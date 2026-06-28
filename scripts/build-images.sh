@@ -5,7 +5,7 @@
 #
 # Env:
 #   IMAGE_TAG      (default: git short sha, or 'latest')
-#   ECR_REGISTRY   (required for --push) e.g. 123456789012.dkr.ecr.eu-central-1.amazonaws.com
+#   ECR_REGISTRY   (required for --push) e.g. 123456789012.dkr.ecr.us-east-2.amazonaws.com
 #   AWS_REGION     (required for --push)
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 

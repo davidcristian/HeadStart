@@ -3,7 +3,7 @@ terraform {
   backend "s3" {
     bucket         = "CHANGEME-jobnotifier-tfstate"
     key            = "prod/terraform.tfstate"
-    region         = "eu-central-1"
+    region         = "us-east-2"
     dynamodb_table = "jobnotifier-tflock"
     encrypt        = true
   }

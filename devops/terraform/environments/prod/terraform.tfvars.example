@@ -3,7 +3,7 @@
 #   export TF_VAR_jwt_secret=...
 #   export TF_VAR_credentials_secret_key=...
 
-region    = "eu-central-1"
+region    = "us-east-2"
 image_tag = "latest"
 
 db_password            = "change-me-strong-password"

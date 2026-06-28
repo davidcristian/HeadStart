@@ -20,13 +20,13 @@ State lives in S3 with a DynamoDB lock table. Create them once (any method):
 
 ```bash
 aws s3api create-bucket --bucket CHANGEME-jobnotifier-tfstate \
-  --region eu-central-1 --create-bucket-configuration LocationConstraint=eu-central-1
+  --region us-east-2 --create-bucket-configuration LocationConstraint=us-east-2
 aws s3api put-bucket-versioning --bucket CHANGEME-jobnotifier-tfstate \
   --versioning-configuration Status=Enabled
 aws dynamodb create-table --table-name jobnotifier-tflock \
   --attribute-definitions AttributeName=LockID,AttributeType=S \
   --key-schema AttributeName=LockID,KeyType=HASH \
-  --billing-mode PAY_PER_REQUEST --region eu-central-1
+  --billing-mode PAY_PER_REQUEST --region us-east-2
 ```
 
 Then set the bucket name in `environments/<env>/backend.tf` (replace `CHANGEME`).
@@ -52,8 +52,8 @@ run migrations and roll the services (this is exactly what `scripts/deploy.sh`
 does in CI):
 
 ```bash
-export AWS_REGION=eu-central-1
-export ECR_REGISTRY=<account-id>.dkr.ecr.eu-central-1.amazonaws.com
+export AWS_REGION=us-east-2
+export ECR_REGISTRY=<account-id>.dkr.ecr.us-east-2.amazonaws.com
 export ECS_CLUSTER=$(terraform output -raw ecs_cluster_name)
 ../../../scripts/deploy.sh
 ```

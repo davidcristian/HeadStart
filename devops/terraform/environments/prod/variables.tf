@@ -1,11 +1,11 @@
 variable "region" {
   type    = string
-  default = "eu-central-1"
+  default = "us-east-2"
 }
 
 variable "azs" {
   type    = list(string)
-  default = ["eu-central-1a", "eu-central-1b"]
+  default = ["us-east-2a", "us-east-2b"]
 }
 
 variable "image_tag" {

@@ -5,7 +5,7 @@
 #
 # Do NOT commit real secrets.
 
-region    = "eu-central-1"
+region    = "us-east-2"
 image_tag = "latest"
 
 # Secrets (prefer environment variables over this file).
