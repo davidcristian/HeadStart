@@ -45,6 +45,7 @@ everything. The worker resolves a scraper with `get_scraper(adapter_key)`.
 | --------------- | ----------------------------------------- | -------------------------------------- |
 | `greenhouse`    | Public Greenhouse job board JSON API      | `boards-api.greenhouse.io/v1/boards/<token>/jobs` |
 | `lever`         | Public Lever Postings API                 | `api.lever.co/v0/postings/<site>?mode=json`; also accepts `jobs.lever.co/<site>` URLs |
+| `ashby`         | Public Ashby Postings API                 | `api.ashbyhq.com/posting-api/job-board/<board>`; also accepts `jobs.ashbyhq.com/<board>` URLs |
 | `generic_html`  | CSS selectors from config (selectolax)    | For simple static pages; configured in the UI |
 | `playwright`    | Headless browser (base helper)            | For JS-heavy/anti-bot pages (opt-in)   |
 

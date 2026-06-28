@@ -37,7 +37,7 @@ single adapter file — see [recipes.md](recipes.md).
 | Adapter | Rationale | Likely strategy |
 | ------- | --------- | --------------- |
 | ~~Lever~~ | ~~Very common ATS in tech~~ | **Shipped:** public Postings API (`api.lever.co/v0/postings/<site>`); config `site` + optional `region: "eu"` |
-| Ashby | Fast-growing ATS | Public board endpoint |
+| ~~Ashby~~ | ~~Fast-growing ATS~~ | **Shipped:** public Postings API (`api.ashbyhq.com/posting-api/job-board/<board>`); config `board` + optional `include_compensation` |
 | Workday | High-value but painful | Playwright + credentials; opt-in |
 | LinkedIn / Indeed | High demand, high anti-bot risk | Advanced/opt-in; lean on [credentials](modules/credentials.md) |
 
@@ -104,7 +104,7 @@ Pursue only if core alerting is solid and adapter coverage is good.
 
 **Personal use (one job seeker):**
 
-1. ~~Lever~~ + Ashby adapters
+1. ~~Lever~~ + ~~Ashby~~ adapters
 2. ~~Scrape health in the UI~~
 3. Email notifier as a fallback channel
 
