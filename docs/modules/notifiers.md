@@ -3,7 +3,7 @@
 **Path:** `backend/app/notifiers/`
 
 Notifiers deliver new jobs to a channel. Each channel is one self-registering
-adapter. Built-in channels: `email`, `ntfy`, and `slack`.
+adapter. Built-in channels: `discord`, `email`, `ntfy`, and `slack`.
 
 ## Contract
 
@@ -58,6 +58,15 @@ Posts one Slack message per new job via an [incoming webhook](https://api.slack.
 Create the webhook in your Slack workspace (Apps → Incoming Webhooks), then paste
 the URL into the target config. Messages use mrkdwn with title, company,
 location, and an Apply link.
+
+## discord adapter
+
+**Key:** `discord`. Config: `{ "webhook_url": "https://discord.com/api/webhooks/..." }`.
+
+Posts one Discord message per new job via a [channel webhook](https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks).
+Create the webhook in your server (Server Settings → Integrations → Webhooks),
+then paste the URL into the target config. Messages use a rich embed with title,
+company, location, and a clickable apply link.
 
 ## Adding a channel
 

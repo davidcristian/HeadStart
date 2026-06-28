@@ -28,8 +28,8 @@ export function SettingsPage() {
       <Card title="Receiving notifications">
         <p>
           JobNotifier can deliver alerts via <strong>email</strong> (configure <code>SMTP_*</code>{" "}
-          on the server), <strong>Slack</strong> (incoming webhook), or <strong>ntfy</strong> push
-          (no server mail setup required).
+          on the server), <strong>Slack</strong> or <strong>Discord</strong> (incoming webhooks), or{" "}
+          <strong>ntfy</strong> push (no server mail setup required).
         </p>
         <h3>Email</h3>
         <ol className="help-list">
@@ -52,6 +52,20 @@ export function SettingsPage() {
           </li>
           <li>
             Create a <strong>slack</strong> target on the <strong>Notifications</strong> page and
+            paste the webhook URL into <code>webhook_url</code>.
+          </li>
+          <li>
+            Use &quot;Send test&quot; to confirm delivery, then attach the target to a search.
+          </li>
+        </ol>
+        <h3>Discord</h3>
+        <ol className="help-list">
+          <li>
+            In Discord, open your server&apos;s <strong>Integrations</strong> settings and create a{" "}
+            <strong>Webhook</strong> for the channel you want alerts in.
+          </li>
+          <li>
+            Create a <strong>discord</strong> target on the <strong>Notifications</strong> page and
             paste the webhook URL into <code>webhook_url</code>.
           </li>
           <li>

@@ -17,12 +17,16 @@ const TYPE_DEFAULTS: Record<string, Json> = {
   slack: {
     webhook_url: "https://hooks.slack.com/services/T00/B00/xxxxxxxxxxxxxxxxxxxxxxxx",
   },
+  discord: {
+    webhook_url: "https://discord.com/api/webhooks/123456789/xxxxxxxxxxxxxxxxxxxxxxxx",
+  },
 };
 
 const TYPE_HINTS: Record<string, string> = {
   email: "For email: to (recipient address). Requires SMTP_* env vars on the server.",
   ntfy: "For ntfy: server_url, topic, priority.",
   slack: "For Slack: webhook_url (incoming webhook URL from your Slack workspace).",
+  discord: "For Discord: webhook_url (channel webhook URL from your Discord server).",
 };
 
 export function TargetsPage() {
@@ -75,7 +79,9 @@ export function TargetsPage() {
             ? "Test notification sent. Check your inbox."
             : targetType === "slack"
               ? "Test notification sent. Check your Slack channel."
-              : "Test notification sent. Check your device.";
+              : targetType === "discord"
+                ? "Test notification sent. Check your Discord channel."
+                : "Test notification sent. Check your device.";
         setNotice(message);
       } else setError(`Test failed: ${result.error ?? "unknown error"}`);
     } catch (err) {
