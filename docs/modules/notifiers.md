@@ -3,7 +3,7 @@
 **Path:** `backend/app/notifiers/`
 
 Notifiers deliver new jobs to a channel. Each channel is one self-registering
-adapter. Built-in channels: `discord`, `email`, `ntfy`, and `slack`.
+adapter. Built-in channels: `discord`, `email`, `ntfy`, `slack`, and `telegram`.
 
 ## Contract
 
@@ -67,6 +67,15 @@ Posts one Discord message per new job via a [channel webhook](https://support.di
 Create the webhook in your server (Server Settings → Integrations → Webhooks),
 then paste the URL into the target config. Messages use a rich embed with title,
 company, location, and a clickable apply link.
+
+## telegram adapter
+
+**Key:** `telegram`. Config: `{ "bot_token": "123456:ABC...", "chat_id": "123456789" }`.
+
+Posts one Telegram message per new job via the [Bot API](https://core.telegram.org/bots/api).
+Create a bot with [@BotFather](https://t.me/BotFather), send `/start` to it (or add it to a
+group), then use your numeric chat id in config. Messages use HTML formatting with title,
+company, location, and an Apply link.
 
 ## Adding a channel
 

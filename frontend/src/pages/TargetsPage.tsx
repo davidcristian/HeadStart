@@ -20,6 +20,10 @@ const TYPE_DEFAULTS: Record<string, Json> = {
   discord: {
     webhook_url: "https://discord.com/api/webhooks/123456789/xxxxxxxxxxxxxxxxxxxxxxxx",
   },
+  telegram: {
+    bot_token: "123456789:ABCdefGHIjklMNOpqrsTUVwxyz",
+    chat_id: "123456789",
+  },
 };
 
 const TYPE_HINTS: Record<string, string> = {
@@ -27,6 +31,8 @@ const TYPE_HINTS: Record<string, string> = {
   ntfy: "For ntfy: server_url, topic, priority.",
   slack: "For Slack: webhook_url (incoming webhook URL from your Slack workspace).",
   discord: "For Discord: webhook_url (channel webhook URL from your Discord server).",
+  telegram:
+    "For Telegram: bot_token (from @BotFather) and chat_id (your user or group id).",
 };
 
 export function TargetsPage() {
@@ -81,7 +87,9 @@ export function TargetsPage() {
               ? "Test notification sent. Check your Slack channel."
               : targetType === "discord"
                 ? "Test notification sent. Check your Discord channel."
-                : "Test notification sent. Check your device.";
+                : targetType === "telegram"
+                  ? "Test notification sent. Check your Telegram chat."
+                  : "Test notification sent. Check your device.";
         setNotice(message);
       } else setError(`Test failed: ${result.error ?? "unknown error"}`);
     } catch (err) {

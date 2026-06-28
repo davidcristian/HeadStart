@@ -48,7 +48,7 @@ single adapter file — see [recipes.md](recipes.md).
 | Email | Lowest friction for non-technical users | **Shipped:** plain-text per-job emails via `SMTP_*`; target config `to` |
 | ~~Slack webhook~~ | ~~Natural for dev teams~~ | **Shipped:** incoming webhook per job; target config `webhook_url` |
 | ~~Discord webhook~~ | ~~Natural for dev teams~~ | **Shipped:** channel webhook per job; target config `webhook_url` |
-| Telegram | Lightweight mobile push alternative to ntfy |
+| ~~Telegram~~ | ~~Lightweight mobile push alternative to ntfy~~ | **Shipped:** Bot API per job; target config `bot_token` + `chat_id` |
 
 **Done when:** a typical tech job seeker can configure at least two of their
 target companies without writing custom HTML selectors.

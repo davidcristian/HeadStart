@@ -27,6 +27,7 @@ def test_meta_lists_capabilities(client: TestClient, auth_headers: dict[str, str
     assert "email" in body["notifiers"]
     assert "slack" in body["notifiers"]
     assert "discord" in body["notifiers"]
+    assert "telegram" in body["notifiers"]
 
 
 def test_reads_require_auth(client: TestClient) -> None:
