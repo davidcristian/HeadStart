@@ -3,7 +3,7 @@
 **Path:** `backend/app/notifiers/`
 
 Notifiers deliver new jobs to a channel. Each channel is one self-registering
-adapter. Built-in channels: `email` and `ntfy`.
+adapter. Built-in channels: `email`, `ntfy`, and `slack`.
 
 ## Contract
 
@@ -49,6 +49,15 @@ lines for company, location, and apply URL.
 
 When SMTP is not configured, deliveries are recorded as `failed` with a clear
 error (unlike password reset, which logs the link in dev).
+
+## slack adapter
+
+**Key:** `slack`. Config: `{ "webhook_url": "https://hooks.slack.com/services/..." }`.
+
+Posts one Slack message per new job via an [incoming webhook](https://api.slack.com/messaging/webhooks).
+Create the webhook in your Slack workspace (Apps → Incoming Webhooks), then paste
+the URL into the target config. Messages use mrkdwn with title, company,
+location, and an Apply link.
 
 ## Adding a channel
 

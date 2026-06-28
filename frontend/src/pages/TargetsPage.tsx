@@ -14,11 +14,15 @@ const TYPE_DEFAULTS: Record<string, Json> = {
     topic: "jobnotifier-change-me",
     priority: "default",
   },
+  slack: {
+    webhook_url: "https://hooks.slack.com/services/T00/B00/xxxxxxxxxxxxxxxxxxxxxxxx",
+  },
 };
 
 const TYPE_HINTS: Record<string, string> = {
   email: "For email: to (recipient address). Requires SMTP_* env vars on the server.",
   ntfy: "For ntfy: server_url, topic, priority.",
+  slack: "For Slack: webhook_url (incoming webhook URL from your Slack workspace).",
 };
 
 export function TargetsPage() {
@@ -69,7 +73,9 @@ export function TargetsPage() {
         const message =
           targetType === "email"
             ? "Test notification sent. Check your inbox."
-            : "Test notification sent. Check your device.";
+            : targetType === "slack"
+              ? "Test notification sent. Check your Slack channel."
+              : "Test notification sent. Check your device.";
         setNotice(message);
       } else setError(`Test failed: ${result.error ?? "unknown error"}`);
     } catch (err) {

@@ -27,17 +27,36 @@ export function SettingsPage() {
 
       <Card title="Receiving notifications">
         <p>
-          JobNotifier can deliver alerts via <strong>email</strong> (configure <code>SMTP_*</code> on
-          the server) or <strong>ntfy</strong> push (no server mail setup required).
+          JobNotifier can deliver alerts via <strong>email</strong> (configure <code>SMTP_*</code>{" "}
+          on the server), <strong>Slack</strong> (incoming webhook), or <strong>ntfy</strong> push
+          (no server mail setup required).
         </p>
         <h3>Email</h3>
         <ol className="help-list">
-          <li>Set <code>SMTP_HOST</code>, <code>SMTP_FROM</code>, and related vars on the API server.</li>
+          <li>
+            Set <code>SMTP_HOST</code>, <code>SMTP_FROM</code>, and related vars on the API server.
+          </li>
           <li>
             Create an <strong>email</strong> target on the <strong>Notifications</strong> page with
             your address in <code>to</code>.
           </li>
-          <li>Use &quot;Send test&quot; to confirm delivery, then attach the target to a search.</li>
+          <li>
+            Use &quot;Send test&quot; to confirm delivery, then attach the target to a search.
+          </li>
+        </ol>
+        <h3>Slack</h3>
+        <ol className="help-list">
+          <li>
+            In Slack, add an <strong>Incoming Webhooks</strong> app to your workspace and choose a
+            channel.
+          </li>
+          <li>
+            Create a <strong>slack</strong> target on the <strong>Notifications</strong> page and
+            paste the webhook URL into <code>webhook_url</code>.
+          </li>
+          <li>
+            Use &quot;Send test&quot; to confirm delivery, then attach the target to a search.
+          </li>
         </ol>
         <h3>ntfy push</h3>
         <ol className="help-list">
@@ -53,7 +72,9 @@ export function SettingsPage() {
             your chosen topic (pick something unguessable).
           </li>
           <li>Subscribe to that exact topic in the ntfy app.</li>
-          <li>Use &quot;Send test&quot; to confirm delivery, then attach the target to a search.</li>
+          <li>
+            Use &quot;Send test&quot; to confirm delivery, then attach the target to a search.
+          </li>
         </ol>
       </Card>
     </>

@@ -1,0 +1,79 @@
+"""Slack incoming-webhook notifier.
+
+Posts one message per new job to a Slack channel via an incoming webhook URL.
+Create the webhook in Slack: Apps → Incoming Webhooks → Add to Slack.
+
+Target config:
+    {
+      "webhook_url": "https://hooks.slack.com/services/T00/B00/xxxx"  # required
+    }
+"""
+
+from typing import Any
+
+import httpx
+
+from app.core.logging import get_logger
+from app.notifiers.base import Notifier, register_notifier
+from app.notifiers.types import DeliveryResult, NotifyContext
+from app.scrapers.types import JobPosting
+
+logger = get_logger(__name__)
+
+
+@register_notifier("slack")
+class SlackNotifier(Notifier):
+    """Send new jobs as Slack messages via an incoming webhook."""
+
+    def __init__(self, client: httpx.Client | None = None) -> None:
+        self._owns_client = client is None
+        self._client = client or httpx.Client(timeout=15.0)
+
+    def send(self, ctx: NotifyContext, jobs: list[JobPosting]) -> list[DeliveryResult]:
+        webhook_url = ctx.config.get("webhook_url")
+        if not webhook_url or not str(webhook_url).strip():
+            raise ValueError("slack target requires config.webhook_url")
+
+        url = str(webhook_url).strip()
+        results: list[DeliveryResult] = []
+        for job in jobs:
+            results.append(self._send_one(url, job))
+        return results
+
+    def _send_one(self, webhook_url: str, job: JobPosting) -> DeliveryResult:
+        payload = self._payload(job)
+        try:
+            resp = self._client.post(webhook_url, json=payload)
+            resp.raise_for_status()
+            return DeliveryResult(external_id=job.external_id, status="sent")
+        except httpx.HTTPError as exc:
+            logger.warning("slack send failed for %s: %s", job.external_id, exc)
+            return DeliveryResult(external_id=job.external_id, status="failed", error=str(exc))
+
+    @staticmethod
+    def _payload(job: JobPosting) -> dict[str, Any]:
+        text = SlackNotifier._text(job)
+        return {
+            "text": text,
+            "blocks": [
+                {
+                    "type": "section",
+                    "text": {"type": "mrkdwn", "text": text},
+                }
+            ],
+        }
+
+    @staticmethod
+    def _text(job: JobPosting) -> str:
+        title = f"*{job.title}*" if job.title else "New job"
+        headline = f"{title} @ {job.company}" if job.company else title
+        lines = [headline]
+        if job.location:
+            lines.append(job.location)
+        if job.url:
+            lines.append(f"<{job.url}|Apply>")
+        return "\n".join(lines)
+
+    def close(self) -> None:
+        if self._owns_client:
+            self._client.close()

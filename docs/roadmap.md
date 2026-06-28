@@ -46,7 +46,8 @@ single adapter file — see [recipes.md](recipes.md).
 | Adapter | Rationale |
 | ------- | --------- |
 | Email | Lowest friction for non-technical users | **Shipped:** plain-text per-job emails via `SMTP_*`; target config `to` |
-| Slack / Discord webhook | Natural for dev teams |
+| ~~Slack webhook~~ | ~~Natural for dev teams~~ | **Shipped:** incoming webhook per job; target config `webhook_url` |
+| Discord webhook | Natural for dev teams |
 | Telegram | Lightweight mobile push alternative to ntfy |
 
 **Done when:** a typical tech job seeker can configure at least two of their
@@ -111,7 +112,7 @@ Pursue only if core alerting is solid and adapter coverage is good.
 **Shared with friends / a small team:**
 
 1. ~~Password reset~~ + onboarding polish
-2. Slack notifier
+2. ~~Slack notifier~~
 3. Digest mode
 
 ---
