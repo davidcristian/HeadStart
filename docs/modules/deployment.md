@@ -51,12 +51,18 @@ task definitions — never in Terraform variables committed to git.
 3. Run DB migrations as a one-off ECS task.
 4. Update ECS services to the new image tag (rolling deploy).
 
-CI runs `terraform plan` on PRs and (gated) `terraform apply` on merge to main.
-See [.github/workflows](../../.github/workflows).
+CI runs the quality gate on every push/PR; the AWS workflows
+run `terraform plan` on PRs and (gated) `terraform apply` + `make deploy` on
+merge to main.
 
 ## First-time setup
 
-1. Create the S3 state bucket + DynamoDB lock table (one-time, documented in
-   `environments/<env>/backend.tf`).
-2. `terraform init && terraform apply` in `environments/dev`.
-3. Configure GitHub Actions secrets (AWS role to assume, Slack webhook).
+See **[deploying-to-aws.md](../deploying-to-aws.md)** for the full walkthrough
+(prerequisites, state bootstrap, `terraform apply`, `make deploy`, verification).
+
+Summary:
+
+1. Bootstrap S3 state + DynamoDB lock (`environments/<env>/backend.tf`).
+2. `terraform init && terraform apply` in `environments/dev` (or `prod`).
+3. `make deploy` with `ECR_REGISTRY` and `ECS_CLUSTER` set.
+4. Optional: configure AWS/GitHub secrets so the deploy/terraform workflows can run.

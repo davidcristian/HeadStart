@@ -1,9 +1,11 @@
 # Getting started: from zero to your first job notification
 
 This is the end-to-end walkthrough for a **user** who wants to start getting
-notified when new jobs are posted on their preferred portals. It assumes you are
-running the stack locally; the steps are identical against an AWS deployment,
-only the URLs change.
+notified when new jobs are posted on their preferred portals.
+
+**Local dev:** follow from step 1. **AWS:** deploy the stack first with
+[deploying-to-aws.md](deploying-to-aws.md), then continue from step 2 using your
+ALB URL (`http://<alb-dns>/`) instead of `localhost`.
 
 By the end you will have: an account, a notification channel on your phone, a
 source, a search, and a real push notification.

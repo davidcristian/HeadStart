@@ -1,8 +1,9 @@
 # Terraform (AWS deployment)
 
-Provisions JobNotifier on AWS ECS Fargate. See
-[../../docs/modules/deployment.md](../../docs/modules/deployment.md) for the
-architecture overview.
+Provisions JobNotifier on AWS ECS Fargate.
+
+- **First-time deploy walkthrough:** [../../docs/deploying-to-aws.md](../../docs/deploying-to-aws.md)
+- **Architecture / module layout:** [../../docs/modules/deployment.md](../../docs/modules/deployment.md)
 
 ## Layout
 
