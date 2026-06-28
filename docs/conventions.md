@@ -1,0 +1,63 @@
+# Conventions
+
+The non-negotiables live in [AGENTS.md](../AGENTS.md). This file fills in the
+day-to-day details.
+
+## Python (backend)
+
+- Python 3.12. Formatting by **black**, linting by **ruff**, types by **mypy**.
+- Line length 100.
+- Naming: `snake_case` for functions/variables, `PascalCase` for classes,
+  `UPPER_SNAKE` for constants.
+- Imports: standard lib, third-party, local — grouped and sorted (ruff isort).
+- Use type hints everywhere. Prefer `from __future__ import annotations` is not
+  needed on 3.12 for built-in generics.
+- Pydantic v2 for all schemas and settings. SQLAlchemy 2.0 typed ORM
+  (`Mapped[...]`, `mapped_column(...)`).
+- **Synchronous by design.** The persistence layer, services, scrapers, and
+  notifiers are all synchronous. FastAPI routes are plain `def` (FastAPI runs
+  them in a threadpool), and Celery tasks call the same services directly. This
+  keeps one execution model across API and worker — no async/await, no event-loop
+  juggling — which is the right trade-off for an I/O-light polling workload.
+  HTTP uses `httpx.Client`; the optional Playwright scraper uses its sync API.
+
+### Layering (enforced)
+
+Outer depends on inner only: `api -> services -> repositories -> models`.
+Scrapers and notifiers are reached only via their base class + registry. See the
+table in [AGENTS.md](../AGENTS.md) §1.
+
+### Errors
+
+- Raise domain exceptions from services (`app/core/exceptions.py`); routers map
+  them to HTTP responses. Never leak raw DB/driver errors to clients.
+- Scrapers and notifiers must not crash the worker: wrap external I/O and surface
+  failures as logged, recorded errors.
+
+## TypeScript (frontend)
+
+- Strict mode on. Formatting by **prettier**, linting by **eslint**.
+- Functional components + hooks. Data fetching via the typed API client in
+  `src/api/`. No business logic in components — keep it in hooks/helpers.
+- Types for API payloads live in `src/types/` and mirror the backend schemas.
+
+## Commits & branches
+
+- **Conventional Commits**: `feat:`, `fix:`, `docs:`, `refactor:`, `test:`,
+  `chore:`, `ci:`, `build:`.
+- Branches: `feat/...`, `fix/...`, `docs/...`, `chore/...`.
+- One logical concern per PR. `make check` must pass before opening a PR.
+
+## Testing
+
+- Backend: `pytest`. Unit-test services, scrapers (against saved fixtures), and
+  notifiers (mocked HTTP). Integration-test the worker pipeline.
+- Scraper tests must not hit the network — use fixtures under
+  `backend/tests/fixtures/`.
+- Frontend: `vitest` + Testing Library for components and hooks.
+
+## Configuration
+
+- All config via environment variables, parsed by `app/core/config.py`
+  (pydantic-settings). Document every new variable in `.env.example`.
+- No magic numbers in code that should be tunable — promote them to settings.

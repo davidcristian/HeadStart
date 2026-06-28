@@ -1,0 +1,19 @@
+{
+  "jobs": [
+    {
+      "id": 5501001,
+      "title": "Senior Software Engineer",
+      "absolute_url": "https://boards.greenhouse.io/acme/jobs/5501001",
+      "location": { "name": "Amsterdam, Netherlands" },
+      "updated_at": "2026-06-27T10:00:00-04:00"
+    },
+    {
+      "id": 5501002,
+      "title": "Staff Backend Engineer",
+      "absolute_url": "https://boards.greenhouse.io/acme/jobs/5501002",
+      "location": { "name": "Remote - EU" },
+      "updated_at": "2026-06-26T12:30:00-04:00"
+    }
+  ],
+  "meta": { "total": 2 }
+}

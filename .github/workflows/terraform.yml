@@ -1,0 +1,47 @@
+name: Terraform
+
+on:
+  pull_request:
+    paths:
+      - "devops/terraform/**"
+      - ".github/workflows/terraform.yml"
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  plan:
+    name: Validate & plan (${{ matrix.env }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        env: [dev, prod]
+    defaults:
+      run:
+        working-directory: devops/terraform/environments/${{ matrix.env }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.8"
+
+      - name: Format check
+        working-directory: devops/terraform
+        run: terraform fmt -recursive -check
+
+      - name: Init (no backend)
+        run: terraform init -backend=false -input=false
+
+      - name: Validate
+        run: terraform validate
+
+      # A real plan needs AWS credentials + remote state. Enable once the
+      # backend bucket exists and OIDC role is configured (see deploy.yml).
+      - name: Plan
+        if: ${{ vars.AWS_ROLE_ARN != '' }}
+        env:
+          TF_VAR_db_password: ${{ secrets.TF_VAR_DB_PASSWORD }}
+          TF_VAR_jwt_secret: ${{ secrets.TF_VAR_JWT_SECRET }}
+          TF_VAR_credentials_secret_key: ${{ secrets.TF_VAR_CREDENTIALS_SECRET_KEY }}
+        run: terraform plan -input=false -no-color

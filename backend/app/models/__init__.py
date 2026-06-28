@@ -1,0 +1,23 @@
+"""ORM models. Importing this package registers every table on `Base.metadata`,
+which Alembic autogenerate and `create_all` (tests) rely on.
+"""
+
+from app.models.base import Base
+from app.models.delivery_log import DeliveryLog
+from app.models.notification_target import NotificationTarget
+from app.models.search import Search
+from app.models.seen_job import SeenJob
+from app.models.site_credential import SiteCredential
+from app.models.source import Source
+from app.models.user import User
+
+__all__ = [
+    "Base",
+    "DeliveryLog",
+    "NotificationTarget",
+    "Search",
+    "SeenJob",
+    "SiteCredential",
+    "Source",
+    "User",
+]

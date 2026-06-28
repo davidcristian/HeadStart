@@ -1,0 +1,76 @@
+"""Password hashing (bcrypt) and JWT issuing/verification (PyJWT).
+
+This module is framework-agnostic: it knows nothing about FastAPI. The auth
+dependency that turns a request into a `User` lives in `app.api.deps`.
+"""
+
+from datetime import timedelta
+from typing import Any, Literal
+
+import bcrypt
+import jwt
+
+from app.core.config import settings
+from app.models.base import utcnow
+
+# bcrypt only hashes the first 72 bytes; longer inputs raise in newer releases.
+_BCRYPT_MAX_BYTES = 72
+
+TokenType = Literal["access", "refresh"]
+
+
+class TokenError(Exception):
+    """Raised when a JWT is missing, malformed, expired, or the wrong type."""
+
+
+def _truncate(password: str) -> bytes:
+    return password.encode("utf-8")[:_BCRYPT_MAX_BYTES]
+
+
+def hash_password(password: str) -> str:
+    """Hash a plaintext password for storage."""
+    return bcrypt.hashpw(_truncate(password), bcrypt.gensalt()).decode("utf-8")
+
+
+def verify_password(password: str, password_hash: str) -> bool:
+    """Constant-time check of a plaintext password against a stored hash."""
+    try:
+        return bcrypt.checkpw(_truncate(password), password_hash.encode("utf-8"))
+    except ValueError:
+        return False
+
+
+def _create_token(subject: str, token_type: TokenType, expires: timedelta) -> str:
+    now = utcnow()
+    payload = {
+        "sub": subject,
+        "type": token_type,
+        "iat": now,
+        "exp": now + expires,
+    }
+    return jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
+
+
+def create_access_token(subject: str | int) -> str:
+    return _create_token(
+        str(subject), "access", timedelta(minutes=settings.access_token_expire_minutes)
+    )
+
+
+def create_refresh_token(subject: str | int) -> str:
+    return _create_token(
+        str(subject), "refresh", timedelta(days=settings.refresh_token_expire_days)
+    )
+
+
+def decode_token(token: str, *, expected_type: TokenType) -> dict[str, Any]:
+    """Decode and validate a JWT, enforcing its `type`. Raises `TokenError`."""
+    try:
+        payload: dict[str, Any] = jwt.decode(
+            token, settings.jwt_secret, algorithms=[settings.jwt_algorithm]
+        )
+    except jwt.PyJWTError as exc:
+        raise TokenError(str(exc)) from exc
+    if payload.get("type") != expected_type:
+        raise TokenError(f"Expected a {expected_type} token.")
+    return payload

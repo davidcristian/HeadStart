@@ -1,0 +1,64 @@
+import { act, renderHook, waitFor } from "@testing-library/react";
+import type { ReactNode } from "react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { getAccessToken } from "../lib/settings";
+import { AuthProvider, useAuth } from "./AuthContext";
+
+const user = {
+  id: 1,
+  email: "x@example.test",
+  is_admin: true,
+  is_active: true,
+  created_at: "2026-06-28T00:00:00Z",
+};
+
+vi.mock("../api", () => ({
+  api: {
+    login: vi.fn(async () => ({
+      access_token: "access-token",
+      refresh_token: "refresh-token",
+      token_type: "bearer",
+    })),
+    register: vi.fn(async () => user),
+    me: vi.fn(async () => user),
+  },
+}));
+
+function wrapper({ children }: { children: ReactNode }) {
+  return <AuthProvider>{children}</AuthProvider>;
+}
+
+describe("AuthContext", () => {
+  beforeEach(() => localStorage.clear());
+
+  it("starts unauthenticated when no token is stored", async () => {
+    const { result } = renderHook(() => useAuth(), { wrapper });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    expect(result.current.user).toBeNull();
+  });
+
+  it("logs in, stores tokens, and exposes the user", async () => {
+    const { result } = renderHook(() => useAuth(), { wrapper });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    await act(async () => {
+      await result.current.login("x@example.test", "password123");
+    });
+
+    expect(getAccessToken()).toBe("access-token");
+    expect(result.current.user?.email).toBe("x@example.test");
+  });
+
+  it("logout clears the session", async () => {
+    const { result } = renderHook(() => useAuth(), { wrapper });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    await act(async () => {
+      await result.current.login("x@example.test", "password123");
+    });
+
+    act(() => result.current.logout());
+
+    expect(result.current.user).toBeNull();
+    expect(getAccessToken()).toBe("");
+  });
+});

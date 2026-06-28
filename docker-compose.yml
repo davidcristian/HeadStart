@@ -1,0 +1,119 @@
+# Full local stack. Same images used in AWS; only the orchestration differs.
+#   make up        -> build + start everything
+#   make migrate   -> apply DB migrations
+#   make logs      -> tail logs
+#
+# An optional self-hosted ntfy server is available via the "offline" profile:
+#   docker compose --profile offline up -d ntfy
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-jobnotifier}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-jobnotifier}
+      POSTGRES_DB: ${POSTGRES_DB:-jobnotifier}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-jobnotifier}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: jobnotifier/backend:latest
+    restart: unless-stopped
+    command: ["api"]
+    env_file: .env
+    environment:
+      POSTGRES_HOST: db
+      REDIS_HOST: redis
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    image: jobnotifier/backend:latest
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    command: ["worker"]
+    env_file: .env
+    environment:
+      POSTGRES_HOST: db
+      REDIS_HOST: redis
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  beat:
+    image: jobnotifier/backend:latest
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    command: ["beat"]
+    env_file: .env
+    environment:
+      POSTGRES_HOST: db
+      REDIS_HOST: redis
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8000}
+    image: jobnotifier/frontend:latest
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+
+  # Optional fully-offline notifications. Enable with: --profile offline
+  ntfy:
+    image: binwiederhier/ntfy:latest
+    profiles: ["offline"]
+    command: ["serve"]
+    restart: unless-stopped
+    environment:
+      NTFY_BASE_URL: http://localhost:8090
+    ports:
+      - "8090:80"
+    volumes:
+      - ntfydata:/var/lib/ntfy
+
+volumes:
+  pgdata:
+  ntfydata:

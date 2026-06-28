@@ -1,0 +1,16 @@
+# Copy to terraform.tfvars (gitignored) OR provide via environment variables:
+#   export TF_VAR_db_password=...
+#   export TF_VAR_jwt_secret=...
+#   export TF_VAR_credentials_secret_key=...
+
+region    = "eu-central-1"
+image_tag = "latest"
+
+db_password            = "change-me-strong-password"
+jwt_secret             = "change-me-long-random-jwt-secret"
+credentials_secret_key = "change-me-long-random-credentials-key"
+
+# Strongly recommended in prod: restrict CORS to your real domain.
+cors_origins = ["https://jobs.example.com"]
+
+ntfy_default_topic = "jobnotifier-change-me"
