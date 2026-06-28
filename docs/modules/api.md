@@ -31,6 +31,10 @@ never touch the DB directly (services use repositories). See
 | PATCH  | `/searches/{id}`      | Update a search (enable/disable, retune) |
 | DELETE | `/searches/{id}`      | Delete a search                          |
 | POST   | `/searches/{id}/run`  | Trigger a search immediately             |
+
+`SearchRead` includes scrape health: `last_run_at`, `last_error` (most recent
+scrape failure), and `recent_delivery_failures` (up to five recent failed
+notification attempts with job title, URL, error, and timestamp).
 | GET    | `/jobs`               | Feed of seen jobs (filter by search)     |
 | GET    | `/targets`            | List notification targets                |
 | POST   | `/targets`            | Create a target (e.g. ntfy topic)        |

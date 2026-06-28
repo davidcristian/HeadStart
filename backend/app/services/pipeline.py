@@ -76,7 +76,7 @@ class PipelineService:
             logger.exception("run_search %s failed: %s", search_id, exc)
             result.error = str(exc)
         finally:
-            self._reschedule(search_id)
+            self._reschedule(search_id, last_error=result.error)
         return result
 
     def _scrape(self, adapter_key: str, search: object) -> list[JobPosting]:
@@ -167,11 +167,12 @@ class PipelineService:
                 failed += 1
         return sent, failed
 
-    def _reschedule(self, search_id: int) -> None:
+    def _reschedule(self, search_id: int, *, last_error: str | None = None) -> None:
         search = self.searches.get(search_id)
         if search is None:
             return
         now = utcnow()
         search.last_run_at = now
+        search.last_error = last_error
         search.next_run_at = next_run_from(now, search.interval_seconds)
         self.session.flush()

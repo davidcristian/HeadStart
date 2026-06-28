@@ -5,6 +5,8 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.schemas.delivery import DeliveryFailureRead
+
 
 class SearchBase(BaseModel):
     name: str = Field(min_length=1, max_length=200)
@@ -36,5 +38,7 @@ class SearchRead(SearchBase):
 
     id: int
     last_run_at: datetime | None
+    last_error: str | None = None
     next_run_at: datetime
     created_at: datetime
+    recent_delivery_failures: list[DeliveryFailureRead] = Field(default_factory=list)

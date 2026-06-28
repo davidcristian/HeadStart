@@ -90,7 +90,10 @@ def test_search_lifecycle(client: TestClient, auth_headers: dict[str, str]) -> N
         headers=auth_headers,
     )
     assert created.status_code == 201
-    search_id = created.json()["id"]
+    body = created.json()
+    assert body["last_error"] is None
+    assert body["recent_delivery_failures"] == []
+    search_id = body["id"]
 
     run = client.post(f"/api/v1/searches/{search_id}/run", headers=auth_headers)
     assert run.status_code == 202

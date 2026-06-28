@@ -16,7 +16,7 @@ router = APIRouter()
 def list_searches(
     db: Session = Depends(get_db), user: User = Depends(get_current_user)
 ) -> list[SearchRead]:
-    return [SearchRead.model_validate(s) for s in SearchService(db).list_all(user.id)]
+    return SearchService(db).list_reads(user.id)
 
 
 @router.post("", response_model=SearchRead, status_code=status.HTTP_201_CREATED)
@@ -25,14 +25,14 @@ def create_search(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> SearchRead:
-    return SearchRead.model_validate(SearchService(db).create(user.id, data))
+    return SearchService(db).create_read(user.id, data)
 
 
 @router.get("/{search_id}", response_model=SearchRead)
 def get_search(
     search_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)
 ) -> SearchRead:
-    return SearchRead.model_validate(SearchService(db).get(search_id, user.id))
+    return SearchService(db).get_read(search_id, user.id)
 
 
 @router.patch("/{search_id}", response_model=SearchRead)
@@ -42,7 +42,7 @@ def update_search(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> SearchRead:
-    return SearchRead.model_validate(SearchService(db).update(search_id, user.id, data))
+    return SearchService(db).update_read(search_id, user.id, data)
 
 
 @router.delete("/{search_id}", status_code=status.HTTP_204_NO_CONTENT)

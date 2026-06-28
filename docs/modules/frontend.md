@@ -24,7 +24,8 @@ container (which also reverse-proxies `/api` to the backend in production).
 | Register    | Create an account (first user becomes admin)                     |
 | Sources     | List/create/edit sources (name, adapter, base URL, config)       |
 | Searches    | Create a search: pick source + target, query URL + filters +     |
-|             | interval; enable/disable; run now                                |
+|             | interval; enable/disable; run now; view last run, scrape errors, |
+|             | and recent delivery failures                                     |
 | Jobs        | Feed of seen jobs, filterable by search                          |
 | Targets     | Manage notification targets (e.g. ntfy server/topic); send test  |
 | Credentials | Per-source encrypted cookies/headers for bot-walled sites        |

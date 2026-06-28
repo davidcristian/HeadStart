@@ -221,3 +221,34 @@ def test_pipeline_runs_without_credentials(db_session: Session) -> None:
     ).run(search.id)
     assert scraper.last_ctx is not None
     assert scraper.last_ctx.cookies == {}
+
+
+class FailingScraper:
+    def fetch(self, ctx: ScrapeContext) -> list[JobPosting]:
+        raise ValueError("scrape blew up")
+
+
+def test_pipeline_records_last_error(db_session: Session) -> None:
+    search = _make_search(db_session)
+    pipeline = PipelineService(
+        db_session,
+        scraper_factory=lambda key, http=None: FailingScraper(),  # type: ignore[arg-type,return-value]
+        notifier_factory=lambda key: RecordingNotifier(),  # type: ignore[arg-type,return-value]
+    )
+
+    result = pipeline.run(search.id)
+
+    assert result.error == "scrape blew up"
+    db_session.refresh(search)
+    assert search.last_error == "scrape blew up"
+
+
+def test_pipeline_clears_last_error_after_success(db_session: Session) -> None:
+    search = _make_search(db_session)
+    search.last_error = "old failure"
+    db_session.flush()
+
+    _pipeline(db_session, FakeScraper([]), RecordingNotifier()).run(search.id)
+
+    db_session.refresh(search)
+    assert search.last_error is None

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { api } from "../api";
+import { SearchHealthBadge, SearchHealthDetails, SearchLastRun } from "../components/SearchHealth";
 import { JsonEditor } from "../components/JsonEditor";
 import { Badge, Banner, Button, Card, EmptyState, Field } from "../components/ui";
 import { useAsync } from "../hooks/useAsync";
@@ -168,6 +169,8 @@ export function SearchesPage() {
                 <th>Source</th>
                 <th>Notify</th>
                 <th>Every</th>
+                <th>Last run</th>
+                <th>Health</th>
                 <th>Status</th>
                 <th></th>
               </tr>
@@ -177,10 +180,17 @@ export function SearchesPage() {
                 <tr key={s.id}>
                   <td>
                     <strong>{s.name}</strong>
+                    <SearchHealthDetails search={s} />
                   </td>
                   <td>{sourceName(s.source_id)}</td>
                   <td>{targetName(s.target_id)}</td>
                   <td>{s.interval_seconds}s</td>
+                  <td>
+                    <SearchLastRun at={s.last_run_at} />
+                  </td>
+                  <td>
+                    <SearchHealthBadge search={s} />
+                  </td>
                   <td>
                     <Badge on={s.enabled} />
                   </td>

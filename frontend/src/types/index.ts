@@ -14,6 +14,13 @@ export interface Source {
 
 export type SourceCreate = Omit<Source, "id" | "created_at">;
 
+export interface DeliveryFailure {
+  job_title: string;
+  job_url: string;
+  error: string | null;
+  sent_at: string;
+}
+
 export interface Search {
   id: number;
   name: string;
@@ -25,8 +32,10 @@ export interface Search {
   interval_seconds: number;
   enabled: boolean;
   last_run_at: string | null;
+  last_error: string | null;
   next_run_at: string;
   created_at: string;
+  recent_delivery_failures: DeliveryFailure[];
 }
 
 export type SearchCreate = Pick<

@@ -70,6 +70,7 @@ A saved query against a source, on an interval, delivering to a target.
 | target_id       | FK target | Where to notify                                |
 | enabled         | bool      |                                                |
 | last_run_at     | datetime? | Set after each run                             |
+| last_error      | text?     | Most recent scrape failure message             |
 | next_run_at     | datetime  | Drives due-based scheduling/catch-up           |
 
 ### seen_job
