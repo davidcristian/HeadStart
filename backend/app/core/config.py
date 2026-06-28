@@ -43,7 +43,7 @@ class Settings(BaseSettings):
     # Base URL of the web UI (used in password-reset links).
     frontend_base_url: str = "http://localhost:5173"
 
-    # ---- email (password reset) ----
+    # ---- email (password reset + email notifier) ----
     # Leave SMTP_HOST empty in local dev; reset links are logged instead.
     smtp_host: str = ""
     smtp_port: int = 587

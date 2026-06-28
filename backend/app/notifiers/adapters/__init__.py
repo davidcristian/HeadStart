@@ -4,6 +4,6 @@ Add a channel by creating a module here and importing it below (see
 docs/recipes.md).
 """
 
-from app.notifiers.adapters import ntfy
+from app.notifiers.adapters import email, ntfy
 
-__all__ = ["ntfy"]
+__all__ = ["email", "ntfy"]

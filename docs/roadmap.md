@@ -45,7 +45,7 @@ single adapter file — see [recipes.md](recipes.md).
 
 | Adapter | Rationale |
 | ------- | --------- |
-| Email | Lowest friction for non-technical users |
+| Email | Lowest friction for non-technical users | **Shipped:** plain-text per-job emails via `SMTP_*`; target config `to` |
 | Slack / Discord webhook | Natural for dev teams |
 | Telegram | Lightweight mobile push alternative to ntfy |
 
@@ -106,7 +106,7 @@ Pursue only if core alerting is solid and adapter coverage is good.
 
 1. ~~Lever~~ + ~~Ashby~~ adapters
 2. ~~Scrape health in the UI~~
-3. Email notifier as a fallback channel
+3. ~~Email notifier as a fallback channel~~
 
 **Shared with friends / a small team:**
 

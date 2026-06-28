@@ -35,7 +35,7 @@ describe("TargetsPage", () => {
 
     await waitFor(() => expect(mockApi.createTarget).toHaveBeenCalled());
     expect(mockApi.createTarget).toHaveBeenCalledWith(
-      expect.objectContaining({ name: "Work alerts", type: "ntfy" }),
+      expect.objectContaining({ name: "Work alerts", type: "email" }),
     );
   });
 

@@ -25,7 +25,21 @@ export function SettingsPage() {
         <Button onClick={save}>Save</Button>
       </Card>
 
-      <Card title="Receiving notifications (ntfy)">
+      <Card title="Receiving notifications">
+        <p>
+          JobNotifier can deliver alerts via <strong>email</strong> (configure <code>SMTP_*</code> on
+          the server) or <strong>ntfy</strong> push (no server mail setup required).
+        </p>
+        <h3>Email</h3>
+        <ol className="help-list">
+          <li>Set <code>SMTP_HOST</code>, <code>SMTP_FROM</code>, and related vars on the API server.</li>
+          <li>
+            Create an <strong>email</strong> target on the <strong>Notifications</strong> page with
+            your address in <code>to</code>.
+          </li>
+          <li>Use &quot;Send test&quot; to confirm delivery, then attach the target to a search.</li>
+        </ol>
+        <h3>ntfy push</h3>
         <ol className="help-list">
           <li>
             Install the <strong>ntfy</strong> app (iOS / Android) or open{" "}
@@ -35,11 +49,11 @@ export function SettingsPage() {
             .
           </li>
           <li>
-            Create a Notification target on the <strong>Notifications</strong> page with your chosen
-            topic (pick something unguessable).
+            Create an <strong>ntfy</strong> target on the <strong>Notifications</strong> page with
+            your chosen topic (pick something unguessable).
           </li>
           <li>Subscribe to that exact topic in the ntfy app.</li>
-          <li>Use "Send test" to confirm delivery, then attach the target to a search.</li>
+          <li>Use &quot;Send test&quot; to confirm delivery, then attach the target to a search.</li>
         </ol>
       </Card>
     </>

@@ -1,16 +1,24 @@
-/** Manage notification targets (e.g. ntfy topics) and send test pushes. */
+/** Manage notification targets (e.g. ntfy topics, email) and send test notifications. */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { api } from "../api";
 import { JsonEditor } from "../components/JsonEditor";
 import { Banner, Button, Card, EmptyState, Field } from "../components/ui";
 import { useAsync } from "../hooks/useAsync";
 import type { Json } from "../types";
 
-const NTFY_DEFAULT: Json = {
-  server_url: "https://ntfy.sh",
-  topic: "jobnotifier-change-me",
-  priority: "default",
+const TYPE_DEFAULTS: Record<string, Json> = {
+  email: { to: "you@example.com" },
+  ntfy: {
+    server_url: "https://ntfy.sh",
+    topic: "jobnotifier-change-me",
+    priority: "default",
+  },
+};
+
+const TYPE_HINTS: Record<string, string> = {
+  email: "For email: to (recipient address). Requires SMTP_* env vars on the server.",
+  ntfy: "For ntfy: server_url, topic, priority.",
 };
 
 export function TargetsPage() {
@@ -21,31 +29,49 @@ export function TargetsPage() {
 
   const [name, setName] = useState("");
   const [type, setType] = useState("");
-  const [config, setConfig] = useState<Json>(NTFY_DEFAULT);
+  const [config, setConfig] = useState<Json>({});
   const [configValid, setConfigValid] = useState(true);
 
   const types = meta.data?.notifiers ?? [];
   const effectiveType = type || types[0] || "";
+  const configHint = TYPE_HINTS[effectiveType] ?? "Channel-specific JSON config.";
+
+  useEffect(() => {
+    if (!meta.data?.notifiers.length || type) return;
+    const initial = meta.data.notifiers[0];
+    setType(initial);
+    setConfig(TYPE_DEFAULTS[initial] ?? {});
+  }, [meta.data, type]);
+
+  function onTypeChange(nextType: string) {
+    setType(nextType);
+    setConfig(TYPE_DEFAULTS[nextType] ?? {});
+  }
 
   async function create() {
     setError(undefined);
     try {
       await api.createTarget({ name, type: effectiveType, config });
       setName("");
-      setConfig(NTFY_DEFAULT);
+      setConfig(TYPE_DEFAULTS[effectiveType] ?? {});
       targets.reload();
     } catch (err) {
       setError((err as Error).message);
     }
   }
 
-  async function test(id: number) {
+  async function test(id: number, targetType: string) {
     setError(undefined);
     setNotice(undefined);
     try {
       const result = await api.testTarget(id);
-      if (result.status === "sent") setNotice("Test notification sent. Check your device.");
-      else setError(`Test failed: ${result.error ?? "unknown error"}`);
+      if (result.status === "sent") {
+        const message =
+          targetType === "email"
+            ? "Test notification sent. Check your inbox."
+            : "Test notification sent. Check your device.";
+        setNotice(message);
+      } else setError(`Test failed: ${result.error ?? "unknown error"}`);
     } catch (err) {
       setError((err as Error).message);
     }
@@ -68,7 +94,7 @@ export function TargetsPage() {
             <input value={name} onChange={(e) => setName(e.target.value)} placeholder="My phone" />
           </Field>
           <Field label="Type">
-            <select value={effectiveType} onChange={(e) => setType(e.target.value)}>
+            <select value={effectiveType} onChange={(e) => onTypeChange(e.target.value)}>
               {types.map((t) => (
                 <option key={t} value={t}>
                   {t}
@@ -77,7 +103,7 @@ export function TargetsPage() {
             </select>
           </Field>
         </div>
-        <Field label="Config (JSON)" hint="For ntfy: server_url, topic, priority.">
+        <Field label="Config (JSON)" hint={configHint}>
           <JsonEditor
             value={config}
             onChange={(v, valid) => {
@@ -117,7 +143,7 @@ export function TargetsPage() {
                     <code className="muted">{JSON.stringify(t.config)}</code>
                   </td>
                   <td className="row-actions">
-                    <Button variant="ghost" onClick={() => test(t.id)}>
+                    <Button variant="ghost" onClick={() => test(t.id, t.type)}>
                       Send test
                     </Button>
                     <Button variant="danger" onClick={() => remove(t.id)}>
