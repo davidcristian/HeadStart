@@ -77,6 +77,7 @@ export function SearchesPage() {
             (result.queued ? `, ${result.queued} queued for digest` : "") +
             (result.filtered ? `, ${result.filtered} filtered out` : "") +
             (result.skipped ? `, ${result.skipped} skipped (already notified)` : "") +
+            (result.closed ? `, ${result.closed} marked closed` : "") +
             (result.failed ? `, ${result.failed} delivery failure(s)` : "") +
             ".",
         );

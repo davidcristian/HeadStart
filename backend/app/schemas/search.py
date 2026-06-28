@@ -60,4 +60,5 @@ class SearchRunRead(BaseModel):
     skipped: int = 0
     filtered: int = 0
     queued: int = 0
+    closed: int = 0
     error: str | None = None

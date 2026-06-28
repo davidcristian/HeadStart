@@ -45,6 +45,7 @@ class RunResult:
     skipped: int = 0
     filtered: int = 0
     queued: int = 0
+    closed: int = 0
     error: str | None = None
 
 
@@ -81,6 +82,9 @@ class PipelineService:
                 config={**search.source.default_config, **search.config},
             )
             result.found = len(postings)
+            scraped_ids = {p.external_id for p in postings}
+            closed, _reopened = self.seen_jobs.sync_after_scrape(search_id, scraped_ids)
+            result.closed = closed
             postings, result.filtered = apply_posting_filters(postings, search.filters)
             new_postings = self._dedupe(search_id, postings)
             result.new = len(new_postings)

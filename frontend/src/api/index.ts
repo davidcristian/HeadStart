@@ -19,6 +19,14 @@ import type {
 } from "../types";
 import { request } from "./client";
 
+function buildJobQuery(searchId?: number, status?: string): string {
+  const params = new URLSearchParams();
+  if (searchId !== undefined) params.set("search_id", String(searchId));
+  if (status) params.set("status", status);
+  const query = params.toString();
+  return query ? `?${query}` : "";
+}
+
 export const api = {
   // meta
   health: () => request<Health>("/api/v1/health", { skipAuth: true }),
@@ -72,8 +80,10 @@ export const api = {
     request<SearchRunResult>(`/api/v1/searches/${id}/run`, { method: "POST" }),
 
   // jobs
-  listJobs: (searchId?: number) =>
-    request<Job[]>(`/api/v1/jobs${searchId ? `?search_id=${searchId}` : ""}`),
+  listJobs: (searchId?: number, status?: string) =>
+    request<Job[]>(`/api/v1/jobs${buildJobQuery(searchId, status)}`),
+  updateJob: (id: number, data: { status: "seen" | "applied" | "archived" }) =>
+    request<Job>(`/api/v1/jobs/${id}`, { method: "PATCH", body: data }),
 
   // targets
   listTargets: () => request<NotificationTarget[]>("/api/v1/targets"),

@@ -1,17 +1,38 @@
-/** Feed of jobs discovered so far, filterable by search. */
+/** Feed of jobs discovered so far, filterable by search and triage status. */
 
 import { useState } from "react";
 import { api } from "../api";
-import { Card, EmptyState, Field } from "../components/ui";
+import { JobStatusBadge } from "../components/JobStatusBadge";
+import { Button, Card, EmptyState, Field } from "../components/ui";
 import { useAsync } from "../hooks/useAsync";
+import type { JobStatus } from "../types";
+
+const STATUS_FILTERS: Array<{ value: "" | JobStatus; label: string }> = [
+  { value: "", label: "All statuses" },
+  { value: "new", label: "New" },
+  { value: "seen", label: "Seen" },
+  { value: "applied", label: "Applied" },
+  { value: "archived", label: "Archived" },
+  { value: "closed", label: "Closed" },
+];
 
 export function JobsPage() {
   const [searchId, setSearchId] = useState<number | "">("");
+  const [status, setStatus] = useState<"" | JobStatus>("");
   const searches = useAsync(() => api.listSearches(), []);
   const jobs = useAsync(
-    () => api.listJobs(searchId === "" ? undefined : Number(searchId)),
-    [searchId],
+    () =>
+      api.listJobs(
+        searchId === "" ? undefined : Number(searchId),
+        status === "" ? undefined : status,
+      ),
+    [searchId, status],
   );
+
+  async function setJobStatus(jobId: number, next: "seen" | "applied" | "archived") {
+    await api.updateJob(jobId, { status: next });
+    jobs.reload();
+  }
 
   return (
     <>
@@ -19,19 +40,30 @@ export function JobsPage() {
       <Card
         title="Discovered jobs"
         actions={
-          <Field label="">
-            <select
-              value={searchId}
-              onChange={(e) => setSearchId(e.target.value === "" ? "" : Number(e.target.value))}
-            >
-              <option value="">All searches</option>
-              {searches.data?.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
-              ))}
-            </select>
-          </Field>
+          <div className="card-actions">
+            <Field label="">
+              <select value={status} onChange={(e) => setStatus(e.target.value as "" | JobStatus)}>
+                {STATUS_FILTERS.map((option) => (
+                  <option key={option.label} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="">
+              <select
+                value={searchId}
+                onChange={(e) => setSearchId(e.target.value === "" ? "" : Number(e.target.value))}
+              >
+                <option value="">All searches</option>
+                {searches.data?.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          </div>
         }
       >
         {jobs.loading && <p>Loading...</p>}
@@ -45,7 +77,9 @@ export function JobsPage() {
                 <th>Title</th>
                 <th>Company</th>
                 <th>Location</th>
+                <th>Status</th>
                 <th>First seen</th>
+                <th />
               </tr>
             </thead>
             <tbody>
@@ -62,7 +96,29 @@ export function JobsPage() {
                   </td>
                   <td>{j.company || "-"}</td>
                   <td>{j.location || "-"}</td>
+                  <td>
+                    <JobStatusBadge status={j.status} />
+                  </td>
                   <td className="muted">{new Date(j.first_seen_at).toLocaleString()}</td>
+                  <td>
+                    <div className="row-actions">
+                      {j.status !== "seen" && j.status !== "closed" && (
+                        <Button variant="ghost" onClick={() => setJobStatus(j.id, "seen")}>
+                          Seen
+                        </Button>
+                      )}
+                      {j.status !== "applied" && (
+                        <Button variant="ghost" onClick={() => setJobStatus(j.id, "applied")}>
+                          Applied
+                        </Button>
+                      )}
+                      {j.status !== "archived" && (
+                        <Button variant="ghost" onClick={() => setJobStatus(j.id, "archived")}>
+                          Archive
+                        </Button>
+                      )}
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>

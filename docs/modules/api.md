@@ -38,7 +38,8 @@ never touch the DB directly (services use repositories). See
 `SearchRead` includes scrape health: `last_run_at`, `last_error` (most recent
 scrape failure), and `recent_delivery_failures` (up to five recent failed
 notification attempts with job title, URL, error, and timestamp).
-| GET    | `/jobs`               | Feed of seen jobs (filter by search)     |
+| GET    | `/jobs`               | Feed of seen jobs (filter by `search_id`, `status`) |
+| PATCH  | `/jobs/{id}`          | Update triage status (`seen` / `applied` / `archived`) |
 | GET    | `/targets`            | List notification targets                |
 | POST   | `/targets`            | Create a target (e.g. ntfy topic)        |
 | PATCH  | `/targets/{id}`       | Update a target                          |

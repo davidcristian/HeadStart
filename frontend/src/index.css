@@ -304,6 +304,26 @@ code {
   background: rgba(139, 152, 165, 0.15);
   color: var(--muted);
 }
+.badge-job-new {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+}
+.badge-job-seen {
+  background: rgba(139, 152, 165, 0.15);
+  color: var(--muted);
+}
+.badge-job-applied {
+  background: rgba(34, 197, 94, 0.15);
+  color: var(--success);
+}
+.badge-job-archived {
+  background: rgba(139, 152, 165, 0.1);
+  color: var(--muted);
+}
+.badge-job-closed {
+  background: rgba(239, 68, 68, 0.12);
+  color: var(--danger);
+}
 .health-details {
   margin-top: 8px;
   font-size: 12px;

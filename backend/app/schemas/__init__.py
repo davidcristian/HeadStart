@@ -12,7 +12,7 @@ from app.schemas.credential import (
     CredentialRead,
     CredentialUpdate,
 )
-from app.schemas.job import JobRead
+from app.schemas.job import JobRead, JobUpdate
 from app.schemas.meta import HealthRead, MessageRead, MetaRead
 from app.schemas.search import SearchCreate, SearchRead, SearchUpdate
 from app.schemas.source import SourceCreate, SourceRead, SourceUpdate
@@ -24,6 +24,7 @@ __all__ = [
     "CredentialUpdate",
     "HealthRead",
     "JobRead",
+    "JobUpdate",
     "LoginRequest",
     "MessageRead",
     "MetaRead",

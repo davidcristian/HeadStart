@@ -27,6 +27,7 @@ describe("JobsPage", () => {
     await waitFor(() => expect(screen.getByText("Software Engineer")).toBeInTheDocument());
     expect(screen.getByText("ACME")).toBeInTheDocument();
     expect(screen.getByText("Remote")).toBeInTheDocument();
+    expect(screen.getByText("New", { selector: ".badge-job-new" })).toBeInTheDocument();
   });
 
   it("filters jobs by search", async () => {
@@ -35,12 +36,38 @@ describe("JobsPage", () => {
     render(<JobsPage />);
 
     await waitFor(() => expect(screen.getByText("Software Engineer")).toBeInTheDocument());
-    expect(mockApi.listJobs).toHaveBeenCalledWith(undefined);
+    expect(mockApi.listJobs).toHaveBeenCalledWith(undefined, undefined);
 
-    fireEvent.change(screen.getByRole("combobox"), {
+    const selects = screen.getAllByRole("combobox");
+    fireEvent.change(selects[1], {
       target: { value: String(sampleSearch.id) },
     });
 
-    await waitFor(() => expect(mockApi.listJobs).toHaveBeenCalledWith(sampleSearch.id));
+    await waitFor(() => expect(mockApi.listJobs).toHaveBeenCalledWith(sampleSearch.id, undefined));
+  });
+
+  it("filters jobs by status", async () => {
+    mockApi.listJobs.mockResolvedValue([{ ...sampleJob, status: "applied" }]);
+    render(<JobsPage />);
+
+    await waitFor(() => expect(screen.getByText("Applied")).toBeInTheDocument());
+
+    fireEvent.change(screen.getAllByRole("combobox")[0], {
+      target: { value: "applied" },
+    });
+
+    await waitFor(() => expect(mockApi.listJobs).toHaveBeenCalledWith(undefined, "applied"));
+  });
+
+  it("updates job status from row actions", async () => {
+    mockApi.listJobs.mockResolvedValue([sampleJob]);
+    render(<JobsPage />);
+
+    await waitFor(() => expect(screen.getByText("Software Engineer")).toBeInTheDocument());
+    fireEvent.click(screen.getByRole("button", { name: "Applied" }));
+
+    await waitFor(() =>
+      expect(mockApi.updateJob).toHaveBeenCalledWith(sampleJob.id, { status: "applied" }),
+    );
   });
 });

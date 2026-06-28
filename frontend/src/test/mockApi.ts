@@ -2,6 +2,7 @@
 
 import { vi } from "vitest";
 import type { Job, NotificationTarget, Search, Source } from "../types";
+import { sampleJob } from "./fixtures";
 
 const mockApi = vi.hoisted(() => ({
   meta: vi.fn(async () => ({
@@ -87,9 +88,14 @@ const mockApi = vi.hoisted(() => ({
     skipped: 0,
     filtered: 0,
     queued: 0,
+    closed: 0,
     error: null,
   })),
   listJobs: vi.fn(async (): Promise<Job[]> => []),
+  updateJob: vi.fn(async (_id: number, data: { status: string }) => ({
+    ...sampleJob,
+    status: data.status,
+  })),
   listTargets: vi.fn(async (): Promise<NotificationTarget[]> => []),
   createTarget: vi.fn(async (data: unknown) => ({
     id: 99,

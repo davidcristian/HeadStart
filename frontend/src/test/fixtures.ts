@@ -53,5 +53,6 @@ export const sampleJob: Job = {
   company: "ACME",
   location: "Remote",
   url: "https://example.test/jobs/1",
+  status: "new",
   first_seen_at: "2026-06-28T12:00:00Z",
 };

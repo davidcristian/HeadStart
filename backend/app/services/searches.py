@@ -87,6 +87,7 @@ class SearchService:
             skipped=result.skipped,
             filtered=result.filtered,
             queued=result.queued,
+            closed=result.closed,
             error=result.error,
         )
 

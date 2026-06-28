@@ -50,14 +50,16 @@ flowchart TD
 
 1. Load the search + its source + target (service).
 2. Resolve and run the scraper (`get_scraper(source.adapter_key).fetch(ctx)`).
-3. Apply the search's `filters` JSON to drop non-matching postings.
-4. Dedupe postings against `seen_job` for that search (by `external_id`).
-5. Skip notification when the normalized job URL was already seen in any of the
+3. Sync job lifecycle: mark `new`/`seen` rows missing from the scrape as `closed`;
+   reopen `closed` rows that reappear as `seen`. Applied/archived rows are untouched.
+4. Apply the search's `filters` JSON to drop non-matching postings.
+5. Dedupe postings against `seen_job` for that search (by `external_id`).
+6. Skip notification when the normalized job URL was already seen in any of the
    owner's other searches (cross-search dedup); still persist a `seen_job` row for
    this search so the Jobs feed stays complete.
-6. Send remaining new postings via `get_notifier(target.type).send(ctx, new_jobs)`,
+7. Send remaining new postings via `get_notifier(target.type).send(ctx, new_jobs)`,
    or queue them in `pending_digest` when `notification_mode` is `digest`.
-7. Persist `seen_job` rows and `delivery_log` entries (immediate mode only);
+8. Persist `seen_job` rows and `delivery_log` entries (immediate mode only);
    update schedule fields.
 
 A separate beat task `flush_due_digests` sends batched notifications for digest

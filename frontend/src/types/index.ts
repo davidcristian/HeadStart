@@ -79,6 +79,7 @@ export interface SearchRunResult {
   skipped: number;
   filtered: number;
   queued: number;
+  closed: number;
   error: string | null;
 }
 
@@ -92,6 +93,8 @@ export interface NotificationTarget {
 
 export type TargetCreate = Omit<NotificationTarget, "id" | "created_at">;
 
+export type JobStatus = "new" | "seen" | "applied" | "archived" | "closed";
+
 export interface Job {
   id: number;
   search_id: number;
@@ -100,6 +103,7 @@ export interface Job {
   company: string;
   location: string;
   url: string;
+  status: JobStatus;
   first_seen_at: string;
 }
 
