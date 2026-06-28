@@ -76,7 +76,7 @@ A saved query against a source, on an interval, delivering to a target.
 | source_id       | FK source |                                                |
 | name            | str       | e.g. "Google SWE Amsterdam"                        |
 | query_url       | str       | The search URL/endpoint                        |
-| filters         | JSON      | Arbitrary filters (keywords, location, ...)    |
+| filters         | JSON      | Post-scrape filters (see below)                |
 | config          | JSON      | Per-search scraper config overrides            |
 | interval_seconds| int       | Poll interval                                  |
 | target_id       | FK target | Where to notify                                |
@@ -84,6 +84,15 @@ A saved query against a source, on an interval, delivering to a target.
 | last_run_at     | datetime? | Set after each run                             |
 | last_error      | text?     | Most recent scrape failure message             |
 | next_run_at     | datetime  | Drives due-based scheduling/catch-up           |
+
+**`filters` JSON** — applied in the pipeline after scraping, before dedup:
+
+| Key | Type | Behavior |
+| --- | ---- | -------- |
+| `keywords` / `keywords_include` | string or list | All terms must appear in title, company, or location (case-insensitive) |
+| `keywords_exclude` | string or list | Exclude when any term appears in title, company, or location |
+| `location` | string or list | Location field must contain any of the terms |
+| `workplace` | string or list | `remote`, `hybrid`, or `onsite` — matches inferred workplace; unknown workplace passes |
 
 ### seen_job
 

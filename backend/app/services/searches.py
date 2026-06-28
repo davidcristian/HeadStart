@@ -83,6 +83,7 @@ class SearchService:
             notified=result.notified,
             failed=result.failed,
             skipped=result.skipped,
+            filtered=result.filtered,
             error=result.error,
         )
 

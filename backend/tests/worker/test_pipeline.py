@@ -306,3 +306,33 @@ def test_pipeline_cross_search_dedup_is_scoped_per_user(db_session: Session) -> 
 
     assert (result.new, result.notified, result.skipped) == (1, 1, 0)
     assert len(notifier.batches) == 2
+
+
+def test_pipeline_applies_search_filters(db_session: Session) -> None:
+    search = _make_search(db_session)
+    search.filters = {"keywords": "engineer", "keywords_exclude": "manager"}
+    db_session.flush()
+
+    scraper = FakeScraper(
+        [
+            JobPosting(
+                external_id="eng",
+                title="Backend Engineer",
+                company="ACME",
+                location="Amsterdam",
+                url="https://acme.test/eng",
+            ),
+            JobPosting(
+                external_id="mgr",
+                title="Engineering Manager",
+                company="ACME",
+                location="Amsterdam",
+                url="https://acme.test/mgr",
+            ),
+        ]
+    )
+    notifier = RecordingNotifier()
+    result = _pipeline(db_session, scraper, notifier).run(search.id)
+
+    assert (result.found, result.filtered, result.new, result.notified) == (2, 1, 1, 1)
+    assert [job.external_id for job in notifier.batches[0]] == ["eng"]

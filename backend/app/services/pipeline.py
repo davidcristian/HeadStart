@@ -1,4 +1,4 @@
-"""The per-search pipeline: scrape -> dedupe -> notify -> record -> reschedule.
+"""The per-search pipeline: scrape -> filter -> dedupe -> notify -> record -> reschedule.
 
 This is plain business logic with no Celery/HTTP framework coupling, so it can be
 unit-tested directly and driven by the worker. Scraper/notifier resolution is
@@ -25,6 +25,7 @@ from app.scrapers.http import HttpClient
 from app.scrapers.types import JobPosting
 from app.scrapers.url import normalize_job_url
 from app.services.credentials import CredentialService
+from app.services.posting_filters import apply_posting_filters
 from app.services.scheduling import next_run_from
 
 logger = get_logger(__name__)
@@ -41,6 +42,7 @@ class RunResult:
     notified: int = 0
     failed: int = 0
     skipped: int = 0
+    filtered: int = 0
     error: str | None = None
 
 
@@ -76,6 +78,7 @@ class PipelineService:
                 config={**search.source.default_config, **search.config},
             )
             result.found = len(postings)
+            postings, result.filtered = apply_posting_filters(postings, search.filters)
             new_postings = self._dedupe(search_id, postings)
             result.new = len(new_postings)
             to_notify, result.skipped = self._filter_cross_search(search.user_id, new_postings)

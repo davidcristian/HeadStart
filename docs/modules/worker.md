@@ -35,7 +35,8 @@ flowchart TD
   tick["beat tick (every N s)"] --> q{"search.next_run_at <= now\nand enabled?"}
   q -->|yes| enqueue["enqueue run_search(id)"]
   q -->|no| skip[skip]
-  enqueue --> scrape[scrape] --> dedupe[dedupe vs seen_job]
+  enqueue --> scrape[scrape] --> filter[apply search filters]
+  filter --> dedupe[dedupe vs seen_job]
   dedupe --> cross{"URL seen in another\nsearch for user?"}
   cross -->|yes| record_only[record seen_job only]
   cross -->|no| notify["notify new jobs"]
@@ -48,12 +49,13 @@ flowchart TD
 
 1. Load the search + its source + target (service).
 2. Resolve and run the scraper (`get_scraper(source.adapter_key).fetch(ctx)`).
-3. Dedupe postings against `seen_job` for that search (by `external_id`).
-4. Skip notification when the normalized job URL was already seen in any of the
+3. Apply the search's `filters` JSON to drop non-matching postings.
+4. Dedupe postings against `seen_job` for that search (by `external_id`).
+5. Skip notification when the normalized job URL was already seen in any of the
    owner's other searches (cross-search dedup); still persist a `seen_job` row for
    this search so the Jobs feed stays complete.
-5. Send remaining new postings via `get_notifier(target.type).send(ctx, new_jobs)`.
-6. Persist `seen_job` rows and `delivery_log` entries; update schedule fields.
+6. Send remaining new postings via `get_notifier(target.type).send(ctx, new_jobs)`.
+7. Persist `seen_job` rows and `delivery_log` entries; update schedule fields.
 
 Failures at any external step are caught, logged, and recorded; the worker keeps
 running.

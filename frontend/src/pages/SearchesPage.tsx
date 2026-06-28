@@ -70,6 +70,7 @@ export function SearchesPage() {
       } else {
         setNotice(
           `Found ${result.found}, ${result.new} new, ${result.notified} notified` +
+            (result.filtered ? `, ${result.filtered} filtered out` : "") +
             (result.skipped ? `, ${result.skipped} skipped (already notified)` : "") +
             (result.failed ? `, ${result.failed} delivery failure(s)` : "") +
             ".",
@@ -147,7 +148,10 @@ export function SearchesPage() {
           />
         </Field>
         <div className="form-grid">
-          <Field label="Filters (JSON)" hint='e.g. {"keywords": "engineer"}'>
+          <Field
+            label="Filters (JSON)"
+            hint='e.g. {"keywords": "engineer", "keywords_exclude": "manager", "location": "amsterdam", "workplace": "remote"}'
+          >
             <JsonEditor
               value={filters}
               onChange={(v, valid) => {

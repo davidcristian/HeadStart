@@ -23,9 +23,10 @@ def run_search(self: object, search_id: int) -> dict[str, object]:
     with session_scope() as session:
         result = PipelineService(session).run(search_id)
     logger.info(
-        "run_search %s: found=%d new=%d notified=%d failed=%d",
+        "run_search %s: found=%d filtered=%d new=%d notified=%d failed=%d",
         result.search_id,
         result.found,
+        result.filtered,
         result.new,
         result.notified,
         result.failed,
