@@ -100,7 +100,7 @@ export function SourcesPage() {
             />
           </Field>
         </div>
-        <Field label="Default config (JSON)" hint='e.g. {"board_token": "acme", "company": "ACME"}'>
+        <Field label="Default config (JSON)" hint='e.g. {"board_token": "acme", "company": "ACME"} or {"site": "acme", "company": "ACME"} for Lever'>
           <JsonEditor
             value={config}
             onChange={(v, valid) => {

@@ -1,0 +1,28 @@
+[
+  {
+    "id": "33538a2f-d27d-4a96-8f05-fa4b0e4d940e",
+    "text": "Senior Software Engineer",
+    "categories": {
+      "commitment": "Full-time",
+      "department": "Engineering",
+      "location": "Amsterdam, Netherlands",
+      "team": "Platform",
+      "allLocations": ["Amsterdam, Netherlands"]
+    },
+    "createdAt": 1719496800000,
+    "hostedUrl": "https://jobs.lever.co/acme/33538a2f-d27d-4a96-8f05-fa4b0e4d940e"
+  },
+  {
+    "id": "dbedd284-e008-4961-b75c-e70d284eab5a",
+    "text": "Staff Backend Engineer",
+    "categories": {
+      "commitment": "Full-time",
+      "department": "Engineering",
+      "location": "Remote - EU",
+      "team": "Platform",
+      "allLocations": ["Remote - EU"]
+    },
+    "createdAt": 1719403200000,
+    "hostedUrl": "https://jobs.lever.co/acme/dbedd284-e008-4961-b75c-e70d284eab5a"
+  }
+]

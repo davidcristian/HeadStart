@@ -5,7 +5,7 @@ import type { Job, NotificationTarget, Search, Source } from "../types";
 
 const mockApi = vi.hoisted(() => ({
   meta: vi.fn(async () => ({
-    scrapers: ["greenhouse", "generic_html", "playwright"],
+    scrapers: ["greenhouse", "lever", "generic_html", "playwright"],
     notifiers: ["ntfy"],
   })),
   listSources: vi.fn(async (): Promise<Source[]> => []),
