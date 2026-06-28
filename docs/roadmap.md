@@ -101,6 +101,29 @@ Pursue only if core alerting is solid and adapter coverage is good.
 
 ---
 
+## Phase 6 — Production SaaS
+
+Goal: turn JobNotifier from a self-hosted tool into a hosted product strangers can
+sign up for, pay for, and trust.
+
+| Item | Why | Notes |
+| ---- | --- | ----- |
+| Public marketing site | First impression and conversion; explain value before signup | Landing page with hero, features, screenshots/demo, FAQ, and clear CTA to register |
+| Pricing page | Users need to understand cost before committing | Tiered plans (e.g. free / pro / team), feature matrix, annual vs monthly toggle |
+| Billing & payments | Revenue and subscription lifecycle | Stripe (or similar): checkout, subscriptions, plan upgrades/downgrades, invoices, failed-payment handling, webhooks |
+| Legal pages | Required for a public SaaS; builds trust | Privacy Policy, Terms of Use, and cookie/consent notice where applicable |
+| Public vs app routing | Marketing and authenticated app should coexist cleanly | e.g. `/` landing + `/pricing` public; `/app/*` or subdomain for the logged-in product |
+| Signup & onboarding polish | Paid SaaS needs a smooth first-run path | Email verification, welcome flow, plan selection at signup, trial handling |
+| Plan limits & enforcement | Free tier and paid tiers need server-side guardrails | Per-plan caps on searches, sources, notification targets; enforce in services, not UI only |
+| Custom domain & branding | Hosted product polish | App on a real domain, consistent branding, transactional emails from the product domain |
+| GDPR / data compliance | EU users and enterprise buyers expect it | Data export, account deletion, retention policy, subprocessors list in privacy policy |
+
+**Done when:** a visitor can land on the site, understand the product, pick a plan,
+pay, sign up, and use the app under enforceable plan limits — with legal pages
+linked in the footer.
+
+---
+
 ## Suggested starting points
 
 **Personal use (one job seeker):**
