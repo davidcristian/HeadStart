@@ -31,8 +31,7 @@ const TYPE_HINTS: Record<string, string> = {
   ntfy: "For ntfy: server_url, topic, priority.",
   slack: "For Slack: webhook_url (incoming webhook URL from your Slack workspace).",
   discord: "For Discord: webhook_url (channel webhook URL from your Discord server).",
-  telegram:
-    "For Telegram: bot_token (from @BotFather) and chat_id (your user or group id).",
+  telegram: "For Telegram: bot_token (from @BotFather) and chat_id (your user or group id).",
 };
 
 export function TargetsPage() {

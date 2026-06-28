@@ -9,9 +9,14 @@ from app.core.config import settings
 
 
 def beat_schedule() -> dict[str, dict[str, object]]:
+    tick = float(settings.scheduler_tick_seconds)
     return {
         "enqueue-due-searches": {
             "task": "app.worker.tasks.enqueue_due_searches",
-            "schedule": float(settings.scheduler_tick_seconds),
-        }
+            "schedule": tick,
+        },
+        "flush-due-digests": {
+            "task": "app.worker.tasks.flush_due_digests",
+            "schedule": tick,
+        },
     }

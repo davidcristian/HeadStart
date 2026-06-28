@@ -45,8 +45,11 @@ export interface Search {
   filters: Json;
   config: Json;
   interval_seconds: number;
+  notification_mode: "immediate" | "digest";
+  digest_interval_seconds: number;
   enabled: boolean;
   last_run_at: string | null;
+  last_digest_at: string | null;
   last_error: string | null;
   next_run_at: string;
   created_at: string;
@@ -62,6 +65,8 @@ export type SearchCreate = Pick<
   | "filters"
   | "config"
   | "interval_seconds"
+  | "notification_mode"
+  | "digest_interval_seconds"
   | "enabled"
 >;
 
@@ -73,6 +78,7 @@ export interface SearchRunResult {
   failed: number;
   skipped: number;
   filtered: number;
+  queued: number;
   error: string | null;
 }
 

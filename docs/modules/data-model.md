@@ -79,9 +79,12 @@ A saved query against a source, on an interval, delivering to a target.
 | filters         | JSON      | Post-scrape filters (see below)                |
 | config          | JSON      | Per-search scraper config overrides            |
 | interval_seconds| int       | Poll interval                                  |
+| notification_mode | str     | `immediate` (default) or `digest`              |
+| digest_interval_seconds | int | Batch window when mode is `digest` (default 3600) |
 | target_id       | FK target | Where to notify                                |
 | enabled         | bool      |                                                |
 | last_run_at     | datetime? | Set after each run                             |
+| last_digest_at  | datetime? | Set after each digest flush                    |
 | last_error      | text?     | Most recent scrape failure message             |
 | next_run_at     | datetime  | Drives due-based scheduling/catch-up           |
 
@@ -112,6 +115,17 @@ dedup is also applied across a user's searches by normalized job URL (see
 | url           | str         |                                               |
 | first_seen_at | datetime    |                                               |
 |               |             | **Unique (search_id, external_id)**           |
+
+### pending_digest
+
+Jobs waiting to be included in the next batched digest notification for a search.
+
+| Column        | Type        | Notes                                         |
+| ------------- | ----------- | --------------------------------------------- |
+| id            | int PK      |                                               |
+| search_id     | FK search   |                                               |
+| seen_job_id   | FK seen_job | One queue row per job (**unique**)            |
+| created_at    | datetime    | Used to anchor the first digest window        |
 
 ### notification_target
 

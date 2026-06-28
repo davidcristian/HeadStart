@@ -1,7 +1,7 @@
 """Search request/response schemas."""
 
 from datetime import datetime
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -16,6 +16,8 @@ class SearchBase(BaseModel):
     filters: dict[str, Any] = Field(default_factory=dict)
     config: dict[str, Any] = Field(default_factory=dict)
     interval_seconds: int = Field(default=300, ge=10)
+    notification_mode: Literal["immediate", "digest"] = "immediate"
+    digest_interval_seconds: int = Field(default=3600, ge=60)
     enabled: bool = True
 
 
@@ -30,6 +32,8 @@ class SearchUpdate(BaseModel):
     filters: dict[str, Any] | None = None
     config: dict[str, Any] | None = None
     interval_seconds: int | None = Field(default=None, ge=10)
+    notification_mode: Literal["immediate", "digest"] | None = None
+    digest_interval_seconds: int | None = Field(default=None, ge=60)
     enabled: bool | None = None
 
 
@@ -38,6 +42,7 @@ class SearchRead(SearchBase):
 
     id: int
     last_run_at: datetime | None
+    last_digest_at: datetime | None = None
     last_error: str | None = None
     next_run_at: datetime
     created_at: datetime
@@ -54,4 +59,5 @@ class SearchRunRead(BaseModel):
     failed: int = 0
     skipped: int = 0
     filtered: int = 0
+    queued: int = 0
     error: str | None = None

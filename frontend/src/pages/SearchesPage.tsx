@@ -20,6 +20,8 @@ export function SearchesPage() {
   const [targetId, setTargetId] = useState<number | "">("");
   const [queryUrl, setQueryUrl] = useState("");
   const [interval, setInterval] = useState(900);
+  const [notificationMode, setNotificationMode] = useState<"immediate" | "digest">("immediate");
+  const [digestInterval, setDigestInterval] = useState(3600);
   const [filters, setFilters] = useState<Json>({});
   const [config, setConfig] = useState<Json>({});
   const [jsonValid, setJsonValid] = useState(true);
@@ -43,6 +45,8 @@ export function SearchesPage() {
         filters,
         config,
         interval_seconds: interval,
+        notification_mode: notificationMode,
+        digest_interval_seconds: digestInterval,
         enabled: true,
       });
       setName("");
@@ -70,6 +74,7 @@ export function SearchesPage() {
       } else {
         setNotice(
           `Found ${result.found}, ${result.new} new, ${result.notified} notified` +
+            (result.queued ? `, ${result.queued} queued for digest` : "") +
             (result.filtered ? `, ${result.filtered} filtered out` : "") +
             (result.skipped ? `, ${result.skipped} skipped (already notified)` : "") +
             (result.failed ? `, ${result.failed} delivery failure(s)` : "") +
@@ -136,6 +141,25 @@ export function SearchesPage() {
               onChange={(e) => setInterval(Number(e.target.value))}
             />
           </Field>
+          <Field label="Notification mode">
+            <select
+              value={notificationMode}
+              onChange={(e) => setNotificationMode(e.target.value as "immediate" | "digest")}
+            >
+              <option value="immediate">Immediate (one alert per job)</option>
+              <option value="digest">Digest (batched summary)</option>
+            </select>
+          </Field>
+          {notificationMode === "digest" && (
+            <Field label="Digest interval (seconds)" hint="How often to send a batched summary.">
+              <input
+                type="number"
+                min={60}
+                value={digestInterval}
+                onChange={(e) => setDigestInterval(Number(e.target.value))}
+              />
+            </Field>
+          )}
         </div>
         <Field
           label="Query URL"
@@ -186,8 +210,9 @@ export function SearchesPage() {
               <tr>
                 <th>Name</th>
                 <th>Source</th>
-                <th>Notify</th>
+                <th>Target</th>
                 <th>Every</th>
+                <th>Delivery</th>
                 <th>Last run</th>
                 <th>Health</th>
                 <th>Status</th>
@@ -204,6 +229,11 @@ export function SearchesPage() {
                   <td>{sourceName(s.source_id)}</td>
                   <td>{targetName(s.target_id)}</td>
                   <td>{s.interval_seconds}s</td>
+                  <td>
+                    {s.notification_mode === "digest"
+                      ? `Digest every ${s.digest_interval_seconds}s`
+                      : "Immediate"}
+                  </td>
                   <td>
                     <SearchLastRun at={s.last_run_at} />
                   </td>

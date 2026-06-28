@@ -9,15 +9,16 @@ Celery provides the scheduler (beat) and the workers. The worker package is
 
 - `celery_app.py` — the Celery application + config (broker/result backend from
   settings).
-- `schedule.py` — the beat tick: find due searches and enqueue them.
-- `tasks.py` — `run_search(search_id)`: the per-search pipeline.
+- `schedule.py` — beat ticks: enqueue due searches and flush digest queues.
+- `tasks.py` — `run_search(search_id)` and `flush_due_digests()`.
 
 ## Due-based scheduling with catch-up
 
 Beat runs every `SCHEDULER_TICK_SECONDS`. On each tick (and once on startup) it:
 
-1. Selects searches where `enabled = true AND next_run_at <= now`.
-2. Enqueues `run_search` for each.
+1. Selects searches where `enabled = true AND next_run_at <= now` and enqueues
+   `run_search` for each.
+2. Flushes digest queues whose `digest_interval_seconds` has elapsed.
 
 Each search carries `interval_seconds`, `last_run_at`, `next_run_at`.
 
@@ -39,9 +40,9 @@ flowchart TD
   filter --> dedupe[dedupe vs seen_job]
   dedupe --> cross{"URL seen in another\nsearch for user?"}
   cross -->|yes| record_only[record seen_job only]
-  cross -->|no| notify["notify new jobs"]
+  cross -->|no| notify["notify new jobs\n(or queue for digest)"]
   record_only --> reschedule
-  notify --> record["write seen_job + delivery_log"]
+  notify --> record["write seen_job + delivery_log\n(or pending_digest)"]
   record --> reschedule["last_run_at=now; next_run_at=now+interval"]
 ```
 
@@ -54,8 +55,14 @@ flowchart TD
 5. Skip notification when the normalized job URL was already seen in any of the
    owner's other searches (cross-search dedup); still persist a `seen_job` row for
    this search so the Jobs feed stays complete.
-6. Send remaining new postings via `get_notifier(target.type).send(ctx, new_jobs)`.
-7. Persist `seen_job` rows and `delivery_log` entries; update schedule fields.
+6. Send remaining new postings via `get_notifier(target.type).send(ctx, new_jobs)`,
+   or queue them in `pending_digest` when `notification_mode` is `digest`.
+7. Persist `seen_job` rows and `delivery_log` entries (immediate mode only);
+   update schedule fields.
+
+A separate beat task `flush_due_digests` sends batched notifications for digest
+searches whose interval has elapsed, then clears the queue and sets
+`last_digest_at`.
 
 Failures at any external step are caught, logged, and recorded; the worker keeps
 running.

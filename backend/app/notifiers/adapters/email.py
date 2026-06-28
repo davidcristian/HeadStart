@@ -14,6 +14,7 @@ import smtplib
 from app.core.email import SmtpNotConfiguredError, send_email
 from app.core.logging import get_logger
 from app.notifiers.base import Notifier, register_notifier
+from app.notifiers.digest_format import digest_plain_body, digest_title
 from app.notifiers.types import DeliveryResult, NotifyContext
 from app.scrapers.types import JobPosting
 
@@ -30,10 +31,36 @@ class EmailNotifier(Notifier):
             raise ValueError("email target requires config.to")
 
         recipient = str(to).strip()
+        if ctx.digest:
+            return self._send_digest(recipient, ctx, jobs)
+
         results: list[DeliveryResult] = []
         for job in jobs:
             results.append(self._send_one(recipient, job))
         return results
+
+    def _send_digest(
+        self, recipient: str, ctx: NotifyContext, jobs: list[JobPosting]
+    ) -> list[DeliveryResult]:
+        if not jobs:
+            return []
+        subject = digest_title(len(jobs), ctx.search_name)
+        body = digest_plain_body(jobs)
+        try:
+            send_email(to=recipient, subject=subject, body=body)
+            return [DeliveryResult(external_id=job.external_id, status="sent") for job in jobs]
+        except SmtpNotConfiguredError as exc:
+            logger.warning("email digest send skipped: %s", exc)
+            return [
+                DeliveryResult(external_id=job.external_id, status="failed", error=str(exc))
+                for job in jobs
+            ]
+        except smtplib.SMTPException as exc:
+            logger.warning("email digest send failed: %s", exc)
+            return [
+                DeliveryResult(external_id=job.external_id, status="failed", error=str(exc))
+                for job in jobs
+            ]
 
     def _send_one(self, recipient: str, job: JobPosting) -> DeliveryResult:
         subject = self._subject(job)

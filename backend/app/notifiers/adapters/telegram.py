@@ -17,6 +17,7 @@ import httpx
 
 from app.core.logging import get_logger
 from app.notifiers.base import Notifier, register_notifier
+from app.notifiers.digest_format import digest_text_lines, digest_title
 from app.notifiers.types import DeliveryResult, NotifyContext
 from app.scrapers.types import JobPosting
 
@@ -45,10 +46,30 @@ class TelegramNotifier(Notifier):
         chat = str(chat_id).strip()
         url = f"{_TELEGRAM_API}/bot{token}/sendMessage"
 
+        if ctx.digest:
+            return self._send_digest(url, chat, ctx, jobs)
+
         results: list[DeliveryResult] = []
         for job in jobs:
             results.append(self._send_one(url, chat, job))
         return results
+
+    def _send_digest(
+        self, api_url: str, chat_id: str, ctx: NotifyContext, jobs: list[JobPosting]
+    ) -> list[DeliveryResult]:
+        if not jobs:
+            return []
+        payload = self._digest_payload(chat_id, ctx, jobs)
+        try:
+            resp = self._client.post(api_url, json=payload)
+            resp.raise_for_status()
+            return [DeliveryResult(external_id=job.external_id, status="sent") for job in jobs]
+        except httpx.HTTPError as exc:
+            logger.warning("telegram digest send failed: %s", exc)
+            return [
+                DeliveryResult(external_id=job.external_id, status="failed", error=str(exc))
+                for job in jobs
+            ]
 
     def _send_one(self, api_url: str, chat_id: str, job: JobPosting) -> DeliveryResult:
         payload = self._payload(chat_id, job)
@@ -83,6 +104,26 @@ class TelegramNotifier(Notifier):
             safe_url = html.escape(job.url, quote=True)
             lines.append(f'<a href="{safe_url}">Apply</a>')
         return "\n".join(lines)
+
+    @staticmethod
+    def _digest_payload(chat_id: str, ctx: NotifyContext, jobs: list[JobPosting]) -> dict[str, Any]:
+        headline = html.escape(digest_title(len(jobs), ctx.search_name))
+        lines = [f"<b>{headline}</b>", ""]
+        for block in digest_text_lines(jobs):
+            parts = block.split("\n", 1)
+            title = html.escape(parts[0])
+            url = parts[1].strip() if len(parts) > 1 else ""
+            if url:
+                safe_url = html.escape(url, quote=True)
+                lines.append(f'• {title}\n  <a href="{safe_url}">Apply</a>')
+            else:
+                lines.append(f"• {title}")
+        return {
+            "chat_id": chat_id,
+            "text": "\n".join(lines),
+            "parse_mode": "HTML",
+            "disable_web_page_preview": False,
+        }
 
     def close(self) -> None:
         if self._owns_client:

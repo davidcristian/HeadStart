@@ -11,6 +11,7 @@ from app.core.db import session_scope
 from app.core.logging import get_logger
 from app.models.base import utcnow
 from app.repositories.searches import SearchRepository
+from app.services.digest import DigestService
 from app.services.pipeline import PipelineService
 from app.worker.celery_app import celery_app
 
@@ -23,12 +24,13 @@ def run_search(self: object, search_id: int) -> dict[str, object]:
     with session_scope() as session:
         result = PipelineService(session).run(search_id)
     logger.info(
-        "run_search %s: found=%d filtered=%d new=%d notified=%d failed=%d",
+        "run_search %s: found=%d filtered=%d new=%d notified=%d queued=%d failed=%d",
         result.search_id,
         result.found,
         result.filtered,
         result.new,
         result.notified,
+        result.queued,
         result.failed,
     )
     return asdict(result)
@@ -52,3 +54,14 @@ def enqueue_due_searches() -> int:
     if due_ids:
         logger.info("enqueued %d due search(es): %s", len(due_ids), due_ids)
     return len(due_ids)
+
+
+@celery_app.task(name="app.worker.tasks.flush_due_digests")
+def flush_due_digests() -> int:
+    """Beat tick: send batched digest notifications whose interval has elapsed."""
+    with session_scope() as session:
+        flushed = DigestService(session).flush_due(utcnow())
+
+    if flushed:
+        logger.info("flushed %d digest search(es)", flushed)
+    return flushed

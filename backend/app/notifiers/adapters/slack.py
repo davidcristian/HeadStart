@@ -15,6 +15,7 @@ import httpx
 
 from app.core.logging import get_logger
 from app.notifiers.base import Notifier, register_notifier
+from app.notifiers.digest_format import digest_text_lines, digest_title
 from app.notifiers.types import DeliveryResult, NotifyContext
 from app.scrapers.types import JobPosting
 
@@ -35,10 +36,30 @@ class SlackNotifier(Notifier):
             raise ValueError("slack target requires config.webhook_url")
 
         url = str(webhook_url).strip()
+        if ctx.digest:
+            return self._send_digest(url, ctx, jobs)
+
         results: list[DeliveryResult] = []
         for job in jobs:
             results.append(self._send_one(url, job))
         return results
+
+    def _send_digest(
+        self, webhook_url: str, ctx: NotifyContext, jobs: list[JobPosting]
+    ) -> list[DeliveryResult]:
+        if not jobs:
+            return []
+        payload = self._digest_payload(ctx, jobs)
+        try:
+            resp = self._client.post(webhook_url, json=payload)
+            resp.raise_for_status()
+            return [DeliveryResult(external_id=job.external_id, status="sent") for job in jobs]
+        except httpx.HTTPError as exc:
+            logger.warning("slack digest send failed: %s", exc)
+            return [
+                DeliveryResult(external_id=job.external_id, status="failed", error=str(exc))
+                for job in jobs
+            ]
 
     def _send_one(self, webhook_url: str, job: JobPosting) -> DeliveryResult:
         payload = self._payload(job)
@@ -61,6 +82,24 @@ class SlackNotifier(Notifier):
                     "text": {"type": "mrkdwn", "text": text},
                 }
             ],
+        }
+
+    @staticmethod
+    def _digest_payload(ctx: NotifyContext, jobs: list[JobPosting]) -> dict[str, Any]:
+        headline = digest_title(len(jobs), ctx.search_name)
+        lines = [headline, ""]
+        for block in digest_text_lines(jobs):
+            parts = block.split("\n", 1)
+            title = parts[0]
+            url = parts[1].strip() if len(parts) > 1 else ""
+            if url:
+                lines.append(f"• {title}\n  <{url}|Apply>")
+            else:
+                lines.append(f"• {title}")
+        text = "\n".join(lines)
+        return {
+            "text": text,
+            "blocks": [{"type": "section", "text": {"type": "mrkdwn", "text": text}}],
         }
 
     @staticmethod

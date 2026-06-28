@@ -15,6 +15,7 @@ import httpx
 
 from app.core.logging import get_logger
 from app.notifiers.base import Notifier, register_notifier
+from app.notifiers.digest_format import digest_text_lines, digest_title
 from app.notifiers.types import DeliveryResult, NotifyContext
 from app.scrapers.types import JobPosting
 
@@ -37,10 +38,30 @@ class DiscordNotifier(Notifier):
             raise ValueError("discord target requires config.webhook_url")
 
         url = str(webhook_url).strip()
+        if ctx.digest:
+            return self._send_digest(url, ctx, jobs)
+
         results: list[DeliveryResult] = []
         for job in jobs:
             results.append(self._send_one(url, job))
         return results
+
+    def _send_digest(
+        self, webhook_url: str, ctx: NotifyContext, jobs: list[JobPosting]
+    ) -> list[DeliveryResult]:
+        if not jobs:
+            return []
+        payload = self._digest_payload(ctx, jobs)
+        try:
+            resp = self._client.post(webhook_url, json=payload)
+            resp.raise_for_status()
+            return [DeliveryResult(external_id=job.external_id, status="sent") for job in jobs]
+        except httpx.HTTPError as exc:
+            logger.warning("discord digest send failed: %s", exc)
+            return [
+                DeliveryResult(external_id=job.external_id, status="failed", error=str(exc))
+                for job in jobs
+            ]
 
     def _send_one(self, webhook_url: str, job: JobPosting) -> DeliveryResult:
         payload = self._payload(job)
@@ -73,6 +94,24 @@ class DiscordNotifier(Notifier):
         if job.url:
             embed["url"] = job.url
 
+        return {"embeds": [embed]}
+
+    @staticmethod
+    def _digest_payload(ctx: NotifyContext, jobs: list[JobPosting]) -> dict[str, Any]:
+        description_parts: list[str] = []
+        for block in digest_text_lines(jobs):
+            lines = block.split("\n")
+            headline = lines[0]
+            url = lines[1].strip() if len(lines) > 1 else ""
+            if url:
+                description_parts.append(f"• [{headline}]({url})")
+            else:
+                description_parts.append(f"• {headline}")
+        embed: dict[str, Any] = {
+            "title": digest_title(len(jobs), ctx.search_name),
+            "description": "\n".join(description_parts),
+            "color": _EMBED_COLOR,
+        }
         return {"embeds": [embed]}
 
     def close(self) -> None:

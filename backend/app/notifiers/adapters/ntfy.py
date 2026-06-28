@@ -19,6 +19,7 @@ import httpx
 
 from app.core.logging import get_logger
 from app.notifiers.base import Notifier, register_notifier
+from app.notifiers.digest_format import digest_plain_body, digest_title
 from app.notifiers.types import DeliveryResult, NotifyContext
 from app.scrapers.types import JobPosting
 
@@ -45,10 +46,42 @@ class NtfyNotifier(Notifier):
         priority = _PRIORITY_MAP.get(str(cfg.get("priority", "default")), 3)
         headers = self._auth_headers(cfg)
 
+        if ctx.digest:
+            return self._send_digest(server_url, topic, priority, headers, ctx, jobs)
+
         results: list[DeliveryResult] = []
         for job in jobs:
             results.append(self._send_one(server_url, topic, priority, headers, job))
         return results
+
+    def _send_digest(
+        self,
+        server_url: str,
+        topic: str,
+        priority: int,
+        headers: dict[str, str],
+        ctx: NotifyContext,
+        jobs: list[JobPosting],
+    ) -> list[DeliveryResult]:
+        if not jobs:
+            return []
+        payload: dict[str, Any] = {
+            "topic": topic,
+            "title": digest_title(len(jobs), ctx.search_name),
+            "message": digest_plain_body(jobs),
+            "priority": priority,
+            "tags": ["briefcase"],
+        }
+        try:
+            resp = self._client.post(server_url, json=payload, headers=headers)
+            resp.raise_for_status()
+            return [DeliveryResult(external_id=job.external_id, status="sent") for job in jobs]
+        except httpx.HTTPError as exc:
+            logger.warning("ntfy digest send failed: %s", exc)
+            return [
+                DeliveryResult(external_id=job.external_id, status="failed", error=str(exc))
+                for job in jobs
+            ]
 
     def _send_one(
         self,

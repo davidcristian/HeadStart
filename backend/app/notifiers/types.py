@@ -10,6 +10,8 @@ class NotifyContext(BaseModel):
 
     target_type: str
     config: dict[str, Any] = Field(default_factory=dict)
+    digest: bool = False
+    search_name: str | None = None
 
 
 class DeliveryResult(BaseModel):

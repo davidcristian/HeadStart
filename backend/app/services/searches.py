@@ -48,6 +48,8 @@ class SearchService:
             filters=data.filters,
             config=data.config,
             interval_seconds=data.interval_seconds,
+            notification_mode=data.notification_mode,
+            digest_interval_seconds=data.digest_interval_seconds,
             enabled=data.enabled,
             next_run_at=utcnow(),  # due immediately
         )
@@ -84,6 +86,7 @@ class SearchService:
             failed=result.failed,
             skipped=result.skipped,
             filtered=result.filtered,
+            queued=result.queued,
             error=result.error,
         )
 

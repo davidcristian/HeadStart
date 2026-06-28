@@ -25,6 +25,7 @@ from app.scrapers.http import HttpClient
 from app.scrapers.types import JobPosting
 from app.scrapers.url import normalize_job_url
 from app.services.credentials import CredentialService
+from app.services.digest import DigestService
 from app.services.posting_filters import apply_posting_filters
 from app.services.scheduling import next_run_from
 
@@ -43,6 +44,7 @@ class RunResult:
     failed: int = 0
     skipped: int = 0
     filtered: int = 0
+    queued: int = 0
     error: str | None = None
 
 
@@ -58,6 +60,7 @@ class PipelineService:
         self.searches = SearchRepository(session)
         self.seen_jobs = SeenJobRepository(session)
         self.credentials = CredentialService(session)
+        self.digest = DigestService(session, notifier_factory=notifier_factory)
         self._scraper_factory = scraper_factory
         self._notifier_factory = notifier_factory
 
@@ -84,8 +87,11 @@ class PipelineService:
             to_notify, result.skipped = self._filter_cross_search(search.user_id, new_postings)
             seen_rows = self._persist_new(search_id, new_postings)
             if to_notify:
-                sent, failed = self._notify(search, to_notify, seen_rows)
-                result.notified, result.failed = sent, failed
+                if search.notification_mode == "digest":
+                    result.queued = self._queue_digest(search_id, to_notify, seen_rows)
+                else:
+                    sent, failed = self._notify(search, to_notify, seen_rows)
+                    result.notified, result.failed = sent, failed
         except Exception as exc:  # adapters/network are untrusted; never crash the worker
             logger.exception("run_search %s failed: %s", search_id, exc)
             result.error = str(exc)
@@ -175,6 +181,19 @@ class PipelineService:
             self.seen_jobs.add(row)
             rows[posting.external_id] = row
         return rows
+
+    def _queue_digest(
+        self,
+        search_id: int,
+        postings: list[JobPosting],
+        seen_rows: dict[str, SeenJob],
+    ) -> int:
+        seen_job_ids = [
+            seen_rows[posting.external_id].id
+            for posting in postings
+            if posting.external_id in seen_rows
+        ]
+        return self.digest.queue(search_id, seen_job_ids)
 
     def _notify(
         self,

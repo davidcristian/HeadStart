@@ -12,6 +12,8 @@ adapter. Built-in channels: `discord`, `email`, `ntfy`, `slack`, and `telegram`.
 class NotifyContext(BaseModel):
     target_type: str      # e.g. "ntfy"
     config: dict          # channel config from the NotificationTarget
+    digest: bool = False  # when True, send one batched summary message
+    search_name: str | None = None
 
 # app/notifiers/base.py
 class Notifier(ABC):
@@ -38,6 +40,7 @@ For each new job it POSTs to `{server_url}/{topic}` with headers:
 - `Click`: the job URL (tap-through)
 
 Sends are best-effort per job and recorded in `delivery_log` with status/error.
+In digest mode, one batched push lists every new job in the window.
 
 ## email adapter
 
@@ -48,7 +51,17 @@ plain-text email per new job with subject `"<title> @ <company>"` and body
 lines for company, location, and apply URL.
 
 When SMTP is not configured, deliveries are recorded as `failed` with a clear
-error (unlike password reset, which logs the link in dev).
+error (unlike password reset, which logs the link in dev). Digest mode sends
+one email listing all jobs in the batch.
+
+## Digest mode
+
+Set a search's `notification_mode` to `digest` and choose
+`digest_interval_seconds` (minimum 60). New jobs queue in `pending_digest`;
+the beat task `flush_due_digests` sends one batched message per search when the
+interval elapses. Every adapter formats a summary title (e.g. `5 new jobs —
+Google SWE`) and lists each posting. `delivery_log` still records one row per
+job.
 
 ## slack adapter
 
@@ -57,7 +70,7 @@ error (unlike password reset, which logs the link in dev).
 Posts one Slack message per new job via an [incoming webhook](https://api.slack.com/messaging/webhooks).
 Create the webhook in your Slack workspace (Apps → Incoming Webhooks), then paste
 the URL into the target config. Messages use mrkdwn with title, company,
-location, and an Apply link.
+location, and an Apply link. Digest mode sends one message listing all jobs.
 
 ## discord adapter
 
@@ -66,7 +79,8 @@ location, and an Apply link.
 Posts one Discord message per new job via a [channel webhook](https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks).
 Create the webhook in your server (Server Settings → Integrations → Webhooks),
 then paste the URL into the target config. Messages use a rich embed with title,
-company, location, and a clickable apply link.
+company, location, and a clickable apply link. Digest mode uses one embed with
+a bullet list.
 
 ## telegram adapter
 
@@ -75,7 +89,8 @@ company, location, and a clickable apply link.
 Posts one Telegram message per new job via the [Bot API](https://core.telegram.org/bots/api).
 Create a bot with [@BotFather](https://t.me/BotFather), send `/start` to it (or add it to a
 group), then use your numeric chat id in config. Messages use HTML formatting with title,
-company, location, and an Apply link.
+company, location, and an Apply link. Digest mode sends one HTML message listing
+all jobs.
 
 ## Adding a channel
 
