@@ -1,6 +1,8 @@
 /** Typed API endpoints. One function per backend route. */
 
 import type {
+  AdminStats,
+  AdminUser,
   CredentialCreate,
   Health,
   Job,
@@ -58,6 +60,12 @@ export const api = {
       skipAuth: true,
     }),
   me: () => request<User>("/api/v1/auth/me"),
+
+  // admin
+  listAdminUsers: () => request<AdminUser[]>("/api/v1/admin/users"),
+  updateAdminUser: (id: number, data: Partial<Pick<AdminUser, "is_active" | "is_admin">>) =>
+    request<AdminUser>(`/api/v1/admin/users/${id}`, { method: "PATCH", body: data }),
+  getAdminStats: () => request<AdminStats>("/api/v1/admin/stats"),
 
   // sources
   listSources: () => request<Source[]>("/api/v1/sources"),

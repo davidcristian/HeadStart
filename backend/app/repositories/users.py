@@ -27,6 +27,31 @@ class UserRepository:
         return user
 
     def update_password(self, user: User, password_hash: str) -> User:
+        """Update the stored password hash for a user."""
         user.password_hash = password_hash
+        self.session.flush()
+        return user
+
+    def list_all(self) -> list[User]:
+        """Return every user ordered by id (admin listing)."""
+        return list(self.session.scalars(select(User).order_by(User.id)))
+
+    def count_admins(self) -> int:
+        """Count users with admin privileges."""
+        return int(
+            self.session.scalar(
+                select(func.count()).select_from(User).where(User.is_admin.is_(True))
+            )
+            or 0
+        )
+
+    def update_flags(
+        self, user: User, *, is_active: bool | None = None, is_admin: bool | None = None
+    ) -> User:
+        """Patch admin-managed account flags."""
+        if is_active is not None:
+            user.is_active = is_active
+        if is_admin is not None:
+            user.is_admin = is_admin
         self.session.flush()
         return user

@@ -2,11 +2,12 @@
 
 from fastapi import APIRouter
 
-from app.api.v1 import auth, credentials, health, jobs, searches, sources, targets
+from app.api.v1 import admin, auth, credentials, health, jobs, searches, sources, targets
 
 api_router = APIRouter()
 api_router.include_router(health.router, tags=["meta"])
 api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
+api_router.include_router(admin.router, prefix="/admin", tags=["admin"])
 api_router.include_router(sources.router, prefix="/sources", tags=["sources"])
 api_router.include_router(searches.router, prefix="/searches", tags=["searches"])
 api_router.include_router(jobs.router, prefix="/jobs", tags=["jobs"])

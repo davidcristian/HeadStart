@@ -411,3 +411,31 @@ code {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* ---- Admin ---- */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+.stat-tile {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.stat-value {
+  font-size: 24px;
+  font-weight: 600;
+}
+.stat-label {
+  font-size: 12px;
+  color: var(--muted);
+}
+.error-text {
+  color: #fca5a5;
+  font-size: 13px;
+}

@@ -74,6 +74,14 @@ returns `NotFoundError` (404), never another user's data.
 empty (typical local dev), the API logs the reset URL at INFO instead of sending
 mail.
 
+## Admin
+
+Admins (`is_admin=true`, first registered user by default) can open `/admin` in
+the UI. The page lists all accounts (activate/deactivate, grant/revoke admin)
+and shows global scrape health: search counts, delivery success/failure totals,
+and recent scrape errors across all users. Admins cannot deactivate themselves,
+remove their own admin flag, or demote the last remaining admin account.
+
 ## Configuration
 
 `JWT_SECRET`, `ACCESS_TOKEN_EXPIRE_MINUTES`, `REFRESH_TOKEN_EXPIRE_DAYS`,

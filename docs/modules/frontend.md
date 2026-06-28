@@ -30,6 +30,7 @@ container (which also reverse-proxies `/api` to the backend in production).
 | Targets     | Manage notification targets (e.g. ntfy server/topic); send test  |
 | Credentials | Per-source encrypted cookies/headers for bot-walled sites        |
 | Settings    | API base URL, ntfy help                                          |
+| Admin       | User management + global scrape/delivery stats (admin only)      |
 
 ## Auth flow
 
@@ -53,7 +54,7 @@ container (which also reverse-proxies `/api` to the backend in production).
 - Vitest + React Testing Library + jsdom (`npm run test` / `make test --frontend`).
 - Page smoke tests live next to each page under `src/pages/*.test.tsx`; they mock
   `src/api/` via `src/test/mockApi.ts` and shared fixtures in `src/test/fixtures.ts`.
-- Covered pages: Sources, Searches, Targets, Jobs (render, empty state, list data,
+- Covered pages: Sources, Searches, Targets, Jobs, Admin (render, empty state, list data,
   and primary actions like create/delete/test/run).
 
 ## Dev

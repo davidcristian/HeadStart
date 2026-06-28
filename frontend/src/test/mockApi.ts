@@ -1,7 +1,7 @@
 /** Shared mocked API client for page smoke tests. */
 
 import { vi } from "vitest";
-import type { Job, NotificationTarget, Search, Source } from "../types";
+import type { AdminStats, AdminUser, Job, NotificationTarget, Search, Source, User } from "../types";
 import { sampleJob } from "./fixtures";
 
 const mockApi = vi.hoisted(() => ({
@@ -107,6 +107,34 @@ const mockApi = vi.hoisted(() => ({
   })),
   deleteTarget: vi.fn(async () => undefined),
   testTarget: vi.fn(async () => ({ external_id: "test-1", status: "sent", error: null })),
+  me: vi.fn(async (): Promise<User> => ({
+    id: 1,
+    email: "admin@example.com",
+    is_admin: true,
+    is_active: true,
+    created_at: "2026-06-28T00:00:00Z",
+  })),
+  listAdminUsers: vi.fn(async (): Promise<AdminUser[]> => []),
+  updateAdminUser: vi.fn(async (_id: number, data: unknown): Promise<AdminUser> => ({
+    id: 2,
+    email: "member@example.com",
+    is_admin: false,
+    is_active: true,
+    created_at: "2026-06-29T00:00:00Z",
+    ...(data as object),
+  })),
+  getAdminStats: vi.fn(async (): Promise<AdminStats> => ({
+    users_total: 0,
+    users_active: 0,
+    searches_total: 0,
+    searches_enabled: 0,
+    searches_with_error: 0,
+    sources_total: 0,
+    seen_jobs_total: 0,
+    deliveries_sent: 0,
+    deliveries_failed: 0,
+    recent_errors: [],
+  })),
 }));
 
 vi.mock("../api", () => ({ api: mockApi }));

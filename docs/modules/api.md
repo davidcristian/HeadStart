@@ -49,6 +49,9 @@ notification attempts with job title, URL, error, and timestamp).
 | POST   | `/credentials`        | Create encrypted site credentials        |
 | PATCH  | `/credentials/{id}`   | Update credential                        |
 | DELETE | `/credentials/{id}`   | Delete credential                        |
+| GET    | `/admin/users`        | List all users (admin only)              |
+| PATCH  | `/admin/users/{id}`   | Toggle `is_active` / `is_admin` (admin)  |
+| GET    | `/admin/stats`        | Global scrape/delivery aggregates (admin)|
 
 ## Auth
 
@@ -58,6 +61,9 @@ Multi-user with JWT. **Every** route except `/health` and the
 user** — including reads. Cross-user access returns 404. Full detail in
 [auth.md](auth.md); decisions in
 [adr/0004-multi-user-accounts.md](../adr/0004-multi-user-accounts.md).
+
+`/admin/*` routes additionally require `is_admin` and return 403 for non-admins.
+They expose cross-user data (user list, global stats) intentionally.
 
 ## Adding an endpoint
 

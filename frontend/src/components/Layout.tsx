@@ -15,6 +15,8 @@ const NAV = [
   { to: "/settings", label: "Settings" },
 ];
 
+const ADMIN_NAV = { to: "/admin", label: "Admin" };
+
 export function Layout() {
   const health = useAsync(() => api.health(), []);
   const { user, logout } = useAuth();
@@ -36,6 +38,14 @@ export function Layout() {
               {item.label}
             </NavLink>
           ))}
+          {user?.is_admin && (
+            <NavLink
+              to={ADMIN_NAV.to}
+              className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}
+            >
+              {ADMIN_NAV.label}
+            </NavLink>
+          )}
         </nav>
         <div className="sidebar-footer">
           {user && (
