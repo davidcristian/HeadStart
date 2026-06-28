@@ -56,7 +56,9 @@ def test_digest_flush_sends_batched_notification(db_session: Session) -> None:
     notifier = DigestRecordingNotifier()
     pipeline = PipelineService(
         db_session,
-        scraper_factory=lambda key, http=None: FakeScraper([_posting("1"), _posting("2")]),  # type: ignore[arg-type,return-value]
+        scraper_factory=lambda key, http=None, rate_limiter=None: FakeScraper(
+            [_posting("1"), _posting("2")]
+        ),  # type: ignore[arg-type,return-value]
         notifier_factory=lambda key: notifier,  # type: ignore[arg-type,return-value]
     )
     pipeline.run(search.id)
@@ -84,7 +86,7 @@ def test_digest_flush_waits_for_interval(db_session: Session) -> None:
     notifier = DigestRecordingNotifier()
     pipeline = PipelineService(
         db_session,
-        scraper_factory=lambda key, http=None: FakeScraper([_posting("1")]),  # type: ignore[arg-type,return-value]
+        scraper_factory=lambda key, http=None, rate_limiter=None: FakeScraper([_posting("1")]),  # type: ignore[arg-type,return-value]
         notifier_factory=lambda key: notifier,  # type: ignore[arg-type,return-value]
     )
     pipeline.run(search.id)
@@ -103,7 +105,7 @@ def test_digest_flush_uses_last_digest_at_as_anchor(db_session: Session) -> None
     notifier = DigestRecordingNotifier()
     PipelineService(
         db_session,
-        scraper_factory=lambda key, http=None: FakeScraper([_posting("9")]),  # type: ignore[arg-type,return-value]
+        scraper_factory=lambda key, http=None, rate_limiter=None: FakeScraper([_posting("9")]),  # type: ignore[arg-type,return-value]
         notifier_factory=lambda key: notifier,  # type: ignore[arg-type,return-value]
     ).run(search.id)
 

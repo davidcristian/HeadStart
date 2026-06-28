@@ -78,7 +78,7 @@ Goal: run comfortably for a small team or as a lightly hosted service.
 | Item | Why |
 | ---- | --- |
 | Metrics | Scrape latency, success rate, notification delivery rate (Prometheus / CloudWatch) |
-| Per-site rate limits | Configurable politeness per adapter; avoid retry storms |
+| ~~Per-site rate limits~~ | ~~Configurable politeness per adapter; avoid retry storms~~ | **Shipped:** `rate_limit_min_interval_seconds` in source/search config; per-adapter defaults in `app/scrapers/rate_limit.py` |
 | Admin panel | User management and global scrape stats (`is_admin` already exists) |
 | Hosted deploy polish | Streamline [deploying-to-aws.md](deploying-to-aws.md); consider a one-click template |
 | Playwright in production | Container sizing, browser pool, timeout/retry policy for JS-heavy sites |

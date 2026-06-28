@@ -62,3 +62,27 @@ Tests must use saved fixtures and never hit the network.
 `fetch` may raise; the worker catches, logs, and records the failure against the
 search without crashing. Be a polite client: real User-Agent, respect intervals,
 no retry storms.
+
+## Rate limiting
+
+Each adapter has a default minimum gap between outbound HTTP requests during one
+scrape. Override per source (or search) via `default_config` / `config`:
+
+```json
+{ "rate_limit_min_interval_seconds": 2.5 }
+```
+
+Set to `0` to disable throttling for that source. Resolution order: merged
+config value → adapter default → no limit.
+
+| Adapter        | Default interval (s) |
+| -------------- | -------------------- |
+| `greenhouse`   | 1.0                  |
+| `lever`        | 1.0                  |
+| `ashby`        | 1.0                  |
+| `generic_html` | 2.0                  |
+| `playwright`   | 5.0                  |
+
+Limits are enforced in the shared `HttpClient` (for multi-request scrapers) and
+at the start of a `playwright` fetch. Limits are per scrape run, not global
+across workers.

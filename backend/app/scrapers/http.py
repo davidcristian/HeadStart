@@ -8,6 +8,8 @@ from typing import Any
 
 import httpx
 
+from app.scrapers.rate_limit import RateLimiter
+
 DEFAULT_USER_AGENT = "JobNotifier/0.1 (+https://github.com/; polite job-posting watcher)"
 DEFAULT_TIMEOUT = 20.0
 
@@ -21,8 +23,10 @@ class HttpClient:
         headers: dict[str, str] | None = None,
         cookies: dict[str, str] | None = None,
         client: httpx.Client | None = None,
+        rate_limiter: RateLimiter | None = None,
     ) -> None:
         self._owns_client = client is None
+        self._rate_limiter = rate_limiter
         merged_headers = {"User-Agent": user_agent, **(headers or {})}
         self._client = client or httpx.Client(
             headers=merged_headers,
@@ -32,14 +36,20 @@ class HttpClient:
         )
 
     def get_json(self, url: str, **kwargs: Any) -> Any:
+        self._wait_rate_limit()
         resp = self._client.get(url, **kwargs)
         resp.raise_for_status()
         return resp.json()
 
     def get_text(self, url: str, **kwargs: Any) -> str:
+        self._wait_rate_limit()
         resp = self._client.get(url, **kwargs)
         resp.raise_for_status()
         return resp.text
+
+    def _wait_rate_limit(self) -> None:
+        if self._rate_limiter is not None:
+            self._rate_limiter.wait()
 
     def close(self) -> None:
         if self._owns_client:

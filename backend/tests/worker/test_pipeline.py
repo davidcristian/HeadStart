@@ -97,7 +97,7 @@ def _pipeline(
 ) -> PipelineService:
     return PipelineService(
         session,
-        scraper_factory=lambda key, http=None: scraper,  # type: ignore[arg-type,return-value]
+        scraper_factory=lambda key, http=None, rate_limiter=None: scraper,  # type: ignore[arg-type,return-value]
         notifier_factory=lambda key: notifier,  # type: ignore[arg-type,return-value]
     )
 
@@ -193,7 +193,7 @@ def test_pipeline_injects_owner_credentials(db_session: Session) -> None:
     scraper = FakeScraper([_posting("1")])
     received: dict[str, object] = {}
 
-    def factory(key: str, http: HttpClient | None = None) -> FakeScraper:
+    def factory(key: str, http: HttpClient | None = None, rate_limiter=None) -> FakeScraper:
         received["http"] = http
         return scraper
 
@@ -216,9 +216,10 @@ def test_pipeline_runs_without_credentials(db_session: Session) -> None:
     search = _make_search(db_session)
     scraper = FakeScraper([_posting("1")])
 
-    def factory(key: str, http: HttpClient | None = None) -> FakeScraper:
-        # No credential configured -> no HttpClient override.
-        assert http is None
+    def factory(key: str, http: HttpClient | None = None, rate_limiter=None) -> FakeScraper:
+        # Greenhouse has a default rate limit, so an HttpClient is still built.
+        assert http is not None
+        assert rate_limiter is not None
         return scraper
 
     PipelineService(
@@ -239,7 +240,7 @@ def test_pipeline_records_last_error(db_session: Session) -> None:
     search = _make_search(db_session)
     pipeline = PipelineService(
         db_session,
-        scraper_factory=lambda key, http=None: FailingScraper(),  # type: ignore[arg-type,return-value]
+        scraper_factory=lambda key, http=None, rate_limiter=None: FailingScraper(),  # type: ignore[arg-type,return-value]
         notifier_factory=lambda key: RecordingNotifier(),  # type: ignore[arg-type,return-value]
     )
 

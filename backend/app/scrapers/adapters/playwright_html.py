@@ -19,6 +19,8 @@ class PlaywrightScraper(Scraper):
     """Render a page with a headless browser, then extract postings."""
 
     def fetch(self, ctx: ScrapeContext) -> list[JobPosting]:
+        if self._rate_limiter is not None:
+            self._rate_limiter.wait()
         try:
             from playwright.sync_api import sync_playwright
         except ImportError as exc:  # pragma: no cover - exercised only without extra

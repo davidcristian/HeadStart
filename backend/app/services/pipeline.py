@@ -22,6 +22,7 @@ from app.repositories.searches import SearchRepository
 from app.scrapers import ScrapeContext, get_scraper
 from app.scrapers.base import Scraper
 from app.scrapers.http import HttpClient
+from app.scrapers.rate_limit import RateLimiter, resolve_min_interval
 from app.scrapers.types import JobPosting
 from app.scrapers.url import normalize_job_url
 from app.services.credentials import CredentialService
@@ -115,8 +116,13 @@ class PipelineService:
     ) -> list[JobPosting]:
         """Fetch postings once without persisting or notifying."""
         cookies, headers = self._resolve_credentials(user_id, source_id)
-        http = HttpClient(headers=headers, cookies=cookies) if (cookies or headers) else None
-        scraper = self._scraper_factory(adapter_key, http)
+        min_interval = resolve_min_interval(adapter_key, config)
+        rate_limiter = RateLimiter(min_interval) if min_interval > 0 else None
+        if cookies or headers or rate_limiter:
+            http = HttpClient(headers=headers, cookies=cookies, rate_limiter=rate_limiter)
+        else:
+            http = None
+        scraper = self._scraper_factory(adapter_key, http, rate_limiter)
         ctx = ScrapeContext(
             query_url=query_url,
             filters=filters,
