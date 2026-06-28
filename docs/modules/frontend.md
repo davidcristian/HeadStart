@@ -47,6 +47,14 @@ container (which also reverse-proxies `/api` to the backend in production).
 - The API client attaches the bearer token to every request automatically; pages
   never handle tokens directly.
 
+## Tests
+
+- Vitest + React Testing Library + jsdom (`npm run test` / `make test --frontend`).
+- Page smoke tests live next to each page under `src/pages/*.test.tsx`; they mock
+  `src/api/` via `src/test/mockApi.ts` and shared fixtures in `src/test/fixtures.ts`.
+- Covered pages: Sources, Searches, Targets, Jobs (render, empty state, list data,
+  and primary actions like create/delete/test/run).
+
 ## Dev
 
 - Standalone: `npm run dev` (Vite dev server on :5173, proxying to the API).
