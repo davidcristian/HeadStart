@@ -18,7 +18,7 @@ Goal: trust the system day-to-day before adding surface area.
 | Item | Why | Notes |
 | ---- | --- | ----- |
 | ~~Scrape health in the UI~~ | ~~Users need to know *why* a search stopped notifying~~ | **Shipped:** `last_run_at`, `last_error`, and recent `delivery_log` failures on the Searches page |
-| Validate-before-wait flows | Misconfigured selectors/URLs are painful to debug on a poll interval | Strengthen "run now" and add a "test source" path that returns sample postings without persisting |
+| ~~Validate-before-wait flows~~ | ~~Misconfigured selectors/URLs are painful to debug on a poll interval~~ | **Shipped:** `POST /sources/{id}/test` returns sample postings; "Run now" runs the pipeline synchronously and reports results |
 | Frontend test coverage | Backend is well tested; UI regressions are unguarded | Smoke tests for main CRUD pages (sources, searches, targets, jobs) |
 | Password reset | Table-stakes for sharing the app with others | Email-based reset flow; see [modules/auth.md](modules/auth.md) |
 

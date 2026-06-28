@@ -5,7 +5,13 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
 from app.models.user import User
-from app.schemas.source import SourceCreate, SourceRead, SourceUpdate
+from app.schemas.source import (
+    SourceCreate,
+    SourceRead,
+    SourceTestRequest,
+    SourceTestResult,
+    SourceUpdate,
+)
 from app.services.sources import SourceService
 
 router = APIRouter()
@@ -49,3 +55,14 @@ def delete_source(
     source_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)
 ) -> None:
     SourceService(db).delete(source_id, user.id)
+
+
+@router.post("/{source_id}/test", response_model=SourceTestResult)
+def test_source(
+    source_id: int,
+    data: SourceTestRequest | None = None,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> SourceTestResult:
+    """Scrape once and return sample postings without persisting or notifying."""
+    return SourceService(db).test_scrape(source_id, user.id, data or SourceTestRequest())

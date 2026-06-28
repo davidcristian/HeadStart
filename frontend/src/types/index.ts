@@ -14,6 +14,21 @@ export interface Source {
 
 export type SourceCreate = Omit<Source, "id" | "created_at">;
 
+export interface JobPostingPreview {
+  external_id: string;
+  title: string;
+  company: string;
+  location: string;
+  url: string;
+}
+
+export interface SourceTestResult {
+  ok: boolean;
+  found: number;
+  sample: JobPostingPreview[];
+  error: string | null;
+}
+
 export interface DeliveryFailure {
   job_title: string;
   job_url: string;
@@ -49,6 +64,15 @@ export type SearchCreate = Pick<
   | "interval_seconds"
   | "enabled"
 >;
+
+export interface SearchRunResult {
+  search_id: number;
+  found: number;
+  new: number;
+  notified: number;
+  failed: number;
+  error: string | null;
+}
 
 export interface NotificationTarget {
   id: number;

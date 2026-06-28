@@ -25,12 +25,13 @@ never touch the DB directly (services use repositories). See
 | GET    | `/sources/{id}`       | Get a source                             |
 | PATCH  | `/sources/{id}`       | Update a source                          |
 | DELETE | `/sources/{id}`       | Delete a source                          |
+| POST   | `/sources/{id}/test`  | Dry-run scrape; return sample postings   |
 | GET    | `/searches`           | List searches                            |
 | POST   | `/searches`           | Create a search (url, filters, interval, target) |
 | GET    | `/searches/{id}`      | Get a search                             |
 | PATCH  | `/searches/{id}`      | Update a search (enable/disable, retune) |
 | DELETE | `/searches/{id}`      | Delete a search                          |
-| POST   | `/searches/{id}/run`  | Trigger a search immediately             |
+| POST   | `/searches/{id}/run`  | Run the search pipeline immediately (returns found/new/notified counts) |
 
 `SearchRead` includes scrape health: `last_run_at`, `last_error` (most recent
 scrape failure), and `recent_delivery_failures` (up to five recent failed

@@ -7,6 +7,7 @@ injected to make testing trivial (no network).
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Any
 
 from sqlalchemy.orm import Session
 
@@ -64,7 +65,14 @@ class PipelineService:
 
         result = RunResult(search_id=search_id)
         try:
-            postings = self._scrape(search.source.adapter_key, search)
+            postings = self.scrape(
+                adapter_key=search.source.adapter_key,
+                user_id=search.user_id,
+                source_id=search.source_id,
+                query_url=search.query_url,
+                filters=search.filters,
+                config={**search.source.default_config, **search.config},
+            )
             result.found = len(postings)
             new_postings = self._dedupe(search_id, postings)
             result.new = len(new_postings)
@@ -79,23 +87,24 @@ class PipelineService:
             self._reschedule(search_id, last_error=result.error)
         return result
 
-    def _scrape(self, adapter_key: str, search: object) -> list[JobPosting]:
-        # config = source defaults overlaid with per-search overrides.
-        merged_config = {**search.source.default_config, **search.config}  # type: ignore[attr-defined]
-
-        # Inject the owner's per-site credential (cookies/headers) if present, so
-        # adapters can bypass bot/captcha walls without any adapter changes.
-        cookies, headers = self._resolve_credentials(
-            search.user_id,  # type: ignore[attr-defined]
-            search.source_id,  # type: ignore[attr-defined]
-        )
+    def scrape(
+        self,
+        *,
+        adapter_key: str,
+        user_id: int,
+        source_id: int,
+        query_url: str,
+        filters: dict[str, Any],
+        config: dict[str, Any],
+    ) -> list[JobPosting]:
+        """Fetch postings once without persisting or notifying."""
+        cookies, headers = self._resolve_credentials(user_id, source_id)
         http = HttpClient(headers=headers, cookies=cookies) if (cookies or headers) else None
         scraper = self._scraper_factory(adapter_key, http)
-
         ctx = ScrapeContext(
-            query_url=search.query_url,  # type: ignore[attr-defined]
-            filters=search.filters,  # type: ignore[attr-defined]
-            config=merged_config,
+            query_url=query_url,
+            filters=filters,
+            config=config,
             cookies=cookies,
             headers=headers,
         )

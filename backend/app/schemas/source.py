@@ -31,3 +31,30 @@ class SourceRead(SourceBase):
 
     id: int
     created_at: datetime
+
+
+class JobPostingPreview(BaseModel):
+    """A single scraped posting returned by a dry-run source test."""
+
+    external_id: str
+    title: str
+    company: str
+    location: str = ""
+    url: str
+
+
+class SourceTestRequest(BaseModel):
+    """Optional scrape overrides for POST /sources/{id}/test."""
+
+    query_url: str | None = Field(default=None, max_length=2000)
+    filters: dict[str, Any] | None = None
+    config: dict[str, Any] | None = None
+
+
+class SourceTestResult(BaseModel):
+    """Dry-run scrape result; nothing is persisted or notified."""
+
+    ok: bool
+    found: int = 0
+    sample: list[JobPostingPreview] = Field(default_factory=list)
+    error: str | None = None

@@ -1,5 +1,8 @@
+from unittest.mock import patch
+
 from fastapi.testclient import TestClient
 
+from app.services.pipeline import PipelineService, RunResult
 from tests.conftest import register_and_login
 
 
@@ -95,8 +98,40 @@ def test_search_lifecycle(client: TestClient, auth_headers: dict[str, str]) -> N
     assert body["recent_delivery_failures"] == []
     search_id = body["id"]
 
-    run = client.post(f"/api/v1/searches/{search_id}/run", headers=auth_headers)
-    assert run.status_code == 202
+    with patch.object(
+        PipelineService,
+        "run",
+        return_value=RunResult(search_id=search_id, found=0, new=0, notified=0, failed=0),
+    ):
+        run = client.post(f"/api/v1/searches/{search_id}/run", headers=auth_headers)
+    assert run.status_code == 200
+    assert run.json()["search_id"] == search_id
+
+
+def test_source_test_returns_sample(client: TestClient, auth_headers: dict[str, str]) -> None:
+    source_id = client.post(
+        "/api/v1/sources",
+        json={
+            "name": "ACME",
+            "adapter_key": "greenhouse",
+            "base_url": "https://boards.example.test/acme",
+            "default_config": {"board_token": "acme"},
+        },
+        headers=auth_headers,
+    ).json()["id"]
+
+    with patch.object(
+        PipelineService,
+        "scrape",
+        return_value=[],
+    ):
+        resp = client.post(f"/api/v1/sources/{source_id}/test", headers=auth_headers)
+
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["ok"] is True
+    assert body["found"] == 0
+    assert body["sample"] == []
 
 
 def test_search_rejects_missing_source(client: TestClient, auth_headers: dict[str, str]) -> None:

@@ -7,8 +7,17 @@ from sqlalchemy.orm import Session
 from app.core.exceptions import NotFoundError, ValidationError
 from app.models.source import Source
 from app.repositories.sources import SourceRepository
-from app.schemas.source import SourceCreate, SourceUpdate
+from app.schemas.source import (
+    JobPostingPreview,
+    SourceCreate,
+    SourceTestRequest,
+    SourceTestResult,
+    SourceUpdate,
+)
 from app.scrapers import available_scrapers
+from app.services.pipeline import PipelineService
+
+_PREVIEW_LIMIT = 5
 
 
 class SourceService:
@@ -49,6 +58,37 @@ class SourceService:
 
     def delete(self, source_id: int, user_id: int) -> None:
         self.repo.delete(self.get(source_id, user_id))
+
+    def test_scrape(
+        self, source_id: int, user_id: int, data: SourceTestRequest
+    ) -> SourceTestResult:
+        """Scrape once with the source config and return sample postings."""
+        source = self.get(source_id, user_id)
+        query_url = source.base_url if data.query_url is None else data.query_url
+        merged_config = {**source.default_config, **(data.config or {})}
+        filters = data.filters or {}
+        try:
+            postings = PipelineService(self.session).scrape(
+                adapter_key=source.adapter_key,
+                user_id=user_id,
+                source_id=source.id,
+                query_url=query_url,
+                filters=filters,
+                config=merged_config,
+            )
+        except Exception as exc:  # adapters/network are untrusted
+            return SourceTestResult(ok=False, error=str(exc))
+        sample = [
+            JobPostingPreview(
+                external_id=p.external_id,
+                title=p.title,
+                company=p.company,
+                location=p.location,
+                url=p.url,
+            )
+            for p in postings[:_PREVIEW_LIMIT]
+        ]
+        return SourceTestResult(ok=True, found=len(postings), sample=sample)
 
     @staticmethod
     def _validate_adapter(adapter_key: str) -> None:

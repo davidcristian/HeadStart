@@ -5,8 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
 from app.models.user import User
-from app.schemas.meta import MessageRead
-from app.schemas.search import SearchCreate, SearchRead, SearchUpdate
+from app.schemas.search import SearchCreate, SearchRead, SearchRunRead, SearchUpdate
 from app.services.searches import SearchService
 
 router = APIRouter()
@@ -52,10 +51,9 @@ def delete_search(
     SearchService(db).delete(search_id, user.id)
 
 
-@router.post("/{search_id}/run", response_model=MessageRead, status_code=status.HTTP_202_ACCEPTED)
+@router.post("/{search_id}/run", response_model=SearchRunRead)
 def run_search_now(
     search_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)
-) -> MessageRead:
-    """Make the search due now; the scheduler picks it up on the next tick."""
-    SearchService(db).mark_due(search_id, user.id)
-    return MessageRead(detail="Search marked due; it will run on the next scheduler tick.")
+) -> SearchRunRead:
+    """Run the search pipeline immediately and return scrape/notify results."""
+    return SearchService(db).run_now(search_id, user.id)

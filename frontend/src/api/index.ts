@@ -8,9 +8,11 @@ import type {
   NotificationTarget,
   Search,
   SearchCreate,
+  SearchRunResult,
   SiteCredential,
   Source,
   SourceCreate,
+  SourceTestResult,
   TargetCreate,
   TokenResponse,
   User,
@@ -44,6 +46,8 @@ export const api = {
   updateSource: (id: number, data: Partial<SourceCreate>) =>
     request<Source>(`/api/v1/sources/${id}`, { method: "PATCH", body: data }),
   deleteSource: (id: number) => request<void>(`/api/v1/sources/${id}`, { method: "DELETE" }),
+  testSource: (id: number) =>
+    request<SourceTestResult>(`/api/v1/sources/${id}/test`, { method: "POST", body: {} }),
 
   // searches
   listSearches: () => request<Search[]>("/api/v1/searches"),
@@ -53,7 +57,7 @@ export const api = {
     request<Search>(`/api/v1/searches/${id}`, { method: "PATCH", body: data }),
   deleteSearch: (id: number) => request<void>(`/api/v1/searches/${id}`, { method: "DELETE" }),
   runSearch: (id: number) =>
-    request<{ detail: string }>(`/api/v1/searches/${id}/run`, { method: "POST" }),
+    request<SearchRunResult>(`/api/v1/searches/${id}/run`, { method: "POST" }),
 
   // jobs
   listJobs: (searchId?: number) =>

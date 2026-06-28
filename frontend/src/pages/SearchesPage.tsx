@@ -61,9 +61,23 @@ export function SearchesPage() {
   }
 
   async function runNow(id: number) {
+    setError(undefined);
     setNotice(undefined);
-    await api.runSearch(id);
-    setNotice("Search queued; it will run on the next scheduler tick.");
+    try {
+      const result = await api.runSearch(id);
+      if (result.error) {
+        setError(`Run failed: ${result.error}`);
+      } else {
+        setNotice(
+          `Found ${result.found}, ${result.new} new, ${result.notified} notified` +
+            (result.failed ? `, ${result.failed} delivery failure(s)` : "") +
+            ".",
+        );
+      }
+      searches.reload();
+    } catch (err) {
+      setError((err as Error).message);
+    }
   }
 
   async function remove(id: number) {

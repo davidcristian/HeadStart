@@ -11,6 +11,7 @@ export function SourcesPage() {
   const sources = useAsync(() => api.listSources(), []);
   const meta = useAsync(() => api.meta(), []);
   const [error, setError] = useState<string>();
+  const [notice, setNotice] = useState<string>();
 
   const [name, setName] = useState("");
   const [adapter, setAdapter] = useState("");
@@ -50,12 +51,30 @@ export function SourcesPage() {
     sources.reload();
   }
 
+  async function test(id: number) {
+    setError(undefined);
+    setNotice(undefined);
+    try {
+      const result = await api.testSource(id);
+      if (!result.ok) {
+        setError(result.error ?? "Source test failed");
+        return;
+      }
+      const titles = result.sample.map((j) => j.title).join(", ");
+      const preview = titles ? ` Sample: ${titles}.` : "";
+      setNotice(`Found ${result.found} posting(s).${preview}`);
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  }
+
   return (
     <>
       <h1>Sources</h1>
 
       <Card title="Add a source">
         {error && <Banner kind="error">{error}</Banner>}
+        {notice && <Banner kind="success">{notice}</Banner>}
         <div className="form-grid">
           <Field label="Name">
             <input
@@ -122,6 +141,9 @@ export function SourcesPage() {
                     <Badge on={s.enabled} />
                   </td>
                   <td className="row-actions">
+                    <Button variant="ghost" onClick={() => test(s.id)}>
+                      Test scrape
+                    </Button>
                     <Button variant="ghost" onClick={() => toggle(s.id, !s.enabled)}>
                       {s.enabled ? "Disable" : "Enable"}
                     </Button>
