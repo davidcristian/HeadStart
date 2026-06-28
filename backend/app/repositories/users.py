@@ -25,3 +25,8 @@ class UserRepository:
         self.session.add(user)
         self.session.flush()
         return user
+
+    def update_password(self, user: User, password_hash: str) -> User:
+        user.password_hash = password_hash
+        self.session.flush()
+        return user

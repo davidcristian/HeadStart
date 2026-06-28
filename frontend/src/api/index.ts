@@ -37,6 +37,18 @@ export const api = {
       body: { email, password },
       skipAuth: true,
     }),
+  forgotPassword: (email: string) =>
+    request<{ message: string }>("/api/v1/auth/forgot-password", {
+      method: "POST",
+      body: { email },
+      skipAuth: true,
+    }),
+  resetPassword: (token: string, password: string) =>
+    request<{ message: string }>("/api/v1/auth/reset-password", {
+      method: "POST",
+      body: { token, password },
+      skipAuth: true,
+    }),
   me: () => request<User>("/api/v1/auth/me"),
 
   // sources

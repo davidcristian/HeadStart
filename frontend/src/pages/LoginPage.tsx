@@ -63,6 +63,9 @@ export function LoginPage() {
           </Button>
         </form>
         <p className="auth-alt">
+          <Link to="/forgot-password">Forgot password?</Link>
+        </p>
+        <p className="auth-alt">
           No account? <Link to="/register">Create one</Link>
         </p>
       </Card>

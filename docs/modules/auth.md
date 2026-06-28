@@ -44,6 +44,8 @@ returns `NotFoundError` (404), never another user's data.
 | POST   | `/register` | none   | Create an account (first = admin)      |
 | POST   | `/login`    | none   | Exchange email+password for tokens     |
 | POST   | `/refresh`  | none*  | Exchange a refresh token for new tokens|
+| POST   | `/forgot-password` | none | Request a password-reset email   |
+| POST   | `/reset-password`  | none | Set a new password from reset link |
 | GET    | `/me`       | bearer | Current user                           |
 
 \* `/refresh` is unauthenticated but requires a valid refresh token in the body.
@@ -57,9 +59,24 @@ returns `NotFoundError` (404), never another user's data.
   and notifying `AuthContext`.
 - `frontend/src/auth/AuthContext.tsx` holds the current user; `ProtectedRoute`
   gates the app and redirects to `/login`.
+- `/forgot-password` and `/reset-password?token=...` handle the reset flow.
+
+## Password reset
+
+1. User submits their email on `/forgot-password` → `POST /auth/forgot-password`.
+2. If the account exists and is active, a single-use token is stored (hashed) and
+   emailed. The API always returns the same success message (no email enumeration).
+3. The email link opens `/reset-password?token=...` → `POST /auth/reset-password`
+   with the token and new password.
+4. Valid tokens are deleted after use; expired tokens are rejected.
+
+**Email delivery:** configure SMTP via `SMTP_*` env vars. When `SMTP_HOST` is
+empty (typical local dev), the API logs the reset URL at INFO instead of sending
+mail.
 
 ## Configuration
 
-`JWT_SECRET`, `ACCESS_TOKEN_EXPIRE_MINUTES`, `REFRESH_TOKEN_EXPIRE_DAYS` (see
-`.env.example`). In AWS these come from Secrets Manager (see
+`JWT_SECRET`, `ACCESS_TOKEN_EXPIRE_MINUTES`, `REFRESH_TOKEN_EXPIRE_DAYS`,
+`PASSWORD_RESET_EXPIRE_MINUTES`, `FRONTEND_BASE_URL`, and optional `SMTP_*`
+(see `.env.example`). In AWS these come from Secrets Manager (see
 [deployment.md](deployment.md)).

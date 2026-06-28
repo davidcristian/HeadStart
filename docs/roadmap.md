@@ -20,7 +20,7 @@ Goal: trust the system day-to-day before adding surface area.
 | ~~Scrape health in the UI~~ | ~~Users need to know *why* a search stopped notifying~~ | **Shipped:** `last_run_at`, `last_error`, and recent `delivery_log` failures on the Searches page |
 | ~~Validate-before-wait flows~~ | ~~Misconfigured selectors/URLs are painful to debug on a poll interval~~ | **Shipped:** `POST /sources/{id}/test` returns sample postings; "Run now" runs the pipeline synchronously and reports results |
 | ~~Frontend test coverage~~ | ~~Backend is well tested; UI regressions are unguarded~~ | **Shipped:** Vitest smoke tests for Sources, Searches, Targets, and Jobs pages (mocked API) |
-| Password reset | Table-stakes for sharing the app with others | Email-based reset flow; see [modules/auth.md](modules/auth.md) |
+| ~~Password reset~~ | ~~Table-stakes for sharing the app with others~~ | **Shipped:** email-based reset flow with SMTP or dev log fallback; see [modules/auth.md](modules/auth.md) |
 
 **Done when:** a user can configure a search, confirm it works, and diagnose a
 failed scrape from the UI without reading worker logs.
@@ -110,7 +110,7 @@ Pursue only if core alerting is solid and adapter coverage is good.
 
 **Shared with friends / a small team:**
 
-1. Password reset + onboarding polish
+1. ~~Password reset~~ + onboarding polish
 2. Slack notifier
 3. Digest mode
 

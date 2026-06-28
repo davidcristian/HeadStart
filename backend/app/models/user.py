@@ -9,6 +9,7 @@ from app.models.base import Base, TimestampMixin
 
 if TYPE_CHECKING:
     from app.models.notification_target import NotificationTarget
+    from app.models.password_reset_token import PasswordResetToken
     from app.models.search import Search
     from app.models.site_credential import SiteCredential
     from app.models.source import Source
@@ -34,5 +35,8 @@ class User(Base, TimestampMixin):
         back_populates="user", cascade="all, delete-orphan"
     )
     credentials: Mapped[list["SiteCredential"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+    password_reset_tokens: Mapped[list["PasswordResetToken"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )

@@ -19,6 +19,8 @@ never touch the DB directly (services use repositories). See
 | POST   | `/auth/register`      | Create an account (first = admin)        |
 | POST   | `/auth/login`         | Exchange email+password for JWTs         |
 | POST   | `/auth/refresh`       | Exchange a refresh token for new JWTs    |
+| POST   | `/auth/forgot-password` | Request a password-reset email         |
+| POST   | `/auth/reset-password`  | Set a new password from reset link     |
 | GET    | `/auth/me`            | Current user                             |
 | GET    | `/sources`            | List sources                             |
 | POST   | `/sources`            | Create a source (site + adapter_key)     |
@@ -50,7 +52,7 @@ notification attempts with job title, URL, error, and timestamp).
 ## Auth
 
 Multi-user with JWT. **Every** route except `/health` and the
-`/auth/register|login|refresh` endpoints requires
+`/auth/register|login|refresh|forgot-password|reset-password` endpoints requires
 `Authorization: Bearer <access_token>` and is **scoped to the authenticated
 user** — including reads. Cross-user access returns 404. Full detail in
 [auth.md](auth.md); decisions in

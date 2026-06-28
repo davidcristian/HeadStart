@@ -39,7 +39,9 @@ describe("SearchesPage", () => {
     fireEvent.change(screen.getByPlaceholderText("Google SWE Amsterdam"), {
       target: { value: "Backend roles" },
     });
-    fireEvent.change(screen.getByLabelText("Source"), { target: { value: String(sampleSource.id) } });
+    fireEvent.change(screen.getByLabelText("Source"), {
+      target: { value: String(sampleSource.id) },
+    });
     fireEvent.click(screen.getByRole("button", { name: "Create search" }));
 
     await waitFor(() => expect(mockApi.createSearch).toHaveBeenCalled());
@@ -57,9 +59,7 @@ describe("SearchesPage", () => {
     await waitFor(() => expect(screen.getByText("Google SWE")).toBeInTheDocument());
     fireEvent.click(screen.getByRole("button", { name: "Run now" }));
 
-    await waitFor(() =>
-      expect(screen.getByText(/Found 3, 1 new, 1 notified/)).toBeInTheDocument(),
-    );
+    await waitFor(() => expect(screen.getByText(/Found 3, 1 new, 1 notified/)).toBeInTheDocument());
   });
 
   it("deletes a search", async () => {

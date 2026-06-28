@@ -39,6 +39,18 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
     refresh_token_expire_days: int = 7
+    password_reset_expire_minutes: int = 60
+    # Base URL of the web UI (used in password-reset links).
+    frontend_base_url: str = "http://localhost:5173"
+
+    # ---- email (password reset) ----
+    # Leave SMTP_HOST empty in local dev; reset links are logged instead.
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_user: str = ""
+    smtp_password: str = ""
+    smtp_from: str = "noreply@jobnotifier.local"
+    smtp_use_tls: bool = True
 
     # ---- credential encryption ----
     # Fernet key (urlsafe base64, 32 bytes) used to encrypt per-site

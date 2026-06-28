@@ -34,6 +34,7 @@ container (which also reverse-proxies `/api` to the backend in production).
 ## Auth flow
 
 - Login/register store JWT access + refresh tokens in `localStorage`
+- `/forgot-password` and `/reset-password?token=...` for email-based password reset
   (`src/lib/settings.ts`).
 - `src/api/client.ts` attaches the access token to every request and, on a 401,
   tries `/auth/refresh` once before clearing the session.

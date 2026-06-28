@@ -4,6 +4,8 @@ This module is framework-agnostic: it knows nothing about FastAPI. The auth
 dependency that turns a request into a `User` lives in `app.api.deps`.
 """
 
+import hashlib
+import secrets
 from datetime import timedelta
 from typing import Any, Literal
 
@@ -38,6 +40,16 @@ def verify_password(password: str, password_hash: str) -> bool:
         return bcrypt.checkpw(_truncate(password), password_hash.encode("utf-8"))
     except ValueError:
         return False
+
+
+def generate_password_reset_token() -> str:
+    """Return a URL-safe random token for password reset links."""
+    return secrets.token_urlsafe(32)
+
+
+def hash_password_reset_token(token: str) -> str:
+    """One-way hash of a reset token for storage (not bcrypt — token is already random)."""
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
 
 
 def _create_token(subject: str, token_type: TokenType, expires: timedelta) -> str:

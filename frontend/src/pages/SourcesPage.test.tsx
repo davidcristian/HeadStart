@@ -46,9 +46,7 @@ describe("SourcesPage", () => {
     await waitFor(() => expect(screen.getByText("ACME Careers")).toBeInTheDocument());
     fireEvent.click(screen.getByRole("button", { name: "Test scrape" }));
 
-    await waitFor(() =>
-      expect(screen.getByText(/Found 2 posting\(s\)/)).toBeInTheDocument(),
-    );
+    await waitFor(() => expect(screen.getByText(/Found 2 posting\(s\)/)).toBeInTheDocument());
   });
 
   it("deletes a source", async () => {

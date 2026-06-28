@@ -38,6 +38,18 @@ An account. The first one created becomes admin.
 | is_active     | bool     | Disabled accounts cannot log in    |
 | created_at    | datetime |                                    |
 
+### password_reset_token
+
+Single-use, time-limited token for email-based password reset.
+
+| Column     | Type     | Notes                              |
+| ---------- | -------- | ---------------------------------- |
+| id         | int PK   |                                    |
+| user_id    | FK user  | Owner; cascade delete              |
+| token_hash | str      | SHA-256 of the raw token (unique)  |
+| expires_at | datetime |                                    |
+| created_at | datetime |                                    |
+
 ### source
 
 A job site + which scraper handles it.
