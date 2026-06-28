@@ -71,6 +71,7 @@ export interface SearchRunResult {
   new: number;
   notified: number;
   failed: number;
+  skipped: number;
   error: string | null;
 }
 

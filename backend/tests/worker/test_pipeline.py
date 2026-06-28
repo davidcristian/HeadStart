@@ -45,16 +45,22 @@ def _make_user(session: Session, email: str = "pipe@example.test") -> User:
     return user
 
 
-def _make_search(session: Session, *, interval: int = 300, next_run_at=None) -> Search:
-    user = _make_user(session, email=f"pipe{utcnow().timestamp()}@example.test")
+def _make_search(
+    session: Session,
+    *,
+    interval: int = 300,
+    next_run_at=None,
+    user: User | None = None,
+) -> Search:
+    owner = user or _make_user(session, email=f"pipe{utcnow().timestamp()}@example.test")
     source = Source(
-        user_id=user.id, name="src", adapter_key="greenhouse", base_url="", default_config={}
+        user_id=owner.id, name="src", adapter_key="greenhouse", base_url="", default_config={}
     )
-    target = NotificationTarget(user_id=user.id, name="tgt", type="ntfy", config={"topic": "x"})
+    target = NotificationTarget(user_id=owner.id, name="tgt", type="ntfy", config={"topic": "x"})
     session.add_all([source, target])
     session.flush()
     search = Search(
-        user_id=user.id,
+        user_id=owner.id,
         name="search",
         source_id=source.id,
         target_id=target.id,
@@ -75,13 +81,14 @@ def _aware(dt: datetime) -> datetime:
     return dt if dt.tzinfo is not None else dt.replace(tzinfo=UTC)
 
 
-def _posting(external_id: str) -> JobPosting:
+def _posting(external_id: str, *, url: str | None = None) -> JobPosting:
+    job_url = url if url is not None else f"https://acme.test/{external_id}"
     return JobPosting(
         external_id=external_id,
         title=f"Job {external_id}",
         company="ACME",
         location="Amsterdam",
-        url=f"https://acme.test/{external_id}",
+        url=job_url,
     )
 
 
@@ -252,3 +259,50 @@ def test_pipeline_clears_last_error_after_success(db_session: Session) -> None:
 
     db_session.refresh(search)
     assert search.last_error is None
+
+
+def test_pipeline_skips_notification_for_same_url_in_another_search(
+    db_session: Session,
+) -> None:
+    user = _make_user(db_session, email="cross@example.test")
+    search_a = _make_search(db_session, user=user)
+    search_b = _make_search(db_session, user=user)
+    shared_url = "https://acme.test/shared-role"
+    notifier = RecordingNotifier()
+
+    first = _pipeline(
+        db_session,
+        FakeScraper([_posting("a-1", url=shared_url)]),
+        notifier,
+    ).run(search_a.id)
+    assert (first.new, first.notified, first.skipped) == (1, 1, 0)
+
+    second = _pipeline(
+        db_session,
+        FakeScraper([_posting("b-9", url=shared_url)]),
+        notifier,
+    ).run(search_b.id)
+    assert (second.new, second.notified, second.skipped) == (1, 0, 1)
+    assert len(notifier.batches) == 1
+    assert db_session.query(SeenJob).filter_by(search_id=search_b.id).count() == 1
+
+
+def test_pipeline_cross_search_dedup_is_scoped_per_user(db_session: Session) -> None:
+    search_a = _make_search(db_session)
+    search_b = _make_search(db_session)
+    shared_url = "https://acme.test/shared-role"
+    notifier = RecordingNotifier()
+
+    _pipeline(
+        db_session,
+        FakeScraper([_posting("a-1", url=shared_url)]),
+        notifier,
+    ).run(search_a.id)
+    result = _pipeline(
+        db_session,
+        FakeScraper([_posting("b-9", url=shared_url)]),
+        notifier,
+    ).run(search_b.id)
+
+    assert (result.new, result.notified, result.skipped) == (1, 1, 0)
+    assert len(notifier.batches) == 2

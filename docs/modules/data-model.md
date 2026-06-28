@@ -87,7 +87,9 @@ A saved query against a source, on an interval, delivering to a target.
 
 ### seen_job
 
-Dedup ledger; one row per unique job ever seen for a search.
+Dedup ledger; one row per unique job ever seen for a search. Notification
+dedup is also applied across a user's searches by normalized job URL (see
+[worker.md](worker.md)).
 
 | Column        | Type        | Notes                                         |
 | ------------- | ----------- | --------------------------------------------- |

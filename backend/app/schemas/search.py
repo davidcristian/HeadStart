@@ -52,4 +52,5 @@ class SearchRunRead(BaseModel):
     new: int = 0
     notified: int = 0
     failed: int = 0
+    skipped: int = 0
     error: str | None = None

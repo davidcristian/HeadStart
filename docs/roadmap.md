@@ -62,7 +62,7 @@ Goal: reduce noise, increase signal.
 | Item | Why |
 | ---- | --- |
 | Richer filters | Keyword include/exclude, remote/hybrid/onsite, location, salary (where scraped) |
-| Cross-search dedup | Same job URL in multiple searches should not notify twice |
+| Cross-search dedup | Same job URL in multiple searches should not notify twice | **Shipped:** pipeline skips notification when a normalized URL was already recorded in any of the user's searches; per-search `seen_job` rows are still written for the Jobs feed |
 | Digest mode | Batch notifications ("5 new jobs this hour") to avoid alert fatigue |
 | Job lifecycle | Mark seen / applied / archived; optional "job closed" on re-scrape |
 

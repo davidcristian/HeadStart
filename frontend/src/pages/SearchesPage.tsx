@@ -70,6 +70,7 @@ export function SearchesPage() {
       } else {
         setNotice(
           `Found ${result.found}, ${result.new} new, ${result.notified} notified` +
+            (result.skipped ? `, ${result.skipped} skipped (already notified)` : "") +
             (result.failed ? `, ${result.failed} delivery failure(s)` : "") +
             ".",
         );

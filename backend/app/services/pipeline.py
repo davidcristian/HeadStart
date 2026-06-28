@@ -23,6 +23,7 @@ from app.scrapers import ScrapeContext, get_scraper
 from app.scrapers.base import Scraper
 from app.scrapers.http import HttpClient
 from app.scrapers.types import JobPosting
+from app.scrapers.url import normalize_job_url
 from app.services.credentials import CredentialService
 from app.services.scheduling import next_run_from
 
@@ -39,6 +40,7 @@ class RunResult:
     new: int = 0
     notified: int = 0
     failed: int = 0
+    skipped: int = 0
     error: str | None = None
 
 
@@ -76,9 +78,10 @@ class PipelineService:
             result.found = len(postings)
             new_postings = self._dedupe(search_id, postings)
             result.new = len(new_postings)
+            to_notify, result.skipped = self._filter_cross_search(search.user_id, new_postings)
             seen_rows = self._persist_new(search_id, new_postings)
-            if new_postings:
-                sent, failed = self._notify(search, new_postings, seen_rows)
+            if to_notify:
+                sent, failed = self._notify(search, to_notify, seen_rows)
                 result.notified, result.failed = sent, failed
         except Exception as exc:  # adapters/network are untrusted; never crash the worker
             logger.exception("run_search %s failed: %s", search_id, exc)
@@ -126,6 +129,33 @@ class PipelineService:
             by_external.setdefault(posting.external_id, posting)
         existing = self.seen_jobs.existing_external_ids(search_id, list(by_external))
         return [p for ext, p in by_external.items() if ext not in existing]
+
+    def _filter_cross_search(
+        self, user_id: int, postings: list[JobPosting]
+    ) -> tuple[list[JobPosting], int]:
+        """Skip notification when the same job URL was already seen in another search."""
+        if not postings:
+            return [], 0
+
+        by_url: dict[str, JobPosting] = {}
+        without_url: list[JobPosting] = []
+        for posting in postings:
+            normalized = normalize_job_url(posting.url)
+            if normalized:
+                by_url.setdefault(normalized, posting)
+            else:
+                without_url.append(posting)
+
+        known_urls = self.seen_jobs.existing_normalized_urls_for_user(user_id, list(by_url))
+        to_notify = list(without_url)
+        skipped = 0
+        for normalized, posting in by_url.items():
+            if normalized in known_urls:
+                skipped += 1
+                continue
+            known_urls.add(normalized)
+            to_notify.append(posting)
+        return to_notify, skipped
 
     def _persist_new(self, search_id: int, postings: list[JobPosting]) -> dict[str, SeenJob]:
         rows: dict[str, SeenJob] = {}

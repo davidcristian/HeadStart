@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.models.search import Search
 from app.models.seen_job import SeenJob
+from app.scrapers.url import normalize_job_url
 
 
 class SeenJobRepository:
@@ -39,6 +40,22 @@ class SeenJobRepository:
             .where(SeenJob.external_id.in_(external_ids))
         )
         return set(self.session.scalars(stmt))
+
+    def existing_normalized_urls_for_user(
+        self, user_id: int, normalized_urls: list[str]
+    ) -> set[str]:
+        """Return normalized URLs already recorded in any of the user's searches."""
+        if not normalized_urls:
+            return set()
+        wanted = set(normalized_urls)
+        stmt = (
+            select(SeenJob.url)
+            .join(Search, SeenJob.search_id == Search.id)
+            .where(Search.user_id == user_id)
+            .where(SeenJob.url != "")
+        )
+        known = {normalize_job_url(url) for url in self.session.scalars(stmt)}
+        return wanted & known
 
     def add(self, seen_job: SeenJob) -> SeenJob:
         self.session.add(seen_job)
