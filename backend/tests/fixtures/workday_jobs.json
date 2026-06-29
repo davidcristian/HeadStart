@@ -1,0 +1,19 @@
+{
+  "total": 2,
+  "jobPostings": [
+    {
+      "title": "Senior Software Engineer",
+      "externalPath": "/job/US-CA-Santa-Clara/Senior-Software-Engineer_JR1001",
+      "locationsText": "Santa Clara, CA",
+      "postedOn": "Posted Today",
+      "bulletFields": ["JR1001"]
+    },
+    {
+      "title": "Staff Backend Engineer",
+      "externalPath": "/job/US-Remote/Staff-Backend-Engineer_JR1002",
+      "locationsText": "Remote - US",
+      "postedOn": "Posted 2 Days Ago",
+      "bulletFields": ["JR1002"]
+    }
+  ]
+}

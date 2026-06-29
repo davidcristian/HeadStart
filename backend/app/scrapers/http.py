@@ -48,6 +48,12 @@ class HttpClient:
         resp.raise_for_status()
         return resp.json()
 
+    def post_json(self, url: str, *, json: Any = None, **kwargs: Any) -> Any:
+        self._wait_rate_limit()
+        resp = self._client.post(url, json=json, **kwargs)
+        resp.raise_for_status()
+        return resp.json()
+
     def get_text(self, url: str, **kwargs: Any) -> str:
         self._wait_rate_limit()
         assert_safe_outbound_url(url)

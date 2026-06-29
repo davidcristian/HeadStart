@@ -14,7 +14,7 @@ import { sampleJob } from "./fixtures";
 
 const mockApi = vi.hoisted(() => ({
   meta: vi.fn(async () => ({
-    scrapers: ["greenhouse", "lever", "ashby", "generic_html", "playwright"],
+    scrapers: ["greenhouse", "lever", "ashby", "workday", "generic_html", "playwright"],
     notifiers: ["discord", "email", "ntfy", "slack", "telegram"],
   })),
   listSources: vi.fn(async (): Promise<Source[]> => []),
