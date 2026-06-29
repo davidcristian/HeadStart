@@ -36,7 +36,7 @@ container (which also reverse-proxies `/api` to the backend in production).
 
 - Login returns the access token (kept **in memory** in `src/lib/settings.ts`);
   the refresh token is an httpOnly cookie set by the backend. See
-  [auth.md](auth.md) and [adr/0006-httponly-refresh-cookie.md](../adr/0006-httponly-refresh-cookie.md).
+  [auth.md](auth.md) and [adr/0007-httponly-refresh-cookie.md](../adr/0007-httponly-refresh-cookie.md).
 - `/forgot-password` and `/reset-password?token=...` for email-based password reset.
 - `src/api/client.ts` sends `credentials: "include"`, attaches the in-memory
   access token, and on a 401 calls `refreshSession()` (cookie-based) once before

@@ -1,7 +1,7 @@
-# 0006. httpOnly refresh-token cookie; access token in memory
+# 0007. httpOnly refresh-token cookie; access token in memory
 
 - **Status:** Accepted
-- **Date:** 2026-06-28
+- **Date:** 2026-06-29
 
 ## Context
 

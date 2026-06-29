@@ -30,7 +30,7 @@ data isolation.
   cannot exfiltrate the long-lived credential. `/refresh` reads the cookie (and
   rotates it); `/logout` clears it. Non-browser clients may still pass
   `refresh_token` in the `/refresh` body. See
-  [adr/0006-httponly-refresh-cookie.md](../adr/0006-httponly-refresh-cookie.md).
+  [adr/0007-httponly-refresh-cookie.md](../adr/0007-httponly-refresh-cookie.md).
 - `decode_token(token, expected_type=...)` validates signature, expiry, and the
   `type` claim, raising `TokenError` otherwise.
 - Passwords: `hash_password` / `verify_password` (bcrypt, input truncated to the
