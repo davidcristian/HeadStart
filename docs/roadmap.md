@@ -39,7 +39,8 @@ single adapter file — see [recipes.md](recipes.md).
 | ~~Lever~~ | ~~Very common ATS in tech~~ | **Shipped:** public Postings API (`api.lever.co/v0/postings/<site>`); config `site` + optional `region: "eu"` |
 | ~~Ashby~~ | ~~Fast-growing ATS~~ | **Shipped:** public Postings API (`api.ashbyhq.com/posting-api/job-board/<board>`); config `board` + optional `include_compensation` |
 | ~~Workday~~ | ~~High-value but painful~~ | **Shipped:** public CXS jobs API (`POST …/wday/cxs/<tenant>/<site>/jobs`); config `tenant` + `site` + optional `region`; accepts `*.myworkdayjobs.com` board URLs |
-| LinkedIn / Indeed | High demand, high anti-bot risk | Advanced/opt-in; lean on [credentials](modules/credentials.md) |
+| ~~Indeed~~ | ~~High demand aggregator search~~ | **Shipped:** parses embedded `mosaic-provider-jobcards` JSON from `/jobs` search pages; HTML card fallback; optional session cookies via [credentials](modules/credentials.md) for Cloudflare |
+| LinkedIn | High demand, high anti-bot risk | Advanced/opt-in; lean on [credentials](modules/credentials.md) |
 
 ### Notifiers
 

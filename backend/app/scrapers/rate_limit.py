@@ -18,6 +18,7 @@ ADAPTER_DEFAULTS: dict[str, float] = {
     "lever": 1.0,
     "ashby": 1.0,
     "workday": 2.5,
+    "indeed": 5.0,
     "generic_html": 2.0,
     "playwright": 5.0,
 }

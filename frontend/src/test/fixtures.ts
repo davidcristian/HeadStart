@@ -3,7 +3,7 @@
 import type { Job, Meta, NotificationTarget, Search, Source } from "../types";
 
 export const sampleMeta: Meta = {
-  scrapers: ["greenhouse", "lever", "ashby", "workday", "generic_html", "playwright"],
+  scrapers: ["greenhouse", "lever", "ashby", "workday", "indeed", "generic_html", "playwright"],
   notifiers: ["discord", "email", "ntfy", "slack", "telegram", "webhook"],
 };
 

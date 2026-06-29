@@ -8,9 +8,18 @@ from app.scrapers.adapters import (
     ashby,
     generic_html,
     greenhouse,
+    indeed,
     lever,
     playwright_html,
     workday,
 )
 
-__all__ = ["ashby", "generic_html", "greenhouse", "lever", "playwright_html", "workday"]
+__all__ = [
+    "ashby",
+    "generic_html",
+    "greenhouse",
+    "indeed",
+    "lever",
+    "playwright_html",
+    "workday",
+]

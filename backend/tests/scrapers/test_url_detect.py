@@ -55,5 +55,25 @@ def test_detect_workday_board_url() -> None:
     assert result.base_url == "https://acme.wd5.myworkdayjobs.com/en-US/External"
 
 
+def test_detect_indeed_search_url() -> None:
+    result = detect_source_from_url(
+        "https://www.indeed.com/jobs?q=python&l=remote",
+        page_title="Python Jobs, Employment in Remote | Indeed",
+    )
+    assert result is not None
+    assert result.adapter_key == "indeed"
+    assert result.default_config["q"] == "python"
+    assert result.default_config["l"] == "remote"
+    assert result.suggested_name == "Python Jobs, Employment in Remote"
+    assert result.query_url == "https://www.indeed.com/jobs?q=python&l=remote"
+
+
+def test_detect_indeed_country_subdomain() -> None:
+    result = detect_source_from_url("https://uk.indeed.com/jobs?q=engineer&l=London")
+    assert result is not None
+    assert result.adapter_key == "indeed"
+    assert result.base_url == "https://uk.indeed.com/jobs"
+
+
 def test_detect_unknown_url_returns_none() -> None:
     assert detect_source_from_url("https://example.com/careers") is None
