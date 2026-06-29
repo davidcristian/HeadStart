@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { Banner, Button, Card, Field } from "../components/ui";
 import { useHealth } from "../hooks/queries";
 
 export function LoginPage() {
-  const { login } = useAuth();
+  const { user, login } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -17,13 +17,17 @@ export function LoginPage() {
 
   const health = useHealth();
 
+  if (user) {
+    return <Navigate to="/app" replace />;
+  }
+
   async function submit(e: FormEvent) {
     e.preventDefault();
     setError(undefined);
     setBusy(true);
     try {
       await login(email, password);
-      navigate("/searches", { replace: true });
+      navigate("/app/searches", { replace: true });
     } catch (err) {
       setError((err as Error).message);
     } finally {

@@ -9,29 +9,29 @@ import { useAuth } from "../auth/AuthContext";
 import { Button } from "./ui";
 
 const PRIMARY_NAV = [
-  { to: "/jobs", label: "Jobs" },
-  { to: "/searches", label: "Searches" },
-  { to: "/sources", label: "Sources" },
+  { to: "/app/jobs", label: "Jobs" },
+  { to: "/app/searches", label: "Searches" },
+  { to: "/app/sources", label: "Sources" },
 ];
 
 const MORE_NAV = [
-  { to: "/targets", label: "Notifications" },
-  { to: "/credentials", label: "Site credentials" },
-  { to: "/profile", label: "Application profile" },
-  { to: "/settings", label: "Settings" },
+  { to: "/app/targets", label: "Notifications" },
+  { to: "/app/credentials", label: "Site credentials" },
+  { to: "/app/profile", label: "Application profile" },
+  { to: "/app/settings", label: "Settings" },
 ];
 
 const DESKTOP_NAV = [
-  { to: "/searches", label: "Searches" },
-  { to: "/jobs", label: "Jobs" },
-  { to: "/sources", label: "Sources" },
-  { to: "/targets", label: "Notifications" },
-  { to: "/credentials", label: "Site credentials" },
-  { to: "/profile", label: "Application profile" },
-  { to: "/settings", label: "Settings" },
+  { to: "/app/searches", label: "Searches" },
+  { to: "/app/jobs", label: "Jobs" },
+  { to: "/app/sources", label: "Sources" },
+  { to: "/app/targets", label: "Notifications" },
+  { to: "/app/credentials", label: "Site credentials" },
+  { to: "/app/profile", label: "Application profile" },
+  { to: "/app/settings", label: "Settings" },
 ];
 
-const ADMIN_NAV = { to: "/admin", label: "Admin" };
+const ADMIN_NAV = { to: "/app/admin", label: "Admin" };
 
 export function Layout() {
   const health = useHealth();

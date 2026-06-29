@@ -13,7 +13,7 @@ export function AdminRoute() {
     return <Navigate to="/login" replace />;
   }
   if (!user.is_admin) {
-    return <Navigate to="/searches" replace />;
+    return <Navigate to="/app/searches" replace />;
   }
   return <Outlet />;
 }

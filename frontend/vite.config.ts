@@ -17,7 +17,7 @@ export default defineConfig({
         background_color: "#0f1419",
         display: "standalone",
         orientation: "portrait-primary",
-        start_url: "/jobs",
+        start_url: "/app/jobs",
         scope: "/",
         icons: [
           {

@@ -16,10 +16,28 @@ container (which also reverse-proxies `/api` to the backend in production).
 | `src/components/`   | Reusable presentational components                  |
 | `src/pages/`        | Route-level screens                                 |
 
+## Routing: public site vs. authenticated app
+
+The frontend serves two surfaces from one bundle (see
+[App.tsx](../../frontend/src/App.tsx)):
+
+- **Public** (no auth, no app shell): `/` landing page plus the auth screens
+  `/login`, `/register`, `/forgot-password`, `/reset-password`.
+- **Authenticated product** under **`/app/*`**, gated by `ProtectedRoute` and
+  wrapped in the `Layout` shell (`/app/searches`, `/app/jobs`, …, `/app/admin`).
+  `/app` redirects to `/app/searches`.
+
+Login/Register send the user to `/app/searches` on success and bounce
+already-authenticated visitors to `/app`. Legacy top-level paths (`/jobs`,
+`/searches`, …) 301-style redirect to their `/app/*` equivalent so old
+bookmarks and the installed PWA (`start_url: /app/jobs`) keep working. Any
+other unknown path redirects to the landing page.
+
 ## Pages
 
 | Page        | Purpose                                                          |
 | ----------- | ---------------------------------------------------------------- |
+| Landing     | Public marketing page at `/`: hero, feature highlights, CTA to register/sign in |
 | Login       | Email + password sign-in                                         |
 | Register    | Create an account (first user becomes admin)                     |
 | Sources     | List/create/edit sources (name, adapter, base URL, config); test scrape |

@@ -2,18 +2,22 @@
 
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { Banner, Button, Card, Field } from "../components/ui";
 
 export function RegisterPage() {
-  const { register } = useAuth();
+  const { user, register } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState<string>();
   const [busy, setBusy] = useState(false);
+
+  if (user) {
+    return <Navigate to="/app" replace />;
+  }
 
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -25,7 +29,7 @@ export function RegisterPage() {
     setBusy(true);
     try {
       await register(email, password);
-      navigate("/searches", { replace: true });
+      navigate("/app/searches", { replace: true });
     } catch (err) {
       setError((err as Error).message);
     } finally {
