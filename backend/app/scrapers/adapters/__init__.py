@@ -10,6 +10,7 @@ from app.scrapers.adapters import (
     greenhouse,
     indeed,
     lever,
+    linkedin,
     playwright_html,
     workday,
 )
@@ -20,6 +21,7 @@ __all__ = [
     "greenhouse",
     "indeed",
     "lever",
+    "linkedin",
     "playwright_html",
     "workday",
 ]
