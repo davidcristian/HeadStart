@@ -46,7 +46,7 @@ single adapter file — see [recipes.md](recipes.md).
 
 | Adapter | Rationale |
 | ------- | --------- |
-| Email | Lowest friction for non-technical users | **Shipped:** plain-text per-job emails via `SMTP_*`; target config `to` |
+| ~~Email~~ | ~~Lowest friction for non-technical users~~ | **Shipped:** plain-text per-job emails via `SMTP_*`; target config `to` |
 | ~~Slack webhook~~ | ~~Natural for dev teams~~ | **Shipped:** incoming webhook per job; target config `webhook_url` |
 | ~~Discord webhook~~ | ~~Natural for dev teams~~ | **Shipped:** channel webhook per job; target config `webhook_url` |
 | ~~Telegram~~ | ~~Lightweight mobile push alternative to ntfy~~ | **Shipped:** Bot API per job; target config `bot_token` + `chat_id` |
@@ -63,9 +63,9 @@ Goal: reduce noise, increase signal.
 | Item | Why |
 | ---- | --- |
 | ~~Richer filters~~ | ~~Keyword include/exclude, remote/hybrid/onsite, location, salary (where scraped)~~ | **Shipped:** `keywords`/`keywords_include`, `keywords_exclude`, `location`, `workplace`, `min_salary` + `salary_currency` applied post-scrape; structured filter form on Searches page |
-| Cross-search dedup | Same job URL in multiple searches should not notify twice | **Shipped:** pipeline skips notification when a normalized URL was already recorded in any of the user's searches; per-search `seen_job` rows are still written for the Jobs feed |
+| ~~Cross-search dedup~~ | ~~Same job URL in multiple searches should not notify twice~~ | **Shipped:** pipeline skips notification when a normalized URL was already recorded in any of the user's searches; per-search `seen_job` rows are still written for the Jobs feed |
 | ~~Digest mode~~ | ~~Batch notifications ("5 new jobs this hour") to avoid alert fatigue~~ | **Shipped:** per-search `notification_mode` (`immediate`/`digest`) + `digest_interval_seconds`; jobs queue in `pending_digest` and flush on beat |
-| Job lifecycle | Mark seen / applied / archived; optional "job closed" on re-scrape | **Shipped:** `seen_job.status`; `PATCH /jobs/{id}`; pipeline marks missing listings `closed`; Jobs page filters + row actions |
+| ~~Job lifecycle~~ | ~~Mark seen / applied / archived; optional "job closed" on re-scrape~~ | **Shipped:** `seen_job.status`; `PATCH /jobs/{id}`; pipeline marks missing listings `closed`; Jobs page filters + row actions |
 
 **Done when:** power users can run several overlapping searches without duplicate
 pushes and can triage jobs inside the app.
@@ -78,7 +78,7 @@ Goal: run comfortably for a small team or as a lightly hosted service.
 
 | Item | Why |
 | ---- | --- |
-| Metrics | Scrape latency, success rate, notification delivery rate (Prometheus / CloudWatch) | **Shipped:** Prometheus counters/histograms on API `GET /metrics` and worker `:9090/metrics`; see [modules/metrics.md](modules/metrics.md) |
+| ~~Metrics~~ | ~~Scrape latency, success rate, notification delivery rate (Prometheus / CloudWatch)~~ | **Shipped:** Prometheus counters/histograms on API `GET /metrics` and worker `:9090/metrics`; see [modules/metrics.md](modules/metrics.md) |
 | ~~Per-site rate limits~~ | ~~Configurable politeness per adapter; avoid retry storms~~ | **Shipped:** `rate_limit_min_interval_seconds` in source/search config; per-adapter defaults in `app/scrapers/rate_limit.py` |
 | ~~Admin panel~~ | ~~User management and global scrape stats~~ | **Shipped:** `/admin` UI + `GET/PATCH /admin/users`, `GET /admin/stats`; gated on `is_admin` |
 | ~~Hosted deploy polish~~ | ~~Streamline [deploying-to-aws.md](deploying-to-aws.md); consider a one-click template~~ | **Shipped:** `make aws-first-deploy` chains bootstrap → terraform apply → deploy; optional `DOMAIN_NAME` + `ROUTE53_ZONE_ID`; secrets saved to `.aws-first-deploy-secrets.env` |
@@ -95,10 +95,10 @@ Pursue only if core alerting is solid and adapter coverage is good.
 
 | Item | Why |
 | ---- | --- |
-| RSS / webhook export | Power users pipe jobs into their own tools | **Shipped:** signed per-user RSS feed at `GET /feed/rss?token=...`; optional `search_id` / `status` filters; manage from Jobs page. **Shipped (webhook):** `webhook` notification target POSTs JSON per job (or digest batch) to a user-configured HTTPS URL with optional HMAC signing |
-| Browser extension | "Add this search URL" one-click from a job board tab | **Shipped:** Chrome MV3 extension in `browser-extension/`; `POST /sources/detect`; see [modules/browser-extension.md](modules/browser-extension.md) |
+| ~~RSS / webhook export~~ | ~~Power users pipe jobs into their own tools~~ | **Shipped:** signed per-user RSS feed at `GET /feed/rss?token=...`; optional `search_id` / `status` filters; manage from Jobs page. **Shipped (webhook):** `webhook` notification target POSTs JSON per job (or digest batch) to a user-configured HTTPS URL with optional HMAC signing |
+| ~~Browser extension~~ | ~~"Add this search URL" one-click from a job board tab~~ | **Shipped:** Chrome MV3 extension in `browser-extension/`; `POST /sources/detect`; see [modules/browser-extension.md](modules/browser-extension.md) |
 | ~~AI summarization~~ | ~~Short "why this matches" blurb in notifications~~ | **Shipped:** per-job blurb generated in the pipeline and shown in every notifier + the Jobs feed/RSS. Pluggable providers (`heuristic` offline default, `openai`); best-effort so failures never block alerts. See [modules/summaries.md](modules/summaries.md) |
-| Mobile PWA | Lightweight jobs feed if ntfy alone is not enough | **Shipped:** web manifest + service worker (offline shell); installable on mobile; bottom nav; job cards + pull-to-refresh on Jobs |
+| ~~Mobile PWA~~ | ~~Lightweight jobs feed if ntfy alone is not enough~~ | **Shipped:** web manifest + service worker (offline shell); installable on mobile; bottom nav; job cards + pull-to-refresh on Jobs |
 
 ---
 
