@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { api } from "../api";
 import { JobStatusBadge } from "../components/JobStatusBadge";
-import { Button, Card, EmptyState, Field } from "../components/ui";
+import { Banner, Button, Card, EmptyState, Field } from "../components/ui";
 import { useAsync } from "../hooks/useAsync";
 import type { JobStatus } from "../types";
 
@@ -16,9 +16,21 @@ const STATUS_FILTERS: Array<{ value: "" | JobStatus; label: string }> = [
   { value: "closed", label: "Closed" },
 ];
 
+function buildFeedUrl(baseUrl: string, searchId: number | "", status: "" | JobStatus): string {
+  const url = new URL(baseUrl);
+  if (searchId !== "") {
+    url.searchParams.set("search_id", String(searchId));
+  }
+  if (status !== "") {
+    url.searchParams.set("status", status);
+  }
+  return url.toString();
+}
+
 export function JobsPage() {
   const [searchId, setSearchId] = useState<number | "">("");
   const [status, setStatus] = useState<"" | JobStatus>("");
+  const [feedMessage, setFeedMessage] = useState<string | null>(null);
   const searches = useAsync(() => api.listSearches(), []);
   const jobs = useAsync(
     () =>
@@ -28,15 +40,53 @@ export function JobsPage() {
       ),
     [searchId, status],
   );
+  const feed = useAsync(() => api.getFeedUrl(), []);
 
   async function setJobStatus(jobId: number, next: "seen" | "applied" | "archived") {
     await api.updateJob(jobId, { status: next });
     jobs.reload();
   }
 
+  async function copyFeedUrl() {
+    if (!feed.data) return;
+    const url = buildFeedUrl(feed.data.url, searchId, status);
+    await navigator.clipboard.writeText(url);
+    setFeedMessage("RSS feed URL copied to clipboard.");
+  }
+
+  async function rotateFeedUrl() {
+    await api.rotateFeedUrl();
+    feed.reload();
+    setFeedMessage("RSS feed link regenerated. Update any feed readers using the old URL.");
+  }
+
+  const filteredFeedUrl = feed.data ? buildFeedUrl(feed.data.url, searchId, status) : "";
+
   return (
     <>
       <h1>Jobs</h1>
+      <Card title="RSS feed">
+        {feed.loading && <p>Loading feed URL...</p>}
+        {feed.error && <Banner kind="error">Could not load RSS feed URL.</Banner>}
+        {feed.data && (
+          <>
+            <p className="muted">
+              Subscribe in any RSS reader. The URL respects the search and status filters selected
+              below.
+            </p>
+            <Field label="Feed URL" hint="Anyone with this link can read your job feed.">
+              <input readOnly value={filteredFeedUrl} onFocus={(e) => e.target.select()} />
+            </Field>
+            <div className="row-actions">
+              <Button onClick={copyFeedUrl}>Copy feed URL</Button>
+              <Button variant="ghost" onClick={rotateFeedUrl}>
+                Regenerate link
+              </Button>
+            </div>
+            {feedMessage && <p className="muted">{feedMessage}</p>}
+          </>
+        )}
+      </Card>
       <Card
         title="Discovered jobs"
         actions={

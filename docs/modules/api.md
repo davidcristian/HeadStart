@@ -40,6 +40,9 @@ scrape failure), and `recent_delivery_failures` (up to five recent failed
 notification attempts with job title, URL, error, and timestamp).
 | GET    | `/jobs`               | Feed of seen jobs (filter by `search_id`, `status`) |
 | PATCH  | `/jobs/{id}`          | Update triage status (`seen` / `applied` / `archived`) |
+| GET    | `/feed/url`           | Signed RSS feed URL for the current user             |
+| POST   | `/feed/rotate`        | Invalidate prior feed URLs and issue a new one       |
+| GET    | `/feed/rss`           | RSS 2.0 job feed (public; `token` query param)     |
 | GET    | `/targets`            | List notification targets                |
 | POST   | `/targets`            | Create a target (e.g. ntfy topic)        |
 | PATCH  | `/targets/{id}`       | Update a target                          |
@@ -55,7 +58,7 @@ notification attempts with job title, URL, error, and timestamp).
 
 ## Auth
 
-Multi-user with JWT. **Every** route except `/health` and the
+Multi-user with JWT. **Every** route except `/health`, `/feed/rss`, and the
 `/auth/register|login|refresh|forgot-password|reset-password` endpoints requires
 `Authorization: Bearer <access_token>` and is **scoped to the authenticated
 user** — including reads. Cross-user access returns 404. Full detail in

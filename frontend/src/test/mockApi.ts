@@ -1,7 +1,15 @@
 /** Shared mocked API client for page smoke tests. */
 
 import { vi } from "vitest";
-import type { AdminStats, AdminUser, Job, NotificationTarget, Search, Source, User } from "../types";
+import type {
+  AdminStats,
+  AdminUser,
+  Job,
+  NotificationTarget,
+  Search,
+  Source,
+  User,
+} from "../types";
 import { sampleJob } from "./fixtures";
 
 const mockApi = vi.hoisted(() => ({
@@ -95,6 +103,14 @@ const mockApi = vi.hoisted(() => ({
   updateJob: vi.fn(async (_id: number, data: { status: string }) => ({
     ...sampleJob,
     status: data.status,
+  })),
+  getFeedUrl: vi.fn(async () => ({
+    url: "http://localhost:8000/api/v1/feed/rss?token=test-token",
+    token: "test-token",
+  })),
+  rotateFeedUrl: vi.fn(async () => ({
+    url: "http://localhost:8000/api/v1/feed/rss?token=rotated-token",
+    token: "rotated-token",
   })),
   listTargets: vi.fn(async (): Promise<NotificationTarget[]> => []),
   createTarget: vi.fn(async (data: unknown) => ({

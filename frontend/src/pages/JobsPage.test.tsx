@@ -70,4 +70,15 @@ describe("JobsPage", () => {
       expect(mockApi.updateJob).toHaveBeenCalledWith(sampleJob.id, { status: "applied" }),
     );
   });
+
+  it("shows the RSS feed URL", async () => {
+    render(<JobsPage />);
+
+    await waitFor(() =>
+      expect(
+        screen.getByDisplayValue("http://localhost:8000/api/v1/feed/rss?token=test-token"),
+      ).toBeInTheDocument(),
+    );
+    expect(screen.getByRole("button", { name: "Copy feed URL" })).toBeInTheDocument();
+  });
 });

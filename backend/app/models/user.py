@@ -24,6 +24,8 @@ class User(Base, TimestampMixin):
     # The first registered user becomes admin (see AuthService.register).
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    # Incremented to invalidate previously issued RSS feed URLs.
+    feed_token_version: Mapped[int] = mapped_column(default=0, nullable=False)
 
     sources: Mapped[list["Source"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"

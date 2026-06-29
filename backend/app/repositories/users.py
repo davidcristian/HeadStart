@@ -18,6 +18,12 @@ class UserRepository:
     def get_by_email(self, email: str) -> User | None:
         return self.session.scalar(select(User).where(User.email == email))
 
+    def bump_feed_token_version(self, user: User) -> User:
+        """Invalidate existing RSS feed URLs by incrementing the token version."""
+        user.feed_token_version += 1
+        self.session.flush()
+        return user
+
     def count(self) -> int:
         return int(self.session.scalar(select(func.count()).select_from(User)) or 0)
 

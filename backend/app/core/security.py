@@ -18,7 +18,7 @@ from app.models.base import utcnow
 # bcrypt only hashes the first 72 bytes; longer inputs raise in newer releases.
 _BCRYPT_MAX_BYTES = 72
 
-TokenType = Literal["access", "refresh"]
+TokenType = Literal["access", "refresh", "feed"]
 
 
 class TokenError(Exception):
@@ -45,6 +45,34 @@ def verify_password(password: str, password_hash: str) -> bool:
 def generate_password_reset_token() -> str:
     """Return a URL-safe random token for password reset links."""
     return secrets.token_urlsafe(32)
+
+
+def create_feed_token(subject: str | int, *, version: int) -> str:
+    """Issue a long-lived JWT for unauthenticated RSS feed access."""
+    now = utcnow()
+    payload = {
+        "sub": str(subject),
+        "type": "feed",
+        "ver": version,
+        "iat": now,
+        "exp": now + timedelta(days=3650),
+    }
+    return jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
+
+
+def decode_feed_token(token: str) -> dict[str, Any]:
+    """Decode and validate a feed JWT. Raises `TokenError`."""
+    try:
+        payload: dict[str, Any] = jwt.decode(
+            token, settings.jwt_secret, algorithms=[settings.jwt_algorithm]
+        )
+    except jwt.PyJWTError as exc:
+        raise TokenError(str(exc)) from exc
+    if payload.get("type") != "feed":
+        raise TokenError("Expected a feed token.")
+    if "ver" not in payload:
+        raise TokenError("Feed token is missing a version.")
+    return payload
 
 
 def hash_password_reset_token(token: str) -> str:

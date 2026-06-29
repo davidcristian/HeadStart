@@ -107,6 +107,11 @@ export interface Job {
   first_seen_at: string;
 }
 
+export interface FeedUrl {
+  url: string;
+  token: string;
+}
+
 export interface Meta {
   scrapers: string[];
   notifiers: string[];

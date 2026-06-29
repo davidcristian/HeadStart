@@ -6,6 +6,7 @@ import type {
   CredentialCreate,
   Health,
   Job,
+  FeedUrl,
   Meta,
   NotificationTarget,
   Search,
@@ -92,6 +93,10 @@ export const api = {
     request<Job[]>(`/api/v1/jobs${buildJobQuery(searchId, status)}`),
   updateJob: (id: number, data: { status: "seen" | "applied" | "archived" }) =>
     request<Job>(`/api/v1/jobs/${id}`, { method: "PATCH", body: data }),
+
+  // feed
+  getFeedUrl: () => request<FeedUrl>("/api/v1/feed/url"),
+  rotateFeedUrl: () => request<FeedUrl>("/api/v1/feed/rotate", { method: "POST" }),
 
   // targets
   listTargets: () => request<NotificationTarget[]>("/api/v1/targets"),
