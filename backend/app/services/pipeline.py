@@ -27,8 +27,8 @@ from app.scrapers.http import HttpClient
 from app.scrapers.rate_limit import RateLimiter, resolve_min_interval
 from app.scrapers.types import JobPosting
 from app.scrapers.url import normalize_job_url
-from app.services.credentials import CredentialService
 from app.services.compensation import format_compensation_display
+from app.services.credentials import CredentialService
 from app.services.digest import DigestService
 from app.services.posting_filters import apply_posting_filters
 from app.services.scheduling import next_run_from

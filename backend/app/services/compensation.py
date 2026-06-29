@@ -60,7 +60,9 @@ def format_compensation_display(posting: JobPosting) -> str:
     if info.min_annual is not None and info.max_annual is not None:
         if info.min_annual == info.max_annual:
             return f"{prefix}{_format_amount(info.min_annual)}"
-        return f"{prefix}{_format_amount(info.min_annual)} – {prefix}{_format_amount(info.max_annual)}"
+        min_text = _format_amount(info.min_annual)
+        max_text = _format_amount(info.max_annual)
+        return f"{prefix}{min_text} – {prefix}{max_text}"
     if info.min_annual is not None:
         return f"{prefix}{_format_amount(info.min_annual)}+"
     if info.max_annual is not None:
@@ -105,7 +107,9 @@ def _from_ashby_compensation(compensation: dict[str, Any]) -> CompensationInfo |
     components = compensation.get("summaryComponents")
     if isinstance(components, list):
         salary_components = [
-            item for item in components if isinstance(item, dict) and item.get("compensationType") == "Salary"
+            item
+            for item in components
+            if isinstance(item, dict) and item.get("compensationType") == "Salary"
         ]
         if salary_components:
             mins: list[int] = []
@@ -248,5 +252,7 @@ def _format_amount(value: int) -> str:
         return f"{scaled:.1f}M".rstrip("0").rstrip(".")
     if value >= 1_000:
         scaled = value / 1_000
-        return f"{scaled:.0f}K" if scaled == int(scaled) else f"{scaled:.1f}K".rstrip("0").rstrip(".")
+        if scaled == int(scaled):
+            return f"{scaled:.0f}K"
+        return f"{scaled:.1f}K".rstrip("0").rstrip(".")
     return str(value)

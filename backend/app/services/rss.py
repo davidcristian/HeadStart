@@ -37,7 +37,8 @@ def build_rss_feed(channel: RssChannel) -> str:
 def _render_item(job: SeenJob) -> str:
     title = job.title or "Untitled job"
     link = job.url or ""
-    description_parts = [part for part in (job.company, job.location, job.salary, job.status) if part]
+    description_fields = (job.company, job.location, job.salary, job.status)
+    description_parts = [part for part in description_fields if part]
     description = " · ".join(description_parts) if description_parts else job.status
     seen_at = job.first_seen_at
     if seen_at.tzinfo is None:
