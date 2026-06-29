@@ -14,6 +14,8 @@ jwt_secret             = "change-me-long-random-jwt-secret"
 credentials_secret_key = "change-me-long-random-credentials-key"
 
 # Optional: lock CORS to your real domain once you have one.
+# domain_name     = "jobs.example.com"
+# route53_zone_id = "Z0123456789ABCDEFGHIJ"
 # cors_origins = ["https://jobs.example.com"]
 
 ntfy_default_topic = "jobnotifier-change-me"

@@ -33,6 +33,21 @@ variable "cors_origins" {
   default = []
 }
 
+variable "domain_name" {
+  type    = string
+  default = ""
+}
+
+variable "route53_zone_id" {
+  type    = string
+  default = ""
+}
+
+variable "acm_certificate_arn" {
+  type    = string
+  default = ""
+}
+
 variable "ntfy_default_topic" {
   type    = string
   default = "jobnotifier-change-me"

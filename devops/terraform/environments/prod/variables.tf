@@ -34,6 +34,24 @@ variable "cors_origins" {
   default     = []
 }
 
+variable "domain_name" {
+  type        = string
+  description = "Custom hostname for HTTPS (e.g. jobs.example.com)."
+  default     = ""
+}
+
+variable "route53_zone_id" {
+  type        = string
+  description = "Route53 zone for domain_name (ACM validation + ALB alias)."
+  default     = ""
+}
+
+variable "acm_certificate_arn" {
+  type        = string
+  description = "Optional pre-validated ACM cert ARN instead of auto-provisioning."
+  default     = ""
+}
+
 variable "ntfy_default_topic" {
   type    = string
   default = "jobnotifier-change-me"

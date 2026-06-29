@@ -6,7 +6,8 @@ SHELL := /bin/bash
 .DEFAULT_GOAL := help
 
 .PHONY: help setup up down logs dev test lint format typecheck check \
-        migrate makemigration seed build push deploy ps restart
+        migrate makemigration seed build push deploy ps restart \
+        terraform-bootstrap aws-deploy-env
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -65,3 +66,9 @@ push: ## Build and push images to a registry (ECR)
 
 deploy: ## Deploy to AWS (build, push, update ECS)
 	./scripts/deploy.sh
+
+terraform-bootstrap: ## Create S3 + DynamoDB for Terraform remote state (PREFIX=yourname)
+	./scripts/terraform-bootstrap-state.sh "$(PREFIX)" "$(AWS_REGION)"
+
+aws-deploy-env: ## Print exports for deploy (ENVIRONMENT=dev): eval "$$(make aws-deploy-env)"
+	./scripts/aws-deploy-env.sh "$(or $(ENVIRONMENT),dev)"

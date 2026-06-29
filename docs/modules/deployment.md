@@ -29,6 +29,7 @@ devops/terraform/
 │   ├── ecr/       # image repositories
 │   ├── rds/       # Postgres
 │   ├── redis/     # ElastiCache
+│   ├── acm/       # DNS-validated TLS certificates (optional)
 │   ├── alb/       # load balancer, listeners, target groups
 │   ├── ecs/       # cluster, task defs + services (api, frontend, worker, beat)
 │   ├── iam/       # task execution + task roles
@@ -41,6 +42,19 @@ devops/terraform/
 State is remote: S3 bucket + DynamoDB lock table (configured per environment in
 `backend.tf`). Secrets are stored in Secrets Manager / SSM and injected into ECS
 task definitions — never in Terraform variables committed to git.
+
+## HTTPS (optional)
+
+By default the ALB serves HTTP on port 80 using its AWS-assigned DNS name. To
+terminate TLS:
+
+- Set `domain_name` + `route53_zone_id` in the environment module to provision
+  ACM (DNS validation), an HTTPS listener on 443, HTTP→HTTPS redirect, and a
+  Route53 alias to the ALB.
+- Or pass a pre-validated `acm_certificate_arn` in the same region as the ALB.
+
+`app_url` and `CORS_ORIGINS` default to `https://<domain>` when HTTPS is
+enabled. See [deploying-to-aws.md](../deploying-to-aws.md#custom-domain--https).
 
 ## Worker sizing (Playwright)
 
@@ -62,7 +76,9 @@ security group and scrape with Prometheus or the CloudWatch agent.
 
 ## Deploy flow
 
-`make deploy` (→ `scripts/deploy.sh`):
+`make deploy` (→ `scripts/deploy.sh`). Load deploy env vars with
+`eval "$(make aws-deploy-env)"` (reads Terraform outputs for `ECR_REGISTRY`,
+`ECS_CLUSTER`, `APP_URL`, etc.).
 
 1. Build images (`scripts/build-images.sh`): lean `jobnotifier-backend` (api/beat)
    and `jobnotifier-backend-worker` (Playwright + Chromium).

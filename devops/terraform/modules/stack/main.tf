@@ -8,7 +8,26 @@ locals {
     Environment = var.environment
     ManagedBy   = "terraform"
   })
-  effective_cors = length(var.cors_origins) > 0 ? var.cors_origins : ["http://${module.alb.dns_name}"]
+
+  create_acm = (
+    var.domain_name != "" &&
+    var.route53_zone_id != "" &&
+    var.acm_certificate_arn == ""
+  )
+  use_route53_alias = var.domain_name != "" && var.route53_zone_id != ""
+
+  certificate_arn = var.acm_certificate_arn != "" ? var.acm_certificate_arn : (
+    local.create_acm ? module.acm[0].certificate_arn : ""
+  )
+  https_enabled = local.certificate_arn != ""
+
+  app_base_url = (
+    local.https_enabled && var.domain_name != "" ?
+    "https://${var.domain_name}" :
+    "http://${module.alb.dns_name}"
+  )
+
+  effective_cors = length(var.cors_origins) > 0 ? var.cors_origins : [local.app_base_url]
 }
 
 module "network" {
@@ -53,13 +72,37 @@ module "iam" {
   tags        = local.tags
 }
 
+module "acm" {
+  count  = local.create_acm ? 1 : 0
+  source = "../acm"
+
+  domain_name     = var.domain_name
+  route53_zone_id = var.route53_zone_id
+  tags            = local.tags
+}
+
 module "alb" {
   source            = "../alb"
   name              = local.name
   vpc_id            = module.network.vpc_id
   public_subnet_ids = module.network.public_subnet_ids
   security_group_id = module.security.alb_sg_id
+  certificate_arn   = local.https_enabled ? local.certificate_arn : null
   tags              = local.tags
+}
+
+resource "aws_route53_record" "app" {
+  count = local.use_route53_alias ? 1 : 0
+
+  zone_id = var.route53_zone_id
+  name    = var.domain_name
+  type    = "A"
+
+  alias {
+    name                   = module.alb.dns_name
+    zone_id                = module.alb.zone_id
+    evaluate_target_health = true
+  }
 }
 
 module "rds" {
@@ -105,19 +148,19 @@ module "ecs" {
   frontend_target_group_arn = module.alb.frontend_target_group_arn
 
   environment = {
-    ENVIRONMENT             = var.environment
-    LOG_LEVEL               = "INFO"
-    POSTGRES_HOST           = module.rds.address
-    POSTGRES_PORT           = tostring(module.rds.port)
-    POSTGRES_DB             = module.rds.db_name
-    POSTGRES_USER           = var.db_username
-    REDIS_HOST              = module.redis.address
-    REDIS_PORT              = tostring(module.redis.port)
-    CORS_ORIGINS            = join(",", local.effective_cors)
-    NTFY_DEFAULT_SERVER_URL = var.ntfy_default_server_url
-    NTFY_DEFAULT_TOPIC      = var.ntfy_default_topic
-    SCHEDULER_TICK_SECONDS  = "30"
-    SCHEDULER_MAX_CATCHUP   = "1"
+    ENVIRONMENT                      = var.environment
+    LOG_LEVEL                        = "INFO"
+    POSTGRES_HOST                    = module.rds.address
+    POSTGRES_PORT                    = tostring(module.rds.port)
+    POSTGRES_DB                      = module.rds.db_name
+    POSTGRES_USER                    = var.db_username
+    REDIS_HOST                       = module.redis.address
+    REDIS_PORT                       = tostring(module.redis.port)
+    CORS_ORIGINS                     = join(",", local.effective_cors)
+    NTFY_DEFAULT_SERVER_URL          = var.ntfy_default_server_url
+    NTFY_DEFAULT_TOPIC               = var.ntfy_default_topic
+    SCHEDULER_TICK_SECONDS           = "30"
+    SCHEDULER_MAX_CATCHUP            = "1"
     PLAYWRIGHT_NAVIGATION_TIMEOUT_MS = "30000"
     PLAYWRIGHT_MAX_RETRIES           = "1"
   }

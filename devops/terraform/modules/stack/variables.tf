@@ -57,6 +57,24 @@ variable "cors_origins" {
   default     = []
 }
 
+variable "domain_name" {
+  type        = string
+  default     = ""
+  description = "Optional custom hostname (e.g. jobs.example.com). Enables HTTPS when combined with route53_zone_id or acm_certificate_arn."
+}
+
+variable "route53_zone_id" {
+  type        = string
+  default     = ""
+  description = "Route53 hosted zone for domain_name. Provisions ACM DNS validation and an ALB alias record."
+}
+
+variable "acm_certificate_arn" {
+  type        = string
+  default     = ""
+  description = "Pre-validated ACM certificate ARN in the ALB region. Skips ACM creation when route53_zone_id is also set."
+}
+
 variable "ntfy_default_server_url" {
   type    = string
   default = "https://ntfy.sh"

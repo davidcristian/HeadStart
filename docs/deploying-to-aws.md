@@ -16,7 +16,7 @@ change.
 Terraform (`devops/terraform/`) provisions:
 
 - VPC, subnets, security groups
-- Application Load Balancer (public HTTP entrypoint)
+- Application Load Balancer (public entrypoint; HTTP by default, optional HTTPS)
 - ECS Fargate cluster with services: `api`, `frontend`, `worker`, `beat`
 - RDS Postgres + ElastiCache Redis
 - ECR repositories for backend, backend-worker (Playwright), and frontend images
@@ -29,9 +29,9 @@ Default region is **`us-east-2`**. Use the **`dev`** environment first (cheaper)
 > **Cost:** even `dev` runs an ALB, four Fargate tasks, RDS, and Redis — expect
 > ongoing monthly charges, not a free-tier-only stack.
 
-> **HTTPS:** the ALB serves **HTTP on port 80** today. Port 443 is open in the
-> security group, but there is no TLS listener or certificate yet. You access the
-> app at `http://<alb-dns-name>`. Custom domain + HTTPS is a follow-up task.
+> **HTTPS:** without a custom domain the ALB serves **HTTP on port 80** at
+> `http://<alb-dns-name>`. To enable TLS, set `domain_name` and `route53_zone_id`
+> (or bring your own `acm_certificate_arn`) — see [Custom domain & HTTPS](#custom-domain--https) below.
 
 ---
 
@@ -65,27 +65,14 @@ Replace `YOURNAME` with a globally unique prefix:
 
 ```bash
 export AWS_REGION=us-east-2
-
-aws s3api create-bucket \
-  --bucket YOURNAME-jobnotifier-tfstate \
-  --region us-east-2 \
-  --create-bucket-configuration LocationConstraint=us-east-2
-
-aws s3api put-bucket-versioning \
-  --bucket YOURNAME-jobnotifier-tfstate \
-  --versioning-configuration Status=Enabled
-
-aws dynamodb create-table \
-  --table-name jobnotifier-tflock \
-  --attribute-definitions AttributeName=LockID,AttributeType=S \
-  --key-schema AttributeName=LockID,KeyType=HASH \
-  --billing-mode PAY_PER_REQUEST \
-  --region us-east-2
+make terraform-bootstrap PREFIX=YOURNAME
 ```
 
+Or run the underlying script directly: `./scripts/terraform-bootstrap-state.sh YOURNAME us-east-2`.
+
 Edit `devops/terraform/environments/dev/backend.tf` and replace
-`CHANGEME-jobnotifier-tfstate` with your bucket name. Do the same in
-`environments/prod/backend.tf` when you add production.
+`CHANGEME-jobnotifier-tfstate` with your bucket name (`YOURNAME-jobnotifier-tfstate`).
+Do the same in `environments/prod/backend.tf` when you add production.
 
 ---
 
@@ -114,7 +101,9 @@ runtime. Never commit them to git. You can also use a local `terraform.tfvars`
 Note the outputs:
 
 ```bash
-terraform output alb_dns_name        # public URL (HTTP)
+terraform output app_url             # primary URL (HTTPS when configured)
+terraform output alb_dns_name        # ALB DNS name (always available)
+terraform output https_enabled       # true when TLS is active
 terraform output ecs_cluster_name    # e.g. jobnotifier-dev
 terraform output ecr_repository_urls
 ```
@@ -128,12 +117,20 @@ ECS services will not become healthy until images exist in ECR (next step).
 From the **repository root**, with Docker running:
 
 ```bash
+eval "$(make aws-deploy-env)"
+make deploy
+```
+
+`make aws-deploy-env` reads Terraform outputs and prints `AWS_REGION`, `ECR_REGISTRY`,
+`ECS_CLUSTER`, and `ENVIRONMENT`. For production use `eval "$(make aws-deploy-env ENVIRONMENT=prod)"`.
+
+Or set the variables manually:
+
+```bash
 export AWS_REGION=us-east-2
 export ENVIRONMENT=dev
-
 export ECR_REGISTRY="$(aws sts get-caller-identity --query Account --output text).dkr.ecr.${AWS_REGION}.amazonaws.com"
 export ECS_CLUSTER="$(cd devops/terraform/environments/dev && terraform output -raw ecs_cluster_name)"
-
 make deploy
 ```
 
@@ -157,7 +154,14 @@ aws ecs describe-services \
   --output table
 ```
 
-Health check (replace with your ALB DNS name):
+Health check:
+
+```bash
+eval "$(make aws-deploy-env)"
+curl "$APP_URL/api/v1/health"
+```
+
+Or with the raw ALB DNS name:
 
 ```bash
 curl "http://$(cd devops/terraform/environments/dev && terraform output -raw alb_dns_name)/api/v1/health"
@@ -167,10 +171,12 @@ curl "http://$(cd devops/terraform/environments/dev && terraform output -raw alb
 
 ## 4. Use the app
 
-Open the ALB DNS name in a browser:
+Open the app URL in a browser (`terraform output app_url`):
 
-- **UI:** `http://<alb-dns>/`
-- **API docs:** `http://<alb-dns>/docs`
+- **UI:** `<app-url>/`
+- **API docs:** `<app-url>/docs`
+
+Without a custom domain, use `http://<alb-dns>/` as above.
 
 There is no `make seed` on AWS. Continue with
 [getting-started.md](getting-started.md) from **step 2** (create your account).
@@ -183,13 +189,11 @@ The first registered user becomes admin.
 After infrastructure exists, ship code changes with:
 
 ```bash
-export AWS_REGION=us-east-2
-export ECR_REGISTRY="<account-id>.dkr.ecr.us-east-2.amazonaws.com"
-export ECS_CLUSTER=jobnotifier-dev   # or jobnotifier-prod
-export ENVIRONMENT=dev               # optional; default is dev
-
+eval "$(make aws-deploy-env)"          # or ENVIRONMENT=prod
 make deploy
 ```
+
+Or set `AWS_REGION`, `ECR_REGISTRY`, `ECS_CLUSTER`, and optional `ENVIRONMENT` manually.
 
 Migrations run automatically on each deploy.
 
@@ -208,6 +212,49 @@ When ready for production:
 
 `prod` uses larger instances, Multi-AZ RDS, and deletion protection on the
 database.
+
+---
+
+## Custom domain & HTTPS
+
+ACM cannot issue a certificate for the default `*.elb.amazonaws.com` hostname, so
+HTTPS requires a domain you control.
+
+**Recommended (Route53 + auto ACM):** add to `terraform.tfvars` or `TF_VAR_*`:
+
+```hcl
+domain_name       = "jobs.example.com"
+route53_zone_id   = "Z0123456789ABCDEFGHIJ"   # hosted zone for example.com
+# cors_origins defaults to https://jobs.example.com when domain_name is set
+```
+
+On `terraform apply`, Terraform will:
+
+1. Request a DNS-validated ACM certificate
+2. Add the ALB HTTPS listener on port 443 (TLS 1.2+)
+3. Redirect HTTP → HTTPS on port 80
+4. Create a Route53 alias `A` record pointing at the ALB
+5. Set `CORS_ORIGINS` to `https://<domain_name>` unless you override `cors_origins`
+
+**Bring your own certificate:** if the cert is already issued in the same region
+as the ALB:
+
+```hcl
+domain_name           = "jobs.example.com"
+route53_zone_id       = "Z0123456789ABCDEFGHIJ"   # optional: only for alias record
+acm_certificate_arn   = "arn:aws:acm:us-east-2:123456789012:certificate/..."
+```
+
+If you set `acm_certificate_arn` without `route53_zone_id`, create the DNS alias
+(or CNAME) to the ALB yourself.
+
+Verify after apply:
+
+```bash
+terraform output https_enabled   # true
+terraform output app_url           # https://jobs.example.com
+curl "$(terraform output -raw app_url)/api/v1/health"
+```
 
 ---
 
