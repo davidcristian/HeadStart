@@ -16,6 +16,7 @@ const PRIMARY_NAV = [
 const MORE_NAV = [
   { to: "/targets", label: "Notifications" },
   { to: "/credentials", label: "Site credentials" },
+  { to: "/profile", label: "Application profile" },
   { to: "/settings", label: "Settings" },
 ];
 
@@ -25,6 +26,7 @@ const DESKTOP_NAV = [
   { to: "/sources", label: "Sources" },
   { to: "/targets", label: "Notifications" },
   { to: "/credentials", label: "Site credentials" },
+  { to: "/profile", label: "Application profile" },
   { to: "/settings", label: "Settings" },
 ];
 

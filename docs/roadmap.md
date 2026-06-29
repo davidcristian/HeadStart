@@ -173,7 +173,7 @@ sessions) and the job lifecycle (`seen_job.status`).
 
 | Item | Why | Notes |
 | ---- | --- | ----- |
-| User profile & resume storage | Applications need structured candidate data | Encrypted storage for resume/CV, cover-letter templates, and per-field answers; never log secrets |
+| ~~User profile & resume storage~~ | ~~Applications need structured candidate data~~ | **Shipped:** one Fernet-encrypted profile per user (contact, links, resume text, cover-letter template, per-field answers); returned to its owner for editing. See [modules/profile.md](modules/profile.md) |
 | Per-site apply adapters | Each ATS/board has different apply flows | Pluggable adapters (same registry pattern as scrapers); start with one high-value site (e.g. Greenhouse or Lever) |
 | Apply orchestration service | Business rules live in services, not routers | Queue apply jobs, inject credentials, record outcome, update `seen_job.status` to `applied` |
 | Apply from the Jobs UI | Users need a one-click path | "Apply" action on a job row; confirm dialog with editable cover letter; show in-progress / success / failure |

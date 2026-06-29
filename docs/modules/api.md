@@ -53,6 +53,9 @@ notification attempts with job title, URL, error, and timestamp).
 | POST   | `/credentials`        | Create encrypted site credentials        |
 | PATCH  | `/credentials/{id}`   | Update credential                        |
 | DELETE | `/credentials/{id}`   | Delete credential                        |
+| GET    | `/profile`            | Get the application profile (empty defaults if unset) |
+| PUT    | `/profile`            | Create or fully replace the application profile |
+| DELETE | `/profile`            | Clear the application profile            |
 | GET    | `/admin/users`        | List all users (admin only)              |
 | PATCH  | `/admin/users/{id}`   | Toggle `is_active` / `is_admin` (admin)  |
 | GET    | `/admin/stats`        | Global scrape/delivery aggregates (admin)|

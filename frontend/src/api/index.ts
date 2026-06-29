@@ -9,6 +9,8 @@ import type {
   FeedUrl,
   Meta,
   NotificationTarget,
+  Profile,
+  ProfileData,
   Search,
   SearchCreate,
   SearchRunResult,
@@ -119,4 +121,10 @@ export const api = {
     request<SiteCredential>(`/api/v1/credentials/${id}`, { method: "PATCH", body: data }),
   deleteCredential: (id: number) =>
     request<void>(`/api/v1/credentials/${id}`, { method: "DELETE" }),
+
+  // application profile (auto-apply candidate data)
+  getProfile: () => request<Profile>("/api/v1/profile"),
+  saveProfile: (data: ProfileData) =>
+    request<Profile>("/api/v1/profile", { method: "PUT", body: data }),
+  deleteProfile: () => request<void>("/api/v1/profile", { method: "DELETE" }),
 };

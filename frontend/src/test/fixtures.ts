@@ -1,6 +1,6 @@
 /** Sample API payloads for frontend smoke tests. */
 
-import type { Job, Meta, NotificationTarget, Search, Source } from "../types";
+import type { Job, Meta, NotificationTarget, Profile, Search, Source } from "../types";
 
 export const sampleMeta: Meta = {
   scrapers: [
@@ -52,6 +52,32 @@ export const sampleSearch: Search = {
   next_run_at: "2026-06-28T12:15:00Z",
   created_at: "2026-06-28T00:00:00Z",
   recent_delivery_failures: [],
+};
+
+export const emptyProfile: Profile = {
+  full_name: "",
+  email: "",
+  phone: "",
+  location: "",
+  links: { linkedin: "", github: "", website: "" },
+  resume_text: "",
+  cover_letter_template: "",
+  answers: {},
+  exists: false,
+  updated_at: null,
+};
+
+export const sampleProfile: Profile = {
+  full_name: "Ada Lovelace",
+  email: "ada@example.com",
+  phone: "+1 555 0100",
+  location: "London, UK",
+  links: { linkedin: "", github: "https://github.com/ada", website: "" },
+  resume_text: "Pioneering programmer.",
+  cover_letter_template: "Dear {company} team, ...",
+  answers: { work_authorization: "UK citizen" },
+  exists: true,
+  updated_at: "2026-06-28T12:00:00Z",
 };
 
 export const sampleJob: Job = {

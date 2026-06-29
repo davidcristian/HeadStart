@@ -12,6 +12,7 @@ erDiagram
   USER ||--o{ SEARCH : owns
   USER ||--o{ NOTIFICATION_TARGET : owns
   USER ||--o{ SITE_CREDENTIAL : owns
+  USER ||--o| APPLICATION_PROFILE : has
   SOURCE ||--o{ SEARCH : has
   SOURCE ||--o{ SITE_CREDENTIAL : "secured by"
   NOTIFICATION_TARGET ||--o{ SEARCH : used_by
@@ -20,8 +21,8 @@ erDiagram
   NOTIFICATION_TARGET ||--o{ DELIVERY_LOG : via
 ```
 
-**Ownership:** `source`, `search`, `notification_target`, and `site_credential`
-each carry a `user_id` FK (`ON DELETE CASCADE`). `seen_job` and `delivery_log`
+**Ownership:** `source`, `search`, `notification_target`, `site_credential`, and
+`application_profile` each carry a `user_id` FK (`ON DELETE CASCADE`). `seen_job` and `delivery_log`
 have no `user_id`; they are scoped transitively through their parent `search`.
 All API queries filter by the authenticated user — see [auth.md](auth.md).
 
@@ -169,6 +170,19 @@ Encrypted per-user, per-source secrets injected into scraper requests. See
 | secret_ciphertext | text      | Fernet-encrypted `{cookies, headers, session}` |
 | enabled           | bool      | Only enabled creds are injected             |
 | created_at        | datetime  |                                             |
+
+### application_profile
+
+Encrypted, per-user candidate profile for auto-apply (singleton per user). See
+[profile.md](profile.md).
+
+| Column          | Type      | Notes                                          |
+| --------------- | --------- | ---------------------------------------------- |
+| id              | int PK    |                                                |
+| user_id         | FK user   | Owner; **unique** (one profile per user)       |
+| data_ciphertext | text      | Fernet-encrypted JSON (contact, links, resume, cover-letter template, answers) |
+| created_at      | datetime  |                                                |
+| updated_at      | datetime  | Bumped on each save                            |
 
 ### delivery_log
 

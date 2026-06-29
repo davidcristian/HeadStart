@@ -181,3 +181,25 @@ export interface CredentialCreate {
   headers: Record<string, string>;
   session: Record<string, string>;
 }
+
+export interface ProfileLinks {
+  linkedin: string;
+  github: string;
+  website: string;
+}
+
+export interface ProfileData {
+  full_name: string;
+  email: string;
+  phone: string;
+  location: string;
+  links: ProfileLinks;
+  resume_text: string;
+  cover_letter_template: string;
+  answers: Record<string, string>;
+}
+
+export interface Profile extends ProfileData {
+  exists: boolean;
+  updated_at: string | null;
+}

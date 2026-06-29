@@ -2,7 +2,18 @@
 
 from fastapi import APIRouter
 
-from app.api.v1 import admin, auth, credentials, feed, health, jobs, searches, sources, targets
+from app.api.v1 import (
+    admin,
+    auth,
+    credentials,
+    feed,
+    health,
+    jobs,
+    profile,
+    searches,
+    sources,
+    targets,
+)
 
 api_router = APIRouter()
 api_router.include_router(health.router, tags=["meta"])
@@ -14,5 +25,6 @@ api_router.include_router(jobs.router, prefix="/jobs", tags=["jobs"])
 api_router.include_router(feed.router, prefix="/feed", tags=["feed"])
 api_router.include_router(targets.router, prefix="/targets", tags=["targets"])
 api_router.include_router(credentials.router, prefix="/credentials", tags=["credentials"])
+api_router.include_router(profile.router, prefix="/profile", tags=["profile"])
 
 __all__ = ["api_router"]

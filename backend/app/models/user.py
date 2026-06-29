@@ -8,6 +8,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import Base, TimestampMixin
 
 if TYPE_CHECKING:
+    from app.models.application_profile import ApplicationProfile
     from app.models.notification_target import NotificationTarget
     from app.models.password_reset_token import PasswordResetToken
     from app.models.search import Search
@@ -41,4 +42,7 @@ class User(Base, TimestampMixin):
     )
     password_reset_tokens: Mapped[list["PasswordResetToken"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
+    )
+    application_profile: Mapped["ApplicationProfile | None"] = relationship(
+        back_populates="user", uselist=False, cascade="all, delete-orphan"
     )

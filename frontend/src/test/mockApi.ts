@@ -6,11 +6,13 @@ import type {
   AdminUser,
   Job,
   NotificationTarget,
+  Profile,
+  ProfileData,
   Search,
   Source,
   User,
 } from "../types";
-import { sampleJob } from "./fixtures";
+import { emptyProfile, sampleJob } from "./fixtures";
 
 const mockApi = vi.hoisted(() => ({
   meta: vi.fn(async () => ({
@@ -139,6 +141,14 @@ const mockApi = vi.hoisted(() => ({
     is_active: true,
     created_at: "2026-06-28T00:00:00Z",
   })),
+  getProfile: vi.fn(async (): Promise<Profile> => emptyProfile),
+  saveProfile: vi.fn(async (data: ProfileData): Promise<Profile> => ({
+    ...emptyProfile,
+    ...data,
+    exists: true,
+    updated_at: "2026-06-28T12:00:00Z",
+  })),
+  deleteProfile: vi.fn(async () => undefined),
   listAdminUsers: vi.fn(async (): Promise<AdminUser[]> => []),
   updateAdminUser: vi.fn(async (_id: number, data: unknown): Promise<AdminUser> => ({
     id: 2,
@@ -173,6 +183,7 @@ export function resetMockApi(): void {
   mockApi.listSearches.mockResolvedValue([]);
   mockApi.listJobs.mockResolvedValue([]);
   mockApi.listTargets.mockResolvedValue([]);
+  mockApi.getProfile.mockResolvedValue(emptyProfile);
 }
 
 export { mockApi };

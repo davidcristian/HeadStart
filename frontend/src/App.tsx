@@ -7,6 +7,7 @@ import { CredentialsPage } from "./pages/CredentialsPage";
 import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
 import { JobsPage } from "./pages/JobsPage";
 import { LoginPage } from "./pages/LoginPage";
+import { ProfilePage } from "./pages/ProfilePage";
 import { RegisterPage } from "./pages/RegisterPage";
 import { ResetPasswordPage } from "./pages/ResetPasswordPage";
 import { SearchesPage } from "./pages/SearchesPage";
@@ -29,6 +30,7 @@ export function App() {
           <Route path="/sources" element={<SourcesPage />} />
           <Route path="/targets" element={<TargetsPage />} />
           <Route path="/credentials" element={<CredentialsPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route element={<AdminRoute />}>
             <Route path="/admin" element={<AdminPage />} />
