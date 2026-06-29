@@ -28,22 +28,23 @@ export function JobList({
 
   return (
     <table className="table job-table">
-        <thead>
-          <tr>
-            <th>Title</th>
-            <th>Company</th>
-            <th>Location</th>
-            <th>Status</th>
-            <th>First seen</th>
-            <th />
-          </tr>
-        </thead>
-        <tbody>
-          {jobs.map((job) => (
-            <JobTableRow key={job.id} job={job} onStatusChange={onStatusChange} />
-          ))}
-        </tbody>
-      </table>
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Company</th>
+          <th>Location</th>
+          <th>Salary</th>
+          <th>Status</th>
+          <th>First seen</th>
+          <th />
+        </tr>
+      </thead>
+      <tbody>
+        {jobs.map((job) => (
+          <JobTableRow key={job.id} job={job} onStatusChange={onStatusChange} />
+        ))}
+      </tbody>
+    </table>
   );
 }
 
@@ -58,6 +59,7 @@ function JobTableRow({
     <tr>
       <td>
         <JobTitle job={job} />
+        {job.summary && <div className="job-summary muted">{job.summary}</div>}
       </td>
       <td>{job.company || "-"}</td>
       <td>{job.location || "-"}</td>
@@ -88,6 +90,8 @@ function JobCard({
       <p className="job-card-meta">
         {[job.company, job.location].filter(Boolean).join(" · ") || "Unknown company"}
       </p>
+      {job.summary && <p className="job-summary muted">{job.summary}</p>}
+      {job.salary && <p className="job-card-salary muted">{job.salary}</p>}
       <p className="job-card-seen muted">First seen {formatSeenAt(job.first_seen_at)}</p>
       <JobActions job={job} onStatusChange={onStatusChange} />
     </article>

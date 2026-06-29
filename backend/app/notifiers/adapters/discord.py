@@ -15,7 +15,7 @@ import httpx
 
 from app.core.logging import get_logger
 from app.notifiers.base import Notifier, register_notifier
-from app.notifiers.digest_format import digest_text_lines, digest_title
+from app.notifiers.digest_format import digest_blocks, digest_title
 from app.notifiers.types import DeliveryResult, NotifyContext
 from app.scrapers.types import JobPosting
 
@@ -80,6 +80,8 @@ class DiscordNotifier(Notifier):
             title = f"{title} @ {job.company}"
 
         description_parts: list[str] = []
+        if job.summary:
+            description_parts.append(job.summary)
         if job.company and job.title:
             description_parts.append(job.company)
         if job.location:
@@ -99,14 +101,13 @@ class DiscordNotifier(Notifier):
     @staticmethod
     def _digest_payload(ctx: NotifyContext, jobs: list[JobPosting]) -> dict[str, Any]:
         description_parts: list[str] = []
-        for block in digest_text_lines(jobs):
-            lines = block.split("\n")
-            headline = lines[0]
-            url = lines[1].strip() if len(lines) > 1 else ""
-            if url:
-                description_parts.append(f"• [{headline}]({url})")
+        for block in digest_blocks(jobs):
+            if block.url:
+                description_parts.append(f"• [{block.headline}]({block.url})")
             else:
-                description_parts.append(f"• {headline}")
+                description_parts.append(f"• {block.headline}")
+            if block.summary:
+                description_parts.append(f"  {block.summary}")
         embed: dict[str, Any] = {
             "title": digest_title(len(jobs), ctx.search_name),
             "description": "\n".join(description_parts),

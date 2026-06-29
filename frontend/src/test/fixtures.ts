@@ -63,6 +63,7 @@ export const sampleJob: Job = {
   location: "Remote",
   salary: "$150K – $180K",
   url: "https://example.test/jobs/1",
+  summary: "Matches your search: mentions engineer; remote role.",
   status: "new",
   first_seen_at: "2026-06-28T12:00:00Z",
 };

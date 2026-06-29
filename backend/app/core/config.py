@@ -88,6 +88,20 @@ class Settings(BaseSettings):
     # Optional bearer token for GET /metrics (empty = unauthenticated).
     metrics_token: str = ""
 
+    # ---- AI summaries ("why this matches" blurb in notifications) ----
+    # Generate a short blurb per new job and include it in notifications + the
+    # Jobs feed. The default provider is offline and free.
+    summaries_enabled: bool = True
+    # Registered summarizer key: "heuristic" (offline, default) or "openai".
+    summary_provider: str = "heuristic"
+    # Hard cap on a blurb's length before it is stored/sent.
+    summary_max_chars: int = 280
+
+    # ---- OpenAI (used only when summary_provider = "openai") ----
+    openai_api_key: str = ""
+    openai_model: str = "gpt-4o-mini"
+    openai_base_url: str = "https://api.openai.com/v1"
+
     # ---- ntfy defaults (used by seed + default target) ----
     ntfy_default_server_url: str = "https://ntfy.sh"
     ntfy_default_topic: str = "jobnotifier-change-me"

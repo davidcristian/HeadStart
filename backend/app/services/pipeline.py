@@ -32,6 +32,7 @@ from app.services.credentials import CredentialService
 from app.services.digest import DigestService
 from app.services.posting_filters import apply_posting_filters
 from app.services.scheduling import next_run_from
+from app.services.summaries import SummaryService
 
 logger = get_logger(__name__)
 
@@ -66,6 +67,7 @@ class PipelineService:
         self.seen_jobs = SeenJobRepository(session)
         self.credentials = CredentialService(session)
         self.digest = DigestService(session, notifier_factory=notifier_factory)
+        self.summaries = SummaryService()
         self._scraper_factory = scraper_factory
         self._notifier_factory = notifier_factory
 
@@ -94,6 +96,7 @@ class PipelineService:
             new_postings = self._dedupe(search_id, postings)
             result.new = len(new_postings)
             to_notify, result.skipped = self._filter_cross_search(search.user_id, new_postings)
+            self.summaries.annotate(to_notify, search_name=search.name, filters=search.filters)
             seen_rows = self._persist_new(search_id, new_postings)
             if to_notify:
                 if search.notification_mode == "digest":
@@ -202,6 +205,7 @@ class PipelineService:
                 location=posting.location,
                 salary=format_compensation_display(posting),
                 url=posting.url,
+                summary=posting.summary,
             )
             self.seen_jobs.add(row)
             rows[posting.external_id] = row

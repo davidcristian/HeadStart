@@ -28,6 +28,15 @@ Adapters self-register with `@register_notifier("key")`, where `key` matches a
 `NotificationTarget.type`. Modules are imported in
 `app/notifiers/adapters/__init__.py`; resolve with `get_notifier(type)`.
 
+## Match summaries
+
+When a job carries a `summary` (the "why this matches" blurb — see
+[summaries.md](summaries.md)), every adapter includes it in the message: an
+extra line in `ntfy`/`slack`/`telegram`, a `Why this matches:` line in `email`,
+the embed description in `discord`, and a `summary` field in the `webhook` JSON.
+This applies to both immediate and digest sends. When the blurb is empty, output
+is unchanged.
+
 ## ntfy adapter
 
 **Key:** `ntfy`. Config: `{ "server_url": "https://ntfy.sh", "topic": "...",
@@ -108,8 +117,8 @@ all jobs.
 POSTs machine-readable JSON to any HTTPS endpoint for Zapier, n8n, or custom
 integrations. Immediate mode sends one payload per job (`event: job.new`); digest
 mode sends one batched payload (`event: jobs.digest` with a `jobs` array). Each
-job includes `external_id`, `title`, `company`, `location`, `url`, and
-`posted_at` (ISO-8601 or `null`).
+job includes `external_id`, `title`, `company`, `location`, `url`, `summary`
+(the match blurb, or `""`), and `posted_at` (ISO-8601 or `null`).
 
 When `secret` is set, requests include an `X-JobNotifier-Signature` header with
 `sha256=<hex>` (HMAC-SHA256 of the JSON body). Optional `headers` are merged

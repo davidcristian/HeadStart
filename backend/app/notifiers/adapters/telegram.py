@@ -17,7 +17,7 @@ import httpx
 
 from app.core.logging import get_logger
 from app.notifiers.base import Notifier, register_notifier
-from app.notifiers.digest_format import digest_text_lines, digest_title
+from app.notifiers.digest_format import digest_blocks, digest_title
 from app.notifiers.types import DeliveryResult, NotifyContext
 from app.scrapers.types import JobPosting
 
@@ -98,6 +98,8 @@ class TelegramNotifier(Notifier):
             headline = f"{headline} @ {html.escape(job.company)}"
 
         lines = [headline]
+        if job.summary:
+            lines.append(html.escape(job.summary))
         if job.location:
             lines.append(html.escape(job.location))
         if job.url:
@@ -109,15 +111,15 @@ class TelegramNotifier(Notifier):
     def _digest_payload(chat_id: str, ctx: NotifyContext, jobs: list[JobPosting]) -> dict[str, Any]:
         headline = html.escape(digest_title(len(jobs), ctx.search_name))
         lines = [f"<b>{headline}</b>", ""]
-        for block in digest_text_lines(jobs):
-            parts = block.split("\n", 1)
-            title = html.escape(parts[0])
-            url = parts[1].strip() if len(parts) > 1 else ""
-            if url:
-                safe_url = html.escape(url, quote=True)
-                lines.append(f'• {title}\n  <a href="{safe_url}">Apply</a>')
-            else:
-                lines.append(f"• {title}")
+        for block in digest_blocks(jobs):
+            title = html.escape(block.headline)
+            entry = f"• {title}"
+            if block.summary:
+                entry = f"{entry}\n  {html.escape(block.summary)}"
+            if block.url:
+                safe_url = html.escape(block.url, quote=True)
+                entry = f'{entry}\n  <a href="{safe_url}">Apply</a>'
+            lines.append(entry)
         return {
             "chat_id": chat_id,
             "text": "\n".join(lines),

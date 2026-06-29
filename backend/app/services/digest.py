@@ -125,6 +125,7 @@ def _seen_job_to_posting(row: SeenJob) -> JobPosting:
         company=row.company,
         location=row.location,
         url=row.url,
+        summary=row.summary,
     )
 
 

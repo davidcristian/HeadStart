@@ -29,9 +29,7 @@ export function filtersToForm(filters: Json): SearchFilterForm {
     keywordsExclude: stringField(filters.keywords_exclude),
     location: stringField(filters.location),
     workplace:
-      workplace === "remote" || workplace === "hybrid" || workplace === "onsite"
-        ? workplace
-        : "",
+      workplace === "remote" || workplace === "hybrid" || workplace === "onsite" ? workplace : "",
     minSalary: filters.min_salary != null ? String(filters.min_salary) : "",
     salaryCurrency: stringField(filters.salary_currency) || "USD",
   };

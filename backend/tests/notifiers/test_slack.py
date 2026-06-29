@@ -69,5 +69,30 @@ def test_slack_requires_webhook_url() -> None:
         assert "webhook_url" in str(exc)
 
 
+def test_slack_digest_includes_summary() -> None:
+    captured: list[dict] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured.append(json.loads(request.content))
+        return httpx.Response(200, text="ok")
+
+    notifier = SlackNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
+    ctx = NotifyContext(
+        target_type="slack",
+        config={"webhook_url": "https://hooks.slack.com/services/T00/B00/secret"},
+        digest=True,
+        search_name="Backend roles",
+    )
+    job = _job()
+    job.summary = "Matches your search: mentions engineer."
+
+    notifier.send(ctx, [job])
+
+    text = captured[0]["text"]
+    assert "2 new jobs" not in text  # single job digest
+    assert "Matches your search: mentions engineer." in text
+    assert "<https://careers.example/jobs/1|Apply>" in text
+
+
 def test_registry_resolves_slack() -> None:
     assert isinstance(get_notifier("slack"), SlackNotifier)

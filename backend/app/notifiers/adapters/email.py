@@ -82,6 +82,8 @@ class EmailNotifier(Notifier):
     @staticmethod
     def _body(job: JobPosting) -> str:
         lines = [job.title]
+        if job.summary:
+            lines.append(f"Why this matches: {job.summary}")
         if job.company:
             lines.append(f"Company: {job.company}")
         if job.location:

@@ -490,6 +490,23 @@ code {
   font-size: 13px;
 }
 
+.job-card-salary {
+  margin: 0 0 6px;
+  font-size: 13px;
+}
+
+.job-summary {
+  margin: 4px 0 6px;
+  font-size: 13px;
+  line-height: 1.4;
+  font-style: italic;
+}
+
+td .job-summary {
+  margin: 2px 0 0;
+  max-width: 360px;
+}
+
 .job-card-seen {
   margin: 0 0 12px;
 }

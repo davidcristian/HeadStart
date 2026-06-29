@@ -309,6 +309,21 @@ def test_pipeline_cross_search_dedup_is_scoped_per_user(db_session: Session) -> 
     assert len(notifier.batches) == 2
 
 
+def test_pipeline_persists_and_notifies_match_summary(db_session: Session) -> None:
+    search = _make_search(db_session)
+    search.filters = {"keywords": "1"}
+    db_session.flush()
+
+    scraper = FakeScraper([_posting("1")])
+    notifier = RecordingNotifier()
+    _pipeline(db_session, scraper, notifier).run(search.id)
+
+    # The heuristic summarizer (default) annotated the posting before notifying.
+    assert notifier.batches[0][0].summary != ""
+    row = db_session.query(SeenJob).filter_by(search_id=search.id).one()
+    assert row.summary == notifier.batches[0][0].summary
+
+
 def test_pipeline_applies_search_filters(db_session: Session) -> None:
     search = _make_search(db_session)
     search.filters = {"keywords": "engineer", "keywords_exclude": "manager"}

@@ -104,6 +104,7 @@ export interface Job {
   location: string;
   salary: string;
   url: string;
+  summary: string;
   status: JobStatus;
   first_seen_at: string;
 }

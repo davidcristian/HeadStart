@@ -117,6 +117,7 @@ dedup is also applied across a user's searches by normalized job URL (see
 | location      | str         |                                               |
 | salary        | str         | Formatted compensation when scraped (optional) |
 | url           | str         |                                               |
+| summary       | str         | "Why this matches" blurb (optional); see [summaries.md](summaries.md) |
 | status        | str         | `new` / `seen` / `applied` / `archived` / `closed` |
 | first_seen_at | datetime    |                                               |
 |               |             | **Unique (search_id, external_id)**           |

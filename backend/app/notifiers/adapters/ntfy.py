@@ -119,7 +119,7 @@ class NtfyNotifier(Notifier):
 
     @staticmethod
     def _message(job: JobPosting) -> str:
-        parts = [p for p in (job.location, job.url) if p]
+        parts = [p for p in (job.summary, job.location, job.url) if p]
         return "\n".join(parts) if parts else "New job posting"
 
     def close(self) -> None:

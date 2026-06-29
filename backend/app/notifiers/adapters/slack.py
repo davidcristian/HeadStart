@@ -15,7 +15,7 @@ import httpx
 
 from app.core.logging import get_logger
 from app.notifiers.base import Notifier, register_notifier
-from app.notifiers.digest_format import digest_text_lines, digest_title
+from app.notifiers.digest_format import digest_blocks, digest_title
 from app.notifiers.types import DeliveryResult, NotifyContext
 from app.scrapers.types import JobPosting
 
@@ -86,16 +86,13 @@ class SlackNotifier(Notifier):
 
     @staticmethod
     def _digest_payload(ctx: NotifyContext, jobs: list[JobPosting]) -> dict[str, Any]:
-        headline = digest_title(len(jobs), ctx.search_name)
-        lines = [headline, ""]
-        for block in digest_text_lines(jobs):
-            parts = block.split("\n", 1)
-            title = parts[0]
-            url = parts[1].strip() if len(parts) > 1 else ""
-            if url:
-                lines.append(f"• {title}\n  <{url}|Apply>")
-            else:
-                lines.append(f"• {title}")
+        lines = [digest_title(len(jobs), ctx.search_name), ""]
+        for block in digest_blocks(jobs):
+            lines.append(f"• {block.headline}")
+            if block.summary:
+                lines.append(f"  {block.summary}")
+            if block.url:
+                lines.append(f"  <{block.url}|Apply>")
         text = "\n".join(lines)
         return {
             "text": text,
@@ -107,6 +104,8 @@ class SlackNotifier(Notifier):
         title = f"*{job.title}*" if job.title else "New job"
         headline = f"{title} @ {job.company}" if job.company else title
         lines = [headline]
+        if job.summary:
+            lines.append(job.summary)
         if job.location:
             lines.append(job.location)
         if job.url:

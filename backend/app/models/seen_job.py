@@ -31,6 +31,7 @@ class SeenJob(Base):
     location: Mapped[str] = mapped_column(String(300), nullable=False, default="")
     salary: Mapped[str] = mapped_column(String(200), nullable=False, default="")
     url: Mapped[str] = mapped_column(String(2000), nullable=False, default="")
+    summary: Mapped[str] = mapped_column(String(1000), nullable=False, default="")
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="new")
     first_seen_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, nullable=False

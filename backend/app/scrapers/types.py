@@ -18,6 +18,9 @@ class JobPosting(BaseModel):
     location: str = ""
     url: str = ""
     posted_at: datetime | None = None
+    # A short "why this matches" blurb generated after scraping (see
+    # app/summarizers/). Not part of the identity hash; purely presentational.
+    summary: str = ""
     raw: dict[str, Any] = Field(default_factory=dict)
 
     def content_hash(self) -> str:

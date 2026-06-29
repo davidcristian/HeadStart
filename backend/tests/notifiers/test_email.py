@@ -37,6 +37,19 @@ def test_email_sends_expected_content(mock_send) -> None:
 
 
 @patch("app.notifiers.adapters.email.send_email")
+def test_email_includes_summary_line(mock_send) -> None:
+    notifier = EmailNotifier()
+    ctx = NotifyContext(target_type="email", config={"to": "me@example.com"})
+    job = _job()
+    job.summary = "Matches your search: mentions engineer."
+
+    notifier.send(ctx, [job])
+
+    body = mock_send.call_args.kwargs["body"]
+    assert "Why this matches: Matches your search: mentions engineer." in body
+
+
+@patch("app.notifiers.adapters.email.send_email")
 def test_email_records_smtp_failure_without_raising(mock_send) -> None:
     import smtplib
 

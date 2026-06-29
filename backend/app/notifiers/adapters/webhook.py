@@ -108,6 +108,7 @@ def _job_payload(job: JobPosting) -> dict[str, Any]:
         "company": job.company,
         "location": job.location,
         "url": job.url,
+        "summary": job.summary,
         "posted_at": job.posted_at.isoformat() if job.posted_at else None,
     }
 

@@ -1,0 +1,71 @@
+# Module: Summaries (AI match blurbs)
+
+**Path:** `backend/app/summarizers/` (adapters) + `backend/app/services/summaries.py`
+(orchestration)
+
+Summaries add a short **"why this matches"** blurb to each new job. The pipeline
+generates it after dedup/filtering and before notifying, then:
+
+- attaches it to the `JobPosting` so every notifier can render it, and
+- persists it on `seen_job.summary` so it shows in the Jobs feed / RSS and is
+  reused for batched digests.
+
+It is **best-effort and presentational**: a provider failure never blocks a
+notification — the blurb is just left empty.
+
+## Contract
+
+```python
+# app/summarizers/types.py
+class SummaryContext(BaseModel):
+    search_name: str | None = None
+    filters: dict           # the search's filter JSON (keywords, location, ...)
+
+# app/summarizers/base.py
+class Summarizer(ABC):
+    @abstractmethod
+    def summarize(self, ctx: SummaryContext, jobs: list[JobPosting]) -> list[str]:
+        """One blurb per posting, aligned with and same length as `jobs`."""
+```
+
+## Registry
+
+Adapters self-register with `@register_summarizer("key")`, are imported in
+`app/summarizers/adapters/__init__.py`, and are resolved with
+`get_summarizer(key)` — the same pattern as scrapers/notifiers. Nothing branches
+on the provider name; you add a file, not an `if`.
+
+## Providers
+
+| Key | When to use | Notes |
+| --- | ----------- | ----- |
+| `heuristic` | **Default.** Offline, free, deterministic | Builds the blurb from the search's own filters (matched keywords, workplace, location). No network or API key, so it is safe in CI/local/prod. Falls back to a neutral "New \<role\> at \<company\>" line when no filter matches. |
+| `openai` | You want richer, natural-language blurbs | Calls an OpenAI-compatible Chat Completions endpoint per job. Requires `OPENAI_API_KEY`; honors `OPENAI_MODEL` and `OPENAI_BASE_URL`. |
+
+## Configuration
+
+All via env (see `.env.example` / `app/core/config.py`):
+
+| Setting | Default | Meaning |
+| ------- | ------- | ------- |
+| `SUMMARIES_ENABLED` | `true` | Master switch; when off, blurbs are never generated |
+| `SUMMARY_PROVIDER` | `heuristic` | Registered summarizer key (`heuristic` or `openai`) |
+| `SUMMARY_MAX_CHARS` | `280` | Blurbs longer than this are truncated with `…` |
+| `OPENAI_API_KEY` | _(empty)_ | Required for the `openai` provider |
+| `OPENAI_MODEL` | `gpt-4o-mini` | Chat model id |
+| `OPENAI_BASE_URL` | `https://api.openai.com/v1` | Override for Azure/OpenRouter/local servers |
+
+## Where the blurb appears
+
+- **Notifications:** every channel (`ntfy`, `email`, `slack`, `discord`,
+  `telegram`, `webhook`) renders the blurb when present, in both immediate and
+  digest modes. The `webhook` JSON payload carries it as a `summary` field.
+- **App:** the Jobs page shows it under each job title/card; the RSS feed
+  prepends it to the item description.
+
+## Adding a provider
+
+See [../recipes.md](../recipes.md) → "add a summarizer provider".
+Implement `Summarizer`, self-register, read any secrets from `settings`, and
+**raise on failure** (the service swallows it). Test with mocked I/O under
+`backend/tests/summarizers/`; never call a real model in tests.

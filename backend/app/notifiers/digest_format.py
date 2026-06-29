@@ -1,5 +1,7 @@
 """Shared helpers for batched digest notification messages."""
 
+from dataclasses import dataclass
+
 from app.scrapers.types import JobPosting
 
 
@@ -18,16 +20,36 @@ def digest_title(count: int, search_name: str | None = None) -> str:
     return base
 
 
-def digest_text_lines(jobs: list[JobPosting]) -> list[str]:
-    """Human-readable lines, one block per job."""
-    lines: list[str] = []
+@dataclass
+class DigestBlock:
+    """Structured per-job content so each channel can format it natively."""
+
+    headline: str
+    summary: str
+    url: str
+
+
+def digest_blocks(jobs: list[JobPosting]) -> list[DigestBlock]:
+    """One structured block per job (headline, optional summary, optional url)."""
+    blocks: list[DigestBlock] = []
     for job in jobs:
-        block = job_headline(job)
+        headline = job_headline(job)
         if job.location:
-            block = f"{block} ({job.location})"
-        if job.url:
-            block = f"{block}\n  {job.url}"
-        lines.append(block)
+            headline = f"{headline} ({job.location})"
+        blocks.append(DigestBlock(headline=headline, summary=job.summary, url=job.url))
+    return blocks
+
+
+def digest_text_lines(jobs: list[JobPosting]) -> list[str]:
+    """Human-readable lines, one block per job (used by plain-text channels)."""
+    lines: list[str] = []
+    for block in digest_blocks(jobs):
+        text = block.headline
+        if block.summary:
+            text = f"{text}\n  {block.summary}"
+        if block.url:
+            text = f"{text}\n  {block.url}"
+        lines.append(text)
     return lines
 
 

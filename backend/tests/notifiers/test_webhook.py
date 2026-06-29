@@ -49,8 +49,29 @@ def test_webhook_posts_expected_json_payload() -> None:
         "company": "Google",
         "location": "Amsterdam",
         "url": "https://careers.example/jobs/1",
+        "summary": "",
         "posted_at": "2026-06-01T12:00:00+00:00",
     }
+
+
+def test_webhook_includes_summary_when_present() -> None:
+    captured: list[dict] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured.append(json.loads(request.content))
+        return httpx.Response(200, text="ok")
+
+    notifier = WebhookNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
+    ctx = NotifyContext(
+        target_type="webhook",
+        config={"webhook_url": "https://example.com/hooks/jobnotifier"},
+    )
+    job = _job()
+    job.summary = "Matches your search: mentions engineer."
+
+    notifier.send(ctx, [job])
+
+    assert captured[0]["job"]["summary"] == "Matches your search: mentions engineer."
 
 
 def test_webhook_adds_hmac_signature_when_secret_configured() -> None:

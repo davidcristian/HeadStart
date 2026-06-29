@@ -53,5 +53,24 @@ def test_ntfy_records_failure_without_raising() -> None:
     assert results[0].error
 
 
+def test_ntfy_includes_summary_in_message() -> None:
+    captured: list[dict] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        import json
+
+        captured.append(json.loads(request.content))
+        return httpx.Response(200, json={"id": "abc"})
+
+    notifier = NtfyNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
+    ctx = NotifyContext(target_type="ntfy", config={"topic": "secret"})
+    job = _job()
+    job.summary = "Matches your search: mentions engineer."
+
+    notifier.send(ctx, [job])
+
+    assert "Matches your search: mentions engineer." in captured[0]["message"]
+
+
 def test_registry_resolves_ntfy() -> None:
     assert isinstance(get_notifier("ntfy"), NtfyNotifier)
