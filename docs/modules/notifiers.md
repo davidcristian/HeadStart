@@ -3,7 +3,8 @@
 **Path:** `backend/app/notifiers/`
 
 Notifiers deliver new jobs to a channel. Each channel is one self-registering
-adapter. Built-in channels: `discord`, `email`, `ntfy`, `slack`, and `telegram`.
+adapter. Built-in channels: `discord`, `email`, `ntfy`, `slack`, `telegram`, and
+`webhook`.
 
 ## Contract
 
@@ -91,6 +92,29 @@ Create a bot with [@BotFather](https://t.me/BotFather), send `/start` to it (or 
 group), then use your numeric chat id in config. Messages use HTML formatting with title,
 company, location, and an Apply link. Digest mode sends one HTML message listing
 all jobs.
+
+## webhook adapter
+
+**Key:** `webhook`. Config:
+
+```json
+{
+  "webhook_url": "https://example.com/hooks/jobnotifier",
+  "secret": "optional-hmac-signing-key",
+  "headers": { "X-Custom": "value" }
+}
+```
+
+POSTs machine-readable JSON to any HTTPS endpoint for Zapier, n8n, or custom
+integrations. Immediate mode sends one payload per job (`event: job.new`); digest
+mode sends one batched payload (`event: jobs.digest` with a `jobs` array). Each
+job includes `external_id`, `title`, `company`, `location`, `url`, and
+`posted_at` (ISO-8601 or `null`).
+
+When `secret` is set, requests include an `X-JobNotifier-Signature` header with
+`sha256=<hex>` (HMAC-SHA256 of the JSON body). Optional `headers` are merged
+into the request. Outbound URLs are validated against private/loopback addresses
+(SSRF protection).
 
 ## Adding a channel
 

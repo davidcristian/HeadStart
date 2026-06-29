@@ -24,6 +24,10 @@ const TYPE_DEFAULTS: Record<string, Json> = {
     bot_token: "123456789:ABCdefGHIjklMNOpqrsTUVwxyz",
     chat_id: "123456789",
   },
+  webhook: {
+    webhook_url: "https://example.com/hooks/jobnotifier",
+    secret: "optional-signing-key",
+  },
 };
 
 const TYPE_HINTS: Record<string, string> = {
@@ -32,6 +36,8 @@ const TYPE_HINTS: Record<string, string> = {
   slack: "For Slack: webhook_url (incoming webhook URL from your Slack workspace).",
   discord: "For Discord: webhook_url (channel webhook URL from your Discord server).",
   telegram: "For Telegram: bot_token (from @BotFather) and chat_id (your user or group id).",
+  webhook:
+    "For webhook: webhook_url (HTTPS endpoint). Optional secret (HMAC-SHA256 in X-JobNotifier-Signature) and headers.",
 };
 
 export function TargetsPage() {
@@ -88,7 +94,9 @@ export function TargetsPage() {
                 ? "Test notification sent. Check your Discord channel."
                 : targetType === "telegram"
                   ? "Test notification sent. Check your Telegram chat."
-                  : "Test notification sent. Check your device.";
+                  : targetType === "webhook"
+                    ? "Test notification sent. Check your webhook endpoint."
+                    : "Test notification sent. Check your device.";
         setNotice(message);
       } else setError(`Test failed: ${result.error ?? "unknown error"}`);
     } catch (err) {
