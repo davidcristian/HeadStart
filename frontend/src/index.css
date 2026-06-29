@@ -744,9 +744,19 @@ td .job-summary {
   border-top: 1px solid var(--border);
   color: var(--muted);
 }
+.landing-footer-copy {
+  font-size: 13px;
+}
 .landing-footer-nav {
   display: flex;
   gap: 20px;
+}
+.landing-footer-nav a {
+  color: var(--muted);
+  font-size: 13px;
+}
+.landing-footer-nav a:hover {
+  color: var(--text);
 }
 
 @media (max-width: 900px) {

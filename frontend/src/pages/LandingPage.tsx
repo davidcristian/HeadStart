@@ -82,10 +82,18 @@ export function LandingPage() {
       </main>
 
       <footer className="landing-footer">
-        <span className="brand-name">JobNotifier</span>
+        <span className="landing-footer-copy">
+          &copy; {new Date().getFullYear()} JobNotifier
+        </span>
         <nav className="landing-footer-nav">
-          <Link to="/login">Sign in</Link>
-          <Link to="/register">Get started</Link>
+          {user ? (
+            <Link to="/app">Go to app</Link>
+          ) : (
+            <>
+              <Link to="/login">Sign in</Link>
+              <Link to="/register">Get started</Link>
+            </>
+          )}
         </nav>
       </footer>
     </div>

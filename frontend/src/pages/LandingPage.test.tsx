@@ -37,7 +37,9 @@ describe("LandingPage", () => {
     authState.user = { email: "user@example.com" };
     renderLanding();
 
-    expect(screen.getByRole("link", { name: "Go to app" })).toHaveAttribute("href", "/app");
+    const appLinks = screen.getAllByRole("link", { name: "Go to app" });
+    expect(appLinks.length).toBeGreaterThan(0);
+    appLinks.forEach((link) => expect(link).toHaveAttribute("href", "/app"));
     expect(screen.getByRole("link", { name: "Open your dashboard" })).toHaveAttribute(
       "href",
       "/app",
