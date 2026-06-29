@@ -23,7 +23,7 @@ in production).
 The frontend serves two surfaces from one bundle (see
 [App.tsx](../../frontend/src/App.tsx)):
 
-- **Public** (no auth, no app shell): `/` landing page plus the auth screens
+- **Public** (no auth, no app shell): `/` landing page, `/privacy`, `/terms`, plus the auth screens
   `/login`, `/register`, `/forgot-password`, `/reset-password`.
 - **Authenticated product** under **`/app/*`**, gated by `ProtectedRoute` and
   wrapped in the `Layout` shell (`/app/searches`, `/app/jobs`, …, `/app/admin`).
@@ -40,6 +40,8 @@ other unknown path redirects to the landing page.
 | Page        | Purpose                                                          |
 | ----------- | ---------------------------------------------------------------- |
 | Landing     | Public marketing page at `/`: hero, integrations strip, how-it-works, features, FAQ, CTA to register/sign in |
+| Privacy     | Public privacy policy at `/privacy` |
+| Terms       | Public terms of use at `/terms` |
 | Login       | Email + password sign-in                                         |
 | Register    | Create an account (first user becomes admin)                     |
 | Sources     | List/create/edit sources (name, adapter, base URL, config); test scrape |

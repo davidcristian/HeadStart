@@ -3,6 +3,7 @@
 import { Link } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { Brand } from "../components/Brand";
+import { PublicFooter } from "../components/PublicFooter";
 
 const INTEGRATIONS = [
   "Greenhouse",
@@ -209,22 +210,7 @@ export function LandingPage() {
         </section>
       </main>
 
-      <footer className="landing-footer">
-        <Brand className="landing-footer-brand" />
-        <span className="landing-footer-copy">
-          &copy; {new Date().getFullYear()} HeadStart
-        </span>
-        <nav className="landing-footer-nav">
-          {user ? (
-            <Link to="/app">Go to app</Link>
-          ) : (
-            <>
-              <Link to="/login">Sign in</Link>
-              <Link to="/register">Get started</Link>
-            </>
-          )}
-        </nav>
-      </footer>
+      <PublicFooter />
     </div>
   );
 }

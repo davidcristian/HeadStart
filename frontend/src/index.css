@@ -1035,9 +1035,74 @@ td .job-summary {
   color: var(--text);
 }
 
+/* ---- Public legal pages ---- */
+.legal-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+}
+.legal-header {
+  position: relative;
+  z-index: 1;
+  padding: 20px 40px;
+  border-bottom: 1px solid var(--border);
+}
+.legal-main {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  padding: 48px 24px 80px;
+}
+.legal-article {
+  max-width: 720px;
+  margin: 0 auto;
+}
+.legal-article-header {
+  margin-bottom: 32px;
+}
+.legal-article h1 {
+  font-family: "Outfit", var(--font-family, inherit);
+  font-size: clamp(32px, 5vw, 40px);
+  letter-spacing: -0.02em;
+  margin: 0 0 8px;
+}
+.legal-effective {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+.legal-article section {
+  margin-bottom: 28px;
+}
+.legal-article h2 {
+  font-size: 18px;
+  margin: 0 0 10px;
+}
+.legal-article p,
+.legal-article li {
+  color: var(--muted);
+  line-height: 1.6;
+}
+.legal-article p {
+  margin: 0 0 12px;
+}
+.legal-article ul {
+  margin: 0 0 12px;
+  padding-left: 1.25rem;
+}
+.legal-article li + li {
+  margin-top: 8px;
+}
+.legal-article strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
 @media (max-width: 900px) {
   .landing-header,
-  .landing-footer {
+  .landing-footer,
+  .legal-header {
     padding-left: 20px;
     padding-right: 20px;
   }

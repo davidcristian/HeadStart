@@ -42,6 +42,11 @@ describe("App routing", () => {
     ).toBeInTheDocument();
   });
 
+  it("serves legal pages without authentication", () => {
+    renderAt("/privacy");
+    expect(screen.getByRole("heading", { name: "Privacy Policy" })).toBeInTheDocument();
+  });
+
   it("redirects an unauthenticated visitor from /app to the login screen", async () => {
     renderAt("/app");
     await waitFor(() =>

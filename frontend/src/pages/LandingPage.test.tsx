@@ -31,6 +31,8 @@ describe("LandingPage", () => {
     );
     expect(screen.getAllByRole("link", { name: "Sign in" }).length).toBeGreaterThan(0);
     expect(screen.queryByRole("link", { name: "Go to app" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Privacy" })).toHaveAttribute("href", "/privacy");
+    expect(screen.getByRole("link", { name: "Terms" })).toHaveAttribute("href", "/terms");
   });
 
   it("links straight to the app when already signed in", () => {
