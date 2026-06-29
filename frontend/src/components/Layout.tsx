@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
-import { useAsync } from "../hooks/useAsync";
-import { api } from "../api";
+import { useHealth } from "../hooks/queries";
 import { useAuth } from "../auth/AuthContext";
 import { Button } from "./ui";
 
@@ -33,7 +32,7 @@ const DESKTOP_NAV = [
 const ADMIN_NAV = { to: "/admin", label: "Admin" };
 
 export function Layout() {
-  const health = useAsync(() => api.health(), []);
+  const health = useHealth();
   const { user, logout } = useAuth();
   const [moreOpen, setMoreOpen] = useState(false);
 

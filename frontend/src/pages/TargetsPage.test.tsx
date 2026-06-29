@@ -1,7 +1,8 @@
 import { mockApi, resetMockApi } from "../test/mockApi";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
 import { sampleTarget } from "../test/fixtures";
+import { renderWithClient } from "../test/renderWithClient";
 import { TargetsPage } from "./TargetsPage";
 
 describe("TargetsPage", () => {
@@ -10,7 +11,7 @@ describe("TargetsPage", () => {
   });
 
   it("renders the page and empty state", async () => {
-    render(<TargetsPage />);
+    renderWithClient(<TargetsPage />);
 
     expect(screen.getByRole("heading", { name: "Notifications" })).toBeInTheDocument();
     await waitFor(() => expect(screen.getByText("No targets yet.")).toBeInTheDocument());
@@ -18,14 +19,14 @@ describe("TargetsPage", () => {
 
   it("lists existing targets", async () => {
     mockApi.listTargets.mockResolvedValue([sampleTarget]);
-    render(<TargetsPage />);
+    renderWithClient(<TargetsPage />);
 
     await waitFor(() => expect(screen.getByText("My phone")).toBeInTheDocument());
     expect(screen.getByText(/"topic":"jobs"/)).toBeInTheDocument();
   });
 
   it("creates a target", async () => {
-    render(<TargetsPage />);
+    renderWithClient(<TargetsPage />);
     await waitFor(() => expect(mockApi.meta).toHaveBeenCalled());
 
     fireEvent.change(screen.getByPlaceholderText("My phone"), {
@@ -41,7 +42,7 @@ describe("TargetsPage", () => {
 
   it("sends a test notification", async () => {
     mockApi.listTargets.mockResolvedValue([sampleTarget]);
-    render(<TargetsPage />);
+    renderWithClient(<TargetsPage />);
 
     await waitFor(() => expect(screen.getByText("My phone")).toBeInTheDocument());
     fireEvent.click(screen.getByRole("button", { name: "Send test" }));
@@ -53,7 +54,7 @@ describe("TargetsPage", () => {
 
   it("deletes a target", async () => {
     mockApi.listTargets.mockResolvedValue([sampleTarget]);
-    render(<TargetsPage />);
+    renderWithClient(<TargetsPage />);
 
     await waitFor(() => expect(screen.getByText("My phone")).toBeInTheDocument());
     fireEvent.click(screen.getByRole("button", { name: "Delete" }));

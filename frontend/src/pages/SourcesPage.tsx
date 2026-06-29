@@ -1,15 +1,24 @@
 /** Manage sources (job sites + which scraper handles them). */
 
 import { useState } from "react";
-import { api } from "../api";
 import { JsonEditor } from "../components/JsonEditor";
 import { Badge, Banner, Button, Card, EmptyState, Field } from "../components/ui";
-import { useAsync } from "../hooks/useAsync";
+import { useMeta, useSources } from "../hooks/queries";
+import {
+  useCreateSource,
+  useDeleteSource,
+  useTestSource,
+  useUpdateSource,
+} from "../hooks/mutations";
 import type { Json } from "../types";
 
 export function SourcesPage() {
-  const sources = useAsync(() => api.listSources(), []);
-  const meta = useAsync(() => api.meta(), []);
+  const sources = useSources();
+  const meta = useMeta();
+  const createSource = useCreateSource();
+  const updateSource = useUpdateSource();
+  const deleteSource = useDeleteSource();
+  const testSource = useTestSource();
   const [error, setError] = useState<string>();
   const [notice, setNotice] = useState<string>();
 
@@ -25,7 +34,7 @@ export function SourcesPage() {
   async function create() {
     setError(undefined);
     try {
-      await api.createSource({
+      await createSource.mutateAsync({
         name,
         adapter_key: effectiveAdapter,
         base_url: baseUrl,
@@ -35,27 +44,24 @@ export function SourcesPage() {
       setName("");
       setBaseUrl("");
       setConfig({});
-      sources.reload();
     } catch (err) {
       setError((err as Error).message);
     }
   }
 
   async function remove(id: number) {
-    await api.deleteSource(id);
-    sources.reload();
+    await deleteSource.mutateAsync(id);
   }
 
   async function toggle(id: number, enabled: boolean) {
-    await api.updateSource(id, { enabled });
-    sources.reload();
+    await updateSource.mutateAsync({ id, data: { enabled } });
   }
 
   async function test(id: number) {
     setError(undefined);
     setNotice(undefined);
     try {
-      const result = await api.testSource(id);
+      const result = await testSource.mutateAsync(id);
       if (!result.ok) {
         setError(result.error ?? "Source test failed");
         return;
@@ -118,7 +124,7 @@ export function SourcesPage() {
       </Card>
 
       <Card title="All sources">
-        {sources.loading && <p>Loading...</p>}
+        {sources.isPending && <p>Loading...</p>}
         {sources.data && sources.data.length === 0 && <EmptyState>No sources yet.</EmptyState>}
         {sources.data && sources.data.length > 0 && (
           <table className="table">

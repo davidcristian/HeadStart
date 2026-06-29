@@ -1,10 +1,10 @@
 /** Manage notification targets (e.g. ntfy topics, email) and send test notifications. */
 
 import { useEffect, useState } from "react";
-import { api } from "../api";
 import { JsonEditor } from "../components/JsonEditor";
 import { Banner, Button, Card, EmptyState, Field } from "../components/ui";
-import { useAsync } from "../hooks/useAsync";
+import { useMeta, useTargets } from "../hooks/queries";
+import { useCreateTarget, useDeleteTarget, useTestTarget } from "../hooks/mutations";
 import type { Json } from "../types";
 
 const TYPE_DEFAULTS: Record<string, Json> = {
@@ -41,8 +41,11 @@ const TYPE_HINTS: Record<string, string> = {
 };
 
 export function TargetsPage() {
-  const targets = useAsync(() => api.listTargets(), []);
-  const meta = useAsync(() => api.meta(), []);
+  const targets = useTargets();
+  const meta = useMeta();
+  const createTarget = useCreateTarget();
+  const deleteTarget = useDeleteTarget();
+  const testTarget = useTestTarget();
   const [error, setError] = useState<string>();
   const [notice, setNotice] = useState<string>();
 
@@ -70,10 +73,9 @@ export function TargetsPage() {
   async function create() {
     setError(undefined);
     try {
-      await api.createTarget({ name, type: effectiveType, config });
+      await createTarget.mutateAsync({ name, type: effectiveType, config });
       setName("");
       setConfig(TYPE_DEFAULTS[effectiveType] ?? {});
-      targets.reload();
     } catch (err) {
       setError((err as Error).message);
     }
@@ -83,7 +85,7 @@ export function TargetsPage() {
     setError(undefined);
     setNotice(undefined);
     try {
-      const result = await api.testTarget(id);
+      const result = await testTarget.mutateAsync(id);
       if (result.status === "sent") {
         const message =
           targetType === "email"
@@ -105,8 +107,7 @@ export function TargetsPage() {
   }
 
   async function remove(id: number) {
-    await api.deleteTarget(id);
-    targets.reload();
+    await deleteTarget.mutateAsync(id);
   }
 
   return (
@@ -145,7 +146,7 @@ export function TargetsPage() {
       </Card>
 
       <Card title="All targets">
-        {targets.loading && <p>Loading...</p>}
+        {targets.isPending && <p>Loading...</p>}
         {targets.data && targets.data.length === 0 && <EmptyState>No targets yet.</EmptyState>}
         {targets.data && targets.data.length > 0 && (
           <table className="table">

@@ -1,19 +1,28 @@
 /** Create and manage searches: the core "notify me about X" configuration. */
 
 import { useState } from "react";
-import { api } from "../api";
 import { SearchHealthBadge, SearchHealthDetails, SearchLastRun } from "../components/SearchHealth";
 import { SearchFiltersForm } from "../components/SearchFiltersForm";
 import { JsonEditor } from "../components/JsonEditor";
 import { Badge, Banner, Button, Card, EmptyState, Field } from "../components/ui";
-import { useAsync } from "../hooks/useAsync";
+import { useSearches, useSources, useTargets } from "../hooks/queries";
+import {
+  useCreateSearch,
+  useDeleteSearch,
+  useRunSearch,
+  useUpdateSearch,
+} from "../hooks/mutations";
 import { EMPTY_SEARCH_FILTERS, formToFilters, type SearchFilterForm } from "../lib/searchFilters";
 import type { Json } from "../types";
 
 export function SearchesPage() {
-  const searches = useAsync(() => api.listSearches(), []);
-  const sources = useAsync(() => api.listSources(), []);
-  const targets = useAsync(() => api.listTargets(), []);
+  const searches = useSearches();
+  const sources = useSources();
+  const targets = useTargets();
+  const createSearch = useCreateSearch();
+  const updateSearch = useUpdateSearch();
+  const deleteSearch = useDeleteSearch();
+  const runSearch = useRunSearch();
   const [error, setError] = useState<string>();
   const [notice, setNotice] = useState<string>();
 
@@ -39,7 +48,7 @@ export function SearchesPage() {
       return;
     }
     try {
-      await api.createSearch({
+      await createSearch.mutateAsync({
         name,
         source_id: Number(sourceId),
         target_id: targetId === "" ? null : Number(targetId),
@@ -55,22 +64,20 @@ export function SearchesPage() {
       setQueryUrl("");
       setFilterForm(EMPTY_SEARCH_FILTERS);
       setConfig({});
-      searches.reload();
     } catch (err) {
       setError((err as Error).message);
     }
   }
 
   async function toggle(id: number, enabled: boolean) {
-    await api.updateSearch(id, { enabled });
-    searches.reload();
+    await updateSearch.mutateAsync({ id, data: { enabled } });
   }
 
   async function runNow(id: number) {
     setError(undefined);
     setNotice(undefined);
     try {
-      const result = await api.runSearch(id);
+      const result = await runSearch.mutateAsync(id);
       if (result.error) {
         setError(`Run failed: ${result.error}`);
       } else {
@@ -84,15 +91,13 @@ export function SearchesPage() {
             ".",
         );
       }
-      searches.reload();
     } catch (err) {
       setError((err as Error).message);
     }
   }
 
   async function remove(id: number) {
-    await api.deleteSearch(id);
-    searches.reload();
+    await deleteSearch.mutateAsync(id);
   }
 
   return (
@@ -190,7 +195,7 @@ export function SearchesPage() {
       </Card>
 
       <Card title="All searches">
-        {searches.loading && <p>Loading...</p>}
+        {searches.isPending && <p>Loading...</p>}
         {searches.data && searches.data.length === 0 && (
           <EmptyState>No searches yet. Create one above.</EmptyState>
         )}

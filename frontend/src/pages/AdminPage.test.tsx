@@ -1,6 +1,7 @@
 import { mockApi, resetMockApi } from "../test/mockApi";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
+import { renderWithClient } from "../test/renderWithClient";
 import { AdminPage } from "./AdminPage";
 
 const sampleAdminUser = {
@@ -49,7 +50,7 @@ describe("AdminPage", () => {
   });
 
   it("renders the page and system stats", async () => {
-    render(<AdminPage />);
+    renderWithClient(<AdminPage />);
 
     expect(screen.getByRole("heading", { name: "Admin" })).toBeInTheDocument();
     await waitFor(() => expect(screen.getByText("Delivery failures")).toBeInTheDocument());
@@ -57,7 +58,7 @@ describe("AdminPage", () => {
   });
 
   it("lists users and recent scrape errors", async () => {
-    render(<AdminPage />);
+    renderWithClient(<AdminPage />);
 
     await waitFor(() => expect(screen.getByText("Broken search")).toBeInTheDocument());
     expect(screen.getAllByText("member@example.com").length).toBeGreaterThan(0);
@@ -65,7 +66,7 @@ describe("AdminPage", () => {
   });
 
   it("deactivates a user", async () => {
-    render(<AdminPage />);
+    renderWithClient(<AdminPage />);
 
     await waitFor(() => expect(screen.getByText("Broken search")).toBeInTheDocument());
     const deactivate = screen

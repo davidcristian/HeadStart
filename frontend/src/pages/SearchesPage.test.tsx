@@ -1,7 +1,8 @@
 import { mockApi, resetMockApi } from "../test/mockApi";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
 import { sampleSearch, sampleSource, sampleTarget } from "../test/fixtures";
+import { renderWithClient } from "../test/renderWithClient";
 import { SearchesPage } from "./SearchesPage";
 
 describe("SearchesPage", () => {
@@ -10,7 +11,7 @@ describe("SearchesPage", () => {
   });
 
   it("renders the page and empty state", async () => {
-    render(<SearchesPage />);
+    renderWithClient(<SearchesPage />);
 
     expect(screen.getByRole("heading", { name: "Searches" })).toBeInTheDocument();
     await waitFor(() =>
@@ -22,7 +23,7 @@ describe("SearchesPage", () => {
     mockApi.listSources.mockResolvedValue([sampleSource]);
     mockApi.listTargets.mockResolvedValue([sampleTarget]);
     mockApi.listSearches.mockResolvedValue([sampleSearch]);
-    render(<SearchesPage />);
+    renderWithClient(<SearchesPage />);
 
     await waitFor(() => expect(screen.getByText("Google SWE")).toBeInTheDocument());
     expect(screen.getByText("healthy")).toBeInTheDocument();
@@ -32,7 +33,7 @@ describe("SearchesPage", () => {
   it("creates a search", async () => {
     mockApi.listSources.mockResolvedValue([sampleSource]);
     mockApi.listTargets.mockResolvedValue([sampleTarget]);
-    render(<SearchesPage />);
+    renderWithClient(<SearchesPage />);
 
     await waitFor(() => expect(screen.getByText("ACME Careers (greenhouse)")).toBeInTheDocument());
 
@@ -61,7 +62,7 @@ describe("SearchesPage", () => {
     mockApi.listSources.mockResolvedValue([sampleSource]);
     mockApi.listTargets.mockResolvedValue([sampleTarget]);
     mockApi.listSearches.mockResolvedValue([sampleSearch]);
-    render(<SearchesPage />);
+    renderWithClient(<SearchesPage />);
 
     await waitFor(() => expect(screen.getByText("Google SWE")).toBeInTheDocument());
     fireEvent.click(screen.getByRole("button", { name: "Run now" }));
@@ -73,7 +74,7 @@ describe("SearchesPage", () => {
     mockApi.listSources.mockResolvedValue([sampleSource]);
     mockApi.listTargets.mockResolvedValue([sampleTarget]);
     mockApi.listSearches.mockResolvedValue([sampleSearch]);
-    render(<SearchesPage />);
+    renderWithClient(<SearchesPage />);
 
     await waitFor(() => expect(screen.getByText("Google SWE")).toBeInTheDocument());
     fireEvent.click(screen.getByRole("button", { name: "Delete" }));

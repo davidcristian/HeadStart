@@ -1,9 +1,9 @@
 /** Admin dashboard: user management and global scrape health. */
 
 import { useState } from "react";
-import { api } from "../api";
 import { Badge, Banner, Button, Card, EmptyState } from "../components/ui";
-import { useAsync } from "../hooks/useAsync";
+import { useAdminStats, useAdminUsers, useMe } from "../hooks/queries";
+import { useUpdateAdminUser } from "../hooks/mutations";
 import type { AdminUser } from "../types";
 
 function StatTile({ label, value }: { label: string; value: number }) {
@@ -57,16 +57,16 @@ function UserRow({
 }
 
 export function AdminPage() {
-  const users = useAsync(() => api.listAdminUsers(), []);
-  const stats = useAsync(() => api.getAdminStats(), []);
-  const me = useAsync(() => api.me(), []);
+  const users = useAdminUsers();
+  const stats = useAdminStats();
+  const me = useMe();
+  const updateAdminUser = useUpdateAdminUser();
   const [error, setError] = useState<string>();
 
   async function updateUser(id: number, patch: Partial<Pick<AdminUser, "is_active" | "is_admin">>) {
     setError(undefined);
     try {
-      await api.updateAdminUser(id, patch);
-      users.reload();
+      await updateAdminUser.mutateAsync({ id, patch });
     } catch (err) {
       setError((err as Error).message);
     }

@@ -3,10 +3,9 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { api } from "../api";
 import { useAuth } from "../auth/AuthContext";
 import { Banner, Button, Card, Field } from "../components/ui";
-import { useAsync } from "../hooks/useAsync";
+import { useHealth } from "../hooks/queries";
 
 export function LoginPage() {
   const { login } = useAuth();
@@ -16,7 +15,7 @@ export function LoginPage() {
   const [error, setError] = useState<string>();
   const [busy, setBusy] = useState(false);
 
-  const health = useAsync(() => api.health(), []);
+  const health = useHealth();
 
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -35,7 +34,7 @@ export function LoginPage() {
   return (
     <div className="auth-screen">
       <Card title="Sign in to JobNotifier">
-        {!health.data && !health.loading && (
+        {!health.data && !health.isPending && (
           <Banner kind="error">API unreachable. Check the URL on the Settings screen.</Banner>
         )}
         {error && <Banner kind="error">{error}</Banner>}

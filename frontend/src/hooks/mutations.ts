@@ -1,0 +1,151 @@
+/** React Query write hooks. Each mutation invalidates the caches it affects so
+ * the UI re-fetches authoritative data instead of mutating local state by hand.
+ */
+
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import type { QueryClient } from "@tanstack/react-query";
+import { api } from "../api";
+import type { CredentialCreate, SearchCreate, SourceCreate, TargetCreate } from "../types";
+import { queryKeys } from "./queries";
+
+function invalidate(qc: QueryClient, key: readonly unknown[]) {
+  return qc.invalidateQueries({ queryKey: key });
+}
+
+export function useCreateSource() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: SourceCreate) => api.createSource(data),
+    onSuccess: () => invalidate(qc, queryKeys.sources),
+  });
+}
+
+export function useUpdateSource() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: Partial<SourceCreate> }) =>
+      api.updateSource(id, data),
+    onSuccess: () => invalidate(qc, queryKeys.sources),
+  });
+}
+
+export function useDeleteSource() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => api.deleteSource(id),
+    onSuccess: () => invalidate(qc, queryKeys.sources),
+  });
+}
+
+export function useTestSource() {
+  return useMutation({ mutationFn: (id: number) => api.testSource(id) });
+}
+
+export function useCreateSearch() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: SearchCreate) => api.createSearch(data),
+    onSuccess: () => invalidate(qc, queryKeys.searches),
+  });
+}
+
+export function useUpdateSearch() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: Partial<SearchCreate> }) =>
+      api.updateSearch(id, data),
+    onSuccess: () => invalidate(qc, queryKeys.searches),
+  });
+}
+
+export function useDeleteSearch() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => api.deleteSearch(id),
+    onSuccess: () => invalidate(qc, queryKeys.searches),
+  });
+}
+
+export function useRunSearch() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => api.runSearch(id),
+    onSuccess: () => invalidate(qc, queryKeys.searches),
+  });
+}
+
+export function useCreateTarget() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: TargetCreate) => api.createTarget(data),
+    onSuccess: () => invalidate(qc, queryKeys.targets),
+  });
+}
+
+export function useDeleteTarget() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => api.deleteTarget(id),
+    onSuccess: () => invalidate(qc, queryKeys.targets),
+  });
+}
+
+export function useTestTarget() {
+  return useMutation({ mutationFn: (id: number) => api.testTarget(id) });
+}
+
+export function useCreateCredential() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CredentialCreate) => api.createCredential(data),
+    onSuccess: () => invalidate(qc, queryKeys.credentials),
+  });
+}
+
+export function useUpdateCredential() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: Partial<CredentialCreate> }) =>
+      api.updateCredential(id, data),
+    onSuccess: () => invalidate(qc, queryKeys.credentials),
+  });
+}
+
+export function useDeleteCredential() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => api.deleteCredential(id),
+    onSuccess: () => invalidate(qc, queryKeys.credentials),
+  });
+}
+
+export function useUpdateJob() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, status }: { id: number; status: "seen" | "applied" | "archived" }) =>
+      api.updateJob(id, { status }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["jobs"] }),
+  });
+}
+
+export function useRotateFeedUrl() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => api.rotateFeedUrl(),
+    onSuccess: () => invalidate(qc, queryKeys.feedUrl),
+  });
+}
+
+export function useUpdateAdminUser() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      patch,
+    }: {
+      id: number;
+      patch: Partial<{ is_active: boolean; is_admin: boolean }>;
+    }) => api.updateAdminUser(id, patch),
+    onSuccess: () => invalidate(qc, queryKeys.adminUsers),
+  });
+}

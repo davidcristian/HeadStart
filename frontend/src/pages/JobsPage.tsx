@@ -1,10 +1,10 @@
 /** Feed of jobs discovered so far, filterable by search and triage status. */
 
 import { useCallback, useState } from "react";
-import { api } from "../api";
 import { JobList } from "../components/JobList";
 import { Banner, Button, Card, EmptyState, Field } from "../components/ui";
-import { useAsync } from "../hooks/useAsync";
+import { useFeedUrl, useJobs, useSearches } from "../hooks/queries";
+import { useRotateFeedUrl, useUpdateJob } from "../hooks/mutations";
 import { usePullToRefresh } from "../hooks/usePullToRefresh";
 import type { JobStatus } from "../types";
 
@@ -32,27 +32,24 @@ export function JobsPage() {
   const [searchId, setSearchId] = useState<number | "">("");
   const [status, setStatus] = useState<"" | JobStatus>("");
   const [feedMessage, setFeedMessage] = useState<string | null>(null);
-  const searches = useAsync(() => api.listSearches(), []);
-  const jobs = useAsync(
-    () =>
-      api.listJobs(
-        searchId === "" ? undefined : Number(searchId),
-        status === "" ? undefined : status,
-      ),
-    [searchId, status],
+  const searches = useSearches();
+  const jobs = useJobs(
+    searchId === "" ? undefined : Number(searchId),
+    status === "" ? undefined : status,
   );
-  const feed = useAsync(() => api.getFeedUrl(), []);
+  const feed = useFeedUrl();
+  const updateJob = useUpdateJob();
+  const rotateFeed = useRotateFeedUrl();
 
-  const { reload } = jobs;
+  const { refetch } = jobs;
   const refreshJobs = useCallback(() => {
-    reload();
-  }, [reload]);
+    void refetch();
+  }, [refetch]);
 
   const { pulling, refreshing } = usePullToRefresh(refreshJobs);
 
   async function setJobStatus(jobId: number, next: "seen" | "applied" | "archived") {
-    await api.updateJob(jobId, { status: next });
-    jobs.reload();
+    await updateJob.mutateAsync({ id: jobId, status: next });
   }
 
   async function copyFeedUrl() {
@@ -63,8 +60,7 @@ export function JobsPage() {
   }
 
   async function rotateFeedUrl() {
-    await api.rotateFeedUrl();
-    feed.reload();
+    await rotateFeed.mutateAsync();
     setFeedMessage("RSS feed link regenerated. Update any feed readers using the old URL.");
   }
 
@@ -79,8 +75,8 @@ export function JobsPage() {
       )}
       <h1>Jobs</h1>
       <Card title="RSS feed" className="rss-card">
-        {feed.loading && <p>Loading feed URL...</p>}
-        {feed.error && <Banner kind="error">Could not load RSS feed URL.</Banner>}
+        {feed.isPending && <p>Loading feed URL...</p>}
+        {feed.isError && <Banner kind="error">Could not load RSS feed URL.</Banner>}
         {feed.data && (
           <>
             <p className="muted">
@@ -129,7 +125,7 @@ export function JobsPage() {
           </div>
         }
       >
-        {jobs.loading && <p>Loading...</p>}
+        {jobs.isPending && <p>Loading...</p>}
         {jobs.data && jobs.data.length === 0 && (
           <EmptyState>No jobs seen yet. They appear here as searches run.</EmptyState>
         )}

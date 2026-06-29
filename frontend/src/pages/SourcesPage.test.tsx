@@ -1,7 +1,8 @@
 import { mockApi, resetMockApi } from "../test/mockApi";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
 import { sampleSource } from "../test/fixtures";
+import { renderWithClient } from "../test/renderWithClient";
 import { SourcesPage } from "./SourcesPage";
 
 describe("SourcesPage", () => {
@@ -10,7 +11,7 @@ describe("SourcesPage", () => {
   });
 
   it("renders the page and empty state", async () => {
-    render(<SourcesPage />);
+    renderWithClient(<SourcesPage />);
 
     expect(screen.getByRole("heading", { name: "Sources" })).toBeInTheDocument();
     await waitFor(() => expect(screen.getByText("No sources yet.")).toBeInTheDocument());
@@ -18,14 +19,14 @@ describe("SourcesPage", () => {
 
   it("lists existing sources", async () => {
     mockApi.listSources.mockResolvedValue([sampleSource]);
-    render(<SourcesPage />);
+    renderWithClient(<SourcesPage />);
 
     await waitFor(() => expect(screen.getByText("ACME Careers")).toBeInTheDocument());
     expect(screen.getByText("https://boards.greenhouse.io/acme")).toBeInTheDocument();
   });
 
   it("creates a source", async () => {
-    render(<SourcesPage />);
+    renderWithClient(<SourcesPage />);
     await waitFor(() => expect(mockApi.meta).toHaveBeenCalled());
 
     fireEvent.change(screen.getByPlaceholderText("ACME Careers"), {
@@ -41,7 +42,7 @@ describe("SourcesPage", () => {
 
   it("runs a test scrape and shows results", async () => {
     mockApi.listSources.mockResolvedValue([sampleSource]);
-    render(<SourcesPage />);
+    renderWithClient(<SourcesPage />);
 
     await waitFor(() => expect(screen.getByText("ACME Careers")).toBeInTheDocument());
     fireEvent.click(screen.getByRole("button", { name: "Test scrape" }));
@@ -51,7 +52,7 @@ describe("SourcesPage", () => {
 
   it("deletes a source", async () => {
     mockApi.listSources.mockResolvedValue([sampleSource]);
-    render(<SourcesPage />);
+    renderWithClient(<SourcesPage />);
 
     await waitFor(() => expect(screen.getByText("ACME Careers")).toBeInTheDocument());
     fireEvent.click(screen.getByRole("button", { name: "Delete" }));

@@ -12,7 +12,7 @@ container (which also reverse-proxies `/api` to the backend in production).
 | `src/api/`          | Typed API client (one function per endpoint)        |
 | `src/auth/`         | `AuthContext`, `ProtectedRoute` (session state)     |
 | `src/types/`        | TS types mirroring backend schemas                  |
-| `src/hooks/`        | Data-fetching/state hooks (no logic in components)  |
+| `src/hooks/`        | React Query data hooks (`queries.ts`/`mutations.ts`) + UI state hooks |
 | `src/components/`   | Reusable presentational components                  |
 | `src/pages/`        | Route-level screens                                 |
 
@@ -42,10 +42,27 @@ container (which also reverse-proxies `/api` to the backend in production).
 - `AuthProvider` (in `main.tsx`) resolves the current user; `ProtectedRoute`
   gates all app routes and redirects to `/login`. See [auth.md](auth.md).
 
+## Data fetching (React Query)
+
+Server state is managed by **TanStack Query** (`@tanstack/react-query`). The
+`QueryClient` is provided once in `src/main.tsx`.
+
+- **Reads:** `src/hooks/queries.ts` exposes one `useXxx()` hook per resource
+  (`useSources`, `useJobs`, `useAdminStats`, …) and owns the `queryKeys`
+  registry. Components read `data` / `isPending` / `isError` from these.
+- **Writes:** `src/hooks/mutations.ts` exposes `useCreateXxx` / `useUpdateXxx` /
+  `useDeleteXxx` hooks. Each calls the typed API client and invalidates the
+  query keys it affects, so lists re-fetch authoritative data instead of pages
+  hand-mutating local state. Components call `mutation.mutateAsync(...)`.
+- The hooks still call `src/api/` under the hood — React Query only adds
+  caching, background revalidation, and dedupe on top of the typed client.
+
 ## Conventions
 
 - Strict TypeScript; prettier + eslint.
-- All network calls go through `src/api/` using `VITE_API_BASE_URL`.
+- All network calls go through `src/api/` (wrapped by the React Query hooks in
+  `src/hooks/`) using `VITE_API_BASE_URL`. Components do not call `api.*`
+  directly.
 - The API client attaches the bearer token to every request automatically; pages
   never handle tokens directly.
 
@@ -54,6 +71,8 @@ container (which also reverse-proxies `/api` to the backend in production).
 - Vitest + React Testing Library + jsdom (`npm run test` / `make test --frontend`).
 - Page smoke tests live next to each page under `src/pages/*.test.tsx`; they mock
   `src/api/` via `src/test/mockApi.ts` and shared fixtures in `src/test/fixtures.ts`.
+  Pages are rendered with `renderWithClient` (`src/test/renderWithClient.tsx`),
+  which wraps them in a fresh React Query client per test.
 - Covered pages: Sources, Searches, Targets, Jobs, Admin (render, empty state, list data,
   and primary actions like create/delete/test/run).
 

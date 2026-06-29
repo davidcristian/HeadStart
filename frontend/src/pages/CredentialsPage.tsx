@@ -5,10 +5,10 @@
  */
 
 import { useState } from "react";
-import { api } from "../api";
 import { JsonEditor } from "../components/JsonEditor";
 import { Badge, Banner, Button, Card, EmptyState, Field } from "../components/ui";
-import { useAsync } from "../hooks/useAsync";
+import { useCredentials, useSources } from "../hooks/queries";
+import { useCreateCredential, useDeleteCredential, useUpdateCredential } from "../hooks/mutations";
 import type { Json } from "../types";
 
 function asStringMap(value: Json): Record<string, string> {
@@ -18,8 +18,11 @@ function asStringMap(value: Json): Record<string, string> {
 }
 
 export function CredentialsPage() {
-  const credentials = useAsync(() => api.listCredentials(), []);
-  const sources = useAsync(() => api.listSources(), []);
+  const credentials = useCredentials();
+  const sources = useSources();
+  const createCredential = useCreateCredential();
+  const updateCredential = useUpdateCredential();
+  const deleteCredential = useDeleteCredential();
   const [error, setError] = useState<string>();
 
   const [sourceId, setSourceId] = useState<number | null>(null);
@@ -44,7 +47,7 @@ export function CredentialsPage() {
       return;
     }
     try {
-      await api.createCredential({
+      await createCredential.mutateAsync({
         source_id: effectiveSource,
         name,
         enabled: true,
@@ -56,20 +59,17 @@ export function CredentialsPage() {
       setCookies({});
       setHeaders({});
       setSession({});
-      credentials.reload();
     } catch (err) {
       setError((err as Error).message);
     }
   }
 
   async function toggle(id: number, enabled: boolean) {
-    await api.updateCredential(id, { enabled });
-    credentials.reload();
+    await updateCredential.mutateAsync({ id, data: { enabled } });
   }
 
   async function remove(id: number) {
-    await api.deleteCredential(id);
-    credentials.reload();
+    await deleteCredential.mutateAsync(id);
   }
 
   return (
@@ -143,7 +143,7 @@ export function CredentialsPage() {
       </Card>
 
       <Card title="Stored credentials">
-        {credentials.loading && <p>Loading...</p>}
+        {credentials.isPending && <p>Loading...</p>}
         {credentials.data && credentials.data.length === 0 && (
           <EmptyState>No credentials stored.</EmptyState>
         )}
