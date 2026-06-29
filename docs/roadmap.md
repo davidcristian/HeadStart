@@ -62,7 +62,7 @@ Goal: reduce noise, increase signal.
 
 | Item | Why |
 | ---- | --- |
-| ~~Richer filters~~ | ~~Keyword include/exclude, remote/hybrid/onsite, location, salary (where scraped)~~ | **Shipped (v1):** `keywords`/`keywords_include`, `keywords_exclude`, `location`, `workplace` applied post-scrape in the pipeline; salary deferred |
+| ~~Richer filters~~ | ~~Keyword include/exclude, remote/hybrid/onsite, location, salary (where scraped)~~ | **Shipped:** `keywords`/`keywords_include`, `keywords_exclude`, `location`, `workplace`, `min_salary` + `salary_currency` applied post-scrape; structured filter form on Searches page |
 | Cross-search dedup | Same job URL in multiple searches should not notify twice | **Shipped:** pipeline skips notification when a normalized URL was already recorded in any of the user's searches; per-search `seen_job` rows are still written for the Jobs feed |
 | ~~Digest mode~~ | ~~Batch notifications ("5 new jobs this hour") to avoid alert fatigue~~ | **Shipped:** per-search `notification_mode` (`immediate`/`digest`) + `digest_interval_seconds`; jobs queue in `pending_digest` and flush on beat |
 | Job lifecycle | Mark seen / applied / archived; optional "job closed" on re-scrape | **Shipped:** `seen_job.status`; `PATCH /jobs/{id}`; pipeline marks missing listings `closed`; Jobs page filters + row actions |

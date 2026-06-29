@@ -3,9 +3,11 @@
 import { useState } from "react";
 import { api } from "../api";
 import { SearchHealthBadge, SearchHealthDetails, SearchLastRun } from "../components/SearchHealth";
+import { SearchFiltersForm } from "../components/SearchFiltersForm";
 import { JsonEditor } from "../components/JsonEditor";
 import { Badge, Banner, Button, Card, EmptyState, Field } from "../components/ui";
 import { useAsync } from "../hooks/useAsync";
+import { EMPTY_SEARCH_FILTERS, formToFilters, type SearchFilterForm } from "../lib/searchFilters";
 import type { Json } from "../types";
 
 export function SearchesPage() {
@@ -22,9 +24,9 @@ export function SearchesPage() {
   const [interval, setInterval] = useState(900);
   const [notificationMode, setNotificationMode] = useState<"immediate" | "digest">("immediate");
   const [digestInterval, setDigestInterval] = useState(3600);
-  const [filters, setFilters] = useState<Json>({});
+  const [filterForm, setFilterForm] = useState<SearchFilterForm>(EMPTY_SEARCH_FILTERS);
   const [config, setConfig] = useState<Json>({});
-  const [jsonValid, setJsonValid] = useState(true);
+  const [configValid, setConfigValid] = useState(true);
 
   const sourceName = (id: number) => sources.data?.find((s) => s.id === id)?.name ?? `#${id}`;
   const targetName = (id: number | null) =>
@@ -42,7 +44,7 @@ export function SearchesPage() {
         source_id: Number(sourceId),
         target_id: targetId === "" ? null : Number(targetId),
         query_url: queryUrl,
-        filters,
+        filters: formToFilters(filterForm),
         config,
         interval_seconds: interval,
         notification_mode: notificationMode,
@@ -51,7 +53,7 @@ export function SearchesPage() {
       });
       setName("");
       setQueryUrl("");
-      setFilters({});
+      setFilterForm(EMPTY_SEARCH_FILTERS);
       setConfig({});
       searches.reload();
     } catch (err) {
@@ -172,30 +174,17 @@ export function SearchesPage() {
             placeholder="https://..."
           />
         </Field>
-        <div className="form-grid">
-          <Field
-            label="Filters (JSON)"
-            hint='e.g. {"keywords": "engineer", "keywords_exclude": "manager", "location": "amsterdam", "workplace": "remote"}'
-          >
-            <JsonEditor
-              value={filters}
-              onChange={(v, valid) => {
-                setFilters(v);
-                setJsonValid(valid);
-              }}
-            />
-          </Field>
-          <Field label="Config overrides (JSON)" hint="Per-search scraper config.">
-            <JsonEditor
-              value={config}
-              onChange={(v, valid) => {
-                setConfig(v);
-                setJsonValid(valid);
-              }}
-            />
-          </Field>
-        </div>
-        <Button onClick={create} disabled={!name || sourceId === "" || !jsonValid}>
+        <SearchFiltersForm value={filterForm} onChange={setFilterForm} />
+        <Field label="Config overrides (JSON)" hint="Per-search scraper config.">
+          <JsonEditor
+            value={config}
+            onChange={(v, valid) => {
+              setConfig(v);
+              setConfigValid(valid);
+            }}
+          />
+        </Field>
+        <Button onClick={create} disabled={!name || sourceId === "" || !configValid}>
           Create search
         </Button>
       </Card>

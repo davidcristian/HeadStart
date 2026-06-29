@@ -97,6 +97,8 @@ A saved query against a source, on an interval, delivering to a target.
 | `keywords_exclude` | string or list | Exclude when any term appears in title, company, or location |
 | `location` | string or list | Location field must contain any of the terms |
 | `workplace` | string or list | `remote`, `hybrid`, or `onsite` — matches inferred workplace; unknown workplace passes |
+| `min_salary` | number | Minimum annual salary when compensation is known; unknown or mismatched currency passes |
+| `salary_currency` | string | ISO currency for `min_salary` (default `USD`) |
 
 ### seen_job
 
@@ -113,6 +115,7 @@ dedup is also applied across a user's searches by normalized job URL (see
 | title         | str         |                                               |
 | company       | str         |                                               |
 | location      | str         |                                               |
+| salary        | str         | Formatted compensation when scraped (optional) |
 | url           | str         |                                               |
 | status        | str         | `new` / `seen` / `applied` / `archived` / `closed` |
 | first_seen_at | datetime    |                                               |

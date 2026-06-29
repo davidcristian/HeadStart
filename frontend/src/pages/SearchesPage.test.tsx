@@ -39,6 +39,9 @@ describe("SearchesPage", () => {
     fireEvent.change(screen.getByPlaceholderText("Google SWE Amsterdam"), {
       target: { value: "Backend roles" },
     });
+    fireEvent.change(screen.getByPlaceholderText("engineer backend"), {
+      target: { value: "backend" },
+    });
     fireEvent.change(screen.getByLabelText("Source"), {
       target: { value: String(sampleSource.id) },
     });
@@ -46,7 +49,11 @@ describe("SearchesPage", () => {
 
     await waitFor(() => expect(mockApi.createSearch).toHaveBeenCalled());
     expect(mockApi.createSearch).toHaveBeenCalledWith(
-      expect.objectContaining({ name: "Backend roles", source_id: sampleSource.id }),
+      expect.objectContaining({
+        name: "Backend roles",
+        source_id: sampleSource.id,
+        filters: { keywords: "backend" },
+      }),
     );
   });
 

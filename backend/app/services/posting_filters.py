@@ -11,6 +11,7 @@ import re
 from typing import Any, Literal
 
 from app.scrapers.types import JobPosting
+from app.services.compensation import meets_min_salary
 
 Workplace = Literal["remote", "hybrid", "onsite"]
 
@@ -62,6 +63,12 @@ def matches_posting_filters(posting: JobPosting, filters: dict[str, Any]) -> boo
     if workplaces:
         inferred = infer_workplace(posting)
         if inferred is not None and inferred not in workplaces:
+            return False
+
+    min_salary = _min_salary(filters.get("min_salary"))
+    if min_salary is not None:
+        currency = _salary_currency(filters.get("salary_currency"))
+        if not meets_min_salary(posting, min_salary, currency):
             return False
 
     return True
@@ -129,6 +136,31 @@ def _normalize_workplace_token(value: str) -> Workplace | None:
     if "onsite" in token or "on-site" in token or "on site" in token:
         return "onsite"
     return None
+
+
+def _min_salary(value: Any) -> int | None:
+    if value is None or value == "":
+        return None
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, int):
+        return value if value > 0 else None
+    if isinstance(value, float):
+        rounded = int(round(value))
+        return rounded if rounded > 0 else None
+    if isinstance(value, str) and value.strip():
+        try:
+            rounded = int(round(float(value.replace(",", ""))))
+        except ValueError:
+            return None
+        return rounded if rounded > 0 else None
+    return None
+
+
+def _salary_currency(value: Any) -> str:
+    if isinstance(value, str) and value.strip():
+        return value.strip().upper()
+    return "USD"
 
 
 def _normalize_workplace_text(value: str) -> Workplace | None:

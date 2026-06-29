@@ -18,6 +18,7 @@ class JobRead(BaseModel):
     title: str
     company: str
     location: str
+    salary: str
     url: str
     status: JobStatus
     first_seen_at: datetime

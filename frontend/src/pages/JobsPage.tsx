@@ -127,6 +127,7 @@ export function JobsPage() {
                 <th>Title</th>
                 <th>Company</th>
                 <th>Location</th>
+                <th>Salary</th>
                 <th>Status</th>
                 <th>First seen</th>
                 <th />
@@ -146,6 +147,7 @@ export function JobsPage() {
                   </td>
                   <td>{j.company || "-"}</td>
                   <td>{j.location || "-"}</td>
+                  <td>{j.salary || "-"}</td>
                   <td>
                     <JobStatusBadge status={j.status} />
                   </td>

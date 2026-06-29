@@ -27,6 +27,7 @@ describe("JobsPage", () => {
     await waitFor(() => expect(screen.getByText("Software Engineer")).toBeInTheDocument());
     expect(screen.getByText("ACME")).toBeInTheDocument();
     expect(screen.getByText("Remote")).toBeInTheDocument();
+    expect(screen.getByText("$150K – $180K")).toBeInTheDocument();
     expect(screen.getByText("New", { selector: ".badge-job-new" })).toBeInTheDocument();
   });
 
