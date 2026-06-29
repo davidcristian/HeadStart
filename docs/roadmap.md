@@ -104,23 +104,83 @@ Pursue only if core alerting is solid and adapter coverage is good.
 ## Phase 6 — Production SaaS
 
 Goal: turn JobNotifier from a self-hosted tool into a hosted product strangers can
-sign up for, pay for, and trust.
+sign up for, pay for, and trust. Work the sub-phases in order — each builds on
+the previous.
+
+### 6a — Public shell & trust
+
+Foundation: strangers can visit the site and understand what it is before they
+create an account.
 
 | Item | Why | Notes |
 | ---- | --- | ----- |
-| Public marketing site | First impression and conversion; explain value before signup | Landing page with hero, features, screenshots/demo, FAQ, and clear CTA to register |
-| Pricing page | Users need to understand cost before committing | Tiered plans (e.g. free / pro / team), feature matrix, annual vs monthly toggle |
-| Billing & payments | Revenue and subscription lifecycle | Stripe (or similar): checkout, subscriptions, plan upgrades/downgrades, invoices, failed-payment handling, webhooks |
-| Legal pages | Required for a public SaaS; builds trust | Privacy Policy, Terms of Use, and cookie/consent notice where applicable |
-| Public vs app routing | Marketing and authenticated app should coexist cleanly | e.g. `/` landing + `/pricing` public; `/app/*` or subdomain for the logged-in product |
-| Signup & onboarding polish | Paid SaaS needs a smooth first-run path | Email verification, welcome flow, plan selection at signup, trial handling |
-| Plan limits & enforcement | Free tier and paid tiers need server-side guardrails | Per-plan caps on searches, sources, notification targets; enforce in services, not UI only |
-| Custom domain & branding | Hosted product polish | App on a real domain, consistent branding, transactional emails from the product domain |
-| GDPR / data compliance | EU users and enterprise buyers expect it | Data export, account deletion, retention policy, subprocessors list in privacy policy |
+| Public vs app routing | Marketing and authenticated app must coexist cleanly | e.g. `/` + `/pricing` public; `/app/*` (or subdomain) for the logged-in product |
+| Public marketing site | First impression and conversion | Landing page with hero, features, screenshots/demo, FAQ, and clear CTA to register |
+| Legal pages | Required before public signup; builds trust | Privacy Policy, Terms of Use, and cookie/consent notice where applicable |
 
-**Done when:** a visitor can land on the site, understand the product, pick a plan,
-pay, sign up, and use the app under enforceable plan limits — with legal pages
-linked in the footer.
+**Done when:** a visitor can browse the landing page, read legal pages, and reach
+signup without hitting the authenticated app shell.
+
+### 6b — Accounts & onboarding
+
+Turn anonymous visitors into active users with a smooth first-run path.
+
+| Item | Why | Notes |
+| ---- | --- | ----- |
+| Signup & onboarding polish | Paid SaaS needs a credible first-run path | Email verification, welcome flow, guided setup (first source/search/target), trial handling |
+| GDPR / data compliance (baseline) | EU users and enterprise buyers expect it before collecting data at scale | Account deletion, data export, retention policy, subprocessors list in privacy policy |
+
+**Done when:** a new user can verify their email, complete onboarding, and run
+their first search — and can delete their account or export their data.
+
+### 6c — Monetization
+
+Introduce paid tiers once the public shell and onboarding work.
+
+| Item | Why | Notes |
+| ---- | --- | ----- |
+| Pricing page | Users need to understand cost before committing | Tiered plans (e.g. free / pro / team), feature matrix, annual vs monthly toggle |
+| Plan limits & enforcement | Free and paid tiers need server-side guardrails | Per-plan caps on searches, sources, notification targets; enforce in services, not UI only |
+| Billing & payments | Revenue and subscription lifecycle | Stripe (or similar): checkout, subscriptions, plan upgrades/downgrades, invoices, failed-payment handling, webhooks |
+
+**Done when:** a user can pick a plan, pay, hit enforceable limits on the free
+tier, and upgrade without manual intervention.
+
+### 6d — Launch polish
+
+Final hosted-product details after billing works end-to-end.
+
+| Item | Why | Notes |
+| ---- | --- | ----- |
+| Custom domain & branding | Hosted product credibility | App on a real domain, consistent branding, transactional emails from the product domain |
+| GDPR / data compliance (full) | Enterprise and EU readiness | Cookie consent management, DPA/subprocessor documentation, audit trail for deletion/export requests |
+
+**Done when:** the product runs on a branded domain with transactional email from
+that domain, and compliance items needed for a public launch are complete.
+
+**Phase 6 overall done when:** a visitor can land on the site, understand the
+product, pick a plan, pay, sign up, and use the app under enforceable plan limits
+— with legal pages linked in the footer.
+
+---
+
+## Phase 7 — Auto-apply
+
+Goal: let users submit job applications from JobNotifier instead of only opening
+apply links. Builds on [site credentials](modules/credentials.md) (authenticated
+sessions) and the job lifecycle (`seen_job.status`).
+
+| Item | Why | Notes |
+| ---- | --- | ----- |
+| User profile & resume storage | Applications need structured candidate data | Encrypted storage for resume/CV, cover-letter templates, and per-field answers; never log secrets |
+| Per-site apply adapters | Each ATS/board has different apply flows | Pluggable adapters (same registry pattern as scrapers); start with one high-value site (e.g. Greenhouse or Lever) |
+| Apply orchestration service | Business rules live in services, not routers | Queue apply jobs, inject credentials, record outcome, update `seen_job.status` to `applied` |
+| Apply from the Jobs UI | Users need a one-click path | "Apply" action on a job row; confirm dialog with editable cover letter; show in-progress / success / failure |
+| Safety & consent | Auto-apply is high-risk | Explicit opt-in per source, dry-run/preview mode, rate limits, and clear audit log of what was submitted |
+
+**Done when:** a user with a saved credential and profile can apply to a
+supported job from the Jobs page, see the result, and the job is marked
+`applied` — with a clear audit trail and no silent failures.
 
 ---
 
