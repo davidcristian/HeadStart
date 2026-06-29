@@ -30,7 +30,7 @@ module "security" {
 
 module "ecr" {
   source       = "../ecr"
-  repositories = ["jobnotifier-backend", "jobnotifier-frontend"]
+  repositories = ["jobnotifier-backend", "jobnotifier-backend-worker", "jobnotifier-frontend"]
   tags         = local.tags
 }
 
@@ -94,8 +94,13 @@ module "ecs" {
   execution_role_arn        = module.iam.execution_role_arn
   task_role_arn             = module.iam.task_role_arn
   backend_image             = module.ecr.repository_urls["jobnotifier-backend"]
+  worker_backend_image      = module.ecr.repository_urls["jobnotifier-backend-worker"]
   frontend_image            = module.ecr.repository_urls["jobnotifier-frontend"]
   image_tag                 = var.image_tag
+  cpu                       = var.ecs_cpu
+  memory                    = var.ecs_memory
+  worker_cpu                = var.worker_cpu
+  worker_memory             = var.worker_memory
   api_target_group_arn      = module.alb.api_target_group_arn
   frontend_target_group_arn = module.alb.frontend_target_group_arn
 
@@ -113,6 +118,8 @@ module "ecs" {
     NTFY_DEFAULT_TOPIC      = var.ntfy_default_topic
     SCHEDULER_TICK_SECONDS  = "30"
     SCHEDULER_MAX_CATCHUP   = "1"
+    PLAYWRIGHT_NAVIGATION_TIMEOUT_MS = "30000"
+    PLAYWRIGHT_MAX_RETRIES           = "1"
   }
 
   secrets = {

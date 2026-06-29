@@ -19,7 +19,7 @@ Terraform (`devops/terraform/`) provisions:
 - Application Load Balancer (public HTTP entrypoint)
 - ECS Fargate cluster with services: `api`, `frontend`, `worker`, `beat`
 - RDS Postgres + ElastiCache Redis
-- ECR repositories for backend and frontend images
+- ECR repositories for backend, backend-worker (Playwright), and frontend images
 - Secrets Manager entries for `POSTGRES_PASSWORD`, `JWT_SECRET`,
   `CREDENTIALS_SECRET_KEY`
 
@@ -139,7 +139,8 @@ make deploy
 
 `make deploy` runs `scripts/deploy.sh`, which:
 
-1. Builds backend and frontend images (`scripts/build-images.sh --push`)
+1. Builds backend images (`scripts/build-images.sh --push`): lean API/beat image
+   plus the Playwright-enabled worker image, and the frontend image
 2. Pushes them to ECR (tag = current git short SHA, or `latest` if not in git)
 3. Runs DB migrations as a one-off ECS task (`jobnotifier-migrate`)
 4. Forces a rolling deploy of `jobnotifier-api`, `jobnotifier-frontend`,

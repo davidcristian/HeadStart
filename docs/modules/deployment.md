@@ -42,6 +42,13 @@ State is remote: S3 bucket + DynamoDB lock table (configured per environment in
 `backend.tf`). Secrets are stored in Secrets Manager / SSM and injected into ECS
 task definitions — never in Terraform variables committed to git.
 
+## Worker sizing (Playwright)
+
+The worker service uses a separate container image (`jobnotifier-backend-worker`)
+with Chromium pre-installed. Default Fargate sizing is **1024 CPU / 2048 MiB**
+(vs **256 / 512** for api, beat, and frontend). Override via stack module vars
+`worker_cpu` and `worker_memory` in `environments/<env>/main.tf`.
+
 ## Observability
 
 Prometheus metrics are exposed from two scrape targets:
@@ -57,7 +64,8 @@ security group and scrape with Prometheus or the CloudWatch agent.
 
 `make deploy` (→ `scripts/deploy.sh`):
 
-1. Build images (`scripts/build-images.sh`).
+1. Build images (`scripts/build-images.sh`): lean `jobnotifier-backend` (api/beat)
+   and `jobnotifier-backend-worker` (Playwright + Chromium).
 2. Push to ECR.
 3. Run DB migrations as a one-off ECS task.
 4. Update ECS services to the new image tag (rolling deploy).

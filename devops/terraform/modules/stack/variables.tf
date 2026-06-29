@@ -84,6 +84,27 @@ variable "redis_node_type" {
   default = "cache.t4g.micro"
 }
 
+variable "ecs_cpu" {
+  type        = number
+  description = "Fargate CPU units for api, beat, migrate, and frontend tasks."
+  default     = 256
+}
+variable "ecs_memory" {
+  type        = number
+  description = "Fargate memory (MiB) for api, beat, migrate, and frontend tasks."
+  default     = 512
+}
+variable "worker_cpu" {
+  type        = number
+  description = "Fargate CPU units for the worker task (Playwright needs headroom)."
+  default     = 1024
+}
+variable "worker_memory" {
+  type        = number
+  description = "Fargate memory (MiB) for the worker task (Chromium baseline ~512 MiB)."
+  default     = 2048
+}
+
 variable "tags" {
   type    = map(string)
   default = {}

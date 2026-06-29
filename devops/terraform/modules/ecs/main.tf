@@ -4,8 +4,9 @@
 # Plus a one-off `migrate` task definition invoked by scripts/deploy.sh.
 
 locals {
-  backend_ref  = "${var.backend_image}:${var.image_tag}"
-  frontend_ref = "${var.frontend_image}:${var.image_tag}"
+  backend_ref        = "${var.backend_image}:${var.image_tag}"
+  worker_backend_ref = "${var.worker_backend_image}:${var.image_tag}"
+  frontend_ref       = "${var.frontend_image}:${var.image_tag}"
 
   env_list     = [for k, v in var.environment : { name = k, value = v }]
   secrets_list = [for k, v in var.secrets : { name = k, valueFrom = v }]
@@ -37,7 +38,7 @@ resource "aws_cloudwatch_log_group" "this" {
 
 # Helper to build a backend container definition for a given role/command.
 locals {
-  backend_container = { for role in ["api", "worker", "beat", "migrate"] :
+  backend_container = { for role in ["api", "beat", "migrate"] :
     role => jsonencode([{
       name             = role
       image            = local.backend_ref
@@ -49,6 +50,16 @@ locals {
       logConfiguration = local.log_config
     }])
   }
+  worker_container = jsonencode([{
+    name             = "worker"
+    image            = local.worker_backend_ref
+    command          = ["worker"]
+    essential        = true
+    portMappings     = [{ containerPort = 9090, protocol = "tcp" }]
+    environment      = local.env_list
+    secrets          = local.secrets_list
+    logConfiguration = local.log_config
+  }])
 }
 
 # ---- Task definitions ----
@@ -68,11 +79,11 @@ resource "aws_ecs_task_definition" "worker" {
   family                   = "${var.service_prefix}-worker"
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
-  cpu                      = var.cpu
-  memory                   = var.memory
+  cpu                      = var.worker_cpu
+  memory                   = var.worker_memory
   execution_role_arn       = var.execution_role_arn
   task_role_arn            = var.task_role_arn
-  container_definitions    = local.backend_container["worker"]
+  container_definitions    = local.worker_container
   tags                     = var.tags
 }
 

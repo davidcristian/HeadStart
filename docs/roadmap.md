@@ -81,7 +81,7 @@ Goal: run comfortably for a small team or as a lightly hosted service.
 | ~~Per-site rate limits~~ | ~~Configurable politeness per adapter; avoid retry storms~~ | **Shipped:** `rate_limit_min_interval_seconds` in source/search config; per-adapter defaults in `app/scrapers/rate_limit.py` |
 | ~~Admin panel~~ | ~~User management and global scrape stats~~ | **Shipped:** `/admin` UI + `GET/PATCH /admin/users`, `GET /admin/stats`; gated on `is_admin` |
 | Hosted deploy polish | Streamline [deploying-to-aws.md](deploying-to-aws.md); consider a one-click template |
-| Playwright in production | Container sizing, browser pool, timeout/retry policy for JS-heavy sites |
+| ~~Playwright in production~~ | ~~Container sizing, browser pool, timeout/retry policy for JS-heavy sites~~ | **Shipped:** worker Docker target with Chromium; process-scoped browser pool; navigation timeout + retries; larger worker Fargate task + `jobnotifier-backend-worker` ECR image |
 
 **Done when:** an operator can tell whether the system is healthy without SSH or
 log diving.

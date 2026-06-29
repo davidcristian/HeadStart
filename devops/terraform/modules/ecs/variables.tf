@@ -19,6 +19,10 @@ variable "backend_image" {
   type        = string
   description = "Backend ECR repository URL (without tag)."
 }
+variable "worker_backend_image" {
+  type        = string
+  description = "Worker backend ECR repository URL (without tag); includes Playwright."
+}
 variable "frontend_image" {
   type        = string
   description = "Frontend ECR repository URL (without tag)."
@@ -50,6 +54,14 @@ variable "cpu" {
 variable "memory" {
   type    = number
   default = 512
+}
+variable "worker_cpu" {
+  type    = number
+  default = 1024
+}
+variable "worker_memory" {
+  type    = number
+  default = 2048
 }
 
 variable "desired_counts" {

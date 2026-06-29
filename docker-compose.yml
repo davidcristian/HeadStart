@@ -39,6 +39,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+      target: api
     image: jobnotifier/backend:latest
     restart: unless-stopped
     command: ["api"]
@@ -55,10 +56,11 @@ services:
         condition: service_healthy
 
   worker:
-    image: jobnotifier/backend:latest
+    image: jobnotifier/backend-worker:latest
     build:
       context: ./backend
       dockerfile: Dockerfile
+      target: worker
     restart: unless-stopped
     command: ["worker"]
     env_file: .env
@@ -78,6 +80,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+      target: api
     restart: unless-stopped
     command: ["beat"]
     env_file: .env

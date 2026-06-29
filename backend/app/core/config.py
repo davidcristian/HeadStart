@@ -76,6 +76,11 @@ class Settings(BaseSettings):
     scheduler_tick_seconds: int = 30
     scheduler_max_catchup: int = 1
 
+    # ---- playwright (worker / opt-in scraper) ----
+    playwright_navigation_timeout_ms: int = 30_000
+    # Retries after the first attempt (0 = no retries).
+    playwright_max_retries: int = 1
+
     # ---- metrics (Prometheus) ----
     metrics_enabled: bool = True
     # Worker-only HTTP port for /metrics when the pipeline runs in Celery.

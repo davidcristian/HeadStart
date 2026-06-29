@@ -5,13 +5,20 @@ Playwright is an optional dependency. Install with:
 
 Config mirrors `generic_html` (item/title/url/company/location selectors) but the
 page is rendered in a headless browser before selectors are applied.
+
+Production workers use a process-scoped browser pool (see `playwright_browser`).
+Per-source overrides: `navigation_timeout_ms`, `wait_until`, `max_retries`.
 """
 
+from __future__ import annotations
+
+import time
 from typing import Any
 from urllib.parse import urljoin
 
-from app.core.outbound_url import assert_safe_outbound_url
+from app.core.config import settings
 from app.scrapers.base import Scraper, register_scraper
+from app.scrapers.playwright_browser import get_browser
 from app.scrapers.types import JobPosting, ScrapeContext
 
 
@@ -22,13 +29,6 @@ class PlaywrightScraper(Scraper):
     def fetch(self, ctx: ScrapeContext) -> list[JobPosting]:
         if self._rate_limiter is not None:
             self._rate_limiter.wait()
-        try:
-            from playwright.sync_api import sync_playwright
-        except ImportError as exc:  # pragma: no cover - exercised only without extra
-            raise RuntimeError(
-                "The 'playwright' adapter requires the optional dependency. "
-                'Install with: pip install -e ".[playwright]" && playwright install chromium'
-            ) from exc
 
         cfg = ctx.config
         item_sel = cfg.get("item")
@@ -36,21 +36,52 @@ class PlaywrightScraper(Scraper):
             raise ValueError("playwright scraper requires config.item (a CSS selector)")
         if not ctx.query_url:
             raise ValueError("playwright scraper requires a query_url")
-        assert_safe_outbound_url(ctx.query_url)
+
+        timeout_ms = int(
+            cfg.get("navigation_timeout_ms", settings.playwright_navigation_timeout_ms)
+        )
+        wait_until = str(cfg.get("wait_until", "networkidle"))
+        max_retries_raw = cfg.get("max_retries")
+        max_retries = (
+            int(max_retries_raw) if max_retries_raw is not None else settings.playwright_max_retries
+        )
+
+        last_exc: Exception | None = None
+        for attempt in range(max_retries + 1):
+            try:
+                return self._fetch_once(ctx, item_sel, timeout_ms, wait_until)
+            except Exception as exc:
+                last_exc = exc
+                if attempt < max_retries:
+                    delay = min(2**attempt, 8)
+                    time.sleep(delay)
+                    continue
+                raise
+        if last_exc is not None:
+            raise last_exc
+        return []
+
+    def _fetch_once(
+        self,
+        ctx: ScrapeContext,
+        item_sel: str,
+        timeout_ms: int,
+        wait_until: str,
+    ) -> list[JobPosting]:
+        cfg = ctx.config
         base_url = str(cfg.get("base_url") or ctx.query_url)
 
         postings: list[JobPosting] = []
-        with sync_playwright() as pw:
-            browser = pw.chromium.launch(headless=True)
-            try:
-                page = browser.new_page()
-                page.goto(ctx.query_url, wait_until="networkidle")
-                for handle in page.query_selector_all(item_sel):
-                    posting = self._parse(handle, cfg, base_url)
-                    if posting is not None:
-                        postings.append(posting)
-            finally:
-                browser.close()
+        browser = get_browser()
+        page = browser.new_page()
+        try:
+            page.goto(ctx.query_url, wait_until=wait_until, timeout=timeout_ms)
+            for handle in page.query_selector_all(item_sel):
+                posting = self._parse(handle, cfg, base_url)
+                if posting is not None:
+                    postings.append(posting)
+        finally:
+            page.close()
         return postings
 
     @staticmethod

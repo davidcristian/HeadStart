@@ -92,3 +92,32 @@ config value → adapter default → no limit.
 Limits are enforced in the shared `HttpClient` (for multi-request scrapers) and
 at the start of a `playwright` fetch. Limits are per scrape run, not global
 across workers.
+
+## Playwright adapter (production)
+
+The `playwright` adapter is optional locally (`pip install -e ".[playwright]"`)
+and **enabled in production on the worker only**:
+
+- **Docker:** `backend/Dockerfile` target `worker` installs Chromium; the lean
+  `api` / `beat` images omit Playwright.
+- **Browser pool:** each Celery worker child process reuses one headless Chromium
+  instance across scrapes (`app/scrapers/playwright_browser.py`). The browser
+  is closed on worker shutdown.
+- **Timeouts / retries:** env vars `PLAYWRIGHT_NAVIGATION_TIMEOUT_MS` (default
+  `30000`) and `PLAYWRIGHT_MAX_RETRIES` (default `1`). Per-source overrides in
+  `default_config` / `config`:
+
+```json
+{
+  "item": "li.job",
+  "title": "a.title",
+  "url": "a.title",
+  "navigation_timeout_ms": 45000,
+  "wait_until": "domcontentloaded",
+  "max_retries": 2
+}
+```
+
+On AWS, the worker ECS task is sized larger than api/beat (default **1024 CPU /
+2048 MiB**) and pulls the `jobnotifier-backend-worker` image. See
+[deployment.md](deployment.md).

@@ -1,7 +1,7 @@
 """Celery application used by both the worker and beat processes."""
 
 from celery import Celery
-from celery.signals import worker_process_init
+from celery.signals import worker_process_init, worker_process_shutdown
 
 from app.core.config import settings
 from app.core.logging import configure_logging
@@ -34,6 +34,14 @@ celery_app.conf.update(
 def _start_worker_metrics_server(**_: object) -> None:
     """Expose pipeline metrics from the Celery worker process."""
     start_metrics_server(settings.metrics_port)
+
+
+@worker_process_shutdown.connect
+def _close_playwright_browser(**_: object) -> None:
+    """Release the shared headless browser when a worker child exits."""
+    from app.scrapers.playwright_browser import close_browser
+
+    close_browser()
 
 
 # Importing the tasks module registers the task functions on this app.
