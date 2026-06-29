@@ -95,3 +95,7 @@ The frontend is installable as a PWA for a lightweight mobile jobs feed.
 - **Mobile layout** — Below 900px width the sidebar becomes a fixed bottom nav
   (Jobs, Searches, Sources, More). The Jobs page uses card rows instead of a
   table, hides the RSS card, and supports pull-to-refresh.
+- **"More" sheet a11y** — The bottom-sheet dialog is `role="dialog"
+  aria-modal="true"` and uses `useFocusTrap` (`src/hooks/useFocusTrap.ts`):
+  opening moves focus into the sheet, Tab/Shift+Tab cycle within it, Escape
+  closes it, and focus returns to the trigger on close.

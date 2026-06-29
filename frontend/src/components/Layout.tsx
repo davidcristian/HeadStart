@@ -1,8 +1,10 @@
 /** App shell: sidebar on desktop, bottom nav on mobile. */
 
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
-import { useHealth } from "../hooks/queries";
+import { useAsync } from "../hooks/useAsync";
+import { useFocusTrap } from "../hooks/useFocusTrap";
+import { api } from "../api";
 import { useAuth } from "../auth/AuthContext";
 import { Button } from "./ui";
 
@@ -35,6 +37,10 @@ export function Layout() {
   const health = useHealth();
   const { user, logout } = useAuth();
   const [moreOpen, setMoreOpen] = useState(false);
+  const moreSheetRef = useRef<HTMLDivElement>(null);
+  const closeMore = useCallback(() => setMoreOpen(false), []);
+
+  useFocusTrap(moreOpen, moreSheetRef, closeMore);
 
   return (
     <div className="layout">
@@ -110,16 +116,18 @@ export function Layout() {
         </nav>
 
         {moreOpen && (
-          <div className="mobile-more-backdrop" onClick={() => setMoreOpen(false)}>
+          <div className="mobile-more-backdrop" onClick={closeMore}>
             <div
               className="mobile-more-sheet"
+              ref={moreSheetRef}
               role="dialog"
+              aria-modal="true"
               aria-label="More navigation"
               onClick={(event) => event.stopPropagation()}
             >
               <div className="mobile-more-header">
                 <span className="brand-name">More</span>
-                <Button variant="ghost" onClick={() => setMoreOpen(false)}>
+                <Button variant="ghost" onClick={closeMore}>
                   Close
                 </Button>
               </div>
@@ -129,7 +137,7 @@ export function Layout() {
                     key={item.to}
                     to={item.to}
                     className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}
-                    onClick={() => setMoreOpen(false)}
+                    onClick={closeMore}
                   >
                     {item.label}
                   </NavLink>
@@ -138,7 +146,7 @@ export function Layout() {
                   <NavLink
                     to={ADMIN_NAV.to}
                     className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}
-                    onClick={() => setMoreOpen(false)}
+                    onClick={closeMore}
                   >
                     {ADMIN_NAV.label}
                   </NavLink>
@@ -152,7 +160,7 @@ export function Layout() {
                   <Button
                     variant="ghost"
                     onClick={() => {
-                      setMoreOpen(false);
+                      closeMore();
                       logout();
                     }}
                   >
