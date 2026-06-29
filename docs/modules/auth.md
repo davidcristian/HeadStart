@@ -24,6 +24,13 @@ data isolation.
   of `{sub: user_id, type, iat, exp}` with `settings.jwt_secret`.
 - Access tokens are short-lived (`ACCESS_TOKEN_EXPIRE_MINUTES`, default 30);
   refresh tokens last `REFRESH_TOKEN_EXPIRE_DAYS` (default 7).
+- **Token delivery:** `/login` and `/refresh` return the **access token in the
+  response body** and set the **refresh token as an httpOnly cookie**
+  (`AUTH_COOKIE_*`). The refresh token is never exposed to JavaScript, so XSS
+  cannot exfiltrate the long-lived credential. `/refresh` reads the cookie (and
+  rotates it); `/logout` clears it. Non-browser clients may still pass
+  `refresh_token` in the `/refresh` body. See
+  [adr/0006-httponly-refresh-cookie.md](../adr/0006-httponly-refresh-cookie.md).
 - `decode_token(token, expected_type=...)` validates signature, expiry, and the
   `type` claim, raising `TokenError` otherwise.
 - Passwords: `hash_password` / `verify_password` (bcrypt, input truncated to the
@@ -44,23 +51,29 @@ returns `NotFoundError` (404), never another user's data.
 | Method | Path        | Auth   | Purpose                                |
 | ------ | ----------- | ------ | -------------------------------------- |
 | POST   | `/register` | none   | Create an account (first = admin)      |
-| POST   | `/login`    | none   | Exchange email+password for tokens     |
-| POST   | `/refresh`  | none*  | Exchange a refresh token for new tokens|
+| POST   | `/login`    | none   | Email+password → access token (body) + refresh cookie |
+| POST   | `/refresh`  | none*  | Refresh cookie → new access token (rotates cookie) |
+| POST   | `/logout`   | none   | Clear the refresh cookie               |
 | POST   | `/forgot-password` | none | Request a password-reset email   |
 | POST   | `/reset-password`  | none | Set a new password from reset link |
 | GET    | `/me`       | bearer | Current user                           |
 
-\* `/refresh` is unauthenticated but requires a valid refresh token in the body.
+\* `/refresh` is unauthenticated but requires a valid refresh token, normally
+read from the httpOnly cookie (falls back to a `refresh_token` body field).
 
 ## Frontend
 
-- `frontend/src/lib/settings.ts` stores access + refresh tokens in
-  `localStorage`.
-- `frontend/src/api/client.ts` attaches the access token to every request and,
-  on a 401, transparently tries `/auth/refresh` once before clearing the session
-  and notifying `AuthContext`.
-- `frontend/src/auth/AuthContext.tsx` holds the current user; `ProtectedRoute`
-  gates the app and redirects to `/login`.
+- `frontend/src/lib/settings.ts` keeps the **access token in memory only** (a
+  module variable, never `localStorage`/`sessionStorage`). The refresh token is
+  the httpOnly cookie owned by the backend and is invisible to JS.
+- `frontend/src/api/client.ts` sends `credentials: "include"` on every request
+  and attaches the in-memory access token. On a 401 it calls `refreshSession()`
+  (cookie-based `/auth/refresh`) once, stores the new access token, and retries;
+  if that fails it clears the token and notifies `AuthContext`.
+- `frontend/src/auth/AuthContext.tsx` holds the current user. On load it calls
+  `refreshSession()` to mint an access token from the cookie, then `/auth/me`;
+  `logout()` calls `/auth/logout` to clear the cookie. `ProtectedRoute` gates
+  the app and redirects to `/login`.
 - `/forgot-password` and `/reset-password?token=...` handle the reset flow.
 
 ## Password reset
@@ -87,6 +100,9 @@ remove their own admin flag, or demote the last remaining admin account.
 ## Configuration
 
 `JWT_SECRET`, `ACCESS_TOKEN_EXPIRE_MINUTES`, `REFRESH_TOKEN_EXPIRE_DAYS`,
-`PASSWORD_RESET_EXPIRE_MINUTES`, `FRONTEND_BASE_URL`, and optional `SMTP_*`
-(see `.env.example`). In AWS these come from Secrets Manager (see
-[deployment.md](deployment.md)).
+`PASSWORD_RESET_EXPIRE_MINUTES`, `FRONTEND_BASE_URL`, the refresh-cookie settings
+`AUTH_COOKIE_NAME` / `AUTH_COOKIE_PATH` / `AUTH_COOKIE_SECURE` /
+`AUTH_COOKIE_SAMESITE`, and optional `SMTP_*` (see `.env.example`). The cookie
+defaults are production-safe (`Secure` + `SameSite=Lax`); for local dev over
+plain HTTP set `AUTH_COOKIE_SECURE=false`. In AWS these come from Secrets
+Manager (see [deployment.md](deployment.md)).

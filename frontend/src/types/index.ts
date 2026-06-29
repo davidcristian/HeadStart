@@ -156,9 +156,8 @@ export interface AdminStats {
   recent_errors: AdminSearchError[];
 }
 
-export interface TokenResponse {
+export interface AccessTokenResponse {
   access_token: string;
-  refresh_token: string;
   token_type: string;
 }
 

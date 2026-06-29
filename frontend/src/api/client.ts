@@ -1,17 +1,13 @@
 /** Thin typed fetch wrapper. All network access goes through here.
  *
- * Every request carries the access token. On a 401 we transparently try the
- * refresh token once; if that fails the session is cleared and a registered
- * handler (the AuthContext) is notified so the UI can redirect to login.
+ * Every request carries the in-memory access token plus the httpOnly refresh
+ * cookie (`credentials: "include"`). On a 401 we transparently try the
+ * cookie-based refresh once; if that fails the session is cleared and a
+ * registered handler (the AuthContext) is notified so the UI can redirect to
+ * login.
  */
 
-import {
-  clearTokens,
-  getAccessToken,
-  getApiBaseUrl,
-  getRefreshToken,
-  setTokens,
-} from "../lib/settings";
+import { clearAccessToken, getAccessToken, getApiBaseUrl, setAccessToken } from "../lib/settings";
 
 export class ApiError extends Error {
   constructor(
@@ -51,20 +47,19 @@ async function rawFetch(
     method,
     headers,
     body: body === undefined ? undefined : JSON.stringify(body),
+    credentials: "include",
   });
 }
 
-async function tryRefresh(): Promise<boolean> {
-  const refreshToken = getRefreshToken();
-  if (!refreshToken) return false;
+/** Exchange the httpOnly refresh cookie for a fresh access token. */
+export async function refreshSession(): Promise<boolean> {
   const resp = await fetch(`${getApiBaseUrl()}/api/v1/auth/refresh`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ refresh_token: refreshToken }),
+    credentials: "include",
   });
   if (!resp.ok) return false;
-  const data = (await resp.json()) as { access_token: string; refresh_token: string };
-  setTokens(data.access_token, data.refresh_token);
+  const data = (await resp.json()) as { access_token: string };
+  setAccessToken(data.access_token);
   return true;
 }
 
@@ -88,12 +83,12 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
 
   let resp = await rawFetch(path, method, body, getAccessToken());
   if (resp.status === 401) {
-    const refreshed = await tryRefresh();
+    const refreshed = await refreshSession();
     if (refreshed) {
       resp = await rawFetch(path, method, body, getAccessToken());
     }
     if (resp.status === 401) {
-      clearTokens();
+      clearAccessToken();
       onUnauthorized?.();
     }
   }

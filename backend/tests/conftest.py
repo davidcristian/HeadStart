@@ -75,7 +75,12 @@ def make_http_client(handler: "callable[[httpx.Request], httpx.Response]") -> Ht
 def client() -> Iterator[TestClient]:
     """A FastAPI TestClient wired to a shared in-memory SQLite database."""
     from app.api.deps import get_db
+    from app.core.config import settings
     from app.main import app
+
+    # The TestClient talks plain HTTP, so allow the refresh cookie to flow
+    # without the Secure flag (it defaults to Secure for real deployments).
+    settings.auth_cookie_secure = False
 
     engine = create_engine(
         "sqlite+pysqlite:///:memory:",

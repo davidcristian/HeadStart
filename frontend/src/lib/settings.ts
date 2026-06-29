@@ -1,16 +1,18 @@
-/** Runtime-configurable connection settings + JWT storage, in localStorage.
+/** Runtime connection settings + in-memory access-token storage.
  *
- * The API base URL falls back to the build-time VITE_API_BASE_URL, then to a
- * sensible local default. Access/refresh tokens are issued by `/auth/login`
- * and `/auth/register` and are attached to every request by the API client.
+ * The API base URL is persisted in localStorage. The access token is held only
+ * in memory (a module variable) — never in localStorage/sessionStorage — so it
+ * is not exposed to XSS or readable across tabs. The long-lived refresh token is
+ * an httpOnly cookie owned by the backend and is never visible to JavaScript; on
+ * a fresh load the app exchanges that cookie for a new access token.
  */
 
 const BASE_URL_KEY = "jobnotifier.apiBaseUrl";
-const ACCESS_TOKEN_KEY = "jobnotifier.accessToken";
-const REFRESH_TOKEN_KEY = "jobnotifier.refreshToken";
 
 const DEFAULT_BASE_URL =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? "http://localhost:8000";
+
+let accessToken = "";
 
 export function getApiBaseUrl(): string {
   return (localStorage.getItem(BASE_URL_KEY) || DEFAULT_BASE_URL).replace(/\/$/, "");
@@ -21,19 +23,13 @@ export function setApiBaseUrl(url: string): void {
 }
 
 export function getAccessToken(): string {
-  return localStorage.getItem(ACCESS_TOKEN_KEY) || "";
+  return accessToken;
 }
 
-export function getRefreshToken(): string {
-  return localStorage.getItem(REFRESH_TOKEN_KEY) || "";
+export function setAccessToken(token: string): void {
+  accessToken = token;
 }
 
-export function setTokens(accessToken: string, refreshToken: string): void {
-  localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
-  localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
-}
-
-export function clearTokens(): void {
-  localStorage.removeItem(ACCESS_TOKEN_KEY);
-  localStorage.removeItem(REFRESH_TOKEN_KEY);
+export function clearAccessToken(): void {
+  accessToken = "";
 }

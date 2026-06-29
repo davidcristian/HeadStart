@@ -37,7 +37,7 @@ def test_register_duplicate_email_conflicts(client: TestClient) -> None:
     assert client.post("/api/v1/auth/register", json=payload).status_code == 409
 
 
-def test_login_returns_tokens_and_me_works(client: TestClient) -> None:
+def test_login_returns_access_token_and_sets_refresh_cookie(client: TestClient) -> None:
     client.post(
         "/api/v1/auth/register",
         json={"email": "me@example.com", "password": "password123"},
@@ -47,10 +47,14 @@ def test_login_returns_tokens_and_me_works(client: TestClient) -> None:
         json={"email": "me@example.com", "password": "password123"},
     )
     assert login.status_code == 200
-    tokens = login.json()
-    assert tokens["access_token"] and tokens["refresh_token"]
+    body = login.json()
+    # The access token is in the body; the refresh token is an httpOnly cookie
+    # and must never be exposed in the response body.
+    assert body["access_token"]
+    assert "refresh_token" not in body
+    assert client.cookies.get("jobnotifier_refresh")
 
-    headers = {"Authorization": f"Bearer {tokens['access_token']}"}
+    headers = {"Authorization": f"Bearer {body['access_token']}"}
     me = client.get("/api/v1/auth/me", headers=headers)
     assert me.status_code == 200
     assert me.json()["email"] == "me@example.com"
@@ -68,19 +72,41 @@ def test_login_wrong_password_rejected(client: TestClient) -> None:
     assert resp.status_code == 400
 
 
-def test_refresh_issues_new_tokens(client: TestClient) -> None:
+def test_refresh_uses_cookie_and_issues_new_access_token(client: TestClient) -> None:
     client.post(
         "/api/v1/auth/register",
         json={"email": "r@example.com", "password": "password123"},
     )
-    refresh_token = client.post(
+    client.post(
         "/api/v1/auth/login",
         json={"email": "r@example.com", "password": "password123"},
-    ).json()["refresh_token"]
+    )
 
-    resp = client.post("/api/v1/auth/refresh", json={"refresh_token": refresh_token})
+    # No body: the refresh token rides along in the httpOnly cookie set at login.
+    resp = client.post("/api/v1/auth/refresh")
     assert resp.status_code == 200
     assert resp.json()["access_token"]
+
+
+def test_refresh_without_token_rejected(client: TestClient) -> None:
+    resp = client.post("/api/v1/auth/refresh")
+    assert resp.status_code == 400
+
+
+def test_logout_clears_refresh_cookie(client: TestClient) -> None:
+    client.post(
+        "/api/v1/auth/register",
+        json={"email": "out@example.com", "password": "password123"},
+    )
+    client.post(
+        "/api/v1/auth/login",
+        json={"email": "out@example.com", "password": "password123"},
+    )
+    assert client.cookies.get("jobnotifier_refresh")
+
+    assert client.post("/api/v1/auth/logout").status_code == 200
+    # The cookie is gone, so a subsequent cookie-based refresh is rejected.
+    assert client.post("/api/v1/auth/refresh").status_code == 400
 
 
 def test_refresh_token_rejected_as_access_token(client: TestClient) -> None:
@@ -88,13 +114,14 @@ def test_refresh_token_rejected_as_access_token(client: TestClient) -> None:
         "/api/v1/auth/register",
         json={"email": "t@example.com", "password": "password123"},
     )
-    tokens = client.post(
+    client.post(
         "/api/v1/auth/login",
         json={"email": "t@example.com", "password": "password123"},
-    ).json()
+    )
 
     # A refresh token must not be accepted where an access token is required.
-    headers = {"Authorization": f"Bearer {tokens['refresh_token']}"}
+    refresh_token = client.cookies.get("jobnotifier_refresh")
+    headers = {"Authorization": f"Bearer {refresh_token}"}
     assert client.get("/api/v1/auth/me", headers=headers).status_code == 401
 
 

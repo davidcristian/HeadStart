@@ -16,12 +16,24 @@ class LoginRequest(BaseModel):
 
 
 class RefreshRequest(BaseModel):
-    refresh_token: str = Field(min_length=1)
+    # Optional: the refresh token normally arrives via the httpOnly cookie. The
+    # body field is kept for non-browser clients that manage tokens themselves.
+    refresh_token: str | None = Field(default=None, min_length=1)
 
 
 class TokenResponse(BaseModel):
+    """Internal token pair returned by the auth service."""
+
     access_token: str
     refresh_token: str
+    token_type: str = "bearer"
+
+
+class AccessTokenResponse(BaseModel):
+    """API response body: only the access token. The refresh token is set as an
+    httpOnly cookie and never exposed to JavaScript."""
+
+    access_token: str
     token_type: str = "bearer"
 
 

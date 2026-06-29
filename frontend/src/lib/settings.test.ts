@@ -1,31 +1,38 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import {
-  clearTokens,
+  clearAccessToken,
   getAccessToken,
   getApiBaseUrl,
-  getRefreshToken,
+  setAccessToken,
   setApiBaseUrl,
-  setTokens,
 } from "./settings";
 
 describe("settings", () => {
-  beforeEach(() => localStorage.clear());
+  beforeEach(() => {
+    localStorage.clear();
+    clearAccessToken();
+  });
 
   it("strips trailing slashes from the base URL", () => {
     setApiBaseUrl("http://example.test/");
     expect(getApiBaseUrl()).toBe("http://example.test");
   });
 
-  it("persists access and refresh tokens", () => {
-    setTokens("access-1", "refresh-1");
+  it("holds the access token in memory", () => {
+    expect(getAccessToken()).toBe("");
+    setAccessToken("access-1");
     expect(getAccessToken()).toBe("access-1");
-    expect(getRefreshToken()).toBe("refresh-1");
   });
 
-  it("clears tokens", () => {
-    setTokens("access-1", "refresh-1");
-    clearTokens();
+  it("clears the access token", () => {
+    setAccessToken("access-1");
+    clearAccessToken();
     expect(getAccessToken()).toBe("");
-    expect(getRefreshToken()).toBe("");
+  });
+
+  it("never persists the access token to localStorage", () => {
+    setAccessToken("secret-token");
+    expect(localStorage.getItem("jobnotifier.accessToken")).toBeNull();
+    expect(JSON.stringify(localStorage)).not.toContain("secret-token");
   });
 });

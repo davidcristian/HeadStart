@@ -43,6 +43,24 @@ class Settings(BaseSettings):
     # Base URL of the web UI (used in password-reset links).
     frontend_base_url: str = "http://localhost:5173"
 
+    # ---- auth refresh cookie ----
+    # The refresh token is delivered as an httpOnly cookie (never readable by JS,
+    # so it is out of reach of XSS). Scope it to the auth endpoints. Defaults are
+    # production-safe (Secure + Lax, same-site behind nginx); over plain-HTTP
+    # local dev set AUTH_COOKIE_SECURE=false.
+    auth_cookie_name: str = "jobnotifier_refresh"
+    auth_cookie_path: str = "/api/v1/auth"
+    auth_cookie_secure: bool = True
+    auth_cookie_samesite: str = "lax"
+
+    @field_validator("auth_cookie_samesite", mode="before")
+    @classmethod
+    def _normalize_samesite(cls, value: object) -> object:
+        """SameSite is case-insensitive; Starlette expects a lowercase literal."""
+        if isinstance(value, str):
+            return value.strip().lower()
+        return value
+
     # ---- email (password reset + email notifier) ----
     # Leave SMTP_HOST empty in local dev; reset links are logged instead.
     smtp_host: str = ""

@@ -1,6 +1,7 @@
 /** Typed API endpoints. One function per backend route. */
 
 import type {
+  AccessTokenResponse,
   AdminStats,
   AdminUser,
   CredentialCreate,
@@ -19,7 +20,6 @@ import type {
   SourceCreate,
   SourceTestResult,
   TargetCreate,
-  TokenResponse,
   User,
 } from "../types";
 import { request } from "./client";
@@ -45,9 +45,14 @@ export const api = {
       skipAuth: true,
     }),
   login: (email: string, password: string) =>
-    request<TokenResponse>("/api/v1/auth/login", {
+    request<AccessTokenResponse>("/api/v1/auth/login", {
       method: "POST",
       body: { email, password },
+      skipAuth: true,
+    }),
+  logout: () =>
+    request<{ message: string }>("/api/v1/auth/logout", {
+      method: "POST",
       skipAuth: true,
     }),
   forgotPassword: (email: string) =>

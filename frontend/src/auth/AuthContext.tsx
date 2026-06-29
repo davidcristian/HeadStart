@@ -1,14 +1,16 @@
 /** Authentication state: current user + login/register/logout actions.
  *
- * Tokens live in localStorage (see lib/settings); this context tracks the
- * resolved user and reacts to unrecoverable 401s reported by the API client.
+ * The access token lives only in memory (see lib/settings) and the refresh
+ * token is an httpOnly cookie. On load we exchange that cookie for a fresh
+ * access token; this context tracks the resolved user and reacts to
+ * unrecoverable 401s reported by the API client.
  */
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { api } from "../api";
-import { setUnauthorizedHandler } from "../api/client";
-import { clearTokens, getAccessToken, setTokens } from "../lib/settings";
+import { refreshSession, setUnauthorizedHandler } from "../api/client";
+import { clearAccessToken, setAccessToken } from "../lib/settings";
 import type { User } from "../types";
 
 interface AuthState {
@@ -26,23 +28,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const logout = useCallback(() => {
-    clearTokens();
+    void api.logout().catch(() => undefined);
+    clearAccessToken();
     setUser(null);
   }, []);
 
-  // Resolve the session on first load if we already hold a token.
+  // Resolve the session on first load by exchanging the refresh cookie for an
+  // access token, then loading the current user.
   useEffect(() => {
     let cancelled = false;
     async function bootstrap() {
-      if (!getAccessToken()) {
-        setLoading(false);
-        return;
-      }
       try {
+        const refreshed = await refreshSession();
+        if (!refreshed) return;
         const me = await api.me();
         if (!cancelled) setUser(me);
       } catch {
-        if (!cancelled) logout();
+        if (!cancelled) clearAccessToken();
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -51,7 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [logout]);
+  }, []);
 
   // The API client calls this when a refresh fails.
   useEffect(() => {
@@ -61,7 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async (email: string, password: string) => {
     const tokens = await api.login(email, password);
-    setTokens(tokens.access_token, tokens.refresh_token);
+    setAccessToken(tokens.access_token);
     setUser(await api.me());
   }, []);
 

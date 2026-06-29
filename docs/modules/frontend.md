@@ -34,11 +34,13 @@ container (which also reverse-proxies `/api` to the backend in production).
 
 ## Auth flow
 
-- Login/register store JWT access + refresh tokens in `localStorage`
-- `/forgot-password` and `/reset-password?token=...` for email-based password reset
-  (`src/lib/settings.ts`).
-- `src/api/client.ts` attaches the access token to every request and, on a 401,
-  tries `/auth/refresh` once before clearing the session.
+- Login returns the access token (kept **in memory** in `src/lib/settings.ts`);
+  the refresh token is an httpOnly cookie set by the backend. See
+  [auth.md](auth.md) and [adr/0006-httponly-refresh-cookie.md](../adr/0006-httponly-refresh-cookie.md).
+- `/forgot-password` and `/reset-password?token=...` for email-based password reset.
+- `src/api/client.ts` sends `credentials: "include"`, attaches the in-memory
+  access token, and on a 401 calls `refreshSession()` (cookie-based) once before
+  clearing the session.
 - `AuthProvider` (in `main.tsx`) resolves the current user; `ProtectedRoute`
   gates all app routes and redirects to `/login`. See [auth.md](auth.md).
 
