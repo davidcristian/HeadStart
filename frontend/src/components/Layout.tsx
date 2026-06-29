@@ -1,12 +1,25 @@
-/** App shell: sidebar navigation + routed content. */
+/** App shell: sidebar on desktop, bottom nav on mobile. */
 
+import { useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import { useAsync } from "../hooks/useAsync";
 import { api } from "../api";
 import { useAuth } from "../auth/AuthContext";
 import { Button } from "./ui";
 
-const NAV = [
+const PRIMARY_NAV = [
+  { to: "/jobs", label: "Jobs" },
+  { to: "/searches", label: "Searches" },
+  { to: "/sources", label: "Sources" },
+];
+
+const MORE_NAV = [
+  { to: "/targets", label: "Notifications" },
+  { to: "/credentials", label: "Site credentials" },
+  { to: "/settings", label: "Settings" },
+];
+
+const DESKTOP_NAV = [
   { to: "/searches", label: "Searches" },
   { to: "/jobs", label: "Jobs" },
   { to: "/sources", label: "Sources" },
@@ -20,6 +33,7 @@ const ADMIN_NAV = { to: "/admin", label: "Admin" };
 export function Layout() {
   const health = useAsync(() => api.health(), []);
   const { user, logout } = useAuth();
+  const [moreOpen, setMoreOpen] = useState(false);
 
   return (
     <div className="layout">
@@ -29,7 +43,7 @@ export function Layout() {
           <span className="brand-name">JobNotifier</span>
         </div>
         <nav>
-          {NAV.map((item) => (
+          {DESKTOP_NAV.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
@@ -68,9 +82,87 @@ export function Layout() {
           )}
         </div>
       </aside>
-      <main className="content">
-        <Outlet />
-      </main>
+
+      <div className="app-main">
+        <main className="content">
+          <Outlet />
+        </main>
+
+        <nav className="mobile-nav" aria-label="Primary">
+          {PRIMARY_NAV.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              className={({ isActive }) => `mobile-nav-link ${isActive ? "active" : ""}`}
+            >
+              {item.label}
+            </NavLink>
+          ))}
+          <button
+            type="button"
+            className={`mobile-nav-link mobile-nav-more ${moreOpen ? "active" : ""}`}
+            aria-expanded={moreOpen}
+            onClick={() => setMoreOpen((open) => !open)}
+          >
+            More
+          </button>
+        </nav>
+
+        {moreOpen && (
+          <div className="mobile-more-backdrop" onClick={() => setMoreOpen(false)}>
+            <div
+              className="mobile-more-sheet"
+              role="dialog"
+              aria-label="More navigation"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="mobile-more-header">
+                <span className="brand-name">More</span>
+                <Button variant="ghost" onClick={() => setMoreOpen(false)}>
+                  Close
+                </Button>
+              </div>
+              <nav className="mobile-more-links">
+                {MORE_NAV.map((item) => (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}
+                    onClick={() => setMoreOpen(false)}
+                  >
+                    {item.label}
+                  </NavLink>
+                ))}
+                {user?.is_admin && (
+                  <NavLink
+                    to={ADMIN_NAV.to}
+                    className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}
+                    onClick={() => setMoreOpen(false)}
+                  >
+                    {ADMIN_NAV.label}
+                  </NavLink>
+                )}
+              </nav>
+              {user && (
+                <div className="mobile-more-footer">
+                  <span className="user-email" title={user.email}>
+                    {user.email}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      setMoreOpen(false);
+                      logout();
+                    }}
+                  >
+                    Sign out
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

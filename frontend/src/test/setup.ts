@@ -1,4 +1,21 @@
 import "@testing-library/jest-dom";
+import { vi } from "vitest";
+
+vi.mock("virtual:pwa-register", () => ({
+  registerSW: () => () => {},
+}));
+
+Object.defineProperty(window, "matchMedia", {
+  writable: true,
+  value: vi.fn().mockImplementation((query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })),
+});
 
 // Provide a deterministic in-memory localStorage for tests. jsdom's storage can
 // be shadowed by Node's experimental built-in localStorage, so we install our

@@ -13,13 +13,15 @@ export function Card({
   title,
   actions,
   children,
+  className,
 }: {
   title?: string;
   actions?: ReactNode;
   children: ReactNode;
+  className?: string;
 }) {
   return (
-    <section className="card">
+    <section className={className ? `card ${className}` : "card"}>
       {(title || actions) && (
         <header className="card-header">
           {title && <h2>{title}</h2>}

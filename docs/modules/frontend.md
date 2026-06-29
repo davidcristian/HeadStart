@@ -61,4 +61,18 @@ container (which also reverse-proxies `/api` to the backend in production).
 
 - Standalone: `npm run dev` (Vite dev server on :5173, proxying to the API).
 - In the stack: served by nginx on :8080 (see `frontend/Dockerfile`,
-  `frontend/nginx.conf`).
+  `frontend/nginx.conf`). Service worker assets (`sw.js`, `manifest.webmanifest`)
+  are served with `Cache-Control: no-cache` so updates propagate.
+
+## Progressive Web App (mobile)
+
+The frontend is installable as a PWA for a lightweight mobile jobs feed.
+
+- **Manifest + icons** — `vite-plugin-pwa` generates `manifest.webmanifest` and
+  registers a Workbox service worker on build. Static icons live in `public/`.
+- **Install** — On mobile Chrome/Safari, use “Add to Home Screen”. The installed
+  app opens on `/jobs` (`start_url` in the manifest).
+- **Offline** — Cached shell (HTML/JS/CSS); API calls still require network.
+- **Mobile layout** — Below 900px width the sidebar becomes a fixed bottom nav
+  (Jobs, Searches, Sources, More). The Jobs page uses card rows instead of a
+  table, hides the RSS card, and supports pull-to-refresh.

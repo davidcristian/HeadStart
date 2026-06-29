@@ -1,10 +1,11 @@
 /** Feed of jobs discovered so far, filterable by search and triage status. */
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { api } from "../api";
-import { JobStatusBadge } from "../components/JobStatusBadge";
+import { JobList } from "../components/JobList";
 import { Banner, Button, Card, EmptyState, Field } from "../components/ui";
 import { useAsync } from "../hooks/useAsync";
+import { usePullToRefresh } from "../hooks/usePullToRefresh";
 import type { JobStatus } from "../types";
 
 const STATUS_FILTERS: Array<{ value: "" | JobStatus; label: string }> = [
@@ -42,6 +43,13 @@ export function JobsPage() {
   );
   const feed = useAsync(() => api.getFeedUrl(), []);
 
+  const { reload } = jobs;
+  const refreshJobs = useCallback(() => {
+    reload();
+  }, [reload]);
+
+  const { pulling, refreshing } = usePullToRefresh(refreshJobs);
+
   async function setJobStatus(jobId: number, next: "seen" | "applied" | "archived") {
     await api.updateJob(jobId, { status: next });
     jobs.reload();
@@ -63,9 +71,14 @@ export function JobsPage() {
   const filteredFeedUrl = feed.data ? buildFeedUrl(feed.data.url, searchId, status) : "";
 
   return (
-    <>
+    <div className="jobs-page">
+      {(pulling || refreshing) && (
+        <div className="pull-refresh" aria-live="polite">
+          {refreshing ? "Refreshing jobs..." : "Release to refresh"}
+        </div>
+      )}
       <h1>Jobs</h1>
-      <Card title="RSS feed">
+      <Card title="RSS feed" className="rss-card">
         {feed.loading && <p>Loading feed URL...</p>}
         {feed.error && <Banner kind="error">Could not load RSS feed URL.</Banner>}
         {feed.data && (
@@ -90,7 +103,7 @@ export function JobsPage() {
       <Card
         title="Discovered jobs"
         actions={
-          <div className="card-actions">
+          <div className="card-actions job-filters">
             <Field label="">
               <select value={status} onChange={(e) => setStatus(e.target.value as "" | JobStatus)}>
                 {STATUS_FILTERS.map((option) => (
@@ -121,62 +134,9 @@ export function JobsPage() {
           <EmptyState>No jobs seen yet. They appear here as searches run.</EmptyState>
         )}
         {jobs.data && jobs.data.length > 0 && (
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Title</th>
-                <th>Company</th>
-                <th>Location</th>
-                <th>Salary</th>
-                <th>Status</th>
-                <th>First seen</th>
-                <th />
-              </tr>
-            </thead>
-            <tbody>
-              {jobs.data.map((j) => (
-                <tr key={j.id}>
-                  <td>
-                    {j.url ? (
-                      <a href={j.url} target="_blank" rel="noreferrer">
-                        {j.title}
-                      </a>
-                    ) : (
-                      j.title
-                    )}
-                  </td>
-                  <td>{j.company || "-"}</td>
-                  <td>{j.location || "-"}</td>
-                  <td>{j.salary || "-"}</td>
-                  <td>
-                    <JobStatusBadge status={j.status} />
-                  </td>
-                  <td className="muted">{new Date(j.first_seen_at).toLocaleString()}</td>
-                  <td>
-                    <div className="row-actions">
-                      {j.status !== "seen" && j.status !== "closed" && (
-                        <Button variant="ghost" onClick={() => setJobStatus(j.id, "seen")}>
-                          Seen
-                        </Button>
-                      )}
-                      {j.status !== "applied" && (
-                        <Button variant="ghost" onClick={() => setJobStatus(j.id, "applied")}>
-                          Applied
-                        </Button>
-                      )}
-                      {j.status !== "archived" && (
-                        <Button variant="ghost" onClick={() => setJobStatus(j.id, "archived")}>
-                          Archive
-                        </Button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <JobList jobs={jobs.data} onStatusChange={setJobStatus} />
         )}
       </Card>
-    </>
+    </div>
   );
 }
