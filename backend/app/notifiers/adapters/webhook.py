@@ -29,7 +29,7 @@ from app.scrapers.types import JobPosting
 
 logger = get_logger(__name__)
 
-_SIGNATURE_HEADER = "X-JobNotifier-Signature"
+_SIGNATURE_HEADER = "X-HeadStart-Signature"
 
 
 @register_notifier("webhook")

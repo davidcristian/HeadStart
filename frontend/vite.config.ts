@@ -10,11 +10,12 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: ["icon.svg", "favicon.png", "apple-touch-icon.png"],
       manifest: {
-        name: "JobNotifier",
-        short_name: "JobNotifier",
-        description: "Track job postings and get notified when new roles match your searches.",
-        theme_color: "#0f1419",
-        background_color: "#0f1419",
+        name: "HeadStart",
+        short_name: "HeadStart",
+        description:
+          "Watch the job boards you care about and get alerted before the crowd.",
+        theme_color: "#0a0e14",
+        background_color: "#0a0e14",
         display: "standalone",
         orientation: "portrait-primary",
         start_url: "/app/jobs",

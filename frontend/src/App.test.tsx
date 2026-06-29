@@ -38,14 +38,14 @@ describe("App routing", () => {
   it("serves the public landing page at /", () => {
     renderAt("/");
     expect(
-      screen.getByRole("heading", { name: "Never miss the job you actually want." }),
+      screen.getByRole("heading", { name: "See new roles before the crowd." }),
     ).toBeInTheDocument();
   });
 
   it("redirects an unauthenticated visitor from /app to the login screen", async () => {
     renderAt("/app");
     await waitFor(() =>
-      expect(screen.getByRole("heading", { name: "Sign in to JobNotifier" })).toBeInTheDocument(),
+      expect(screen.getByRole("heading", { name: "Sign in to HeadStart" })).toBeInTheDocument(),
     );
   });
 
@@ -53,7 +53,7 @@ describe("App routing", () => {
     renderAt("/totally-unknown");
     await waitFor(() =>
       expect(
-        screen.getByRole("heading", { name: "Never miss the job you actually want." }),
+        screen.getByRole("heading", { name: "See new roles before the crowd." }),
       ).toBeInTheDocument(),
     );
   });
@@ -61,7 +61,7 @@ describe("App routing", () => {
   it("redirects legacy app paths under /app (which then gate on auth)", async () => {
     renderAt("/jobs");
     await waitFor(() =>
-      expect(screen.getByRole("heading", { name: "Sign in to JobNotifier" })).toBeInTheDocument(),
+      expect(screen.getByRole("heading", { name: "Sign in to HeadStart" })).toBeInTheDocument(),
     );
   });
 });

@@ -73,9 +73,9 @@ class FeedService:
             raise NotFoundError(f"Search {search_id} not found")
         jobs = self.jobs.list_all(user_id=user.id, search_id=search_id, status=status, limit=limit)
         channel = RssChannel(
-            title="JobNotifier jobs",
+            title="HeadStart jobs",
             link=feed_url,
-            description="Jobs discovered by your JobNotifier searches.",
+            description="Jobs discovered by your HeadStart searches.",
             jobs=jobs,
         )
         return build_rss_feed(channel)

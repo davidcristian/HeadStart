@@ -27,7 +27,7 @@ export function SettingsPage() {
 
       <Card title="Receiving notifications">
         <p>
-          JobNotifier can deliver alerts via <strong>email</strong> (configure <code>SMTP_*</code>{" "}
+          HeadStart can deliver alerts via <strong>email</strong> (configure <code>SMTP_*</code>{" "}
           on the server), <strong>Slack</strong> or <strong>Discord</strong> (incoming webhooks),{" "}
           <strong>Telegram</strong> (Bot API), or <strong>ntfy</strong> push (no server mail setup
           required).

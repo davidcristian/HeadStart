@@ -39,7 +39,7 @@ export function RegisterPage() {
 
   return (
     <div className="auth-screen">
-      <Card title="Create your JobNotifier account">
+      <Card title="Create your HeadStart account">
         {error && <Banner kind="error">{error}</Banner>}
         <form onSubmit={submit}>
           <Field label="Email">

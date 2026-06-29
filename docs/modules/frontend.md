@@ -2,8 +2,10 @@
 
 **Path:** `frontend/`
 
-React + TypeScript (Vite). Built to a static bundle and served by nginx in a
-container (which also reverse-proxies `/api` to the backend in production).
+React + TypeScript (Vite). The product is branded **HeadStart** in the UI; the
+repo and package names still use `jobnotifier` internally. Built to a static bundle
+and served by nginx in a container (which also reverse-proxies `/api` to the backend
+in production).
 
 ## Structure
 
@@ -13,7 +15,7 @@ container (which also reverse-proxies `/api` to the backend in production).
 | `src/auth/`         | `AuthContext`, `ProtectedRoute` (session state)     |
 | `src/types/`        | TS types mirroring backend schemas                  |
 | `src/hooks/`        | React Query data hooks (`queries.ts`/`mutations.ts`) + UI state hooks |
-| `src/components/`   | Reusable presentational components                  |
+| `src/components/`   | Reusable presentational components (`Brand`, `Layout`, …) |
 | `src/pages/`        | Route-level screens                                 |
 
 ## Routing: public site vs. authenticated app
@@ -37,7 +39,7 @@ other unknown path redirects to the landing page.
 
 | Page        | Purpose                                                          |
 | ----------- | ---------------------------------------------------------------- |
-| Landing     | Public marketing page at `/`: hero, feature highlights, CTA to register/sign in |
+| Landing     | Public marketing page at `/`: hero, integrations strip, how-it-works, features, FAQ, CTA to register/sign in |
 | Login       | Email + password sign-in                                         |
 | Register    | Create an account (first user becomes admin)                     |
 | Sources     | List/create/edit sources (name, adapter, base URL, config); test scrape |

@@ -26,9 +26,9 @@ def _job(**overrides: object) -> SeenJob:
 def test_build_rss_feed_renders_jobs() -> None:
     xml = build_rss_feed(
         RssChannel(
-            title="JobNotifier jobs",
+            title="HeadStart jobs",
             link="http://testserver/api/v1/feed/rss?token=abc",
-            description="Jobs discovered by your JobNotifier searches.",
+            description="Jobs discovered by your HeadStart searches.",
             jobs=[_job()],
         )
     )

@@ -11,7 +11,7 @@ import httpx
 from app.core.outbound_url import assert_safe_outbound_url
 from app.scrapers.rate_limit import RateLimiter
 
-DEFAULT_USER_AGENT = "JobNotifier/0.1 (+https://github.com/; polite job-posting watcher)"
+DEFAULT_USER_AGENT = "HeadStart/0.1 (+https://github.com/; polite job-posting watcher)"
 DEFAULT_TIMEOUT = 20.0
 
 

@@ -6,6 +6,7 @@ import { useAsync } from "../hooks/useAsync";
 import { useFocusTrap } from "../hooks/useFocusTrap";
 import { api } from "../api";
 import { useAuth } from "../auth/AuthContext";
+import { Brand } from "./Brand";
 import { Button } from "./ui";
 
 const PRIMARY_NAV = [
@@ -45,10 +46,7 @@ export function Layout() {
   return (
     <div className="layout">
       <aside className="sidebar">
-        <div className="brand">
-          <span className="brand-mark">JN</span>
-          <span className="brand-name">JobNotifier</span>
-        </div>
+        <Brand to="/app/jobs" />
         <nav>
           {DESKTOP_NAV.map((item) => (
             <NavLink

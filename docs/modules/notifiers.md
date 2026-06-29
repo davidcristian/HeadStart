@@ -120,7 +120,7 @@ mode sends one batched payload (`event: jobs.digest` with a `jobs` array). Each
 job includes `external_id`, `title`, `company`, `location`, `url`, `summary`
 (the match blurb, or `""`), and `posted_at` (ISO-8601 or `null`).
 
-When `secret` is set, requests include an `X-JobNotifier-Signature` header with
+When `secret` is set, requests include an `X-HeadStart-Signature` header with
 `sha256=<hex>` (HMAC-SHA256 of the JSON body). Optional `headers` are merged
 into the request. Outbound URLs are validated against private/loopback addresses
 (SSRF protection).

@@ -37,7 +37,7 @@ const TYPE_HINTS: Record<string, string> = {
   discord: "For Discord: webhook_url (channel webhook URL from your Discord server).",
   telegram: "For Telegram: bot_token (from @BotFather) and chat_id (your user or group id).",
   webhook:
-    "For webhook: webhook_url (HTTPS endpoint). Optional secret (HMAC-SHA256 in X-JobNotifier-Signature) and headers.",
+    "For webhook: webhook_url (HTTPS endpoint). Optional secret (HMAC-SHA256 in X-HeadStart-Signature) and headers.",
 };
 
 export function TargetsPage() {

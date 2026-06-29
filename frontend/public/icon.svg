@@ -1,4 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
-  <rect width="512" height="512" rx="96" fill="#3b82f6"/>
-  <text x="256" y="300" text-anchor="middle" font-family="system-ui, sans-serif" font-size="200" font-weight="700" fill="#ffffff">JN</text>
+  <defs>
+    <linearGradient id="hs" x1="64" y1="64" x2="448" y2="448" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#22c55e"/>
+      <stop offset="1" stop-color="#0ea5e9"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="96" fill="url(#hs)"/>
+  <text x="256" y="310" text-anchor="middle" font-family="system-ui, sans-serif" font-size="180" font-weight="700" fill="#ffffff">HS</text>
 </svg>

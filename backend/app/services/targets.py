@@ -53,8 +53,8 @@ class TargetService:
         notifier = get_notifier(target.type)
         sample = JobPosting(
             external_id="test",
-            title="JobNotifier test notification",
-            company="JobNotifier",
+            title="HeadStart test notification",
+            company="HeadStart",
             location="",
             url="https://github.com/",
         )

@@ -37,7 +37,7 @@ export function LoginPage() {
 
   return (
     <div className="auth-screen">
-      <Card title="Sign in to JobNotifier">
+      <Card title="Sign in to HeadStart">
         {!health.data && !health.isPending && (
           <Banner kind="error">API unreachable. Check the URL on the Settings screen.</Banner>
         )}

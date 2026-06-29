@@ -1,4 +1,4 @@
-/** Minimal JobNotifier API client for the browser extension popup. */
+/** Minimal HeadStart API client for the browser extension popup. */
 
 import type { Search, Session, Source, SourceDetectResult, TokenResponse } from "./types";
 import { ApiError } from "./types";

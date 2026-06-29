@@ -38,9 +38,9 @@ def send_email(*, to: str, subject: str, body: str, from_addr: str | None = None
 
 def send_password_reset_email(*, to_email: str, reset_url: str) -> None:
     """Deliver a password-reset link. Falls back to logging when SMTP is not configured."""
-    subject = "Reset your JobNotifier password"
+    subject = "Reset your HeadStart password"
     body = (
-        "You requested a password reset for your JobNotifier account.\n\n"
+        "You requested a password reset for your HeadStart account.\n\n"
         f"Open this link to choose a new password (valid for "
         f"{settings.password_reset_expire_minutes} minutes):\n\n"
         f"{reset_url}\n\n"

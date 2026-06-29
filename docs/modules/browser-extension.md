@@ -3,7 +3,7 @@
 **Path:** `browser-extension/`
 
 Chrome extension (Manifest V3) that adds a job board from the current browser
-tab to JobNotifier in one click.
+tab to HeadStart in one click.
 
 ## What it does
 
@@ -35,8 +35,8 @@ e.g. `http://localhost:8000`) and **App URL** (frontend, e.g.
 ## Usage
 
 1. Open a supported careers page (e.g. `https://jobs.lever.co/<company>`).
-2. Click the JobNotifier toolbar icon.
-3. Review the detected adapter and name, then click **Add to JobNotifier**.
+2. Click the HeadStart toolbar icon.
+3. Review the detected adapter and name, then click **Add to HeadStart**.
 4. Optionally keep **Also create a search** checked to start polling immediately
    (assign a notification target in the web app afterward).
 
@@ -55,11 +55,11 @@ truth shared with any future UI helpers).
 
 - `storage` — persist API URL and JWT tokens locally in the browser
 - `tabs` / `activeTab` — read the current tab URL and title
-- `host_permissions` — call your JobNotifier API (`http://localhost/*` and
+- `host_permissions` — call your HeadStart API (`http://localhost/*` and
   `https://*/*`)
 
 Tokens are stored in `chrome.storage.local` only; they are never synced to
-JobNotifier servers beyond normal API requests.
+HeadStart servers beyond normal API requests.
 
 ## Tests
 

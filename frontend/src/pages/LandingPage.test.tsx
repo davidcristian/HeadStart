@@ -23,9 +23,9 @@ describe("LandingPage", () => {
     renderLanding();
 
     expect(
-      screen.getByRole("heading", { name: "Never miss the job you actually want." }),
+      screen.getByRole("heading", { name: "See new roles before the crowd." }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Create a free account" })).toHaveAttribute(
+    expect(screen.getAllByRole("link", { name: "Create a free account" })[0]).toHaveAttribute(
       "href",
       "/register",
     );
@@ -40,7 +40,7 @@ describe("LandingPage", () => {
     const appLinks = screen.getAllByRole("link", { name: "Go to app" });
     expect(appLinks.length).toBeGreaterThan(0);
     appLinks.forEach((link) => expect(link).toHaveAttribute("href", "/app"));
-    expect(screen.getByRole("link", { name: "Open your dashboard" })).toHaveAttribute(
+    expect(screen.getAllByRole("link", { name: "Open your dashboard" })[0]).toHaveAttribute(
       "href",
       "/app",
     );

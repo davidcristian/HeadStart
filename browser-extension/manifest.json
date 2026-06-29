@@ -1,10 +1,10 @@
 {
   "manifest_version": 3,
-  "name": "JobNotifier",
-  "description": "Add job board searches to JobNotifier from the current tab.",
+  "name": "HeadStart",
+  "description": "Add job board searches to HeadStart from the current tab.",
   "version": "0.1.0",
   "action": {
-    "default_title": "Add to JobNotifier",
+    "default_title": "Add to HeadStart",
     "default_popup": "src/popup.html"
   },
   "permissions": ["storage", "tabs", "activeTab"],

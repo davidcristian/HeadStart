@@ -96,7 +96,7 @@ def test_webhook_adds_hmac_signature_when_secret_configured() -> None:
 
     body = captured_body[0]
     expected = hmac.new(b"signing-key", body, hashlib.sha256).hexdigest()
-    assert captured_headers[0]["x-jobnotifier-signature"] == f"sha256={expected}"
+    assert captured_headers[0]["x-headstart-signature"] == f"sha256={expected}"
 
 
 def test_webhook_merges_custom_headers() -> None:

@@ -116,7 +116,7 @@ create an account.
 | Item | Why | Notes |
 | ---- | --- | ----- |
 | ~~Public vs app routing~~ | ~~Marketing and authenticated app must coexist cleanly~~ | **Shipped:** public `/` landing + auth screens; authenticated product under `/app/*` (gated, app shell); legacy top-level paths redirect to `/app/*`. See [modules/frontend.md](modules/frontend.md) |
-| Public marketing site | First impression and conversion | Landing page with hero, features, screenshots/demo, FAQ, and clear CTA to register |
+| Public marketing site | First impression and conversion | **In progress:** HeadStart-branded landing with hero, integrations, how-it-works, features, FAQ; screenshots/demo still TODO |
 | Legal pages | Required before public signup; builds trust | Privacy Policy, Terms of Use, and cookie/consent notice where applicable |
 
 **Done when:** a visitor can browse the landing page, read legal pages, and reach

@@ -18,7 +18,7 @@ def create_app() -> FastAPI:
     configure_logging()
 
     app = FastAPI(
-        title="JobNotifier API",
+        title="HeadStart API",
         version=__version__,
         summary="Configure job-site searches and get notified about new postings.",
     )
@@ -36,7 +36,7 @@ def create_app() -> FastAPI:
 
     @app.get("/", include_in_schema=False)
     def root() -> dict[str, str]:
-        return {"name": "JobNotifier API", "docs": "/docs", "health": f"{API_PREFIX}/health"}
+        return {"name": "HeadStart API", "docs": "/docs", "health": f"{API_PREFIX}/health"}
 
     @app.get("/metrics", include_in_schema=False)
     def metrics(request: Request) -> Response:
