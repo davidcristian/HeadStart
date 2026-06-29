@@ -29,6 +29,7 @@ coverage/
 .env
 .env.*
 !.env.example
+.aws-first-deploy-secrets.env
 *.pem
 *.key
 

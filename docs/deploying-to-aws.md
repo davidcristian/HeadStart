@@ -11,6 +11,48 @@ change.
 
 ---
 
+## Quick start (one command)
+
+If you have AWS credentials, Terraform, and Docker configured, you can run the
+full first-time path from the **repository root**:
+
+```bash
+export AWS_REGION=us-east-2
+make aws-first-deploy PREFIX=your-unique-name
+```
+
+This single command:
+
+1. Creates the remote Terraform state bucket + DynamoDB lock table (if missing)
+2. Generates application secrets and saves them to `.aws-first-deploy-secrets.env`
+   (gitignored — back them up)
+3. Runs `terraform init` (with `-backend-config` so you do not need to edit
+   `backend.tf`) and `terraform apply`
+4. Builds container images, pushes to ECR, runs migrations, and rolls ECS services
+
+Add `YES=1` to skip the terraform confirmation prompt (useful in automation).
+Add `SKIP_DEPLOY=1` to provision infrastructure only (no Docker image push).
+
+Optional HTTPS during first deploy (Route53 hosted zone required):
+
+```bash
+make aws-first-deploy PREFIX=yourname \
+  DOMAIN_NAME=jobs.example.com \
+  ROUTE53_ZONE_ID=Z0123456789ABCDEFGHIJ \
+  YES=1
+```
+
+Verify prerequisites without making changes:
+
+```bash
+./scripts/aws-first-deploy.sh --check
+```
+
+The sections below walk through the same steps manually if you prefer more
+control or need to troubleshoot.
+
+---
+
 ## What gets created
 
 Terraform (`devops/terraform/`) provisions:
@@ -73,6 +115,9 @@ Or run the underlying script directly: `./scripts/terraform-bootstrap-state.sh Y
 Edit `devops/terraform/environments/dev/backend.tf` and replace
 `CHANGEME-jobnotifier-tfstate` with your bucket name (`YOURNAME-jobnotifier-tfstate`).
 Do the same in `environments/prod/backend.tf` when you add production.
+
+> **Tip:** `make aws-first-deploy` passes the bucket via `terraform init
+> -backend-config`, so you can skip editing `backend.tf` on a first deploy.
 
 ---
 

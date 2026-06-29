@@ -23,7 +23,18 @@ State lives in S3 with a DynamoDB lock table. Create them once from the repo roo
 make terraform-bootstrap PREFIX=YOURNAME AWS_REGION=us-east-2
 ```
 
-Then set the bucket name in `environments/<env>/backend.tf` (replace `CHANGEME`).
+Then set the bucket name in `environments/<env>/backend.tf` (replace `CHANGEME`),
+or use `make aws-first-deploy` which passes the bucket via `-backend-config`.
+
+## First-time deploy (one command)
+
+From the repo root (AWS creds + Terraform + Docker required):
+
+```bash
+make aws-first-deploy PREFIX=YOURNAME AWS_REGION=us-east-2
+```
+
+See [../../docs/deploying-to-aws.md](../../docs/deploying-to-aws.md#quick-start-one-command).
 
 ## Deploy an environment
 

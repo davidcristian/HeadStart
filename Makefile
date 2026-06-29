@@ -7,7 +7,7 @@ SHELL := /bin/bash
 
 .PHONY: help setup up down logs dev test lint format typecheck check \
         migrate makemigration seed build push deploy ps restart \
-        terraform-bootstrap aws-deploy-env
+        terraform-bootstrap aws-deploy-env aws-first-deploy
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -72,3 +72,10 @@ terraform-bootstrap: ## Create S3 + DynamoDB for Terraform remote state (PREFIX=
 
 aws-deploy-env: ## Print exports for deploy (ENVIRONMENT=dev): eval "$$(make aws-deploy-env)"
 	./scripts/aws-deploy-env.sh "$(or $(ENVIRONMENT),dev)"
+
+aws-first-deploy: ## First-time AWS deploy (PREFIX=yourname): bootstrap + terraform + deploy
+	PREFIX="$(PREFIX)" AWS_REGION="$(or $(AWS_REGION),us-east-2)" \
+	ENVIRONMENT="$(or $(ENVIRONMENT),dev)" YES="$(YES)" \
+	SKIP_BOOTSTRAP="$(SKIP_BOOTSTRAP)" SKIP_DEPLOY="$(SKIP_DEPLOY)" \
+	DOMAIN_NAME="$(DOMAIN_NAME)" ROUTE53_ZONE_ID="$(ROUTE53_ZONE_ID)" \
+	./scripts/aws-first-deploy.sh $(if $(filter 1,$(YES)),--yes,)

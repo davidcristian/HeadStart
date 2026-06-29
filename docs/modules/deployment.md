@@ -80,6 +80,10 @@ security group and scrape with Prometheus or the CloudWatch agent.
 `eval "$(make aws-deploy-env)"` (reads Terraform outputs for `ECR_REGISTRY`,
 `ECS_CLUSTER`, `APP_URL`, etc.).
 
+**First-time deploy:** `make aws-first-deploy PREFIX=yourname` chains state
+bootstrap, `terraform apply`, and `make deploy` — see
+[deploying-to-aws.md](../deploying-to-aws.md#quick-start-one-command).
+
 1. Build images (`scripts/build-images.sh`): lean `jobnotifier-backend` (api/beat)
    and `jobnotifier-backend-worker` (Playwright + Chromium).
 2. Push to ECR.

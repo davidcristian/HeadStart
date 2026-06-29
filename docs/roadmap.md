@@ -81,7 +81,7 @@ Goal: run comfortably for a small team or as a lightly hosted service.
 | Metrics | Scrape latency, success rate, notification delivery rate (Prometheus / CloudWatch) | **Shipped:** Prometheus counters/histograms on API `GET /metrics` and worker `:9090/metrics`; see [modules/metrics.md](modules/metrics.md) |
 | ~~Per-site rate limits~~ | ~~Configurable politeness per adapter; avoid retry storms~~ | **Shipped:** `rate_limit_min_interval_seconds` in source/search config; per-adapter defaults in `app/scrapers/rate_limit.py` |
 | ~~Admin panel~~ | ~~User management and global scrape stats~~ | **Shipped:** `/admin` UI + `GET/PATCH /admin/users`, `GET /admin/stats`; gated on `is_admin` |
-| Hosted deploy polish | Streamline [deploying-to-aws.md](deploying-to-aws.md); consider a one-click template | **Partial:** HTTPS + custom domain (ACM/Route53), `make terraform-bootstrap`, `make aws-deploy-env`; one-click template still open |
+| ~~Hosted deploy polish~~ | ~~Streamline [deploying-to-aws.md](deploying-to-aws.md); consider a one-click template~~ | **Shipped:** `make aws-first-deploy` chains bootstrap → terraform apply → deploy; optional `DOMAIN_NAME` + `ROUTE53_ZONE_ID`; secrets saved to `.aws-first-deploy-secrets.env` |
 | ~~Playwright in production~~ | ~~Container sizing, browser pool, timeout/retry policy for JS-heavy sites~~ | **Shipped:** worker Docker target with Chromium; process-scoped browser pool; navigation timeout + retries; larger worker Fargate task + `jobnotifier-backend-worker` ECR image |
 
 **Done when:** an operator can tell whether the system is healthy without SSH or

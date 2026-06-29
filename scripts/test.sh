@@ -27,12 +27,18 @@ run_extension() {
   fi
 }
 
+run_scripts() {
+  log "Shell script validation"
+  "${REPO_ROOT}/scripts/validate-shell-scripts.sh"
+}
+
 case "${scope}" in
-  --backend)  run_backend ;;
-  --frontend) run_frontend ;;
+  --backend)   run_backend ;;
+  --frontend)  run_frontend ;;
   --extension) run_extension ;;
-  all)        run_backend; run_frontend; run_extension ;;
-  *)          die "Unknown scope '${scope}'. Use --backend|--frontend|--extension|all" ;;
+  --scripts)   run_scripts ;;
+  all)         run_backend; run_frontend; run_extension; run_scripts ;;
+  *)           die "Unknown scope '${scope}'. Use --backend|--frontend|--extension|--scripts|all" ;;
 esac
 
 ok "Tests complete."
