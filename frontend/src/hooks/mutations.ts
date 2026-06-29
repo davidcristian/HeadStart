@@ -5,7 +5,13 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { QueryClient } from "@tanstack/react-query";
 import { api } from "../api";
-import type { CredentialCreate, SearchCreate, SourceCreate, TargetCreate } from "../types";
+import type {
+  CredentialCreate,
+  ProfileData,
+  SearchCreate,
+  SourceCreate,
+  TargetCreate,
+} from "../types";
 import { queryKeys } from "./queries";
 
 function invalidate(qc: QueryClient, key: readonly unknown[]) {
@@ -116,6 +122,22 @@ export function useDeleteCredential() {
   return useMutation({
     mutationFn: (id: number) => api.deleteCredential(id),
     onSuccess: () => invalidate(qc, queryKeys.credentials),
+  });
+}
+
+export function useSaveProfile() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: ProfileData) => api.saveProfile(data),
+    onSuccess: () => invalidate(qc, queryKeys.profile),
+  });
+}
+
+export function useDeleteProfile() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => api.deleteProfile(),
+    onSuccess: () => invalidate(qc, queryKeys.profile),
   });
 }
 

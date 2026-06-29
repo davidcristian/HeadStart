@@ -7,11 +7,11 @@
  */
 
 import { useEffect, useState } from "react";
-import { api } from "../api";
 import { JsonEditor } from "../components/JsonEditor";
 import { Banner, Button, Card, Field } from "../components/ui";
-import { useAsync } from "../hooks/useAsync";
-import type { Json, Profile } from "../types";
+import { useProfile } from "../hooks/queries";
+import { useDeleteProfile, useSaveProfile } from "../hooks/mutations";
+import type { Json } from "../types";
 
 const EMPTY = {
   full_name: "",
@@ -32,7 +32,9 @@ function asStringMap(value: Json): Record<string, string> {
 }
 
 export function ProfilePage() {
-  const profile = useAsync(() => api.getProfile(), []);
+  const profile = useProfile();
+  const saveProfile = useSaveProfile();
+  const deleteProfile = useDeleteProfile();
   const [form, setForm] = useState({ ...EMPTY });
   const [answers, setAnswers] = useState<Json>({});
   const [answersValid, setAnswersValid] = useState(true);
@@ -64,7 +66,7 @@ export function ProfilePage() {
   async function save() {
     setError(undefined);
     try {
-      await api.saveProfile({
+      await saveProfile.mutateAsync({
         full_name: form.full_name,
         email: form.email,
         phone: form.phone,
@@ -75,7 +77,6 @@ export function ProfilePage() {
         answers: asStringMap(answers),
       });
       setSaved(true);
-      profile.reload();
     } catch (err) {
       setError((err as Error).message);
     }
@@ -84,17 +85,16 @@ export function ProfilePage() {
   async function clear() {
     setError(undefined);
     try {
-      await api.deleteProfile();
+      await deleteProfile.mutateAsync();
       setForm({ ...EMPTY });
       setAnswers({});
       setSaved(false);
-      profile.reload();
     } catch (err) {
       setError((err as Error).message);
     }
   }
 
-  const existing = profile.data as Profile | undefined;
+  const existing = profile.data;
 
   return (
     <>
@@ -107,7 +107,7 @@ export function ProfilePage() {
       <Card title="Your details">
         {error && <Banner kind="error">{error}</Banner>}
         {saved && <Banner kind="success">Profile saved.</Banner>}
-        {profile.loading && <p>Loading...</p>}
+        {profile.isPending && <p>Loading...</p>}
 
         <div className="form-grid">
           <Field label="Full name">
@@ -204,7 +204,7 @@ export function ProfilePage() {
         </Field>
 
         <div className="row-actions">
-          <Button onClick={save} disabled={!answersValid || profile.loading}>
+          <Button onClick={save} disabled={!answersValid || profile.isPending}>
             Save profile
           </Button>
           {existing?.exists && (

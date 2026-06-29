@@ -16,6 +16,7 @@ export const queryKeys = {
   searches: ["searches"] as const,
   targets: ["targets"] as const,
   credentials: ["credentials"] as const,
+  profile: ["profile"] as const,
   feedUrl: ["feed-url"] as const,
   jobs: (searchId?: number, status?: JobStatus) =>
     ["jobs", searchId ?? null, status ?? null] as const,
@@ -49,6 +50,10 @@ export function useTargets() {
 
 export function useCredentials() {
   return useQuery({ queryKey: queryKeys.credentials, queryFn: () => api.listCredentials() });
+}
+
+export function useProfile() {
+  return useQuery({ queryKey: queryKeys.profile, queryFn: () => api.getProfile() });
 }
 
 export function useFeedUrl() {

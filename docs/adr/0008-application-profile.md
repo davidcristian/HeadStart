@@ -1,7 +1,7 @@
-# 0007. Encrypted per-user application profile for auto-apply
+# 0008. Encrypted per-user application profile for auto-apply
 
 - **Status:** Accepted
-- **Date:** 2026-06-28
+- **Date:** 2026-06-29
 
 ## Context
 
