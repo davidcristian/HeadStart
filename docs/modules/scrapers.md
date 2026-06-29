@@ -63,6 +63,10 @@ Tests must use saved fixtures and never hit the network.
 search without crashing. Be a polite client: real User-Agent, respect intervals,
 no retry storms.
 
+Outbound HTTP from scrapers is restricted to public `http`/`https` destinations.
+Private, loopback, link-local, and cloud-metadata addresses are rejected in the
+shared `HttpClient` (including redirect targets). See `app.core.outbound_url`.
+
 ## Rate limiting
 
 Each adapter has a default minimum gap between outbound HTTP requests during one

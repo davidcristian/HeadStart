@@ -48,14 +48,17 @@ class AuthService:
         email = data.email.lower()
         if self.repo.get_by_email(email) is not None:
             raise ConflictError("An account with this email already exists.")
-        is_first = self.repo.count() == 0
         user = User(
             email=email,
             password_hash=hash_password(data.password),
-            is_admin=is_first,
+            is_admin=False,
             is_active=True,
         )
-        return self.repo.add(user)
+        user = self.repo.add(user)
+        if self.repo.claim_bootstrap_admin(user.id):
+            user.is_admin = True
+            self.session.flush()
+        return user
 
     def login(self, data: LoginRequest) -> TokenResponse:
         user = self.repo.get_by_email(data.email.lower())

@@ -10,6 +10,7 @@ page is rendered in a headless browser before selectors are applied.
 from typing import Any
 from urllib.parse import urljoin
 
+from app.core.outbound_url import assert_safe_outbound_url
 from app.scrapers.base import Scraper, register_scraper
 from app.scrapers.types import JobPosting, ScrapeContext
 
@@ -35,6 +36,7 @@ class PlaywrightScraper(Scraper):
             raise ValueError("playwright scraper requires config.item (a CSS selector)")
         if not ctx.query_url:
             raise ValueError("playwright scraper requires a query_url")
+        assert_safe_outbound_url(ctx.query_url)
         base_url = str(cfg.get("base_url") or ctx.query_url)
 
         postings: list[JobPosting] = []

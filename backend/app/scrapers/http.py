@@ -8,10 +8,15 @@ from typing import Any
 
 import httpx
 
+from app.core.outbound_url import assert_safe_outbound_url
 from app.scrapers.rate_limit import RateLimiter
 
 DEFAULT_USER_AGENT = "JobNotifier/0.1 (+https://github.com/; polite job-posting watcher)"
 DEFAULT_TIMEOUT = 20.0
+
+
+def _validate_outbound_request(request: httpx.Request) -> None:
+    assert_safe_outbound_url(str(request.url))
 
 
 class HttpClient:
@@ -33,16 +38,19 @@ class HttpClient:
             cookies=cookies or {},
             timeout=timeout,
             follow_redirects=True,
+            event_hooks={"request": [_validate_outbound_request]},
         )
 
     def get_json(self, url: str, **kwargs: Any) -> Any:
         self._wait_rate_limit()
+        assert_safe_outbound_url(url)
         resp = self._client.get(url, **kwargs)
         resp.raise_for_status()
         return resp.json()
 
     def get_text(self, url: str, **kwargs: Any) -> str:
         self._wait_rate_limit()
+        assert_safe_outbound_url(url)
         resp = self._client.get(url, **kwargs)
         resp.raise_for_status()
         return resp.text

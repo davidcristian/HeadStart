@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 from sqlalchemy.orm import Session
 
+from app.models.registration_lock import RegistrationLock
 from app.models.user import User
 
 
@@ -26,6 +27,16 @@ class UserRepository:
 
     def count(self) -> int:
         return int(self.session.scalar(select(func.count()).select_from(User)) or 0)
+
+    def claim_bootstrap_admin(self, user_id: int) -> bool:
+        """Atomically assign bootstrap admin to the first successful registrant."""
+        result = self.session.execute(
+            update(RegistrationLock)
+            .where(RegistrationLock.id == 1)
+            .where(RegistrationLock.bootstrap_user_id.is_(None))
+            .values(bootstrap_user_id=user_id)
+        )
+        return bool(getattr(result, "rowcount", 0))
 
     def add(self, user: User) -> User:
         self.session.add(user)

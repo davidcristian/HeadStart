@@ -1,4 +1,10 @@
 from fastapi.testclient import TestClient
+from sqlalchemy.orm import Session
+
+from app.models.user import User
+from app.repositories.users import UserRepository
+from app.schemas.auth import RegisterRequest
+from app.services.auth import AuthService
 
 
 def test_register_first_user_is_admin(client: TestClient) -> None:
@@ -94,3 +100,25 @@ def test_refresh_token_rejected_as_access_token(client: TestClient) -> None:
 
 def test_me_requires_auth(client: TestClient) -> None:
     assert client.get("/api/v1/auth/me").status_code == 401
+
+
+def test_bootstrap_admin_claim_is_exclusive(db_session: Session) -> None:
+    """Only one account can claim the bootstrap admin slot."""
+    repo = UserRepository(db_session)
+    first = repo.add(
+        User(email="first@example.com", password_hash="x", is_admin=False, is_active=True)
+    )
+    second = repo.add(
+        User(email="second@example.com", password_hash="x", is_admin=False, is_active=True)
+    )
+    assert repo.claim_bootstrap_admin(first.id) is True
+    assert repo.claim_bootstrap_admin(second.id) is False
+
+
+def test_register_grants_admin_only_to_bootstrap_claimant(db_session: Session) -> None:
+    """Registration promotes at most one account to admin."""
+    service = AuthService(db_session)
+    first = service.register(RegisterRequest(email="first@example.com", password="password123"))
+    second = service.register(RegisterRequest(email="second@example.com", password="password123"))
+    assert first.is_admin is True
+    assert second.is_admin is False

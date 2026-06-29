@@ -7,6 +7,7 @@ from app.models.delivery_log import DeliveryLog
 from app.models.notification_target import NotificationTarget
 from app.models.password_reset_token import PasswordResetToken
 from app.models.pending_digest import PendingDigest
+from app.models.registration_lock import RegistrationLock
 from app.models.search import Search
 from app.models.seen_job import SeenJob
 from app.models.site_credential import SiteCredential
@@ -19,6 +20,7 @@ __all__ = [
     "NotificationTarget",
     "PasswordResetToken",
     "PendingDigest",
+    "RegistrationLock",
     "Search",
     "SeenJob",
     "SiteCredential",

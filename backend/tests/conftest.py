@@ -16,7 +16,16 @@ from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.models import Base
+from app.models.registration_lock import RegistrationLock
 from app.scrapers.http import HttpClient
+
+
+def seed_registration_lock(session: Session) -> None:
+    """Tests use create_all instead of migrations; seed the registration lock row."""
+    if session.get(RegistrationLock, 1) is None:
+        session.add(RegistrationLock(id=1))
+        session.flush()
+
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
@@ -46,6 +55,8 @@ def db_session() -> Iterator[Session]:
     Base.metadata.create_all(engine)
     factory = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False, future=True)
     session = factory()
+    seed_registration_lock(session)
+    session.commit()
     try:
         yield session
     finally:
@@ -74,6 +85,9 @@ def client() -> Iterator[TestClient]:
     )
     Base.metadata.create_all(engine)
     factory = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False, future=True)
+    with factory() as bootstrap:
+        seed_registration_lock(bootstrap)
+        bootstrap.commit()
 
     def override_get_db() -> Iterator[Session]:
         session = factory()

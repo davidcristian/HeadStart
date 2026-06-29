@@ -11,7 +11,9 @@ data isolation.
 
 - `user` table: `email` (unique), `password_hash` (bcrypt), `is_admin`,
   `is_active`. See [data-model.md](data-model.md).
-- The **first** registered user becomes admin (`AuthService.register`).
+- The **first** registered user becomes admin (`AuthService.register`). A
+  `registration_lock.bootstrap_user_id` column is claimed atomically so
+  concurrent bootstrap registrations cannot create multiple admins.
 - Every owned entity (`source`, `search`, `notification_target`,
   `site_credential`) carries a `user_id` FK. `seen_job` / `delivery_log` are
   scoped transitively through their parent `search`.
