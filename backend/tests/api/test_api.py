@@ -73,6 +73,28 @@ def test_create_source_rejects_unknown_adapter(
     assert resp.status_code == 400
 
 
+def test_detect_source_from_url(client: TestClient, auth_headers: dict[str, str]) -> None:
+    resp = client.post(
+        "/api/v1/sources/detect",
+        json={"url": "https://jobs.lever.co/acme", "page_title": "ACME Careers"},
+        headers=auth_headers,
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["adapter_key"] == "lever"
+    assert body["default_config"]["site"] == "acme"
+    assert body["suggested_name"] == "ACME"
+
+
+def test_detect_source_unknown_url(client: TestClient, auth_headers: dict[str, str]) -> None:
+    resp = client.post(
+        "/api/v1/sources/detect",
+        json={"url": "https://example.com/jobs"},
+        headers=auth_headers,
+    )
+    assert resp.status_code == 400
+
+
 def test_search_lifecycle(client: TestClient, auth_headers: dict[str, str]) -> None:
     source_id = client.post(
         "/api/v1/sources",

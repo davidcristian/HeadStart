@@ -1,0 +1,98 @@
+:root {
+  color-scheme: light dark;
+  font-family: system-ui, -apple-system, Segoe UI, sans-serif;
+  line-height: 1.4;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+main {
+  padding: 16px;
+}
+
+header h1 {
+  margin: 0 0 4px;
+  font-size: 1.1rem;
+}
+
+header p,
+.muted {
+  margin: 0;
+  color: #94a3b8;
+  font-size: 0.85rem;
+  word-break: break-all;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 12px 0;
+  font-size: 0.85rem;
+}
+
+.field.checkbox {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="url"] {
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: #1e293b;
+  color: inherit;
+}
+
+input[readonly] {
+  opacity: 0.8;
+}
+
+button {
+  border: none;
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: #2563eb;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+}
+
+button.secondary {
+  margin-top: 8px;
+  background: #334155;
+}
+
+button.link {
+  margin-top: 12px;
+  background: transparent;
+  color: #94a3b8;
+  font-weight: 500;
+  width: auto;
+  padding: 0;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.error {
+  margin-top: 12px;
+  color: #fca5a5;
+  font-size: 0.85rem;
+}
+
+#page-url {
+  margin-bottom: 12px;
+}

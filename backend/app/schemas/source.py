@@ -58,3 +58,20 @@ class SourceTestResult(BaseModel):
     found: int = 0
     sample: list[JobPostingPreview] = Field(default_factory=list)
     error: str | None = None
+
+
+class SourceDetectRequest(BaseModel):
+    """Input for POST /sources/detect (browser extension and UI helpers)."""
+
+    url: str = Field(min_length=1, max_length=2000)
+    page_title: str | None = Field(default=None, max_length=500)
+
+
+class SourceDetectResult(BaseModel):
+    """Suggested source fields inferred from a careers-page URL."""
+
+    adapter_key: str
+    suggested_name: str
+    base_url: str
+    default_config: dict[str, Any] = Field(default_factory=dict)
+    query_url: str

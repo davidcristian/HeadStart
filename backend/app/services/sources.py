@@ -10,11 +10,14 @@ from app.repositories.sources import SourceRepository
 from app.schemas.source import (
     JobPostingPreview,
     SourceCreate,
+    SourceDetectRequest,
+    SourceDetectResult,
     SourceTestRequest,
     SourceTestResult,
     SourceUpdate,
 )
 from app.scrapers import available_scrapers
+from app.scrapers.url_detect import detect_source_from_url
 from app.services.pipeline import PipelineService
 
 _PREVIEW_LIMIT = 5
@@ -89,6 +92,23 @@ class SourceService:
             for p in postings[:_PREVIEW_LIMIT]
         ]
         return SourceTestResult(ok=True, found=len(postings), sample=sample)
+
+    def detect(self, data: SourceDetectRequest) -> SourceDetectResult:
+        """Infer adapter and defaults from a careers-page URL."""
+        detected = detect_source_from_url(data.url, page_title=data.page_title)
+        if detected is None:
+            raise ValidationError(
+                "Could not detect a supported job board from this URL. "
+                "Supported: Greenhouse, Lever, Ashby, and Workday careers pages."
+            )
+        self._validate_adapter(detected.adapter_key)
+        return SourceDetectResult(
+            adapter_key=detected.adapter_key,
+            suggested_name=detected.suggested_name,
+            base_url=detected.base_url,
+            default_config=detected.default_config,
+            query_url=detected.query_url,
+        )
 
     @staticmethod
     def _validate_adapter(adapter_key: str) -> None:

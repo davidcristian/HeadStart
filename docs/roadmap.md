@@ -95,7 +95,7 @@ Pursue only if core alerting is solid and adapter coverage is good.
 | Item | Why |
 | ---- | --- |
 | RSS / webhook export | Power users pipe jobs into their own tools | **Shipped:** signed per-user RSS feed at `GET /feed/rss?token=...`; optional `search_id` / `status` filters; manage from Jobs page. **Shipped (webhook):** `webhook` notification target POSTs JSON per job (or digest batch) to a user-configured HTTPS URL with optional HMAC signing |
-| Browser extension | "Add this search URL" one-click from a job board tab |
+| Browser extension | "Add this search URL" one-click from a job board tab | **Shipped:** Chrome MV3 extension in `browser-extension/`; `POST /sources/detect`; see [modules/browser-extension.md](modules/browser-extension.md) |
 | AI summarization | Short "why this matches" blurb in notifications |
 | Mobile PWA | Lightweight jobs feed if ntfy alone is not enough |
 

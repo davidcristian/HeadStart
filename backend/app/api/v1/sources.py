@@ -7,6 +7,8 @@ from app.api.deps import get_current_user, get_db
 from app.models.user import User
 from app.schemas.source import (
     SourceCreate,
+    SourceDetectRequest,
+    SourceDetectResult,
     SourceRead,
     SourceTestRequest,
     SourceTestResult,
@@ -31,6 +33,16 @@ def create_source(
     user: User = Depends(get_current_user),
 ) -> SourceRead:
     return SourceRead.model_validate(SourceService(db).create(user.id, data))
+
+
+@router.post("/detect", response_model=SourceDetectResult)
+def detect_source(
+    data: SourceDetectRequest,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> SourceDetectResult:
+    """Suggest source fields from a job-board URL (browser extension helper)."""
+    return SourceService(db).detect(data)
 
 
 @router.get("/{source_id}", response_model=SourceRead)

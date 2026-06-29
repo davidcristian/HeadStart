@@ -18,11 +18,21 @@ run_frontend() {
   fi
 }
 
+run_extension() {
+  if [[ -d "${REPO_ROOT}/browser-extension/node_modules" ]]; then
+    log "Browser extension tests (vitest)"
+    ( cd "${REPO_ROOT}/browser-extension" && npm run test --silent )
+  else
+    warn "browser-extension/node_modules missing; skipping. Run 'npm install' in browser-extension/."
+  fi
+}
+
 case "${scope}" in
   --backend)  run_backend ;;
   --frontend) run_frontend ;;
-  all)        run_backend; run_frontend ;;
-  *)          die "Unknown scope '${scope}'. Use --backend|--frontend|all" ;;
+  --extension) run_extension ;;
+  all)        run_backend; run_frontend; run_extension ;;
+  *)          die "Unknown scope '${scope}'. Use --backend|--frontend|--extension|all" ;;
 esac
 
 ok "Tests complete."

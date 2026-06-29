@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JobNotifier</title>
+    <link rel="stylesheet" href="./popup.css" />
+  </head>
+  <body>
+    <main id="app">
+      <header>
+        <h1>JobNotifier</h1>
+        <p id="subtitle">Add this job board to your searches.</p>
+      </header>
+
+      <section id="login-view" hidden>
+        <label class="field">
+          <span>API URL</span>
+          <input id="api-url" type="url" placeholder="http://localhost:8000" />
+        </label>
+        <label class="field">
+          <span>App URL</span>
+          <input id="app-url" type="url" placeholder="http://localhost:5173" />
+        </label>
+        <label class="field">
+          <span>Email</span>
+          <input id="email" type="email" autocomplete="username" />
+        </label>
+        <label class="field">
+          <span>Password</span>
+          <input id="password" type="password" autocomplete="current-password" />
+        </label>
+        <button id="login-btn" type="button">Sign in</button>
+      </section>
+
+      <section id="detect-view" hidden>
+        <p class="muted">Reading the current tab…</p>
+      </section>
+
+      <section id="form-view" hidden>
+        <p id="page-url" class="muted"></p>
+        <label class="field">
+          <span>Name</span>
+          <input id="source-name" type="text" />
+        </label>
+        <label class="field">
+          <span>Adapter</span>
+          <input id="adapter-key" type="text" readonly />
+        </label>
+        <label class="field checkbox">
+          <input id="create-search" type="checkbox" checked />
+          <span>Also create a search for this board</span>
+        </label>
+        <button id="create-btn" type="button">Add to JobNotifier</button>
+      </section>
+
+      <section id="success-view" hidden>
+        <p id="success-message"></p>
+        <button id="open-app-btn" type="button">Open JobNotifier</button>
+        <button id="add-another-btn" type="button" class="secondary">Add another</button>
+      </section>
+
+      <p id="error" class="error" hidden></p>
+      <button id="logout-btn" type="button" class="link" hidden>Sign out</button>
+    </main>
+    <script type="module" src="./popup.ts"></script>
+  </body>
+</html>

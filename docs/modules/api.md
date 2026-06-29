@@ -24,6 +24,7 @@ never touch the DB directly (services use repositories). See
 | GET    | `/auth/me`            | Current user                             |
 | GET    | `/sources`            | List sources                             |
 | POST   | `/sources`            | Create a source (site + adapter_key)     |
+| POST   | `/sources/detect`     | Infer adapter + defaults from a careers URL |
 | GET    | `/sources/{id}`       | Get a source                             |
 | PATCH  | `/sources/{id}`       | Update a source                          |
 | DELETE | `/sources/{id}`       | Delete a source                          |
