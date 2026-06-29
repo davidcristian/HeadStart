@@ -9,6 +9,7 @@ from dataclasses import asdict
 
 from app.core.db import session_scope
 from app.core.logging import get_logger
+from app.core.metrics import record_scheduler_enqueued
 from app.models.base import utcnow
 from app.repositories.searches import SearchRepository
 from app.services.digest import DigestService
@@ -51,6 +52,7 @@ def enqueue_due_searches() -> int:
     for search_id in due_ids:
         run_search.delay(search_id)
 
+    record_scheduler_enqueued(len(due_ids))
     if due_ids:
         logger.info("enqueued %d due search(es): %s", len(due_ids), due_ids)
     return len(due_ids)

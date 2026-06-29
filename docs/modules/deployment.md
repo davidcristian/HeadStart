@@ -42,6 +42,17 @@ State is remote: S3 bucket + DynamoDB lock table (configured per environment in
 `backend.tf`). Secrets are stored in Secrets Manager / SSM and injected into ECS
 task definitions — never in Terraform variables committed to git.
 
+## Observability
+
+Prometheus metrics are exposed from two scrape targets:
+
+- **API** service: `GET /metrics` on port 8000 (synchronous pipeline runs).
+- **Worker** service: `GET /metrics` on `METRICS_PORT` (default 9090).
+
+See [modules/metrics.md](../modules/metrics.md) for metric names, PromQL examples,
+and optional `METRICS_TOKEN` auth. On AWS, add the worker metrics port to the task
+security group and scrape with Prometheus or the CloudWatch agent.
+
 ## Deploy flow
 
 `make deploy` (→ `scripts/deploy.sh`):

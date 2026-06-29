@@ -76,6 +76,13 @@ class Settings(BaseSettings):
     scheduler_tick_seconds: int = 30
     scheduler_max_catchup: int = 1
 
+    # ---- metrics (Prometheus) ----
+    metrics_enabled: bool = True
+    # Worker-only HTTP port for /metrics when the pipeline runs in Celery.
+    metrics_port: int = 9090
+    # Optional bearer token for GET /metrics (empty = unauthenticated).
+    metrics_token: str = ""
+
     # ---- ntfy defaults (used by seed + default target) ----
     ntfy_default_server_url: str = "https://ntfy.sh"
     ntfy_default_topic: str = "jobnotifier-change-me"

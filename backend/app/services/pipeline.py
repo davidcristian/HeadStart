@@ -5,6 +5,7 @@ unit-tested directly and driven by the worker. Scraper/notifier resolution is
 injected to make testing trivial (no network).
 """
 
+import time
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
@@ -12,6 +13,7 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from app.core.logging import get_logger
+from app.core.metrics import record_notification, record_pipeline_run, record_scrape
 from app.models.base import utcnow
 from app.models.delivery_log import DeliveryLog
 from app.models.seen_job import SeenJob
@@ -70,6 +72,7 @@ class PipelineService:
         search = self.searches.get(search_id)
         if search is None:
             logger.warning("run_search: search %s no longer exists", search_id)
+            record_pipeline_run("not_found")
             return RunResult(search_id=search_id, error="not found")
 
         result = RunResult(search_id=search_id)
@@ -100,6 +103,9 @@ class PipelineService:
         except Exception as exc:  # adapters/network are untrusted; never crash the worker
             logger.exception("run_search %s failed: %s", search_id, exc)
             result.error = str(exc)
+            record_pipeline_run("error")
+        else:
+            record_pipeline_run("success")
         finally:
             self._reschedule(search_id, last_error=result.error)
         return result
@@ -130,7 +136,14 @@ class PipelineService:
             cookies=cookies,
             headers=headers,
         )
-        return scraper.fetch(ctx)
+        start = time.perf_counter()
+        try:
+            postings = scraper.fetch(ctx)
+        except Exception:
+            record_scrape(adapter_key, "error", time.perf_counter() - start, 0)
+            raise
+        record_scrape(adapter_key, "success", time.perf_counter() - start, len(postings))
+        return postings
 
     def _resolve_credentials(
         self, user_id: int, source_id: int
@@ -236,6 +249,7 @@ class PipelineService:
                 sent += 1
             else:
                 failed += 1
+            record_notification(target.type, res.status, "immediate")  # type: ignore[arg-type]
         return sent, failed
 
     def _reschedule(self, search_id: int, *, last_error: str | None = None) -> None:

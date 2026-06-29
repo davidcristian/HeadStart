@@ -77,7 +77,7 @@ Goal: run comfortably for a small team or as a lightly hosted service.
 
 | Item | Why |
 | ---- | --- |
-| Metrics | Scrape latency, success rate, notification delivery rate (Prometheus / CloudWatch) |
+| Metrics | Scrape latency, success rate, notification delivery rate (Prometheus / CloudWatch) | **Shipped:** Prometheus counters/histograms on API `GET /metrics` and worker `:9090/metrics`; see [modules/metrics.md](modules/metrics.md) |
 | ~~Per-site rate limits~~ | ~~Configurable politeness per adapter; avoid retry storms~~ | **Shipped:** `rate_limit_min_interval_seconds` in source/search config; per-adapter defaults in `app/scrapers/rate_limit.py` |
 | ~~Admin panel~~ | ~~User management and global scrape stats~~ | **Shipped:** `/admin` UI + `GET/PATCH /admin/users`, `GET /admin/stats`; gated on `is_admin` |
 | Hosted deploy polish | Streamline [deploying-to-aws.md](deploying-to-aws.md); consider a one-click template |

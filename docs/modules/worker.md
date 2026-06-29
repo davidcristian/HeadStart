@@ -69,6 +69,9 @@ searches whose interval has elapsed, then clears the queue and sets
 Failures at any external step are caught, logged, and recorded; the worker keeps
 running.
 
+Prometheus metrics for scrape latency, pipeline outcomes, and notification
+delivery are recorded here — see [metrics.md](metrics.md).
+
 ## Testing
 
 - Integration test drives the full pipeline against scraper fixtures + a fake

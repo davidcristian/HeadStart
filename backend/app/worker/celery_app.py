@@ -1,9 +1,11 @@
 """Celery application used by both the worker and beat processes."""
 
 from celery import Celery
+from celery.signals import worker_process_init
 
 from app.core.config import settings
 from app.core.logging import configure_logging
+from app.core.metrics import start_metrics_server
 from app.worker.schedule import beat_schedule
 
 configure_logging()
@@ -26,6 +28,13 @@ celery_app.conf.update(
     broker_connection_retry_on_startup=True,
     beat_schedule=beat_schedule(),
 )
+
+
+@worker_process_init.connect
+def _start_worker_metrics_server(**_: object) -> None:
+    """Expose pipeline metrics from the Celery worker process."""
+    start_metrics_server(settings.metrics_port)
+
 
 # Importing the tasks module registers the task functions on this app.
 # Done last to avoid a circular import (tasks imports `celery_app`).

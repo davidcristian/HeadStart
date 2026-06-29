@@ -8,6 +8,7 @@ from datetime import UTC, datetime, timedelta
 from sqlalchemy.orm import Session
 
 from app.core.logging import get_logger
+from app.core.metrics import record_digest_flush, record_notification
 from app.models.base import utcnow
 from app.models.delivery_log import DeliveryLog
 from app.models.pending_digest import PendingDigest
@@ -77,15 +78,19 @@ class DigestService:
         seen_rows: list[SeenJob] = [row.seen_job for row in pending]
         postings = [_seen_job_to_posting(row) for row in seen_rows]
         notifier = self._notifier_factory(target.type)
-        results = notifier.send(
-            NotifyContext(
-                target_type=target.type,
-                config=target.config,
-                digest=True,
-                search_name=search.name,
-            ),
-            postings,
-        )
+        try:
+            results = notifier.send(
+                NotifyContext(
+                    target_type=target.type,
+                    config=target.config,
+                    digest=True,
+                    search_name=search.name,
+                ),
+                postings,
+            )
+        except Exception:
+            record_digest_flush("error")
+            raise
         by_external = {row.external_id: row for row in seen_rows}
         for res in results:
             row = by_external.get(res.external_id)
@@ -99,9 +104,11 @@ class DigestService:
                     error=res.error,
                 )
             )
+            record_notification(target.type, res.status, "digest")  # type: ignore[arg-type]
         self.pending.delete_for_search(search.id)
         search.last_digest_at = utcnow()
         self.session.flush()
+        record_digest_flush("success")
         logger.info(
             "digest flush search %s: %d job(s), sent=%d failed=%d",
             search.id,
