@@ -47,6 +47,11 @@ describe("App routing", () => {
     expect(screen.getByRole("heading", { name: "Privacy Policy" })).toBeInTheDocument();
   });
 
+  it("serves the pricing page without authentication", () => {
+    renderAt("/pricing");
+    expect(screen.getByRole("heading", { name: "Pay for signal, not noise." })).toBeInTheDocument();
+  });
+
   it("redirects an unauthenticated visitor from /app to the login screen", async () => {
     renderAt("/app");
     await waitFor(() =>

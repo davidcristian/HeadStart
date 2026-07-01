@@ -140,7 +140,7 @@ Introduce paid tiers once the public shell and onboarding work.
 
 | Item | Why | Notes |
 | ---- | --- | ----- |
-| Pricing page | Users need to understand cost before committing | Tiered plans (e.g. free / pro / team), feature matrix, annual vs monthly toggle |
+| Pricing page | Users need to understand cost before committing | Tiered plans (e.g. free / pro / team), feature matrix, annual vs monthly toggle | **Shipped:** public `/pricing` with Free / Pro / Team cards, comparison table, billing-period toggle, and register CTAs; paid checkout deferred to billing item |
 | Plan limits & enforcement | Free and paid tiers need server-side guardrails | Per-plan caps on searches, sources, notification targets; enforce in services, not UI only |
 | Billing & payments | Revenue and subscription lifecycle | Stripe (or similar): checkout, subscriptions, plan upgrades/downgrades, invoices, failed-payment handling, webhooks |
 

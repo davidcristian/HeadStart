@@ -12,6 +12,7 @@ export function PublicFooter() {
       <Brand className="landing-footer-brand" />
       <span className="landing-footer-copy">&copy; {new Date().getFullYear()} HeadStart</span>
       <nav className="landing-footer-nav" aria-label="Footer">
+        <Link to="/pricing">Pricing</Link>
         <Link to="/privacy">Privacy</Link>
         <Link to="/terms">Terms</Link>
         {user ? (

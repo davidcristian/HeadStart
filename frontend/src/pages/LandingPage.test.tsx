@@ -33,6 +33,7 @@ describe("LandingPage", () => {
     expect(screen.queryByRole("link", { name: "Go to app" })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Privacy" })).toHaveAttribute("href", "/privacy");
     expect(screen.getByRole("link", { name: "Terms" })).toHaveAttribute("href", "/terms");
+    expect(screen.getAllByRole("link", { name: "Pricing" })[0]).toHaveAttribute("href", "/pricing");
   });
 
   it("shows product screenshots and switches showcase tabs", () => {

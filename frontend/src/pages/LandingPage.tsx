@@ -113,6 +113,9 @@ export function LandingPage() {
           <a href="#faq" className="landing-nav-link">
             FAQ
           </a>
+          <Link to="/pricing" className="landing-nav-link">
+            Pricing
+          </Link>
           {user ? (
             <Link to="/app" className="btn btn-primary">
               Go to app
