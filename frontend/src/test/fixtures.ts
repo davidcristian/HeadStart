@@ -30,7 +30,7 @@ export const sampleAccountPlan: AccountPlan = {
 export const sampleMeta: Meta = {
   scrapers: sampleAccountPlan.allowed_scrapers,
   notifiers: sampleAccountPlan.allowed_notifiers,
-  appliers: ["greenhouse", "lever"],
+  appliers: ["greenhouse", "lever", "ashby"],
   plan: sampleAccountPlan,
 };
 

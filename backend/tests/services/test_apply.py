@@ -119,7 +119,7 @@ def test_apply_service_rejects_unsupported_adapter(db_session: Session) -> None:
     search = _make_search(db_session)
     source = db_session.get(Source, search.source_id)
     assert source is not None
-    source.adapter_key = "ashby"
+    source.adapter_key = "workday"
     db_session.flush()
     job = SeenJob(
         search_id=search.id,
@@ -140,7 +140,7 @@ def test_apply_service_rejects_unsupported_adapter(db_session: Session) -> None:
         ApplyService(db_session).apply_to_job(search.user_id, job.id, dry_run=True)
         raise AssertionError("expected ValidationError")
     except ValidationError as exc:
-        assert "ashby" in str(exc)
+        assert "workday" in str(exc)
 
 
 def test_apply_service_scopes_jobs_by_user(db_session: Session) -> None:

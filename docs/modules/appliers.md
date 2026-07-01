@@ -50,6 +50,7 @@ source's `adapter_key` when that source supports auto-apply. Import the
 | ------------ | -------------------------------- | ----- |
 | `greenhouse` | Job Board API JSON POST          | `POST boards-api.greenhouse.io/v1/boards/<token>/jobs/<id>`; see below |
 | `lever`      | Postings API JSON POST           | `POST api.lever.co/v0/postings/<site>/<id>?key=...`; see below |
+| `ashby`      | RPC `applicationForm.submit`     | `POST api.ashbyhq.com/applicationForm.submit`; see below |
 
 ### Greenhouse
 
@@ -97,6 +98,28 @@ credentials:
 Store in source config or, preferably, credential `session.postings_api_key`.
 Resume **files** are not uploaded in v1; `resume_text` is appended to
 `comments` when present.
+
+### Ashby
+
+Maps `ProfileData` to the [`applicationForm.submit`
+shape](https://developers.ashbyhq.com/reference/applicationformsubmit). Config /
+credentials:
+
+| Field | Where | Purpose |
+| ----- | ----- | ------- |
+| `board` | source `default_config` or parsed from `job_url` | Jobs page slug (`jobs.ashbyhq.com/<board>/...`) — informational for operators |
+| `ashby_api_key` | `default_config` or credential `session` | Organization API key with `candidatesWrite` for **live** submission |
+| `cover_letter_path` | source/search config | Optional form field path for cover letter + `resume_text` |
+| `phone_path` | source/search config | Optional form field path for the profile phone |
+| `location_path` | source/search config | Optional form field path for the profile location |
+| `<form path>` | profile `answers` | Custom application questions (Ashby field `path` values) |
+
+**Dry run:** same as Greenhouse — preview JSON without calling Ashby.
+
+**Live submit:** requires an Ashby API key (Admin → Settings → API) with
+`candidatesWrite`. Store in source config or, preferably, credential
+`session.ashby_api_key`. System fields `_systemfield_name` and
+`_systemfield_email` are always sent; resume **files** are not uploaded in v1.
 
 ## Safety & consent
 

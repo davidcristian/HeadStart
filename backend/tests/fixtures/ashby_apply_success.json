@@ -1,0 +1,15 @@
+{
+  "success": true,
+  "results": {
+    "submittedFormInstance": {
+      "id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+      "submittedValues": {
+        "_systemfield_name": "Ada Lovelace",
+        "_systemfield_email": "ada@example.com"
+      }
+    },
+    "formMessages": {
+      "blocked": false
+    }
+  }
+}
