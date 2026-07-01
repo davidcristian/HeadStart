@@ -169,6 +169,26 @@ export function useUpdateJob() {
   });
 }
 
+export function useApplyToJob() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      dry_run = false,
+      cover_letter,
+    }: {
+      id: number;
+      dry_run?: boolean;
+      cover_letter?: string | null;
+    }) => api.applyToJob(id, { dry_run, cover_letter }),
+    onSuccess: (result) => {
+      if (result.status === "submitted") {
+        qc.invalidateQueries({ queryKey: ["jobs"] });
+      }
+    },
+  });
+}
+
 export function useRotateFeedUrl() {
   const qc = useQueryClient();
   return useMutation({

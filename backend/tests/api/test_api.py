@@ -25,6 +25,7 @@ def test_meta_lists_capabilities(client: TestClient, auth_headers: dict[str, str
     assert "generic_html" in body["scrapers"]
     assert "ntfy" in body["notifiers"]
     assert "email" in body["notifiers"]
+    assert "greenhouse" in body["appliers"]
     assert body["plan"]["limits"]["max_sources"] >= 3
     assert "usage" in body["plan"]
 

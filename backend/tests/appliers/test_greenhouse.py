@@ -56,6 +56,17 @@ def test_build_application_payload_maps_profile_fields() -> None:
     assert payload["data_compliance"]["gdpr_processing_consent_given"] is True
 
 
+def test_build_application_payload_uses_cover_letter_override() -> None:
+    payload = build_application_payload(
+        _profile(),
+        job_title="Senior Engineer",
+        company="ACME",
+        config={},
+        cover_letter="Custom letter for ACME",
+    )
+    assert payload["cover_letter_text"] == "Custom letter for ACME"
+
+
 def test_build_application_payload_requires_name_and_email() -> None:
     try:
         build_application_payload(

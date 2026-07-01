@@ -124,7 +124,9 @@ export function SettingsPage() {
       <h1>Settings</h1>
 
       {billingNotice === "success" && (
-        <Banner kind="success">Subscription updated. Your plan may take a moment to refresh.</Banner>
+        <Banner kind="success">
+          Subscription updated. Your plan may take a moment to refresh.
+        </Banner>
       )}
       {billingNotice === "cancel" && (
         <Banner kind="info">Checkout was cancelled. No changes were made.</Banner>
@@ -146,7 +148,9 @@ export function SettingsPage() {
           <>
             {billing.can_checkout ? (
               <>
-                <p>Upgrade to Pro for more searches, digest mode, AI summaries, and premium scrapers.</p>
+                <p>
+                  Upgrade to Pro for more searches, digest mode, AI summaries, and premium scrapers.
+                </p>
                 <Field label="Billing period">
                   <select
                     value={billingPeriod}
@@ -182,8 +186,8 @@ export function SettingsPage() {
           </>
         ) : (
           <p>
-            Paid checkout is not configured on this server.{" "}
-            <a href="/pricing">View plans</a> or contact the operator to enable billing.
+            Paid checkout is not configured on this server. <a href="/pricing">View plans</a> or
+            contact the operator to enable billing.
           </p>
         )}
         {billingError && <Banner kind="error">{billingError}</Banner>}

@@ -1,7 +1,7 @@
 import { mockApi, resetMockApi } from "../test/mockApi";
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
-import { sampleJob, sampleSearch } from "../test/fixtures";
+import { sampleJob, sampleProfile, sampleSearch, sampleSource } from "../test/fixtures";
 import { renderWithClient } from "../test/renderWithClient";
 import { JobsPage } from "./JobsPage";
 
@@ -82,5 +82,40 @@ describe("JobsPage", () => {
       ).toBeInTheDocument(),
     );
     expect(screen.getByRole("button", { name: "Copy feed URL" })).toBeInTheDocument();
+  });
+
+  it("opens the apply dialog for supported jobs", async () => {
+    mockApi.listSources.mockResolvedValue([sampleSource]);
+    mockApi.listSearches.mockResolvedValue([sampleSearch]);
+    mockApi.listJobs.mockResolvedValue([sampleJob]);
+    mockApi.getProfile.mockResolvedValue(sampleProfile);
+    renderWithClient(<JobsPage />);
+
+    await waitFor(() => expect(screen.getByText("Software Engineer")).toBeInTheDocument());
+    fireEvent.click(screen.getByRole("button", { name: "Apply" }));
+
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Apply to Software Engineer" })).toBeInTheDocument();
+    expect(screen.getByDisplayValue(/Dear ACME team/)).toBeInTheDocument();
+  });
+
+  it("previews an application from the dialog", async () => {
+    mockApi.listSources.mockResolvedValue([sampleSource]);
+    mockApi.listSearches.mockResolvedValue([sampleSearch]);
+    mockApi.listJobs.mockResolvedValue([sampleJob]);
+    mockApi.getProfile.mockResolvedValue(sampleProfile);
+    renderWithClient(<JobsPage />);
+
+    await waitFor(() => expect(screen.getByRole("button", { name: "Apply" })).toBeInTheDocument());
+    fireEvent.click(screen.getByRole("button", { name: "Apply" }));
+    fireEvent.click(screen.getByRole("button", { name: "Preview" }));
+
+    await waitFor(() =>
+      expect(mockApi.applyToJob).toHaveBeenCalledWith(sampleJob.id, {
+        dry_run: true,
+        cover_letter: "Dear ACME team, ...",
+      }),
+    );
+    expect(screen.getByText("Application preview")).toBeInTheDocument();
   });
 });

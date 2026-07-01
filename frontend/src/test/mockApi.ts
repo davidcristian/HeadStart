@@ -111,6 +111,13 @@ const mockApi = vi.hoisted(() => ({
     ...sampleJob,
     status: data.status,
   })),
+  applyToJob: vi.fn(async () => ({
+    status: "dry_run",
+    error: null,
+    payload: { email: "ada@example.com", cover_letter_text: "Dear ACME team" },
+    external_application_id: null,
+    job: null,
+  })),
   getFeedUrl: vi.fn(async () => ({
     url: "http://localhost:8000/api/v1/feed/rss?token=test-token",
     token: "test-token",

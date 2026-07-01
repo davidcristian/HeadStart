@@ -17,6 +17,7 @@ class ApplyContext(BaseModel):
     config: dict[str, Any] = Field(default_factory=dict)
     profile: ProfileData
     credentials: dict[str, dict[str, str]] | None = None
+    cover_letter: str | None = None
     dry_run: bool = False
 
 

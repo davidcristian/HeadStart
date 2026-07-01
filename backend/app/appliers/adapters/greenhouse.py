@@ -44,7 +44,13 @@ class GreenhouseApplier(Applier):
             )
 
         try:
-            payload = build_application_payload(ctx.profile, ctx.job_title, ctx.company, ctx.config)
+            payload = build_application_payload(
+                ctx.profile,
+                ctx.job_title,
+                ctx.company,
+                ctx.config,
+                cover_letter=ctx.cover_letter,
+            )
         except ValueError as exc:
             return ApplyResult(status="failed", error=str(exc))
 
@@ -128,6 +134,8 @@ def build_application_payload(
     job_title: str,
     company: str,
     config: dict[str, Any],
+    *,
+    cover_letter: str | None = None,
 ) -> dict[str, Any]:
     """Map profile data to the Greenhouse Job Board application JSON shape."""
     first_name, last_name = split_name(profile.full_name)
@@ -155,11 +163,14 @@ def build_application_payload(
     if resume_text:
         payload["resume_text"] = resume_text
 
-    cover_template = profile.cover_letter_template.strip()
-    if cover_template:
-        payload["cover_letter_text"] = render_cover_letter(
-            cover_template, company=company, job_title=job_title
-        )
+    if cover_letter and cover_letter.strip():
+        payload["cover_letter_text"] = cover_letter.strip()
+    else:
+        cover_template = profile.cover_letter_template.strip()
+        if cover_template:
+            payload["cover_letter_text"] = render_cover_letter(
+                cover_template, company=company, job_title=job_title
+            )
 
     for key, value in profile.answers.items():
         if not value:

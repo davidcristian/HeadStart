@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app import __version__
 from app.api.deps import get_current_user, get_db
+from app.appliers import available_appliers
 from app.core.config import settings
 from app.models.user import User
 from app.schemas.meta import HealthRead, MetaRead
@@ -29,5 +30,6 @@ def meta(user: User = Depends(get_current_user), db: Session = Depends(get_db)) 
     return MetaRead(
         scrapers=plan.allowed_scrapers,
         notifiers=plan.allowed_notifiers,
+        appliers=available_appliers(),
         plan=plan,
     )

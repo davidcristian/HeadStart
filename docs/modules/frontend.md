@@ -53,7 +53,7 @@ other unknown path redirects to the landing page.
 | Searches    | Create a search: pick source + target, query URL + structured filters (keywords, location, workplace, salary) + |
 |             | interval; enable/disable; run now (immediate results); view last |
 |             | run, scrape errors, and recent delivery failures                 |
-| Jobs        | Feed of seen jobs, filterable by search and status; mark seen/applied/archived; salary when scraped; copy RSS feed URL |
+| Jobs        | Feed of seen jobs, filterable by search and status; mark seen/applied/archived; **Apply** on supported sources (preview + submit); salary when scraped; copy RSS feed URL |
 | Targets     | Manage notification targets (e.g. ntfy server/topic); send test  |
 | Credentials | Per-source encrypted cookies/headers for bot-walled sites        |
 | Settings    | API base URL, ntfy help                                          |

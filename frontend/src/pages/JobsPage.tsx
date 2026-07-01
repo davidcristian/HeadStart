@@ -1,13 +1,23 @@
 /** Feed of jobs discovered so far, filterable by search and triage status. */
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+import { ApplyJobDialog } from "../components/ApplyJobDialog";
 import { JobList } from "../components/JobList";
 import { Banner, Button, Card, EmptyState, Field } from "../components/ui";
-import { useFeedUrl, useJobs, useMeta, useSearches } from "../hooks/queries";
+import {
+  useFeedUrl,
+  useJobs,
+  useMeta,
+  useProfile,
+  useSearches,
+  useSources,
+} from "../hooks/queries";
 import { useRotateFeedUrl, useUpdateJob } from "../hooks/mutations";
 import { usePullToRefresh } from "../hooks/usePullToRefresh";
+import { canAutoApply } from "../lib/canAutoApply";
+import { renderCoverLetterTemplate } from "../lib/coverLetter";
 import { planLabel } from "../lib/plan";
-import type { JobStatus } from "../types";
+import type { Job, JobStatus } from "../types";
 
 const STATUS_FILTERS: Array<{ value: "" | JobStatus; label: string }> = [
   { value: "", label: "All statuses" },
@@ -33,7 +43,10 @@ export function JobsPage() {
   const [searchId, setSearchId] = useState<number | "">("");
   const [status, setStatus] = useState<"" | JobStatus>("");
   const [feedMessage, setFeedMessage] = useState<string | null>(null);
+  const [applyJob, setApplyJob] = useState<Job | null>(null);
   const searches = useSearches();
+  const sources = useSources();
+  const profile = useProfile();
   const meta = useMeta();
   const rssAllowed = meta.data?.plan.features.rss_feed ?? false;
   const jobs = useJobs(
@@ -68,6 +81,19 @@ export function JobsPage() {
   }
 
   const filteredFeedUrl = feed.data ? buildFeedUrl(feed.data.url, searchId, status) : "";
+
+  const appliers = useMemo(() => meta.data?.appliers ?? [], [meta.data?.appliers]);
+  const jobCanApply = useCallback(
+    (job: Job) => canAutoApply(job, searches.data ?? [], sources.data ?? [], appliers),
+    [searches.data, sources.data, appliers],
+  );
+
+  const applyCoverLetter = useMemo(() => {
+    if (!applyJob) return "";
+    const template = profile.data?.cover_letter_template ?? "";
+    if (!template.trim()) return "";
+    return renderCoverLetterTemplate(template, applyJob.company, applyJob.title);
+  }, [applyJob, profile.data?.cover_letter_template]);
 
   return (
     <div className="jobs-page">
@@ -144,9 +170,23 @@ export function JobsPage() {
           <EmptyState>No jobs seen yet. They appear here as searches run.</EmptyState>
         )}
         {jobs.data && jobs.data.length > 0 && (
-          <JobList jobs={jobs.data} onStatusChange={setJobStatus} />
+          <JobList
+            jobs={jobs.data}
+            onStatusChange={setJobStatus}
+            canApply={jobCanApply}
+            onApply={setApplyJob}
+          />
         )}
       </Card>
+      {applyJob && (
+        <ApplyJobDialog
+          job={applyJob}
+          open
+          initialCoverLetter={applyCoverLetter}
+          profileReady={profile.data?.exists ?? false}
+          onClose={() => setApplyJob(null)}
+        />
+      )}
     </div>
   );
 }

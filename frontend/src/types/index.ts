@@ -117,6 +117,14 @@ export interface Job {
   first_seen_at: string;
 }
 
+export interface JobApplyResult {
+  status: string;
+  error: string | null;
+  payload: Record<string, unknown> | null;
+  external_application_id: string | null;
+  job: Job | null;
+}
+
 export interface FeedUrl {
   url: string;
   token: string;
@@ -125,6 +133,7 @@ export interface FeedUrl {
 export interface Meta {
   scrapers: string[];
   notifiers: string[];
+  appliers: string[];
   plan: AccountPlan;
 }
 

@@ -5,7 +5,8 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
 from app.models.user import User
-from app.schemas.job import JobRead, JobStatus, JobUpdate
+from app.schemas.job import JobApplyRequest, JobApplyResult, JobRead, JobStatus, JobUpdate
+from app.services.apply import ApplyService
 from app.services.jobs import JobService
 
 router = APIRouter()
@@ -31,3 +32,29 @@ def update_job(
     user: User = Depends(get_current_user),
 ) -> JobRead:
     return JobRead.model_validate(JobService(db).update(job_id, user.id, data))
+
+
+@router.post("/{job_id}/apply", response_model=JobApplyResult)
+def apply_to_job(
+    job_id: int,
+    data: JobApplyRequest,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> JobApplyResult:
+    """Submit or preview an auto-apply for one job."""
+    result = ApplyService(db).apply_to_job(
+        user.id,
+        job_id,
+        dry_run=data.dry_run,
+        cover_letter=data.cover_letter,
+    )
+    job = None
+    if result.status == "submitted":
+        job = JobRead.model_validate(JobService(db).get(job_id, user.id))
+    return JobApplyResult(
+        status=result.status,
+        error=result.error,
+        payload=result.payload,
+        external_application_id=result.external_application_id,
+        job=job,
+    )

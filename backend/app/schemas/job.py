@@ -1,7 +1,7 @@
 """Job feed (seen job) request/response schemas."""
 
 from datetime import datetime
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -27,3 +27,19 @@ class JobRead(BaseModel):
 
 class JobUpdate(BaseModel):
     status: UserJobStatus = Field(description="User triage status; closed is set by the pipeline")
+
+
+class JobApplyRequest(BaseModel):
+    dry_run: bool = Field(default=False, description="Preview payload without submitting")
+    cover_letter: str | None = Field(
+        default=None,
+        description="Optional cover letter override for this application",
+    )
+
+
+class JobApplyResult(BaseModel):
+    status: str
+    error: str | None = None
+    payload: dict[str, Any] | None = None
+    external_application_id: str | None = None
+    job: JobRead | None = None

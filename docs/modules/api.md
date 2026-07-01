@@ -43,6 +43,7 @@ scrape failure), and `recent_delivery_failures` (up to five recent failed
 notification attempts with job title, URL, error, and timestamp).
 | GET    | `/jobs`               | Feed of seen jobs (filter by `search_id`, `status`) |
 | PATCH  | `/jobs/{id}`          | Update triage status (`seen` / `applied` / `archived`) |
+| POST   | `/jobs/{id}/apply`    | Submit or preview an auto-apply (`dry_run`, optional `cover_letter`) |
 | GET    | `/feed/url`           | Signed RSS feed URL for the current user             |
 | POST   | `/feed/rotate`        | Invalidate prior feed URLs and issue a new one       |
 | GET    | `/feed/rss`           | RSS 2.0 job feed (public; `token` query param)     |

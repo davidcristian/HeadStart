@@ -19,7 +19,14 @@ class ApplyService:
         self.session = session
         self.sources = SourceRepository(session)
 
-    def apply_to_job(self, user_id: int, job_id: int, *, dry_run: bool = False) -> ApplyResult:
+    def apply_to_job(
+        self,
+        user_id: int,
+        job_id: int,
+        *,
+        dry_run: bool = False,
+        cover_letter: str | None = None,
+    ) -> ApplyResult:
         """Submit or preview an application for one seen job."""
         job = self._load_job(job_id, user_id)
         source = self.sources.get(job.search.source_id, user_id)
@@ -46,6 +53,7 @@ class ApplyService:
             config=config,
             profile=profile,
             credentials=credentials,
+            cover_letter=cover_letter,
             dry_run=dry_run,
         )
         result = get_applier(source.adapter_key).apply(ctx)

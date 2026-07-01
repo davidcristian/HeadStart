@@ -5,8 +5,8 @@
 Apply adapters submit (or preview) job applications for a single posting.
 Each supported job site is one self-registering adapter, mirroring the scraper
 and notifier registries. Orchestration lives in `ApplyService`
-(`backend/app/services/apply.py`); the Jobs UI "Apply" action is tracked
-separately in [roadmap.md](../roadmap.md).
+(`backend/app/services/apply.py`); the Jobs page **Apply** action calls
+`POST /api/v1/jobs/{id}/apply` (preview via `dry_run: true`).
 
 ## Contract
 

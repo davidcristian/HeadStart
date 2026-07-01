@@ -16,6 +16,7 @@ class MetaRead(BaseModel):
 
     scrapers: list[str]
     notifiers: list[str]
+    appliers: list[str]
     plan: AccountPlanRead
 
 

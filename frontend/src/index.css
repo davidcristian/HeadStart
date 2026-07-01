@@ -611,6 +611,62 @@ td .job-summary {
   flex-wrap: wrap;
 }
 
+.apply-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.apply-dialog {
+  width: min(640px, 100%);
+  max-height: min(90vh, 760px);
+  overflow: auto;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.25);
+}
+
+.apply-dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.apply-dialog-header h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.apply-dialog-body {
+  padding: 20px;
+  display: grid;
+  gap: 16px;
+}
+
+.apply-dialog-actions {
+  justify-content: flex-end;
+}
+
+.apply-preview pre {
+  margin: 12px 0 0;
+  padding: 12px;
+  border-radius: var(--radius);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  overflow: auto;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
 .pull-refresh {
   position: sticky;
   top: 0;

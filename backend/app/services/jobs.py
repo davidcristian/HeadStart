@@ -27,10 +27,14 @@ class JobService:
             user_id=user_id, search_id=search_id, status=status, limit=min(max(limit, 1), 500)
         )
 
-    def update(self, job_id: int, user_id: int, data: JobUpdate) -> SeenJob:
+    def get(self, job_id: int, user_id: int) -> SeenJob:
         job = self.repo.get(job_id, user_id)
         if job is None:
             raise NotFoundError(f"Job {job_id} not found")
+        return job
+
+    def update(self, job_id: int, user_id: int, data: JobUpdate) -> SeenJob:
+        job = self.get(job_id, user_id)
         job.status = data.status
         self.session.flush()
         return job
