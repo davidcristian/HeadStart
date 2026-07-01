@@ -113,6 +113,7 @@ const mockApi = vi.hoisted(() => ({
     is_active: true,
     plan: "free",
     onboarding_completed_at: "2026-06-29T00:00:00Z",
+    email_verified_at: "2026-06-29T00:00:00Z",
     created_at: "2026-06-29T00:00:00Z",
     ...(data as object),
   })),

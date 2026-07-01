@@ -10,6 +10,7 @@ from app.models.base import Base, TimestampMixin
 
 if TYPE_CHECKING:
     from app.models.application_profile import ApplicationProfile
+    from app.models.email_verification_token import EmailVerificationToken
     from app.models.notification_target import NotificationTarget
     from app.models.password_reset_token import PasswordResetToken
     from app.models.search import Search
@@ -32,6 +33,10 @@ class User(Base, TimestampMixin):
     onboarding_completed_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+    # Set when the user confirms ownership of their email address.
+    email_verified_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     # Subscription tier (Stripe webhooks or admin panel).
     plan: Mapped[str] = mapped_column(String(20), default="free", nullable=False)
     stripe_customer_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
@@ -51,6 +56,9 @@ class User(Base, TimestampMixin):
         back_populates="user", cascade="all, delete-orphan"
     )
     password_reset_tokens: Mapped[list["PasswordResetToken"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+    email_verification_tokens: Mapped[list["EmailVerificationToken"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
     application_profile: Mapped["ApplicationProfile | None"] = relationship(

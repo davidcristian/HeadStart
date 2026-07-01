@@ -10,7 +10,8 @@ data isolation.
 ## Model
 
 - `user` table: `email` (unique), `password_hash` (bcrypt), `is_admin`,
-  `is_active`, `plan` (`free` / `pro` / `team`, default `free`). See
+  `is_active`, `plan` (`free` / `pro` / `team`, default `free`),
+  `email_verified_at` (null until the user confirms their address). See
   [data-model.md](data-model.md).
 - The **first** registered user becomes admin (`AuthService.register`). A
   `registration_lock.bootstrap_user_id` column is claimed atomically so
@@ -57,6 +58,8 @@ returns `NotFoundError` (404), never another user's data.
 | POST   | `/logout`   | none   | Clear the refresh cookie               |
 | POST   | `/forgot-password` | none | Request a password-reset email   |
 | POST   | `/reset-password`  | none | Set a new password from reset link |
+| POST   | `/verify-email`    | none | Confirm email from verification link |
+| POST   | `/resend-verification` | bearer | Send another verification email |
 | GET    | `/me`       | bearer | Current user                           |
 | POST   | `/me/complete-onboarding` | bearer | Mark the first-run wizard finished |
 | GET    | `/me/export` | bearer | JSON bundle of all owned data (GDPR export) |
@@ -77,9 +80,15 @@ read from the httpOnly cookie (falls back to a `refresh_token` body field).
 - `frontend/src/auth/AuthContext.tsx` holds the current user. On load it calls
   `refreshSession()` to mint an access token from the cookie, then `/auth/me`;
   `logout()` calls `/auth/logout` to clear the cookie. `ProtectedRoute` gates
-  the app and redirects to `/login`. `OnboardingGuard` sends new accounts to
+  the app and   redirects to `/login`. `OnboardingGuard` sends new accounts to
   `/app/onboarding` until `onboarding_completed_at` is set.
+  `EmailVerificationGuard` sends unverified accounts to `/verify-email` before
+  onboarding or the main app shell.
 - `/forgot-password` and `/reset-password?token=...` handle the reset flow.
+- `/verify-email` and `/verify-email?token=...` handle email verification after
+  signup. Unverified users can sign in but product routes return **403** until
+  verified; the UI redirects them to `/verify-email`. Account export/deletion
+  (`/app/settings`) remains available before verification.
 - **Settings → Your account** (`/app/settings`): export all owned data as JSON
   (`GET /auth/me/export`) or permanently delete the account (`DELETE /auth/me`
   with the current password). Deletion cascades to sources, searches, targets,
@@ -100,10 +109,22 @@ read from the httpOnly cookie (falls back to a `refresh_token` body field).
 empty (typical local dev), the API logs the reset URL at INFO instead of sending
 mail.
 
+## Email verification
+
+1. On register, a single-use token is stored (hashed) and emailed. Existing
+   accounts created before this feature are grandfathered as verified.
+2. The email link opens `/verify-email?token=...` → `POST /auth/verify-email`
+   with the token.
+3. Signed-in users can request another email via `POST /auth/resend-verification`.
+4. Most API routes require a verified email (`403` otherwise). Auth self-service
+   (`/me`, export, delete) and `/app/settings` stay available while unverified.
+
+**Email delivery:** uses the same `SMTP_*` configuration as password reset. When
+`SMTP_HOST` is empty, the verification URL is logged at INFO.
+
 ## Account data export & deletion
 
 Users can download a portable JSON export of everything they own (`GET
-/auth/me/export`): account metadata, sources, searches, notification targets,
 site credentials (including decrypted session material), application profile, and
 job history. Password hashes are never included.
 
@@ -157,7 +178,8 @@ remove their own admin flag, or demote the last remaining admin account.
 ## Configuration
 
 `JWT_SECRET`, `ACCESS_TOKEN_EXPIRE_MINUTES`, `REFRESH_TOKEN_EXPIRE_DAYS`,
-`PASSWORD_RESET_EXPIRE_MINUTES`, `FRONTEND_BASE_URL`, the refresh-cookie settings
+`PASSWORD_RESET_EXPIRE_MINUTES`, `EMAIL_VERIFICATION_EXPIRE_MINUTES`,
+`FRONTEND_BASE_URL`, the refresh-cookie settings
 `AUTH_COOKIE_NAME` / `AUTH_COOKIE_PATH` / `AUTH_COOKIE_SECURE` /
 `AUTH_COOKIE_SAMESITE`, and optional `SMTP_*` (see `.env.example`). The cookie
 defaults are production-safe (`Secure` + `SameSite=Lax`); for local dev over

@@ -11,6 +11,7 @@ const sampleAdminUser = {
   is_active: true,
   plan: "team" as const,
   onboarding_completed_at: "2026-06-28T00:00:00Z",
+  email_verified_at: "2026-06-28T00:00:00Z",
   created_at: "2026-06-28T00:00:00Z",
 };
 
@@ -21,6 +22,7 @@ const sampleMember = {
   is_active: true,
   plan: "free" as const,
   onboarding_completed_at: "2026-06-29T00:00:00Z",
+  email_verified_at: "2026-06-29T00:00:00Z",
   created_at: "2026-06-29T00:00:00Z",
 };
 

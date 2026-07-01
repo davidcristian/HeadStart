@@ -47,11 +47,49 @@ def send_password_reset_email(*, to_email: str, reset_url: str) -> None:
         "If you did not request this, you can ignore this email."
     )
 
+    _send_or_log_email(
+        to_email=to_email,
+        subject=subject,
+        body=body,
+        log_label="password reset",
+        log_url=reset_url,
+    )
+
+
+def send_verification_email(*, to_email: str, verify_url: str) -> None:
+    """Deliver an email-verification link. Falls back to logging when SMTP is not configured."""
+    subject = "Verify your HeadStart email"
+    body = (
+        "Thanks for creating a HeadStart account.\n\n"
+        f"Open this link to verify your email address (valid for "
+        f"{settings.email_verification_expire_minutes // 60} hours):\n\n"
+        f"{verify_url}\n\n"
+        "If you did not create this account, you can ignore this email."
+    )
+
+    _send_or_log_email(
+        to_email=to_email,
+        subject=subject,
+        body=body,
+        log_label="email verification",
+        log_url=verify_url,
+    )
+
+
+def _send_or_log_email(
+    *,
+    to_email: str,
+    subject: str,
+    body: str,
+    log_label: str,
+    log_url: str,
+) -> None:
     try:
         send_email(to=to_email, subject=subject, body=body)
     except SmtpNotConfiguredError:
         logger.info(
-            "SMTP not configured; password reset link for %s: %s",
+            "SMTP not configured; %s link for %s: %s",
+            log_label,
             to_email,
-            reset_url,
+            log_url,
         )

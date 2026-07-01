@@ -49,7 +49,17 @@ def get_current_user(
     return user
 
 
-def get_current_admin(user: User = Depends(get_current_user)) -> User:
+def get_verified_user(user: User = Depends(get_current_user)) -> User:
+    """Require the authenticated user to have a verified email address."""
+    if user.email_verified_at is None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Verify your email address to continue.",
+        )
+    return user
+
+
+def get_current_admin(user: User = Depends(get_verified_user)) -> User:
     """Require the authenticated user to be an admin."""
     if not user.is_admin:
         raise HTTPException(

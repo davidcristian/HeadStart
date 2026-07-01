@@ -7,6 +7,7 @@ and never touch the network.
 import json
 from collections.abc import Iterator
 from pathlib import Path
+from unittest.mock import patch
 
 import httpx
 import pytest
@@ -33,8 +34,13 @@ FIXTURES_DIR = Path(__file__).parent / "fixtures"
 def register_and_login(
     client: TestClient, email: str = "user@example.com", password: str = "password123"
 ) -> dict[str, str]:
-    """Register (idempotently) + log in, returning a Bearer auth header."""
-    client.post("/api/v1/auth/register", json={"email": email, "password": password})
+    """Register (idempotently) + verify email + log in, returning a Bearer auth header."""
+    with (
+        patch("app.services.auth.send_verification_email"),
+        patch("app.services.auth.generate_password_reset_token", return_value="test-verify-token"),
+    ):
+        client.post("/api/v1/auth/register", json={"email": email, "password": password})
+    client.post("/api/v1/auth/verify-email", json={"token": "test-verify-token"})
     resp = client.post("/api/v1/auth/login", json={"email": email, "password": password})
     token = resp.json()["access_token"]
     return {"Authorization": f"Bearer {token}"}

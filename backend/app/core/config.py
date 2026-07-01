@@ -40,7 +40,8 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 30
     refresh_token_expire_days: int = 7
     password_reset_expire_minutes: int = 60
-    # Base URL of the web UI (used in password-reset links).
+    email_verification_expire_minutes: int = 1440  # 24 hours
+    # Base URL of the web UI (used in password-reset and verification links).
     frontend_base_url: str = "http://localhost:5173"
 
     # ---- auth refresh cookie ----

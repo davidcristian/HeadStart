@@ -58,6 +58,7 @@ export const sampleTeamUser: User = {
   is_active: true,
   plan: "team",
   onboarding_completed_at: "2026-06-28T00:00:00Z",
+  email_verified_at: "2026-06-28T00:00:00Z",
   created_at: "2026-06-28T00:00:00Z",
 };
 
@@ -71,6 +72,7 @@ export const sampleUserDataExport: UserDataExport = {
     is_active: true,
     plan: "team",
     onboarding_completed_at: "2026-06-28T00:00:00Z",
+    email_verified_at: "2026-06-28T00:00:00Z",
     created_at: "2026-06-28T00:00:00Z",
   },
   sources: [],

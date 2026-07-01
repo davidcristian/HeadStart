@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user, get_db
+from app.api.deps import get_db, get_verified_user
 from app.models.user import User
 from app.schemas.search import SearchCreate, SearchRead, SearchRunRead, SearchUpdate
 from app.services.searches import SearchService
@@ -13,7 +13,7 @@ router = APIRouter()
 
 @router.get("", response_model=list[SearchRead])
 def list_searches(
-    db: Session = Depends(get_db), user: User = Depends(get_current_user)
+    db: Session = Depends(get_db), user: User = Depends(get_verified_user)
 ) -> list[SearchRead]:
     return SearchService(db).list_reads(user.id)
 
@@ -22,14 +22,14 @@ def list_searches(
 def create_search(
     data: SearchCreate,
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_verified_user),
 ) -> SearchRead:
     return SearchService(db).create_read(user.id, data)
 
 
 @router.get("/{search_id}", response_model=SearchRead)
 def get_search(
-    search_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)
+    search_id: int, db: Session = Depends(get_db), user: User = Depends(get_verified_user)
 ) -> SearchRead:
     return SearchService(db).get_read(search_id, user.id)
 
@@ -39,21 +39,21 @@ def update_search(
     search_id: int,
     data: SearchUpdate,
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_verified_user),
 ) -> SearchRead:
     return SearchService(db).update_read(search_id, user.id, data)
 
 
 @router.delete("/{search_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_search(
-    search_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)
+    search_id: int, db: Session = Depends(get_db), user: User = Depends(get_verified_user)
 ) -> None:
     SearchService(db).delete(search_id, user.id)
 
 
 @router.post("/{search_id}/run", response_model=SearchRunRead)
 def run_search_now(
-    search_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)
+    search_id: int, db: Session = Depends(get_db), user: User = Depends(get_verified_user)
 ) -> SearchRunRead:
     """Run the search pipeline immediately and return scrape/notify results."""
     return SearchService(db).run_now(search_id, user.id)

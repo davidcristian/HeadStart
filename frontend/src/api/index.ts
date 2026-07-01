@@ -84,6 +84,16 @@ export const api = {
       body: { token, password },
       skipAuth: true,
     }),
+  verifyEmail: (token: string) =>
+    request<User>("/api/v1/auth/verify-email", {
+      method: "POST",
+      body: { token },
+      skipAuth: true,
+    }),
+  resendVerificationEmail: () =>
+    request<{ message: string }>("/api/v1/auth/resend-verification", {
+      method: "POST",
+    }),
   me: () => request<User>("/api/v1/auth/me"),
   completeOnboarding: () =>
     request<User>("/api/v1/auth/me/complete-onboarding", { method: "POST" }),

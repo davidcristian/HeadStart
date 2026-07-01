@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user, get_db
+from app.api.deps import get_db, get_verified_user
 from app.core.exceptions import PlanLimitError
 from app.models.user import User
 from app.schemas.feed import FeedUrlRead
@@ -59,7 +59,7 @@ def rss_feed(
 def feed_url(
     request: Request,
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_verified_user),
 ) -> FeedUrlRead:
     """Return the current user's RSS feed URL."""
     PlanLimitsService(db).require_rss_feed(user)
@@ -73,7 +73,7 @@ def feed_url(
 def rotate_feed_url(
     request: Request,
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_verified_user),
 ) -> FeedUrlRead:
     """Invalidate prior feed URLs and return a new RSS feed URL."""
     PlanLimitsService(db).require_rss_feed(user)

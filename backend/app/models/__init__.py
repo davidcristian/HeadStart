@@ -7,6 +7,7 @@ from app.models.application_profile import ApplicationProfile
 from app.models.base import Base
 from app.models.data_request_log import DataRequestLog
 from app.models.delivery_log import DeliveryLog
+from app.models.email_verification_token import EmailVerificationToken
 from app.models.notification_target import NotificationTarget
 from app.models.password_reset_token import PasswordResetToken
 from app.models.pending_digest import PendingDigest
@@ -26,6 +27,7 @@ __all__ = [
     "Base",
     "DataRequestLog",
     "DeliveryLog",
+    "EmailVerificationToken",
     "NotificationTarget",
     "PasswordResetToken",
     "PendingDigest",

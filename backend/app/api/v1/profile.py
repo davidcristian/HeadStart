@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends, File, UploadFile, status
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user, get_db
+from app.api.deps import get_db, get_verified_user
 from app.core.config import settings
 from app.core.exceptions import ValidationError
 from app.models.user import User
@@ -34,7 +34,7 @@ async def _read_bounded_upload(file: UploadFile, max_bytes: int) -> bytes:
 
 @router.get("", response_model=ProfileRead)
 def get_profile(
-    db: Session = Depends(get_db), user: User = Depends(get_current_user)
+    db: Session = Depends(get_db), user: User = Depends(get_verified_user)
 ) -> ProfileRead:
     return ProfileService(db).get(user.id)
 
@@ -43,7 +43,7 @@ def get_profile(
 def save_profile(
     data: ProfileData,
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_verified_user),
 ) -> ProfileRead:
     return ProfileService(db).save(user.id, data)
 
@@ -52,7 +52,7 @@ def save_profile(
 async def upload_resume(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_verified_user),
 ) -> ProfileRead:
     """Upload or replace the user's resume file (PDF or Word)."""
     content = await _read_bounded_upload(file, settings.profile_resume_max_bytes)
@@ -68,12 +68,12 @@ async def upload_resume(
 
 @router.delete("/resume", response_model=ProfileRead)
 def delete_resume(
-    db: Session = Depends(get_db), user: User = Depends(get_current_user)
+    db: Session = Depends(get_db), user: User = Depends(get_verified_user)
 ) -> ProfileRead:
     """Remove the stored resume file without clearing other profile fields."""
     return ProfileService(db).delete_resume(user.id)
 
 
 @router.delete("", status_code=status.HTTP_204_NO_CONTENT)
-def delete_profile(db: Session = Depends(get_db), user: User = Depends(get_current_user)) -> None:
+def delete_profile(db: Session = Depends(get_db), user: User = Depends(get_verified_user)) -> None:
     ProfileService(db).delete(user.id)

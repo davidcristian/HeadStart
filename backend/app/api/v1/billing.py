@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user, get_db
+from app.api.deps import get_db, get_verified_user
 from app.models.user import User
 from app.schemas.billing import BillingStatusRead, CheckoutRequest, CheckoutResponse, PortalResponse
 from app.schemas.promo import PromoValidateRequest, PromoValidateResponse
@@ -15,7 +15,7 @@ router = APIRouter()
 
 @router.get("/status", response_model=BillingStatusRead)
 def billing_status(
-    user: User = Depends(get_current_user), db: Session = Depends(get_db)
+    user: User = Depends(get_verified_user), db: Session = Depends(get_db)
 ) -> BillingStatusRead:
     """Return billing capabilities and subscription state for the signed-in user."""
     return BillingService(db).status(user.id)
@@ -24,7 +24,7 @@ def billing_status(
 @router.post("/checkout", response_model=CheckoutResponse)
 def create_checkout(
     data: CheckoutRequest,
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_verified_user),
     db: Session = Depends(get_db),
 ) -> CheckoutResponse:
     """Start a Stripe Checkout session for a paid plan."""
@@ -40,7 +40,7 @@ def create_checkout(
 @router.post("/promo/validate", response_model=PromoValidateResponse)
 def validate_promo_code(
     data: PromoValidateRequest,
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_verified_user),
     db: Session = Depends(get_db),
 ) -> PromoValidateResponse:
     """Check whether a promo code is valid for the signed-in user."""
@@ -49,7 +49,7 @@ def validate_promo_code(
 
 @router.post("/portal", response_model=PortalResponse)
 def create_portal(
-    user: User = Depends(get_current_user), db: Session = Depends(get_db)
+    user: User = Depends(get_verified_user), db: Session = Depends(get_db)
 ) -> PortalResponse:
     """Open the Stripe customer portal to manage an existing subscription."""
     url = BillingService(db).create_portal_session(user.id)

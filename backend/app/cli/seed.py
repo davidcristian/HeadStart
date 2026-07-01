@@ -40,10 +40,13 @@ def seed() -> None:
                 password_hash=hash_password(settings.seed_user_password),
                 is_admin=is_first,
                 is_active=True,
+                email_verified_at=utcnow(),
             )
             session.add(user)
             session.flush()
             logger.info("Created seed user %s (admin=%s)", email, is_first)
+        elif user.email_verified_at is None:
+            user.email_verified_at = utcnow()
 
         target = session.scalar(
             select(NotificationTarget)

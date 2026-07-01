@@ -44,7 +44,20 @@ An account. The first one created becomes admin.
 | stripe_subscription_id | str?  | Active Stripe subscription ID |
 | subscription_status   | str?     | Last known Stripe status (`active`, `trialing`, `canceled`, …) |
 | onboarding_completed_at | datetime? | Set when the first-run wizard is finished or skipped |
+| email_verified_at | datetime? | Set when the user confirms their email address |
 | created_at    | datetime |                                    |
+
+### email_verification_token
+
+Single-use, time-limited token for email address verification.
+
+| Column     | Type     | Notes                              |
+| ---------- | -------- | ---------------------------------- |
+| id         | int PK   |                                    |
+| user_id    | FK user  | Owner; cascade delete              |
+| token_hash | str      | SHA-256 of the raw token (unique)  |
+| expires_at | datetime |                                    |
+| created_at | datetime |                                    |
 
 ### password_reset_token
 

@@ -7,6 +7,7 @@ export interface User {
   is_active: boolean;
   plan: PlanId;
   onboarding_completed_at: string | null;
+  email_verified_at: string | null;
   created_at: string;
 }
 

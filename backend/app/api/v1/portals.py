@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user, get_db
+from app.api.deps import get_db, get_verified_user
 from app.models.user import User
 from app.portals.catalog import PortalCategory
 from app.schemas.portal import (
@@ -24,7 +24,7 @@ def list_portals(
     category: PortalCategory | None = Query(default=None),
     q: str | None = Query(default=None, max_length=100),
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_verified_user),
 ) -> PortalListRead:
     """List curated FAANG-adjacent, unicorn, and AI employer portals."""
     return PortalCatalogService(db).list_for_user(user, category=category, query=q)
@@ -34,7 +34,7 @@ def list_portals(
 def search_portals(
     data: PortalSearchRequest,
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_verified_user),
 ) -> PortalSearchResultRead:
     """Search job listings across curated portals (Pro+)."""
     return PortalSearchService(db).search(user, data)
@@ -44,7 +44,7 @@ def search_portals(
 def subscribe_portals(
     data: PortalSubscribeRequest,
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_verified_user),
 ) -> PortalSubscribeResultRead:
     """Create sources and searches for curated portals in one step (Pro+)."""
     return PortalSearchService(db).subscribe(user, data)

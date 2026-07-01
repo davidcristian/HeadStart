@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Cookie, Depends, Request, Response, status
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user, get_db
+from app.api.deps import get_current_user, get_db, get_verified_user
 from app.core.config import settings
 from app.core.exceptions import ValidationError
 from app.core.request_meta import request_meta
@@ -20,6 +20,7 @@ from app.schemas.auth import (
     TokenResponse,
     UserDataExport,
     UserRead,
+    VerifyEmailRequest,
 )
 from app.services.auth import AuthService
 
@@ -103,6 +104,21 @@ def reset_password(data: ResetPasswordRequest, db: Session = Depends(get_db)) ->
     return MessageResponse(message="Password updated. You can sign in with your new password.")
 
 
+@router.post("/verify-email", response_model=UserRead)
+def verify_email(data: VerifyEmailRequest, db: Session = Depends(get_db)) -> UserRead:
+    """Confirm an email address using a token from the verification email."""
+    return UserRead.model_validate(AuthService(db).verify_email(data))
+
+
+@router.post("/resend-verification", response_model=MessageResponse)
+def resend_verification(
+    user: User = Depends(get_current_user), db: Session = Depends(get_db)
+) -> MessageResponse:
+    """Send another verification email to the signed-in user."""
+    message = AuthService(db).resend_verification_email(user.id)
+    return MessageResponse(message=message)
+
+
 @router.get("/me", response_model=UserRead)
 def me(user: User = Depends(get_current_user)) -> UserRead:
     return UserRead.model_validate(user)
@@ -110,7 +126,7 @@ def me(user: User = Depends(get_current_user)) -> UserRead:
 
 @router.post("/me/complete-onboarding", response_model=UserRead)
 def complete_onboarding(
-    user: User = Depends(get_current_user), db: Session = Depends(get_db)
+    user: User = Depends(get_verified_user), db: Session = Depends(get_db)
 ) -> UserRead:
     """Mark the first-run onboarding wizard as finished."""
     return UserRead.model_validate(AuthService(db).complete_onboarding(user.id))

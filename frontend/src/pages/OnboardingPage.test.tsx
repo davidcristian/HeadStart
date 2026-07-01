@@ -16,6 +16,7 @@ vi.mock("../auth/AuthContext", () => ({
       is_active: true,
       plan: "free" as const,
       onboarding_completed_at: null,
+      email_verified_at: "2026-06-28T00:00:00Z",
       created_at: "2026-06-28T00:00:00Z",
     },
     refreshUser,
@@ -33,6 +34,7 @@ describe("OnboardingPage", () => {
       is_active: true,
       plan: "free" as const,
       onboarding_completed_at: null,
+      email_verified_at: "2026-06-28T00:00:00Z",
       created_at: "2026-06-28T00:00:00Z",
     });
   });

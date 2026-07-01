@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { AdminRoute } from "./auth/AdminRoute";
+import { EmailVerificationGuard } from "./auth/EmailVerificationGuard";
 import { OnboardingGuard } from "./auth/OnboardingGuard";
 import { ProtectedRoute } from "./auth/ProtectedRoute";
 import { Layout } from "./components/Layout";
@@ -16,6 +17,7 @@ import { ImpressumPage } from "./pages/ImpressumPage";
 import { PrivacyPolicyPage } from "./pages/PrivacyPolicyPage";
 import { SubprocessorsPage } from "./pages/SubprocessorsPage";
 import { TermsOfUsePage } from "./pages/TermsOfUsePage";
+import { VerifyEmailPage } from "./pages/VerifyEmailPage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { RegisterPage } from "./pages/RegisterPage";
 import { ResetPasswordPage } from "./pages/ResetPasswordPage";
@@ -51,24 +53,27 @@ export function App() {
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
+      <Route path="/verify-email" element={<VerifyEmailPage />} />
 
       <Route path="/app" element={<ProtectedRoute />}>
-        <Route path="onboarding" element={<OnboardingPage />} />
-        <Route element={<OnboardingGuard />}>
-          <Route element={<Layout />}>
-            <Route index element={<Navigate to="/app/searches" replace />} />
-            <Route path="searches" element={<SearchesPage />} />
-            <Route path="jobs" element={<JobsPage />} />
-            <Route path="sources" element={<SourcesPage />} />
-            <Route path="portals" element={<PortalsPage />} />
-            <Route path="targets" element={<TargetsPage />} />
-            <Route path="credentials" element={<CredentialsPage />} />
-            <Route path="profile" element={<ProfilePage />} />
-            <Route path="settings" element={<SettingsPage />} />
-            <Route element={<AdminRoute />}>
-              <Route path="admin" element={<AdminPage />} />
+        <Route path="settings" element={<SettingsPage />} />
+        <Route element={<EmailVerificationGuard />}>
+          <Route path="onboarding" element={<OnboardingPage />} />
+          <Route element={<OnboardingGuard />}>
+            <Route element={<Layout />}>
+              <Route index element={<Navigate to="/app/searches" replace />} />
+              <Route path="searches" element={<SearchesPage />} />
+              <Route path="jobs" element={<JobsPage />} />
+              <Route path="sources" element={<SourcesPage />} />
+              <Route path="portals" element={<PortalsPage />} />
+              <Route path="targets" element={<TargetsPage />} />
+              <Route path="credentials" element={<CredentialsPage />} />
+              <Route path="profile" element={<ProfilePage />} />
+              <Route element={<AdminRoute />}>
+                <Route path="admin" element={<AdminPage />} />
+              </Route>
+              <Route path="*" element={<Navigate to="/app/searches" replace />} />
             </Route>
-            <Route path="*" element={<Navigate to="/app/searches" replace />} />
           </Route>
         </Route>
       </Route>

@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
@@ -5,6 +7,19 @@ from app.models.user import User
 from app.repositories.users import UserRepository
 from app.schemas.auth import RegisterRequest
 from app.services.auth import AuthService
+
+
+def _register_and_verify(
+    client: TestClient, email: str, password: str = "password123"
+) -> dict[str, str]:
+    with (
+        patch("app.services.auth.send_verification_email"),
+        patch("app.services.auth.generate_password_reset_token", return_value="test-verify-token"),
+    ):
+        client.post("/api/v1/auth/register", json={"email": email, "password": password})
+    client.post("/api/v1/auth/verify-email", json={"token": "test-verify-token"})
+    login = client.post("/api/v1/auth/login", json={"email": email, "password": password})
+    return {"Authorization": f"Bearer {login.json()['access_token']}"}
 
 
 def test_register_first_user_is_admin(client: TestClient) -> None:
@@ -145,15 +160,7 @@ def test_new_user_needs_onboarding(client: TestClient) -> None:
 
 
 def test_complete_onboarding_sets_timestamp(client: TestClient) -> None:
-    client.post(
-        "/api/v1/auth/register",
-        json={"email": "onboard@example.com", "password": "password123"},
-    )
-    login = client.post(
-        "/api/v1/auth/login",
-        json={"email": "onboard@example.com", "password": "password123"},
-    )
-    headers = {"Authorization": f"Bearer {login.json()['access_token']}"}
+    headers = _register_and_verify(client, "onboard@example.com")
 
     complete = client.post("/api/v1/auth/me/complete-onboarding", headers=headers)
     assert complete.status_code == 200
@@ -164,15 +171,7 @@ def test_complete_onboarding_sets_timestamp(client: TestClient) -> None:
 
 
 def test_complete_onboarding_is_idempotent(client: TestClient) -> None:
-    client.post(
-        "/api/v1/auth/register",
-        json={"email": "again@example.com", "password": "password123"},
-    )
-    login = client.post(
-        "/api/v1/auth/login",
-        json={"email": "again@example.com", "password": "password123"},
-    )
-    headers = {"Authorization": f"Bearer {login.json()['access_token']}"}
+    headers = _register_and_verify(client, "again@example.com")
 
     first = client.post("/api/v1/auth/me/complete-onboarding", headers=headers)
     second = client.post("/api/v1/auth/me/complete-onboarding", headers=headers)

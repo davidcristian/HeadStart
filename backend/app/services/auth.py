@@ -7,7 +7,7 @@ from datetime import timedelta
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.core.email import send_password_reset_email
+from app.core.email import send_password_reset_email, send_verification_email
 from app.core.exceptions import ConflictError, NotFoundError, ValidationError
 from app.core.security import (
     TokenError,
@@ -20,20 +20,13 @@ from app.core.security import (
     verify_password,
 )
 from app.models.base import utcnow
-from app.models.data_request_log import DataRequestLog
+from app.models.email_verification_token import EmailVerificationToken
 from app.models.password_reset_token import PasswordResetToken
-from app.models.site_credential import SiteCredential
 from app.models.user import User
-from app.repositories.credentials import CredentialRepository
-from app.repositories.data_request_logs import DataRequestLogRepository
-from app.repositories.jobs import SeenJobRepository
+from app.repositories.email_verification_tokens import EmailVerificationTokenRepository
 from app.repositories.password_reset_tokens import PasswordResetTokenRepository
-from app.repositories.searches import SearchRepository
-from app.repositories.sources import SourceRepository
-from app.repositories.targets import TargetRepository
 from app.repositories.users import UserRepository
 from app.schemas.auth import (
-    CredentialExport,
     DeleteAccountRequest,
     ForgotPasswordRequest,
     LoginRequest,
@@ -41,17 +34,15 @@ from app.schemas.auth import (
     ResetPasswordRequest,
     TokenResponse,
     UserDataExport,
-    UserRead,
+    VerifyEmailRequest,
 )
-from app.schemas.job import JobRead
-from app.schemas.search import SearchRead
-from app.schemas.source import SourceRead
-from app.schemas.target import TargetRead
-from app.services.credentials import CredentialService
-from app.services.profiles import ProfileService
+from app.services.auth_account import delete_user_account, export_user_data
 
 _PASSWORD_RESET_SENT_MESSAGE = (
     "If an account exists for that email, a password reset link has been sent."
+)
+_VERIFICATION_SENT_MESSAGE = (
+    "If your account is not yet verified, a verification link has been sent."
 )
 
 
@@ -60,14 +51,7 @@ class AuthService:
         self.session = session
         self.repo = UserRepository(session)
         self.reset_tokens = PasswordResetTokenRepository(session)
-        self.sources = SourceRepository(session)
-        self.searches = SearchRepository(session)
-        self.targets = TargetRepository(session)
-        self.credentials = CredentialRepository(session)
-        self.jobs = SeenJobRepository(session)
-        self.data_requests = DataRequestLogRepository(session)
-        self.credential_service = CredentialService(session)
-        self.profile_service = ProfileService(session)
+        self.verification_tokens = EmailVerificationTokenRepository(session)
 
     def register(self, data: RegisterRequest) -> User:
         """Create an account. The very first user becomes the admin."""
@@ -84,6 +68,7 @@ class AuthService:
         if self.repo.claim_bootstrap_admin(user.id):
             user.is_admin = True
             self.session.flush()
+        self._issue_verification_email(user)
         return user
 
     def login(self, data: LoginRequest) -> TokenResponse:
@@ -157,6 +142,33 @@ class AuthService:
         self.repo.update_password(user, hash_password(data.password))
         self.reset_tokens.delete_for_user(user.id)
 
+    def verify_email(self, data: VerifyEmailRequest) -> User:
+        """Confirm ownership of an email address from a verification link."""
+        token_hash = hash_password_reset_token(data.token)
+        now = utcnow()
+        row = self.verification_tokens.get_valid_by_hash(token_hash, now=now)
+        if row is None:
+            raise ValidationError("Invalid or expired verification link. Request a new one.")
+
+        user = self.repo.get(row.user_id)
+        if user is None or not user.is_active:
+            raise ValidationError("Invalid or expired verification link. Request a new one.")
+
+        if user.email_verified_at is None:
+            user.email_verified_at = now
+            self.session.flush()
+        self.verification_tokens.delete_for_user(user.id)
+        return user
+
+    def resend_verification_email(self, user_id: int) -> str:
+        """Send a fresh verification link to the signed-in user."""
+        user = self.me(user_id)
+        if user.email_verified_at is not None:
+            raise ValidationError("Email is already verified.")
+
+        self._issue_verification_email(user)
+        return _VERIFICATION_SENT_MESSAGE
+
     def export_data(
         self,
         user_id: int,
@@ -165,30 +177,12 @@ class AuthService:
         user_agent: str | None = None,
     ) -> UserDataExport:
         """Return a portable JSON bundle of everything the user owns."""
-        user = self.me(user_id)
-        profile = self.profile_service.get(user_id)
-        export = UserDataExport(
-            exported_at=utcnow(),
-            account=UserRead.model_validate(user),
-            sources=[SourceRead.model_validate(row) for row in self.sources.list_all(user_id)],
-            searches=[SearchRead.model_validate(row) for row in self.searches.list_all(user_id)],
-            targets=[TargetRead.model_validate(row) for row in self.targets.list_all(user_id)],
-            credentials=[
-                self._credential_export(row) for row in self.credentials.list_all(user_id)
-            ],
-            profile=profile if profile.exists else None,
-            jobs=[
-                JobRead.model_validate(row)
-                for row in self.jobs.list_all(user_id=user_id, limit=None)
-            ],
-        )
-        self._record_data_request(
-            user,
-            request_type="export",
+        return export_user_data(
+            self.session,
+            self.me(user_id),
             ip_address=ip_address,
             user_agent=user_agent,
         )
-        return export
 
     def delete_account(
         self,
@@ -199,52 +193,27 @@ class AuthService:
         user_agent: str | None = None,
     ) -> None:
         """Permanently remove the signed-in account after password confirmation."""
-        user = self.me(user_id)
-        if not verify_password(data.password, user.password_hash):
-            raise ValidationError("Invalid password.")
-        if user.is_admin and self.repo.count_admins() <= 1 and self.repo.count() > 1:
-            raise ValidationError(
-                "You are the only admin. Promote another account to admin before deleting yours."
-            )
-        self._record_data_request(
-            user,
-            request_type="delete",
+        delete_user_account(
+            self.session,
+            self.me(user_id),
+            data,
             ip_address=ip_address,
             user_agent=user_agent,
         )
-        self.repo.delete(user)
 
-    def _credential_export(self, credential: SiteCredential) -> CredentialExport:
-        payload = self.credential_service._decode(credential)
-        return CredentialExport(
-            id=credential.id,
-            source_id=credential.source_id,
-            name=credential.name,
-            enabled=credential.enabled,
-            created_at=credential.created_at,
-            cookies=payload["cookies"],
-            headers=payload["headers"],
-            session=payload["session"],
-        )
-
-    def _record_data_request(
-        self,
-        user: User,
-        *,
-        request_type: str,
-        ip_address: str | None,
-        user_agent: str | None,
-    ) -> None:
-        """Persist an audit row for a completed GDPR export or deletion."""
-        self.data_requests.add(
-            DataRequestLog(
-                user_id=user.id if request_type == "export" else None,
-                user_email=user.email,
-                request_type=request_type,
-                ip_address=ip_address,
-                user_agent=user_agent,
+    def _issue_verification_email(self, user: User) -> None:
+        raw_token = generate_password_reset_token()
+        expires_at = utcnow() + timedelta(minutes=settings.email_verification_expire_minutes)
+        self.verification_tokens.delete_for_user(user.id)
+        self.verification_tokens.add(
+            EmailVerificationToken(
+                user_id=user.id,
+                token_hash=hash_password_reset_token(raw_token),
+                expires_at=expires_at,
             )
         )
+        verify_url = f"{settings.frontend_base_url.rstrip('/')}/verify-email?token={raw_token}"
+        send_verification_email(to_email=user.email, verify_url=verify_url)
 
     @staticmethod
     def _issue_tokens(user: User) -> TokenResponse:

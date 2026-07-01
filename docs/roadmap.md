@@ -128,7 +128,7 @@ Turn anonymous visitors into active users with a smooth first-run path.
 
 | Item | Why | Notes |
 | ---- | --- | ----- |
-| ~~Signup & onboarding polish~~ | ~~Paid SaaS needs a credible first-run path~~ | **Shipped (wizard):** guided `/app/onboarding` flow (source → notify → search → run); `onboarding_completed_at` on user + `POST /auth/me/complete-onboarding`; skip option. Email verification and trial handling remain. |
+| ~~Signup & onboarding polish~~ | ~~Paid SaaS needs a credible first-run path~~ | **Shipped (wizard):** guided `/app/onboarding` flow (source → notify → search → run); `onboarding_completed_at` on user + `POST /auth/me/complete-onboarding`; skip option. **Shipped (email verification):** verification email on register; `POST /auth/verify-email` + resend; `/verify-email` UI; server-side 403 until verified. Trial handling remains. |
 | ~~GDPR / data compliance (baseline)~~ | ~~EU users and enterprise buyers expect it before collecting data at scale~~ | **Shipped:** `GET /auth/me/export` JSON data export; `DELETE /auth/me` account deletion with password confirmation; Settings UI |
 
 **Done when:** a new user can verify their email, complete onboarding, and run

@@ -53,6 +53,7 @@ class UserRead(BaseModel):
     is_active: bool
     plan: Literal["free", "pro", "team"] = "free"
     onboarding_completed_at: datetime | None = None
+    email_verified_at: datetime | None = None
     created_at: datetime
 
 
@@ -63,6 +64,10 @@ class ForgotPasswordRequest(BaseModel):
 class ResetPasswordRequest(BaseModel):
     token: str = Field(min_length=1)
     password: str = Field(min_length=8, max_length=128)
+
+
+class VerifyEmailRequest(BaseModel):
+    token: str = Field(min_length=1)
 
 
 class MessageResponse(BaseModel):

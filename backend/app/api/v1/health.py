@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app import __version__
-from app.api.deps import get_current_user, get_db
+from app.api.deps import get_db, get_verified_user
 from app.appliers import available_appliers
 from app.core.config import settings
 from app.models.user import User
@@ -22,7 +22,7 @@ def health() -> HealthRead:
 
 
 @router.get("/meta", response_model=MetaRead)
-def meta(user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> MetaRead:
+def meta(user: User = Depends(get_verified_user), db: Session = Depends(get_db)) -> MetaRead:
     """Capabilities used by the UI to populate adapter/notifier dropdowns."""
     limits = PlanLimitsService(db)
     snapshot = limits.snapshot(user)
