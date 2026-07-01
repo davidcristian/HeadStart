@@ -4,6 +4,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, EmailStr
 
+from app.schemas.plan import PlanId
+
 
 class AdminUserRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -12,12 +14,14 @@ class AdminUserRead(BaseModel):
     email: EmailStr
     is_admin: bool
     is_active: bool
+    plan: PlanId
     created_at: datetime
 
 
 class AdminUserUpdate(BaseModel):
     is_active: bool | None = None
     is_admin: bool | None = None
+    plan: PlanId | None = None
 
 
 class AdminSearchErrorRead(BaseModel):

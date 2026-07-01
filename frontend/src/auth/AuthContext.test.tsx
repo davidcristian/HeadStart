@@ -9,6 +9,7 @@ const user = {
   email: "x@example.test",
   is_admin: true,
   is_active: true,
+  plan: "team" as const,
   onboarding_completed_at: "2026-06-28T00:00:00Z",
   created_at: "2026-06-28T00:00:00Z",
 };

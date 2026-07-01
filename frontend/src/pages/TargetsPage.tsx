@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { JsonEditor } from "../components/JsonEditor";
+import { PlanUsageHint } from "../components/PlanUsageHint";
 import { Banner, Button, Card, EmptyState, Field } from "../components/ui";
 import { useMeta, useTargets } from "../hooks/queries";
 import { useCreateTarget, useDeleteTarget, useTestTarget } from "../hooks/mutations";
+import { canAddResource } from "../lib/plan";
 import type { Json } from "../types";
 
 const TYPE_DEFAULTS: Record<string, Json> = {
@@ -57,6 +59,8 @@ export function TargetsPage() {
   const types = meta.data?.notifiers ?? [];
   const effectiveType = type || types[0] || "";
   const configHint = TYPE_HINTS[effectiveType] ?? "Channel-specific JSON config.";
+  const plan = meta.data?.plan;
+  const canCreate = plan ? canAddResource(plan, "targets") : true;
 
   useEffect(() => {
     if (!meta.data?.notifiers.length || type) return;
@@ -115,6 +119,7 @@ export function TargetsPage() {
       <h1>Notifications</h1>
 
       <Card title="Add a notification target">
+        {plan && <PlanUsageHint plan={plan} resource="targets" />}
         {error && <Banner kind="error">{error}</Banner>}
         {notice && <Banner kind="success">{notice}</Banner>}
         <div className="form-grid">
@@ -140,7 +145,7 @@ export function TargetsPage() {
             }}
           />
         </Field>
-        <Button onClick={create} disabled={!name || !effectiveType || !configValid}>
+        <Button onClick={create} disabled={!name || !effectiveType || !configValid || !canCreate}>
           Create target
         </Button>
       </Card>

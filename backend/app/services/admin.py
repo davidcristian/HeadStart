@@ -5,6 +5,7 @@ from __future__ import annotations
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import NotFoundError, ValidationError
+from app.core.plans import VALID_PLANS
 from app.repositories.admin_stats import AdminStatsRepository
 from app.repositories.users import UserRepository
 from app.schemas.admin import AdminStatsRead, AdminUserRead, AdminUserUpdate
@@ -32,11 +33,14 @@ class AdminService:
             raise ValidationError("You cannot remove your own admin privileges.")
         if data.is_admin is False and user.is_admin and self.users.count_admins() <= 1:
             raise ValidationError("At least one admin account must remain.")
+        if data.plan is not None and data.plan not in VALID_PLANS:
+            raise ValidationError(f"Unknown plan '{data.plan}'.")
 
         updated = self.users.update_flags(
             user,
             is_active=data.is_active,
             is_admin=data.is_admin,
+            plan=data.plan,
         )
         return AdminUserRead.model_validate(updated)
 

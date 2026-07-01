@@ -11,7 +11,7 @@ from app.services.credentials import CredentialService
 
 
 def _user_and_source(session: Session, email: str = "u@example.test") -> tuple[int, int]:
-    user = User(email=email, password_hash="x", is_admin=False, is_active=True)
+    user = User(email=email, password_hash="x", is_admin=False, is_active=True, plan="pro")
     session.add(user)
     session.flush()
     source = Source(user_id=user.id, name="src", adapter_key="greenhouse", default_config={})

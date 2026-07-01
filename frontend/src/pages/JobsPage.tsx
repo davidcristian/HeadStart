@@ -3,9 +3,10 @@
 import { useCallback, useState } from "react";
 import { JobList } from "../components/JobList";
 import { Banner, Button, Card, EmptyState, Field } from "../components/ui";
-import { useFeedUrl, useJobs, useSearches } from "../hooks/queries";
+import { useFeedUrl, useJobs, useMeta, useSearches } from "../hooks/queries";
 import { useRotateFeedUrl, useUpdateJob } from "../hooks/mutations";
 import { usePullToRefresh } from "../hooks/usePullToRefresh";
+import { planLabel } from "../lib/plan";
 import type { JobStatus } from "../types";
 
 const STATUS_FILTERS: Array<{ value: "" | JobStatus; label: string }> = [
@@ -33,11 +34,13 @@ export function JobsPage() {
   const [status, setStatus] = useState<"" | JobStatus>("");
   const [feedMessage, setFeedMessage] = useState<string | null>(null);
   const searches = useSearches();
+  const meta = useMeta();
+  const rssAllowed = meta.data?.plan.features.rss_feed ?? false;
   const jobs = useJobs(
     searchId === "" ? undefined : Number(searchId),
     status === "" ? undefined : status,
   );
-  const feed = useFeedUrl();
+  const feed = useFeedUrl(rssAllowed);
   const updateJob = useUpdateJob();
   const rotateFeed = useRotateFeedUrl();
 
@@ -75,9 +78,20 @@ export function JobsPage() {
       )}
       <h1>Jobs</h1>
       <Card title="RSS feed" className="rss-card">
-        {feed.isPending && <p>Loading feed URL...</p>}
-        {feed.isError && <Banner kind="error">Could not load RSS feed URL.</Banner>}
-        {feed.data && (
+        {!rssAllowed && meta.data && (
+          <>
+            <p className="muted">
+              RSS export is available on Pro and Team plans. You are on the{" "}
+              {planLabel(meta.data.plan.plan)} plan.
+            </p>
+            <p>
+              <a href="/pricing">Compare plans</a>
+            </p>
+          </>
+        )}
+        {rssAllowed && feed.isPending && <p>Loading feed URL...</p>}
+        {rssAllowed && feed.isError && <Banner kind="error">Could not load RSS feed URL.</Banner>}
+        {rssAllowed && feed.data && (
           <>
             <p className="muted">
               Subscribe in any RSS reader. The URL respects the search and status filters selected

@@ -1,6 +1,7 @@
 """Auth request/response schemas."""
 
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
@@ -50,6 +51,7 @@ class UserRead(BaseModel):
     email: EmailStr
     is_admin: bool
     is_active: bool
+    plan: Literal["free", "pro", "team"] = "free"
     onboarding_completed_at: datetime | None = None
     created_at: datetime
 

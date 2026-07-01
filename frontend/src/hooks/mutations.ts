@@ -7,6 +7,7 @@ import type { QueryClient } from "@tanstack/react-query";
 import { api } from "../api";
 import type {
   CredentialCreate,
+  PlanId,
   ProfileData,
   SearchCreate,
   SourceCreate,
@@ -22,7 +23,10 @@ export function useCreateSource() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: SourceCreate) => api.createSource(data),
-    onSuccess: () => invalidate(qc, queryKeys.sources),
+    onSuccess: () => {
+      invalidate(qc, queryKeys.sources);
+      invalidate(qc, queryKeys.meta);
+    },
   });
 }
 
@@ -39,7 +43,10 @@ export function useDeleteSource() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: number) => api.deleteSource(id),
-    onSuccess: () => invalidate(qc, queryKeys.sources),
+    onSuccess: () => {
+      invalidate(qc, queryKeys.sources);
+      invalidate(qc, queryKeys.meta);
+    },
   });
 }
 
@@ -51,7 +58,10 @@ export function useCreateSearch() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: SearchCreate) => api.createSearch(data),
-    onSuccess: () => invalidate(qc, queryKeys.searches),
+    onSuccess: () => {
+      invalidate(qc, queryKeys.searches);
+      invalidate(qc, queryKeys.meta);
+    },
   });
 }
 
@@ -68,7 +78,10 @@ export function useDeleteSearch() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: number) => api.deleteSearch(id),
-    onSuccess: () => invalidate(qc, queryKeys.searches),
+    onSuccess: () => {
+      invalidate(qc, queryKeys.searches);
+      invalidate(qc, queryKeys.meta);
+    },
   });
 }
 
@@ -84,7 +97,10 @@ export function useCreateTarget() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: TargetCreate) => api.createTarget(data),
-    onSuccess: () => invalidate(qc, queryKeys.targets),
+    onSuccess: () => {
+      invalidate(qc, queryKeys.targets);
+      invalidate(qc, queryKeys.meta);
+    },
   });
 }
 
@@ -92,7 +108,10 @@ export function useDeleteTarget() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: number) => api.deleteTarget(id),
-    onSuccess: () => invalidate(qc, queryKeys.targets),
+    onSuccess: () => {
+      invalidate(qc, queryKeys.targets);
+      invalidate(qc, queryKeys.meta);
+    },
   });
 }
 
@@ -166,8 +185,11 @@ export function useUpdateAdminUser() {
       patch,
     }: {
       id: number;
-      patch: Partial<{ is_active: boolean; is_admin: boolean }>;
+      patch: Partial<{ is_active: boolean; is_admin: boolean; plan: PlanId }>;
     }) => api.updateAdminUser(id, patch),
-    onSuccess: () => invalidate(qc, queryKeys.adminUsers),
+    onSuccess: () => {
+      invalidate(qc, queryKeys.adminUsers);
+      invalidate(qc, queryKeys.meta);
+    },
   });
 }

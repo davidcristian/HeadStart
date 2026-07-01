@@ -56,8 +56,12 @@ export function useProfile() {
   return useQuery({ queryKey: queryKeys.profile, queryFn: () => api.getProfile() });
 }
 
-export function useFeedUrl() {
-  return useQuery({ queryKey: queryKeys.feedUrl, queryFn: () => api.getFeedUrl() });
+export function useFeedUrl(enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.feedUrl,
+    queryFn: () => api.getFeedUrl(),
+    enabled,
+  });
 }
 
 export function useJobs(searchId?: number, status?: JobStatus) {

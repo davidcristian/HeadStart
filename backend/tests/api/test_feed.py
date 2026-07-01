@@ -70,6 +70,15 @@ def test_rss_feed_scopes_jobs_to_token_owner(client: TestClient) -> None:
     alice = register_and_login(client, "alice-rss@example.com")
     _seed_job_via_api(client, alice)
     bob = register_and_login(client, "bob-rss@example.com")
+    bob_id = client.get("/api/v1/auth/me", headers=bob).json()["id"]
+    assert (
+        client.patch(
+            f"/api/v1/admin/users/{bob_id}",
+            json={"plan": "pro"},
+            headers=alice,
+        ).status_code
+        == 200
+    )
 
     feed_url = client.get("/api/v1/feed/url", headers=bob).json()["url"]
     rss = client.get(feed_url)

@@ -125,6 +125,39 @@ export interface FeedUrl {
 export interface Meta {
   scrapers: string[];
   notifiers: string[];
+  plan: AccountPlan;
+}
+
+export type PlanId = "free" | "pro" | "team";
+
+export interface PlanLimits {
+  max_searches: number;
+  max_sources: number;
+  max_targets: number;
+}
+
+export interface PlanUsage {
+  searches: number;
+  sources: number;
+  targets: number;
+}
+
+export interface PlanFeatures {
+  digest_mode: boolean;
+  ai_summaries: boolean;
+  site_credentials: boolean;
+  rss_feed: boolean;
+}
+
+export interface AccountPlan {
+  plan: PlanId;
+  effective_plan: PlanId;
+  unlimited: boolean;
+  limits: PlanLimits;
+  usage: PlanUsage;
+  features: PlanFeatures;
+  allowed_scrapers: string[];
+  allowed_notifiers: string[];
 }
 
 export interface Health {
@@ -138,6 +171,7 @@ export interface User {
   email: string;
   is_admin: boolean;
   is_active: boolean;
+  plan: PlanId;
   onboarding_completed_at: string | null;
   created_at: string;
 }

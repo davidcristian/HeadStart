@@ -19,6 +19,7 @@ from app.schemas.source import (
 from app.scrapers import available_scrapers
 from app.scrapers.url_detect import detect_source_from_url
 from app.services.pipeline import PipelineService
+from app.services.plan_limits import PlanLimitsService
 
 _PREVIEW_LIMIT = 5
 
@@ -39,6 +40,7 @@ class SourceService:
 
     def create(self, user_id: int, data: SourceCreate) -> Source:
         self._validate_adapter(data.adapter_key)
+        PlanLimitsService(self.session).require_can_add_source(user_id, data.adapter_key)
         source = Source(
             user_id=user_id,
             name=data.name,
@@ -54,6 +56,9 @@ class SourceService:
         fields = data.model_dump(exclude_unset=True)
         if "adapter_key" in fields:
             self._validate_adapter(fields["adapter_key"])
+            PlanLimitsService(self.session).require_can_update_source_adapter(
+                user_id, fields["adapter_key"]
+            )
         for key, value in fields.items():
             setattr(source, key, value)
         self.session.flush()

@@ -4,10 +4,12 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
+from app.core.exceptions import PlanLimitError
 from app.models.user import User
 from app.schemas.feed import FeedUrlRead
 from app.schemas.job import JobStatus
 from app.services.feed import FeedService
+from app.services.plan_limits import PlanLimitsService
 
 router = APIRouter()
 
@@ -33,6 +35,10 @@ def rss_feed(
             status_code=401,
             detail="Invalid or expired feed token.",
         )
+    try:
+        PlanLimitsService(db).require_rss_feed(user)
+    except PlanLimitError as exc:
+        raise HTTPException(status_code=402, detail=str(exc)) from exc
     feed_url = service.build_feed_url(
         base_url=_api_base_url(request),
         token=token,
@@ -56,6 +62,7 @@ def feed_url(
     user: User = Depends(get_current_user),
 ) -> FeedUrlRead:
     """Return the current user's RSS feed URL."""
+    PlanLimitsService(db).require_rss_feed(user)
     service = FeedService(db)
     token = service.issue_token(user)
     url = service.build_feed_url(base_url=_api_base_url(request), token=token)
@@ -69,6 +76,7 @@ def rotate_feed_url(
     user: User = Depends(get_current_user),
 ) -> FeedUrlRead:
     """Invalidate prior feed URLs and return a new RSS feed URL."""
+    PlanLimitsService(db).require_rss_feed(user)
     service = FeedService(db)
     token = service.rotate_token(user)
     url = service.build_feed_url(base_url=_api_base_url(request), token=token)

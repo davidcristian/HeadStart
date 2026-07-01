@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Badge, Banner, Button, Card, EmptyState } from "../components/ui";
 import { useAdminStats, useAdminUsers, useMe } from "../hooks/queries";
 import { useUpdateAdminUser } from "../hooks/mutations";
-import type { AdminUser } from "../types";
+import type { AdminUser, PlanId } from "../types";
 
 function StatTile({ label, value }: { label: string; value: number }) {
   return (
@@ -22,7 +22,10 @@ function UserRow({
 }: {
   user: AdminUser;
   selfId: number;
-  onUpdate: (id: number, patch: Partial<Pick<AdminUser, "is_active" | "is_admin">>) => void;
+  onUpdate: (
+    id: number,
+    patch: Partial<Pick<AdminUser, "is_active" | "is_admin" | "plan">>,
+  ) => void;
 }) {
   const isSelf = user.id === selfId;
 
@@ -34,6 +37,18 @@ function UserRow({
       </td>
       <td>
         <Badge on={user.is_admin} labels={["admin", "member"]} />
+      </td>
+      <td>
+        <select
+          value={user.plan}
+          disabled={isSelf}
+          onChange={(e) => onUpdate(user.id, { plan: e.target.value as PlanId })}
+          aria-label={`Plan for ${user.email}`}
+        >
+          <option value="free">Free</option>
+          <option value="pro">Pro</option>
+          <option value="team">Team</option>
+        </select>
       </td>
       <td className="muted">{new Date(user.created_at).toLocaleDateString()}</td>
       <td className="row-actions">
@@ -63,7 +78,10 @@ export function AdminPage() {
   const updateAdminUser = useUpdateAdminUser();
   const [error, setError] = useState<string>();
 
-  async function updateUser(id: number, patch: Partial<Pick<AdminUser, "is_active" | "is_admin">>) {
+  async function updateUser(
+    id: number,
+    patch: Partial<Pick<AdminUser, "is_active" | "is_admin" | "plan">>,
+  ) {
     setError(undefined);
     try {
       await updateAdminUser.mutateAsync({ id, patch });
@@ -129,6 +147,10 @@ export function AdminPage() {
       </Card>
 
       <Card title="Users">
+        <p className="muted">
+          Change a member&apos;s plan here until Stripe billing is live. Admins are not capped by
+          plan limits.
+        </p>
         {users.data && users.data.length === 0 ? (
           <EmptyState>No users yet.</EmptyState>
         ) : (
@@ -139,6 +161,7 @@ export function AdminPage() {
                   <th>Email</th>
                   <th>Status</th>
                   <th>Role</th>
+                  <th>Plan</th>
                   <th>Joined</th>
                   <th />
                 </tr>

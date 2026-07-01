@@ -11,6 +11,7 @@ from app.notifiers.types import DeliveryResult
 from app.repositories.targets import TargetRepository
 from app.schemas.target import TargetCreate, TargetUpdate
 from app.scrapers.types import JobPosting
+from app.services.plan_limits import PlanLimitsService
 
 
 class TargetService:
@@ -29,6 +30,7 @@ class TargetService:
 
     def create(self, user_id: int, data: TargetCreate) -> NotificationTarget:
         self._validate_type(data.type)
+        PlanLimitsService(self.session).require_can_add_target(user_id, data.type)
         target = NotificationTarget(
             user_id=user_id, name=data.name, type=data.type, config=data.config
         )
@@ -39,6 +41,7 @@ class TargetService:
         fields = data.model_dump(exclude_unset=True)
         if "type" in fields:
             self._validate_type(fields["type"])
+            PlanLimitsService(self.session).require_can_update_target_type(user_id, fields["type"])
         for key, value in fields.items():
             setattr(target, key, value)
         self.session.flush()

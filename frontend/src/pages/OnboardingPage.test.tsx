@@ -14,6 +14,7 @@ vi.mock("../auth/AuthContext", () => ({
       email: "new@example.com",
       is_admin: false,
       is_active: true,
+      plan: "free" as const,
       onboarding_completed_at: null,
       created_at: "2026-06-28T00:00:00Z",
     },
@@ -30,6 +31,7 @@ describe("OnboardingPage", () => {
       email: "new@example.com",
       is_admin: false,
       is_active: true,
+      plan: "free" as const,
       onboarding_completed_at: null,
       created_at: "2026-06-28T00:00:00Z",
     });

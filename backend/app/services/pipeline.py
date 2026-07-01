@@ -30,6 +30,7 @@ from app.scrapers.url import normalize_job_url
 from app.services.compensation import format_compensation_display
 from app.services.credentials import CredentialService
 from app.services.digest import DigestService
+from app.services.plan_limits import PlanLimitsService
 from app.services.posting_filters import apply_posting_filters
 from app.services.scheduling import next_run_from
 from app.services.summaries import SummaryService
@@ -96,7 +97,8 @@ class PipelineService:
             new_postings = self._dedupe(search_id, postings)
             result.new = len(new_postings)
             to_notify, result.skipped = self._filter_cross_search(search.user_id, new_postings)
-            self.summaries.annotate(to_notify, search_name=search.name, filters=search.filters)
+            if PlanLimitsService(self.session).allows_summaries(search.user_id):
+                self.summaries.annotate(to_notify, search_name=search.name, filters=search.filters)
             seen_rows = self._persist_new(search_id, new_postings)
             if to_notify:
                 if search.notification_mode == "digest":

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { JsonEditor } from "../components/JsonEditor";
+import { PlanUsageHint } from "../components/PlanUsageHint";
 import { Badge, Banner, Button, Card, EmptyState, Field } from "../components/ui";
 import { useMeta, useSources } from "../hooks/queries";
 import {
@@ -10,6 +11,7 @@ import {
   useTestSource,
   useUpdateSource,
 } from "../hooks/mutations";
+import { canAddResource } from "../lib/plan";
 import type { Json } from "../types";
 
 export function SourcesPage() {
@@ -30,6 +32,8 @@ export function SourcesPage() {
 
   const adapters = meta.data?.scrapers ?? [];
   const effectiveAdapter = adapter || adapters[0] || "";
+  const plan = meta.data?.plan;
+  const canCreate = plan ? canAddResource(plan, "sources") : true;
 
   async function create() {
     setError(undefined);
@@ -79,6 +83,7 @@ export function SourcesPage() {
       <h1>Sources</h1>
 
       <Card title="Add a source">
+        {plan && <PlanUsageHint plan={plan} resource="sources" />}
         {error && <Banner kind="error">{error}</Banner>}
         {notice && <Banner kind="success">{notice}</Banner>}
         <div className="form-grid">
@@ -118,7 +123,10 @@ export function SourcesPage() {
             }}
           />
         </Field>
-        <Button onClick={create} disabled={!name || !effectiveAdapter || !configValid}>
+        <Button
+          onClick={create}
+          disabled={!name || !effectiveAdapter || !configValid || !canCreate}
+        >
           Create source
         </Button>
       </Card>

@@ -63,13 +63,20 @@ class UserRepository:
         )
 
     def update_flags(
-        self, user: User, *, is_active: bool | None = None, is_admin: bool | None = None
+        self,
+        user: User,
+        *,
+        is_active: bool | None = None,
+        is_admin: bool | None = None,
+        plan: str | None = None,
     ) -> User:
         """Patch admin-managed account flags."""
         if is_active is not None:
             user.is_active = is_active
         if is_admin is not None:
             user.is_admin = is_admin
+        if plan is not None:
+            user.plan = plan
         self.session.flush()
         return user
 

@@ -32,6 +32,8 @@ class User(Base, TimestampMixin):
     onboarding_completed_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+    # Subscription tier (billing integration sets this later; default is free).
+    plan: Mapped[str] = mapped_column(String(20), default="free", nullable=False)
 
     sources: Mapped[list["Source"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"

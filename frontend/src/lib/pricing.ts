@@ -1,4 +1,4 @@
-/** Plan definitions for the public pricing page (limits are aspirational until billing ships). */
+/** Plan definitions for the public pricing page (enforced server-side via `user.plan`). */
 
 export type BillingPeriod = "monthly" | "annual";
 

@@ -18,3 +18,20 @@ class ValidationError(DomainError):
 
 class ConflictError(DomainError):
     """The operation conflicts with current state (e.g. duplicate)."""
+
+
+class PlanLimitError(DomainError):
+    """The user's plan does not allow this action (cap reached or feature gated)."""
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        code: str,
+        plan: str,
+        limit: int | None = None,
+    ) -> None:
+        super().__init__(message)
+        self.code = code
+        self.plan = plan
+        self.limit = limit

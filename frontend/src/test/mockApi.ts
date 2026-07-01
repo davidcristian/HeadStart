@@ -13,22 +13,10 @@ import type {
   User,
   UserDataExport,
 } from "../types";
-import { emptyProfile, sampleJob } from "./fixtures";
+import { emptyProfile, sampleJob, sampleMeta } from "./fixtures";
 
 const mockApi = vi.hoisted(() => ({
-  meta: vi.fn(async () => ({
-    scrapers: [
-      "greenhouse",
-      "lever",
-      "ashby",
-      "workday",
-      "indeed",
-      "linkedin",
-      "generic_html",
-      "playwright",
-    ],
-    notifiers: ["discord", "email", "ntfy", "slack", "telegram", "webhook"],
-  })),
+  meta: vi.fn(async () => sampleMeta),
   listSources: vi.fn(async (): Promise<Source[]> => []),
   detectSource: vi.fn(async () => ({
     adapter_key: "greenhouse",
@@ -147,6 +135,7 @@ const mockApi = vi.hoisted(() => ({
     email: "admin@example.com",
     is_admin: true,
     is_active: true,
+    plan: "team",
     onboarding_completed_at: "2026-06-28T00:00:00Z",
     created_at: "2026-06-28T00:00:00Z",
   })),
@@ -155,6 +144,7 @@ const mockApi = vi.hoisted(() => ({
     email: "admin@example.com",
     is_admin: true,
     is_active: true,
+    plan: "team",
     onboarding_completed_at: "2026-06-28T12:00:00Z",
     created_at: "2026-06-28T00:00:00Z",
   })),
@@ -166,6 +156,7 @@ const mockApi = vi.hoisted(() => ({
       email: "admin@example.com",
       is_admin: true,
       is_active: true,
+      plan: "team",
       onboarding_completed_at: "2026-06-28T00:00:00Z",
       created_at: "2026-06-28T00:00:00Z",
     },
@@ -191,6 +182,7 @@ const mockApi = vi.hoisted(() => ({
     email: "member@example.com",
     is_admin: false,
     is_active: true,
+    plan: "free",
     onboarding_completed_at: "2026-06-29T00:00:00Z",
     created_at: "2026-06-29T00:00:00Z",
     ...(data as object),
@@ -210,8 +202,6 @@ const mockApi = vi.hoisted(() => ({
 }));
 
 vi.mock("../api", () => ({ api: mockApi }));
-
-import { sampleMeta } from "./fixtures";
 
 /** Reset all API mocks to their default empty-list responses. */
 export function resetMockApi(): void {

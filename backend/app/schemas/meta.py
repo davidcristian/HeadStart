@@ -2,6 +2,8 @@
 
 from pydantic import BaseModel
 
+from app.schemas.plan import AccountPlanRead
+
 
 class HealthRead(BaseModel):
     status: str
@@ -14,6 +16,7 @@ class MetaRead(BaseModel):
 
     scrapers: list[str]
     notifiers: list[str]
+    plan: AccountPlanRead
 
 
 class MessageRead(BaseModel):

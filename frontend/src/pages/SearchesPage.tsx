@@ -4,8 +4,9 @@ import { useState } from "react";
 import { SearchHealthBadge, SearchHealthDetails, SearchLastRun } from "../components/SearchHealth";
 import { SearchFiltersForm } from "../components/SearchFiltersForm";
 import { JsonEditor } from "../components/JsonEditor";
+import { PlanUsageHint } from "../components/PlanUsageHint";
 import { Badge, Banner, Button, Card, EmptyState, Field } from "../components/ui";
-import { useSearches, useSources, useTargets } from "../hooks/queries";
+import { useMeta, useSearches, useSources, useTargets } from "../hooks/queries";
 import {
   useCreateSearch,
   useDeleteSearch,
@@ -13,12 +14,14 @@ import {
   useUpdateSearch,
 } from "../hooks/mutations";
 import { EMPTY_SEARCH_FILTERS, formToFilters, type SearchFilterForm } from "../lib/searchFilters";
+import { canAddResource } from "../lib/plan";
 import type { Json } from "../types";
 
 export function SearchesPage() {
   const searches = useSearches();
   const sources = useSources();
   const targets = useTargets();
+  const meta = useMeta();
   const createSearch = useCreateSearch();
   const updateSearch = useUpdateSearch();
   const deleteSearch = useDeleteSearch();
@@ -40,6 +43,9 @@ export function SearchesPage() {
   const sourceName = (id: number) => sources.data?.find((s) => s.id === id)?.name ?? `#${id}`;
   const targetName = (id: number | null) =>
     id == null ? "-" : (targets.data?.find((t) => t.id === id)?.name ?? `#${id}`);
+  const plan = meta.data?.plan;
+  const canCreate = plan ? canAddResource(plan, "searches") : true;
+  const digestAllowed = plan?.features.digest_mode ?? true;
 
   async function create() {
     setError(undefined);
@@ -105,6 +111,7 @@ export function SearchesPage() {
       <h1>Searches</h1>
 
       <Card title="Create a search">
+        {plan && <PlanUsageHint plan={plan} resource="searches" />}
         {error && <Banner kind="error">{error}</Banner>}
         {notice && <Banner kind="info">{notice}</Banner>}
         <div className="form-grid">
@@ -149,13 +156,18 @@ export function SearchesPage() {
               onChange={(e) => setInterval(Number(e.target.value))}
             />
           </Field>
-          <Field label="Notification mode">
+          <Field
+            label="Notification mode"
+            hint={digestAllowed ? undefined : "Digest mode requires a Pro or Team plan."}
+          >
             <select
               value={notificationMode}
               onChange={(e) => setNotificationMode(e.target.value as "immediate" | "digest")}
             >
               <option value="immediate">Immediate (one alert per job)</option>
-              <option value="digest">Digest (batched summary)</option>
+              <option value="digest" disabled={!digestAllowed}>
+                Digest (batched summary){digestAllowed ? "" : " — Pro+"}
+              </option>
             </select>
           </Field>
           {notificationMode === "digest" && (
@@ -189,7 +201,7 @@ export function SearchesPage() {
             }}
           />
         </Field>
-        <Button onClick={create} disabled={!name || sourceId === "" || !configValid}>
+        <Button onClick={create} disabled={!name || sourceId === "" || !configValid || !canCreate}>
           Create search
         </Button>
       </Card>

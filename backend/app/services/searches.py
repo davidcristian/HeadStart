@@ -13,6 +13,7 @@ from app.repositories.sources import SourceRepository
 from app.repositories.targets import TargetRepository
 from app.schemas.search import SearchCreate, SearchRead, SearchRunRead, SearchUpdate
 from app.services.pipeline import PipelineService
+from app.services.plan_limits import PlanLimitsService
 
 
 class SearchService:
@@ -38,6 +39,9 @@ class SearchService:
         return self._to_reads([self.get(search_id, user_id)])[0]
 
     def create(self, user_id: int, data: SearchCreate) -> Search:
+        PlanLimitsService(self.session).require_can_add_search(user_id)
+        if data.notification_mode == "digest":
+            PlanLimitsService(self.session).require_digest_mode(user_id)
         self._validate_refs(user_id, data.source_id, data.target_id)
         search = Search(
             user_id=user_id,
@@ -61,6 +65,8 @@ class SearchService:
     def update(self, search_id: int, user_id: int, data: SearchUpdate) -> Search:
         search = self.get(search_id, user_id)
         fields = data.model_dump(exclude_unset=True)
+        if fields.get("notification_mode") == "digest":
+            PlanLimitsService(self.session).require_digest_mode(user_id)
         if "target_id" in fields and fields["target_id"] is not None:
             self._validate_refs(user_id, search.source_id, fields["target_id"])
         for key, value in fields.items():

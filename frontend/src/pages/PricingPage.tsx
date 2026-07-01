@@ -17,7 +17,10 @@ import {
 function ComparisonCell({ value }: { value: string | boolean }) {
   if (typeof value === "boolean") {
     return (
-      <span className={value ? "pricing-check" : "pricing-dash"} aria-label={value ? "Included" : "Not included"}>
+      <span
+        className={value ? "pricing-check" : "pricing-dash"}
+        aria-label={value ? "Included" : "Not included"}
+      >
         {value ? "✓" : "—"}
       </span>
     );
@@ -39,7 +42,11 @@ export function PricingPage() {
           <Link to="/" className="landing-nav-link">
             Home
           </Link>
-          <Link to="/pricing" className="landing-nav-link landing-nav-link-active" aria-current="page">
+          <Link
+            to="/pricing"
+            className="landing-nav-link landing-nav-link-active"
+            aria-current="page"
+          >
             Pricing
           </Link>
           {user ? (
@@ -101,14 +108,15 @@ export function PricingPage() {
           {PLANS.map((plan) => {
             const price = planDisplayPrice(plan, billingPeriod);
             const isFree = plan.id === "free";
-            const ctaHref = isFree || plan.id === "pro" ? "/register" : "mailto:support@headstart.app?subject=HeadStart%20Team%20plan";
+            const ctaHref =
+              isFree || plan.id === "pro"
+                ? "/register"
+                : "mailto:support@headstart.app?subject=HeadStart%20Team%20plan";
 
             return (
               <article
                 key={plan.id}
-                className={
-                  plan.highlight ? "pricing-card pricing-card-highlight" : "pricing-card"
-                }
+                className={plan.highlight ? "pricing-card pricing-card-highlight" : "pricing-card"}
               >
                 {plan.highlight ? <span className="pricing-card-badge">Most popular</span> : null}
                 <header className="pricing-card-header">
@@ -156,13 +164,20 @@ export function PricingPage() {
                 </ul>
 
                 {ctaHref.startsWith("mailto:") ? (
-                  <a href={ctaHref} className={plan.highlight ? "btn btn-primary btn-block" : "btn btn-ghost btn-block"}>
+                  <a
+                    href={ctaHref}
+                    className={
+                      plan.highlight ? "btn btn-primary btn-block" : "btn btn-ghost btn-block"
+                    }
+                  >
                     {plan.cta}
                   </a>
                 ) : (
                   <Link
                     to={ctaHref}
-                    className={plan.highlight ? "btn btn-primary btn-block" : "btn btn-ghost btn-block"}
+                    className={
+                      plan.highlight ? "btn btn-primary btn-block" : "btn btn-ghost btn-block"
+                    }
                   >
                     {plan.cta}
                   </Link>

@@ -344,9 +344,7 @@ export function OnboardingPage() {
           {STEPS.map((item, index) => (
             <li
               key={item.key}
-              className={
-                index < stepIndex ? "done" : index === stepIndex ? "current" : undefined
-              }
+              className={index < stepIndex ? "done" : index === stepIndex ? "current" : undefined}
             >
               <span className="onboarding-step-num">{index + 1}</span>
               <span className="onboarding-step-label">{item.label}</span>
@@ -360,8 +358,8 @@ export function OnboardingPage() {
         {step === "welcome" && (
           <Card title="Welcome to HeadStart">
             <p className="onboarding-lead">
-              In a few steps you will connect a job board, pick where alerts go, and run your
-              first search.
+              In a few steps you will connect a job board, pick where alerts go, and run your first
+              search.
             </p>
             <ul className="onboarding-checklist">
               <li>Add a job board source (Greenhouse, Lever, Indeed, …)</li>
@@ -406,10 +404,7 @@ export function OnboardingPage() {
                   />
                 </Field>
                 <Field label="Scraper">
-                  <select
-                    value={effectiveAdapter}
-                    onChange={(e) => setAdapterKey(e.target.value)}
-                  >
+                  <select value={effectiveAdapter} onChange={(e) => setAdapterKey(e.target.value)}>
                     {adapters.map((key) => (
                       <option key={key} value={key}>
                         {key}
@@ -454,7 +449,10 @@ export function OnboardingPage() {
                   />
                 </Field>
                 <Field label="Channel">
-                  <select value={effectiveNotifier} onChange={(e) => onNotifierTypeChange(e.target.value)}>
+                  <select
+                    value={effectiveNotifier}
+                    onChange={(e) => onNotifierTypeChange(e.target.value)}
+                  >
                     {notifiers.map((key) => (
                       <option key={key} value={key}>
                         {key}
@@ -499,7 +497,10 @@ export function OnboardingPage() {
                     required
                   />
                 </Field>
-                <Field label="Keywords (optional)" hint="Only notify when title/company/location matches.">
+                <Field
+                  label="Keywords (optional)"
+                  hint="Only notify when title/company/location matches."
+                >
                   <input
                     value={keywords}
                     onChange={(e) => setKeywords(e.target.value)}

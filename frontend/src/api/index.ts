@@ -78,8 +78,10 @@ export const api = {
 
   // admin
   listAdminUsers: () => request<AdminUser[]>("/api/v1/admin/users"),
-  updateAdminUser: (id: number, data: Partial<Pick<AdminUser, "is_active" | "is_admin">>) =>
-    request<AdminUser>(`/api/v1/admin/users/${id}`, { method: "PATCH", body: data }),
+  updateAdminUser: (
+    id: number,
+    data: Partial<Pick<AdminUser, "is_active" | "is_admin" | "plan">>,
+  ) => request<AdminUser>(`/api/v1/admin/users/${id}`, { method: "PATCH", body: data }),
   getAdminStats: () => request<AdminStats>("/api/v1/admin/stats"),
 
   // sources

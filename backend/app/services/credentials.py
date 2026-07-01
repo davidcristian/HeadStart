@@ -17,6 +17,7 @@ from app.models.site_credential import SiteCredential
 from app.repositories.credentials import CredentialRepository
 from app.repositories.sources import SourceRepository
 from app.schemas.credential import CredentialCreate, CredentialRead, CredentialUpdate
+from app.services.plan_limits import PlanLimitsService
 
 _SECTIONS = ("cookies", "headers", "session")
 
@@ -40,6 +41,7 @@ class CredentialService:
         return self.to_read(self.get(credential_id, user_id))
 
     def create(self, user_id: int, data: CredentialCreate) -> CredentialRead:
+        PlanLimitsService(self.session).require_site_credentials(user_id)
         if self.sources.get(data.source_id, user_id) is None:
             raise ValidationError(f"Source {data.source_id} does not exist")
         payload = {"cookies": data.cookies, "headers": data.headers, "session": data.session}

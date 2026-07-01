@@ -17,7 +17,18 @@ vi.mock("../auth/AuthContext", async () => {
   const actual = await vi.importActual<typeof import("../auth/AuthContext")>("../auth/AuthContext");
   return {
     ...actual,
-    useAuth: () => ({ logout }),
+    useAuth: () => ({
+      logout,
+      user: {
+        id: 1,
+        email: "user@example.com",
+        is_admin: false,
+        is_active: true,
+        plan: "free" as const,
+        onboarding_completed_at: "2026-06-28T00:00:00Z",
+        created_at: "2026-06-28T00:00:00Z",
+      },
+    }),
   };
 });
 
@@ -48,6 +59,7 @@ describe("SettingsPage", () => {
         email: "user@example.com",
         is_admin: false,
         is_active: true,
+        plan: "free",
         onboarding_completed_at: "2026-06-28T00:00:00Z",
         created_at: "2026-06-28T00:00:00Z",
       },

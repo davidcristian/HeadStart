@@ -1,14 +1,15 @@
 """Health + capability endpoints."""
 
 from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
 
 from app import __version__
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, get_db
 from app.core.config import settings
 from app.models.user import User
-from app.notifiers import available_notifiers
 from app.schemas.meta import HealthRead, MetaRead
-from app.scrapers import available_scrapers
+from app.schemas.plan import AccountPlanRead
+from app.services.plan_limits import PlanLimitsService
 
 router = APIRouter()
 
@@ -20,6 +21,13 @@ def health() -> HealthRead:
 
 
 @router.get("/meta", response_model=MetaRead)
-def meta(_: User = Depends(get_current_user)) -> MetaRead:
+def meta(user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> MetaRead:
     """Capabilities used by the UI to populate adapter/notifier dropdowns."""
-    return MetaRead(scrapers=available_scrapers(), notifiers=available_notifiers())
+    limits = PlanLimitsService(db)
+    snapshot = limits.snapshot(user)
+    plan = AccountPlanRead.model_validate(snapshot)
+    return MetaRead(
+        scrapers=plan.allowed_scrapers,
+        notifiers=plan.allowed_notifiers,
+        plan=plan,
+    )

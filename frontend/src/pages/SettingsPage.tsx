@@ -6,10 +6,11 @@ import { Banner, Button, Card, Field } from "../components/ui";
 import { api } from "../api";
 import { useAuth } from "../auth/AuthContext";
 import { getApiBaseUrl, setApiBaseUrl } from "../lib/settings";
+import { planLabel } from "../lib/plan";
 
 export function SettingsPage() {
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const [baseUrl, setBaseUrl] = useState(getApiBaseUrl());
   const [saved, setSaved] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -66,6 +67,14 @@ export function SettingsPage() {
     <>
       <h1>Settings</h1>
       <Card title="Your account">
+        {user && (
+          <p>
+            Signed in as <strong>{user.email}</strong> on the{" "}
+            <strong>{planLabel(user.plan)}</strong> plan.
+            {user.is_admin ? " Admin accounts are not capped by plan limits." : null}{" "}
+            <a href="/pricing">View plans</a>
+          </p>
+        )}
         <p>
           Download a JSON copy of your sources, searches, notification targets, credentials,
           application profile, and job history. Deleting your account permanently removes all of

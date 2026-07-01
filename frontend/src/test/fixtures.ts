@@ -1,9 +1,20 @@
 /** Sample API payloads for frontend smoke tests. */
 
-import type { Job, Meta, NotificationTarget, Profile, Search, Source } from "../types";
+import type { AccountPlan, Job, Meta, NotificationTarget, Profile, Search, Source } from "../types";
 
-export const sampleMeta: Meta = {
-  scrapers: [
+export const sampleAccountPlan: AccountPlan = {
+  plan: "team",
+  effective_plan: "team",
+  unlimited: true,
+  limits: { max_searches: 50, max_sources: 50, max_targets: 20 },
+  usage: { searches: 0, sources: 0, targets: 0 },
+  features: {
+    digest_mode: true,
+    ai_summaries: true,
+    site_credentials: true,
+    rss_feed: true,
+  },
+  allowed_scrapers: [
     "greenhouse",
     "lever",
     "ashby",
@@ -13,7 +24,13 @@ export const sampleMeta: Meta = {
     "generic_html",
     "playwright",
   ],
-  notifiers: ["discord", "email", "ntfy", "slack", "telegram", "webhook"],
+  allowed_notifiers: ["discord", "email", "ntfy", "slack", "telegram", "webhook"],
+};
+
+export const sampleMeta: Meta = {
+  scrapers: sampleAccountPlan.allowed_scrapers,
+  notifiers: sampleAccountPlan.allowed_notifiers,
+  plan: sampleAccountPlan,
 };
 
 export const sampleSource: Source = {

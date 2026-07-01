@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 from app import __version__
 from app.api.v1 import api_router
 from app.core.config import get_settings, settings
-from app.core.exceptions import ConflictError, NotFoundError, ValidationError
+from app.core.exceptions import ConflictError, NotFoundError, PlanLimitError, ValidationError
 from app.core.logging import configure_logging
 from app.core.metrics import render_metrics
 
@@ -67,6 +67,18 @@ def _register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(ConflictError)
     def _conflict(_: Request, exc: ConflictError) -> JSONResponse:
         return JSONResponse(status_code=409, content={"detail": str(exc)})
+
+    @app.exception_handler(PlanLimitError)
+    def _plan_limit(_: Request, exc: PlanLimitError) -> JSONResponse:
+        return JSONResponse(
+            status_code=402,
+            content={
+                "detail": str(exc),
+                "code": exc.code,
+                "plan": exc.plan,
+                "limit": exc.limit,
+            },
+        )
 
 
 app = create_app()

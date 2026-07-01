@@ -10,7 +10,8 @@ data isolation.
 ## Model
 
 - `user` table: `email` (unique), `password_hash` (bcrypt), `is_admin`,
-  `is_active`. See [data-model.md](data-model.md).
+  `is_active`, `plan` (`free` / `pro` / `team`, default `free`). See
+  [data-model.md](data-model.md).
 - The **first** registered user becomes admin (`AuthService.register`). A
   `registration_lock.bootstrap_user_id` column is claimed atomically so
   concurrent bootstrap registrations cannot create multiple admins.
@@ -111,11 +112,37 @@ requires the current password, clears the refresh cookie, and removes the user
 row. Owned data cascades via FK/`ON DELETE CASCADE`. The last admin account
 cannot be deleted while other users remain (promote another admin first).
 
+## Plan limits
+
+Every account has a `plan` (`free`, `pro`, or `team`; default `free`). Caps and
+feature gates are defined in `app/core/plans.py` (mirrors the public pricing
+page) and enforced in `PlanLimitsService` — **services raise `PlanLimitError`,
+mapped to HTTP 402**, never UI-only checks.
+
+| Resource / feature | Free | Pro | Team |
+| ------------------ | ---- | --- | ---- |
+| Searches | 3 | 15 | 50 |
+| Sources | 3 | 15 | 50 |
+| Notification targets | 1 | 5 | 20 |
+| Digest mode | no | yes | yes |
+| AI summaries (pipeline) | no | yes | yes |
+| Site credentials | no | yes | yes |
+| RSS feed | no | yes | yes |
+| Premium scrapers (`indeed`, `linkedin`, `playwright`) | no | yes | yes |
+| Webhook notifier | no | yes | yes |
+
+**Downgrade behaviour:** existing rows stay; create/update that would exceed a
+cap or use a gated feature is rejected. Admins bypass all limits.
+
+`GET /meta` returns an `AccountPlanRead` snapshot (limits, current usage,
+allowed scrapers/notifiers) so the UI can disable options proactively.
+`PATCH /admin/users/{id}` accepts `plan` until Stripe billing ships.
+
 ## Admin
 
 Admins (`is_admin=true`, first registered user by default) can open `/admin` in
-the UI. The page lists all accounts (activate/deactivate, grant/revoke admin)
-and shows global scrape health: search counts, delivery success/failure totals,
+the UI. The page lists all accounts (activate/deactivate, grant/revoke admin,
+change subscription `plan`) and shows global scrape health: search counts, delivery success/failure totals,
 and recent scrape errors across all users. Admins cannot deactivate themselves,
 remove their own admin flag, or demote the last remaining admin account.
 
