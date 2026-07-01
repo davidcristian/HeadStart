@@ -17,6 +17,30 @@ def test_list_portal_presets_filters_query() -> None:
     assert matches[0].company_name == "NVIDIA"
 
 
+def test_curated_portal_catalog_size() -> None:
+    from app.portals.catalog import CURATED_PORTALS
+
+    assert len(CURATED_PORTALS) == 42
+
+
+def test_curated_portal_doordash_board_token() -> None:
+    from app.portals.catalog import CURATED_PORTALS
+
+    preset = next(p for p in CURATED_PORTALS if p.id == "doordash")
+    assert preset.adapter_key == "greenhouse"
+    assert preset.default_config["board_token"] == "doordashusa"
+
+
+def test_curated_portal_intel_workday_config() -> None:
+    from app.portals.catalog import CURATED_PORTALS
+
+    preset = next(p for p in CURATED_PORTALS if p.id == "intel")
+    assert preset.adapter_key == "workday"
+    assert preset.default_config["tenant"] == "intel"
+    assert preset.default_config["site"] == "External"
+    assert preset.default_config["region"] == "wd1"
+
+
 def test_config_keys_match_greenhouse() -> None:
     from app.portals.catalog import CURATED_PORTALS
 

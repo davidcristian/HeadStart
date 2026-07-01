@@ -11,7 +11,7 @@ def test_portals_lists_curated_entries(client: TestClient, auth_headers: dict[st
     resp = client.get("/api/v1/portals", headers=auth_headers)
     assert resp.status_code == 200
     body = resp.json()
-    assert len(body["items"]) >= 20
+    assert len(body["items"]) >= 40
     assert body["categories"] == ["big_tech", "unicorn", "ai"]
     stripe = next(item for item in body["items"] if item["id"] == "stripe")
     assert stripe["company_name"] == "Stripe"
