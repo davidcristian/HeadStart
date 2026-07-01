@@ -16,6 +16,7 @@ export function PublicFooter() {
       <nav className="landing-footer-nav" aria-label="Footer">
         <Link to="/pricing">Pricing</Link>
         <Link to="/privacy">Privacy</Link>
+        <Link to="/subprocessors">Subprocessors</Link>
         <Link to="/terms">Terms</Link>
         <Link to="/impressum">Impressum</Link>
         <button type="button" className="landing-footer-link" onClick={openCookieSettings}>

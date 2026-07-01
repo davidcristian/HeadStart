@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Badge, Banner, Button, Card, EmptyState } from "../components/ui";
+import { AdminDataRequestsCard } from "../components/AdminDataRequestsCard";
 import { AdminPromoCodesCard } from "../components/AdminPromoCodesCard";
 import { useAdminStats, useAdminUsers, useMe } from "../hooks/queries";
 import { useUpdateAdminUser } from "../hooks/mutations";
@@ -148,6 +149,8 @@ export function AdminPage() {
       </Card>
 
       <AdminPromoCodesCard />
+
+      <AdminDataRequestsCard />
 
       <Card title="Users">
         <p className="muted">

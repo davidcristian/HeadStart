@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_admin, get_db
 from app.models.user import User
-from app.schemas.admin import AdminStatsRead, AdminUserRead, AdminUserUpdate
+from app.schemas.admin import AdminStatsRead, AdminUserRead, AdminUserUpdate, DataRequestLogRead
 from app.schemas.promo import (
     PromoCodeCreate,
     PromoCodeRead,
@@ -40,6 +40,15 @@ def get_stats(
     db: Session = Depends(get_db), _admin: User = Depends(get_current_admin)
 ) -> AdminStatsRead:
     return AdminService(db).get_stats()
+
+
+@router.get("/data-requests", response_model=list[DataRequestLogRead])
+def list_data_requests(
+    limit: int = 100,
+    db: Session = Depends(get_db),
+    _admin: User = Depends(get_current_admin),
+) -> list[DataRequestLogRead]:
+    return AdminService(db).list_data_requests(limit=min(limit, 500))
 
 
 @router.get("/promo-codes", response_model=list[PromoCodeRead])

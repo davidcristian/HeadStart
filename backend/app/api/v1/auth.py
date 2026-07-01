@@ -1,11 +1,12 @@
 """Auth endpoints: register, login, refresh, logout, password reset, current-user."""
 
-from fastapi import APIRouter, Cookie, Depends, Response, status
+from fastapi import APIRouter, Cookie, Depends, Request, Response, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
 from app.core.config import settings
 from app.core.exceptions import ValidationError
+from app.core.request_meta import request_meta
 from app.models.user import User
 from app.schemas.auth import (
     AccessTokenResponse,
@@ -117,19 +118,33 @@ def complete_onboarding(
 
 @router.get("/me/export", response_model=UserDataExport)
 def export_my_data(
-    user: User = Depends(get_current_user), db: Session = Depends(get_db)
+    request: Request,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
 ) -> UserDataExport:
     """Download a JSON bundle of all data owned by the signed-in account."""
-    return AuthService(db).export_data(user.id)
+    meta = request_meta(request)
+    return AuthService(db).export_data(
+        user.id,
+        ip_address=meta.ip_address,
+        user_agent=meta.user_agent,
+    )
 
 
 @router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
 def delete_my_account(
     data: DeleteAccountRequest,
+    request: Request,
     response: Response,
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> None:
     """Permanently delete the signed-in account after password confirmation."""
-    AuthService(db).delete_account(user.id, data)
+    meta = request_meta(request)
+    AuthService(db).delete_account(
+        user.id,
+        data,
+        ip_address=meta.ip_address,
+        user_agent=meta.user_agent,
+    )
     _clear_refresh_cookie(response)

@@ -20,10 +20,12 @@ from app.core.security import (
     verify_password,
 )
 from app.models.base import utcnow
+from app.models.data_request_log import DataRequestLog
 from app.models.password_reset_token import PasswordResetToken
 from app.models.site_credential import SiteCredential
 from app.models.user import User
 from app.repositories.credentials import CredentialRepository
+from app.repositories.data_request_logs import DataRequestLogRepository
 from app.repositories.jobs import SeenJobRepository
 from app.repositories.password_reset_tokens import PasswordResetTokenRepository
 from app.repositories.searches import SearchRepository
@@ -63,6 +65,7 @@ class AuthService:
         self.targets = TargetRepository(session)
         self.credentials = CredentialRepository(session)
         self.jobs = SeenJobRepository(session)
+        self.data_requests = DataRequestLogRepository(session)
         self.credential_service = CredentialService(session)
         self.profile_service = ProfileService(session)
 
@@ -154,11 +157,17 @@ class AuthService:
         self.repo.update_password(user, hash_password(data.password))
         self.reset_tokens.delete_for_user(user.id)
 
-    def export_data(self, user_id: int) -> UserDataExport:
+    def export_data(
+        self,
+        user_id: int,
+        *,
+        ip_address: str | None = None,
+        user_agent: str | None = None,
+    ) -> UserDataExport:
         """Return a portable JSON bundle of everything the user owns."""
         user = self.me(user_id)
         profile = self.profile_service.get(user_id)
-        return UserDataExport(
+        export = UserDataExport(
             exported_at=utcnow(),
             account=UserRead.model_validate(user),
             sources=[SourceRead.model_validate(row) for row in self.sources.list_all(user_id)],
@@ -173,8 +182,22 @@ class AuthService:
                 for row in self.jobs.list_all(user_id=user_id, limit=None)
             ],
         )
+        self._record_data_request(
+            user,
+            request_type="export",
+            ip_address=ip_address,
+            user_agent=user_agent,
+        )
+        return export
 
-    def delete_account(self, user_id: int, data: DeleteAccountRequest) -> None:
+    def delete_account(
+        self,
+        user_id: int,
+        data: DeleteAccountRequest,
+        *,
+        ip_address: str | None = None,
+        user_agent: str | None = None,
+    ) -> None:
         """Permanently remove the signed-in account after password confirmation."""
         user = self.me(user_id)
         if not verify_password(data.password, user.password_hash):
@@ -183,6 +206,12 @@ class AuthService:
             raise ValidationError(
                 "You are the only admin. Promote another account to admin before deleting yours."
             )
+        self._record_data_request(
+            user,
+            request_type="delete",
+            ip_address=ip_address,
+            user_agent=user_agent,
+        )
         self.repo.delete(user)
 
     def _credential_export(self, credential: SiteCredential) -> CredentialExport:
@@ -196,6 +225,25 @@ class AuthService:
             cookies=payload["cookies"],
             headers=payload["headers"],
             session=payload["session"],
+        )
+
+    def _record_data_request(
+        self,
+        user: User,
+        *,
+        request_type: str,
+        ip_address: str | None,
+        user_agent: str | None,
+    ) -> None:
+        """Persist an audit row for a completed GDPR export or deletion."""
+        self.data_requests.add(
+            DataRequestLog(
+                user_id=user.id if request_type == "export" else None,
+                user_email=user.email,
+                request_type=request_type,
+                ip_address=ip_address,
+                user_agent=user_agent,
+            )
         )
 
     @staticmethod

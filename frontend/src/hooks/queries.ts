@@ -23,6 +23,7 @@ export const queryKeys = {
     ["jobs", searchId ?? null, status ?? null] as const,
   adminUsers: ["admin", "users"] as const,
   adminStats: ["admin", "stats"] as const,
+  adminDataRequests: ["admin", "data-requests"] as const,
 };
 
 export function useHealth() {
@@ -85,4 +86,11 @@ export function useAdminUsers() {
 
 export function useAdminStats() {
   return useQuery({ queryKey: queryKeys.adminStats, queryFn: () => api.getAdminStats() });
+}
+
+export function useAdminDataRequests(limit = 100) {
+  return useQuery({
+    queryKey: [...queryKeys.adminDataRequests, limit] as const,
+    queryFn: () => api.listAdminDataRequests(limit),
+  });
 }

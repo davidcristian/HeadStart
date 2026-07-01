@@ -51,6 +51,17 @@ describe("AdminPage", () => {
     mockApi.me.mockResolvedValue(sampleAdminUser);
     mockApi.listAdminUsers.mockResolvedValue([sampleAdminUser, sampleMember]);
     mockApi.getAdminStats.mockResolvedValue(sampleStats);
+    mockApi.listAdminDataRequests.mockResolvedValue([
+      {
+        id: 1,
+        user_id: 2,
+        user_email: "member@example.com",
+        request_type: "export",
+        ip_address: "127.0.0.1",
+        user_agent: "pytest",
+        created_at: "2026-06-29T10:00:00Z",
+      },
+    ]);
   });
 
   it("renders the page and system stats", async () => {
@@ -67,6 +78,14 @@ describe("AdminPage", () => {
     await waitFor(() => expect(screen.getByText("Broken search")).toBeInTheDocument());
     expect(screen.getAllByText("member@example.com").length).toBeGreaterThan(0);
     expect(screen.getByText("timeout")).toBeInTheDocument();
+  });
+
+  it("lists GDPR data request audit rows", async () => {
+    renderWithClient(<AdminPage />);
+
+    await waitFor(() => expect(screen.getByText("Data export")).toBeInTheDocument());
+    expect(screen.getByRole("heading", { name: "GDPR data requests" })).toBeInTheDocument();
+    expect(screen.getAllByText("member@example.com").length).toBeGreaterThan(0);
   });
 
   it("deactivates a user", async () => {

@@ -5,6 +5,7 @@ import type {
   AdminStats,
   AdminUser,
   ApplicationLog,
+  DataRequestLog,
   Job,
   NotificationTarget,
   Profile,
@@ -230,6 +231,7 @@ const mockApi = vi.hoisted(() => ({
     deliveries_failed: 0,
     recent_errors: [],
   })),
+  listAdminDataRequests: vi.fn(async (): Promise<DataRequestLog[]> => []),
   listAdminPromoCodes: vi.fn(async () => []),
   createAdminPromoCode: vi.fn(async (data: unknown) => ({
     id: 1,

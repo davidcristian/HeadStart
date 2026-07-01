@@ -43,3 +43,15 @@ class AdminStatsRead(BaseModel):
     deliveries_sent: int
     deliveries_failed: int
     recent_errors: list[AdminSearchErrorRead]
+
+
+class DataRequestLogRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    user_id: int | None
+    user_email: EmailStr
+    request_type: str
+    ip_address: str | None
+    user_agent: str | None
+    created_at: datetime

@@ -7,8 +7,9 @@ from sqlalchemy.orm import Session
 from app.core.exceptions import NotFoundError, ValidationError
 from app.core.plans import VALID_PLANS
 from app.repositories.admin_stats import AdminStatsRepository
+from app.repositories.data_request_logs import DataRequestLogRepository
 from app.repositories.users import UserRepository
-from app.schemas.admin import AdminStatsRead, AdminUserRead, AdminUserUpdate
+from app.schemas.admin import AdminStatsRead, AdminUserRead, AdminUserUpdate, DataRequestLogRead
 
 
 class AdminService:
@@ -16,6 +17,7 @@ class AdminService:
         self.session = session
         self.users = UserRepository(session)
         self.stats_repo = AdminStatsRepository(session)
+        self.data_requests = DataRequestLogRepository(session)
 
     def list_users(self) -> list[AdminUserRead]:
         """Return every account for the admin dashboard."""
@@ -47,3 +49,10 @@ class AdminService:
     def get_stats(self) -> AdminStatsRead:
         """Return aggregate scrape and delivery health across all users."""
         return self.stats_repo.get_stats()
+
+    def list_data_requests(self, *, limit: int = 100) -> list[DataRequestLogRead]:
+        """Return recent GDPR export and deletion requests for the admin dashboard."""
+        return [
+            DataRequestLogRead.model_validate(row)
+            for row in self.data_requests.list_recent(limit=limit)
+        ]

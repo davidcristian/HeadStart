@@ -4,6 +4,7 @@ import type {
   AccessTokenResponse,
   AdminStats,
   AdminUser,
+  DataRequestLog,
   CredentialCreate,
   Health,
   Job,
@@ -111,6 +112,8 @@ export const api = {
     data: Partial<Pick<AdminUser, "is_active" | "is_admin" | "plan">>,
   ) => request<AdminUser>(`/api/v1/admin/users/${id}`, { method: "PATCH", body: data }),
   getAdminStats: () => request<AdminStats>("/api/v1/admin/stats"),
+  listAdminDataRequests: (limit = 100) =>
+    request<DataRequestLog[]>(`/api/v1/admin/data-requests?limit=${limit}`),
 
   listAdminPromoCodes: () => request<PromoCode[]>("/api/v1/admin/promo-codes"),
   createAdminPromoCode: (data: {

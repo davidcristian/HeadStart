@@ -112,6 +112,14 @@ requires the current password, clears the refresh cookie, and removes the user
 row. Owned data cascades via FK/`ON DELETE CASCADE`. The last admin account
 cannot be deleted while other users remain (promote another admin first).
 
+Successful export and deletion requests are recorded in `data_request_log`
+(user email snapshot, request type, client IP, user agent). Export rows keep
+`user_id`; deletion rows store only the email because the account is removed
+immediately afterward. Admins list recent rows via `GET /admin/data-requests`.
+
+Public subprocessors and DPA overview: `/subprocessors` (linked from the privacy
+policy and site footer).
+
 ## Plan limits
 
 Every account has a `plan` (`free`, `pro`, or `team`; default `free`). Caps and

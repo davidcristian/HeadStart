@@ -274,6 +274,16 @@ export interface AdminStats {
   recent_errors: AdminSearchError[];
 }
 
+export interface DataRequestLog {
+  id: number;
+  user_id: number | null;
+  user_email: string;
+  request_type: "export" | "delete";
+  ip_address: string | null;
+  user_agent: string | null;
+  created_at: string;
+}
+
 export interface AccessTokenResponse {
   access_token: string;
   token_type: string;

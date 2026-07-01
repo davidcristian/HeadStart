@@ -4,6 +4,7 @@ import { clearCookieConsent } from "../lib/cookieConsent";
 import { renderPublicPage } from "../test/renderPublicPage";
 import { ImpressumPage } from "./ImpressumPage";
 import { PrivacyPolicyPage } from "./PrivacyPolicyPage";
+import { SubprocessorsPage } from "./SubprocessorsPage";
 import { TermsOfUsePage } from "./TermsOfUsePage";
 
 const authState = vi.hoisted(() => ({ user: null as { email: string } | null }));
@@ -22,6 +23,10 @@ describe("Legal pages", () => {
     expect(screen.getByText(/Effective June 29, 2026/)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Terms" })).toHaveAttribute("href", "/terms");
     expect(screen.getByRole("link", { name: "Privacy" })).toHaveAttribute("href", "/privacy");
+    expect(screen.getAllByRole("link", { name: "Subprocessors" })[0]).toHaveAttribute(
+      "href",
+      "/subprocessors",
+    );
     expect(screen.getByRole("link", { name: "Impressum" })).toHaveAttribute("href", "/impressum");
     expect(screen.getByRole("link", { name: "Pricing" })).toHaveAttribute("href", "/pricing");
   });
@@ -45,5 +50,24 @@ describe("Legal pages", () => {
     expect(screen.getByText(/\[Firmenname \/ Name des Betreibers\]/)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Privacy" })).toHaveAttribute("href", "/privacy");
     expect(screen.getByRole("link", { name: "Impressum" })).toHaveAttribute("href", "/impressum");
+  });
+
+  it("renders the subprocessors page with provider table", () => {
+    render(renderPublicPage(<SubprocessorsPage />));
+
+    expect(screen.getByRole("heading", { name: "Subprocessors" })).toBeInTheDocument();
+    expect(screen.getByText(/Effective June 29, 2026/)).toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: "Privacy Policy" })[0]).toHaveAttribute(
+      "href",
+      "/privacy",
+    );
+    expect(screen.getByRole("link", { name: "Amazon Web Services (AWS)" })).toHaveAttribute(
+      "href",
+      "https://aws.amazon.com/compliance/gdpr-center/",
+    );
+    expect(screen.getAllByRole("link", { name: "Subprocessors" })[0]).toHaveAttribute(
+      "href",
+      "/subprocessors",
+    );
   });
 });

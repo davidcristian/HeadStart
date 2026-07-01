@@ -1,5 +1,6 @@
 /** Public privacy policy for HeadStart. */
 
+import { Link } from "react-router-dom";
 import { LegalPageLayout } from "../components/LegalPageLayout";
 
 const EFFECTIVE_DATE = "June 29, 2026";
@@ -58,7 +59,13 @@ export function PrivacyPolicyPage() {
 
       <section>
         <h2>Third parties and subprocessors</h2>
-        <p>Depending on how you configure HeadStart, data may be sent to:</p>
+        <p>
+          Depending on how you configure HeadStart, data may be sent to third-party service
+          providers that help us operate the product. See our{" "}
+          <Link to="/subprocessors">Subprocessors</Link> page for the current list, purposes, and
+          safeguards (including DPAs where applicable).
+        </p>
+        <p>Depending on how you configure HeadStart, data may also be sent to:</p>
         <ul>
           <li>
             <strong>Job boards and career sites</strong> you ask us to monitor (for scraping only).

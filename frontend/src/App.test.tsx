@@ -51,6 +51,9 @@ describe("App routing", () => {
 
     renderAt("/impressum");
     expect(screen.getByRole("heading", { name: "Impressum" })).toBeInTheDocument();
+
+    renderAt("/subprocessors");
+    expect(screen.getByRole("heading", { name: "Subprocessors" })).toBeInTheDocument();
   });
 
   it("serves the pricing page without authentication", () => {

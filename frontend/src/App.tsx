@@ -13,6 +13,7 @@ import { OnboardingPage } from "./pages/OnboardingPage";
 import { PricingPage } from "./pages/PricingPage";
 import { ImpressumPage } from "./pages/ImpressumPage";
 import { PrivacyPolicyPage } from "./pages/PrivacyPolicyPage";
+import { SubprocessorsPage } from "./pages/SubprocessorsPage";
 import { TermsOfUsePage } from "./pages/TermsOfUsePage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { RegisterPage } from "./pages/RegisterPage";
@@ -41,6 +42,7 @@ export function App() {
       <Route path="/" element={<LandingPage />} />
       <Route path="/pricing" element={<PricingPage />} />
       <Route path="/privacy" element={<PrivacyPolicyPage />} />
+      <Route path="/subprocessors" element={<SubprocessorsPage />} />
       <Route path="/terms" element={<TermsOfUsePage />} />
       <Route path="/impressum" element={<ImpressumPage />} />
       <Route path="/login" element={<LoginPage />} />

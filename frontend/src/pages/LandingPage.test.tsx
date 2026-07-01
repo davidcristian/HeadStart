@@ -30,6 +30,10 @@ describe("LandingPage", () => {
     expect(screen.getAllByRole("link", { name: "Sign in" }).length).toBeGreaterThan(0);
     expect(screen.queryByRole("link", { name: "Go to app" })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Privacy" })).toHaveAttribute("href", "/privacy");
+    expect(screen.getByRole("link", { name: "Subprocessors" })).toHaveAttribute(
+      "href",
+      "/subprocessors",
+    );
     expect(screen.getByRole("link", { name: "Terms" })).toHaveAttribute("href", "/terms");
     expect(screen.getByRole("link", { name: "Impressum" })).toHaveAttribute("href", "/impressum");
     expect(screen.getByRole("button", { name: "Cookie settings" })).toBeInTheDocument();
