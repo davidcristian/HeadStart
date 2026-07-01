@@ -1,0 +1,37 @@
+{
+  "id": "quest-primary-001",
+  "questions": [
+    {
+      "id": "q-work-auth",
+      "body": "Are you authorized to work in the US?",
+      "order": "a",
+      "required": true,
+      "type": {
+        "id": "single-select",
+        "descriptor": "Multiple Choice - Single Select"
+      },
+      "possibleAnswers": [
+        {
+          "id": "ans-yes",
+          "answerText": "Yes",
+          "order": "a"
+        },
+        {
+          "id": "ans-no",
+          "answerText": "No",
+          "order": "b"
+        }
+      ]
+    },
+    {
+      "id": "q-notice",
+      "body": "What is your notice period?",
+      "order": "b",
+      "required": false,
+      "type": {
+        "id": "text",
+        "descriptor": "Text"
+      }
+    }
+  ]
+}

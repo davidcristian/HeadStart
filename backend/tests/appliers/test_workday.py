@@ -14,7 +14,7 @@ from app.appliers.adapters.workday_common import (
 )
 from app.appliers.base import get_applier
 from app.schemas.profile import ProfileData, ProfileLinks
-from tests.conftest import load_fixture, make_http_client
+from tests.conftest import load_fixture, load_json_fixture, make_http_client
 
 
 def _profile() -> ProfileData:
@@ -91,27 +91,50 @@ def test_build_application_payload_requires_name_and_email() -> None:
         assert "last name" in str(exc)
 
 
-def test_dry_run_returns_payload_without_network() -> None:
-    applier = get_applier("workday", http=make_http_client(_unexpected_request))
+def test_dry_run_returns_payload_with_questionnaire_preview() -> None:
+    questionnaire_fixture = load_json_fixture("workday_questionnaire.json")
+    posting_fixture = load_json_fixture("workday_job_posting_info.json")
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path.endswith("/job/US-CA-Santa-Clara/Senior-Software-Engineer_JR1001"):
+            return httpx.Response(200, json=posting_fixture)
+        if request.url.path.endswith("/questionnaire/quest-primary-001"):
+            return httpx.Response(200, json=questionnaire_fixture)
+        raise AssertionError(f"unexpected request: {request.method} {request.url}")
+
+    applier = get_applier("workday", http=make_http_client(handler))
     result = applier.apply(
         ApplyContext(
             job_external_id="JR1001",
             job_title="Senior Software Engineer",
             company="ACME",
             job_url=_JOB_URL,
-            config={"tenant": "acme", "site": "AcmeCareers", "region": "wd5"},
-            profile=_profile(),
+            config={
+                "tenant": "acme",
+                "site": "AcmeCareers",
+                "region": "wd5",
+                "skip_secondary_questionnaire": True,
+            },
+            profile=ProfileData(
+                full_name="Ada Lovelace",
+                email="ada@example.com",
+                answers={"q-work-auth": "Yes"},
+            ),
             dry_run=True,
         )
     )
     assert result.status == "dry_run"
     assert result.payload is not None
     assert result.payload["candidate"]["emailAddress"] == "ada@example.com"
+    assert "questionnaires" in result.payload
     assert result.error is None
 
 
-def test_live_submit_creates_names_and_finalizes() -> None:
+def test_live_submit_creates_names_questionnaires_and_finalizes() -> None:
     create_fixture = load_fixture("workday_apply_create.json")
+    questionnaire_fixture = load_json_fixture("workday_questionnaire.json")
+    posting_fixture = load_json_fixture("workday_job_posting_info.json")
+    questionnaire_response_fixture = load_json_fixture("workday_questionnaire_response.json")
     seen: dict[str, object] = {}
 
     def handler(request: httpx.Request) -> httpx.Response:
@@ -125,6 +148,13 @@ def test_live_submit_creates_names_and_finalizes() -> None:
         if request.url.path.endswith("/name"):
             seen["name_body"] = json.loads(request.read().decode())
             return httpx.Response(200, json={"ok": True})
+        if request.url.path.endswith("/job/US-CA-Santa-Clara/Senior-Software-Engineer_JR1001"):
+            return httpx.Response(200, json=posting_fixture)
+        if request.url.path.endswith("/questionnaire/quest-primary-001"):
+            return httpx.Response(200, json=questionnaire_fixture)
+        if "questionnaireresponse" in request.url.path:
+            seen["questionnaire_body"] = json.loads(request.read().decode())
+            return httpx.Response(200, json=questionnaire_response_fixture)
         if request.url.path.endswith("/finalize"):
             return httpx.Response(200, json={"ok": True})
         raise AssertionError(f"unexpected request: {request.method} {request.url}")
@@ -136,8 +166,18 @@ def test_live_submit_creates_names_and_finalizes() -> None:
             job_title="Senior Software Engineer",
             company="ACME",
             job_url=_JOB_URL,
-            config={"tenant": "acme", "site": "AcmeCareers", "region": "wd5", "country_id": "US"},
-            profile=_profile(),
+            config={
+                "tenant": "acme",
+                "site": "AcmeCareers",
+                "region": "wd5",
+                "country_id": "US",
+                "skip_secondary_questionnaire": True,
+            },
+            profile=ProfileData(
+                full_name="Ada Lovelace",
+                email="ada@example.com",
+                answers={"q-work-auth": "Yes"},
+            ),
             credentials={
                 "cookies": {
                     "CALYPSO_SESSION": "session-token",
@@ -159,6 +199,10 @@ def test_live_submit_creates_names_and_finalizes() -> None:
     name_body = seen["name_body"]
     assert isinstance(name_body, dict)
     assert name_body["legalName"]["firstName"] == "Ada"
+    questionnaire_body = seen["questionnaire_body"]
+    assert isinstance(questionnaire_body, dict)
+    choice_answers = questionnaire_body["questionnaireAnswers"][0]["questionMultipleChoiceAnswers"]
+    assert choice_answers == ["ans-yes"]
 
 
 def test_apply_fails_without_target_coordinates() -> None:

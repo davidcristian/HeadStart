@@ -3,13 +3,16 @@
 Workday career sites use the CXS apply flow:
   1. POST /wday/cxs/{tenant}/jobpostings/{jobPostingId}/jobapplications
   2. POST /wday/cxs/{tenant}/jobapplication/{applicationId}/name
-  3. POST /wday/cxs/{tenant}/jobapplication/{applicationId}/finalize
+  3. POST questionnaire responses (primary / secondary / supplementary)
+  4. PUT /wday/cxs/{tenant}/jobapplication/{applicationId}/termsandconditions (optional)
+  5. POST /wday/cxs/{tenant}/jobapplication/{applicationId}/finalize
 
 Live submission requires an authenticated candidate session — store the
 ``CALYPSO_SESSION`` and ``CALYPSO_CSRF_TOKEN`` cookies (or
 ``session.csrf_token``) from a logged-in apply page in [site
-credentials](../../docs/modules/credentials.md). Resume files are not uploaded
-in v1; ``resume_text`` is sent in the preview payload comments field.
+credentials](../../docs/modules/credentials.md). Map screening questions via
+``profile.answers`` (question id -> answer id or label). Resume files are not
+uploaded in v1; ``resume_text`` is sent in the preview payload comments field.
 """
 
 from __future__ import annotations
@@ -22,11 +25,18 @@ from app.appliers.adapters.workday_common import (
     WorkdayTarget,
     build_application_payload,
     build_name_body,
+    cxs_jobapplication_url,
     request_headers,
     resolve_csrf_token,
     resolve_job_path,
     resolve_job_posting_id,
     resolve_target,
+)
+from app.appliers.adapters.workday_questionnaire import (
+    QuestionnaireSubmitResult,
+    preview_questionnaires,
+    submit_questionnaires,
+    submit_terms_consent,
 )
 from app.appliers.base import Applier, register_applier
 from app.appliers.types import ApplyContext, ApplyResult
@@ -77,6 +87,18 @@ class WorkdayApplier(Applier):
             return ApplyResult(status="failed", error=str(exc))
 
         if ctx.dry_run:
+            preview = preview_questionnaires(
+                self.http,
+                target=target,
+                config=ctx.config,
+                profile=ctx.profile,
+                job_path=job_path,
+                credentials=ctx.credentials,
+                csrf_token=resolve_csrf_token(ctx.credentials, ctx.config),
+                session_id=None,
+            )
+            payload["questionnaires"] = preview.get("questionnaires", {})
+            payload["jobPostingInfo"] = preview.get("jobPostingInfo", {})
             return ApplyResult(status="dry_run", payload=payload)
 
         csrf_token = resolve_csrf_token(ctx.credentials, ctx.config)
@@ -130,7 +152,7 @@ class WorkdayApplier(Applier):
         csrf_token: str,
         credentials: dict[str, dict[str, str]] | None,
     ) -> ApplyResult:
-        """Create the application, submit name, and finalize."""
+        """Create the application, submit sections, and finalize."""
         create_url = f"{target.api_base()}/jobpostings/{job_posting_id}/jobapplications"
         headers = request_headers(target, job_path, csrf_token=csrf_token, credentials=credentials)
         try:
@@ -159,12 +181,13 @@ class WorkdayApplier(Applier):
                 payload=profile_payload,
             )
 
-        name_url = f"{target.api_base()}/jobapplication/{application_id}/name"
+        session_token = str(session_id or "")
+        name_url = cxs_jobapplication_url(target, str(application_id), "name")
         name_headers = request_headers(
             target,
             job_path,
             csrf_token=csrf_token,
-            session_id=str(session_id or ""),
+            session_id=session_token,
             credentials=credentials,
         )
         try:
@@ -181,12 +204,56 @@ class WorkdayApplier(Applier):
                 external_application_id=str(application_id),
             )
 
-        finalize_url = f"{target.api_base()}/jobapplication/{application_id}/finalize"
+        questionnaire_results = submit_questionnaires(
+            http,
+            target=target,
+            application_id=str(application_id),
+            config=config,
+            profile=profile,
+            job_path=job_path,
+            csrf_token=csrf_token,
+            session_id=session_token,
+            credentials=credentials,
+        )
+        failed_questionnaire = next((r for r in questionnaire_results if not r.ok), None)
+        if failed_questionnaire is not None:
+            return ApplyResult(
+                status="failed",
+                error=failed_questionnaire.error or "workday questionnaire submit failed",
+                payload={
+                    **profile_payload,
+                    "questionnaires": _questionnaire_payload(questionnaire_results),
+                },
+                external_application_id=str(application_id),
+            )
+
+        if config.get("auto_terms_consent"):
+            try:
+                submit_terms_consent(
+                    http,
+                    target=target,
+                    application_id=str(application_id),
+                    csrf_token=csrf_token,
+                    session_id=session_token,
+                    credentials=credentials,
+                )
+            except httpx.HTTPError as exc:
+                return ApplyResult(
+                    status="failed",
+                    error=str(exc),
+                    payload={
+                        **profile_payload,
+                        "questionnaires": _questionnaire_payload(questionnaire_results),
+                    },
+                    external_application_id=str(application_id),
+                )
+
+        finalize_url = cxs_jobapplication_url(target, str(application_id), "finalize")
         finalize_headers = request_headers(
             target,
             job_path,
             csrf_token=csrf_token,
-            session_id=str(session_id or ""),
+            session_id=session_token,
             credentials=credentials,
         )
         try:
@@ -195,7 +262,10 @@ class WorkdayApplier(Applier):
             return ApplyResult(
                 status="failed",
                 error=str(exc),
-                payload=profile_payload,
+                payload={
+                    **profile_payload,
+                    "questionnaires": _questionnaire_payload(questionnaire_results),
+                },
                 external_application_id=str(application_id),
             )
 
@@ -203,13 +273,19 @@ class WorkdayApplier(Applier):
             return ApplyResult(
                 status="failed",
                 error=_extract_error_message(finalized) or "workday finalize rejected",
-                payload=profile_payload,
+                payload={
+                    **profile_payload,
+                    "questionnaires": _questionnaire_payload(questionnaire_results),
+                },
                 external_application_id=str(application_id),
             )
 
         return ApplyResult(
             status="submitted",
-            payload=profile_payload,
+            payload={
+                **profile_payload,
+                "questionnaires": _questionnaire_payload(questionnaire_results),
+            },
             external_application_id=str(application_id),
         )
 
@@ -222,3 +298,15 @@ def _extract_error_message(response: dict[str, Any]) -> str | None:
     if error_code:
         return str(error_code)
     return None
+
+
+def _questionnaire_payload(results: list[QuestionnaireSubmitResult]) -> dict[str, Any]:
+    return {
+        result.qtype: {
+            "questionnaireId": result.questionnaire_id,
+            "questionnaireAnswers": result.answers,
+            **({"error": result.error} if result.error else {}),
+            **({"responseId": result.response.get("id")} if result.response else {}),
+        }
+        for result in results
+    }

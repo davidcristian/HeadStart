@@ -54,6 +54,13 @@ class HttpClient:
         resp.raise_for_status()
         return resp.json()
 
+    def put_json(self, url: str, *, json: Any = None, **kwargs: Any) -> Any:
+        """PUT JSON and parse a JSON response body."""
+        self._wait_rate_limit()
+        resp = self._client.put(url, json=json, **kwargs)
+        resp.raise_for_status()
+        return resp.json()
+
     def post_multipart(
         self, url: str, *, data: dict[str, Any], files: dict[str, Any], **kwargs: Any
     ) -> Any:

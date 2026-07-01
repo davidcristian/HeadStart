@@ -124,6 +124,7 @@ def test_apply_service_workday_dry_run(db_session: Session) -> None:
         "tenant": "acme",
         "site": "AcmeCareers",
         "region": "wd5",
+        "skip_questionnaires": True,
     }
     db_session.flush()
     job = SeenJob(

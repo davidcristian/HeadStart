@@ -143,6 +143,13 @@ career sites. Config / credentials:
 | `locale` | source/search config | Locale prefix (default `en-US`) |
 | `country_id` | source/search config | Country WID for name fields (default `US`) |
 | `job_path` | source/search config | Optional override when `job_url` is missing |
+| `questionnaire_id` | source/search config | Override primary questionnaire WID (else from job posting CXS detail) |
+| `secondary_questionnaire_id` | source/search config | Override secondary questionnaire WID |
+| `supplementary_questionnaire_id` | source/search config | Override supplementary questionnaire WID |
+| `questionnaire_answers` | source/search config | Optional alias map `{questionId: value}` merged with profile `answers` |
+| `skip_questionnaires` | source/search config | When true, skip all questionnaire submission |
+| `skip_primary_questionnaire` / `skip_secondary_questionnaire` / `skip_supplementary_questionnaire` | source/search config | Skip one questionnaire type |
+| `auto_terms_consent` | source/search config | When true, PUT `termsandconditions` with `acceptTermsAndAgreements: true` before finalize |
 | `CALYPSO_SESSION` | credential `cookies` | Authenticated candidate session cookie |
 | `CALYPSO_CSRF_TOKEN` | credential `cookies` or `session.csrf_token` | CSRF token from the apply page |
 
@@ -151,12 +158,22 @@ calling Workday.
 
 **Live submit:** requires cookies from a **logged-in** Workday candidate account
 on the target tenant (create/sign-in on the apply page, then copy session cookies
-from dev tools). The adapter creates the application, posts the legal name, and
-calls finalize. Complex per-employer questionnaires, resume uploads, and
-multi-page experience sections are **not** automated in v1 — finalize may fail
-until those steps are completed manually or future adapter versions add them.
-Resume **files** are not uploaded; `resume_text` is included in the preview
-payload `comments` field only.
+from dev tools). The adapter creates the application, posts the legal name, submits
+mapped **primary / secondary / supplementary questionnaires** (when the job
+posting exposes them), optionally accepts terms (`auto_terms_consent`), and calls
+finalize. Question answers come from `profile.answers` (question WID or label →
+answer WID or label such as `Yes` / `No`). Use **dry run** to preview
+`questionnaireAnswers` before enabling live apply.
+
+**Questionnaires:** Workday exposes `questionnaireId` fields on the public job
+detail CXS response. The adapter fetches each questionnaire definition, maps
+`profile.answers` to `questionnaireAnswers`, and POSTs
+`jobapplication/{id}/questionnaireresponse?type=primary|secondary|supplementary`.
+Required questions without a mapped answer fail before finalize with a clear error.
+
+**Still manual / best-effort:** resume file upload, work experience / education /
+skills sections, and complex branching trees where follow-up questions depend on
+earlier choices you did not map. Multi-page experience sections are not automated.
 
 ## Safety & consent
 
@@ -165,8 +182,10 @@ default `false`). Toggle from the Sources page (only for adapters with a
 registered applier). `ApplyService` rejects non–dry-run applies when opt-in is
 off; preview (`dry_run`) still works.
 
-**v1 limitations:** Workday questionnaires and multi-page flows are not
-automated; Indeed/LinkedIn/generic sources have no apply adapter. See
+**v1 limitations:** Workday resume upload and structured experience/education
+sections are not automated; Indeed/LinkedIn/generic sources have no apply adapter.
+Branching questionnaires only submit answers you explicitly map in
+`profile.answers`. See
 [launch-checklist.md](../launch-checklist.md#7-auto-apply-optional--know-the-limits)
 before advertising auto-apply on a public instance.
 

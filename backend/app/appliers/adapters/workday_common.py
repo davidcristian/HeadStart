@@ -136,6 +136,43 @@ def build_http_client(
     return HttpClient(headers=merged_headers, cookies=cred_cookies)
 
 
+def job_posting_info_url(target: WorkdayTarget, job_path: str) -> str:
+    """CXS job detail URL used to read questionnaire metadata."""
+    return f"https://{target.host}/wday/cxs/{target.tenant}/{target.site}/job/{job_path}"
+
+
+def calypso_common_url(target: WorkdayTarget, suffix: str) -> str:
+    """Calypso common-service URL (questionnaire definitions)."""
+    return f"https://{target.host}/wday/calypso/cxs/common/{target.tenant}/{suffix}"
+
+
+def calypso_jobapplication_url(target: WorkdayTarget, suffix: str) -> str:
+    """Calypso jobapplication-service URL (questionnaire submit)."""
+    return f"https://{target.host}/wday/calypso/cxs/jobapplication/{target.tenant}/{suffix}"
+
+
+def cxs_jobapplication_url(target: WorkdayTarget, application_id: str, section: str) -> str:
+    """Direct CXS application section URL (name, finalize, terms, ...)."""
+    return f"{target.api_base()}/jobapplication/{application_id}/{section}"
+
+
+def fetch_job_posting_info(
+    http: HttpClient, target: WorkdayTarget, job_path: str
+) -> dict[str, Any]:
+    """Load job posting metadata (questionnaire ids, etc.) from CXS."""
+    url = job_posting_info_url(target, job_path)
+    headers = {
+        "Accept": "application/json",
+        "Accept-Language": target.locale,
+        "Referer": target.job_page_url(job_path),
+    }
+    data = http.get_json(url, headers=headers)
+    if not isinstance(data, dict):
+        return {}
+    posting = data.get("jobPostingInfo")
+    return posting if isinstance(posting, dict) else {}
+
+
 def request_headers(
     target: WorkdayTarget,
     job_path: str,
