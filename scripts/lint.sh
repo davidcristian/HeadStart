@@ -15,4 +15,6 @@ else
   warn "frontend/node_modules missing; skipping eslint."
 fi
 
+"${REPO_ROOT}/scripts/check_loc.sh"
+
 ok "Lint complete."

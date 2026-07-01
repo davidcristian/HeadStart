@@ -5,13 +5,8 @@ import { Banner, Button, Card, EmptyState, Field } from "../../components/ui";
 import { useMeta, usePortals } from "../../hooks/queries";
 import { useCreateSource } from "../../hooks/mutations";
 import { canAddResource } from "../../lib/plan";
+import { PORTAL_CATEGORY_LABELS } from "../../lib/portals";
 import type { Portal, PortalCategory } from "../../types";
-
-const CATEGORY_LABELS: Record<PortalCategory, string> = {
-  big_tech: "Big tech",
-  unicorn: "Unicorns",
-  ai: "AI",
-};
 
 type PortalCatalogProps = {
   onAdded?: (companyName: string) => void;
@@ -92,7 +87,7 @@ export function PortalCatalog({ onAdded, onError }: PortalCatalogProps) {
               aria-selected={category === key}
               onClick={() => setCategory(key)}
             >
-              {CATEGORY_LABELS[key]}
+              {PORTAL_CATEGORY_LABELS[key]}
             </button>
           ))}
         </div>
@@ -118,7 +113,7 @@ export function PortalCatalog({ onAdded, onError }: PortalCatalogProps) {
               <div className="portal-card-main">
                 <strong>{portal.company_name}</strong>
                 <div className="portal-card-meta">
-                  <span className="portal-chip">{CATEGORY_LABELS[portal.category]}</span>
+                  <span className="portal-chip">{PORTAL_CATEGORY_LABELS[portal.category]}</span>
                   <code>{portal.adapter_key}</code>
                   {portal.supports_auto_apply && (
                     <span className="portal-chip portal-chip-muted">Auto-apply</span>

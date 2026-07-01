@@ -58,6 +58,12 @@ table in [AGENTS.md](../AGENTS.md) §1.
   `backend/tests/fixtures/`.
 - Frontend: `vitest` + Testing Library for components and hooks.
 
+## File size
+
+- Soft cap of **~300 lines per source file** (see [AGENTS.md](../AGENTS.md) §3).
+  `make lint` runs `scripts/check_loc.sh` and fails when any `.py`/`.ts`/`.tsx`
+  file exceeds 300 lines (excluding `alembic/versions/`).
+
 ## Configuration
 
 - All config via environment variables, parsed by `app/core/config.py`
