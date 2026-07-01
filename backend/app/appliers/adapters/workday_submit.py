@@ -12,6 +12,12 @@ from app.appliers.adapters.workday_common import (
     cxs_jobapplication_url,
     request_headers,
 )
+from app.appliers.adapters.workday_experience import (
+    SectionSubmitResult,
+    sections_payload,
+    submit_educations,
+    submit_work_experiences,
+)
 from app.appliers.adapters.workday_questionnaire import (
     QuestionnaireSubmitResult,
     submit_questionnaires,
@@ -112,6 +118,55 @@ def submit_live_application(
                 external_application_id=str(application_id),
             )
 
+    experience_results = submit_work_experiences(
+        http,
+        target=target,
+        application_id=str(application_id),
+        profile=profile,
+        job_path=job_path,
+        config=config,
+        csrf_token=csrf_token,
+        session_id=session_token,
+        credentials=credentials,
+    )
+    failed_experience = next((r for r in experience_results if not r.ok), None)
+    if failed_experience is not None:
+        return ApplyResult(
+            status="failed",
+            error=failed_experience.error or "workday work experience submit failed",
+            payload=_live_payload(
+                profile_payload,
+                resume_result=resume_result,
+                experience_results=experience_results,
+            ),
+            external_application_id=str(application_id),
+        )
+
+    education_results = submit_educations(
+        http,
+        target=target,
+        application_id=str(application_id),
+        profile=profile,
+        job_path=job_path,
+        config=config,
+        csrf_token=csrf_token,
+        session_id=session_token,
+        credentials=credentials,
+    )
+    failed_education = next((r for r in education_results if not r.ok), None)
+    if failed_education is not None:
+        return ApplyResult(
+            status="failed",
+            error=failed_education.error or "workday education submit failed",
+            payload=_live_payload(
+                profile_payload,
+                resume_result=resume_result,
+                experience_results=experience_results,
+                education_results=education_results,
+            ),
+            external_application_id=str(application_id),
+        )
+
     questionnaire_results = submit_questionnaires(
         http,
         target=target,
@@ -128,11 +183,13 @@ def submit_live_application(
         return ApplyResult(
             status="failed",
             error=failed_questionnaire.error or "workday questionnaire submit failed",
-            payload={
-                **profile_payload,
-                **({"resumeAttachments": resume_result} if resume_result else {}),
-                "questionnaires": _questionnaire_payload(questionnaire_results),
-            },
+            payload=_live_payload(
+                profile_payload,
+                resume_result=resume_result,
+                experience_results=experience_results,
+                education_results=education_results,
+                questionnaire_results=questionnaire_results,
+            ),
             external_application_id=str(application_id),
         )
 
@@ -150,11 +207,13 @@ def submit_live_application(
             return ApplyResult(
                 status="failed",
                 error=str(exc),
-                payload={
-                    **profile_payload,
-                    **({"resumeAttachments": resume_result} if resume_result else {}),
-                    "questionnaires": _questionnaire_payload(questionnaire_results),
-                },
+                payload=_live_payload(
+                    profile_payload,
+                    resume_result=resume_result,
+                    experience_results=experience_results,
+                    education_results=education_results,
+                    questionnaire_results=questionnaire_results,
+                ),
                 external_application_id=str(application_id),
             )
 
@@ -172,11 +231,13 @@ def submit_live_application(
         return ApplyResult(
             status="failed",
             error=str(exc),
-            payload={
-                **profile_payload,
-                **({"resumeAttachments": resume_result} if resume_result else {}),
-                "questionnaires": _questionnaire_payload(questionnaire_results),
-            },
+            payload=_live_payload(
+                profile_payload,
+                resume_result=resume_result,
+                experience_results=experience_results,
+                education_results=education_results,
+                questionnaire_results=questionnaire_results,
+            ),
             external_application_id=str(application_id),
         )
 
@@ -184,23 +245,47 @@ def submit_live_application(
         return ApplyResult(
             status="failed",
             error=_extract_error_message(finalized) or "workday finalize rejected",
-            payload={
-                **profile_payload,
-                **({"resumeAttachments": resume_result} if resume_result else {}),
-                "questionnaires": _questionnaire_payload(questionnaire_results),
-            },
+            payload=_live_payload(
+                profile_payload,
+                resume_result=resume_result,
+                experience_results=experience_results,
+                education_results=education_results,
+                questionnaire_results=questionnaire_results,
+            ),
             external_application_id=str(application_id),
         )
 
     return ApplyResult(
         status="submitted",
-        payload={
-            **profile_payload,
-            **({"resumeAttachments": resume_result} if resume_result else {}),
-            "questionnaires": _questionnaire_payload(questionnaire_results),
-        },
+        payload=_live_payload(
+            profile_payload,
+            resume_result=resume_result,
+            experience_results=experience_results,
+            education_results=education_results,
+            questionnaire_results=questionnaire_results,
+        ),
         external_application_id=str(application_id),
     )
+
+
+def _live_payload(
+    profile_payload: dict[str, Any],
+    *,
+    resume_result: dict[str, Any] | None = None,
+    experience_results: list[SectionSubmitResult] | None = None,
+    education_results: list[SectionSubmitResult] | None = None,
+    questionnaire_results: list[QuestionnaireSubmitResult] | None = None,
+) -> dict[str, Any]:
+    payload = dict(profile_payload)
+    if resume_result:
+        payload["resumeAttachments"] = resume_result
+    if experience_results:
+        payload["workExperiences"] = sections_payload(experience_results)
+    if education_results:
+        payload["educations"] = sections_payload(education_results)
+    if questionnaire_results:
+        payload["questionnaires"] = _questionnaire_payload(questionnaire_results)
+    return payload
 
 
 def _extract_error_message(response: dict[str, Any]) -> str | None:

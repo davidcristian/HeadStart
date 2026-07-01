@@ -32,4 +32,4 @@ export type {
 export type { User, AdminUser, AccessTokenResponse } from "./auth";
 export type { AdminSearchError, AdminStats, DataRequestLog } from "./admin";
 export type { SiteCredential, CredentialCreate, CredentialExport } from "./credentials";
-export type { ProfileLinks, ProfileData, ResumeFileMeta, Profile, UserDataExport } from "./profile";
+export type { ProfileLinks, WorkExperienceEntry, EducationEntry, ProfileData, ResumeFileMeta, Profile, UserDataExport } from "./profile";

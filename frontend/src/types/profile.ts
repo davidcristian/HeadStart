@@ -11,6 +11,27 @@ export interface ProfileLinks {
   website: string;
 }
 
+export interface WorkExperienceEntry {
+  job_title: string;
+  company: string;
+  location: string;
+  start_month: number | null;
+  start_year: number | null;
+  end_month: number | null;
+  end_year: number | null;
+  is_current: boolean;
+  description: string;
+}
+
+export interface EducationEntry {
+  school: string;
+  degree: string;
+  field_of_study: string;
+  start_year: number | null;
+  end_year: number | null;
+  gpa: string;
+}
+
 export interface ProfileData {
   full_name: string;
   email: string;
@@ -20,6 +41,8 @@ export interface ProfileData {
   resume_text: string;
   cover_letter_template: string;
   answers: Record<string, string>;
+  work_experience: WorkExperienceEntry[];
+  education: EducationEntry[];
 }
 
 export interface ResumeFileMeta {

@@ -24,7 +24,30 @@ payload is a JSON object:
   "links": { "linkedin": "", "github": "https://github.com/ada", "website": "" },
   "resume_text": "Pioneering programmer...",
   "cover_letter_template": "Dear {company} team, ...",
-  "answers": { "work_authorization": "UK citizen", "notice_period": "2 weeks" }
+  "answers": { "work_authorization": "UK citizen", "notice_period": "2 weeks" },
+  "work_experience": [
+    {
+      "job_title": "Software Engineer",
+      "company": "ACME Corp",
+      "location": "Remote",
+      "start_month": 3,
+      "start_year": 2020,
+      "end_month": 6,
+      "end_year": 2023,
+      "is_current": false,
+      "description": "Built APIs and services."
+    }
+  ],
+  "education": [
+    {
+      "school": "Example University",
+      "degree": "Bachelor of Science",
+      "field_of_study": "Computer Science",
+      "start_year": 2016,
+      "end_year": 2020,
+      "gpa": "3.8"
+    }
+  ]
 }
 ```
 
@@ -35,6 +58,11 @@ returns only metadata (`filename`, `content_type`, `size_bytes`) — never raw b
 
 `answers` is a free-form map of recurring application questions to the user's
 canned response.
+
+`work_experience` and `education` are structured lists used by the Workday
+apply adapter (and future apply adapters). Each work-experience row needs a job
+title, company, and start month/year; education rows need at least a school
+name.
 
 ## Encryption & read safety
 

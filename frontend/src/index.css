@@ -210,6 +210,25 @@ h1 {
   gap: 16px;
   margin-bottom: 16px;
 }
+.profile-section {
+  margin-bottom: 24px;
+}
+.profile-section h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+.profile-repeat-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+}
 .field {
   display: flex;
   flex-direction: column;

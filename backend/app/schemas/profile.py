@@ -28,6 +28,31 @@ class ProfileLinks(BaseModel):
     website: str = Field(default="", max_length=500)
 
 
+class WorkExperienceEntry(BaseModel):
+    """One prior role used by Workday auto-apply and future apply adapters."""
+
+    job_title: str = Field(default="", max_length=200)
+    company: str = Field(default="", max_length=200)
+    location: str = Field(default="", max_length=200)
+    start_month: int | None = Field(default=None, ge=1, le=12)
+    start_year: int | None = Field(default=None, ge=1900, le=2100)
+    end_month: int | None = Field(default=None, ge=1, le=12)
+    end_year: int | None = Field(default=None, ge=1900, le=2100)
+    is_current: bool = False
+    description: str = Field(default="", max_length=10_000)
+
+
+class EducationEntry(BaseModel):
+    """One education record used by Workday auto-apply and future apply adapters."""
+
+    school: str = Field(default="", max_length=200)
+    degree: str = Field(default="", max_length=200)
+    field_of_study: str = Field(default="", max_length=200)
+    start_year: int | None = Field(default=None, ge=1900, le=2100)
+    end_year: int | None = Field(default=None, ge=1900, le=2100)
+    gpa: str = Field(default="", max_length=20)
+
+
 class ProfileData(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
@@ -41,6 +66,8 @@ class ProfileData(BaseModel):
     # Free-form answers to recurring application questions, e.g.
     # {"work_authorization": "US citizen", "notice_period": "2 weeks"}.
     answers: dict[str, str] = Field(default_factory=dict)
+    work_experience: list[WorkExperienceEntry] = Field(default_factory=list)
+    education: list[EducationEntry] = Field(default_factory=list)
 
 
 class ResumeFileMeta(BaseModel):

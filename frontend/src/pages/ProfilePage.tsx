@@ -1,6 +1,7 @@
 /** Edit the application profile used by auto-apply. */
 
 import { useEffect, useState } from "react";
+import { ExperienceEducationForm } from "../components/profile/ExperienceEducationForm";
 import { ApplicationHistoryTable } from "../components/profile/ApplicationHistoryTable";
 import {
   EMPTY_PROFILE_FORM,
@@ -15,7 +16,7 @@ import {
   useSaveProfile,
   useUploadResume,
 } from "../hooks/mutations";
-import type { Json } from "../types";
+import type { EducationEntry, Json, WorkExperienceEntry } from "../types";
 
 function asStringMap(value: Json): Record<string, string> {
   const out: Record<string, string> = {};
@@ -32,6 +33,8 @@ export function ProfilePage() {
   const deleteResume = useDeleteResume();
   const [form, setForm] = useState<ProfileFormState>({ ...EMPTY_PROFILE_FORM });
   const [answers, setAnswers] = useState<Json>({});
+  const [workExperience, setWorkExperience] = useState<WorkExperienceEntry[]>([]);
+  const [education, setEducation] = useState<EducationEntry[]>([]);
   const [answersValid, setAnswersValid] = useState(true);
   const [error, setError] = useState<string>();
   const [saved, setSaved] = useState(false);
@@ -51,6 +54,8 @@ export function ProfilePage() {
       cover_letter_template: data.cover_letter_template,
     });
     setAnswers(data.answers ?? {});
+    setWorkExperience(data.work_experience ?? []);
+    setEducation(data.education ?? []);
   }, [profile.data]);
 
   function setField<K extends keyof ProfileFormState>(key: K, value: string) {
@@ -70,6 +75,8 @@ export function ProfilePage() {
         resume_text: form.resume_text,
         cover_letter_template: form.cover_letter_template,
         answers: asStringMap(answers),
+        work_experience: workExperience,
+        education,
       });
       setSaved(true);
     } catch (err) {
@@ -83,6 +90,8 @@ export function ProfilePage() {
       await deleteProfile.mutateAsync();
       setForm({ ...EMPTY_PROFILE_FORM });
       setAnswers({});
+      setWorkExperience([]);
+      setEducation([]);
       setSaved(false);
     } catch (err) {
       setError((err as Error).message);
@@ -139,6 +148,21 @@ export function ProfilePage() {
           onRemoveResume={() => void removeResume()}
           onSave={() => void save()}
           onClear={() => void clear()}
+        />
+      </Card>
+
+      <Card title="Experience & education">
+        <ExperienceEducationForm
+          workExperience={workExperience}
+          education={education}
+          onWorkExperienceChange={(rows) => {
+            setWorkExperience(rows);
+            setSaved(false);
+          }}
+          onEducationChange={(rows) => {
+            setEducation(rows);
+            setSaved(false);
+          }}
         />
       </Card>
 

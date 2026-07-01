@@ -151,6 +151,8 @@ career sites. Config / credentials:
 | `skip_primary_questionnaire` / `skip_secondary_questionnaire` / `skip_supplementary_questionnaire` | source/search config | Skip one questionnaire type |
 | `auto_terms_consent` | source/search config | When true, PUT `termsandconditions` with `acceptTermsAndAgreements: true` before finalize |
 | `skip_resume_upload` | source/search config | When true, skip CXS resume upload even when the profile has a stored file |
+| `skip_work_experience` | source/search config | When true, skip CXS work-experience rows even when the profile has them |
+| `skip_education` | source/search config | When true, skip CXS education rows even when the profile has them |
 | `CALYPSO_SESSION` | credential `cookies` | Authenticated candidate session cookie |
 | `CALYPSO_CSRF_TOKEN` | credential `cookies` or `session.csrf_token` | CSRF token from the apply page |
 
@@ -172,15 +174,25 @@ answer WID or label such as `Yes` / `No`). Use **dry run** to preview
 Set `skip_resume_upload: true` in source/search config to omit the resume upload
 steps while still applying other sections.
 
+**Work experience / education:** when the application profile has structured
+`work_experience` or `education` rows, the adapter POSTs each applicable row to
+`jobapplication/{id}/workexperiences` and `jobapplication/{id}/educations`
+before questionnaires and finalize. Work experience needs title, company, and
+start month/year; education needs at least a school name. Degree and field of
+study are sent as descriptors (best-effort; some tenants may require exact
+lookup ids). Use dry run to preview `workExperiences` / `educations` payloads.
+Set `skip_work_experience` or `skip_education` to omit either section.
+
 **Questionnaires:** Workday exposes `questionnaireId` fields on the public job
 detail CXS response. The adapter fetches each questionnaire definition, maps
 `profile.answers` to `questionnaireAnswers`, and POSTs
 `jobapplication/{id}/questionnaireresponse?type=primary|secondary|supplementary`.
 Required questions without a mapped answer fail before finalize with a clear error.
 
-**Still manual / best-effort:** work experience / education /
-skills sections, and complex branching trees where follow-up questions depend on
-earlier choices you did not map. Multi-page experience sections are not automated.
+**Still manual / best-effort:** skills, languages, websites, and complex
+branching questionnaires where follow-up questions depend on earlier choices you
+did not map. Degree dropdowns on some tenants may reject descriptor-only values
+until a future lookup enhancement lands.
 
 ## Safety & consent
 
@@ -189,10 +201,10 @@ default `false`). Toggle from the Sources page (only for adapters with a
 registered applier). `ApplyService` rejects non–dry-run applies when opt-in is
 off; preview (`dry_run`) still works.
 
-**v1 limitations:** Workday structured experience/education
-sections are not automated; Indeed/LinkedIn/generic sources have no apply adapter.
-Branching questionnaires only submit answers you explicitly map in
-`profile.answers`. See
+**v1 limitations:** Workday degree prompts may need tenant-specific ids on some
+boards; skills/languages are not automated; Indeed/LinkedIn/generic sources have
+no apply adapter. Branching questionnaires only submit answers you explicitly map
+in `profile.answers`. See
 [launch-checklist.md](../launch-checklist.md#7-auto-apply-optional--know-the-limits)
 before advertising auto-apply on a public instance.
 

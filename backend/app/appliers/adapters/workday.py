@@ -3,10 +3,12 @@
 Workday career sites use the CXS apply flow:
   1. POST /wday/cxs/{tenant}/jobpostings/{jobPostingId}/jobapplications
   2. POST /wday/cxs/{tenant}/jobapplication/{applicationId}/name
-  3. POST /wday/cxs/{tenant}/attachments then POST .../resumeattachments (when profile has a file)
-  4. POST questionnaire responses (primary / secondary / supplementary)
-  5. PUT /wday/cxs/{tenant}/jobapplication/{applicationId}/termsandconditions (optional)
-  6. POST /wday/cxs/{tenant}/jobapplication/{applicationId}/finalize
+  3. POST /wday/cxs/{tenant}/jobapplication/{applicationId}/name
+  4. POST /wday/cxs/{tenant}/attachments then POST .../resumeattachments (when profile has a file)
+  5. POST .../workexperiences and .../educations (when profile has structured rows)
+  6. POST questionnaire responses (primary / secondary / supplementary)
+  7. PUT /wday/cxs/{tenant}/jobapplication/{applicationId}/termsandconditions (optional)
+  8. POST /wday/cxs/{tenant}/jobapplication/{applicationId}/finalize
 
 Live submission requires an authenticated candidate session — store the
 ``CALYPSO_SESSION`` and ``CALYPSO_CSRF_TOKEN`` cookies (or
@@ -28,6 +30,7 @@ from app.appliers.adapters.workday_common import (
     resolve_job_posting_id,
     resolve_target,
 )
+from app.appliers.adapters.workday_experience import preview_educations, preview_work_experiences
 from app.appliers.adapters.workday_questionnaire import preview_questionnaires
 from app.appliers.adapters.workday_resume import preview_resume_attachment
 from app.appliers.adapters.workday_submit import submit_live_application
@@ -94,6 +97,12 @@ class WorkdayApplier(Applier):
             resume_preview = preview_resume_attachment(ctx.resume_file)
             if resume_preview is not None:
                 payload["resumeAttachments"] = resume_preview
+            work_experiences = preview_work_experiences(ctx.profile)
+            if work_experiences:
+                payload["workExperiences"] = work_experiences
+            educations = preview_educations(ctx.profile)
+            if educations:
+                payload["educations"] = educations
             return ApplyResult(status="dry_run", payload=payload)
 
         csrf_token = resolve_csrf_token(ctx.credentials, ctx.config)

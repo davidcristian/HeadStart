@@ -46,10 +46,41 @@ def test_profile_defaults_then_save_and_clear(
     assert saved_body["answers"] == {"work_authorization": "UK citizen"}
     assert saved_body["updated_at"] is not None
 
+    structured = client.put(
+        "/api/v1/profile",
+        json={
+            "full_name": "Ada Lovelace",
+            "email": "ada@example.com",
+            "resume_text": "Pioneering programmer.",
+            "work_experience": [
+                {
+                    "job_title": "Engineer",
+                    "company": "ACME",
+                    "start_month": 1,
+                    "start_year": 2020,
+                }
+            ],
+            "education": [
+                {
+                    "school": "Example University",
+                    "degree": "BS",
+                    "start_year": 2016,
+                    "end_year": 2020,
+                }
+            ],
+        },
+        headers=auth_headers,
+    )
+    assert structured.status_code == 200
+    structured_body = structured.json()
+    assert structured_body["work_experience"][0]["company"] == "ACME"
+    assert structured_body["education"][0]["school"] == "Example University"
+
     # Persisted: a fresh GET returns the same data.
     fetched = client.get("/api/v1/profile", headers=auth_headers).json()
     assert fetched["exists"] is True
     assert fetched["resume_text"] == "Pioneering programmer."
+    assert fetched["work_experience"][0]["company"] == "ACME"
 
     assert client.delete("/api/v1/profile", headers=auth_headers).status_code == 204
     assert client.get("/api/v1/profile", headers=auth_headers).json()["exists"] is False
