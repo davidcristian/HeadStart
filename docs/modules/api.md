@@ -25,6 +25,7 @@ never touch the DB directly (services use repositories). See
 | GET    | `/auth/me/export`     | Export all owned data as JSON            |
 | DELETE | `/auth/me`            | Permanently delete account (password)    |
 | GET    | `/sources`            | List sources                             |
+| GET    | `/portals`            | Curated employer portal catalog (category/q filters) |
 | POST   | `/sources`            | Create a source (site + adapter_key)     |
 | POST   | `/sources/detect`     | Infer adapter + defaults from a careers URL |
 | GET    | `/sources/{id}`       | Get a source                             |

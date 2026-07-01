@@ -40,6 +40,22 @@ describe("SourcesPage", () => {
     );
   });
 
+  it("adds a curated portal as a source", async () => {
+    renderWithClient(<SourcesPage />);
+    await waitFor(() => expect(screen.getByText("Stripe")).toBeInTheDocument());
+
+    fireEvent.click(screen.getByRole("button", { name: "Add source" }));
+
+    await waitFor(() => expect(mockApi.createSource).toHaveBeenCalled());
+    expect(mockApi.createSource).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "Stripe",
+        adapter_key: "greenhouse",
+        base_url: "https://boards.greenhouse.io/stripe",
+      }),
+    );
+  });
+
   it("runs a test scrape and shows results", async () => {
     mockApi.listSources.mockResolvedValue([sampleSource]);
     renderWithClient(<SourcesPage />);

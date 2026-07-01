@@ -12,6 +12,7 @@ export const queryKeys = {
   health: ["health"] as const,
   meta: ["meta"] as const,
   me: ["me"] as const,
+  portals: (category?: string, query?: string) => ["portals", category ?? null, query ?? null] as const,
   sources: ["sources"] as const,
   searches: ["searches"] as const,
   targets: ["targets"] as const,
@@ -40,6 +41,13 @@ export function useMe() {
 
 export function useSources() {
   return useQuery({ queryKey: queryKeys.sources, queryFn: () => api.listSources() });
+}
+
+export function usePortals(category?: string, query?: string) {
+  return useQuery({
+    queryKey: queryKeys.portals(category, query),
+    queryFn: () => api.listPortals({ category, q: query }),
+  });
 }
 
 export function useSearches() {

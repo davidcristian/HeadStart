@@ -12,6 +12,7 @@ import {
   useUpdateSource,
 } from "../hooks/mutations";
 import { canAddResource } from "../lib/plan";
+import { PortalCatalog } from "./sources/PortalCatalog";
 import type { Json } from "../types";
 
 export function SourcesPage() {
@@ -87,7 +88,15 @@ export function SourcesPage() {
     <>
       <h1>Sources</h1>
 
-      <Card title="Add a source">
+      <PortalCatalog
+        onAdded={(name) => {
+          setError(undefined);
+          setNotice(`Added ${name} as a source.`);
+        }}
+        onError={setError}
+      />
+
+      <Card title="Add a source manually">
         {plan && <PlanUsageHint plan={plan} resource="sources" />}
         {error && <Banner kind="error">{error}</Banner>}
         {notice && <Banner kind="success">{notice}</Banner>}

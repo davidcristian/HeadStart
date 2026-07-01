@@ -11,6 +11,7 @@ from app.api.v1 import (
     feed,
     health,
     jobs,
+    portals,
     profile,
     searches,
     sources,
@@ -23,6 +24,7 @@ api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
 api_router.include_router(billing.router, prefix="/billing", tags=["billing"])
 api_router.include_router(admin.router, prefix="/admin", tags=["admin"])
 api_router.include_router(sources.router, prefix="/sources", tags=["sources"])
+api_router.include_router(portals.router, prefix="/portals", tags=["portals"])
 api_router.include_router(searches.router, prefix="/searches", tags=["searches"])
 api_router.include_router(jobs.router, prefix="/jobs", tags=["jobs"])
 api_router.include_router(

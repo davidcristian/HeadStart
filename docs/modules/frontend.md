@@ -57,7 +57,7 @@ other unknown path redirects to the landing page.
 | Login       | Email + password sign-in                                         |
 | Register    | Create an account (first user becomes admin)                     |
 | Onboarding  | First-run wizard at `/app/onboarding`: source → notify → search → run |
-| Sources     | List/create/edit sources (name, adapter, base URL, config); test scrape |
+| Sources     | List/create/edit sources (name, adapter, base URL, config); browse curated company portals; test scrape |
 | Searches    | Create a search: pick source + target, query URL + structured filters (keywords, location, workplace, salary) + |
 |             | interval; enable/disable; run now (immediate results); view last |
 |             | run, scrape errors, and recent delivery failures                 |

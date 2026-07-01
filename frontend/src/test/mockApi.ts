@@ -14,11 +14,30 @@ import type {
   Source,
   User,
   UserDataExport,
+  PortalList,
 } from "../types";
 import { emptyProfile, sampleJob, sampleMeta } from "./fixtures";
 
+const samplePortals: PortalList = {
+  categories: ["big_tech", "unicorn", "ai"],
+  items: [
+    {
+      id: "stripe",
+      company_name: "Stripe",
+      category: "unicorn",
+      adapter_key: "greenhouse",
+      base_url: "https://boards.greenhouse.io/stripe",
+      default_config: { board_token: "stripe", company: "Stripe", portal_id: "stripe" },
+      supports_auto_apply: true,
+      allowed_on_plan: true,
+      already_added: false,
+    },
+  ],
+};
+
 const mockApi = vi.hoisted(() => ({
   meta: vi.fn(async () => sampleMeta),
+  listPortals: vi.fn(async (): Promise<PortalList> => samplePortals),
   listSources: vi.fn(async (): Promise<Source[]> => []),
   detectSource: vi.fn(async () => ({
     adapter_key: "greenhouse",
@@ -284,6 +303,7 @@ vi.mock("../api", () => ({ api: mockApi }));
 /** Reset all API mocks to their default empty-list responses. */
 export function resetMockApi(): void {
   mockApi.meta.mockResolvedValue(sampleMeta);
+  mockApi.listPortals.mockResolvedValue(samplePortals);
   mockApi.listSources.mockResolvedValue([]);
   mockApi.listSearches.mockResolvedValue([]);
   mockApi.listJobs.mockResolvedValue([]);

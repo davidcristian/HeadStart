@@ -238,7 +238,7 @@ about most, and give paid users a single place to search across them.
 
 | Item | Why | Notes |
 | ---- | --- | ----- |
-| FAANG / MAANG / MAMAA & unicorn portals | High-value employers use dedicated career sites and ATS boards that are not always obvious to configure | Explicit scraper and source support for major tech employers (FAANG/MAANG/MAMAA) and well-known unicorn companies; curated presets or adapters for their official job portals rather than relying on generic URL detection |
+| FAANG / MAANG / MAMAA & unicorn portals | High-value employers use dedicated career sites and ATS boards that are not always obvious to configure | **Shipped:** `GET /portals` curated catalog (22 employers across Greenhouse, Lever, Ashby, Workday); category/search filters; one-click **Add source** on Sources page; `portal_id` in `default_config` for duplicate detection |
 | Paid portal search page | Paid users should discover and search all supported boards without manual source setup | Authenticated page (paid tier) to browse and search across all supported/curated job portals in one place; server-side plan gate; builds on curated portal catalog from the item above |
 
 **Done when:** a paid user can open one page, pick from curated FAANG/MAANG/MAMAA

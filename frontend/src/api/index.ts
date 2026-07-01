@@ -16,6 +16,7 @@ import type {
   PlanId,
   Profile,
   ProfileData,
+  PortalList,
   Search,
   SearchCreate,
   SearchRunResult,
@@ -138,6 +139,13 @@ export const api = {
     request<PromoRedemption[]>(`/api/v1/admin/promo-codes/${id}/redemptions`),
 
   // sources
+  listPortals: (params?: { category?: string; q?: string }) => {
+    const search = new URLSearchParams();
+    if (params?.category) search.set("category", params.category);
+    if (params?.q) search.set("q", params.q);
+    const query = search.toString();
+    return request<PortalList>(`/api/v1/portals${query ? `?${query}` : ""}`);
+  },
   listSources: () => request<Source[]>("/api/v1/sources"),
   detectSource: (url: string, pageTitle?: string) =>
     request<SourceDetectResult>("/api/v1/sources/detect", {
