@@ -45,6 +45,9 @@ describe("App routing", () => {
   it("serves legal pages without authentication", () => {
     renderAt("/privacy");
     expect(screen.getByRole("heading", { name: "Privacy Policy" })).toBeInTheDocument();
+
+    renderAt("/impressum");
+    expect(screen.getByRole("heading", { name: "Impressum" })).toBeInTheDocument();
   });
 
   it("serves the pricing page without authentication", () => {

@@ -23,7 +23,7 @@ in production).
 The frontend serves two surfaces from one bundle (see
 [App.tsx](../../frontend/src/App.tsx)):
 
-- **Public** (no auth, no app shell): `/` landing page, `/pricing`, `/privacy`, `/terms`, plus the auth screens
+- **Public** (no auth, no app shell): `/` landing page, `/pricing`, `/privacy`, `/terms`, `/impressum`, plus the auth screens
   `/login`, `/register`, `/forgot-password`, `/reset-password`.
 - **Authenticated product** under **`/app/*`**, gated by `ProtectedRoute` and
   wrapped in the `Layout` shell (`/app/searches`, `/app/jobs`, …, `/app/admin`).
@@ -46,6 +46,7 @@ other unknown path redirects to the landing page.
 | Pricing     | Public pricing page at `/pricing`: Free / Pro / Team tiers, feature comparison, monthly vs annual toggle; CTAs to register (paid checkout coming soon) |
 | Privacy     | Public privacy policy at `/privacy` |
 | Terms       | Public terms of use at `/terms` |
+| Impressum   | Public German legal notice at `/impressum` (placeholder operator details; replace before DE launch) |
 | Login       | Email + password sign-in                                         |
 | Register    | Create an account (first user becomes admin)                     |
 | Onboarding  | First-run wizard at `/app/onboarding`: source → notify → search → run |

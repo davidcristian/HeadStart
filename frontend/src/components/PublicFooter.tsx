@@ -15,6 +15,7 @@ export function PublicFooter() {
         <Link to="/pricing">Pricing</Link>
         <Link to="/privacy">Privacy</Link>
         <Link to="/terms">Terms</Link>
+        <Link to="/impressum">Impressum</Link>
         {user ? (
           <Link to="/app">Go to app</Link>
         ) : (

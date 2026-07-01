@@ -1,4 +1,4 @@
-/** Shared shell for public legal documents (privacy, terms). */
+/** Shared shell for public legal documents (privacy, terms, impressum). */
 
 import type { ReactNode } from "react";
 import { Brand } from "./Brand";

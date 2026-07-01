@@ -11,6 +11,7 @@ import { LandingPage } from "./pages/LandingPage";
 import { LoginPage } from "./pages/LoginPage";
 import { OnboardingPage } from "./pages/OnboardingPage";
 import { PricingPage } from "./pages/PricingPage";
+import { ImpressumPage } from "./pages/ImpressumPage";
 import { PrivacyPolicyPage } from "./pages/PrivacyPolicyPage";
 import { TermsOfUsePage } from "./pages/TermsOfUsePage";
 import { ProfilePage } from "./pages/ProfilePage";
@@ -41,6 +42,7 @@ export function App() {
       <Route path="/pricing" element={<PricingPage />} />
       <Route path="/privacy" element={<PrivacyPolicyPage />} />
       <Route path="/terms" element={<TermsOfUsePage />} />
+      <Route path="/impressum" element={<ImpressumPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />

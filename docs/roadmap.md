@@ -223,7 +223,7 @@ Goal: meet Germany-specific legal requirements for operating a public website.
 
 | Item | Why | Notes |
 | ---- | --- | ----- |
-| Placeholder Impressum | Required by German law (Impressumspflicht) for commercial websites | `/impressum` page with placeholder owner/contact details; footer link alongside Privacy and Terms on the public shell |
+| Placeholder Impressum | Required by German law (Impressumspflicht) for commercial websites | **Shipped:** `/impressum` with placeholder owner/contact sections (German); footer link on public shell |
 
 **Done when:** visitors can open a linked Impressum page from the public footer
 before the operator replaces placeholder text with final legal details.

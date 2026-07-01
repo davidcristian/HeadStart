@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { ImpressumPage } from "./ImpressumPage";
 import { PrivacyPolicyPage } from "./PrivacyPolicyPage";
 import { TermsOfUsePage } from "./TermsOfUsePage";
 
@@ -23,6 +24,7 @@ describe("Legal pages", () => {
     expect(screen.getByText(/Effective June 28, 2026/)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Terms" })).toHaveAttribute("href", "/terms");
     expect(screen.getByRole("link", { name: "Privacy" })).toHaveAttribute("href", "/privacy");
+    expect(screen.getByRole("link", { name: "Impressum" })).toHaveAttribute("href", "/impressum");
     expect(screen.getByRole("link", { name: "Pricing" })).toHaveAttribute("href", "/pricing");
   });
 
@@ -36,6 +38,22 @@ describe("Legal pages", () => {
     expect(screen.getByRole("heading", { name: "Terms of Use" })).toBeInTheDocument();
     expect(screen.getByText(/Effective June 28, 2026/)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Privacy" })).toHaveAttribute("href", "/privacy");
+    expect(screen.getByRole("link", { name: "Impressum" })).toHaveAttribute("href", "/impressum");
     expect(screen.getByRole("link", { name: "Pricing" })).toHaveAttribute("href", "/pricing");
+  });
+
+  it("renders the impressum with placeholder legal sections", () => {
+    render(
+      <MemoryRouter>
+        <ImpressumPage />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole("heading", { name: "Impressum" })).toBeInTheDocument();
+    expect(screen.getByText(/Effective June 29, 2026/)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Diensteanbieter" })).toBeInTheDocument();
+    expect(screen.getByText(/\[Firmenname \/ Name des Betreibers\]/)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Privacy" })).toHaveAttribute("href", "/privacy");
+    expect(screen.getByRole("link", { name: "Impressum" })).toHaveAttribute("href", "/impressum");
   });
 });
