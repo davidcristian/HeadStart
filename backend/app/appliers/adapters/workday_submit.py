@@ -18,6 +18,7 @@ from app.appliers.adapters.workday_experience import (
     submit_educations,
     submit_work_experiences,
 )
+from app.appliers.adapters.workday_skills import submit_languages, submit_skills
 from app.appliers.adapters.workday_questionnaire import (
     QuestionnaireSubmitResult,
     submit_questionnaires,
@@ -167,6 +168,59 @@ def submit_live_application(
             external_application_id=str(application_id),
         )
 
+    skill_results = submit_skills(
+        http,
+        target=target,
+        application_id=str(application_id),
+        profile=profile,
+        job_path=job_path,
+        config=config,
+        csrf_token=csrf_token,
+        session_id=session_token,
+        credentials=credentials,
+    )
+    failed_skill = next((r for r in skill_results if not r.ok), None)
+    if failed_skill is not None:
+        return ApplyResult(
+            status="failed",
+            error=failed_skill.error or "workday skills submit failed",
+            payload=_live_payload(
+                profile_payload,
+                resume_result=resume_result,
+                experience_results=experience_results,
+                education_results=education_results,
+                skill_results=skill_results,
+            ),
+            external_application_id=str(application_id),
+        )
+
+    language_results = submit_languages(
+        http,
+        target=target,
+        application_id=str(application_id),
+        profile=profile,
+        job_path=job_path,
+        config=config,
+        csrf_token=csrf_token,
+        session_id=session_token,
+        credentials=credentials,
+    )
+    failed_language = next((r for r in language_results if not r.ok), None)
+    if failed_language is not None:
+        return ApplyResult(
+            status="failed",
+            error=failed_language.error or "workday languages submit failed",
+            payload=_live_payload(
+                profile_payload,
+                resume_result=resume_result,
+                experience_results=experience_results,
+                education_results=education_results,
+                skill_results=skill_results,
+                language_results=language_results,
+            ),
+            external_application_id=str(application_id),
+        )
+
     questionnaire_results = submit_questionnaires(
         http,
         target=target,
@@ -188,6 +242,8 @@ def submit_live_application(
                 resume_result=resume_result,
                 experience_results=experience_results,
                 education_results=education_results,
+                skill_results=skill_results,
+                language_results=language_results,
                 questionnaire_results=questionnaire_results,
             ),
             external_application_id=str(application_id),
@@ -212,6 +268,8 @@ def submit_live_application(
                     resume_result=resume_result,
                     experience_results=experience_results,
                     education_results=education_results,
+                    skill_results=skill_results,
+                    language_results=language_results,
                     questionnaire_results=questionnaire_results,
                 ),
                 external_application_id=str(application_id),
@@ -236,6 +294,8 @@ def submit_live_application(
                 resume_result=resume_result,
                 experience_results=experience_results,
                 education_results=education_results,
+                skill_results=skill_results,
+                language_results=language_results,
                 questionnaire_results=questionnaire_results,
             ),
             external_application_id=str(application_id),
@@ -250,6 +310,8 @@ def submit_live_application(
                 resume_result=resume_result,
                 experience_results=experience_results,
                 education_results=education_results,
+                skill_results=skill_results,
+                language_results=language_results,
                 questionnaire_results=questionnaire_results,
             ),
             external_application_id=str(application_id),
@@ -262,6 +324,8 @@ def submit_live_application(
             resume_result=resume_result,
             experience_results=experience_results,
             education_results=education_results,
+            skill_results=skill_results,
+            language_results=language_results,
             questionnaire_results=questionnaire_results,
         ),
         external_application_id=str(application_id),
@@ -274,6 +338,8 @@ def _live_payload(
     resume_result: dict[str, Any] | None = None,
     experience_results: list[SectionSubmitResult] | None = None,
     education_results: list[SectionSubmitResult] | None = None,
+    skill_results: list[SectionSubmitResult] | None = None,
+    language_results: list[SectionSubmitResult] | None = None,
     questionnaire_results: list[QuestionnaireSubmitResult] | None = None,
 ) -> dict[str, Any]:
     payload = dict(profile_payload)
@@ -283,6 +349,10 @@ def _live_payload(
         payload["workExperiences"] = sections_payload(experience_results)
     if education_results:
         payload["educations"] = sections_payload(education_results)
+    if skill_results:
+        payload["skills"] = sections_payload(skill_results)
+    if language_results:
+        payload["languages"] = sections_payload(language_results)
     if questionnaire_results:
         payload["questionnaires"] = _questionnaire_payload(questionnaire_results)
     return payload

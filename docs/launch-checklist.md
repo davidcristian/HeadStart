@@ -95,7 +95,7 @@ apply adapters for Indeed, LinkedIn, or generic HTML/Playwright sources.
 | ---- | ---------- |
 | **Resume files** | Uploaded on the Application profile (PDF/Word, up to 2 MB). Attached on Greenhouse, Lever, Ashby, and Workday live apply; plain `resume_text` is a fallback when no file is stored. |
 | **Greenhouse / Lever / Ashby** | Live submit needs an employer-issued API key (Job Board / Postings / Ashby API). Store in encrypted [site credentials](modules/credentials.md), not plain source config. |
-| **Workday** | Requires logged-in candidate session cookies. Primary/secondary/supplementary **questionnaires** are submitted when mapped in `profile.answers` (preview via dry run). **Work experience** and **education** rows from the application profile are posted via CXS when present (preview via dry run). Resume upload uses the stored file when available. Skills and languages are **not** automated. Enable `auto_terms_consent` when the employer requires T&C acceptance. |
+| **Workday** | Requires logged-in candidate session cookies. Primary/secondary/supplementary **questionnaires** are submitted when mapped in `profile.answers` (preview via dry run). **Work experience**, **education**, **skills**, and **languages** from the application profile are posted via CXS when present (preview via dry run). Resume upload uses the stored file when available. Enable `auto_terms_consent` when the employer requires T&C acceptance. |
 | **Custom questions** | Only fields mapped in the application profile (`answers`, config paths) are sent. Unmapped required questions can cause rejection. |
 | **Coverage** | Treat auto-apply as a **best-effort preview + submit helper**, not unattended bulk applying. Always use **dry run / preview** first. |
 

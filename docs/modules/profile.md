@@ -47,6 +47,14 @@ payload is a JSON object:
       "end_year": 2020,
       "gpa": "3.8"
     }
+  ],
+  "skills": ["Python", "SQL", "Distributed systems"],
+  "languages": [
+    {
+      "language": "English",
+      "proficiency": "Native",
+      "is_native": true
+    }
   ]
 }
 ```
@@ -63,6 +71,10 @@ canned response.
 apply adapter (and future apply adapters). Each work-experience row needs a job
 title, company, and start month/year; education rows need at least a school
 name.
+
+`skills` is a list of skill names (up to 100 entries, 200 characters each).
+`languages` is a structured list with language name, optional proficiency label,
+and an optional native-language flag — used by the Workday apply adapter.
 
 ## Encryption & read safety
 

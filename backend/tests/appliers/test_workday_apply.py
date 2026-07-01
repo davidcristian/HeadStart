@@ -152,6 +152,16 @@ def test_live_submit_posts_experience_and_education_before_questionnaires() -> N
             body = json.loads(request.read().decode())
             assert body["schoolName"] == "Example University"
             return httpx.Response(200, json={"id": "edu-1"})
+        if path.endswith("/skills"):
+            order.append("skills")
+            body = json.loads(request.read().decode())
+            assert body["skill"]["descriptor"] == "Python"
+            return httpx.Response(200, json={"id": "skill-1"})
+        if path.endswith("/languages"):
+            order.append("languages")
+            body = json.loads(request.read().decode())
+            assert body["language"]["descriptor"] == "English"
+            return httpx.Response(200, json={"id": "lang-1"})
         if path.endswith("/job/US-CA-Santa-Clara/Senior-Software-Engineer_JR1001"):
             return httpx.Response(200, json=posting_fixture)
         if path.endswith("/questionnaire/quest-primary-001"):
@@ -164,7 +174,7 @@ def test_live_submit_posts_experience_and_education_before_questionnaires() -> N
             return httpx.Response(200, json={"ok": True})
         raise AssertionError(f"unexpected request: {request.method} {request.url}")
 
-    from app.schemas.profile import EducationEntry, WorkExperienceEntry
+    from app.schemas.profile import EducationEntry, LanguageEntry, WorkExperienceEntry
 
     applier = WorkdayApplier(http=make_http_client(handler))
     result = applier.apply(
@@ -192,6 +202,8 @@ def test_live_submit_posts_experience_and_education_before_questionnaires() -> N
                     )
                 ],
                 education=[EducationEntry(school="Example University", degree="BS")],
+                skills=["Python"],
+                languages=[LanguageEntry(language="English", is_native=True)],
             ),
             credentials={
                 "cookies": {
@@ -206,7 +218,15 @@ def test_live_submit_posts_experience_and_education_before_questionnaires() -> N
     )
 
     assert result.status == "submitted"
-    assert order == ["name", "workexperiences", "educations", "questionnaire", "finalize"]
+    assert order == [
+        "name",
+        "workexperiences",
+        "educations",
+        "skills",
+        "languages",
+        "questionnaire",
+        "finalize",
+    ]
 
 
 def test_dry_run_includes_experience_and_education_preview() -> None:
@@ -220,7 +240,7 @@ def test_dry_run_includes_experience_and_education_preview() -> None:
             return httpx.Response(200, json=questionnaire_fixture)
         raise AssertionError(f"unexpected request: {request.method} {request.url}")
 
-    from app.schemas.profile import EducationEntry, WorkExperienceEntry
+    from app.schemas.profile import EducationEntry, LanguageEntry, WorkExperienceEntry
 
     applier = get_applier("workday", http=make_http_client(handler))
     result = applier.apply(
@@ -247,6 +267,8 @@ def test_dry_run_includes_experience_and_education_preview() -> None:
                     )
                 ],
                 education=[EducationEntry(school="Example University")],
+                skills=["Python"],
+                languages=[LanguageEntry(language="English", proficiency="Native")],
             ),
             dry_run=True,
         )
@@ -255,6 +277,8 @@ def test_dry_run_includes_experience_and_education_preview() -> None:
     assert result.payload is not None
     assert result.payload["workExperiences"][0]["companyName"] == "ACME"
     assert result.payload["educations"][0]["schoolName"] == "Example University"
+    assert result.payload["skills"][0]["skill"]["descriptor"] == "Python"
+    assert result.payload["languages"][0]["language"]["descriptor"] == "English"
 
 
 def test_live_submit_uploads_resume_before_questionnaires() -> None:

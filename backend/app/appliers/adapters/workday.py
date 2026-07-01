@@ -6,9 +6,10 @@ Workday career sites use the CXS apply flow:
   3. POST /wday/cxs/{tenant}/jobapplication/{applicationId}/name
   4. POST /wday/cxs/{tenant}/attachments then POST .../resumeattachments (when profile has a file)
   5. POST .../workexperiences and .../educations (when profile has structured rows)
-  6. POST questionnaire responses (primary / secondary / supplementary)
-  7. PUT /wday/cxs/{tenant}/jobapplication/{applicationId}/termsandconditions (optional)
-  8. POST /wday/cxs/{tenant}/jobapplication/{applicationId}/finalize
+  6. POST .../skills and .../languages (when profile has structured rows)
+  7. POST questionnaire responses (primary / secondary / supplementary)
+  8. PUT /wday/cxs/{tenant}/jobapplication/{applicationId}/termsandconditions (optional)
+  9. POST /wday/cxs/{tenant}/jobapplication/{applicationId}/finalize
 
 Live submission requires an authenticated candidate session — store the
 ``CALYPSO_SESSION`` and ``CALYPSO_CSRF_TOKEN`` cookies (or
@@ -31,6 +32,7 @@ from app.appliers.adapters.workday_common import (
     resolve_target,
 )
 from app.appliers.adapters.workday_experience import preview_educations, preview_work_experiences
+from app.appliers.adapters.workday_skills import preview_languages, preview_skills
 from app.appliers.adapters.workday_questionnaire import preview_questionnaires
 from app.appliers.adapters.workday_resume import preview_resume_attachment
 from app.appliers.adapters.workday_submit import submit_live_application
@@ -103,6 +105,12 @@ class WorkdayApplier(Applier):
             educations = preview_educations(ctx.profile)
             if educations:
                 payload["educations"] = educations
+            skills = preview_skills(ctx.profile)
+            if skills:
+                payload["skills"] = skills
+            languages = preview_languages(ctx.profile)
+            if languages:
+                payload["languages"] = languages
             return ApplyResult(status="dry_run", payload=payload)
 
         csrf_token = resolve_csrf_token(ctx.credentials, ctx.config)

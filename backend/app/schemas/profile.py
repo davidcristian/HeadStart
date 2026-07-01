@@ -11,7 +11,7 @@ from __future__ import annotations
 import base64
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 ALLOWED_RESUME_CONTENT_TYPES = frozenset(
     {
@@ -53,6 +53,14 @@ class EducationEntry(BaseModel):
     gpa: str = Field(default="", max_length=20)
 
 
+class LanguageEntry(BaseModel):
+    """One language used by Workday auto-apply and future apply adapters."""
+
+    language: str = Field(default="", max_length=100)
+    proficiency: str = Field(default="", max_length=100)
+    is_native: bool = False
+
+
 class ProfileData(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
@@ -68,6 +76,19 @@ class ProfileData(BaseModel):
     answers: dict[str, str] = Field(default_factory=dict)
     work_experience: list[WorkExperienceEntry] = Field(default_factory=list)
     education: list[EducationEntry] = Field(default_factory=list)
+    skills: list[str] = Field(default_factory=list)
+    languages: list[LanguageEntry] = Field(default_factory=list)
+
+    @field_validator("skills")
+    @classmethod
+    def validate_skills(cls, value: list[str]) -> list[str]:
+        """Cap skill count and name length for storage and apply payloads."""
+        if len(value) > 100:
+            raise ValueError("skills cannot exceed 100 entries")
+        for skill in value:
+            if len(skill) > 200:
+                raise ValueError("each skill name cannot exceed 200 characters")
+        return value
 
 
 class ResumeFileMeta(BaseModel):

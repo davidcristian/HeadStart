@@ -32,6 +32,12 @@ export interface EducationEntry {
   gpa: string;
 }
 
+export interface LanguageEntry {
+  language: string;
+  proficiency: string;
+  is_native: boolean;
+}
+
 export interface ProfileData {
   full_name: string;
   email: string;
@@ -43,6 +49,8 @@ export interface ProfileData {
   answers: Record<string, string>;
   work_experience: WorkExperienceEntry[];
   education: EducationEntry[];
+  skills: string[];
+  languages: LanguageEntry[];
 }
 
 export interface ResumeFileMeta {

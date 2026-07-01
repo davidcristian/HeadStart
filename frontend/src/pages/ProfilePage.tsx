@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { ExperienceEducationForm } from "../components/profile/ExperienceEducationForm";
+import { SkillsLanguagesForm } from "../components/profile/SkillsLanguagesForm";
 import { ApplicationHistoryTable } from "../components/profile/ApplicationHistoryTable";
 import {
   EMPTY_PROFILE_FORM,
@@ -16,7 +17,7 @@ import {
   useSaveProfile,
   useUploadResume,
 } from "../hooks/mutations";
-import type { EducationEntry, Json, WorkExperienceEntry } from "../types";
+import type { EducationEntry, Json, LanguageEntry, WorkExperienceEntry } from "../types";
 
 function asStringMap(value: Json): Record<string, string> {
   const out: Record<string, string> = {};
@@ -35,6 +36,8 @@ export function ProfilePage() {
   const [answers, setAnswers] = useState<Json>({});
   const [workExperience, setWorkExperience] = useState<WorkExperienceEntry[]>([]);
   const [education, setEducation] = useState<EducationEntry[]>([]);
+  const [skills, setSkills] = useState<string[]>([]);
+  const [languages, setLanguages] = useState<LanguageEntry[]>([]);
   const [answersValid, setAnswersValid] = useState(true);
   const [error, setError] = useState<string>();
   const [saved, setSaved] = useState(false);
@@ -56,6 +59,8 @@ export function ProfilePage() {
     setAnswers(data.answers ?? {});
     setWorkExperience(data.work_experience ?? []);
     setEducation(data.education ?? []);
+    setSkills(data.skills ?? []);
+    setLanguages(data.languages ?? []);
   }, [profile.data]);
 
   function setField<K extends keyof ProfileFormState>(key: K, value: string) {
@@ -77,6 +82,8 @@ export function ProfilePage() {
         answers: asStringMap(answers),
         work_experience: workExperience,
         education,
+        skills: skills.map((skill) => skill.trim()).filter(Boolean),
+        languages: languages.filter((row) => row.language.trim()),
       });
       setSaved(true);
     } catch (err) {
@@ -92,6 +99,8 @@ export function ProfilePage() {
       setAnswers({});
       setWorkExperience([]);
       setEducation([]);
+      setSkills([]);
+      setLanguages([]);
       setSaved(false);
     } catch (err) {
       setError((err as Error).message);
@@ -161,6 +170,21 @@ export function ProfilePage() {
           }}
           onEducationChange={(rows) => {
             setEducation(rows);
+            setSaved(false);
+          }}
+        />
+      </Card>
+
+      <Card title="Skills & languages">
+        <SkillsLanguagesForm
+          skills={skills}
+          languages={languages}
+          onSkillsChange={(rows) => {
+            setSkills(rows);
+            setSaved(false);
+          }}
+          onLanguagesChange={(rows) => {
+            setLanguages(rows);
             setSaved(false);
           }}
         />

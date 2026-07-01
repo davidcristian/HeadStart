@@ -68,6 +68,14 @@ def test_profile_defaults_then_save_and_clear(
                     "end_year": 2020,
                 }
             ],
+            "skills": ["Python", "SQL"],
+            "languages": [
+                {
+                    "language": "English",
+                    "proficiency": "Native",
+                    "is_native": True,
+                }
+            ],
         },
         headers=auth_headers,
     )
@@ -75,6 +83,8 @@ def test_profile_defaults_then_save_and_clear(
     structured_body = structured.json()
     assert structured_body["work_experience"][0]["company"] == "ACME"
     assert structured_body["education"][0]["school"] == "Example University"
+    assert structured_body["skills"] == ["Python", "SQL"]
+    assert structured_body["languages"][0]["language"] == "English"
 
     # Persisted: a fresh GET returns the same data.
     fetched = client.get("/api/v1/profile", headers=auth_headers).json()
