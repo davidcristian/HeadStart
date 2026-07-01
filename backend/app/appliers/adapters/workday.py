@@ -31,6 +31,7 @@ from app.appliers.adapters.workday_common import (
     resolve_job_posting_id,
     resolve_target,
 )
+from app.appliers.adapters.workday_education_lookup import build_education_lookup_resolver
 from app.appliers.adapters.workday_experience import preview_educations, preview_work_experiences
 from app.appliers.adapters.workday_questionnaire import preview_questionnaires
 from app.appliers.adapters.workday_resume import preview_resume_attachment
@@ -102,7 +103,16 @@ class WorkdayApplier(Applier):
             work_experiences = preview_work_experiences(ctx.profile)
             if work_experiences:
                 payload["workExperiences"] = work_experiences
-            educations = preview_educations(ctx.profile)
+            education_resolver = build_education_lookup_resolver(
+                self.http,
+                target=target,
+                job_path=job_path,
+                config=ctx.config,
+                csrf_token=resolve_csrf_token(ctx.credentials, ctx.config),
+                session_id=None,
+                credentials=ctx.credentials,
+            )
+            educations = preview_educations(ctx.profile, resolver=education_resolver)
             if educations:
                 payload["educations"] = educations
             skills = preview_skills(ctx.profile)

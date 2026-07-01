@@ -11,6 +11,10 @@ from app.appliers.adapters.workday_common import (
     cxs_jobapplication_url,
     request_headers,
 )
+from app.appliers.adapters.workday_education_lookup import (
+    EducationLookupResolver,
+    build_education_lookup_resolver,
+)
 from app.schemas.profile import EducationEntry, ProfileData, WorkExperienceEntry
 from app.scrapers.http import HttpClient
 
@@ -76,15 +80,24 @@ def build_work_experience_body(entry: WorkExperienceEntry) -> dict[str, Any]:
     return body
 
 
-def build_education_body(entry: EducationEntry) -> dict[str, Any]:
+def build_education_body(
+    entry: EducationEntry,
+    *,
+    degree: dict[str, str] | None = None,
+    field_of_study: dict[str, str] | None = None,
+) -> dict[str, Any]:
     """Map a profile education row to the Workday CXS create payload."""
     body: dict[str, Any] = {"schoolName": entry.school.strip()}
-    degree = entry.degree.strip()
-    if degree:
-        body["degree"] = {"descriptor": degree}
-    field = entry.field_of_study.strip()
-    if field:
-        body["fieldOfStudy"] = {"descriptor": field}
+    degree_ref = degree if degree is not None else _descriptor_reference(entry.degree)
+    if degree_ref is not None:
+        body["degree"] = degree_ref
+    field_ref = (
+        field_of_study
+        if field_of_study is not None
+        else _descriptor_reference(entry.field_of_study)
+    )
+    if field_ref is not None:
+        body["fieldOfStudy"] = field_ref
     if entry.start_year:
         body["firstYearAttended"] = f"{entry.start_year}-01-01"
     if entry.end_year:
@@ -100,9 +113,13 @@ def preview_work_experiences(profile: ProfileData) -> list[dict[str, Any]]:
     return [build_work_experience_body(entry) for entry in applicable_work_experience(profile)]
 
 
-def preview_educations(profile: ProfileData) -> list[dict[str, Any]]:
+def preview_educations(
+    profile: ProfileData,
+    *,
+    resolver: EducationLookupResolver | None = None,
+) -> list[dict[str, Any]]:
     """Dry-run payloads for configured education rows."""
-    return [build_education_body(entry) for entry in applicable_education(profile)]
+    return [_education_body(entry, resolver=resolver) for entry in applicable_education(profile)]
 
 
 def submit_work_experiences(
@@ -183,9 +200,18 @@ def submit_educations(
         session_id=session_id,
         credentials=credentials,
     )
+    resolver = build_education_lookup_resolver(
+        http,
+        target=target,
+        job_path=job_path,
+        config=config,
+        csrf_token=csrf_token,
+        session_id=session_id,
+        credentials=credentials,
+    )
     results: list[SectionSubmitResult] = []
     for index, entry in enumerate(applicable_education(profile)):
-        payload = build_education_body(entry)
+        payload = _education_body(entry, resolver=resolver)
         try:
             response = http.post_json(url, json=payload, headers=headers)
         except httpx.HTTPError as exc:
@@ -225,6 +251,24 @@ def sections_payload(results: list[SectionSubmitResult]) -> dict[str, Any]:
             }
         )
     return grouped
+
+
+def _education_body(
+    entry: EducationEntry,
+    *,
+    resolver: EducationLookupResolver | None,
+) -> dict[str, Any]:
+    if resolver is None:
+        return build_education_body(entry)
+    degree, field_of_study = resolver.references_for(entry)
+    return build_education_body(entry, degree=degree, field_of_study=field_of_study)
+
+
+def _descriptor_reference(value: str) -> dict[str, str] | None:
+    stripped = value.strip()
+    if not stripped:
+        return None
+    return {"descriptor": stripped}
 
 
 def _response_error(response: object) -> str | None:

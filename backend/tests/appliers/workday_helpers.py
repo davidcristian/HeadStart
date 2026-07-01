@@ -44,3 +44,10 @@ def profile() -> ProfileData:
 
 def unexpected_request(request: httpx.Request) -> httpx.Response:
     raise AssertionError(f"unexpected network call: {request.method} {request.url}")
+
+
+def institutionvalues_empty_response(request: httpx.Request) -> httpx.Response | None:
+    """Return an empty institution-values payload when tests do not model lookups."""
+    if "/institutionvalues/" in request.url.path:
+        return httpx.Response(200, json={"total": 0, "data": []})
+    return None

@@ -13,7 +13,11 @@ from app.schemas.profile import (
     ResumeFile,
     WorkExperienceEntry,
 )
-from tests.appliers.workday_apply_helpers import JOB_URL, WORKDAY_CREDENTIALS
+from tests.appliers.workday_helpers import (
+    JOB_URL,
+    WORKDAY_CREDENTIALS,
+    institutionvalues_empty_response,
+)
 from tests.conftest import load_fixture, load_json_fixture, make_http_client
 
 
@@ -25,6 +29,9 @@ def test_live_submit_creates_names_questionnaires_and_finalizes() -> None:
     seen: dict[str, object] = {}
 
     def handler(request: httpx.Request) -> httpx.Response:
+        lookup_response = institutionvalues_empty_response(request)
+        if lookup_response is not None:
+            return lookup_response
         seen["last_url"] = str(request.url)
         seen["last_method"] = request.method
         if request.url.path.endswith("/jobapplications"):
@@ -93,6 +100,9 @@ def test_live_submit_posts_experience_and_education_before_questionnaires() -> N
     order: list[str] = []
 
     def handler(request: httpx.Request) -> httpx.Response:
+        lookup_response = institutionvalues_empty_response(request)
+        if lookup_response is not None:
+            return lookup_response
         path = request.url.path
         if path.endswith("/jobapplications"):
             return httpx.Response(
@@ -188,6 +198,9 @@ def test_live_submit_uploads_resume_before_questionnaires() -> None:
     seen: dict[str, object] = {}
 
     def handler(request: httpx.Request) -> httpx.Response:
+        lookup_response = institutionvalues_empty_response(request)
+        if lookup_response is not None:
+            return lookup_response
         if request.url.path.endswith("/jobapplications"):
             return httpx.Response(
                 200, text=create_fixture, headers={"content-type": "application/json"}
