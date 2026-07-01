@@ -25,9 +25,7 @@ async def _read_bounded_upload(file: UploadFile, max_bytes: int) -> bytes:
             break
         total += len(chunk)
         if total > max_bytes:
-            raise ValidationError(
-                f"Resume file exceeds the {max_bytes // 1_048_576} MB limit"
-            )
+            raise ValidationError(f"Resume file exceeds the {max_bytes // 1_048_576} MB limit")
         chunks.append(chunk)
     if total == 0:
         raise ValidationError("Resume file is empty")

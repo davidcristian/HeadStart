@@ -18,13 +18,13 @@ from app.appliers.adapters.workday_experience import (
     submit_educations,
     submit_work_experiences,
 )
-from app.appliers.adapters.workday_skills import submit_languages, submit_skills
 from app.appliers.adapters.workday_questionnaire import (
     QuestionnaireSubmitResult,
     submit_questionnaires,
     submit_terms_consent,
 )
 from app.appliers.adapters.workday_resume import upload_resume_attachment
+from app.appliers.adapters.workday_skills import submit_languages, submit_skills
 from app.appliers.types import ApplyResult
 from app.schemas.profile import ProfileData, ResumeFile
 from app.scrapers.http import HttpClient

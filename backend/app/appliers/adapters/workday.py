@@ -32,9 +32,9 @@ from app.appliers.adapters.workday_common import (
     resolve_target,
 )
 from app.appliers.adapters.workday_experience import preview_educations, preview_work_experiences
-from app.appliers.adapters.workday_skills import preview_languages, preview_skills
 from app.appliers.adapters.workday_questionnaire import preview_questionnaires
 from app.appliers.adapters.workday_resume import preview_resume_attachment
+from app.appliers.adapters.workday_skills import preview_languages, preview_skills
 from app.appliers.adapters.workday_submit import submit_live_application
 from app.appliers.base import Applier, register_applier
 from app.appliers.types import ApplyContext, ApplyResult

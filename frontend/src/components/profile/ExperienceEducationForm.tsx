@@ -55,7 +55,9 @@ export function ExperienceEducationForm({
           <h2>Work experience</h2>
           <Button
             variant="ghost"
-            onClick={() => onWorkExperienceChange([...workExperience, { ...EMPTY_WORK_EXPERIENCE }])}
+            onClick={() =>
+              onWorkExperienceChange([...workExperience, { ...EMPTY_WORK_EXPERIENCE }])
+            }
           >
             Add role
           </Button>
@@ -80,7 +82,9 @@ export function ExperienceEducationForm({
                 <input
                   value={row.job_title}
                   onChange={(e) =>
-                    onWorkExperienceChange(updateRow(workExperience, index, { job_title: e.target.value }))
+                    onWorkExperienceChange(
+                      updateRow(workExperience, index, { job_title: e.target.value }),
+                    )
                   }
                   placeholder="Software Engineer"
                 />
@@ -89,7 +93,9 @@ export function ExperienceEducationForm({
                 <input
                   value={row.company}
                   onChange={(e) =>
-                    onWorkExperienceChange(updateRow(workExperience, index, { company: e.target.value }))
+                    onWorkExperienceChange(
+                      updateRow(workExperience, index, { company: e.target.value }),
+                    )
                   }
                   placeholder="ACME Corp"
                 />
@@ -98,7 +104,9 @@ export function ExperienceEducationForm({
                 <input
                   value={row.location}
                   onChange={(e) =>
-                    onWorkExperienceChange(updateRow(workExperience, index, { location: e.target.value }))
+                    onWorkExperienceChange(
+                      updateRow(workExperience, index, { location: e.target.value }),
+                    )
                   }
                   placeholder="San Francisco, CA"
                 />
@@ -113,7 +121,9 @@ export function ExperienceEducationForm({
                   value={row.start_month ?? ""}
                   onChange={(e) =>
                     onWorkExperienceChange(
-                      updateRow(workExperience, index, { start_month: parseOptionalInt(e.target.value) }),
+                      updateRow(workExperience, index, {
+                        start_month: parseOptionalInt(e.target.value),
+                      }),
                     )
                   }
                 />
@@ -126,7 +136,9 @@ export function ExperienceEducationForm({
                   value={row.start_year ?? ""}
                   onChange={(e) =>
                     onWorkExperienceChange(
-                      updateRow(workExperience, index, { start_year: parseOptionalInt(e.target.value) }),
+                      updateRow(workExperience, index, {
+                        start_year: parseOptionalInt(e.target.value),
+                      }),
                     )
                   }
                 />
@@ -160,7 +172,9 @@ export function ExperienceEducationForm({
                     value={row.end_month ?? ""}
                     onChange={(e) =>
                       onWorkExperienceChange(
-                        updateRow(workExperience, index, { end_month: parseOptionalInt(e.target.value) }),
+                        updateRow(workExperience, index, {
+                          end_month: parseOptionalInt(e.target.value),
+                        }),
                       )
                     }
                   />
@@ -173,7 +187,9 @@ export function ExperienceEducationForm({
                     value={row.end_year ?? ""}
                     onChange={(e) =>
                       onWorkExperienceChange(
-                        updateRow(workExperience, index, { end_year: parseOptionalInt(e.target.value) }),
+                        updateRow(workExperience, index, {
+                          end_year: parseOptionalInt(e.target.value),
+                        }),
                       )
                     }
                   />
@@ -185,7 +201,9 @@ export function ExperienceEducationForm({
                 rows={4}
                 value={row.description}
                 onChange={(e) =>
-                  onWorkExperienceChange(updateRow(workExperience, index, { description: e.target.value }))
+                  onWorkExperienceChange(
+                    updateRow(workExperience, index, { description: e.target.value }),
+                  )
                 }
                 placeholder="Responsibilities and achievements"
               />
@@ -221,14 +239,18 @@ export function ExperienceEducationForm({
               <Field label="School">
                 <input
                   value={row.school}
-                  onChange={(e) => onEducationChange(updateRow(education, index, { school: e.target.value }))}
+                  onChange={(e) =>
+                    onEducationChange(updateRow(education, index, { school: e.target.value }))
+                  }
                   placeholder="University of Example"
                 />
               </Field>
               <Field label="Degree">
                 <input
                   value={row.degree}
-                  onChange={(e) => onEducationChange(updateRow(education, index, { degree: e.target.value }))}
+                  onChange={(e) =>
+                    onEducationChange(updateRow(education, index, { degree: e.target.value }))
+                  }
                   placeholder="Bachelor of Science"
                 />
               </Field>
@@ -236,7 +258,9 @@ export function ExperienceEducationForm({
                 <input
                   value={row.field_of_study}
                   onChange={(e) =>
-                    onEducationChange(updateRow(education, index, { field_of_study: e.target.value }))
+                    onEducationChange(
+                      updateRow(education, index, { field_of_study: e.target.value }),
+                    )
                   }
                   placeholder="Computer Science"
                 />
@@ -272,7 +296,9 @@ export function ExperienceEducationForm({
               <Field label="GPA">
                 <input
                   value={row.gpa}
-                  onChange={(e) => onEducationChange(updateRow(education, index, { gpa: e.target.value }))}
+                  onChange={(e) =>
+                    onEducationChange(updateRow(education, index, { gpa: e.target.value }))
+                  }
                   placeholder="3.8"
                 />
               </Field>

@@ -112,7 +112,9 @@ export function SkillsLanguagesForm({
                     type="checkbox"
                     checked={row.is_native}
                     onChange={(e) =>
-                      onLanguagesChange(updateRow(languages, index, { is_native: e.target.checked }))
+                      onLanguagesChange(
+                        updateRow(languages, index, { is_native: e.target.checked }),
+                      )
                     }
                   />
                   This is my native language
