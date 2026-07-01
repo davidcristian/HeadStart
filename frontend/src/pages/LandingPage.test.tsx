@@ -1,22 +1,20 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { clearCookieConsent } from "../lib/cookieConsent";
+import { renderPublicPage } from "../test/renderPublicPage";
 import { LandingPage } from "./LandingPage";
 
 const authState = vi.hoisted(() => ({ user: null as { email: string } | null }));
 vi.mock("../auth/AuthContext", () => ({ useAuth: () => authState }));
 
 function renderLanding() {
-  return render(
-    <MemoryRouter>
-      <LandingPage />
-    </MemoryRouter>,
-  );
+  return render(renderPublicPage(<LandingPage />));
 }
 
 describe("LandingPage", () => {
   beforeEach(() => {
     authState.user = null;
+    clearCookieConsent();
   });
 
   it("shows the marketing hero and signup CTAs when logged out", () => {
@@ -34,6 +32,7 @@ describe("LandingPage", () => {
     expect(screen.getByRole("link", { name: "Privacy" })).toHaveAttribute("href", "/privacy");
     expect(screen.getByRole("link", { name: "Terms" })).toHaveAttribute("href", "/terms");
     expect(screen.getByRole("link", { name: "Impressum" })).toHaveAttribute("href", "/impressum");
+    expect(screen.getByRole("button", { name: "Cookie settings" })).toBeInTheDocument();
     expect(screen.getAllByRole("link", { name: "Pricing" })[0]).toHaveAttribute("href", "/pricing");
   });
 

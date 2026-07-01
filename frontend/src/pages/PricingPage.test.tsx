@@ -1,22 +1,20 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { clearCookieConsent } from "../lib/cookieConsent";
+import { renderPublicPage } from "../test/renderPublicPage";
 import { PricingPage } from "./PricingPage";
 
 const authState = vi.hoisted(() => ({ user: null as { email: string } | null }));
 vi.mock("../auth/AuthContext", () => ({ useAuth: () => authState }));
 
 function renderPricing() {
-  return render(
-    <MemoryRouter>
-      <PricingPage />
-    </MemoryRouter>,
-  );
+  return render(renderPublicPage(<PricingPage />));
 }
 
 describe("PricingPage", () => {
   beforeEach(() => {
     authState.user = null;
+    clearCookieConsent();
   });
 
   it("renders plan cards and comparison table", () => {

@@ -5,6 +5,7 @@ import { BrowserRouter } from "react-router-dom";
 import { registerSW } from "virtual:pwa-register";
 import { App } from "./App";
 import { AuthProvider } from "./auth/AuthContext";
+import { CookieConsentProvider } from "./components/CookieConsentContext";
 import "./index.css";
 
 registerSW({ immediate: true });
@@ -23,7 +24,9 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AuthProvider>
-          <App />
+          <CookieConsentProvider>
+            <App />
+          </CookieConsentProvider>
         </AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>

@@ -5,6 +5,7 @@ import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 import { App } from "./App";
 import { AuthProvider } from "./auth/AuthContext";
+import { CookieConsentProvider } from "./components/CookieConsentContext";
 
 vi.mock("./api", () => ({
   api: {
@@ -26,7 +27,9 @@ function renderAt(path: string): ReturnType<typeof render> {
     <QueryClientProvider client={client}>
       <MemoryRouter initialEntries={[path]}>
         <AuthProvider>
-          <App />
+          <CookieConsentProvider>
+            <App />
+          </CookieConsentProvider>
         </AuthProvider>
       </MemoryRouter>
     </QueryClientProvider>

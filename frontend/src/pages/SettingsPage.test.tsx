@@ -3,6 +3,8 @@ import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithClient } from "../test/renderWithClient";
+import { CookieConsentProvider } from "../components/CookieConsentContext";
+import { clearCookieConsent } from "../lib/cookieConsent";
 import { SettingsPage } from "./SettingsPage";
 
 const navigate = vi.fn();
@@ -38,6 +40,7 @@ describe("SettingsPage", () => {
     resetMockApi();
     navigate.mockReset();
     logout.mockReset();
+    clearCookieConsent();
     vi.stubGlobal("URL", {
       createObjectURL: vi.fn(() => "blob:export"),
       revokeObjectURL: vi.fn(),
@@ -47,7 +50,9 @@ describe("SettingsPage", () => {
   function renderSettings() {
     return renderWithClient(
       <MemoryRouter>
-        <SettingsPage />
+        <CookieConsentProvider>
+          <SettingsPage />
+        </CookieConsentProvider>
       </MemoryRouter>,
     );
   }
@@ -56,6 +61,7 @@ describe("SettingsPage", () => {
     renderSettings();
     expect(screen.getByRole("heading", { name: "Settings" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Billing" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Privacy & cookies" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Export my data" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Delete my account" })).toBeInTheDocument();
   });

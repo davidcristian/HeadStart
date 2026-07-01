@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Banner, Button, Card, Field } from "../components/ui";
 import { PromoCodeField } from "../components/PromoCodeField";
+import { useCookieConsent } from "../components/CookieConsentContext";
 import { api } from "../api";
 import { useAuth } from "../auth/AuthContext";
 import { getApiBaseUrl, setApiBaseUrl } from "../lib/settings";
@@ -27,6 +28,7 @@ export function SettingsPage() {
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>("monthly");
   const [appliedPromo, setAppliedPromo] = useState<PromoValidation | null>(null);
   const billingNotice = searchParams.get("billing");
+  const { choice, openCookieSettings } = useCookieConsent();
 
   useEffect(() => {
     let cancelled = false;
@@ -234,6 +236,23 @@ export function SettingsPage() {
         </Field>
         <Button variant="danger" onClick={() => void deleteAccount()} disabled={deleting}>
           {deleting ? "Deleting…" : "Delete my account"}
+        </Button>
+      </Card>
+
+      <Card title="Privacy & cookies">
+        <p>
+          Cookie consent:{" "}
+          <strong>
+            {choice === "all"
+              ? "Accept all (optional cookies allowed when enabled)"
+              : choice === "essential"
+                ? "Essential only"
+                : "Not set"}
+          </strong>
+          . Essential cookies keep you signed in; optional cookies are not loaded today.
+        </p>
+        <Button type="button" variant="ghost" onClick={openCookieSettings}>
+          Cookie settings
         </Button>
       </Card>
 

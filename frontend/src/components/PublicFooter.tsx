@@ -3,9 +3,11 @@
 import { Link } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { Brand } from "./Brand";
+import { useCookieConsent } from "./CookieConsentContext";
 
 export function PublicFooter() {
   const { user } = useAuth();
+  const { openCookieSettings } = useCookieConsent();
 
   return (
     <footer className="landing-footer">
@@ -16,6 +18,9 @@ export function PublicFooter() {
         <Link to="/privacy">Privacy</Link>
         <Link to="/terms">Terms</Link>
         <Link to="/impressum">Impressum</Link>
+        <button type="button" className="landing-footer-link" onClick={openCookieSettings}>
+          Cookie settings
+        </button>
         {user ? (
           <Link to="/app">Go to app</Link>
         ) : (

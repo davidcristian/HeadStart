@@ -154,7 +154,7 @@ Final hosted-product details after billing works end-to-end.
 | Item | Why | Notes |
 | ---- | --- | ----- |
 | Custom domain & branding | Hosted product credibility | App on a real domain, consistent branding, transactional emails from the product domain |
-| GDPR / data compliance (full) | Enterprise and EU readiness | Cookie consent management, DPA/subprocessor documentation, audit trail for deletion/export requests |
+| GDPR / data compliance (full) | Enterprise and EU readiness | **Shipped (cookie consent):** banner + `localStorage` preference (`essential` / `all`); footer + Settings → Privacy & cookies to reopen. DPA/subprocessor documentation and audit trail for deletion/export requests remain. |
 
 **Done when:** the product runs on a branded domain with transactional email from
 that domain, and compliance items needed for a public launch are complete.

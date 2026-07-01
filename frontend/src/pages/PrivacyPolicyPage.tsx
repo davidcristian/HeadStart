@@ -2,7 +2,7 @@
 
 import { LegalPageLayout } from "../components/LegalPageLayout";
 
-const EFFECTIVE_DATE = "June 28, 2026";
+const EFFECTIVE_DATE = "June 29, 2026";
 
 export function PrivacyPolicyPage() {
   return (
@@ -85,10 +85,29 @@ export function PrivacyPolicyPage() {
       <section>
         <h2>Cookies and session storage</h2>
         <p>
-          HeadStart uses an httpOnly refresh-token cookie to keep you signed in between visits. The
-          short-lived access token is kept in browser memory, not localStorage. We do not use
-          third-party advertising or analytics cookies in the product UI.
+          HeadStart uses an httpOnly refresh-token cookie to keep you signed in between visits. This
+          cookie is strictly necessary for the service and is set when you log in, independent of
+          the consent banner.
         </p>
+        <p>
+          The short-lived access token is kept in browser memory, not localStorage. Your cookie
+          consent choice is stored in <code>localStorage</code> under{" "}
+          <code>headstart.cookieConsent</code> so we can remember whether you allowed optional
+          cookies. You can change your choice any time via <strong>Cookie settings</strong> in the
+          site footer.
+        </p>
+        <ul>
+          <li>
+            <strong>Essential only:</strong> only strictly necessary cookies (session sign-in). No
+            optional advertising or analytics cookies are loaded.
+          </li>
+          <li>
+            <strong>Accept all:</strong> permits optional cookies when we introduce features such as
+            free-tier advertising or usage analytics. As of this policy date, those optional cookies
+            are not yet enabled in the product.
+          </li>
+        </ul>
+        <p>We do not sell your personal data or use your data for advertising profiles.</p>
       </section>
 
       <section>

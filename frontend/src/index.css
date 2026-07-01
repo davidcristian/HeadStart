@@ -1301,6 +1301,64 @@ td .job-summary {
 .landing-footer-nav a:hover {
   color: var(--text);
 }
+.landing-footer-link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--muted);
+  font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.landing-footer-link:hover {
+  color: var(--text);
+}
+
+/* ---- Cookie consent banner ---- */
+.cookie-consent {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  padding: 20px 24px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.28);
+}
+.cookie-consent-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.cookie-consent-text {
+  flex: 1;
+  min-width: 240px;
+}
+.cookie-consent-heading {
+  margin: 0 0 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+.cookie-consent-text p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.cookie-consent-text a {
+  color: var(--accent);
+}
+.cookie-consent-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
 
 /* ---- Public legal pages ---- */
 .legal-page {

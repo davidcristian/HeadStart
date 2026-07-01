@@ -25,6 +25,12 @@ The frontend serves two surfaces from one bundle (see
 
 - **Public** (no auth, no app shell): `/` landing page, `/pricing`, `/privacy`, `/terms`, `/impressum`, plus the auth screens
   `/login`, `/register`, `/forgot-password`, `/reset-password`.
+- **Cookie consent:** a fixed bottom banner (`CookieConsentProvider` in `main.tsx`)
+  asks for **Essential only** vs **Accept all** on first visit. The choice is stored in
+  `localStorage` (`headstart.cookieConsent`), not a cookie. Visitors can reopen the banner
+  from **Cookie settings** in the public footer or **Settings → Privacy & cookies** in the
+  app. Use `acceptsOptionalCookies()` from `src/lib/cookieConsent.ts` before loading optional
+  scripts (e.g. future free-tier ads).
 - **Authenticated product** under **`/app/*`**, gated by `ProtectedRoute` and
   wrapped in the `Layout` shell (`/app/searches`, `/app/jobs`, …, `/app/admin`).
   `/app` redirects to `/app/searches`. New accounts without
