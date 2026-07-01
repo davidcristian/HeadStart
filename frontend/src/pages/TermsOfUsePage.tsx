@@ -16,8 +16,8 @@ export function TermsOfUsePage() {
       <section>
         <h2>The service</h2>
         <p>
-          HeadStart monitors job boards and career pages you configure, filters postings against your
-          criteria, and sends alerts through channels you choose. We may add, change, or remove
+          HeadStart monitors job boards and career pages you configure, filters postings against
+          your criteria, and sends alerts through channels you choose. We may add, change, or remove
           features over time. The service is provided on an &quot;as is&quot; basis without
           guarantees of uptime, completeness, or fitness for a particular purpose.
         </p>
@@ -82,9 +82,9 @@ export function TermsOfUsePage() {
       <section>
         <h2>Auto-apply and future features</h2>
         <p>
-          Features that submit applications on your behalf require explicit opt-in where implemented.
-          You are responsible for reviewing materials sent in your name and for outcomes of any
-          automated submission.
+          Features that submit applications on your behalf require explicit opt-in where
+          implemented. You are responsible for reviewing materials sent in your name and for
+          outcomes of any automated submission.
         </p>
       </section>
 

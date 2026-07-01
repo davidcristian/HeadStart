@@ -8,9 +8,9 @@ export function PrivacyPolicyPage() {
   return (
     <LegalPageLayout title="Privacy Policy" effectiveDate={EFFECTIVE_DATE}>
       <p>
-        HeadStart (&quot;we&quot;, &quot;us&quot;) helps you monitor job boards and receive alerts when
-        matching roles are posted. This policy describes what personal data we process when you use
-        the service and how we handle it.
+        HeadStart (&quot;we&quot;, &quot;us&quot;) helps you monitor job boards and receive alerts
+        when matching roles are posted. This policy describes what personal data we process when you
+        use the service and how we handle it.
       </p>
 
       <section>
@@ -53,9 +53,7 @@ export function PrivacyPolicyPage() {
           <li>Power the jobs feed, RSS export, and optional AI summaries of why a role matches.</li>
           <li>Maintain your account, enforce access controls, and improve reliability.</li>
         </ul>
-        <p>
-          We do not sell your personal data. We do not use your data for advertising profiles.
-        </p>
+        <p>We do not sell your personal data. We do not use your data for advertising profiles.</p>
       </section>
 
       <section>
@@ -74,8 +72,8 @@ export function PrivacyPolicyPage() {
             title, company, location, and filter context needed to generate a short blurb.
           </li>
           <li>
-            <strong>Infrastructure providers</strong> that host the application and database when you
-            use a deployed instance (for example AWS).
+            <strong>Infrastructure providers</strong> that host the application and database when
+            you use a deployed instance (for example AWS).
           </li>
         </ul>
         <p>
@@ -98,9 +96,8 @@ export function PrivacyPolicyPage() {
         <p>
           We retain account and configuration data while your account is active. Job postings and
           delivery history are kept to power your feed and diagnostics. When you delete resources in
-          the app, associated rows are removed from our database. Account deletion and full data
-          export are planned as first-class features; until then, contact your instance operator to
-          request removal.
+          the app, associated rows are removed from our database. You can export all of your data or
+          permanently delete your account from <strong>Settings → Your account</strong> in the app.
         </p>
       </section>
 
@@ -109,8 +106,8 @@ export function PrivacyPolicyPage() {
         <p>
           Passwords are hashed. Sensitive fields (site credentials and application profiles) are
           encrypted at rest. API access requires authentication, and user-owned data is scoped to
-          the signed-in account. No security measure is perfect; do not store secrets in notification
-          target configs that you cannot rotate.
+          the signed-in account. No security measure is perfect; do not store secrets in
+          notification target configs that you cannot rotate.
         </p>
       </section>
 

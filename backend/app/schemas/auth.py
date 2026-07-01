@@ -4,6 +4,12 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
+from app.schemas.job import JobRead
+from app.schemas.profile import ProfileRead
+from app.schemas.search import SearchRead
+from app.schemas.source import SourceRead
+from app.schemas.target import TargetRead
+
 
 class RegisterRequest(BaseModel):
     email: EmailStr
@@ -58,3 +64,36 @@ class ResetPasswordRequest(BaseModel):
 
 class MessageResponse(BaseModel):
     message: str
+
+
+class DeleteAccountRequest(BaseModel):
+    password: str = Field(min_length=1, max_length=128)
+
+
+class CredentialExport(BaseModel):
+    """Site credential with decrypted secrets — only returned in a data export."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    source_id: int
+    name: str
+    enabled: bool
+    created_at: datetime
+    cookies: dict[str, str] = Field(default_factory=dict)
+    headers: dict[str, str] = Field(default_factory=dict)
+    session: dict[str, str] = Field(default_factory=dict)
+
+
+class UserDataExport(BaseModel):
+    """Machine-readable bundle of everything the signed-in user owns."""
+
+    exported_at: datetime
+    format_version: int = 1
+    account: UserRead
+    sources: list[SourceRead]
+    searches: list[SearchRead]
+    targets: list[TargetRead]
+    credentials: list[CredentialExport]
+    profile: ProfileRead | None = None
+    jobs: list[JobRead]

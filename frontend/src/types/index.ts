@@ -202,3 +202,26 @@ export interface Profile extends ProfileData {
   exists: boolean;
   updated_at: string | null;
 }
+
+export interface CredentialExport {
+  id: number;
+  source_id: number;
+  name: string;
+  enabled: boolean;
+  created_at: string;
+  cookies: Record<string, string>;
+  headers: Record<string, string>;
+  session: Record<string, string>;
+}
+
+export interface UserDataExport {
+  exported_at: string;
+  format_version: number;
+  account: User;
+  sources: Source[];
+  searches: Search[];
+  targets: NotificationTarget[];
+  credentials: CredentialExport[];
+  profile: Profile | null;
+  jobs: Job[];
+}

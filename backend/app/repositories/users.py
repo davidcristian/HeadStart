@@ -72,3 +72,8 @@ class UserRepository:
             user.is_admin = is_admin
         self.session.flush()
         return user
+
+    def delete(self, user: User) -> None:
+        """Remove a user row (owned data cascades via FK / ORM)."""
+        self.session.delete(user)
+        self.session.flush()

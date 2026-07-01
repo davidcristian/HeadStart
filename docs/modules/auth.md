@@ -57,6 +57,8 @@ returns `NotFoundError` (404), never another user's data.
 | POST   | `/forgot-password` | none | Request a password-reset email   |
 | POST   | `/reset-password`  | none | Set a new password from reset link |
 | GET    | `/me`       | bearer | Current user                           |
+| GET    | `/me/export` | bearer | JSON bundle of all owned data (GDPR export) |
+| DELETE | `/me`       | bearer | Permanently delete account (password in body) |
 
 \* `/refresh` is unauthenticated but requires a valid refresh token, normally
 read from the httpOnly cookie (falls back to a `refresh_token` body field).
@@ -75,6 +77,12 @@ read from the httpOnly cookie (falls back to a `refresh_token` body field).
   `logout()` calls `/auth/logout` to clear the cookie. `ProtectedRoute` gates
   the app and redirects to `/login`.
 - `/forgot-password` and `/reset-password?token=...` handle the reset flow.
+- **Settings → Your account** (`/app/settings`): export all owned data as JSON
+  (`GET /auth/me/export`) or permanently delete the account (`DELETE /auth/me`
+  with the current password). Deletion cascades to sources, searches, targets,
+  credentials, profile, jobs, and delivery history. The sole remaining admin
+  cannot delete their account while other users exist — promote another admin
+  first.
 
 ## Password reset
 
@@ -88,6 +96,18 @@ read from the httpOnly cookie (falls back to a `refresh_token` body field).
 **Email delivery:** configure SMTP via `SMTP_*` env vars. When `SMTP_HOST` is
 empty (typical local dev), the API logs the reset URL at INFO instead of sending
 mail.
+
+## Account data export & deletion
+
+Users can download a portable JSON export of everything they own (`GET
+/auth/me/export`): account metadata, sources, searches, notification targets,
+site credentials (including decrypted session material), application profile, and
+job history. Password hashes are never included.
+
+Permanent account deletion (`DELETE /auth/me` with `{ "password": "..." }`)
+requires the current password, clears the refresh cookie, and removes the user
+row. Owned data cascades via FK/`ON DELETE CASCADE`. The last admin account
+cannot be deleted while other users remain (promote another admin first).
 
 ## Admin
 

@@ -9,6 +9,7 @@ from app.core.exceptions import ValidationError
 from app.models.user import User
 from app.schemas.auth import (
     AccessTokenResponse,
+    DeleteAccountRequest,
     ForgotPasswordRequest,
     LoginRequest,
     MessageResponse,
@@ -16,6 +17,7 @@ from app.schemas.auth import (
     RegisterRequest,
     ResetPasswordRequest,
     TokenResponse,
+    UserDataExport,
     UserRead,
 )
 from app.services.auth import AuthService
@@ -103,3 +105,23 @@ def reset_password(data: ResetPasswordRequest, db: Session = Depends(get_db)) ->
 @router.get("/me", response_model=UserRead)
 def me(user: User = Depends(get_current_user)) -> UserRead:
     return UserRead.model_validate(user)
+
+
+@router.get("/me/export", response_model=UserDataExport)
+def export_my_data(
+    user: User = Depends(get_current_user), db: Session = Depends(get_db)
+) -> UserDataExport:
+    """Download a JSON bundle of all data owned by the signed-in account."""
+    return AuthService(db).export_data(user.id)
+
+
+@router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
+def delete_my_account(
+    data: DeleteAccountRequest,
+    response: Response,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> None:
+    """Permanently delete the signed-in account after password confirmation."""
+    AuthService(db).delete_account(user.id, data)
+    _clear_refresh_cookie(response)

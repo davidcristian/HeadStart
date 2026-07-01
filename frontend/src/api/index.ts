@@ -21,6 +21,7 @@ import type {
   SourceTestResult,
   TargetCreate,
   User,
+  UserDataExport,
 } from "../types";
 import { request } from "./client";
 
@@ -68,6 +69,9 @@ export const api = {
       skipAuth: true,
     }),
   me: () => request<User>("/api/v1/auth/me"),
+  exportMyData: () => request<UserDataExport>("/api/v1/auth/me/export"),
+  deleteAccount: (password: string) =>
+    request<void>("/api/v1/auth/me", { method: "DELETE", body: { password } }),
 
   // admin
   listAdminUsers: () => request<AdminUser[]>("/api/v1/admin/users"),

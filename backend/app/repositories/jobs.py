@@ -20,7 +20,7 @@ class SeenJobRepository:
         user_id: int,
         search_id: int | None = None,
         status: str | None = None,
-        limit: int = 100,
+        limit: int | None = 100,
     ) -> list[SeenJob]:
         # Jobs are owned transitively through their search, so scope by the
         # search's owner rather than adding a redundant column to seen_job.
@@ -29,8 +29,9 @@ class SeenJobRepository:
             .join(Search, SeenJob.search_id == Search.id)
             .where(Search.user_id == user_id)
             .order_by(SeenJob.first_seen_at.desc())
-            .limit(limit)
         )
+        if limit is not None:
+            stmt = stmt.limit(limit)
         if search_id is not None:
             stmt = stmt.where(SeenJob.search_id == search_id)
         if status is not None:

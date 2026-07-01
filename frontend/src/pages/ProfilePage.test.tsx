@@ -35,9 +35,7 @@ describe("ProfilePage", () => {
     renderWithClient(<ProfilePage />);
     // Wait for the initial fetch to settle (Save is disabled while pending) so the
     // populate-effect cannot overwrite the value we type below.
-    await waitFor(() =>
-      expect(screen.getByRole("button", { name: "Save profile" })).toBeEnabled(),
-    );
+    await waitFor(() => expect(screen.getByRole("button", { name: "Save profile" })).toBeEnabled());
 
     fireEvent.change(screen.getByPlaceholderText("Ada Lovelace"), {
       target: { value: "Grace Hopper" },

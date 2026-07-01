@@ -1,12 +1,22 @@
-/** Connection settings (API base URL) and ntfy help. Auth is via sign-in. */
+/** Connection settings (API base URL), account data controls, and ntfy help. */
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Banner, Button, Card, Field } from "../components/ui";
+import { api } from "../api";
+import { useAuth } from "../auth/AuthContext";
 import { getApiBaseUrl, setApiBaseUrl } from "../lib/settings";
 
 export function SettingsPage() {
+  const navigate = useNavigate();
+  const { logout } = useAuth();
   const [baseUrl, setBaseUrl] = useState(getApiBaseUrl());
   const [saved, setSaved] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState<string>();
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string>();
 
   function save() {
     setApiBaseUrl(baseUrl);
@@ -14,9 +24,77 @@ export function SettingsPage() {
     setTimeout(() => setSaved(false), 2000);
   }
 
+  async function exportData() {
+    setExportError(undefined);
+    setExporting(true);
+    try {
+      const data = await api.exportMyData();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      const stamp = data.exported_at.slice(0, 10);
+      anchor.href = url;
+      anchor.download = `headstart-export-${stamp}.json`;
+      anchor.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setExportError(err instanceof Error ? err.message : "Export failed.");
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  async function deleteAccount() {
+    setDeleteError(undefined);
+    if (!deletePassword) {
+      setDeleteError("Enter your password to confirm deletion.");
+      return;
+    }
+    setDeleting(true);
+    try {
+      await api.deleteAccount(deletePassword);
+      logout();
+      navigate("/");
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : "Could not delete account.");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   return (
     <>
       <h1>Settings</h1>
+      <Card title="Your account">
+        <p>
+          Download a JSON copy of your sources, searches, notification targets, credentials,
+          application profile, and job history. Deleting your account permanently removes all of
+          that data.
+        </p>
+        {exportError && <Banner kind="error">{exportError}</Banner>}
+        <p>
+          <Button onClick={() => void exportData()} disabled={exporting}>
+            {exporting ? "Preparing export…" : "Export my data"}
+          </Button>
+        </p>
+        {deleteError && <Banner kind="error">{deleteError}</Banner>}
+        <Field
+          label="Delete account"
+          hint="This cannot be undone. Enter your password to confirm permanent deletion."
+        >
+          <input
+            type="password"
+            autoComplete="current-password"
+            aria-label="Confirm account deletion password"
+            value={deletePassword}
+            onChange={(e) => setDeletePassword(e.target.value)}
+          />
+        </Field>
+        <Button variant="danger" onClick={() => void deleteAccount()} disabled={deleting}>
+          {deleting ? "Deleting…" : "Delete my account"}
+        </Button>
+      </Card>
+
       <Card title="API connection">
         {saved && <Banner kind="success">Saved.</Banner>}
         <Field label="API base URL" hint="Where the backend is reachable from your browser.">
@@ -27,8 +105,8 @@ export function SettingsPage() {
 
       <Card title="Receiving notifications">
         <p>
-          HeadStart can deliver alerts via <strong>email</strong> (configure <code>SMTP_*</code>{" "}
-          on the server), <strong>Slack</strong> or <strong>Discord</strong> (incoming webhooks),{" "}
+          HeadStart can deliver alerts via <strong>email</strong> (configure <code>SMTP_*</code> on
+          the server), <strong>Slack</strong> or <strong>Discord</strong> (incoming webhooks),{" "}
           <strong>Telegram</strong> (Bot API), or <strong>ntfy</strong> push (no server mail setup
           required).
         </p>

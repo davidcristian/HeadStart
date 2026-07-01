@@ -43,12 +43,12 @@ describe("LandingPage", () => {
       "src",
       "/marketing/notification.png",
     );
-    expect(
-      screen.getByRole("tab", { name: "Searches", selected: true }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Searches", selected: true })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("tab", { name: "Jobs feed" }));
-    expect(screen.getByRole("heading", { name: "Triage matches in one place" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Triage matches in one place" }),
+    ).toBeInTheDocument();
     expect(screen.getByRole("img", { name: /jobs feed/i })).toHaveAttribute(
       "src",
       "/marketing/jobs.png",

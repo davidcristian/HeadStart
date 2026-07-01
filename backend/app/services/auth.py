@@ -21,16 +21,32 @@ from app.core.security import (
 )
 from app.models.base import utcnow
 from app.models.password_reset_token import PasswordResetToken
+from app.models.site_credential import SiteCredential
 from app.models.user import User
+from app.repositories.credentials import CredentialRepository
+from app.repositories.jobs import SeenJobRepository
 from app.repositories.password_reset_tokens import PasswordResetTokenRepository
+from app.repositories.searches import SearchRepository
+from app.repositories.sources import SourceRepository
+from app.repositories.targets import TargetRepository
 from app.repositories.users import UserRepository
 from app.schemas.auth import (
+    CredentialExport,
+    DeleteAccountRequest,
     ForgotPasswordRequest,
     LoginRequest,
     RegisterRequest,
     ResetPasswordRequest,
     TokenResponse,
+    UserDataExport,
+    UserRead,
 )
+from app.schemas.job import JobRead
+from app.schemas.search import SearchRead
+from app.schemas.source import SourceRead
+from app.schemas.target import TargetRead
+from app.services.credentials import CredentialService
+from app.services.profiles import ProfileService
 
 _PASSWORD_RESET_SENT_MESSAGE = (
     "If an account exists for that email, a password reset link has been sent."
@@ -42,6 +58,13 @@ class AuthService:
         self.session = session
         self.repo = UserRepository(session)
         self.reset_tokens = PasswordResetTokenRepository(session)
+        self.sources = SourceRepository(session)
+        self.searches = SearchRepository(session)
+        self.targets = TargetRepository(session)
+        self.credentials = CredentialRepository(session)
+        self.jobs = SeenJobRepository(session)
+        self.credential_service = CredentialService(session)
+        self.profile_service = ProfileService(session)
 
     def register(self, data: RegisterRequest) -> User:
         """Create an account. The very first user becomes the admin."""
@@ -122,6 +145,50 @@ class AuthService:
 
         self.repo.update_password(user, hash_password(data.password))
         self.reset_tokens.delete_for_user(user.id)
+
+    def export_data(self, user_id: int) -> UserDataExport:
+        """Return a portable JSON bundle of everything the user owns."""
+        user = self.me(user_id)
+        profile = self.profile_service.get(user_id)
+        return UserDataExport(
+            exported_at=utcnow(),
+            account=UserRead.model_validate(user),
+            sources=[SourceRead.model_validate(row) for row in self.sources.list_all(user_id)],
+            searches=[SearchRead.model_validate(row) for row in self.searches.list_all(user_id)],
+            targets=[TargetRead.model_validate(row) for row in self.targets.list_all(user_id)],
+            credentials=[
+                self._credential_export(row) for row in self.credentials.list_all(user_id)
+            ],
+            profile=profile if profile.exists else None,
+            jobs=[
+                JobRead.model_validate(row)
+                for row in self.jobs.list_all(user_id=user_id, limit=None)
+            ],
+        )
+
+    def delete_account(self, user_id: int, data: DeleteAccountRequest) -> None:
+        """Permanently remove the signed-in account after password confirmation."""
+        user = self.me(user_id)
+        if not verify_password(data.password, user.password_hash):
+            raise ValidationError("Invalid password.")
+        if user.is_admin and self.repo.count_admins() <= 1 and self.repo.count() > 1:
+            raise ValidationError(
+                "You are the only admin. Promote another account to admin before deleting yours."
+            )
+        self.repo.delete(user)
+
+    def _credential_export(self, credential: SiteCredential) -> CredentialExport:
+        payload = self.credential_service._decode(credential)
+        return CredentialExport(
+            id=credential.id,
+            source_id=credential.source_id,
+            name=credential.name,
+            enabled=credential.enabled,
+            created_at=credential.created_at,
+            cookies=payload["cookies"],
+            headers=payload["headers"],
+            session=payload["session"],
+        )
 
     @staticmethod
     def _issue_tokens(user: User) -> TokenResponse:

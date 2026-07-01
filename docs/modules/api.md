@@ -22,6 +22,8 @@ never touch the DB directly (services use repositories). See
 | POST   | `/auth/forgot-password` | Request a password-reset email         |
 | POST   | `/auth/reset-password`  | Set a new password from reset link     |
 | GET    | `/auth/me`            | Current user                             |
+| GET    | `/auth/me/export`     | Export all owned data as JSON            |
+| DELETE | `/auth/me`            | Permanently delete account (password)    |
 | GET    | `/sources`            | List sources                             |
 | POST   | `/sources`            | Create a source (site + adapter_key)     |
 | POST   | `/sources/detect`     | Infer adapter + defaults from a careers URL |

@@ -11,6 +11,7 @@ import type {
   Search,
   Source,
   User,
+  UserDataExport,
 } from "../types";
 import { emptyProfile, sampleJob } from "./fixtures";
 
@@ -141,6 +142,24 @@ const mockApi = vi.hoisted(() => ({
     is_active: true,
     created_at: "2026-06-28T00:00:00Z",
   })),
+  exportMyData: vi.fn(async (): Promise<UserDataExport> => ({
+    exported_at: "2026-06-28T12:00:00Z",
+    format_version: 1,
+    account: {
+      id: 1,
+      email: "admin@example.com",
+      is_admin: true,
+      is_active: true,
+      created_at: "2026-06-28T00:00:00Z",
+    },
+    sources: [],
+    searches: [],
+    targets: [],
+    credentials: [],
+    profile: null,
+    jobs: [],
+  })),
+  deleteAccount: vi.fn(async () => undefined),
   getProfile: vi.fn(async (): Promise<Profile> => emptyProfile),
   saveProfile: vi.fn(async (data: ProfileData): Promise<Profile> => ({
     ...emptyProfile,

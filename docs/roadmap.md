@@ -129,7 +129,7 @@ Turn anonymous visitors into active users with a smooth first-run path.
 | Item | Why | Notes |
 | ---- | --- | ----- |
 | Signup & onboarding polish | Paid SaaS needs a credible first-run path | Email verification, welcome flow, guided setup (first source/search/target), trial handling |
-| GDPR / data compliance (baseline) | EU users and enterprise buyers expect it before collecting data at scale | Account deletion, data export, retention policy, subprocessors list in privacy policy |
+| ~~GDPR / data compliance (baseline)~~ | ~~EU users and enterprise buyers expect it before collecting data at scale~~ | **Shipped:** `GET /auth/me/export` JSON data export; `DELETE /auth/me` account deletion with password confirmation; Settings UI |
 
 **Done when:** a new user can verify their email, complete onboarding, and run
 their first search — and can delete their account or export their data.

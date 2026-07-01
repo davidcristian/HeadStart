@@ -157,7 +157,11 @@ export function LandingPage() {
           </div>
 
           <div className="landing-hero-shot">
-            <div className="landing-browser" role="img" aria-label="Screenshot of the HeadStart searches dashboard">
+            <div
+              className="landing-browser"
+              role="img"
+              aria-label="Screenshot of the HeadStart searches dashboard"
+            >
               <div className="landing-browser-chrome" aria-hidden="true">
                 <span className="landing-browser-dot" />
                 <span className="landing-browser-dot" />
