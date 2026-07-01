@@ -53,6 +53,7 @@ source's `adapter_key` when that source supports auto-apply. Import the
 | `lever`      | Postings API JSON POST           | `POST api.lever.co/v0/postings/<site>/<id>?key=...`; see below |
 | `ashby`      | RPC `applicationForm.submit`     | `POST api.ashbyhq.com/applicationForm.submit`; see below |
 | `workday`    | CXS apply flow (session cookies) | `POST …/jobpostings/<id>/jobapplications` then `…/name` + `…/finalize`; see below |
+| `google_careers` | HiringCportal batchexecute RPC (session cookies) | `SaveCareersProfile` → `CreatePacket` → `SavePacket` → `SubmitPacket`; see below |
 
 ### Greenhouse
 
@@ -221,6 +222,42 @@ questionnaires only submit answers you explicitly map in `profile.answers`. See
 [launch-checklist.md](../launch-checklist.md#7-auto-apply-optional--know-the-limits)
 before advertising auto-apply on a public instance.
 
+### Google Careers
+
+Google Careers has no employer-issued API. The adapter maps `ProfileData` to a
+Google **Careers Profile** and (on live submit) calls the authenticated
+`HiringCportalFrontendUi` batchexecute RPC sequence:
+
+1. `SaveCareersProfile` (`qvYBjf`)
+2. `CreatePacket` (`tBY1Qe`)
+3. `SavePacket` (`o6YK3`)
+4. `SubmitPacket` (`pmtdJd`)
+
+Config / credentials:
+
+| Field | Where | Purpose |
+| ----- | ----- | ------- |
+| `apply_job_id` | source/search config (optional) | Opaque apply token from the job's sign-in URL (`jobId=…`). Fetched automatically from the job detail page when omitted. |
+| `location_code` | source/search config | Two-letter country code (`loc` query param) when `apply_job_id` is set manually |
+| `company_resource` | source/search config | `gweb-careers-proto/…/companies/…` path when known |
+| Google account cookies | credential `cookies` | Logged-in session (`SID`, `SAPISID`, `__Secure-1PSID`, …) |
+| `at` / `csrf_token` | credential `session` | CSRF token (`SNlM0e`) from an authenticated apply page |
+
+**Dry run:** fetches the public job detail page (`ds:0` embedded JSON), resolves
+the apply token and `apply_url`, and returns the mapped Careers profile plus the
+RPC steps that would run. No Google login required.
+
+**Live submit:** requires the user's own Google account cookies and CSRF token.
+Resume file bytes are included in the preview metadata only — Google uses a
+separate attachment upload flow that is not automated in v1. Employer-specific
+screening questions may need explicit `profile.answers` mappings. RPC ids can
+change when Google redeploys the careers frontend; verify in DevTools if live
+submit starts failing after a Google UI update.
+
+**Limits:** Google enforces application rate limits in the UI (e.g. three jobs
+per 30 days). Treat live auto-apply as best-effort; always preview with dry run
+first.
+
 ## Safety & consent
 
 Live submission requires explicit opt-in per source (`source.auto_apply_enabled`,
@@ -230,8 +267,10 @@ off; preview (`dry_run`) still works.
 
 **v1 limitations:** Workday degree/field and skill lookup is best-effort and needs
 authenticated session cookies; unmatched labels still fall back to descriptors.
-Indeed/LinkedIn/generic sources have no apply adapter. Branching questionnaires
-only submit answers you explicitly map in `profile.answers`. See
+Google Careers live submit needs the candidate's own Google account session and
+CSRF token; resume upload and employer questionnaires are best-effort. Indeed/
+LinkedIn/generic sources have no apply adapter. Branching questionnaires only
+submit answers you explicitly map in `profile.answers`. See
 [launch-checklist.md](../launch-checklist.md#7-auto-apply-optional--know-the-limits)
 before advertising auto-apply on a public instance.
 

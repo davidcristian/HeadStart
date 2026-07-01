@@ -50,6 +50,11 @@ For **Workday auto-apply**, store `CALYPSO_SESSION` and `CALYPSO_CSRF_TOKEN`
 cookies from a logged-in apply page (see [appliers.md](appliers.md)). The
 session is candidate-owned, not employer-issued.
 
+For **Google Careers auto-apply**, store logged-in Google account cookies
+(`SID`, `SAPISID`, `__Secure-1PSID`, …) plus the CSRF token from an
+authenticated apply page in credential `session.at` (or `session.csrf_token`).
+The session is candidate-owned, not employer-issued.
+
 ## Endpoints (prefix `/api/v1/credentials`)
 
 | Method | Path    | Purpose                                  |

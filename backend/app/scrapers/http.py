@@ -54,6 +54,13 @@ class HttpClient:
         resp.raise_for_status()
         return resp.json()
 
+    def post_form(self, url: str, *, data: dict[str, str], **kwargs: Any) -> str:
+        """POST application/x-www-form-urlencoded and return the response text."""
+        self._wait_rate_limit()
+        resp = self._client.post(url, data=data, **kwargs)
+        resp.raise_for_status()
+        return resp.text
+
     def put_json(self, url: str, *, json: Any = None, **kwargs: Any) -> Any:
         """PUT JSON and parse a JSON response body."""
         self._wait_rate_limit()
