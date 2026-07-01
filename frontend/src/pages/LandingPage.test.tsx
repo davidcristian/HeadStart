@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { LandingPage } from "./LandingPage";
@@ -33,6 +33,26 @@ describe("LandingPage", () => {
     expect(screen.queryByRole("link", { name: "Go to app" })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Privacy" })).toHaveAttribute("href", "/privacy");
     expect(screen.getByRole("link", { name: "Terms" })).toHaveAttribute("href", "/terms");
+  });
+
+  it("shows product screenshots and switches showcase tabs", () => {
+    renderLanding();
+
+    expect(screen.getByRole("heading", { name: "See it in action" })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: /Example push notification/i })).toHaveAttribute(
+      "src",
+      "/marketing/notification.png",
+    );
+    expect(
+      screen.getByRole("tab", { name: "Searches", selected: true }),
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("tab", { name: "Jobs feed" }));
+    expect(screen.getByRole("heading", { name: "Triage matches in one place" })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: /jobs feed/i })).toHaveAttribute(
+      "src",
+      "/marketing/jobs.png",
+    );
   });
 
   it("links straight to the app when already signed in", () => {

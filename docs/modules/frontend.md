@@ -39,7 +39,7 @@ other unknown path redirects to the landing page.
 
 | Page        | Purpose                                                          |
 | ----------- | ---------------------------------------------------------------- |
-| Landing     | Public marketing page at `/`: hero, integrations strip, how-it-works, features, FAQ, CTA to register/sign in |
+| Landing     | Public marketing page at `/`: hero with app screenshots, tabbed product demo, integrations strip, how-it-works, features, FAQ, CTA to register/sign in |
 | Privacy     | Public privacy policy at `/privacy` |
 | Terms       | Public terms of use at `/terms` |
 | Login       | Email + password sign-in                                         |
@@ -106,6 +106,19 @@ Server state is managed by **TanStack Query** (`@tanstack/react-query`). The
 - In the stack: served by nginx on :8080 (see `frontend/Dockerfile`,
   `frontend/nginx.conf`). Service worker assets (`sw.js`, `manifest.webmanifest`)
   are served with `Cache-Control: no-cache` so updates propagate.
+
+### Marketing screenshots
+
+The landing page hero and tabbed product demo use static PNGs in
+`frontend/public/marketing/`. Regenerate them after meaningful UI changes:
+
+1. Start the stack (`make dev`) and ensure the DB is seeded (`make seed`).
+2. Install Playwright Chromium once: `pip install playwright && playwright install chromium` (in the backend venv).
+3. Run `./scripts/capture_marketing_screenshots.py` (seeds demo jobs for the
+   screenshot user, logs in via the UI, writes `searches.png`, `jobs.png`, and
+   `notification.png`).
+
+Commit the updated images when the app chrome changes.
 
 ## Progressive Web App (mobile)
 

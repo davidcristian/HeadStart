@@ -7,7 +7,7 @@ SHELL := /bin/bash
 
 .PHONY: help setup up down logs dev test lint format typecheck check \
         migrate makemigration seed build push deploy ps restart \
-        terraform-bootstrap aws-deploy-env aws-first-deploy
+        terraform-bootstrap aws-deploy-env aws-first-deploy marketing-screenshots
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -57,6 +57,9 @@ makemigration: ## Autogenerate a migration: make makemigration m="message"
 
 seed: ## Load example data
 	./scripts/seed.sh
+
+marketing-screenshots: ## Regenerate landing page product screenshots (needs make dev)
+	PYTHONPATH=backend backend/.venv/bin/python ./scripts/capture_marketing_screenshots.py
 
 build: ## Build container images
 	./scripts/build-images.sh

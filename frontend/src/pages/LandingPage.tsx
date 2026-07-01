@@ -1,5 +1,6 @@
 /** Public marketing landing page shown at "/" to logged-out and logged-in visitors. */
 
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { Brand } from "../components/Brand";
@@ -49,6 +50,33 @@ const FEATURES = [
   },
 ];
 
+const SHOWCASE = [
+  {
+    id: "searches",
+    label: "Searches",
+    title: "Configure watches with confidence",
+    body: "Structured filters, scrape health, and a one-click test run so you know a search works before you wait on the poll interval.",
+    image: "/marketing/searches.png",
+    alt: "HeadStart searches page showing filter form and a healthy enabled search",
+  },
+  {
+    id: "jobs",
+    label: "Jobs feed",
+    title: "Triage matches in one place",
+    body: "Review new roles, mark seen or applied, filter by search, and export an RSS feed for your own tools.",
+    image: "/marketing/jobs.png",
+    alt: "HeadStart jobs feed with salary, status badges, and triage actions",
+  },
+  {
+    id: "alerts",
+    label: "Alerts",
+    title: "Get pinged the moment it posts",
+    body: "Push to ntfy, email, Slack, Discord, Telegram, or a signed webhook — each alert includes an AI summary of why the role fits.",
+    image: "/marketing/notification.png",
+    alt: "Example ntfy notification for a new Senior Backend Engineer match",
+  },
+] as const;
+
 const FAQ = [
   {
     q: "How is HeadStart different from job board alerts?",
@@ -66,6 +94,8 @@ const FAQ = [
 
 export function LandingPage() {
   const { user } = useAuth();
+  const [activeShowcase, setActiveShowcase] = useState<(typeof SHOWCASE)[number]["id"]>("searches");
+  const showcase = SHOWCASE.find((item) => item.id === activeShowcase) ?? SHOWCASE[0];
 
   return (
     <div className="landing">
@@ -74,6 +104,9 @@ export function LandingPage() {
       <header className="landing-header">
         <Brand className="landing-brand" />
         <nav className="landing-nav">
+          <a href="#product" className="landing-nav-link">
+            Product
+          </a>
           <a href="#how-it-works" className="landing-nav-link">
             How it works
           </a>
@@ -123,29 +156,32 @@ export function LandingPage() {
             )}
           </div>
 
-          <div className="landing-preview" aria-hidden="true">
-            <div className="landing-preview-card landing-preview-notify">
-              <span className="landing-preview-label">New match</span>
-              <strong>Senior Backend Engineer</strong>
-              <span className="landing-preview-meta">Acme Corp · Remote · $180–210k</span>
-              <span className="landing-preview-pill">Just posted</span>
-            </div>
-            <div className="landing-preview-card landing-preview-feed">
-              <div className="landing-preview-row">
-                <span className="landing-preview-dot" />
-                <div>
-                  <strong>Staff Platform Engineer</strong>
-                  <span className="landing-preview-meta">Includes &quot;kubernetes&quot; · Amsterdam</span>
-                </div>
+          <div className="landing-hero-shot">
+            <div className="landing-browser" role="img" aria-label="Screenshot of the HeadStart searches dashboard">
+              <div className="landing-browser-chrome" aria-hidden="true">
+                <span className="landing-browser-dot" />
+                <span className="landing-browser-dot" />
+                <span className="landing-browser-dot" />
               </div>
-              <div className="landing-preview-row">
-                <span className="landing-preview-dot landing-preview-dot-muted" />
-                <div>
-                  <strong>Product Engineer</strong>
-                  <span className="landing-preview-meta">Hybrid · seen yesterday</span>
-                </div>
-              </div>
+              <img
+                className="landing-browser-screen"
+                src="/marketing/searches.png"
+                alt=""
+                width={1280}
+                height={800}
+                loading="eager"
+                decoding="async"
+              />
             </div>
+            <img
+              className="landing-hero-notify"
+              src="/marketing/notification.png"
+              alt="Example push notification for a new Senior Backend Engineer match"
+              width={320}
+              height={180}
+              loading="eager"
+              decoding="async"
+            />
           </div>
         </section>
 
@@ -156,6 +192,54 @@ export function LandingPage() {
               <li key={name}>{name}</li>
             ))}
           </ul>
+        </section>
+
+        <section id="product" className="landing-showcase" aria-labelledby="product-title">
+          <div className="landing-showcase-intro">
+            <h2 id="product-title" className="landing-section-title">
+              See it in action
+            </h2>
+            <p className="landing-showcase-lead">
+              Real screens from HeadStart — configure watches, triage your feed, and get alerted the
+              second a role matches.
+            </p>
+          </div>
+
+          <div className="landing-showcase-tabs" role="tablist" aria-label="Product screenshots">
+            {SHOWCASE.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                role="tab"
+                id={`showcase-tab-${item.id}`}
+                aria-selected={activeShowcase === item.id}
+                aria-controls={`showcase-panel-${item.id}`}
+                className={
+                  activeShowcase === item.id
+                    ? "landing-showcase-tab landing-showcase-tab-active"
+                    : "landing-showcase-tab"
+                }
+                onClick={() => setActiveShowcase(item.id)}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+
+          <div
+            className="landing-showcase-panel"
+            role="tabpanel"
+            id={`showcase-panel-${showcase.id}`}
+            aria-labelledby={`showcase-tab-${showcase.id}`}
+          >
+            <div className="landing-showcase-copy">
+              <h3>{showcase.title}</h3>
+              <p>{showcase.body}</p>
+            </div>
+            <figure className="landing-showcase-figure">
+              <img src={showcase.image} alt={showcase.alt} loading="lazy" decoding="async" />
+            </figure>
+          </div>
         </section>
 
         <section id="how-it-works" className="landing-steps">
