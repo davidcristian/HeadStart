@@ -198,6 +198,25 @@ placement does not interfere with core job-alert workflows.
 
 ---
 
+## Phase 9 — Promo codes
+
+Goal: let users redeem discounts, extended trials, and other promotional offers
+at signup or checkout. Builds on Phase 6c billing and plan enforcement.
+
+| Item | Why | Notes |
+| ---- | --- | ----- |
+| Promo code model & admin | Operators need to create and retire offers | Codes with type (`percent_off`, `fixed_amount`, `free_trial_days`, `plan_upgrade`), usage limits, expiry, and optional plan/eligibility rules |
+| Redemption at checkout | Users expect to paste a code before paying | Validate code server-side; apply via Stripe Coupons/Promotion Codes (or equivalent); reject expired, exhausted, or ineligible codes with clear errors |
+| Free-trial promos | Acquisition lever without manual plan overrides | Trial duration extends or replaces default trial; downgrade to free (or cancel) when trial ends unless a paid subscription is active |
+| Self-serve entry in UI | Codes should be discoverable in the funnel | Optional field on `/pricing` checkout and in Settings → Billing; show applied discount or trial end date after redemption |
+| Audit & abuse prevention | Promos affect revenue and must be traceable | Log redemptions per user; enforce one-per-user where configured; rate-limit validation attempts |
+
+**Done when:** an admin can create a promo code, a user can redeem it at checkout
+or in billing settings, the correct discount or trial is applied to their
+subscription, and invalid or exhausted codes fail with a clear message.
+
+---
+
 ## Suggested starting points
 
 **Personal use (one job seeker):**
