@@ -51,6 +51,7 @@ source's `adapter_key` when that source supports auto-apply. Import the
 | `greenhouse` | Job Board API JSON POST          | `POST boards-api.greenhouse.io/v1/boards/<token>/jobs/<id>`; see below |
 | `lever`      | Postings API JSON POST           | `POST api.lever.co/v0/postings/<site>/<id>?key=...`; see below |
 | `ashby`      | RPC `applicationForm.submit`     | `POST api.ashbyhq.com/applicationForm.submit`; see below |
+| `workday`    | CXS apply flow (session cookies) | `POST …/jobpostings/<id>/jobapplications` then `…/name` + `…/finalize`; see below |
 
 ### Greenhouse
 
@@ -120,6 +121,34 @@ credentials:
 `candidatesWrite`. Store in source config or, preferably, credential
 `session.ashby_api_key`. System fields `_systemfield_name` and
 `_systemfield_email` are always sent; resume **files** are not uploaded in v1.
+
+### Workday
+
+Maps `ProfileData` to the Workday CXS apply flow used by `*.myworkdayjobs.com`
+career sites. Config / credentials:
+
+| Field | Where | Purpose |
+| ----- | ----- | ------- |
+| `tenant` | source `default_config` or parsed from `job_url` | Workday tenant slug |
+| `site` | source `default_config` or parsed from `job_url` | Board/site path segment |
+| `region` | source/search config | Optional cluster host (`wd5`, `wd12`, …) |
+| `locale` | source/search config | Locale prefix (default `en-US`) |
+| `country_id` | source/search config | Country WID for name fields (default `US`) |
+| `job_path` | source/search config | Optional override when `job_url` is missing |
+| `CALYPSO_SESSION` | credential `cookies` | Authenticated candidate session cookie |
+| `CALYPSO_CSRF_TOKEN` | credential `cookies` or `session.csrf_token` | CSRF token from the apply page |
+
+**Dry run:** preview JSON (candidate contact fields + job posting id) without
+calling Workday.
+
+**Live submit:** requires cookies from a **logged-in** Workday candidate account
+on the target tenant (create/sign-in on the apply page, then copy session cookies
+from dev tools). The adapter creates the application, posts the legal name, and
+calls finalize. Complex per-employer questionnaires, resume uploads, and
+multi-page experience sections are **not** automated in v1 — finalize may fail
+until those steps are completed manually or future adapter versions add them.
+Resume **files** are not uploaded; `resume_text` is included in the preview
+payload `comments` field only.
 
 ## Safety & consent
 

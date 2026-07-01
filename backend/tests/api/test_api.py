@@ -28,6 +28,7 @@ def test_meta_lists_capabilities(client: TestClient, auth_headers: dict[str, str
     assert "greenhouse" in body["appliers"]
     assert "lever" in body["appliers"]
     assert "ashby" in body["appliers"]
+    assert "workday" in body["appliers"]
     assert body["plan"]["limits"]["max_sources"] >= 3
     assert "usage" in body["plan"]
 

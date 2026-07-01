@@ -46,6 +46,10 @@ key is employer-issued; it is encrypted like other credential material.
 For **Lever auto-apply**, store a Postings API key in the credential `session`
 as `postings_api_key`.
 
+For **Workday auto-apply**, store `CALYPSO_SESSION` and `CALYPSO_CSRF_TOKEN`
+cookies from a logged-in apply page (see [appliers.md](appliers.md)). The
+session is candidate-owned, not employer-issued.
+
 ## Endpoints (prefix `/api/v1/credentials`)
 
 | Method | Path    | Purpose                                  |
@@ -66,6 +70,6 @@ JSON. Treat these as passwords.
 
 ## Scope
 
-This module covers **storage + request injection only**. Auto-apply (submitting
-applications) is intentionally out of scope for now; see
+This module covers **storage + request injection** for scrapers and apply
+adapters. See [appliers.md](appliers.md) for supported auto-apply flows and
 [adr/0005-encrypted-site-credentials.md](../adr/0005-encrypted-site-credentials.md).

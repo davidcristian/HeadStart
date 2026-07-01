@@ -115,32 +115,42 @@ def test_apply_service_live_with_opt_in_records_log(db_session: Session) -> None
     assert logs[0].external_application_id == "app-1"
 
 
-def test_apply_service_rejects_unsupported_adapter(db_session: Session) -> None:
+def test_apply_service_workday_dry_run(db_session: Session) -> None:
     search = _make_search(db_session)
     source = db_session.get(Source, search.source_id)
     assert source is not None
     source.adapter_key = "workday"
+    source.default_config = {
+        "tenant": "acme",
+        "site": "AcmeCareers",
+        "region": "wd5",
+    }
     db_session.flush()
     job = SeenJob(
         search_id=search.id,
-        external_id="1",
-        hash="x",
-        title="Role",
-        company="Co",
-        url="https://jobs.lever.co/acme/1",
+        external_id="JR1001",
+        hash="wd-1",
+        title="Senior Software Engineer",
+        company="ACME",
+        location="Santa Clara, CA",
+        url=(
+            "https://acme.wd5.myworkdayjobs.com/en-US/AcmeCareers/"
+            "job/US-CA-Santa-Clara/Senior-Software-Engineer_JR1001"
+        ),
         status="new",
     )
     db_session.add(job)
     db_session.flush()
     ProfileService(db_session).save(
-        search.user_id, ProfileData(full_name="Ada Lovelace", email="ada@example.com")
+        search.user_id,
+        ProfileData(full_name="Ada Lovelace", email="ada@example.com", resume_text="CV"),
     )
 
-    try:
-        ApplyService(db_session).apply_to_job(search.user_id, job.id, dry_run=True)
-        raise AssertionError("expected ValidationError")
-    except ValidationError as exc:
-        assert "workday" in str(exc)
+    result = ApplyService(db_session).apply_to_job(search.user_id, job.id, dry_run=True)
+
+    assert result.status == "dry_run"
+    assert result.payload is not None
+    assert result.payload["candidate"]["emailAddress"] == "ada@example.com"
 
 
 def test_apply_service_scopes_jobs_by_user(db_session: Session) -> None:
