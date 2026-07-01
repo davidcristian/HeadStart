@@ -1,0 +1,37 @@
+{
+  "id": 1970393556869024,
+  "name": "Software Engineer/Sr Software Engineer",
+  "posting_name": "Software Engineer/Sr Software Engineer",
+  "location": "United States, Washington, Redmond",
+  "locations": [
+    "United States, Washington, Redmond"
+  ],
+  "hot": 0,
+  "department": "Software Engineering",
+  "business_unit": "MCAPS - Core",
+  "t_update": 1782386383,
+  "t_create": 1779481294,
+  "ats_job_id": "200038289",
+  "display_job_id": "200038289",
+  "type": "ATS",
+  "job_description": "<b>Overview</b><p>Sample job description.</p>",
+  "id_locale": "200038289-en",
+  "stars": 0,
+  "medallionProgram": null,
+  "location_flexibility": null,
+  "work_location_option": null,
+  "canonicalPositionUrl": "https://apply.careers.microsoft.com/careers/job/1970393556869024",
+  "isPrivate": false,
+  "urls": {
+    "links": {
+      "blogs": [],
+      "videos": []
+    }
+  },
+  "preApplyInfoBanner": {},
+  "custom_JD": {
+    "enable": false
+  },
+  "upload_resume_before_apply": true,
+  "hideUploadResumeOption": false
+}

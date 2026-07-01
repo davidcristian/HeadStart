@@ -55,6 +55,10 @@ For **Google Careers auto-apply**, store logged-in Google account cookies
 authenticated apply page in credential `session.at` (or `session.csrf_token`).
 The session is candidate-owned, not employer-issued.
 
+For **Microsoft Careers auto-apply**, store logged-in session cookies from
+`apply.careers.microsoft.com` plus optional `session.csrf_token` from the apply
+page meta tag `_csrf`. The session is candidate-owned, not employer-issued.
+
 ## Endpoints (prefix `/api/v1/credentials`)
 
 | Method | Path    | Purpose                                  |

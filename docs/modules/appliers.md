@@ -54,6 +54,7 @@ source's `adapter_key` when that source supports auto-apply. Import the
 | `ashby`      | RPC `applicationForm.submit`     | `POST api.ashbyhq.com/applicationForm.submit`; see below |
 | `workday`    | CXS apply flow (session cookies) | `POST …/jobpostings/<id>/jobapplications` then `…/name` + `…/finalize`; see below |
 | `google_careers` | HiringCportal batchexecute RPC (session cookies) | `SaveCareersProfile` → `CreatePacket` → `SavePacket` → `SubmitPacket`; see below |
+| `microsoft_careers` | Eightfold SmartApply JSON (session cookies) | `POST apply.careers.microsoft.com/api/application/v2/submit`; see below |
 | `indeed` | Viewjob parse + downstream ATS delegation | Fetches `/viewjob?jk=…`, delegates to Greenhouse/Lever/Ashby/Workday/Google when the listing embeds an employer apply URL; see below |
 
 ### Greenhouse
@@ -259,6 +260,40 @@ submit starts failing after a Google UI update.
 per 30 days). Treat live auto-apply as best-effort; always preview with dry run
 first.
 
+### Microsoft Careers
+
+Microsoft's external careers portal (`apply.careers.microsoft.com`) is powered by
+Eightfold SmartApply. The adapter uses the public JSON endpoints exposed to the
+apply UI:
+
+| Step | Endpoint |
+| ---- | -------- |
+| Job detail | `GET /api/apply/v2/jobs/<id>?domain=<domain>&hl=en` |
+| Questions | `GET /api/apply/v2/questions?domain=<domain>&position_id=<id>` |
+| Candidate profile | `POST /api/apply/v2/candidate` |
+| Resume upload | `POST /api/pcsx/upload_resume` (base64 `resume_content`) |
+| Submit | `POST /api/application/v2/submit` (`pids` = position id string) |
+
+Config / credentials:
+
+| Field | Where | Purpose |
+| ----- | ----- | ------- |
+| `domain` | source `default_config` | Eightfold domain slug (default `microsoft.com`) |
+| `position_id` | source/search config | Optional override when `job_url` / `external_id` are ambiguous |
+| `hl` / `locale` | source/search config | Locale query param (default `en`) |
+| Microsoft Careers cookies | credential `cookies` | Logged-in candidate session from `apply.careers.microsoft.com` |
+| `csrf_token` | credential `session` | Optional `X-CSRF-Token` (fetched from the apply page when omitted) |
+| `questionId` keys | profile `answers` | Employer screening questions (country-specific sections are best-effort) |
+
+**Dry run:** fetches job detail and questionnaire metadata, then returns the
+mapped candidate plus the submit body (`domain`, `pids`, `candidate`, `answers`).
+No Microsoft login required.
+
+**Live submit:** requires the candidate's own logged-in Microsoft Careers session
+cookies. Resume files upload via `/api/pcsx/upload_resume` before submit. Complex
+country-specific questionnaires (e.g. EEO, consent) may need explicit
+`profile.answers` mappings. Always preview with dry run first.
+
 ### Indeed
 
 Indeed listings rarely submit on Indeed itself — most **Easily apply** jobs
@@ -302,7 +337,10 @@ off; preview (`dry_run`) still works.
 **v1 limitations:** Workday degree/field and skill lookup is best-effort and needs
 authenticated session cookies; unmatched labels still fall back to descriptors.
 Google Careers live submit needs the candidate's own Google account session and
-CSRF token; resume upload and employer questionnaires are best-effort. Indeed
+CSRF token; resume upload and employer questionnaires are best-effort. Microsoft
+Careers live submit needs the candidate's own logged-in session on
+`apply.careers.microsoft.com`; country-specific screening questions are
+best-effort. Indeed
 delegates to downstream ATS adapters when possible; Indeed-hosted Easy Apply and
 LinkedIn sources are best-effort or unsupported. Branching questionnaires only
 submit answers you explicitly map in `profile.answers`. See
