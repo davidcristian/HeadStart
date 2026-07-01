@@ -9,6 +9,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import Base, utcnow
 
 if TYPE_CHECKING:
+    from app.models.application_log import ApplicationLog
     from app.models.delivery_log import DeliveryLog
     from app.models.search import Search
 
@@ -39,5 +40,8 @@ class SeenJob(Base):
 
     search: Mapped["Search"] = relationship(back_populates="seen_jobs")
     deliveries: Mapped[list["DeliveryLog"]] = relationship(
+        back_populates="seen_job", cascade="all, delete-orphan"
+    )
+    application_logs: Mapped[list["ApplicationLog"]] = relationship(
         back_populates="seen_job", cascade="all, delete-orphan"
     )

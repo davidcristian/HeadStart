@@ -41,6 +41,7 @@ export const sampleSource: Source = {
   base_url: "https://boards.greenhouse.io/acme",
   default_config: { board_token: "acme" },
   enabled: true,
+  auto_apply_enabled: false,
   created_at: "2026-06-28T00:00:00Z",
 };
 

@@ -4,6 +4,7 @@ import { vi } from "vitest";
 import type {
   AdminStats,
   AdminUser,
+  ApplicationLog,
   Job,
   NotificationTarget,
   Profile,
@@ -32,6 +33,7 @@ const mockApi = vi.hoisted(() => ({
     base_url: "",
     default_config: {},
     enabled: true,
+    auto_apply_enabled: false,
     created_at: "2026-06-28T00:00:00Z",
     ...(data as object),
   })),
@@ -42,6 +44,7 @@ const mockApi = vi.hoisted(() => ({
     base_url: "https://boards.greenhouse.io/acme",
     default_config: {},
     enabled: true,
+    auto_apply_enabled: false,
     created_at: "2026-06-28T00:00:00Z",
     ...(data as object),
   })),
@@ -194,6 +197,7 @@ const mockApi = vi.hoisted(() => ({
     updated_at: "2026-06-28T12:00:00Z",
   })),
   deleteProfile: vi.fn(async () => undefined),
+  listApplicationLogs: vi.fn(async (): Promise<ApplicationLog[]> => []),
   listAdminUsers: vi.fn(async (): Promise<AdminUser[]> => []),
   updateAdminUser: vi.fn(async (_id: number, data: unknown): Promise<AdminUser> => ({
     id: 2,

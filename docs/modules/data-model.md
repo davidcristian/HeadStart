@@ -22,8 +22,9 @@ erDiagram
 ```
 
 **Ownership:** `source`, `search`, `notification_target`, `site_credential`, and
-`application_profile` each carry a `user_id` FK (`ON DELETE CASCADE`). `seen_job` and `delivery_log`
-have no `user_id`; they are scoped transitively through their parent `search`.
+`application_profile` each carry a `user_id` FK (`ON DELETE CASCADE`). `seen_job`,
+`delivery_log`, and `application_log` have no `user_id`; they are scoped transitively
+through their parent `search`.
 All API queries filter by the authenticated user — see [auth.md](auth.md).
 
 ### user
@@ -70,6 +71,7 @@ A job site + which scraper handles it.
 | base_url        | str       | Site base URL                           |
 | default_config  | JSON      | Defaults merged into each search config |
 | enabled         | bool      | Default true                            |
+| auto_apply_enabled | bool   | Default false; must be true for live auto-apply |
 | created_at      | datetime  |                                         |
 
 ### search
@@ -201,6 +203,21 @@ Audit of notification attempts.
 | status      | str         | `sent` / `failed`              |
 | error       | str?        | Present when failed            |
 | sent_at     | datetime    |                                |
+
+### application_log
+
+Audit of auto-apply attempts (preview and live).
+
+| Column                   | Type        | Notes                                    |
+| ------------------------ | ----------- | ---------------------------------------- |
+| id                       | int PK      |                                          |
+| seen_job_id              | FK seen_job |                                          |
+| status                   | str         | `submitted` / `dry_run` / `failed`       |
+| dry_run                  | bool        | True when the attempt was a preview only |
+| error                    | text?       | Present when failed                      |
+| payload                  | JSON?       | Application body sent or previewed       |
+| external_application_id  | str?        | Board-assigned ID on success             |
+| created_at               | datetime    |                                          |
 
 ## Migrations
 

@@ -2,6 +2,7 @@
 which Alembic autogenerate and `create_all` (tests) rely on.
 """
 
+from app.models.application_log import ApplicationLog
 from app.models.application_profile import ApplicationProfile
 from app.models.base import Base
 from app.models.delivery_log import DeliveryLog
@@ -16,6 +17,7 @@ from app.models.source import Source
 from app.models.user import User
 
 __all__ = [
+    "ApplicationLog",
     "ApplicationProfile",
     "Base",
     "DeliveryLog",

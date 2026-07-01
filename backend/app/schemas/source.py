@@ -12,6 +12,7 @@ class SourceBase(BaseModel):
     base_url: str = Field(default="", max_length=1000)
     default_config: dict[str, Any] = Field(default_factory=dict)
     enabled: bool = True
+    auto_apply_enabled: bool = False
 
 
 class SourceCreate(SourceBase):
@@ -24,6 +25,7 @@ class SourceUpdate(BaseModel):
     base_url: str | None = Field(default=None, max_length=1000)
     default_config: dict[str, Any] | None = None
     enabled: bool | None = None
+    auto_apply_enabled: bool | None = None
 
 
 class SourceRead(SourceBase):

@@ -98,6 +98,17 @@ Store in source config or, preferably, credential `session.postings_api_key`.
 Resume **files** are not uploaded in v1; `resume_text` is appended to
 `comments` when present.
 
+## Safety & consent
+
+Live submission requires explicit opt-in per source (`source.auto_apply_enabled`,
+default `false`). Toggle from the Sources page (only for adapters with a
+registered applier). `ApplyService` rejects non–dry-run applies when opt-in is
+off; preview (`dry_run`) still works.
+
+Every apply attempt (preview or live, success or failure) is recorded in
+`application_log`. List recent rows via `GET /api/v1/application-logs`; the
+Application profile page shows the same audit trail.
+
 ## Adding one
 
 See [../recipes.md](../recipes.md) → "add a new apply adapter".

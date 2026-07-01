@@ -59,4 +59,18 @@ describe("SourcesPage", () => {
 
     await waitFor(() => expect(mockApi.deleteSource).toHaveBeenCalledWith(sampleSource.id));
   });
+
+  it("toggles auto-apply opt-in", async () => {
+    mockApi.listSources.mockResolvedValue([sampleSource]);
+    renderWithClient(<SourcesPage />);
+
+    await waitFor(() => expect(screen.getByText("ACME Careers")).toBeInTheDocument());
+    fireEvent.click(screen.getByRole("checkbox"));
+
+    await waitFor(() =>
+      expect(mockApi.updateSource).toHaveBeenCalledWith(sampleSource.id, {
+        auto_apply_enabled: true,
+      }),
+    );
+  });
 });

@@ -14,12 +14,14 @@ export function ApplyJobDialog({
   open,
   initialCoverLetter,
   profileReady,
+  autoApplyEnabled,
   onClose,
 }: {
   job: Job;
   open: boolean;
   initialCoverLetter: string;
   profileReady: boolean;
+  autoApplyEnabled: boolean;
   onClose: () => void;
 }) {
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -97,6 +99,17 @@ export function ApplyJobDialog({
           </Banner>
         )}
 
+        {profileReady && !autoApplyEnabled && (
+          <Banner kind="info">
+            Live submission is off for this source. You can preview the payload, then enable
+            auto-apply on the{" "}
+            <Link to="/app/sources" onClick={onClose}>
+              Sources
+            </Link>{" "}
+            page before submitting.
+          </Banner>
+        )}
+
         {step === "success" ? (
           <div className="apply-dialog-body">
             <Banner kind="success">
@@ -141,7 +154,7 @@ export function ApplyJobDialog({
               >
                 {busyAction === "preview" ? "Previewing..." : "Preview"}
               </Button>
-              <Button onClick={() => void runApply(false)} disabled={!profileReady || isPending}>
+              <Button onClick={() => void runApply(false)} disabled={!profileReady || !autoApplyEnabled || isPending}>
                 {busyAction === "submit" ? "Submitting..." : "Submit application"}
               </Button>
             </div>

@@ -17,6 +17,7 @@ export const queryKeys = {
   targets: ["targets"] as const,
   credentials: ["credentials"] as const,
   profile: ["profile"] as const,
+  applicationLogs: ["application-logs"] as const,
   feedUrl: ["feed-url"] as const,
   jobs: (searchId?: number, status?: JobStatus) =>
     ["jobs", searchId ?? null, status ?? null] as const,
@@ -54,6 +55,13 @@ export function useCredentials() {
 
 export function useProfile() {
   return useQuery({ queryKey: queryKeys.profile, queryFn: () => api.getProfile() });
+}
+
+export function useApplicationLogs(limit = 100) {
+  return useQuery({
+    queryKey: [...queryKeys.applicationLogs, limit] as const,
+    queryFn: () => api.listApplicationLogs(limit),
+  });
 }
 
 export function useFeedUrl(enabled = true) {

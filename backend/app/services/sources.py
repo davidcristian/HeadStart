@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from sqlalchemy.orm import Session
 
+from app.appliers import available_appliers, has_applier
 from app.core.exceptions import NotFoundError, ValidationError
 from app.models.source import Source
 from app.repositories.sources import SourceRepository
@@ -40,6 +41,8 @@ class SourceService:
 
     def create(self, user_id: int, data: SourceCreate) -> Source:
         self._validate_adapter(data.adapter_key)
+        if data.auto_apply_enabled:
+            self._validate_auto_apply(data.adapter_key)
         PlanLimitsService(self.session).require_can_add_source(user_id, data.adapter_key)
         source = Source(
             user_id=user_id,
@@ -48,6 +51,7 @@ class SourceService:
             base_url=data.base_url,
             default_config=data.default_config,
             enabled=data.enabled,
+            auto_apply_enabled=data.auto_apply_enabled,
         )
         return self.repo.add(source)
 
@@ -59,6 +63,11 @@ class SourceService:
             PlanLimitsService(self.session).require_can_update_source_adapter(
                 user_id, fields["adapter_key"]
             )
+            if not has_applier(fields["adapter_key"]):
+                source.auto_apply_enabled = False
+        if fields.get("auto_apply_enabled") is True:
+            adapter_key = fields.get("adapter_key", source.adapter_key)
+            self._validate_auto_apply(adapter_key)
         for key, value in fields.items():
             setattr(source, key, value)
         self.session.flush()
@@ -120,4 +129,12 @@ class SourceService:
         if adapter_key not in available_scrapers():
             raise ValidationError(
                 f"Unknown adapter_key '{adapter_key}'. Available: {available_scrapers()}"
+            )
+
+    @staticmethod
+    def _validate_auto_apply(adapter_key: str) -> None:
+        if not has_applier(adapter_key):
+            raise ValidationError(
+                f"Adapter '{adapter_key}' does not support auto-apply. "
+                f"Available: {available_appliers()}"
             )

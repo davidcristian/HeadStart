@@ -1,9 +1,18 @@
 import { mockApi, resetMockApi } from "../test/mockApi";
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
+import { MemoryRouter } from "react-router-dom";
 import { sampleJob, sampleProfile, sampleSearch, sampleSource } from "../test/fixtures";
 import { renderWithClient } from "../test/renderWithClient";
 import { JobsPage } from "./JobsPage";
+
+function renderJobsPage() {
+  return renderWithClient(
+    <MemoryRouter>
+      <JobsPage />
+    </MemoryRouter>,
+  );
+}
 
 describe("JobsPage", () => {
   beforeEach(() => {
@@ -11,7 +20,7 @@ describe("JobsPage", () => {
   });
 
   it("renders the page and empty state", async () => {
-    renderWithClient(<JobsPage />);
+    renderJobsPage();
 
     expect(screen.getByRole("heading", { name: "Jobs" })).toBeInTheDocument();
     await waitFor(() =>
@@ -23,7 +32,7 @@ describe("JobsPage", () => {
 
   it("lists discovered jobs", async () => {
     mockApi.listJobs.mockResolvedValue([sampleJob]);
-    renderWithClient(<JobsPage />);
+    renderJobsPage();
 
     await waitFor(() => expect(screen.getByText("Software Engineer")).toBeInTheDocument());
     expect(screen.getByText("ACME")).toBeInTheDocument();
@@ -35,7 +44,7 @@ describe("JobsPage", () => {
   it("filters jobs by search", async () => {
     mockApi.listSearches.mockResolvedValue([sampleSearch]);
     mockApi.listJobs.mockResolvedValue([sampleJob]);
-    renderWithClient(<JobsPage />);
+    renderJobsPage();
 
     await waitFor(() => expect(screen.getByText("Software Engineer")).toBeInTheDocument());
     expect(mockApi.listJobs).toHaveBeenCalledWith(undefined, undefined);
@@ -50,7 +59,7 @@ describe("JobsPage", () => {
 
   it("filters jobs by status", async () => {
     mockApi.listJobs.mockResolvedValue([{ ...sampleJob, status: "applied" }]);
-    renderWithClient(<JobsPage />);
+    renderJobsPage();
 
     await waitFor(() => expect(screen.getByText("Applied")).toBeInTheDocument());
 
@@ -63,7 +72,7 @@ describe("JobsPage", () => {
 
   it("updates job status from row actions", async () => {
     mockApi.listJobs.mockResolvedValue([sampleJob]);
-    renderWithClient(<JobsPage />);
+    renderJobsPage();
 
     await waitFor(() => expect(screen.getByText("Software Engineer")).toBeInTheDocument());
     fireEvent.click(screen.getByRole("button", { name: "Applied" }));
@@ -74,7 +83,7 @@ describe("JobsPage", () => {
   });
 
   it("shows the RSS feed URL", async () => {
-    renderWithClient(<JobsPage />);
+    renderJobsPage();
 
     await waitFor(() =>
       expect(
@@ -89,7 +98,7 @@ describe("JobsPage", () => {
     mockApi.listSearches.mockResolvedValue([sampleSearch]);
     mockApi.listJobs.mockResolvedValue([sampleJob]);
     mockApi.getProfile.mockResolvedValue(sampleProfile);
-    renderWithClient(<JobsPage />);
+    renderJobsPage();
 
     await waitFor(() => expect(screen.getByText("Software Engineer")).toBeInTheDocument());
     fireEvent.click(screen.getByRole("button", { name: "Apply" }));
@@ -104,7 +113,7 @@ describe("JobsPage", () => {
     mockApi.listSearches.mockResolvedValue([sampleSearch]);
     mockApi.listJobs.mockResolvedValue([sampleJob]);
     mockApi.getProfile.mockResolvedValue(sampleProfile);
-    renderWithClient(<JobsPage />);
+    renderJobsPage();
 
     await waitFor(() => expect(screen.getByRole("button", { name: "Apply" })).toBeInTheDocument());
     fireEvent.click(screen.getByRole("button", { name: "Apply" }));

@@ -31,6 +31,7 @@ export function SourcesPage() {
   const [configValid, setConfigValid] = useState(true);
 
   const adapters = meta.data?.scrapers ?? [];
+  const appliers = meta.data?.appliers ?? [];
   const effectiveAdapter = adapter || adapters[0] || "";
   const plan = meta.data?.plan;
   const canCreate = plan ? canAddResource(plan, "sources") : true;
@@ -51,6 +52,10 @@ export function SourcesPage() {
     } catch (err) {
       setError((err as Error).message);
     }
+  }
+
+  async function toggleAutoApply(id: number, autoApplyEnabled: boolean) {
+    await updateSource.mutateAsync({ id, data: { auto_apply_enabled: autoApplyEnabled } });
   }
 
   async function remove(id: number) {
@@ -141,6 +146,7 @@ export function SourcesPage() {
                 <th>Name</th>
                 <th>Adapter</th>
                 <th>Status</th>
+                <th>Auto-apply</th>
                 <th></th>
               </tr>
             </thead>
@@ -156,6 +162,20 @@ export function SourcesPage() {
                   </td>
                   <td>
                     <Badge on={s.enabled} />
+                  </td>
+                  <td>
+                    {appliers.includes(s.adapter_key) ? (
+                      <label className="checkbox-inline">
+                        <input
+                          type="checkbox"
+                          checked={s.auto_apply_enabled}
+                          onChange={(e) => void toggleAutoApply(s.id, e.target.checked)}
+                        />
+                        <span>{s.auto_apply_enabled ? "Enabled" : "Off"}</span>
+                      </label>
+                    ) : (
+                      <span className="muted">N/A</span>
+                    )}
                   </td>
                   <td className="row-actions">
                     <Button variant="ghost" onClick={() => test(s.id)}>

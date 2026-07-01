@@ -9,10 +9,13 @@ export interface Source {
   base_url: string;
   default_config: Json;
   enabled: boolean;
+  auto_apply_enabled: boolean;
   created_at: string;
 }
 
-export type SourceCreate = Omit<Source, "id" | "created_at">;
+export type SourceCreate = Omit<Source, "id" | "created_at" | "auto_apply_enabled"> & {
+  auto_apply_enabled?: boolean;
+};
 
 export interface SourceDetectResult {
   adapter_key: string;
@@ -123,6 +126,20 @@ export interface JobApplyResult {
   payload: Record<string, unknown> | null;
   external_application_id: string | null;
   job: Job | null;
+}
+
+export interface ApplicationLog {
+  id: number;
+  seen_job_id: number;
+  job_title: string;
+  job_company: string;
+  job_url: string;
+  status: string;
+  dry_run: boolean;
+  error: string | null;
+  payload: Record<string, unknown> | null;
+  external_application_id: string | null;
+  created_at: string;
 }
 
 export interface FeedUrl {

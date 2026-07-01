@@ -8,6 +8,7 @@ import type {
   Health,
   Job,
   JobApplyResult,
+  ApplicationLog,
   FeedUrl,
   Meta,
   NotificationTarget,
@@ -129,6 +130,9 @@ export const api = {
     request<Job>(`/api/v1/jobs/${id}`, { method: "PATCH", body: data }),
   applyToJob: (id: number, data: { dry_run?: boolean; cover_letter?: string | null }) =>
     request<JobApplyResult>(`/api/v1/jobs/${id}/apply`, { method: "POST", body: data }),
+
+  listApplicationLogs: (limit = 100) =>
+    request<ApplicationLog[]>(`/api/v1/application-logs?limit=${limit}`),
 
   // feed
   getFeedUrl: () => request<FeedUrl>("/api/v1/feed/url"),

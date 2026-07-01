@@ -25,6 +25,7 @@ class Source(Base, TimestampMixin):
     base_url: Mapped[str] = mapped_column(String(1000), nullable=False, default="")
     default_config: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict, nullable=False)
     enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    auto_apply_enabled: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     user: Mapped["User"] = relationship(back_populates="sources")
     searches: Mapped[list["Search"]] = relationship(

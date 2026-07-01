@@ -182,6 +182,7 @@ export function useApplyToJob() {
       cover_letter?: string | null;
     }) => api.applyToJob(id, { dry_run, cover_letter }),
     onSuccess: (result) => {
+      invalidate(qc, queryKeys.applicationLogs);
       if (result.status === "submitted") {
         qc.invalidateQueries({ queryKey: ["jobs"] });
       }

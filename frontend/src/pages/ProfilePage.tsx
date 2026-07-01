@@ -8,8 +8,8 @@
 
 import { useEffect, useState } from "react";
 import { JsonEditor } from "../components/JsonEditor";
-import { Banner, Button, Card, Field } from "../components/ui";
-import { useProfile } from "../hooks/queries";
+import { Banner, Button, Card, EmptyState, Field } from "../components/ui";
+import { useApplicationLogs, useProfile } from "../hooks/queries";
 import { useDeleteProfile, useSaveProfile } from "../hooks/mutations";
 import type { Json } from "../types";
 
@@ -33,6 +33,7 @@ function asStringMap(value: Json): Record<string, string> {
 
 export function ProfilePage() {
   const profile = useProfile();
+  const applicationLogs = useApplicationLogs();
   const saveProfile = useSaveProfile();
   const deleteProfile = useDeleteProfile();
   const [form, setForm] = useState({ ...EMPTY });
@@ -215,6 +216,54 @@ export function ProfilePage() {
         </div>
         {existing?.updated_at && (
           <p className="muted">Last updated {new Date(existing.updated_at).toLocaleString()}.</p>
+        )}
+      </Card>
+
+      <Card title="Application history">
+        <p className="muted">
+          Audit log of auto-apply previews and submissions. Enable live auto-apply per source on the
+          Sources page.
+        </p>
+        {applicationLogs.isPending && <p>Loading...</p>}
+        {applicationLogs.data && applicationLogs.data.length === 0 && (
+          <EmptyState>No application attempts yet.</EmptyState>
+        )}
+        {applicationLogs.data && applicationLogs.data.length > 0 && (
+          <table className="table">
+            <thead>
+              <tr>
+                <th>When</th>
+                <th>Job</th>
+                <th>Result</th>
+                <th>Details</th>
+              </tr>
+            </thead>
+            <tbody>
+              {applicationLogs.data.map((entry) => (
+                <tr key={entry.id}>
+                  <td className="muted">{new Date(entry.created_at).toLocaleString()}</td>
+                  <td>
+                    <strong>{entry.job_title}</strong>
+                    <div className="muted">{entry.job_company}</div>
+                  </td>
+                  <td>
+                    {entry.dry_run ? "Preview" : entry.status}
+                    {entry.error && <div className="muted">{entry.error}</div>}
+                  </td>
+                  <td>
+                    {entry.external_application_id && (
+                      <div className="muted">ID: {entry.external_application_id}</div>
+                    )}
+                    {entry.job_url && (
+                      <a href={entry.job_url} target="_blank" rel="noreferrer">
+                        View posting
+                      </a>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         )}
       </Card>
     </>

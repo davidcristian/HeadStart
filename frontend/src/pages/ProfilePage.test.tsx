@@ -61,4 +61,26 @@ describe("ProfilePage", () => {
 
     await waitFor(() => expect(mockApi.deleteProfile).toHaveBeenCalled());
   });
+
+  it("shows application history", async () => {
+    mockApi.listApplicationLogs.mockResolvedValue([
+      {
+        id: 1,
+        seen_job_id: 100,
+        job_title: "Software Engineer",
+        job_company: "ACME",
+        job_url: "https://example.test/jobs/1",
+        status: "dry_run",
+        dry_run: true,
+        error: null,
+        payload: { email: "ada@example.com" },
+        external_application_id: null,
+        created_at: "2026-06-28T12:00:00Z",
+      },
+    ]);
+    renderWithClient(<ProfilePage />);
+
+    await waitFor(() => expect(screen.getByText("Software Engineer")).toBeInTheDocument());
+    expect(screen.getByText("Preview")).toBeInTheDocument();
+  });
 });

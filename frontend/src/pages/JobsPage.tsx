@@ -95,6 +95,13 @@ export function JobsPage() {
     return renderCoverLetterTemplate(template, applyJob.company, applyJob.title);
   }, [applyJob, profile.data?.cover_letter_template]);
 
+  const applyAutoApplyEnabled = useMemo(() => {
+    if (!applyJob) return false;
+    const search = searches.data?.find((item) => item.id === applyJob.search_id);
+    const source = sources.data?.find((item) => item.id === search?.source_id);
+    return source?.auto_apply_enabled ?? false;
+  }, [applyJob, searches.data, sources.data]);
+
   return (
     <div className="jobs-page">
       {(pulling || refreshing) && (
@@ -184,6 +191,7 @@ export function JobsPage() {
           open
           initialCoverLetter={applyCoverLetter}
           profileReady={profile.data?.exists ?? false}
+          autoApplyEnabled={applyAutoApplyEnabled}
           onClose={() => setApplyJob(null)}
         />
       )}

@@ -177,7 +177,7 @@ sessions) and the job lifecycle (`seen_job.status`).
 | Per-site apply adapters | Each ATS/board has different apply flows | Pluggable adapters (same registry pattern as scrapers); **Greenhouse** and **Lever** shipped (Job Board / Postings API + dry-run preview); others remain. See [modules/appliers.md](modules/appliers.md) |
 | Apply orchestration service | Business rules live in services, not routers | **Shipped (minimal):** `ApplyService.apply_to_job` loads profile, credentials, and source config; delegates to applier; marks `seen_job` `applied` on success. Queueing, API routes, and audit log deferred. |
 | ~~Apply from the Jobs UI~~ | ~~Users need a one-click path~~ | **Shipped:** Apply button on supported jobs; confirm dialog with editable cover letter; preview (`dry_run`) and submit; success/failure feedback on Jobs page |
-| Safety & consent | Auto-apply is high-risk | Explicit opt-in per source, dry-run/preview mode, rate limits, and clear audit log of what was submitted | **Partial:** dry-run preview in Jobs UI; per-source opt-in and audit log remain |
+| Safety & consent | Auto-apply is high-risk | Explicit opt-in per source, dry-run/preview mode, rate limits, and clear audit log of what was submitted | **Shipped:** `source.auto_apply_enabled` (default off); live apply blocked until enabled; `application_log` table + `GET /application-logs`; Sources toggle + Application profile history UI |
 
 **Done when:** a user with a saved credential and profile can apply to a
 supported job from the Jobs page, see the result, and the job is marked

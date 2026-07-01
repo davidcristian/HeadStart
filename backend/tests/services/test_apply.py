@@ -1,8 +1,12 @@
 """Tests for apply orchestration service."""
 
+from unittest.mock import patch
+
 from sqlalchemy.orm import Session
 
+from app.appliers.types import ApplyResult
 from app.core.exceptions import NotFoundError, ValidationError
+from app.models.application_log import ApplicationLog
 from app.models.seen_job import SeenJob
 from app.models.source import Source
 from app.schemas.profile import ProfileData
@@ -57,6 +61,58 @@ def test_apply_service_dry_run_returns_payload(db_session: Session) -> None:
     assert result.payload["email"] == "ada@example.com"
     db_session.refresh(job)
     assert job.status == "new"
+    logs = db_session.query(ApplicationLog).all()
+    assert len(logs) == 1
+    assert logs[0].status == "dry_run"
+    assert logs[0].dry_run is True
+    assert logs[0].payload is not None
+
+
+def test_apply_service_live_without_opt_in_fails(db_session: Session) -> None:
+    user_id, job_id, job = _seed_greenhouse_job(db_session)
+    ProfileService(db_session).save(
+        user_id,
+        ProfileData(full_name="Ada Lovelace", email="ada@example.com", resume_text="CV"),
+    )
+
+    try:
+        ApplyService(db_session).apply_to_job(user_id, job_id, dry_run=False)
+        raise AssertionError("expected ValidationError")
+    except ValidationError as exc:
+        assert "auto-apply" in str(exc).lower()
+
+    db_session.refresh(job)
+    assert job.status == "new"
+    assert db_session.query(ApplicationLog).count() == 0
+
+
+def test_apply_service_live_with_opt_in_records_log(db_session: Session) -> None:
+    user_id, job_id, job = _seed_greenhouse_job(db_session)
+    source = db_session.get(Source, job.search.source_id)
+    assert source is not None
+    source.auto_apply_enabled = True
+    db_session.flush()
+    ProfileService(db_session).save(
+        user_id,
+        ProfileData(full_name="Ada Lovelace", email="ada@example.com", resume_text="CV"),
+    )
+
+    with patch("app.services.apply.get_applier") as mock_get_applier:
+        mock_get_applier.return_value.apply.return_value = ApplyResult(
+            status="submitted",
+            payload={"email": "ada@example.com"},
+            external_application_id="app-1",
+        )
+        result = ApplyService(db_session).apply_to_job(user_id, job_id, dry_run=False)
+
+    assert result.status == "submitted"
+    db_session.refresh(job)
+    assert job.status == "applied"
+    logs = db_session.query(ApplicationLog).all()
+    assert len(logs) == 1
+    assert logs[0].status == "submitted"
+    assert logs[0].dry_run is False
+    assert logs[0].external_application_id == "app-1"
 
 
 def test_apply_service_rejects_unsupported_adapter(db_session: Session) -> None:
