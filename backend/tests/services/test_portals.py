@@ -20,7 +20,7 @@ def test_list_portal_presets_filters_query() -> None:
 def test_curated_portal_catalog_size() -> None:
     from app.portals.catalog import CURATED_PORTALS
 
-    assert len(CURATED_PORTALS) == 43
+    assert len(CURATED_PORTALS) == 44
 
 
 def test_curated_portal_doordash_board_token() -> None:
@@ -39,6 +39,15 @@ def test_curated_portal_intel_workday_config() -> None:
     assert preset.default_config["tenant"] == "intel"
     assert preset.default_config["site"] == "External"
     assert preset.default_config["region"] == "wd1"
+
+
+def test_curated_portal_microsoft_preset() -> None:
+    from app.portals.catalog import CURATED_PORTALS
+
+    preset = next(p for p in CURATED_PORTALS if p.id == "microsoft")
+    assert preset.adapter_key == "microsoft_careers"
+    assert preset.default_config["domain"] == "microsoft.com"
+    assert preset.base_url == "https://apply.careers.microsoft.com/careers"
 
 
 def test_config_keys_match_greenhouse() -> None:

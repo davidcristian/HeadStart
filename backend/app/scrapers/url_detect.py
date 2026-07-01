@@ -3,24 +3,15 @@
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
 from typing import Any
 from urllib.parse import parse_qs, urlparse
+
+from app.scrapers.url_detect_microsoft import detect_microsoft_careers
+from app.scrapers.url_detect_types import SourceDetection
 
 _LOCALE_RE = re.compile(r"^[a-z]{2}-[A-Z]{2}$")
 _WORKDAY_HOST_WITH_REGION = re.compile(r"^([^.]+)\.(wd\d+)\.myworkdayjobs\.com$", re.IGNORECASE)
 _WORKDAY_HOST_PLAIN = re.compile(r"^([^.]+)\.myworkdayjobs\.com$", re.IGNORECASE)
-
-
-@dataclass(frozen=True)
-class SourceDetection:
-    """Suggested source fields inferred from a job-board URL."""
-
-    adapter_key: str
-    suggested_name: str
-    base_url: str
-    default_config: dict[str, Any]
-    query_url: str
 
 
 def detect_source_from_url(url: str, *, page_title: str | None = None) -> SourceDetection | None:
@@ -36,6 +27,7 @@ def detect_source_from_url(url: str, *, page_title: str | None = None) -> Source
         _detect_ashby,
         _detect_workday,
         _detect_google_careers,
+        detect_microsoft_careers,
         _detect_indeed,
     ):
         result = detector(parsed, host, page_title)

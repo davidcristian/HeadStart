@@ -13,7 +13,15 @@ PlanId = Literal["free", "pro", "team"]
 
 # Scrapers included on Free (common ATS + generic HTML). Pro unlocks the rest.
 FREE_SCRAPERS: frozenset[str] = frozenset(
-    {"greenhouse", "lever", "ashby", "generic_html", "workday", "google_careers"}
+    {
+        "greenhouse",
+        "lever",
+        "ashby",
+        "generic_html",
+        "workday",
+        "google_careers",
+        "microsoft_careers",
+    }
 )
 PREMIUM_SCRAPERS: frozenset[str] = frozenset({"indeed", "linkedin", "playwright"})
 

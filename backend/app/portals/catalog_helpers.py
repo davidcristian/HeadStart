@@ -96,3 +96,25 @@ def google_careers_preset(
         base_url=base,
         default_config={"company": company, "portal_id": portal_id},
     )
+
+
+def microsoft_careers_preset(
+    *,
+    portal_id: str = "microsoft",
+    company: str = "Microsoft",
+    domain: str = "microsoft.com",
+    category: PortalCategory = "big_tech",
+) -> PortalPreset:
+    base = "https://apply.careers.microsoft.com/careers"
+    return PortalPreset(
+        id=portal_id,
+        company_name=company,
+        category=category,
+        adapter_key="microsoft_careers",
+        base_url=base,
+        default_config={
+            "company": company,
+            "domain": domain,
+            "portal_id": portal_id,
+        },
+    )

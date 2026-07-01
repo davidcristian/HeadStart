@@ -75,6 +75,29 @@ def test_detect_google_careers_root_url() -> None:
     assert result.default_config["portal_id"] == "google"
 
 
+def test_detect_microsoft_careers_board_url() -> None:
+    result = detect_source_from_url(
+        "https://apply.careers.microsoft.com/careers?q=software&location=Redmond",
+        page_title="Search Jobs — Microsoft Careers",
+    )
+    assert result is not None
+    assert result.adapter_key == "microsoft_careers"
+    assert result.default_config["company"] == "Microsoft"
+    assert result.default_config["q"] == "software"
+    assert result.default_config["location"] == "Redmond"
+    assert result.suggested_name == "Search Jobs"
+    assert result.base_url == "https://apply.careers.microsoft.com/careers"
+
+
+def test_detect_microsoft_careers_api_url() -> None:
+    result = detect_source_from_url(
+        "https://apply.careers.microsoft.com/api/pcsx/search?domain=microsoft.com&query=kernel"
+    )
+    assert result is not None
+    assert result.adapter_key == "microsoft_careers"
+    assert result.default_config["q"] == "kernel"
+
+
 def test_detect_indeed_search_url() -> None:
     result = detect_source_from_url(
         "https://www.indeed.com/jobs?q=python&l=remote",

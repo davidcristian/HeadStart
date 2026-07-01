@@ -1,0 +1,31 @@
+{
+  "status": 200,
+  "error": { "message": "", "body": "" },
+  "data": {
+    "positions": [
+      {
+        "id": 1970393556869024,
+        "displayJobId": "200038289",
+        "name": "Software Engineer/Sr Software Engineer",
+        "locations": ["United States, Washington, Redmond"],
+        "standardizedLocations": ["Redmond, WA, US"],
+        "postedTs": 1780069158,
+        "department": "Software Engineering",
+        "atsJobId": "200038289",
+        "positionUrl": "/careers/job/1970393556869024"
+      },
+      {
+        "id": 1970393556753321,
+        "displayJobId": "200026496",
+        "name": "Senior Software Engineer -Backend Software",
+        "locations": ["Canada, British Columbia, Vancouver"],
+        "standardizedLocations": ["Vancouver, BC, CA"],
+        "postedTs": 1782386027,
+        "department": "Software Engineering",
+        "atsJobId": "200026496",
+        "positionUrl": "/careers/job/1970393556753321"
+      }
+    ],
+    "count": 802
+  }
+}

@@ -8,12 +8,14 @@ from app.portals.catalog_helpers import (
     gh_preset,
     google_careers_preset,
     lever_preset,
+    microsoft_careers_preset,
     workday_preset,
 )
 
 CURATED_PORTALS: tuple[PortalPreset, ...] = (
     # Big tech (proprietary / dedicated career sites)
     google_careers_preset(),
+    microsoft_careers_preset(),
     # Big tech (Workday-backed career sites with public CXS APIs)
     workday_preset(
         portal_id="nvidia",

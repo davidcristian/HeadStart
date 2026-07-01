@@ -12,6 +12,7 @@ from app.scrapers.adapters import (
     indeed,
     lever,
     linkedin,
+    microsoft_careers,
     playwright_html,
     workday,
 )
@@ -24,6 +25,7 @@ __all__ = [
     "indeed",
     "lever",
     "linkedin",
+    "microsoft_careers",
     "playwright_html",
     "workday",
 ]
