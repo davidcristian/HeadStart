@@ -9,6 +9,21 @@ JOB_URL = (
     "job/US-CA-Santa-Clara/Senior-Software-Engineer_JR1001"
 )
 
+WORKDAY_CONFIG = {
+    "tenant": "acme",
+    "site": "AcmeCareers",
+    "region": "wd5",
+}
+
+WORKDAY_CREDENTIALS = {
+    "cookies": {
+        "CALYPSO_SESSION": "session-token",
+        "CALYPSO_CSRF_TOKEN": "csrf-token",
+    },
+    "headers": {},
+    "session": {},
+}
+
 
 def profile() -> ProfileData:
     return ProfileData(
