@@ -27,10 +27,13 @@ The frontend serves two surfaces from one bundle (see
   `/login`, `/register`, `/forgot-password`, `/reset-password`.
 - **Authenticated product** under **`/app/*`**, gated by `ProtectedRoute` and
   wrapped in the `Layout` shell (`/app/searches`, `/app/jobs`, …, `/app/admin`).
-  `/app` redirects to `/app/searches`.
+  `/app` redirects to `/app/searches`. New accounts without
+  `onboarding_completed_at` are redirected to **`/app/onboarding`** (guided
+  setup wizard) before they can reach the main shell.
 
-Login/Register send the user to `/app/searches` on success and bounce
-already-authenticated visitors to `/app`. Legacy top-level paths (`/jobs`,
+Login/Register send new users to `/app/onboarding` on success (register) or
+`/app` (login, which the onboarding guard redirects). Already-authenticated
+visitors to auth screens bounce to `/app`. Legacy top-level paths (`/jobs`,
 `/searches`, …) 301-style redirect to their `/app/*` equivalent so old
 bookmarks and the installed PWA (`start_url: /app/jobs`) keep working. Any
 other unknown path redirects to the landing page.
@@ -44,6 +47,7 @@ other unknown path redirects to the landing page.
 | Terms       | Public terms of use at `/terms` |
 | Login       | Email + password sign-in                                         |
 | Register    | Create an account (first user becomes admin)                     |
+| Onboarding  | First-run wizard at `/app/onboarding`: source → notify → search → run |
 | Sources     | List/create/edit sources (name, adapter, base URL, config); test scrape |
 | Searches    | Create a search: pick source + target, query URL + structured filters (keywords, location, workplace, salary) + |
 |             | interval; enable/disable; run now (immediate results); view last |

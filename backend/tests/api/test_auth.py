@@ -129,6 +129,59 @@ def test_me_requires_auth(client: TestClient) -> None:
     assert client.get("/api/v1/auth/me").status_code == 401
 
 
+def test_new_user_needs_onboarding(client: TestClient) -> None:
+    client.post(
+        "/api/v1/auth/register",
+        json={"email": "new@example.com", "password": "password123"},
+    )
+    login = client.post(
+        "/api/v1/auth/login",
+        json={"email": "new@example.com", "password": "password123"},
+    )
+    headers = {"Authorization": f"Bearer {login.json()['access_token']}"}
+    me = client.get("/api/v1/auth/me", headers=headers)
+    assert me.status_code == 200
+    assert me.json()["onboarding_completed_at"] is None
+
+
+def test_complete_onboarding_sets_timestamp(client: TestClient) -> None:
+    client.post(
+        "/api/v1/auth/register",
+        json={"email": "onboard@example.com", "password": "password123"},
+    )
+    login = client.post(
+        "/api/v1/auth/login",
+        json={"email": "onboard@example.com", "password": "password123"},
+    )
+    headers = {"Authorization": f"Bearer {login.json()['access_token']}"}
+
+    complete = client.post("/api/v1/auth/me/complete-onboarding", headers=headers)
+    assert complete.status_code == 200
+    assert complete.json()["onboarding_completed_at"] is not None
+
+    me = client.get("/api/v1/auth/me", headers=headers)
+    assert me.json()["onboarding_completed_at"] is not None
+
+
+def test_complete_onboarding_is_idempotent(client: TestClient) -> None:
+    client.post(
+        "/api/v1/auth/register",
+        json={"email": "again@example.com", "password": "password123"},
+    )
+    login = client.post(
+        "/api/v1/auth/login",
+        json={"email": "again@example.com", "password": "password123"},
+    )
+    headers = {"Authorization": f"Bearer {login.json()['access_token']}"}
+
+    first = client.post("/api/v1/auth/me/complete-onboarding", headers=headers)
+    second = client.post("/api/v1/auth/me/complete-onboarding", headers=headers)
+    assert first.status_code == 200
+    assert second.status_code == 200
+    assert first.json()["onboarding_completed_at"] is not None
+    assert second.json()["onboarding_completed_at"] is not None
+
+
 def test_bootstrap_admin_claim_is_exclusive(db_session: Session) -> None:
     """Only one account can claim the bootstrap admin slot."""
     repo = UserRepository(db_session)

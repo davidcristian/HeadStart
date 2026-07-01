@@ -29,7 +29,7 @@ export function RegisterPage() {
     setBusy(true);
     try {
       await register(email, password);
-      navigate("/app/searches", { replace: true });
+      navigate("/app/onboarding", { replace: true });
     } catch (err) {
       setError((err as Error).message);
     } finally {

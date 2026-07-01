@@ -50,6 +50,7 @@ class UserRead(BaseModel):
     email: EmailStr
     is_admin: bool
     is_active: bool
+    onboarding_completed_at: datetime | None = None
     created_at: datetime
 
 

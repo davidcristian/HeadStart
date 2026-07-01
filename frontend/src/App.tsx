@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { AdminRoute } from "./auth/AdminRoute";
+import { OnboardingGuard } from "./auth/OnboardingGuard";
 import { ProtectedRoute } from "./auth/ProtectedRoute";
 import { Layout } from "./components/Layout";
 import { AdminPage } from "./pages/AdminPage";
@@ -8,6 +9,7 @@ import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
 import { JobsPage } from "./pages/JobsPage";
 import { LandingPage } from "./pages/LandingPage";
 import { LoginPage } from "./pages/LoginPage";
+import { OnboardingPage } from "./pages/OnboardingPage";
 import { PrivacyPolicyPage } from "./pages/PrivacyPolicyPage";
 import { TermsOfUsePage } from "./pages/TermsOfUsePage";
 import { ProfilePage } from "./pages/ProfilePage";
@@ -43,19 +45,22 @@ export function App() {
       <Route path="/reset-password" element={<ResetPasswordPage />} />
 
       <Route path="/app" element={<ProtectedRoute />}>
-        <Route element={<Layout />}>
-          <Route index element={<Navigate to="/app/searches" replace />} />
-          <Route path="searches" element={<SearchesPage />} />
-          <Route path="jobs" element={<JobsPage />} />
-          <Route path="sources" element={<SourcesPage />} />
-          <Route path="targets" element={<TargetsPage />} />
-          <Route path="credentials" element={<CredentialsPage />} />
-          <Route path="profile" element={<ProfilePage />} />
-          <Route path="settings" element={<SettingsPage />} />
-          <Route element={<AdminRoute />}>
-            <Route path="admin" element={<AdminPage />} />
+        <Route path="onboarding" element={<OnboardingPage />} />
+        <Route element={<OnboardingGuard />}>
+          <Route element={<Layout />}>
+            <Route index element={<Navigate to="/app/searches" replace />} />
+            <Route path="searches" element={<SearchesPage />} />
+            <Route path="jobs" element={<JobsPage />} />
+            <Route path="sources" element={<SourcesPage />} />
+            <Route path="targets" element={<TargetsPage />} />
+            <Route path="credentials" element={<CredentialsPage />} />
+            <Route path="profile" element={<ProfilePage />} />
+            <Route path="settings" element={<SettingsPage />} />
+            <Route element={<AdminRoute />}>
+              <Route path="admin" element={<AdminPage />} />
+            </Route>
+            <Route path="*" element={<Navigate to="/app/searches" replace />} />
           </Route>
-          <Route path="*" element={<Navigate to="/app/searches" replace />} />
         </Route>
       </Route>
 

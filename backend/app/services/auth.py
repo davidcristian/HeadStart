@@ -110,6 +110,14 @@ class AuthService:
             raise NotFoundError("User not found.")
         return user
 
+    def complete_onboarding(self, user_id: int) -> User:
+        """Mark the first-run onboarding wizard as finished."""
+        user = self.me(user_id)
+        if user.onboarding_completed_at is None:
+            user.onboarding_completed_at = utcnow()
+            self.session.flush()
+        return user
+
     def request_password_reset(self, data: ForgotPasswordRequest) -> str:
         """Issue a reset token and email it. Always returns the same message."""
         user = self.repo.get_by_email(data.email.lower())

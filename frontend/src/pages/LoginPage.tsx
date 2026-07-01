@@ -27,7 +27,7 @@ export function LoginPage() {
     setBusy(true);
     try {
       await login(email, password);
-      navigate("/app/searches", { replace: true });
+      navigate("/app", { replace: true });
     } catch (err) {
       setError((err as Error).message);
     } finally {

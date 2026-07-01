@@ -38,6 +38,7 @@ An account. The first one created becomes admin.
 | is_admin      | bool     | First registered user = true       |
 | feed_token_version | int | Incremented to revoke RSS feed URLs |
 | is_active     | bool     | Disabled accounts cannot log in    |
+| onboarding_completed_at | datetime? | Set when the first-run wizard is finished or skipped |
 | created_at    | datetime |                                    |
 
 ### password_reset_token

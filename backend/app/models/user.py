@@ -1,8 +1,9 @@
 """User: an account that owns its own sources, searches, targets, and creds."""
 
+from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, String
+from sqlalchemy import Boolean, DateTime, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, TimestampMixin
@@ -27,6 +28,10 @@ class User(Base, TimestampMixin):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     # Incremented to invalidate previously issued RSS feed URLs.
     feed_token_version: Mapped[int] = mapped_column(default=0, nullable=False)
+    # Set when the first-run onboarding wizard is finished (or skipped).
+    onboarding_completed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     sources: Mapped[list["Source"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"

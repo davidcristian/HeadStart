@@ -107,6 +107,14 @@ def me(user: User = Depends(get_current_user)) -> UserRead:
     return UserRead.model_validate(user)
 
 
+@router.post("/me/complete-onboarding", response_model=UserRead)
+def complete_onboarding(
+    user: User = Depends(get_current_user), db: Session = Depends(get_db)
+) -> UserRead:
+    """Mark the first-run onboarding wizard as finished."""
+    return UserRead.model_validate(AuthService(db).complete_onboarding(user.id))
+
+
 @router.get("/me/export", response_model=UserDataExport)
 def export_my_data(
     user: User = Depends(get_current_user), db: Session = Depends(get_db)

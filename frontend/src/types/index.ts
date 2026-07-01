@@ -14,6 +14,14 @@ export interface Source {
 
 export type SourceCreate = Omit<Source, "id" | "created_at">;
 
+export interface SourceDetectResult {
+  adapter_key: string;
+  suggested_name: string;
+  base_url: string;
+  default_config: Json;
+  query_url: string;
+}
+
 export interface JobPostingPreview {
   external_id: string;
   title: string;
@@ -130,6 +138,7 @@ export interface User {
   email: string;
   is_admin: boolean;
   is_active: boolean;
+  onboarding_completed_at: string | null;
   created_at: string;
 }
 

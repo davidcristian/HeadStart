@@ -128,7 +128,7 @@ Turn anonymous visitors into active users with a smooth first-run path.
 
 | Item | Why | Notes |
 | ---- | --- | ----- |
-| Signup & onboarding polish | Paid SaaS needs a credible first-run path | Email verification, welcome flow, guided setup (first source/search/target), trial handling |
+| ~~Signup & onboarding polish~~ | ~~Paid SaaS needs a credible first-run path~~ | **Shipped (wizard):** guided `/app/onboarding` flow (source → notify → search → run); `onboarding_completed_at` on user + `POST /auth/me/complete-onboarding`; skip option. Email verification and trial handling remain. |
 | ~~GDPR / data compliance (baseline)~~ | ~~EU users and enterprise buyers expect it before collecting data at scale~~ | **Shipped:** `GET /auth/me/export` JSON data export; `DELETE /auth/me` account deletion with password confirmation; Settings UI |
 
 **Done when:** a new user can verify their email, complete onboarding, and run
@@ -195,7 +195,7 @@ supported job from the Jobs page, see the result, and the job is marked
 
 **Shared with friends / a small team:**
 
-1. ~~Password reset~~ + onboarding polish
+1. ~~Password reset~~ + ~~onboarding polish (guided wizard)~~
 2. ~~Slack notifier~~
 3. ~~Digest mode~~
 

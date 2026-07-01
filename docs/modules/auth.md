@@ -57,6 +57,7 @@ returns `NotFoundError` (404), never another user's data.
 | POST   | `/forgot-password` | none | Request a password-reset email   |
 | POST   | `/reset-password`  | none | Set a new password from reset link |
 | GET    | `/me`       | bearer | Current user                           |
+| POST   | `/me/complete-onboarding` | bearer | Mark the first-run wizard finished |
 | GET    | `/me/export` | bearer | JSON bundle of all owned data (GDPR export) |
 | DELETE | `/me`       | bearer | Permanently delete account (password in body) |
 
@@ -75,7 +76,8 @@ read from the httpOnly cookie (falls back to a `refresh_token` body field).
 - `frontend/src/auth/AuthContext.tsx` holds the current user. On load it calls
   `refreshSession()` to mint an access token from the cookie, then `/auth/me`;
   `logout()` calls `/auth/logout` to clear the cookie. `ProtectedRoute` gates
-  the app and redirects to `/login`.
+  the app and redirects to `/login`. `OnboardingGuard` sends new accounts to
+  `/app/onboarding` until `onboarding_completed_at` is set.
 - `/forgot-password` and `/reset-password?token=...` handle the reset flow.
 - **Settings → Your account** (`/app/settings`): export all owned data as JSON
   (`GET /auth/me/export`) or permanently delete the account (`DELETE /auth/me`

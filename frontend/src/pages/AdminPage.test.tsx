@@ -9,6 +9,7 @@ const sampleAdminUser = {
   email: "admin@example.com",
   is_admin: true,
   is_active: true,
+  onboarding_completed_at: "2026-06-28T00:00:00Z",
   created_at: "2026-06-28T00:00:00Z",
 };
 
@@ -17,6 +18,7 @@ const sampleMember = {
   email: "member@example.com",
   is_admin: false,
   is_active: true,
+  onboarding_completed_at: "2026-06-29T00:00:00Z",
   created_at: "2026-06-29T00:00:00Z",
 };
 

@@ -18,6 +18,7 @@ import type {
   SiteCredential,
   Source,
   SourceCreate,
+  SourceDetectResult,
   SourceTestResult,
   TargetCreate,
   User,
@@ -69,6 +70,8 @@ export const api = {
       skipAuth: true,
     }),
   me: () => request<User>("/api/v1/auth/me"),
+  completeOnboarding: () =>
+    request<User>("/api/v1/auth/me/complete-onboarding", { method: "POST" }),
   exportMyData: () => request<UserDataExport>("/api/v1/auth/me/export"),
   deleteAccount: (password: string) =>
     request<void>("/api/v1/auth/me", { method: "DELETE", body: { password } }),
@@ -81,6 +84,11 @@ export const api = {
 
   // sources
   listSources: () => request<Source[]>("/api/v1/sources"),
+  detectSource: (url: string, pageTitle?: string) =>
+    request<SourceDetectResult>("/api/v1/sources/detect", {
+      method: "POST",
+      body: { url, page_title: pageTitle ?? null },
+    }),
   createSource: (data: SourceCreate) =>
     request<Source>("/api/v1/sources", { method: "POST", body: data }),
   updateSource: (id: number, data: Partial<SourceCreate>) =>
