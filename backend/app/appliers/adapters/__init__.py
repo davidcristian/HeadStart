@@ -4,6 +4,6 @@ Add a new adapter by creating a module here and importing it below. Nothing
 else in the codebase needs to change (see docs/recipes.md).
 """
 
-from app.appliers.adapters import ashby, google_careers, greenhouse, lever, workday
+from app.appliers.adapters import ashby, google_careers, greenhouse, indeed, lever, workday
 
-__all__ = ["ashby", "google_careers", "greenhouse", "lever", "workday"]
+__all__ = ["ashby", "google_careers", "greenhouse", "indeed", "lever", "workday"]

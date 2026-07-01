@@ -54,6 +54,7 @@ source's `adapter_key` when that source supports auto-apply. Import the
 | `ashby`      | RPC `applicationForm.submit`     | `POST api.ashbyhq.com/applicationForm.submit`; see below |
 | `workday`    | CXS apply flow (session cookies) | `POST …/jobpostings/<id>/jobapplications` then `…/name` + `…/finalize`; see below |
 | `google_careers` | HiringCportal batchexecute RPC (session cookies) | `SaveCareersProfile` → `CreatePacket` → `SavePacket` → `SubmitPacket`; see below |
+| `indeed` | Viewjob parse + downstream ATS delegation | Fetches `/viewjob?jk=…`, delegates to Greenhouse/Lever/Ashby/Workday/Google when the listing embeds an employer apply URL; see below |
 
 ### Greenhouse
 
@@ -217,7 +218,7 @@ Required questions without a mapped answer fail before finalize with a clear err
 
 **Still manual / best-effort:** websites, and complex
 branching questionnaires where follow-up questions depend on earlier choices you
-did not map. Indeed/LinkedIn/generic sources have no apply adapter. Branching
+did not map. LinkedIn/generic sources have no apply adapter. Branching
 questionnaires only submit answers you explicitly map in `profile.answers`. See
 [launch-checklist.md](../launch-checklist.md#7-auto-apply-optional--know-the-limits)
 before advertising auto-apply on a public instance.
@@ -258,6 +259,39 @@ submit starts failing after a Google UI update.
 per 30 days). Treat live auto-apply as best-effort; always preview with dry run
 first.
 
+### Indeed
+
+Indeed listings rarely submit on Indeed itself — most **Easily apply** jobs
+redirect to an employer ATS. The adapter fetches the public viewjob page,
+parses embedded `window._initialData`, and **delegates** to Greenhouse, Lever,
+Ashby, Workday, or Google Careers when the downstream apply URL is recognized.
+Config / credentials:
+
+| Field | Where | Purpose |
+| ----- | ----- | ------- |
+| `host` | source/search config | Indeed hostname when building `/viewjob?jk=…` (default `www.indeed.com`) |
+| `external_apply_url` | source/search config | Optional override to skip the viewjob fetch (pin a known employer apply URL) |
+| Indeed session cookies | credential `cookies` | Logged-in Indeed account (`PPID`, `SOCK`, …) for **Indeed-hosted** Easy Apply live submit |
+| `csrf_token` | credential `session` | Optional `X-Indeed-Csrf-Token` for smartapply live submit |
+
+**Dry run:** fetches viewjob (unless `external_apply_url` is set), resolves the
+apply route, and previews either the delegated ATS payload or the Indeed-hosted
+smartapply contact payload. No Indeed login required for delegation previews.
+
+**Live submit (delegated):** uses the downstream adapter's requirements (API
+keys, Workday cookies, etc.) — the preview payload includes `indeed_route` and
+`delegated_adapter` metadata.
+
+**Live submit (Indeed-hosted):** when the listing has no external ATS URL but
+does expose an Easy Apply button, posts to
+`smartapply.indeed.com/beta/indeedapply/v2/applications` with the user's Indeed
+session cookies. Multi-step employer questionnaires are best-effort; map answers
+in `profile.answers`. Cloudflare may block unauthenticated viewjob fetches —
+reuse [site credentials](credentials.md) session cookies from scraping.
+
+**Unsupported:** external apply URLs that are not a recognized ATS (e.g. custom
+career sites, Breezy, LinkedIn). LinkedIn sources still have no apply adapter.
+
 ## Safety & consent
 
 Live submission requires explicit opt-in per source (`source.auto_apply_enabled`,
@@ -268,8 +302,9 @@ off; preview (`dry_run`) still works.
 **v1 limitations:** Workday degree/field and skill lookup is best-effort and needs
 authenticated session cookies; unmatched labels still fall back to descriptors.
 Google Careers live submit needs the candidate's own Google account session and
-CSRF token; resume upload and employer questionnaires are best-effort. Indeed/
-LinkedIn/generic sources have no apply adapter. Branching questionnaires only
+CSRF token; resume upload and employer questionnaires are best-effort. Indeed
+delegates to downstream ATS adapters when possible; Indeed-hosted Easy Apply and
+LinkedIn sources are best-effort or unsupported. Branching questionnaires only
 submit answers you explicitly map in `profile.answers`. See
 [launch-checklist.md](../launch-checklist.md#7-auto-apply-optional--know-the-limits)
 before advertising auto-apply on a public instance.

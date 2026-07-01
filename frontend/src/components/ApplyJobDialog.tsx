@@ -169,7 +169,9 @@ export function ApplyJobDialog({
               </Button>
               <Button
                 onClick={() => void runApply(false)}
-                disabled={!profileReady || !autoApplyEnabled || isPending || busyAction === "submit"}
+                disabled={
+                  !profileReady || !autoApplyEnabled || isPending || busyAction === "submit"
+                }
               >
                 {busyAction === "submit" ? "Submitting..." : "Submit application"}
               </Button>
