@@ -19,3 +19,13 @@ def list_application_logs(
 ) -> list[ApplicationLogRead]:
     """Return recent auto-apply attempts for the authenticated user."""
     return ApplicationLogService(db).list_for_user(user.id, limit=limit)
+
+
+@router.get("/{log_id}", response_model=ApplicationLogRead)
+def get_application_log(
+    log_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_verified_user),
+) -> ApplicationLogRead:
+    """Return one auto-apply attempt for polling queued submissions."""
+    return ApplicationLogService(db).get_for_user(user.id, log_id)

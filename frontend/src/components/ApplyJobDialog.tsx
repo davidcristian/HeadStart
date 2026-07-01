@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
+import { pollApplicationLog } from "../api/pollApplicationLog";
 import { Banner, Button, Field } from "./ui";
 import { useApplyToJob } from "../hooks/mutations";
 import { useFocusTrap } from "../hooks/useFocusTrap";
@@ -25,6 +27,7 @@ export function ApplyJobDialog({
   onClose: () => void;
 }) {
   const dialogRef = useRef<HTMLDivElement>(null);
+  const qc = useQueryClient();
   const { mutateAsync, reset, isPending } = useApplyToJob();
   const [coverLetter, setCoverLetter] = useState(initialCoverLetter);
   const [step, setStep] = useState<Step>("edit");
@@ -58,6 +61,16 @@ export function ApplyJobDialog({
       if (dryRun) {
         setPreview(result);
         setStep("preview");
+        return;
+      }
+      if (result.status === "queued" && result.application_log_id != null) {
+        const log = await pollApplicationLog(result.application_log_id);
+        if (log.status === "failed") {
+          setError(log.error ?? "Application failed.");
+          return;
+        }
+        await qc.invalidateQueries({ queryKey: ["jobs"] });
+        setStep("success");
         return;
       }
       if (result.status === "failed") {
@@ -156,7 +169,7 @@ export function ApplyJobDialog({
               </Button>
               <Button
                 onClick={() => void runApply(false)}
-                disabled={!profileReady || !autoApplyEnabled || isPending}
+                disabled={!profileReady || !autoApplyEnabled || isPending || busyAction === "submit"}
               >
                 {busyAction === "submit" ? "Submitting..." : "Submit application"}
               </Button>

@@ -43,3 +43,7 @@ class JobApplyResult(BaseModel):
     payload: dict[str, Any] | None = None
     external_application_id: str | None = None
     job: JobRead | None = None
+    application_log_id: int | None = Field(
+        default=None,
+        description="Queued live apply log id; poll GET /application-logs/{id} for status",
+    )

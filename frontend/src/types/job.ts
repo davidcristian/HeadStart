@@ -20,6 +20,7 @@ export interface JobApplyResult {
   payload: Record<string, unknown> | null;
   external_application_id: string | null;
   job: Job | null;
+  application_log_id: number | null;
 }
 
 export interface ApplicationLog {

@@ -6,7 +6,8 @@ Apply adapters submit (or preview) job applications for a single posting.
 Each supported job site is one self-registering adapter, mirroring the scraper
 and notifier registries. Orchestration lives in `ApplyService`
 (`backend/app/services/apply.py`); the Jobs page **Apply** action calls
-`POST /api/v1/jobs/{id}/apply` (preview via `dry_run: true`).
+`POST /api/v1/jobs/{id}/apply` (preview via `dry_run: true`). Live submissions
+are queued to Celery and polled via `GET /api/v1/application-logs/{id}`.
 
 ## Contract
 
@@ -235,8 +236,9 @@ only submit answers you explicitly map in `profile.answers`. See
 before advertising auto-apply on a public instance.
 
 Every apply attempt (preview or live, success or failure) is recorded in
-`application_log`. List recent rows via `GET /api/v1/application-logs`; the
-Application profile page shows the same audit trail.
+`application_log`. List recent rows via `GET /api/v1/application-logs`; fetch one
+queued row via `GET /api/v1/application-logs/{id}` while a live submit runs in
+the worker. The Application profile page shows the same audit trail.
 
 ## Adding one
 

@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 
 from app.scrapers.types import JobPosting
 from app.services.pipeline import PipelineService
+from app.worker.tasks import apply_to_job_task
 from tests.conftest import register_and_login
 
 
@@ -68,6 +69,74 @@ def test_apply_dry_run_returns_payload(client: TestClient) -> None:
 
     listed = client.get("/api/v1/jobs", headers=headers).json()
     assert listed[0]["status"] == "new"
+
+
+def test_apply_live_queues_and_returns_log_id(client: TestClient) -> None:
+    headers = register_and_login(client, "apply-live@example.com")
+    job_id = _seed_greenhouse_job_via_api(client, headers)
+    source_id = client.get("/api/v1/sources", headers=headers).json()[0]["id"]
+    client.patch(
+        f"/api/v1/sources/{source_id}",
+        json={"auto_apply_enabled": True},
+        headers=headers,
+    )
+    client.put(
+        "/api/v1/profile",
+        json={
+            "full_name": "Ada Lovelace",
+            "email": "ada@example.com",
+            "resume_text": "CV",
+        },
+        headers=headers,
+    )
+
+    with patch.object(apply_to_job_task, "delay") as mock_delay:
+        resp = client.post(
+            f"/api/v1/jobs/{job_id}/apply",
+            json={"dry_run": False, "cover_letter": "Hello"},
+            headers=headers,
+        )
+
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["status"] == "queued"
+    assert body["application_log_id"] is not None
+    assert body["job"] is None
+    mock_delay.assert_called_once()
+    log_id, _user_id, queued_job_id, cover_letter = mock_delay.call_args[0]
+    assert log_id == body["application_log_id"]
+    assert queued_job_id == job_id
+    assert cover_letter == "Hello"
+
+    log_resp = client.get(
+        f"/api/v1/application-logs/{body['application_log_id']}",
+        headers=headers,
+    )
+    assert log_resp.status_code == 200
+    assert log_resp.json()["status"] == "queued"
+
+
+def test_get_application_log_scopes_by_user(client: TestClient) -> None:
+    alice = register_and_login(client, "apply-log-alice@example.com")
+    job_id = _seed_greenhouse_job_via_api(client, alice)
+    source_id = client.get("/api/v1/sources", headers=alice).json()[0]["id"]
+    client.patch(f"/api/v1/sources/{source_id}", json={"auto_apply_enabled": True}, headers=alice)
+    client.put(
+        "/api/v1/profile",
+        json={"full_name": "Ada Lovelace", "email": "ada@example.com"},
+        headers=alice,
+    )
+
+    with patch.object(apply_to_job_task, "delay"):
+        queued = client.post(
+            f"/api/v1/jobs/{job_id}/apply",
+            json={"dry_run": False},
+            headers=alice,
+        )
+    log_id = queued.json()["application_log_id"]
+
+    bob = register_and_login(client, "apply-log-bob@example.com")
+    assert client.get(f"/api/v1/application-logs/{log_id}", headers=bob).status_code == 404
 
 
 def test_apply_without_profile_returns_400(client: TestClient) -> None:

@@ -125,6 +125,7 @@ export const sampleApplyJobResult = {
   payload: { email: "ada@example.com", cover_letter_text: "Dear ACME team" },
   external_application_id: null,
   job: null,
+  application_log_id: null,
 };
 
 export const sampleFeedUrl = {

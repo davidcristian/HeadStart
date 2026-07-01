@@ -198,6 +198,7 @@ export const api = {
 
   listApplicationLogs: (limit = 100) =>
     request<ApplicationLog[]>(`/api/v1/application-logs?limit=${limit}`),
+  getApplicationLog: (id: number) => request<ApplicationLog>(`/api/v1/application-logs/${id}`),
 
   // feed
   getFeedUrl: () => request<FeedUrl>("/api/v1/feed/url"),

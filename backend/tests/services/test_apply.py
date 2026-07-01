@@ -81,9 +81,54 @@ def test_apply_service_live_without_opt_in_fails(db_session: Session) -> None:
     except ValidationError as exc:
         assert "auto-apply" in str(exc).lower()
 
+    try:
+        ApplyService(db_session).enqueue_apply(user_id, job_id)
+        raise AssertionError("expected ValidationError")
+    except ValidationError as exc:
+        assert "auto-apply" in str(exc).lower()
+
     db_session.refresh(job)
     assert job.status == "new"
     assert db_session.query(ApplicationLog).count() == 0
+
+
+def test_enqueue_apply_creates_queued_log(db_session: Session) -> None:
+    user_id, job_id, job = _seed_greenhouse_job(db_session)
+    source = db_session.get(Source, job.search.source_id)
+    assert source is not None
+    source.auto_apply_enabled = True
+    db_session.flush()
+    ProfileService(db_session).save(
+        user_id,
+        ProfileData(full_name="Ada Lovelace", email="ada@example.com", resume_text="CV"),
+    )
+
+    log_id = ApplyService(db_session).enqueue_apply(user_id, job_id)
+
+    log = db_session.get(ApplicationLog, log_id)
+    assert log is not None
+    assert log.status == "queued"
+    assert log.dry_run is False
+    assert log.seen_job_id == job_id
+
+
+def test_enqueue_apply_rejects_duplicate_pending(db_session: Session) -> None:
+    user_id, job_id, job = _seed_greenhouse_job(db_session)
+    source = db_session.get(Source, job.search.source_id)
+    assert source is not None
+    source.auto_apply_enabled = True
+    db_session.flush()
+    ProfileService(db_session).save(
+        user_id,
+        ProfileData(full_name="Ada Lovelace", email="ada@example.com", resume_text="CV"),
+    )
+    ApplyService(db_session).enqueue_apply(user_id, job_id)
+
+    try:
+        ApplyService(db_session).enqueue_apply(user_id, job_id)
+        raise AssertionError("expected ValidationError")
+    except ValidationError as exc:
+        assert "in progress" in str(exc).lower()
 
 
 def test_apply_service_live_with_opt_in_records_log(db_session: Session) -> None:

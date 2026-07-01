@@ -10,7 +10,7 @@ Celery provides the scheduler (beat) and the workers. The worker package is
 - `celery_app.py` — the Celery application + config (broker/result backend from
   settings).
 - `schedule.py` — beat ticks: enqueue due searches and flush digest queues.
-- `tasks.py` — `run_search(search_id)` and `flush_due_digests()`.
+- `tasks.py` — `run_search(search_id)`, `flush_due_digests()`, and `apply_to_job` (queued live auto-apply).
 
 ## Due-based scheduling with catch-up
 
@@ -68,6 +68,16 @@ searches whose interval has elapsed, then clears the queue and sets
 
 Failures at any external step are caught, logged, and recorded; the worker keeps
 running.
+
+## Queued auto-apply
+
+Live submissions from `POST /jobs/{id}/apply` (non–dry-run) are validated in the
+API, written to `application_log` with status `queued`, and enqueued as
+`apply_to_job`. A Celery worker runs `ApplyService.apply_to_job` with the queued
+log id, updates the audit row to `processing` then `submitted` or `failed`, and
+marks the job `applied` on success. Preview (`dry_run: true`) still runs
+synchronously in the API. Clients poll `GET /application-logs/{id}` until the
+log reaches a terminal status.
 
 When a scrape uses the `playwright` adapter, the worker reuses a process-scoped
 headless Chromium browser (see [scrapers.md](scrapers.md)). Use the worker Docker

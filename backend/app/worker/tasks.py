@@ -12,6 +12,7 @@ from app.core.logging import get_logger
 from app.core.metrics import record_scheduler_enqueued
 from app.models.base import utcnow
 from app.repositories.searches import SearchRepository
+from app.services.apply import ApplyService
 from app.services.digest import DigestService
 from app.services.pipeline import PipelineService
 from app.worker.celery_app import celery_app
@@ -56,6 +57,49 @@ def enqueue_due_searches() -> int:
     if due_ids:
         logger.info("enqueued %d due search(es): %s", len(due_ids), due_ids)
     return len(due_ids)
+
+
+@celery_app.task(name="app.worker.tasks.apply_to_job", bind=True, max_retries=0)
+def apply_to_job_task(
+    self: object,
+    application_log_id: int,
+    user_id: int,
+    job_id: int,
+    cover_letter: str | None,
+) -> dict[str, object]:
+    """Run one queued live auto-apply in the worker."""
+    with session_scope() as session:
+        service = ApplyService(session)
+        try:
+            result = service.apply_to_job(
+                user_id,
+                job_id,
+                dry_run=False,
+                cover_letter=cover_letter,
+                application_log_id=application_log_id,
+            )
+        except Exception as exc:
+            service.fail_queued_apply(application_log_id, str(exc))
+            logger.exception(
+                "apply_to_job failed log=%s job=%s user=%s",
+                application_log_id,
+                job_id,
+                user_id,
+            )
+            raise
+
+    logger.info(
+        "apply_to_job log=%s job=%s user=%s status=%s",
+        application_log_id,
+        job_id,
+        user_id,
+        result.status,
+    )
+    return {
+        "application_log_id": application_log_id,
+        "status": result.status,
+        "error": result.error,
+    }
 
 
 @celery_app.task(name="app.worker.tasks.flush_due_digests")
