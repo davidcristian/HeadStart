@@ -12,6 +12,7 @@ import type {
   FeedUrl,
   Meta,
   NotificationTarget,
+  PlanId,
   Profile,
   ProfileData,
   Search,
@@ -27,6 +28,10 @@ import type {
   UserDataExport,
   BillingStatus,
   BillingPeriod,
+  PromoCode,
+  PromoRedemption,
+  PromoValidation,
+  PromoType,
 } from "../types";
 import { request } from "./client";
 
@@ -82,10 +87,19 @@ export const api = {
 
   // billing
   billingStatus: () => request<BillingStatus>("/api/v1/billing/status"),
-  createCheckout: (billingPeriod: BillingPeriod = "monthly") =>
+  validatePromoCode: (code: string) =>
+    request<PromoValidation>("/api/v1/billing/promo/validate", {
+      method: "POST",
+      body: { code },
+    }),
+  createCheckout: (billingPeriod: BillingPeriod = "monthly", promoCode?: string) =>
     request<{ url: string }>("/api/v1/billing/checkout", {
       method: "POST",
-      body: { plan: "pro", billing_period: billingPeriod },
+      body: {
+        plan: "pro",
+        billing_period: billingPeriod,
+        ...(promoCode ? { promo_code: promoCode } : {}),
+      },
     }),
   createBillingPortal: () =>
     request<{ url: string }>("/api/v1/billing/portal", { method: "POST", body: {} }),
@@ -97,6 +111,28 @@ export const api = {
     data: Partial<Pick<AdminUser, "is_active" | "is_admin" | "plan">>,
   ) => request<AdminUser>(`/api/v1/admin/users/${id}`, { method: "PATCH", body: data }),
   getAdminStats: () => request<AdminStats>("/api/v1/admin/stats"),
+
+  listAdminPromoCodes: () => request<PromoCode[]>("/api/v1/admin/promo-codes"),
+  createAdminPromoCode: (data: {
+    code: string;
+    promo_type: PromoType;
+    value_int: number;
+    plan_target?: PlanId | null;
+    max_redemptions?: number | null;
+    expires_at?: string | null;
+    one_per_user?: boolean;
+    eligible_plans?: PlanId[] | null;
+  }) =>
+    request<PromoCode>("/api/v1/admin/promo-codes", {
+      method: "POST",
+      body: data,
+    }),
+  updateAdminPromoCode: (
+    id: number,
+    data: Partial<{ active: boolean; max_redemptions: number | null; expires_at: string | null }>,
+  ) => request<PromoCode>(`/api/v1/admin/promo-codes/${id}`, { method: "PATCH", body: data }),
+  listAdminPromoRedemptions: (id: number) =>
+    request<PromoRedemption[]>(`/api/v1/admin/promo-codes/${id}/redemptions`),
 
   // sources
   listSources: () => request<Source[]>("/api/v1/sources"),

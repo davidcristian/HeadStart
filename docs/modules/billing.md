@@ -38,9 +38,35 @@ Set all of the following to enable checkout:
 | Method | Path | Auth | Purpose |
 | ------ | ---- | ---- | ------- |
 | GET | `/status` | user | Billing capabilities + subscription state |
-| POST | `/checkout` | user | Start Stripe Checkout (`plan: pro`, `billing_period`) |
+| POST | `/checkout` | user | Start Stripe Checkout (`plan: pro`, `billing_period`, optional `promo_code`) |
+| POST | `/promo/validate` | user | Validate a promo code for the signed-in user |
 | POST | `/portal` | user | Open Stripe customer portal |
 | POST | `/webhook` | Stripe signature | Subscription lifecycle events |
+
+## Promo codes
+
+Promo codes are managed in the **Admin** panel (`/admin` → Promo codes) and
+redeemed at checkout.
+
+| Type | Effect |
+| ---- | ------ |
+| `percent_off` | Stripe coupon (% off subscription) |
+| `fixed_amount` | Stripe coupon (USD cents off) |
+| `free_trial_days` | Overrides checkout `trial_period_days` |
+| `plan_upgrade` | 100% off coupon; sets subscription metadata plan |
+
+When billing is enabled, creating a promo code also creates matching Stripe
+Coupon + Promotion Code objects. Validation is rate-limited (10 attempts per
+15 minutes per user). Redemptions are logged in `promo_redemption`.
+
+Admin endpoints (prefix `/api/v1/admin`):
+
+| Method | Path | Purpose |
+| ------ | ---- | ------- |
+| GET | `/promo-codes` | List all promo codes |
+| POST | `/promo-codes` | Create a promo code |
+| PATCH | `/promo-codes/{id}` | Update (`active`, `max_redemptions`, `expires_at`) |
+| GET | `/promo-codes/{id}/redemptions` | Redemption audit log |
 
 Webhook handler updates `user.stripe_customer_id`, `stripe_subscription_id`,
 `subscription_status`, and `plan` on:
@@ -60,8 +86,9 @@ On `user`:
 
 ## UI
 
-- **Pricing** (`/pricing`): signed-in users start Pro checkout; Team remains a mailto link.
-- **Settings** (`/app/settings`): upgrade to Pro, manage subscription, success/cancel banners.
+- **Pricing** (`/pricing`): signed-in users start Pro checkout with optional promo code; Team remains a mailto link.
+- **Settings** (`/app/settings`): upgrade to Pro with optional promo code, manage subscription, success/cancel banners.
+- **Admin** (`/app/admin`): create and retire promo codes.
 
 ## Local development
 

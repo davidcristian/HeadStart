@@ -154,7 +154,10 @@ export function ApplyJobDialog({
               >
                 {busyAction === "preview" ? "Previewing..." : "Preview"}
               </Button>
-              <Button onClick={() => void runApply(false)} disabled={!profileReady || !autoApplyEnabled || isPending}>
+              <Button
+                onClick={() => void runApply(false)}
+                disabled={!profileReady || !autoApplyEnabled || isPending}
+              >
                 {busyAction === "submit" ? "Submitting..." : "Submit application"}
               </Button>
             </div>

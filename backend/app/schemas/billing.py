@@ -10,6 +10,7 @@ from app.core.plans import PlanId
 class CheckoutRequest(BaseModel):
     plan: Literal["pro"] = "pro"
     billing_period: Literal["monthly", "annual"] = "monthly"
+    promo_code: str | None = None
 
 
 class CheckoutResponse(BaseModel):

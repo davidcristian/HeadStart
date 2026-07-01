@@ -6,7 +6,9 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_current_user, get_db
 from app.models.user import User
 from app.schemas.billing import BillingStatusRead, CheckoutRequest, CheckoutResponse, PortalResponse
+from app.schemas.promo import PromoValidateRequest, PromoValidateResponse
 from app.services.billing import BillingService
+from app.services.promo_codes import PromoCodeService
 
 router = APIRouter()
 
@@ -27,9 +29,22 @@ def create_checkout(
 ) -> CheckoutResponse:
     """Start a Stripe Checkout session for a paid plan."""
     url = BillingService(db).create_checkout_session(
-        user.id, plan=data.plan, billing_period=data.billing_period
+        user.id,
+        plan=data.plan,
+        billing_period=data.billing_period,
+        promo_code=data.promo_code,
     )
     return CheckoutResponse(url=url)
+
+
+@router.post("/promo/validate", response_model=PromoValidateResponse)
+def validate_promo_code(
+    data: PromoValidateRequest,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> PromoValidateResponse:
+    """Check whether a promo code is valid for the signed-in user."""
+    return PromoCodeService(db).validate_for_user(user.id, data.code)
 
 
 @router.post("/portal", response_model=PortalResponse)

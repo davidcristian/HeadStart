@@ -5,7 +5,9 @@ import { Link } from "react-router-dom";
 import { api } from "../api";
 import { useAuth } from "../auth/AuthContext";
 import { Brand } from "../components/Brand";
+import { PromoCodeField } from "../components/PromoCodeField";
 import { PublicFooter } from "../components/PublicFooter";
+import type { PromoValidation } from "../types";
 import {
   COMPARISON_ROWS,
   PLANS,
@@ -34,13 +36,14 @@ export function PricingPage() {
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>("monthly");
   const [checkoutError, setCheckoutError] = useState<string>();
   const [checkingOut, setCheckingOut] = useState(false);
+  const [appliedPromo, setAppliedPromo] = useState<PromoValidation | null>(null);
 
   async function startProCheckout() {
     setCheckoutError(undefined);
     if (!user) return;
     setCheckingOut(true);
     try {
-      const { url } = await api.createCheckout(billingPeriod);
+      const { url } = await api.createCheckout(billingPeriod, appliedPromo?.code);
       window.location.assign(url);
     } catch (err) {
       setCheckoutError(err instanceof Error ? err.message : "Could not start checkout.");
@@ -124,6 +127,12 @@ export function PricingPage() {
           <p className="pricing-billing-note" role="alert">
             {checkoutError}
           </p>
+        ) : null}
+
+        {user ? (
+          <section className="pricing-promo" aria-label="Promo code">
+            <PromoCodeField onApplied={setAppliedPromo} disabled={checkingOut} />
+          </section>
         ) : null}
 
         <section className="pricing-cards" aria-label="Plans">

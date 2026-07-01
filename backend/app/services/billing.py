@@ -20,6 +20,7 @@ from app.core.plans import VALID_PLANS, PlanId
 from app.models.user import User
 from app.repositories.users import UserRepository
 from app.schemas.billing import BillingStatusRead
+from app.services.promo_codes import PromoCodeService
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +53,12 @@ class BillingService:
         )
 
     def create_checkout_session(
-        self, user_id: int, *, plan: str, billing_period: BillingPeriod
+        self,
+        user_id: int,
+        *,
+        plan: str,
+        billing_period: BillingPeriod,
+        promo_code: str | None = None,
     ) -> str:
         """Start a Stripe Checkout session and return its hosted URL."""
         self._require_billing_enabled()
@@ -72,24 +78,44 @@ class BillingService:
         if not price_id:
             raise ValidationError("Billing is not fully configured for this plan.")
 
+        promo_service = PromoCodeService(self.session)
+        promo = None
+        if promo_code:
+            promo = promo_service.resolve_for_checkout(user_id, promo_code)
+
         customer_id = self._ensure_customer(user)
-        session = stripe.checkout.Session.create(
-            customer=customer_id,
-            mode="subscription",
-            line_items=[{"price": price_id, "quantity": 1}],
-            success_url=f"{settings.frontend_base_url}/app/settings?billing=success",
-            cancel_url=f"{settings.frontend_base_url}/app/settings?billing=cancel",
-            client_reference_id=str(user.id),
-            metadata={"user_id": str(user.id), "plan": plan},
-            subscription_data={
+        trial_days = settings.stripe_trial_days
+        if promo and promo.promo_type == "free_trial_days":
+            trial_days = promo.value_int
+
+        session_kwargs: dict[str, Any] = {
+            "customer": customer_id,
+            "mode": "subscription",
+            "line_items": [{"price": price_id, "quantity": 1}],
+            "success_url": f"{settings.frontend_base_url}/app/settings?billing=success",
+            "cancel_url": f"{settings.frontend_base_url}/app/settings?billing=cancel",
+            "client_reference_id": str(user.id),
+            "metadata": {"user_id": str(user.id), "plan": plan},
+            "subscription_data": {
                 "metadata": {"user_id": str(user.id), "plan": plan},
-                **(
-                    {"trial_period_days": settings.stripe_trial_days}
-                    if settings.stripe_trial_days > 0
-                    else {}
-                ),
             },
-        )
+        }
+        if promo:
+            session_kwargs["metadata"]["promo_code_id"] = str(promo.id)
+            session_kwargs["subscription_data"]["metadata"]["promo_code_id"] = str(promo.id)
+            if promo.promo_type == "plan_upgrade" and promo.plan_target:
+                session_kwargs["metadata"]["plan"] = promo.plan_target
+                session_kwargs["subscription_data"]["metadata"]["plan"] = promo.plan_target
+            if promo.stripe_promotion_code_id and promo.promo_type in {
+                "percent_off",
+                "fixed_amount",
+                "plan_upgrade",
+            }:
+                session_kwargs["discounts"] = [{"promotion_code": promo.stripe_promotion_code_id}]
+        if trial_days > 0:
+            session_kwargs["subscription_data"]["trial_period_days"] = trial_days
+
+        session = stripe.checkout.Session.create(**session_kwargs)
         if not session.url:
             raise ValidationError("Stripe did not return a checkout URL.")
         return session.url
@@ -146,6 +172,26 @@ class BillingService:
             updates["stripe_subscription_id"] = subscription_id
         if updates:
             self.users.update_billing(user, **updates)
+
+        metadata = session.get("metadata") or {}
+        promo_code_id = metadata.get("promo_code_id")
+        if promo_code_id is not None:
+            try:
+                promo_id = int(promo_code_id)
+            except (TypeError, ValueError):
+                promo_id = None
+            if promo_id is not None:
+                promo_service = PromoCodeService(self.session)
+                promo = promo_service.promos.get(promo_id)
+                if promo is not None:
+                    checkout_id = session.get("id")
+                    promo_service.record_redemption(
+                        promo,
+                        user.id,
+                        checkout_session_id=(
+                            str(checkout_id) if isinstance(checkout_id, str) else None
+                        ),
+                    )
 
     def _on_subscription_updated(self, subscription: dict[str, Any]) -> None:
         user = self._user_for_subscription(subscription)

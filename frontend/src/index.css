@@ -1549,6 +1549,44 @@ td .job-summary {
   font-size: 14px;
   line-height: 1.5;
 }
+.pricing-promo {
+  position: relative;
+  z-index: 1;
+  max-width: 420px;
+  margin: 0 auto 32px;
+  padding: 0 40px;
+}
+.promo-code-field {
+  display: grid;
+  gap: 8px;
+}
+.promo-code-row {
+  display: flex;
+  gap: 8px;
+}
+.promo-code-row input {
+  flex: 1;
+}
+.promo-code-applied {
+  margin: 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+.link-button {
+  background: none;
+  border: none;
+  color: var(--accent);
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+  text-decoration: underline;
+}
+.admin-promo-form {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 24px;
+  max-width: 420px;
+}
 .pricing-compare {
   position: relative;
   z-index: 1;

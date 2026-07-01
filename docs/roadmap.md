@@ -205,11 +205,11 @@ at signup or checkout. Builds on Phase 6c billing and plan enforcement.
 
 | Item | Why | Notes |
 | ---- | --- | ----- |
-| Promo code model & admin | Operators need to create and retire offers | Codes with type (`percent_off`, `fixed_amount`, `free_trial_days`, `plan_upgrade`), usage limits, expiry, and optional plan/eligibility rules |
-| Redemption at checkout | Users expect to paste a code before paying | Validate code server-side; apply via Stripe Coupons/Promotion Codes (or equivalent); reject expired, exhausted, or ineligible codes with clear errors |
-| Free-trial promos | Acquisition lever without manual plan overrides | Trial duration extends or replaces default trial; downgrade to free (or cancel) when trial ends unless a paid subscription is active |
-| Self-serve entry in UI | Codes should be discoverable in the funnel | Optional field on `/pricing` checkout and in Settings → Billing; show applied discount or trial end date after redemption |
-| Audit & abuse prevention | Promos affect revenue and must be traceable | Log redemptions per user; enforce one-per-user where configured; rate-limit validation attempts |
+| ~~Promo code model & admin~~ | ~~Operators need to create and retire offers~~ | **Shipped:** `promo_code` table; admin CRUD at `GET/POST/PATCH /admin/promo-codes`; types `percent_off`, `fixed_amount`, `free_trial_days`, `plan_upgrade` |
+| ~~Redemption at checkout~~ | ~~Users expect to paste a code before paying~~ | **Shipped:** `POST /billing/promo/validate`; optional `promo_code` on checkout; Stripe Coupons/Promotion Codes synced on create |
+| ~~Free-trial promos~~ | ~~Acquisition lever without manual plan overrides~~ | **Shipped:** `free_trial_days` overrides `trial_period_days` on checkout session |
+| ~~Self-serve entry in UI~~ | ~~Codes should be discoverable in the funnel~~ | **Shipped:** promo field on `/pricing` and Settings → Billing; applied discount/trial shown after validation |
+| ~~Audit & abuse prevention~~ | ~~Promos affect revenue and must be traceable~~ | **Shipped:** `promo_redemption` audit log; one-per-user enforcement; validation rate limit (10 / 15 min) |
 
 **Done when:** an admin can create a promo code, a user can redeem it at checkout
 or in billing settings, the correct discount or trial is applied to their

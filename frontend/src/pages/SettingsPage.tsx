@@ -3,11 +3,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Banner, Button, Card, Field } from "../components/ui";
+import { PromoCodeField } from "../components/PromoCodeField";
 import { api } from "../api";
 import { useAuth } from "../auth/AuthContext";
 import { getApiBaseUrl, setApiBaseUrl } from "../lib/settings";
 import { planLabel } from "../lib/plan";
-import type { BillingPeriod, BillingStatus } from "../types";
+import type { BillingPeriod, BillingStatus, PromoValidation } from "../types";
 
 export function SettingsPage() {
   const navigate = useNavigate();
@@ -24,6 +25,7 @@ export function SettingsPage() {
   const [billingError, setBillingError] = useState<string>();
   const [billingBusy, setBillingBusy] = useState(false);
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>("monthly");
+  const [appliedPromo, setAppliedPromo] = useState<PromoValidation | null>(null);
   const billingNotice = searchParams.get("billing");
 
   useEffect(() => {
@@ -99,7 +101,7 @@ export function SettingsPage() {
     setBillingError(undefined);
     setBillingBusy(true);
     try {
-      const { url } = await api.createCheckout(billingPeriod);
+      const { url } = await api.createCheckout(billingPeriod, appliedPromo?.code);
       window.location.assign(url);
     } catch (err) {
       setBillingError(err instanceof Error ? err.message : "Could not start checkout.");
@@ -161,13 +163,17 @@ export function SettingsPage() {
                     <option value="annual">Annual (save ~17%)</option>
                   </select>
                 </Field>
+                <PromoCodeField onApplied={setAppliedPromo} disabled={billingBusy} />
                 <p>
                   <Button onClick={() => void startCheckout()} disabled={billingBusy}>
                     {billingBusy ? "Redirecting…" : "Upgrade to Pro"}
                   </Button>
                 </p>
-                {billing.trial_days > 0 ? (
+                {billing.trial_days > 0 && !appliedPromo?.trial_days ? (
                   <p className="muted">Includes a {billing.trial_days}-day free trial.</p>
+                ) : null}
+                {appliedPromo?.trial_days ? (
+                  <p className="muted">Promo trial: {appliedPromo.trial_days} days.</p>
                 ) : null}
               </>
             ) : null}
