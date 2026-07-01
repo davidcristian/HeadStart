@@ -97,13 +97,16 @@ def test_live_submit_posts_experience_and_education_before_questionnaires() -> N
     questionnaire_fixture = load_json_fixture("workday_questionnaire.json")
     posting_fixture = load_json_fixture("workday_job_posting_info.json")
     questionnaire_response_fixture = load_json_fixture("workday_questionnaire_response.json")
+    skill_fixture = load_json_fixture("workday_institutionvalues_skill.json")
     order: list[str] = []
 
     def handler(request: httpx.Request) -> httpx.Response:
         lookup_response = institutionvalues_empty_response(request)
-        if lookup_response is not None:
+        if lookup_response is not None and not request.url.path.endswith("/institutionvalues/skill"):
             return lookup_response
         path = request.url.path
+        if path.endswith("/institutionvalues/skill"):
+            return httpx.Response(200, json=skill_fixture)
         if path.endswith("/jobapplications"):
             return httpx.Response(
                 200, text=create_fixture, headers={"content-type": "application/json"}
@@ -124,7 +127,7 @@ def test_live_submit_posts_experience_and_education_before_questionnaires() -> N
         if path.endswith("/skills"):
             order.append("skills")
             body = json.loads(request.read().decode())
-            assert body["skill"]["descriptor"] == "Python"
+            assert body["skill"]["id"] == "f1e2d3c4b5a697887766554433221100"
             return httpx.Response(200, json={"id": "skill-1"})
         if path.endswith("/languages"):
             order.append("languages")

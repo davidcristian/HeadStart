@@ -155,6 +155,8 @@ career sites. Config / credentials:
 | `skip_education` | source/search config | When true, skip CXS education rows even when the profile has them |
 | `skip_education_lookup` | source/search config | When true, send descriptor-only degree/field values without tenant catalog lookup |
 | `education_lookup_aliases` | source/search config | Optional map of `degree:<label>` / `fieldOfStudy:<label>` to catalog WIDs |
+| `skip_skill_lookup` | source/search config | When true, send descriptor-only skill names without tenant catalog lookup |
+| `skill_lookup_aliases` | source/search config | Optional map of skill label to catalog WID |
 | `skip_skills` | source/search config | When true, skip CXS skill rows even when the profile has them |
 | `skip_languages` | source/search config | When true, skip CXS language rows even when the profile has them |
 | `CALYPSO_SESSION` | credential `cookies` | Authenticated candidate session cookie |
@@ -196,10 +198,14 @@ either section.
 **Skills / languages:** when the application profile has `skills` or structured
 `languages` rows, the adapter POSTs each applicable entry to
 `jobapplication/{id}/skills` and `jobapplication/{id}/languages` after
-experience/education and before questionnaires. Skills use descriptor-only names;
-languages support optional proficiency and a native-language flag. Use dry run to
-preview `skills` / `languages` payloads. Set `skip_skills` or `skip_languages` to
-omit either section.
+experience/education and before questionnaires. Skills are resolved against the
+tenant catalog via `GET …/institutionvalues/skill?searchText=…` when session
+cookies are available (exact → normalized → fuzzy match, then descriptor
+fallback). Paste a catalog WID directly into the profile skill name or set
+`skill_lookup_aliases` to override a label. Languages support optional
+proficiency and a native-language flag. Use dry run to preview `skills` /
+`languages` payloads. Set `skip_skills`, `skip_skill_lookup`, or
+`skip_languages` to omit or bypass lookup for either section.
 
 **Questionnaires:** Workday exposes `questionnaireId` fields on the public job
 detail CXS response. The adapter fetches each questionnaire definition, maps
@@ -209,8 +215,7 @@ Required questions without a mapped answer fail before finalize with a clear err
 
 **Still manual / best-effort:** websites, and complex
 branching questionnaires where follow-up questions depend on earlier choices you
-did not map. Skills may require exact tenant catalog names rather than free-text
-descriptors. Indeed/LinkedIn/generic sources have no apply adapter. Branching
+did not map. Indeed/LinkedIn/generic sources have no apply adapter. Branching
 questionnaires only submit answers you explicitly map in `profile.answers`. See
 [launch-checklist.md](../launch-checklist.md#7-auto-apply-optional--know-the-limits)
 before advertising auto-apply on a public instance.
@@ -222,11 +227,10 @@ default `false`). Toggle from the Sources page (only for adapters with a
 registered applier). `ApplyService` rejects non–dry-run applies when opt-in is
 off; preview (`dry_run`) still works.
 
-**v1 limitations:** Workday degree/field lookup is best-effort and needs
+**v1 limitations:** Workday degree/field and skill lookup is best-effort and needs
 authenticated session cookies; unmatched labels still fall back to descriptors.
-Some tenants reject free-text skill descriptors; Indeed/LinkedIn/generic sources
-have no apply adapter. Branching questionnaires only submit answers you explicitly
-map in `profile.answers`. See
+Indeed/LinkedIn/generic sources have no apply adapter. Branching questionnaires
+only submit answers you explicitly map in `profile.answers`. See
 [launch-checklist.md](../launch-checklist.md#7-auto-apply-optional--know-the-limits)
 before advertising auto-apply on a public instance.
 

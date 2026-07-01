@@ -1,0 +1,17 @@
+{
+  "total": 3,
+  "data": [
+    {
+      "id": "f1e2d3c4b5a697887766554433221100",
+      "descriptor": "Python"
+    },
+    {
+      "id": "a9b8c7d6e5f443322110099887766554",
+      "descriptor": "Python Programming"
+    },
+    {
+      "id": "11223344556677889900aabbccddeeff",
+      "descriptor": "SQL"
+    }
+  ]
+}

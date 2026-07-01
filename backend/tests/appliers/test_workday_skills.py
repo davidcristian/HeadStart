@@ -1,5 +1,7 @@
 """Tests for Workday skills and languages helpers."""
 
+import json
+
 import httpx
 
 from app.appliers.adapters.workday_skills import (
@@ -13,8 +15,8 @@ from app.appliers.adapters.workday_skills import (
     submit_skills,
 )
 from app.schemas.profile import LanguageEntry, ProfileData
-from tests.appliers.workday_helpers import JOB_URL
-from tests.conftest import make_http_client
+from tests.appliers.workday_helpers import JOB_URL, WORKDAY_CREDENTIALS
+from tests.conftest import load_json_fixture, make_http_client
 
 
 def test_build_skill_body_uses_descriptor() -> None:
@@ -77,6 +79,35 @@ def test_submit_skills_posts_each_row() -> None:
         "/wday/cxs/acme/jobapplication/app-1/skills",
         "/wday/cxs/acme/jobapplication/app-1/skills",
     ]
+
+
+def test_submit_skills_resolves_catalog_ids_when_credentials_present() -> None:
+    skill_fixture = load_json_fixture("workday_institutionvalues_skill.json")
+    seen: list[dict[str, object]] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path.endswith("/institutionvalues/skill"):
+            return httpx.Response(200, json=skill_fixture)
+        if request.url.path.endswith("/skills"):
+            seen.append(json.loads(request.read().decode()))
+            return httpx.Response(200, json={"id": f"skill-{len(seen)}"})
+        raise AssertionError(f"unexpected request: {request.method} {request.url}")
+
+    profile = ProfileData(skills=["Python"])
+    results = submit_skills(
+        make_http_client(handler),
+        target=_target(),
+        application_id="app-1",
+        profile=profile,
+        job_path="US-CA/Senior-Software-Engineer_JR1001",
+        config={},
+        csrf_token="csrf",
+        session_id="sess",
+        credentials=WORKDAY_CREDENTIALS,
+    )
+    assert len(results) == 1
+    assert results[0].ok
+    assert seen[0]["skill"] == {"id": "f1e2d3c4b5a697887766554433221100"}
 
 
 def test_submit_languages_stops_on_workday_error() -> None:

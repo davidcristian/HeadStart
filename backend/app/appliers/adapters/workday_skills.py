@@ -12,6 +12,10 @@ from app.appliers.adapters.workday_common import (
     request_headers,
 )
 from app.appliers.adapters.workday_experience import SectionSubmitResult
+from app.appliers.adapters.workday_skill_lookup import (
+    SkillLookupResolver,
+    build_skill_lookup_resolver,
+)
 from app.schemas.profile import LanguageEntry, ProfileData
 from app.scrapers.http import HttpClient
 
@@ -26,9 +30,16 @@ def applicable_languages(profile: ProfileData) -> list[LanguageEntry]:
     return [entry for entry in profile.languages if entry.language.strip()]
 
 
-def build_skill_body(skill_name: str) -> dict[str, Any]:
+def build_skill_body(
+    skill_name: str,
+    *,
+    skill: dict[str, str] | None = None,
+) -> dict[str, Any]:
     """Map a profile skill name to the Workday CXS create payload."""
-    return {"skill": {"descriptor": skill_name.strip()}}
+    skill_ref = skill if skill is not None else _descriptor_reference(skill_name)
+    if skill_ref is None:
+        raise ValueError("skill name must be non-empty")
+    return {"skill": skill_ref}
 
 
 def build_language_body(entry: LanguageEntry) -> dict[str, Any]:
@@ -42,9 +53,13 @@ def build_language_body(entry: LanguageEntry) -> dict[str, Any]:
     return body
 
 
-def preview_skills(profile: ProfileData) -> list[dict[str, Any]]:
+def preview_skills(
+    profile: ProfileData,
+    *,
+    resolver: SkillLookupResolver | None = None,
+) -> list[dict[str, Any]]:
     """Dry-run payloads for configured skills."""
-    return [build_skill_body(skill) for skill in applicable_skills(profile)]
+    return [_skill_body(skill, resolver=resolver) for skill in applicable_skills(profile)]
 
 
 def preview_languages(profile: ProfileData) -> list[dict[str, Any]]:
@@ -76,9 +91,18 @@ def submit_skills(
         session_id=session_id,
         credentials=credentials,
     )
+    resolver = build_skill_lookup_resolver(
+        http,
+        target=target,
+        job_path=job_path,
+        config=config,
+        csrf_token=csrf_token,
+        session_id=session_id,
+        credentials=credentials,
+    )
     results: list[SectionSubmitResult] = []
     for index, skill in enumerate(applicable_skills(profile)):
-        payload = build_skill_body(skill)
+        payload = _skill_body(skill, resolver=resolver)
         try:
             response = http.post_json(url, json=payload, headers=headers)
         except httpx.HTTPError as exc:
@@ -158,6 +182,24 @@ def submit_languages(
         if error:
             return results
     return results
+
+
+def _skill_body(
+    skill_name: str,
+    *,
+    resolver: SkillLookupResolver | None,
+) -> dict[str, Any]:
+    if resolver is None:
+        return build_skill_body(skill_name)
+    skill_ref = resolver.skill_reference(skill_name)
+    return build_skill_body(skill_name, skill=skill_ref)
+
+
+def _descriptor_reference(value: str) -> dict[str, str] | None:
+    stripped = value.strip()
+    if not stripped:
+        return None
+    return {"descriptor": stripped}
 
 
 def _response_error(response: object) -> str | None:

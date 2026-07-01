@@ -32,6 +32,7 @@ from app.appliers.adapters.workday_common import (
     resolve_target,
 )
 from app.appliers.adapters.workday_education_lookup import build_education_lookup_resolver
+from app.appliers.adapters.workday_skill_lookup import build_skill_lookup_resolver
 from app.appliers.adapters.workday_experience import preview_educations, preview_work_experiences
 from app.appliers.adapters.workday_questionnaire import preview_questionnaires
 from app.appliers.adapters.workday_resume import preview_resume_attachment
@@ -115,7 +116,16 @@ class WorkdayApplier(Applier):
             educations = preview_educations(ctx.profile, resolver=education_resolver)
             if educations:
                 payload["educations"] = educations
-            skills = preview_skills(ctx.profile)
+            skill_resolver = build_skill_lookup_resolver(
+                self.http,
+                target=target,
+                job_path=job_path,
+                config=ctx.config,
+                csrf_token=resolve_csrf_token(ctx.credentials, ctx.config),
+                session_id=None,
+                credentials=ctx.credentials,
+            )
+            skills = preview_skills(ctx.profile, resolver=skill_resolver)
             if skills:
                 payload["skills"] = skills
             languages = preview_languages(ctx.profile)

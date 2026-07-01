@@ -157,6 +157,49 @@ def test_dry_run_resolves_education_lookups_when_credentials_present() -> None:
     }
 
 
+def test_dry_run_resolves_skill_lookups_when_credentials_present() -> None:
+    questionnaire_fixture = load_json_fixture("workday_questionnaire.json")
+    posting_fixture = load_json_fixture("workday_job_posting_info.json")
+    skill_fixture = load_json_fixture("workday_institutionvalues_skill.json")
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path.endswith("/job/US-CA-Santa-Clara/Senior-Software-Engineer_JR1001"):
+            return httpx.Response(200, json=posting_fixture)
+        if request.url.path.endswith("/questionnaire/quest-primary-001"):
+            return httpx.Response(200, json=questionnaire_fixture)
+        if request.url.path.endswith("/institutionvalues/skill"):
+            return httpx.Response(200, json=skill_fixture)
+        raise AssertionError(f"unexpected request: {request.method} {request.url}")
+
+    applier = get_applier("workday", http=make_http_client(handler))
+    result = applier.apply(
+        ApplyContext(
+            job_external_id="JR1001",
+            job_title="Senior Software Engineer",
+            company="ACME",
+            job_url=JOB_URL,
+            config={
+                "tenant": "acme",
+                "site": "AcmeCareers",
+                "region": "wd5",
+                "skip_secondary_questionnaire": True,
+            },
+            profile=ProfileData(
+                full_name="Ada Lovelace",
+                email="ada@example.com",
+                skills=["Python"],
+            ),
+            credentials=WORKDAY_CREDENTIALS,
+            dry_run=True,
+        )
+    )
+    assert result.status == "dry_run"
+    assert result.payload is not None
+    assert result.payload["skills"][0]["skill"] == {
+        "id": "f1e2d3c4b5a697887766554433221100"
+    }
+
+
 def test_dry_run_includes_resume_attachment_preview() -> None:
     questionnaire_fixture = load_json_fixture("workday_questionnaire.json")
     posting_fixture = load_json_fixture("workday_job_posting_info.json")
