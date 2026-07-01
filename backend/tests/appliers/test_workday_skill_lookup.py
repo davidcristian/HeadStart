@@ -35,9 +35,7 @@ def test_resolver_maps_skill_to_catalog_id() -> None:
         session_id="sess",
         credentials=WORKDAY_CREDENTIALS,
     )
-    assert resolver.skill_reference("Python") == {
-        "id": "f1e2d3c4b5a697887766554433221100"
-    }
+    assert resolver.skill_reference("Python") == {"id": "f1e2d3c4b5a697887766554433221100"}
     assert resolver.skill_reference("Unknown Skill") == {"descriptor": "Unknown Skill"}
 
 
@@ -81,9 +79,7 @@ def test_resolver_honors_config_aliases_without_network() -> None:
         session_id="sess",
         credentials=WORKDAY_CREDENTIALS,
     )
-    assert resolver.skill_reference("Python") == {
-        "id": "f1e2d3c4b5a697887766554433221100"
-    }
+    assert resolver.skill_reference("Python") == {"id": "f1e2d3c4b5a697887766554433221100"}
 
 
 def test_resolver_skips_lookup_when_disabled() -> None:

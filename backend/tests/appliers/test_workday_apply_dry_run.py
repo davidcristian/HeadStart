@@ -195,9 +195,7 @@ def test_dry_run_resolves_skill_lookups_when_credentials_present() -> None:
     )
     assert result.status == "dry_run"
     assert result.payload is not None
-    assert result.payload["skills"][0]["skill"] == {
-        "id": "f1e2d3c4b5a697887766554433221100"
-    }
+    assert result.payload["skills"][0]["skill"] == {"id": "f1e2d3c4b5a697887766554433221100"}
 
 
 def test_dry_run_includes_resume_attachment_preview() -> None:

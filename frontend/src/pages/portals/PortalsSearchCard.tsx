@@ -86,9 +86,7 @@ export function PortalsSearchCard({
           <Field label="Workplace">
             <select
               value={workplace}
-              onChange={(e) =>
-                setWorkplace(e.target.value as "" | "remote" | "hybrid" | "onsite")
-              }
+              onChange={(e) => setWorkplace(e.target.value as "" | "remote" | "hybrid" | "onsite")}
             >
               <option value="">Any</option>
               <option value="remote">Remote</option>

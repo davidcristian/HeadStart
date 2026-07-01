@@ -10,10 +10,7 @@ export function PortalsResultsCard({ results }: PortalsResultsCardProps) {
     <Card title={`Results (${results.items.length})`}>
       <p className="muted">
         Searched {results.portals_searched} portal{results.portals_searched === 1 ? "" : "s"}
-        {results.portals_failed > 0
-          ? `; ${results.portals_failed} failed (see errors below)`
-          : ""}
-        .
+        {results.portals_failed > 0 ? `; ${results.portals_failed} failed (see errors below)` : ""}.
       </p>
       {results.errors.length > 0 && (
         <ul className="portal-search-errors">
@@ -25,9 +22,7 @@ export function PortalsResultsCard({ results }: PortalsResultsCardProps) {
         </ul>
       )}
       {results.items.length === 0 ? (
-        <EmptyState>
-          No matching jobs right now. Try broader keywords or more companies.
-        </EmptyState>
+        <EmptyState>No matching jobs right now. Try broader keywords or more companies.</EmptyState>
       ) : (
         <ul className="portal-results-list">
           {results.items.map((job) => (

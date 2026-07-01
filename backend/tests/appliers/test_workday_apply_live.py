@@ -102,7 +102,8 @@ def test_live_submit_posts_experience_and_education_before_questionnaires() -> N
 
     def handler(request: httpx.Request) -> httpx.Response:
         lookup_response = institutionvalues_empty_response(request)
-        if lookup_response is not None and not request.url.path.endswith("/institutionvalues/skill"):
+        is_skill_lookup = request.url.path.endswith("/institutionvalues/skill")
+        if lookup_response is not None and not is_skill_lookup:
             return lookup_response
         path = request.url.path
         if path.endswith("/institutionvalues/skill"):

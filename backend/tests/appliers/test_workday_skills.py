@@ -57,6 +57,8 @@ def test_submit_skills_posts_each_row() -> None:
     seen: list[str] = []
 
     def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path.endswith("/institutionvalues/skill"):
+            return httpx.Response(200, json={"total": 0, "data": []})
         seen.append(request.url.path)
         assert request.method == "POST"
         return httpx.Response(200, json={"id": f"skill-{len(seen)}"})

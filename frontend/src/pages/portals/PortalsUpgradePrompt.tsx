@@ -12,8 +12,8 @@ export function PortalsUpgradePrompt({ plan }: PortalsUpgradePromptProps) {
     <div className="page-stack">
       <h1>Company search</h1>
       <Banner kind="info">
-        Search across curated FAANG-adjacent, unicorn, and AI employer portals in one place.
-        Upgrade to Pro or Team to unlock cross-portal search and one-click alerts. You are on the{" "}
+        Search across curated FAANG-adjacent, unicorn, and AI employer portals in one place. Upgrade
+        to Pro or Team to unlock cross-portal search and one-click alerts. You are on the{" "}
         {planLabel(plan)} plan.
       </Banner>
       <p>
