@@ -2,7 +2,8 @@
 
 import { useCallback, useRef, useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
-import { useAsync } from "../hooks/useAsync";
+import { FreeTierAd } from "./FreeTierAd";
+import { useHealth } from "../hooks/queries";
 import { useFocusTrap } from "../hooks/useFocusTrap";
 import { api } from "../api";
 import { useAuth } from "../auth/AuthContext";
@@ -66,6 +67,7 @@ export function Layout() {
             </NavLink>
           )}
         </nav>
+        <FreeTierAd variant="sidebar" />
         <div className="sidebar-footer">
           {user && (
             <div className="user-box">
@@ -92,6 +94,8 @@ export function Layout() {
         <main className="content">
           <Outlet />
         </main>
+
+        <FreeTierAd variant="mobile" />
 
         <nav className="mobile-nav" aria-label="Primary">
           {PRIMARY_NAV.map((item) => (

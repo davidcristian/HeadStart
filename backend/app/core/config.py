@@ -124,6 +124,13 @@ class Settings(BaseSettings):
     ntfy_default_server_url: str = "https://ntfy.sh"
     ntfy_default_topic: str = "jobnotifier-change-me"
 
+    # ---- free-tier ads (optional third-party slot; house upgrade CTA is always on) ----
+    # Set ADS_ENABLED=false to hide all in-app ads, including the built-in upgrade card.
+    ads_enabled: bool = True
+    # HTTPS URL of a hosted ad iframe (e.g. AdSense); shown only when the user accepts
+    # optional cookies. Leave empty to show only the built-in upgrade promotion.
+    ads_external_slot_url: str = ""
+
     # ---- Stripe billing (optional; leave empty to disable paid checkout) ----
     stripe_secret_key: str = ""
     stripe_webhook_secret: str = ""

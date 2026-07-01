@@ -191,7 +191,7 @@ Goal: offset hosting costs for free users while keeping paid tiers ad-free.
 
 | Item | Why | Notes |
 | ---- | --- | ----- |
-| Ads for free users | Monetize the free tier without hard paywalls | Show non-intrusive ads in the app UI for `plan=free` accounts; hide for Pro/Team; respect privacy/legal baseline from Phase 6 |
+| Ads for free users | Monetize the free tier without hard paywalls | **Shipped:** `plan.show_ads` on `GET /api/v1/meta`; `FreeTierAd` in app shell (sidebar / mobile strip); built-in Pro upgrade CTA; optional `ADS_EXTERNAL_SLOT_URL` iframe gated on cookie consent; `ADS_ENABLED=false` kill switch; see [modules/frontend.md](modules/frontend.md) |
 
 **Done when:** free-tier users see ads in the app, paid users do not, and ad
 placement does not interfere with core job-alert workflows.

@@ -30,7 +30,8 @@ The frontend serves two surfaces from one bundle (see
   `localStorage` (`headstart.cookieConsent`), not a cookie. Visitors can reopen the banner
   from **Cookie settings** in the public footer or **Settings → Privacy & cookies** in the
   app. Use `acceptsOptionalCookies()` from `src/lib/cookieConsent.ts` before loading optional
-  scripts (e.g. future free-tier ads).
+  third-party ad iframes (see **Free-tier ads** below). The built-in upgrade promotion does
+  not use tracking cookies.
 - **Authenticated product** under **`/app/*`**, gated by `ProtectedRoute` and
   wrapped in the `Layout` shell (`/app/searches`, `/app/jobs`, …, `/app/admin`).
   `/app` redirects to `/app/searches`. New accounts without
@@ -111,6 +112,21 @@ Server state is managed by **TanStack Query** (`@tanstack/react-query`). The
   which wraps them in a fresh React Query client per test.
 - Covered pages: Sources, Searches, Targets, Jobs, Admin (render, empty state, list data,
   and primary actions like create/delete/test/run).
+- `FreeTierAd.test.tsx` covers free vs paid gating and optional-cookie gating for partner slots.
+
+## Free-tier ads
+
+Free-plan users (`plan.show_ads` from `GET /api/v1/meta`) see a non-intrusive **Sponsored**
+card in the app shell (`FreeTierAd` in `Layout.tsx`): sidebar on desktop, compact strip above
+the mobile bottom nav. Pro, Team, and admin accounts see nothing.
+
+- **House promotion** — built-in “Go ad-free with Pro” CTA linking to `/pricing` (no
+  third-party tracking).
+- **Partner slot (optional)** — operators set `ADS_EXTERNAL_SLOT_URL` (HTTPS iframe URL) in
+  the backend env. The iframe loads only when the user has accepted optional cookies
+  (`acceptsOptionalCookies()`). Otherwise a short link to **Settings → Privacy & cookies** is
+  shown.
+- **Kill switch** — `ADS_ENABLED=false` hides all in-app ads (house + partner).
 
 ## Dev
 

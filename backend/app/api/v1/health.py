@@ -8,7 +8,7 @@ from app.api.deps import get_current_user, get_db
 from app.appliers import available_appliers
 from app.core.config import settings
 from app.models.user import User
-from app.schemas.meta import HealthRead, MetaRead
+from app.schemas.meta import AdsConfigRead, HealthRead, MetaRead
 from app.schemas.plan import AccountPlanRead
 from app.services.plan_limits import PlanLimitsService
 
@@ -26,10 +26,16 @@ def meta(user: User = Depends(get_current_user), db: Session = Depends(get_db)) 
     """Capabilities used by the UI to populate adapter/notifier dropdowns."""
     limits = PlanLimitsService(db)
     snapshot = limits.snapshot(user)
+    if not settings.ads_enabled:
+        snapshot = {**snapshot, "show_ads": False}
     plan = AccountPlanRead.model_validate(snapshot)
+    ads_slot: str | None = None
+    if settings.ads_enabled and plan.show_ads:
+        ads_slot = settings.ads_external_slot_url.strip() or None
     return MetaRead(
         scrapers=plan.allowed_scrapers,
         notifiers=plan.allowed_notifiers,
         appliers=available_appliers(),
         plan=plan,
+        ads=AdsConfigRead(external_slot_url=ads_slot),
     )

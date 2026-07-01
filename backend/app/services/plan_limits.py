@@ -50,6 +50,12 @@ class PlanLimitsService:
             "targets": len(self.targets.list_all(user_id)),
         }
 
+    def show_ads_for(self, user: User) -> bool:
+        """Whether the signed-in user should see in-app ads (free tier only)."""
+        if user.is_admin:
+            return False
+        return self.resolve_plan(user) == "free"
+
     def snapshot(self, user: User) -> dict[str, object]:
         """Plan, limits, usage, features, and allowed adapters for the UI."""
         plan = self.resolve_plan(user)
@@ -60,6 +66,7 @@ class PlanLimitsService:
             "plan": user.plan if not user.is_admin else user.plan,
             "effective_plan": plan,
             "unlimited": user.is_admin,
+            "show_ads": self.show_ads_for(user),
             "limits": {
                 "max_searches": limits.max_searches,
                 "max_sources": limits.max_sources,

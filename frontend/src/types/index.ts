@@ -152,6 +152,11 @@ export interface Meta {
   notifiers: string[];
   appliers: string[];
   plan: AccountPlan;
+  ads: AdsConfig;
+}
+
+export interface AdsConfig {
+  external_slot_url: string | null;
 }
 
 export type PlanId = "free" | "pro" | "team";
@@ -179,6 +184,7 @@ export interface AccountPlan {
   plan: PlanId;
   effective_plan: PlanId;
   unlimited: boolean;
+  show_ads: boolean;
   limits: PlanLimits;
   usage: PlanUsage;
   features: PlanFeatures;

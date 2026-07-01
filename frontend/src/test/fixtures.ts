@@ -6,6 +6,7 @@ export const sampleAccountPlan: AccountPlan = {
   plan: "team",
   effective_plan: "team",
   unlimited: true,
+  show_ads: false,
   limits: { max_searches: 50, max_sources: 50, max_targets: 20 },
   usage: { searches: 0, sources: 0, targets: 0 },
   features: {
@@ -32,6 +33,7 @@ export const sampleMeta: Meta = {
   notifiers: sampleAccountPlan.allowed_notifiers,
   appliers: ["greenhouse", "lever", "ashby"],
   plan: sampleAccountPlan,
+  ads: { external_slot_url: null },
 };
 
 export const sampleSource: Source = {

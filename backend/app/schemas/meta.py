@@ -11,6 +11,12 @@ class HealthRead(BaseModel):
     environment: str
 
 
+class AdsConfigRead(BaseModel):
+    """Optional third-party ad slot for free-tier monetization."""
+
+    external_slot_url: str | None = None
+
+
 class MetaRead(BaseModel):
     """Capabilities the frontend uses to populate dropdowns."""
 
@@ -18,6 +24,7 @@ class MetaRead(BaseModel):
     notifiers: list[str]
     appliers: list[str]
     plan: AccountPlanRead
+    ads: AdsConfigRead
 
 
 class MessageRead(BaseModel):

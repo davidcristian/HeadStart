@@ -32,6 +32,7 @@ class AccountPlanRead(BaseModel):
     plan: PlanId
     effective_plan: PlanId
     unlimited: bool
+    show_ads: bool
     limits: PlanLimitsRead
     usage: PlanUsageRead
     features: PlanFeaturesRead
