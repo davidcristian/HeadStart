@@ -79,3 +79,20 @@ def workday_preset(
             "portal_id": portal_id,
         },
     )
+
+
+def google_careers_preset(
+    *,
+    portal_id: str = "google",
+    company: str = "Google",
+    category: PortalCategory = "big_tech",
+) -> PortalPreset:
+    base = "https://www.google.com/about/careers/applications/jobs/results/"
+    return PortalPreset(
+        id=portal_id,
+        company_name=company,
+        category=category,
+        adapter_key="google_careers",
+        base_url=base,
+        default_config={"company": company, "portal_id": portal_id},
+    )

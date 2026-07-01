@@ -20,7 +20,7 @@ def test_list_portal_presets_filters_query() -> None:
 def test_curated_portal_catalog_size() -> None:
     from app.portals.catalog import CURATED_PORTALS
 
-    assert len(CURATED_PORTALS) == 42
+    assert len(CURATED_PORTALS) == 43
 
 
 def test_curated_portal_doordash_board_token() -> None:

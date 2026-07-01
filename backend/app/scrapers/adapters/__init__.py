@@ -7,6 +7,7 @@ else in the codebase needs to change (see docs/recipes.md).
 from app.scrapers.adapters import (
     ashby,
     generic_html,
+    google_careers,
     greenhouse,
     indeed,
     lever,
@@ -18,6 +19,7 @@ from app.scrapers.adapters import (
 __all__ = [
     "ashby",
     "generic_html",
+    "google_careers",
     "greenhouse",
     "indeed",
     "lever",

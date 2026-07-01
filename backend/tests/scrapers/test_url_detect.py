@@ -55,6 +55,26 @@ def test_detect_workday_board_url() -> None:
     assert result.base_url == "https://acme.wd5.myworkdayjobs.com/en-US/External"
 
 
+def test_detect_google_careers_search_url() -> None:
+    result = detect_source_from_url(
+        "https://www.google.com/about/careers/applications/jobs/results/?q=software&location=United+States",
+        page_title="Search Jobs — Google Careers",
+    )
+    assert result is not None
+    assert result.adapter_key == "google_careers"
+    assert result.default_config["company"] == "Google"
+    assert result.default_config["q"] == "software"
+    assert result.default_config["location"] == "United States"
+    assert result.suggested_name == "Search Jobs"
+
+
+def test_detect_google_careers_root_url() -> None:
+    result = detect_source_from_url("https://careers.google.com/")
+    assert result is not None
+    assert result.adapter_key == "google_careers"
+    assert result.default_config["portal_id"] == "google"
+
+
 def test_detect_indeed_search_url() -> None:
     result = detect_source_from_url(
         "https://www.indeed.com/jobs?q=python&l=remote",

@@ -35,6 +35,7 @@ def detect_source_from_url(url: str, *, page_title: str | None = None) -> Source
         _detect_lever,
         _detect_ashby,
         _detect_workday,
+        _detect_google_careers,
         _detect_indeed,
     ):
         result = detector(parsed, host, page_title)
@@ -177,6 +178,61 @@ def _workday_host(tenant: str, region: str | None) -> str:
     if region:
         return f"{tenant}.{region}.myworkdayjobs.com"
     return f"{tenant}.myworkdayjobs.com"
+
+
+def _detect_google_careers(
+    parsed: Any, host: str, page_title: str | None
+) -> SourceDetection | None:
+    if host == "careers.google.com":
+        base_url = "https://www.google.com/about/careers/applications/jobs/results/"
+        return SourceDetection(
+            adapter_key="google_careers",
+            suggested_name=_title_or_slug(page_title, "Google"),
+            base_url=base_url,
+            default_config={"company": "Google", "portal_id": "google"},
+            query_url=base_url,
+        )
+
+    if host not in {"www.google.com", "google.com"}:
+        return None
+    path = parsed.path.rstrip("/")
+    if not path.endswith("/about/careers/applications/jobs/results"):
+        return None
+
+    params = parse_qs(parsed.query, keep_blank_values=True)
+    config: dict[str, Any] = {"company": "Google", "portal_id": "google"}
+    keyword = (params.get("q") or [""])[0].strip()
+    location = (params.get("location") or [""])[0].strip()
+    if keyword:
+        config["q"] = keyword
+    if location:
+        config["location"] = location
+
+    base_url = "https://www.google.com/about/careers/applications/jobs/results/"
+    return SourceDetection(
+        adapter_key="google_careers",
+        suggested_name=_google_suggested_name(keyword, location, page_title),
+        base_url=base_url,
+        default_config=config,
+        query_url=parsed.geturl(),
+    )
+
+
+def _google_suggested_name(keyword: str, location: str, page_title: str | None) -> str:
+    if page_title:
+        cleaned = page_title.strip()
+        for suffix in (
+            " — Google Careers",
+            " - Google Careers",
+            " | Google Careers",
+            " Careers",
+        ):
+            if cleaned.endswith(suffix):
+                cleaned = cleaned[: -len(suffix)].strip()
+        if cleaned:
+            return cleaned
+    parts = [part for part in ("Google", keyword, location) if part]
+    return " / ".join(parts) if parts else "Google Careers"
 
 
 def _detect_indeed(parsed: Any, host: str, page_title: str | None) -> SourceDetection | None:
