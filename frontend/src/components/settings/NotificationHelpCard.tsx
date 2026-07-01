@@ -1,0 +1,81 @@
+/** Receiving notifications setup help for the settings page. */
+
+export function NotificationHelpCard() {
+  return (
+    <>
+      <p>
+        HeadStart can deliver alerts via <strong>email</strong> (configure <code>SMTP_*</code> on
+        the server), <strong>Slack</strong> or <strong>Discord</strong> (incoming webhooks),{" "}
+        <strong>Telegram</strong> (Bot API), or <strong>ntfy</strong> push (no server mail setup
+        required).
+      </p>
+      <h3>Email</h3>
+      <ol className="help-list">
+        <li>
+          Set <code>SMTP_HOST</code>, <code>SMTP_FROM</code>, and related vars on the API server.
+        </li>
+        <li>
+          Create an <strong>email</strong> target on the <strong>Notifications</strong> page with
+          your address in <code>to</code>.
+        </li>
+        <li>Use &quot;Send test&quot; to confirm delivery, then attach the target to a search.</li>
+      </ol>
+      <h3>Slack</h3>
+      <ol className="help-list">
+        <li>
+          In Slack, add an <strong>Incoming Webhooks</strong> app to your workspace and choose a
+          channel.
+        </li>
+        <li>
+          Create a <strong>slack</strong> target on the <strong>Notifications</strong> page and
+          paste the webhook URL into <code>webhook_url</code>.
+        </li>
+        <li>Use &quot;Send test&quot; to confirm delivery, then attach the target to a search.</li>
+      </ol>
+      <h3>Discord</h3>
+      <ol className="help-list">
+        <li>
+          In Discord, open your server&apos;s <strong>Integrations</strong> settings and create a{" "}
+          <strong>Webhook</strong> for the channel you want alerts in.
+        </li>
+        <li>
+          Create a <strong>discord</strong> target on the <strong>Notifications</strong> page and
+          paste the webhook URL into <code>webhook_url</code>.
+        </li>
+        <li>Use &quot;Send test&quot; to confirm delivery, then attach the target to a search.</li>
+      </ol>
+      <h3>Telegram</h3>
+      <ol className="help-list">
+        <li>
+          In Telegram, message <strong>@BotFather</strong>, run <code>/newbot</code>, and copy the
+          bot token.
+        </li>
+        <li>
+          Start a chat with your bot (or add it to a group) and note your numeric{" "}
+          <code>chat_id</code>.
+        </li>
+        <li>
+          Create a <strong>telegram</strong> target on the <strong>Notifications</strong> page with{" "}
+          <code>bot_token</code> and <code>chat_id</code>.
+        </li>
+        <li>Use &quot;Send test&quot; to confirm delivery, then attach the target to a search.</li>
+      </ol>
+      <h3>ntfy push</h3>
+      <ol className="help-list">
+        <li>
+          Install the <strong>ntfy</strong> app (iOS / Android) or open{" "}
+          <a href="https://ntfy.sh" target="_blank" rel="noreferrer">
+            ntfy.sh
+          </a>
+          .
+        </li>
+        <li>
+          Create an <strong>ntfy</strong> target on the <strong>Notifications</strong> page with
+          your chosen topic (pick something unguessable).
+        </li>
+        <li>Subscribe to that exact topic in the ntfy app.</li>
+        <li>Use &quot;Send test&quot; to confirm delivery, then attach the target to a search.</li>
+      </ol>
+    </>
+  );
+}

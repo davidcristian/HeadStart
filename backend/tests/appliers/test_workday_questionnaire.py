@@ -6,11 +6,13 @@ import httpx
 
 from app.appliers.adapters.workday_common import WorkdayTarget, resolve_target
 from app.appliers.adapters.workday_questionnaire import (
-    build_questionnaire_answers,
-    flatten_questions,
     preview_questionnaires,
     resolve_questionnaire_ids,
     submit_questionnaires,
+)
+from app.appliers.adapters.workday_questionnaire_answers import (
+    build_questionnaire_answers,
+    flatten_questions,
 )
 from app.schemas.profile import ProfileData
 from tests.conftest import load_json_fixture, make_http_client

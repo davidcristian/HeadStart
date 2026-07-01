@@ -1,0 +1,65 @@
+"""Tests for Workday target resolution and payload builders."""
+
+from app.appliers.adapters.workday_common import (
+    build_application_payload,
+    resolve_job_path,
+    resolve_job_posting_id,
+    resolve_target,
+)
+from app.schemas.profile import ProfileData
+from tests.appliers.workday_helpers import JOB_URL, profile
+
+
+def test_resolve_target_from_config_or_url() -> None:
+    target = resolve_target({"tenant": "acme", "site": "AcmeCareers", "region": "wd5"}, "")
+    assert target is not None
+    assert target.tenant == "acme"
+    assert target.site == "AcmeCareers"
+
+    from_url = resolve_target({}, JOB_URL)
+    assert from_url is not None
+    assert from_url.tenant == "acme"
+    assert from_url.site == "AcmeCareers"
+
+
+def test_resolve_job_posting_id_from_url() -> None:
+    assert resolve_job_path({}, JOB_URL) == "US-CA-Santa-Clara/Senior-Software-Engineer_JR1001"
+    assert resolve_job_posting_id({}, JOB_URL, "JR1001") == "Senior-Software-Engineer_JR1001"
+
+
+def test_build_application_payload_maps_profile_fields() -> None:
+    payload = build_application_payload(
+        profile(),
+        job_posting_id="Senior-Software-Engineer_JR1001",
+        job_path="US-CA-Santa-Clara/Senior-Software-Engineer_JR1001",
+        job_title="Senior Software Engineer",
+        company="ACME",
+        config={"country_id": "US"},
+    )
+    assert payload["jobPostingId"] == "Senior-Software-Engineer_JR1001"
+    assert payload["candidate"]["legalName"]["firstName"] == "Ada"
+    assert payload["candidate"]["legalName"]["lastName"] == "Lovelace"
+    assert payload["candidate"]["emailAddress"] == "ada@example.com"
+    assert payload["candidate"]["phoneNumber"] == "+1 555 0100"
+    assert payload["candidate"]["links"]["linkedIn"] == "https://linkedin.com/in/ada"
+    assert "ACME" in payload["candidate"]["comments"]
+    assert payload["answers"]["work_authorization"] == "yes"
+
+
+def test_build_application_payload_requires_name_and_email() -> None:
+    try:
+        build_application_payload(
+            ProfileData(full_name="Ada", email="ada@example.com"),
+            job_posting_id="job-1",
+            job_path="loc/job-1",
+            job_title="Role",
+            company="ACME",
+            config={},
+        )
+        raise AssertionError("expected ValueError")
+    except ValueError as exc:
+        assert "last name" in str(exc)
+
+
+def test_resolve_job_posting_id_returns_none_without_inputs() -> None:
+    assert resolve_job_posting_id({}, "", "") is None

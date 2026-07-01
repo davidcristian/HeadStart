@@ -1,4 +1,4 @@
-"""Tests for the Workday apply adapter."""
+"""Tests for the Workday apply adapter submission flow."""
 
 import json
 
@@ -6,89 +6,10 @@ import httpx
 
 from app.appliers import ApplyContext
 from app.appliers.adapters.workday import WorkdayApplier
-from app.appliers.adapters.workday_common import (
-    build_application_payload,
-    resolve_job_path,
-    resolve_job_posting_id,
-    resolve_target,
-)
 from app.appliers.base import get_applier
-from app.schemas.profile import ProfileData, ProfileLinks
+from app.schemas.profile import ProfileData
+from tests.appliers.workday_helpers import JOB_URL, profile, unexpected_request
 from tests.conftest import load_fixture, load_json_fixture, make_http_client
-
-
-def _profile() -> ProfileData:
-    return ProfileData(
-        full_name="Ada Lovelace",
-        email="ada@example.com",
-        phone="+1 555 0100",
-        location="Santa Clara, CA",
-        links=ProfileLinks(
-            linkedin="https://linkedin.com/in/ada",
-            github="https://github.com/ada",
-            website="https://ada.example",
-        ),
-        resume_text="Experienced engineer.",
-        cover_letter_template="Dear {company}, I am excited about {job_title}.",
-        answers={"work_authorization": "yes"},
-    )
-
-
-_JOB_URL = (
-    "https://acme.wd5.myworkdayjobs.com/en-US/AcmeCareers/"
-    "job/US-CA-Santa-Clara/Senior-Software-Engineer_JR1001"
-)
-
-
-def test_resolve_target_from_config_or_url() -> None:
-    target = resolve_target({"tenant": "acme", "site": "AcmeCareers", "region": "wd5"}, "")
-    assert target is not None
-    assert target.tenant == "acme"
-    assert target.site == "AcmeCareers"
-
-    from_url = resolve_target({}, _JOB_URL)
-    assert from_url is not None
-    assert from_url.tenant == "acme"
-    assert from_url.site == "AcmeCareers"
-
-
-def test_resolve_job_posting_id_from_url() -> None:
-    assert resolve_job_path({}, _JOB_URL) == "US-CA-Santa-Clara/Senior-Software-Engineer_JR1001"
-    assert resolve_job_posting_id({}, _JOB_URL, "JR1001") == "Senior-Software-Engineer_JR1001"
-
-
-def test_build_application_payload_maps_profile_fields() -> None:
-    payload = build_application_payload(
-        _profile(),
-        job_posting_id="Senior-Software-Engineer_JR1001",
-        job_path="US-CA-Santa-Clara/Senior-Software-Engineer_JR1001",
-        job_title="Senior Software Engineer",
-        company="ACME",
-        config={"country_id": "US"},
-    )
-    assert payload["jobPostingId"] == "Senior-Software-Engineer_JR1001"
-    assert payload["candidate"]["legalName"]["firstName"] == "Ada"
-    assert payload["candidate"]["legalName"]["lastName"] == "Lovelace"
-    assert payload["candidate"]["emailAddress"] == "ada@example.com"
-    assert payload["candidate"]["phoneNumber"] == "+1 555 0100"
-    assert payload["candidate"]["links"]["linkedIn"] == "https://linkedin.com/in/ada"
-    assert "ACME" in payload["candidate"]["comments"]
-    assert payload["answers"]["work_authorization"] == "yes"
-
-
-def test_build_application_payload_requires_name_and_email() -> None:
-    try:
-        build_application_payload(
-            ProfileData(full_name="Ada", email="ada@example.com"),
-            job_posting_id="job-1",
-            job_path="loc/job-1",
-            job_title="Role",
-            company="ACME",
-            config={},
-        )
-        raise AssertionError("expected ValueError")
-    except ValueError as exc:
-        assert "last name" in str(exc)
 
 
 def test_dry_run_returns_payload_with_questionnaire_preview() -> None:
@@ -108,7 +29,7 @@ def test_dry_run_returns_payload_with_questionnaire_preview() -> None:
             job_external_id="JR1001",
             job_title="Senior Software Engineer",
             company="ACME",
-            job_url=_JOB_URL,
+            job_url=JOB_URL,
             config={
                 "tenant": "acme",
                 "site": "AcmeCareers",
@@ -165,7 +86,7 @@ def test_live_submit_creates_names_questionnaires_and_finalizes() -> None:
             job_external_id="JR1001",
             job_title="Senior Software Engineer",
             company="ACME",
-            job_url=_JOB_URL,
+            job_url=JOB_URL,
             config={
                 "tenant": "acme",
                 "site": "AcmeCareers",
@@ -206,7 +127,7 @@ def test_live_submit_creates_names_questionnaires_and_finalizes() -> None:
 
 
 def test_apply_fails_without_target_coordinates() -> None:
-    applier = get_applier("workday", http=make_http_client(_unexpected_request))
+    applier = get_applier("workday", http=make_http_client(unexpected_request))
     result = applier.apply(
         ApplyContext(
             job_external_id="JR1001",
@@ -214,7 +135,7 @@ def test_apply_fails_without_target_coordinates() -> None:
             company="ACME",
             job_url="https://example.com/careers",
             config={},
-            profile=_profile(),
+            profile=profile(),
             dry_run=True,
         )
     )
@@ -223,7 +144,7 @@ def test_apply_fails_without_target_coordinates() -> None:
 
 
 def test_apply_fails_without_job_path() -> None:
-    applier = get_applier("workday", http=make_http_client(_unexpected_request))
+    applier = get_applier("workday", http=make_http_client(unexpected_request))
     result = applier.apply(
         ApplyContext(
             job_external_id="JR1001",
@@ -231,7 +152,7 @@ def test_apply_fails_without_job_path() -> None:
             company="ACME",
             job_url="https://acme.wd5.myworkdayjobs.com/en-US/AcmeCareers",
             config={"tenant": "acme", "site": "AcmeCareers", "region": "wd5"},
-            profile=_profile(),
+            profile=profile(),
             dry_run=True,
         )
     )
@@ -239,20 +160,16 @@ def test_apply_fails_without_job_path() -> None:
     assert "/job/" in (result.error or "").lower()
 
 
-def test_resolve_job_posting_id_returns_none_without_inputs() -> None:
-    assert resolve_job_posting_id({}, "", "") is None
-
-
 def test_missing_csrf_token_fails_with_helpful_error() -> None:
-    applier = get_applier("workday", http=make_http_client(_unexpected_request))
+    applier = get_applier("workday", http=make_http_client(unexpected_request))
     result = applier.apply(
         ApplyContext(
             job_external_id="JR1001",
             job_title="Role",
             company="ACME",
-            job_url=_JOB_URL,
+            job_url=JOB_URL,
             config={"tenant": "acme", "site": "AcmeCareers", "region": "wd5"},
-            profile=_profile(),
+            profile=profile(),
             credentials={
                 "cookies": {"CALYPSO_SESSION": "session-token"},
                 "headers": {},
@@ -281,9 +198,9 @@ def test_create_without_application_id_surfaces_workday_error() -> None:
             job_external_id="JR1001",
             job_title="Senior Software Engineer",
             company="ACME",
-            job_url=_JOB_URL,
+            job_url=JOB_URL,
             config={"tenant": "acme", "site": "AcmeCareers", "region": "wd5"},
-            profile=_profile(),
+            profile=profile(),
             credentials={
                 "cookies": {
                     "CALYPSO_SESSION": "session-token",
@@ -319,14 +236,14 @@ def test_finalize_error_returns_application_id() -> None:
             job_external_id="JR1001",
             job_title="Senior Software Engineer",
             company="ACME",
-            job_url=_JOB_URL,
+            job_url=JOB_URL,
             config={
                 "tenant": "acme",
                 "site": "AcmeCareers",
                 "region": "wd5",
                 "skip_questionnaires": True,
             },
-            profile=_profile(),
+            profile=profile(),
             credentials={
                 "cookies": {
                     "CALYPSO_SESSION": "session-token",
@@ -344,15 +261,15 @@ def test_finalize_error_returns_application_id() -> None:
 
 
 def test_missing_session_cookie_fails_with_helpful_error() -> None:
-    applier = get_applier("workday", http=make_http_client(_unexpected_request))
+    applier = get_applier("workday", http=make_http_client(unexpected_request))
     result = applier.apply(
         ApplyContext(
             job_external_id="JR1001",
             job_title="Role",
             company="ACME",
-            job_url=_JOB_URL,
+            job_url=JOB_URL,
             config={"tenant": "acme", "site": "AcmeCareers", "region": "wd5"},
-            profile=_profile(),
+            profile=profile(),
             credentials={
                 "cookies": {},
                 "headers": {},
@@ -364,7 +281,3 @@ def test_missing_session_cookie_fails_with_helpful_error() -> None:
     assert result.status == "failed"
     assert "CALYPSO_SESSION" in (result.error or "")
     assert result.payload is not None
-
-
-def _unexpected_request(request: httpx.Request) -> httpx.Response:
-    raise AssertionError(f"unexpected network call: {request.method} {request.url}")
