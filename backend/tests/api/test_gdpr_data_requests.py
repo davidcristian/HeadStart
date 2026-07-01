@@ -33,6 +33,26 @@ def test_export_creates_audit_log(client: TestClient, auth_headers: dict[str, st
     assert logs[0]["user_agent"] == "pytest-export/1.0"
 
 
+def test_export_audit_log_captures_forwarded_ip(client: TestClient) -> None:
+    admin = register_and_login(client, "audit-admin@example.com")
+    member = register_and_login(client, "audit-member@example.com")
+
+    resp = client.get(
+        "/api/v1/auth/me/export",
+        headers={
+            **member,
+            "X-Forwarded-For": "198.51.100.42, 10.0.0.1",
+            "User-Agent": "pytest-export/2.0",
+        },
+    )
+    assert resp.status_code == 200
+
+    logs = client.get("/api/v1/admin/data-requests", headers=admin).json()
+    assert len(logs) == 1
+    assert logs[0]["ip_address"] == "198.51.100.42"
+    assert logs[0]["user_agent"] == "pytest-export/2.0"
+
+
 def test_delete_creates_audit_log_with_email_snapshot(client: TestClient) -> None:
     admin = register_and_login(client, "admin@example.com")
     headers = register_and_login(client, "gone@example.com")

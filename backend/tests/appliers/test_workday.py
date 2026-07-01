@@ -161,6 +161,139 @@ def test_live_submit_creates_names_and_finalizes() -> None:
     assert name_body["legalName"]["firstName"] == "Ada"
 
 
+def test_apply_fails_without_target_coordinates() -> None:
+    applier = get_applier("workday", http=make_http_client(_unexpected_request))
+    result = applier.apply(
+        ApplyContext(
+            job_external_id="JR1001",
+            job_title="Role",
+            company="ACME",
+            job_url="https://example.com/careers",
+            config={},
+            profile=_profile(),
+            dry_run=True,
+        )
+    )
+    assert result.status == "failed"
+    assert "tenant" in (result.error or "").lower()
+
+
+def test_apply_fails_without_job_path() -> None:
+    applier = get_applier("workday", http=make_http_client(_unexpected_request))
+    result = applier.apply(
+        ApplyContext(
+            job_external_id="JR1001",
+            job_title="Role",
+            company="ACME",
+            job_url="https://acme.wd5.myworkdayjobs.com/en-US/AcmeCareers",
+            config={"tenant": "acme", "site": "AcmeCareers", "region": "wd5"},
+            profile=_profile(),
+            dry_run=True,
+        )
+    )
+    assert result.status == "failed"
+    assert "/job/" in (result.error or "").lower()
+
+
+def test_resolve_job_posting_id_returns_none_without_inputs() -> None:
+    assert resolve_job_posting_id({}, "", "") is None
+
+
+def test_missing_csrf_token_fails_with_helpful_error() -> None:
+    applier = get_applier("workday", http=make_http_client(_unexpected_request))
+    result = applier.apply(
+        ApplyContext(
+            job_external_id="JR1001",
+            job_title="Role",
+            company="ACME",
+            job_url=_JOB_URL,
+            config={"tenant": "acme", "site": "AcmeCareers", "region": "wd5"},
+            profile=_profile(),
+            credentials={
+                "cookies": {"CALYPSO_SESSION": "session-token"},
+                "headers": {},
+                "session": {},
+            },
+            dry_run=False,
+        )
+    )
+    assert result.status == "failed"
+    assert "CSRF" in (result.error or "")
+    assert result.payload is not None
+
+
+def test_create_without_application_id_surfaces_workday_error() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path.endswith("/jobapplications"):
+            return httpx.Response(
+                200,
+                json={"errorCode": "AUTH_REQUIRED", "message": "Sign in required"},
+            )
+        raise AssertionError(f"unexpected request: {request.method} {request.url}")
+
+    applier = WorkdayApplier(http=make_http_client(handler))
+    result = applier.apply(
+        ApplyContext(
+            job_external_id="JR1001",
+            job_title="Senior Software Engineer",
+            company="ACME",
+            job_url=_JOB_URL,
+            config={"tenant": "acme", "site": "AcmeCareers", "region": "wd5"},
+            profile=_profile(),
+            credentials={
+                "cookies": {
+                    "CALYPSO_SESSION": "session-token",
+                    "CALYPSO_CSRF_TOKEN": "csrf-token",
+                },
+                "headers": {},
+                "session": {},
+            },
+            dry_run=False,
+        )
+    )
+    assert result.status == "failed"
+    assert result.error == "Sign in required"
+    assert result.external_application_id is None
+
+
+def test_finalize_error_returns_application_id() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path.endswith("/jobapplications"):
+            return httpx.Response(200, json={"id": "app-xyz", "sessionId": "sess-1"})
+        if request.url.path.endswith("/name"):
+            return httpx.Response(200, json={"ok": True})
+        if request.url.path.endswith("/finalize"):
+            return httpx.Response(
+                200,
+                json={"errorCode": "VALIDATION_FAILED", "message": "Missing required answers"},
+            )
+        raise AssertionError(f"unexpected request: {request.method} {request.url}")
+
+    applier = WorkdayApplier(http=make_http_client(handler))
+    result = applier.apply(
+        ApplyContext(
+            job_external_id="JR1001",
+            job_title="Senior Software Engineer",
+            company="ACME",
+            job_url=_JOB_URL,
+            config={"tenant": "acme", "site": "AcmeCareers", "region": "wd5"},
+            profile=_profile(),
+            credentials={
+                "cookies": {
+                    "CALYPSO_SESSION": "session-token",
+                    "CALYPSO_CSRF_TOKEN": "csrf-token",
+                },
+                "headers": {},
+                "session": {},
+            },
+            dry_run=False,
+        )
+    )
+    assert result.status == "failed"
+    assert result.error == "Missing required answers"
+    assert result.external_application_id == "app-xyz"
+
+
 def test_missing_session_cookie_fails_with_helpful_error() -> None:
     applier = get_applier("workday", http=make_http_client(_unexpected_request))
     result = applier.apply(
