@@ -4,11 +4,34 @@ from fastapi import APIRouter, Depends, File, UploadFile, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
+from app.core.config import settings
+from app.core.exceptions import ValidationError
 from app.models.user import User
 from app.schemas.profile import ProfileData, ProfileRead
 from app.services.profiles import ProfileService
 
 router = APIRouter()
+
+_READ_CHUNK_BYTES = 64 * 1024
+
+
+async def _read_bounded_upload(file: UploadFile, max_bytes: int) -> bytes:
+    """Stream an upload into memory without reading more than max_bytes."""
+    chunks: list[bytes] = []
+    total = 0
+    while True:
+        chunk = await file.read(_READ_CHUNK_BYTES)
+        if not chunk:
+            break
+        total += len(chunk)
+        if total > max_bytes:
+            raise ValidationError(
+                f"Resume file exceeds the {max_bytes // 1_048_576} MB limit"
+            )
+        chunks.append(chunk)
+    if total == 0:
+        raise ValidationError("Resume file is empty")
+    return b"".join(chunks)
 
 
 @router.get("", response_model=ProfileRead)
@@ -34,7 +57,7 @@ async def upload_resume(
     user: User = Depends(get_current_user),
 ) -> ProfileRead:
     """Upload or replace the user's resume file (PDF or Word)."""
-    content = await file.read()
+    content = await _read_bounded_upload(file, settings.profile_resume_max_bytes)
     content_type = file.content_type or "application/octet-stream"
     filename = file.filename or "resume.pdf"
     return ProfileService(db).save_resume(

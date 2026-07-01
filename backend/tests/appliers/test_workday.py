@@ -320,7 +320,12 @@ def test_finalize_error_returns_application_id() -> None:
             job_title="Senior Software Engineer",
             company="ACME",
             job_url=_JOB_URL,
-            config={"tenant": "acme", "site": "AcmeCareers", "region": "wd5"},
+            config={
+                "tenant": "acme",
+                "site": "AcmeCareers",
+                "region": "wd5",
+                "skip_questionnaires": True,
+            },
             profile=_profile(),
             credentials={
                 "cookies": {

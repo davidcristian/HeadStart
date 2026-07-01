@@ -119,3 +119,16 @@ def test_resume_upload_rejects_invalid_type(
         files={"file": ("notes.txt", b"hello", "text/plain")},
     )
     assert resp.status_code == 400
+
+
+def test_resume_upload_rejects_oversized_file(
+    client: TestClient, auth_headers: dict[str, str], monkeypatch
+) -> None:
+    monkeypatch.setattr("app.api.v1.profile.settings.profile_resume_max_bytes", 1024)
+    resp = client.put(
+        "/api/v1/profile/resume",
+        headers=auth_headers,
+        files={"file": ("resume.pdf", b"x" * 1025, "application/pdf")},
+    )
+    assert resp.status_code == 400
+    assert "exceeds" in resp.json()["detail"].lower()
