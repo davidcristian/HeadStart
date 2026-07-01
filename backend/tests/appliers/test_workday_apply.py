@@ -7,7 +7,7 @@ import httpx
 from app.appliers import ApplyContext
 from app.appliers.adapters.workday import WorkdayApplier
 from app.appliers.base import get_applier
-from app.schemas.profile import ProfileData
+from app.schemas.profile import ProfileData, ResumeFile
 from tests.appliers.workday_helpers import JOB_URL, profile, unexpected_request
 from tests.conftest import load_fixture, load_json_fixture, make_http_client
 
@@ -124,6 +124,126 @@ def test_live_submit_creates_names_questionnaires_and_finalizes() -> None:
     assert isinstance(questionnaire_body, dict)
     choice_answers = questionnaire_body["questionnaireAnswers"][0]["questionMultipleChoiceAnswers"]
     assert choice_answers == ["ans-yes"]
+
+
+def test_live_submit_uploads_resume_before_questionnaires() -> None:
+    create_fixture = load_fixture("workday_apply_create.json")
+    questionnaire_fixture = load_json_fixture("workday_questionnaire.json")
+    posting_fixture = load_json_fixture("workday_job_posting_info.json")
+    questionnaire_response_fixture = load_json_fixture("workday_questionnaire_response.json")
+    upload_fixture = load_json_fixture("workday_attachment_upload.json")
+    seen: dict[str, object] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path.endswith("/jobapplications"):
+            return httpx.Response(
+                200, text=create_fixture, headers={"content-type": "application/json"}
+            )
+        if request.url.path.endswith("/name"):
+            return httpx.Response(200, json={"ok": True})
+        if request.url.path.endswith("/attachments"):
+            seen["attachments_called"] = True
+            return httpx.Response(200, json=upload_fixture)
+        if request.url.path.endswith("/resumeattachments"):
+            seen["resumeattachments_called"] = True
+            return httpx.Response(200, json={"ok": True})
+        if request.url.path.endswith("/job/US-CA-Santa-Clara/Senior-Software-Engineer_JR1001"):
+            return httpx.Response(200, json=posting_fixture)
+        if request.url.path.endswith("/questionnaire/quest-primary-001"):
+            return httpx.Response(200, json=questionnaire_fixture)
+        if "questionnaireresponse" in request.url.path:
+            return httpx.Response(200, json=questionnaire_response_fixture)
+        if request.url.path.endswith("/finalize"):
+            return httpx.Response(200, json={"ok": True})
+        raise AssertionError(f"unexpected request: {request.method} {request.url}")
+
+    resume = ResumeFile(
+        filename="resume.pdf",
+        content_type="application/pdf",
+        size_bytes=len(b"%PDF-1.4 test"),
+        data=b"%PDF-1.4 test",
+    )
+    applier = WorkdayApplier(http=make_http_client(handler))
+    result = applier.apply(
+        ApplyContext(
+            job_external_id="JR1001",
+            job_title="Senior Software Engineer",
+            company="ACME",
+            job_url=JOB_URL,
+            config={
+                "tenant": "acme",
+                "site": "AcmeCareers",
+                "region": "wd5",
+                "skip_secondary_questionnaire": True,
+            },
+            profile=ProfileData(
+                full_name="Ada Lovelace",
+                email="ada@example.com",
+                answers={"q-work-auth": "Yes"},
+            ),
+            resume_file=resume,
+            credentials={
+                "cookies": {
+                    "CALYPSO_SESSION": "session-token",
+                    "CALYPSO_CSRF_TOKEN": "csrf-token",
+                },
+                "headers": {},
+                "session": {},
+            },
+            dry_run=False,
+        )
+    )
+
+    assert result.status == "submitted"
+    assert seen.get("attachments_called") is True
+    assert seen.get("resumeattachments_called") is True
+    assert result.payload is not None
+    assert "resumeAttachments" in result.payload
+
+
+def test_dry_run_includes_resume_attachment_preview() -> None:
+    questionnaire_fixture = load_json_fixture("workday_questionnaire.json")
+    posting_fixture = load_json_fixture("workday_job_posting_info.json")
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path.endswith("/job/US-CA-Santa-Clara/Senior-Software-Engineer_JR1001"):
+            return httpx.Response(200, json=posting_fixture)
+        if request.url.path.endswith("/questionnaire/quest-primary-001"):
+            return httpx.Response(200, json=questionnaire_fixture)
+        raise AssertionError(f"unexpected request: {request.method} {request.url}")
+
+    resume = ResumeFile(
+        filename="resume.pdf",
+        content_type="application/pdf",
+        size_bytes=4,
+        data=b"%PDF",
+    )
+    applier = get_applier("workday", http=make_http_client(handler))
+    result = applier.apply(
+        ApplyContext(
+            job_external_id="JR1001",
+            job_title="Senior Software Engineer",
+            company="ACME",
+            job_url=JOB_URL,
+            config={
+                "tenant": "acme",
+                "site": "AcmeCareers",
+                "region": "wd5",
+                "skip_secondary_questionnaire": True,
+            },
+            profile=ProfileData(
+                full_name="Ada Lovelace",
+                email="ada@example.com",
+                answers={"q-work-auth": "Yes"},
+            ),
+            resume_file=resume,
+            dry_run=True,
+        )
+    )
+    assert result.status == "dry_run"
+    assert result.payload is not None
+    assert result.payload["resumeAttachments"]["attachments"][0]["fileName"] == "resume.pdf"
+    assert "Resume:" not in str(result.payload.get("candidate", {}).get("comments", ""))
 
 
 def test_apply_fails_without_target_coordinates() -> None:

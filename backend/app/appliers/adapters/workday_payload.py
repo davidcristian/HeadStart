@@ -36,6 +36,7 @@ def build_supplemental_text(
     company: str,
     job_title: str,
     cover_letter: str | None,
+    include_resume_text: bool = True,
 ) -> str | None:
     """Cover letter (override or template) plus optional resume text."""
     parts: list[str] = []
@@ -46,9 +47,10 @@ def build_supplemental_text(
         if template:
             parts.append(render_cover_letter(template, company=company, job_title=job_title))
 
-    resume = profile.resume_text.strip()
-    if resume:
-        parts.append(f"Resume:\n{resume}")
+    if include_resume_text:
+        resume = profile.resume_text.strip()
+        if resume:
+            parts.append(f"Resume:\n{resume}")
 
     return "\n\n".join(parts) if parts else None
 
@@ -62,6 +64,7 @@ def build_application_payload(
     company: str,
     config: dict[str, Any],
     cover_letter: str | None = None,
+    has_resume_file: bool = False,
 ) -> dict[str, Any]:
     """Map profile data to the Workday CXS apply payload shape."""
     first_name, last_name = split_name(profile.full_name)
@@ -105,7 +108,11 @@ def build_application_payload(
         payload["candidate"]["links"] = links
 
     supplemental = build_supplemental_text(
-        profile, company=company, job_title=job_title, cover_letter=cover_letter
+        profile,
+        company=company,
+        job_title=job_title,
+        cover_letter=cover_letter,
+        include_resume_text=not has_resume_file,
     )
     if supplemental:
         payload["candidate"]["comments"] = supplemental

@@ -2,7 +2,12 @@
 
 import base64
 
-from app.appliers.resume import greenhouse_resume_fields, lever_resume_part, resume_meta_for_payload
+from app.appliers.resume import (
+    greenhouse_resume_fields,
+    lever_resume_part,
+    resume_meta_for_payload,
+    workday_content_type,
+)
 from app.schemas.profile import ResumeFile
 
 
@@ -42,3 +47,7 @@ def test_resume_meta_for_payload_omits_bytes() -> None:
     assert meta is not None
     assert meta["filename"] == "resume.pdf"
     assert "data" not in meta
+
+
+def test_workday_content_type_uses_octet_stream_fallback() -> None:
+    assert workday_content_type("")["id"] == "Content_Type_ID=application/octet-stream"

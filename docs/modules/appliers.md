@@ -150,20 +150,27 @@ career sites. Config / credentials:
 | `skip_questionnaires` | source/search config | When true, skip all questionnaire submission |
 | `skip_primary_questionnaire` / `skip_secondary_questionnaire` / `skip_supplementary_questionnaire` | source/search config | Skip one questionnaire type |
 | `auto_terms_consent` | source/search config | When true, PUT `termsandconditions` with `acceptTermsAndAgreements: true` before finalize |
+| `skip_resume_upload` | source/search config | When true, skip CXS resume upload even when the profile has a stored file |
 | `CALYPSO_SESSION` | credential `cookies` | Authenticated candidate session cookie |
 | `CALYPSO_CSRF_TOKEN` | credential `cookies` or `session.csrf_token` | CSRF token from the apply page |
 
 **Dry run:** preview JSON (candidate contact fields + job posting id) without
-calling Workday.
+calling Workday. When the profile has an uploaded resume, the preview includes a
+`resumeAttachments` section with filename, size, and content type (no file bytes).
 
 **Live submit:** requires cookies from a **logged-in** Workday candidate account
 on the target tenant (create/sign-in on the apply page, then copy session cookies
-from dev tools). The adapter creates the application, posts the legal name, submits
+from dev tools). The adapter creates the application, posts the legal name, uploads
+the resume file to the CXS `attachments` endpoint and registers it on
+`resumeattachments` (when the application profile has a stored file), submits
 mapped **primary / secondary / supplementary questionnaires** (when the job
 posting exposes them), optionally accepts terms (`auto_terms_consent`), and calls
 finalize. Question answers come from `profile.answers` (question WID or label →
 answer WID or label such as `Yes` / `No`). Use **dry run** to preview
-`questionnaireAnswers` before enabling live apply.
+`questionnaireAnswers` and `resumeAttachments` before enabling live apply.
+
+Set `skip_resume_upload: true` in source/search config to omit the resume upload
+steps while still applying other sections.
 
 **Questionnaires:** Workday exposes `questionnaireId` fields on the public job
 detail CXS response. The adapter fetches each questionnaire definition, maps
@@ -171,7 +178,7 @@ detail CXS response. The adapter fetches each questionnaire definition, maps
 `jobapplication/{id}/questionnaireresponse?type=primary|secondary|supplementary`.
 Required questions without a mapped answer fail before finalize with a clear error.
 
-**Still manual / best-effort:** resume file upload, work experience / education /
+**Still manual / best-effort:** work experience / education /
 skills sections, and complex branching trees where follow-up questions depend on
 earlier choices you did not map. Multi-page experience sections are not automated.
 
@@ -182,7 +189,7 @@ default `false`). Toggle from the Sources page (only for adapters with a
 registered applier). `ApplyService` rejects non–dry-run applies when opt-in is
 off; preview (`dry_run`) still works.
 
-**v1 limitations:** Workday resume upload and structured experience/education
+**v1 limitations:** Workday structured experience/education
 sections are not automated; Indeed/LinkedIn/generic sources have no apply adapter.
 Branching questionnaires only submit answers you explicitly map in
 `profile.answers`. See

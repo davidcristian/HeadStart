@@ -93,7 +93,7 @@ apply adapters for Indeed, LinkedIn, or generic HTML/Playwright sources.
 
 | Area | Limitation |
 | ---- | ---------- |
-| **Resume files** | Uploaded on the Application profile (PDF/Word, up to 2 MB). Attached on Greenhouse, Lever, and Ashby live apply; plain `resume_text` is a fallback when no file is stored. Workday does not upload resume files yet. |
+| **Resume files** | Uploaded on the Application profile (PDF/Word, up to 2 MB). Attached on Greenhouse, Lever, Ashby, and Workday live apply; plain `resume_text` is a fallback when no file is stored. |
 | **Greenhouse / Lever / Ashby** | Live submit needs an employer-issued API key (Job Board / Postings / Ashby API). Store in encrypted [site credentials](modules/credentials.md), not plain source config. |
 | **Workday** | Requires logged-in candidate session cookies. Primary/secondary/supplementary **questionnaires** are submitted when mapped in `profile.answers` (preview via dry run). Resume upload, work experience, education, and skills sections are **not** automated — finalize may still fail until those are completed manually. Enable `auto_terms_consent` when the employer requires T&C acceptance. |
 | **Custom questions** | Only fields mapped in the application profile (`answers`, config paths) are sent. Unmapped required questions can cause rejection. |

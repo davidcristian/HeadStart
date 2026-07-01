@@ -125,15 +125,17 @@ def request_headers(
     csrf_token: str | None,
     session_id: str | None = None,
     form_definition: bool = False,
+    multipart: bool = False,
     credentials: dict[str, dict[str, str]] | None = None,
 ) -> dict[str, str]:
     """Standard CXS headers for apply requests."""
     headers = {
         "Accept": "application/json",
-        "Content-Type": "application/json",
         "Accept-Language": target.locale,
         "Referer": target.apply_referer(job_path),
     }
+    if not multipart:
+        headers["Content-Type"] = "application/json"
     if csrf_token:
         headers[CSRF_HEADER] = csrf_token
     if session_id:

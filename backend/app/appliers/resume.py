@@ -29,6 +29,16 @@ def greenhouse_resume_fields(resume_file: ResumeFile | None) -> dict[str, str]:
     }
 
 
+def workday_content_type(content_type: str) -> dict[str, str]:
+    """Workday CXS content type reference for attachment metadata."""
+    normalized = content_type.strip() or "application/octet-stream"
+    descriptor = normalized.rsplit("/", 1)[-1]
+    return {
+        "id": f"Content_Type_ID={normalized}",
+        "descriptor": descriptor,
+    }
+
+
 def lever_resume_part(resume_file: ResumeFile | None) -> tuple[str, tuple[str, bytes, str]] | None:
     """Multipart file tuple for Lever's `resume` field."""
     if resume_file is None:

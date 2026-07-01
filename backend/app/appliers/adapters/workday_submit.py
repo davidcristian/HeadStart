@@ -17,8 +17,9 @@ from app.appliers.adapters.workday_questionnaire import (
     submit_questionnaires,
     submit_terms_consent,
 )
+from app.appliers.adapters.workday_resume import upload_resume_attachment
 from app.appliers.types import ApplyResult
-from app.schemas.profile import ProfileData
+from app.schemas.profile import ProfileData, ResumeFile
 from app.scrapers.http import HttpClient
 
 
@@ -30,6 +31,7 @@ def submit_live_application(
     job_posting_id: str,
     profile_payload: dict[str, Any],
     profile: ProfileData,
+    resume_file: ResumeFile | None,
     config: dict[str, Any],
     csrf_token: str,
     credentials: dict[str, dict[str, str]] | None,
@@ -86,6 +88,30 @@ def submit_live_application(
             external_application_id=str(application_id),
         )
 
+    resume_result: dict[str, Any] | None = None
+    if resume_file is not None and not config.get("skip_resume_upload"):
+        try:
+            resume_result = upload_resume_attachment(
+                http,
+                target=target,
+                application_id=str(application_id),
+                resume_file=resume_file,
+                job_path=job_path,
+                csrf_token=csrf_token,
+                session_id=session_token,
+                credentials=credentials,
+            )
+        except ValueError as exc:
+            return ApplyResult(
+                status="failed",
+                error=str(exc),
+                payload={
+                    **profile_payload,
+                    "resumeAttachments": resume_result,
+                },
+                external_application_id=str(application_id),
+            )
+
     questionnaire_results = submit_questionnaires(
         http,
         target=target,
@@ -104,6 +130,7 @@ def submit_live_application(
             error=failed_questionnaire.error or "workday questionnaire submit failed",
             payload={
                 **profile_payload,
+                **({"resumeAttachments": resume_result} if resume_result else {}),
                 "questionnaires": _questionnaire_payload(questionnaire_results),
             },
             external_application_id=str(application_id),
@@ -125,6 +152,7 @@ def submit_live_application(
                 error=str(exc),
                 payload={
                     **profile_payload,
+                    **({"resumeAttachments": resume_result} if resume_result else {}),
                     "questionnaires": _questionnaire_payload(questionnaire_results),
                 },
                 external_application_id=str(application_id),
@@ -146,6 +174,7 @@ def submit_live_application(
             error=str(exc),
             payload={
                 **profile_payload,
+                **({"resumeAttachments": resume_result} if resume_result else {}),
                 "questionnaires": _questionnaire_payload(questionnaire_results),
             },
             external_application_id=str(application_id),
@@ -157,6 +186,7 @@ def submit_live_application(
             error=_extract_error_message(finalized) or "workday finalize rejected",
             payload={
                 **profile_payload,
+                **({"resumeAttachments": resume_result} if resume_result else {}),
                 "questionnaires": _questionnaire_payload(questionnaire_results),
             },
             external_application_id=str(application_id),
@@ -166,6 +196,7 @@ def submit_live_application(
         status="submitted",
         payload={
             **profile_payload,
+            **({"resumeAttachments": resume_result} if resume_result else {}),
             "questionnaires": _questionnaire_payload(questionnaire_results),
         },
         external_application_id=str(application_id),

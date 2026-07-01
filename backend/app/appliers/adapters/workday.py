@@ -3,16 +3,18 @@
 Workday career sites use the CXS apply flow:
   1. POST /wday/cxs/{tenant}/jobpostings/{jobPostingId}/jobapplications
   2. POST /wday/cxs/{tenant}/jobapplication/{applicationId}/name
-  3. POST questionnaire responses (primary / secondary / supplementary)
-  4. PUT /wday/cxs/{tenant}/jobapplication/{applicationId}/termsandconditions (optional)
-  5. POST /wday/cxs/{tenant}/jobapplication/{applicationId}/finalize
+  3. POST /wday/cxs/{tenant}/attachments then POST .../resumeattachments (when profile has a file)
+  4. POST questionnaire responses (primary / secondary / supplementary)
+  5. PUT /wday/cxs/{tenant}/jobapplication/{applicationId}/termsandconditions (optional)
+  6. POST /wday/cxs/{tenant}/jobapplication/{applicationId}/finalize
 
 Live submission requires an authenticated candidate session — store the
 ``CALYPSO_SESSION`` and ``CALYPSO_CSRF_TOKEN`` cookies (or
 ``session.csrf_token``) from a logged-in apply page in [site
 credentials](../../docs/modules/credentials.md). Map screening questions via
-``profile.answers`` (question id -> answer id or label). Resume files are not
-uploaded in v1; ``resume_text`` is sent in the preview payload comments field.
+``profile.answers`` (question id -> answer id or label). Uploaded resume files
+are sent via the CXS attachments API; plain ``resume_text`` is a fallback in the
+preview payload comments field when no file is stored.
 """
 
 from __future__ import annotations
@@ -27,6 +29,7 @@ from app.appliers.adapters.workday_common import (
     resolve_target,
 )
 from app.appliers.adapters.workday_questionnaire import preview_questionnaires
+from app.appliers.adapters.workday_resume import preview_resume_attachment
 from app.appliers.adapters.workday_submit import submit_live_application
 from app.appliers.base import Applier, register_applier
 from app.appliers.types import ApplyContext, ApplyResult
@@ -70,6 +73,7 @@ class WorkdayApplier(Applier):
                 company=ctx.company,
                 config=ctx.config,
                 cover_letter=ctx.cover_letter,
+                has_resume_file=ctx.resume_file is not None,
             )
         except ValueError as exc:
             return ApplyResult(status="failed", error=str(exc))
@@ -87,6 +91,9 @@ class WorkdayApplier(Applier):
             )
             payload["questionnaires"] = preview.get("questionnaires", {})
             payload["jobPostingInfo"] = preview.get("jobPostingInfo", {})
+            resume_preview = preview_resume_attachment(ctx.resume_file)
+            if resume_preview is not None:
+                payload["resumeAttachments"] = resume_preview
             return ApplyResult(status="dry_run", payload=payload)
 
         csrf_token = resolve_csrf_token(ctx.credentials, ctx.config)
@@ -119,6 +126,7 @@ class WorkdayApplier(Applier):
                 job_posting_id=job_posting_id,
                 profile_payload=payload,
                 profile=ctx.profile,
+                resume_file=ctx.resume_file,
                 config=ctx.config,
                 csrf_token=csrf_token,
                 credentials=ctx.credentials,
