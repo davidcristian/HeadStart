@@ -174,8 +174,8 @@ sessions) and the job lifecycle (`seen_job.status`).
 | Item | Why | Notes |
 | ---- | --- | ----- |
 | ~~User profile & resume storage~~ | ~~Applications need structured candidate data~~ | **Shipped:** one Fernet-encrypted profile per user (contact, links, resume text, cover-letter template, per-field answers); returned to its owner for editing. See [modules/profile.md](modules/profile.md) |
-| Per-site apply adapters | Each ATS/board has different apply flows | Pluggable adapters (same registry pattern as scrapers); start with one high-value site (e.g. Greenhouse or Lever) |
-| Apply orchestration service | Business rules live in services, not routers | Queue apply jobs, inject credentials, record outcome, update `seen_job.status` to `applied` |
+| Per-site apply adapters | Each ATS/board has different apply flows | Pluggable adapters (same registry pattern as scrapers); **Greenhouse shipped** (Job Board API + dry-run preview); Lever and others remain. See [modules/appliers.md](modules/appliers.md) |
+| Apply orchestration service | Business rules live in services, not routers | **Shipped (minimal):** `ApplyService.apply_to_job` loads profile, credentials, and source config; delegates to applier; marks `seen_job` `applied` on success. Queueing, API routes, and audit log deferred. |
 | Apply from the Jobs UI | Users need a one-click path | "Apply" action on a job row; confirm dialog with editable cover letter; show in-progress / success / failure |
 | Safety & consent | Auto-apply is high-risk | Explicit opt-in per source, dry-run/preview mode, rate limits, and clear audit log of what was submitted |
 

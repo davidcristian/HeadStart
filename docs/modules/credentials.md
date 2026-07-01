@@ -39,6 +39,10 @@ the search's source (`CredentialService.secret_for_source`), decrypts it, and:
 Existing adapters need **no changes** — the shared HTTP client carries the
 cookies/headers automatically. If no credential exists, behavior is unchanged.
 
+For **Greenhouse auto-apply**, store a Job Board API key in the credential
+`session` object as `job_board_api_key` (see [appliers.md](appliers.md)). The
+key is employer-issued; it is encrypted like other credential material.
+
 ## Endpoints (prefix `/api/v1/credentials`)
 
 | Method | Path    | Purpose                                  |

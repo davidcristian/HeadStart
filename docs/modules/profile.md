@@ -60,8 +60,8 @@ the complete form. All routes require auth and are scoped to the current user.
 
 ## Scope
 
-Storage + retrieval only. The apply adapters, orchestration service, and the
-"Apply" action on the Jobs page are tracked separately in
-[roadmap.md → Phase 7](../roadmap.md). See
+Storage + retrieval only. Apply adapters, orchestration, and the
+"Apply" action on the Jobs page are tracked in [roadmap.md → Phase
+7](../roadmap.md) and [modules/appliers.md](appliers.md). See
 [adr/0008-application-profile.md](../adr/0008-application-profile.md) for the
 decision record.

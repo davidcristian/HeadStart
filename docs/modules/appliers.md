@@ -1,0 +1,87 @@
+# Module: Apply adapters
+
+**Path:** `backend/app/appliers/`
+
+Apply adapters submit (or preview) job applications for a single posting.
+Each supported job site is one self-registering adapter, mirroring the scraper
+and notifier registries. Orchestration lives in `ApplyService`
+(`backend/app/services/apply.py`); the Jobs UI "Apply" action is tracked
+separately in [roadmap.md](../roadmap.md).
+
+## Contract
+
+```python
+# app/appliers/types.py
+class ApplyContext(BaseModel):
+    job_external_id: str
+    job_title: str
+    company: str
+    job_url: str
+    config: dict          # merged source default_config + search config
+    profile: ProfileData    # decrypted application profile (owner only)
+    credentials: dict | None  # decrypted site credential payload, if any
+    dry_run: bool = False   # when True, build payload but do not POST
+
+class ApplyResult(BaseModel):
+    status: str             # "submitted" | "dry_run" | "failed"
+    error: str | None = None
+    payload: dict | None = None
+    external_application_id: str | None = None
+```
+
+```python
+# app/appliers/base.py
+class Applier(ABC):
+    http: HttpClient
+    @abstractmethod
+    def apply(self, ctx: ApplyContext) -> ApplyResult: ...
+```
+
+## Registry
+
+Adapters self-register with `@register_applier("key")`. The `key` matches a
+source's `adapter_key` when that source supports auto-apply. Import the
+`adapters` package to register built-ins; resolve with `get_applier(key)`.
+`has_applier(key)` returns whether a source adapter can apply.
+
+## Built-in adapters
+
+| Key          | Strategy                         | Notes |
+| ------------ | -------------------------------- | ----- |
+| `greenhouse` | Job Board API JSON POST          | `POST boards-api.greenhouse.io/v1/boards/<token>/jobs/<id>`; see below |
+
+### Greenhouse
+
+Maps `ProfileData` to the [Job Board application JSON
+shape](https://developers.greenhouse.io/job-board.html#applications). Config /
+credentials:
+
+| Field | Where | Purpose |
+| ----- | ----- | ------- |
+| `board_token` | source `default_config` or parsed from `job_url` | Board slug (`boards.greenhouse.io/<token>/jobs/...`) |
+| `job_board_api_key` | `default_config` or credential `session` | Employer Job Board API key for **live** submission |
+| `gdpr_consent` | source/search config | When true, sets `data_compliance` consent flags |
+| `question_<id>` | profile `answers` | Custom application questions (`question_5555`, etc.) |
+
+**Dry run:** `ApplyService.apply_to_job(..., dry_run=True)` (or
+`ApplyContext.dry_run=True`) returns the JSON payload without calling Greenhouse.
+Use this to preview applications before consent/audit UI ships.
+
+**Live submit:** Greenhouse requires HTTP Basic auth with a per-board Job Board
+API key (created in the employer's Greenhouse admin under API Credentials). Store
+it in the source config or, preferably, in the linked [site
+credential](credentials.md) as `session.job_board_api_key` so it stays encrypted.
+
+On success, `ApplyService` marks the `seen_job` status `applied`.
+
+## Adding one
+
+See [../recipes.md](../recipes.md) → "add a new apply adapter".
+Tests must use saved fixtures and never hit the network.
+
+## Error handling
+
+`apply` returns `ApplyResult(status="failed", error=...)` for adapter-level
+failures (missing config, HTTP errors). `ApplyService` raises `ValidationError`
+for missing profile or unsupported adapter keys, and `NotFoundError` when the job
+is out of scope.
