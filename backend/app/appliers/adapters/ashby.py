@@ -9,23 +9,27 @@ Config / context:
   - `config["cover_letter_path"]`: optional form field path for cover letter + resume text.
   - `config["phone_path"]`: optional form field path for the profile phone number.
   - `config["location_path"]`: optional form field path for the profile location string.
+  - `config["resume_path"]`: optional form field path for resume file
+    (default `_systemfield_resume`).
 
 Live submission requires an organization API key (Admin → Settings → API). Use
-`dry_run=True` to preview the JSON payload without a key. Resume files are not
-uploaded in v1 — `resume_text` is appended to the cover-letter field when present.
+`dry_run=True` to preview the JSON payload without a key. Resume files use
+multipart/form-data on live submit.
 """
 
 from __future__ import annotations
 
 import base64
+import json
 import re
 from typing import Any
 
 import httpx
 
 from app.appliers.base import Applier, register_applier
+from app.appliers.resume import resume_meta_for_payload
 from app.appliers.types import ApplyContext, ApplyResult
-from app.schemas.profile import ProfileData
+from app.schemas.profile import ApplyProfile, ProfileData, ResumeFile
 
 ASHBY_APPLY_URL = "https://api.ashbyhq.com/applicationForm.submit"
 _ASHBY_JOB_URL_RE = re.compile(r"jobs\.ashbyhq\.com/([^/]+)/", re.IGNORECASE)
@@ -37,16 +41,20 @@ class AshbyApplier(Applier):
 
     def apply(self, ctx: ApplyContext) -> ApplyResult:
         try:
-            payload = build_application_payload(
+            built = build_application_payload(
                 ctx.job_external_id,
                 ctx.profile,
                 ctx.job_title,
                 ctx.company,
                 ctx.config,
                 cover_letter=ctx.cover_letter,
+                resume_file=ctx.resume_file,
             )
         except ValueError as exc:
             return ApplyResult(status="failed", error=str(exc))
+
+        payload = built["payload"]
+        multipart = built.get("multipart")
 
         if ctx.dry_run:
             return ApplyResult(status="dry_run", payload=payload)
@@ -64,7 +72,15 @@ class AshbyApplier(Applier):
 
         headers = {"Authorization": basic_auth_header(api_key)}
         try:
-            response = self.http.post_json(ASHBY_APPLY_URL, json=payload, headers=headers)
+            if multipart is not None:
+                response = self.http.post_multipart(
+                    ASHBY_APPLY_URL,
+                    data=multipart["data"],
+                    files=multipart["files"],
+                    headers=headers,
+                )
+            else:
+                response = self.http.post_json(ASHBY_APPLY_URL, json=payload, headers=headers)
         except httpx.HTTPError as exc:
             return ApplyResult(status="failed", error=str(exc), payload=payload)
 
@@ -129,6 +145,7 @@ def build_supplemental_text(
     company: str,
     job_title: str,
     cover_letter: str | None,
+    include_resume_text: bool = True,
 ) -> str | None:
     """Cover letter (override or template) plus optional resume text."""
     parts: list[str] = []
@@ -139,23 +156,27 @@ def build_supplemental_text(
         if template:
             parts.append(render_cover_letter(template, company=company, job_title=job_title))
 
-    resume = profile.resume_text.strip()
-    if resume:
-        parts.append(f"Resume:\n{resume}")
+    if include_resume_text:
+        resume = profile.resume_text.strip()
+        if resume:
+            parts.append(f"Resume:\n{resume}")
 
     return "\n\n".join(parts) if parts else None
 
 
 def build_application_payload(
     job_posting_id: str,
-    profile: ProfileData,
+    profile: ProfileData | ApplyProfile,
     job_title: str,
     company: str,
     config: dict[str, Any],
     *,
     cover_letter: str | None = None,
+    resume_file: ResumeFile | None = None,
 ) -> dict[str, Any]:
-    """Map profile data to the Ashby applicationForm.submit JSON shape."""
+    """Map profile data to the Ashby applicationForm.submit shape."""
+    if resume_file is None and isinstance(profile, ApplyProfile):
+        resume_file = profile.resume_file
     name = profile.full_name.strip()
     email = profile.email.strip()
     if not name:
@@ -183,11 +204,21 @@ def build_application_payload(
 
     cover_letter_path = config.get("cover_letter_path")
     supplemental = build_supplemental_text(
-        profile, company=company, job_title=job_title, cover_letter=cover_letter
+        profile,
+        company=company,
+        job_title=job_title,
+        cover_letter=cover_letter,
+        include_resume_text=resume_file is None,
     )
     if cover_letter_path and supplemental:
         submissions.append({"path": str(cover_letter_path), "value": supplemental})
         used_paths.add(str(cover_letter_path))
+
+    resume_path = str(config.get("resume_path") or "_systemfield_resume")
+    resume_field_key = "resume_1"
+    if resume_file is not None:
+        submissions.append({"path": resume_path, "value": resume_field_key})
+        used_paths.add(resume_path)
 
     for key, value in profile.answers.items():
         if not value or key in used_paths:
@@ -202,7 +233,26 @@ def build_application_payload(
     if config.get("allow_unpublished_job_posting") is False:
         payload["allowSubmissionForUnpublishedJobPosting"] = False
 
-    return payload
+    meta = resume_meta_for_payload(resume_file)
+    if meta is not None:
+        payload["resume_file"] = meta
+
+    result: dict[str, Any] = {"payload": payload}
+    if resume_file is not None:
+        result["multipart"] = {
+            "data": {
+                "applicationForm": json.dumps({"fieldSubmissions": submissions}),
+                "jobPostingId": job_posting_id,
+            },
+            "files": {
+                resume_field_key: (
+                    resume_file.filename,
+                    resume_file.data,
+                    resume_file.content_type,
+                )
+            },
+        }
+    return result
 
 
 def extract_application_id(response: Any) -> str | None:

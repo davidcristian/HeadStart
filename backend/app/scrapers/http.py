@@ -54,6 +54,18 @@ class HttpClient:
         resp.raise_for_status()
         return resp.json()
 
+    def post_multipart(
+        self, url: str, *, data: dict[str, Any], files: dict[str, Any], **kwargs: Any
+    ) -> Any:
+        """POST multipart/form-data; returns JSON when the response is JSON."""
+        self._wait_rate_limit()
+        resp = self._client.post(url, data=data, files=files, **kwargs)
+        resp.raise_for_status()
+        content_type = resp.headers.get("content-type", "")
+        if "application/json" in content_type:
+            return resp.json()
+        return resp.text
+
     def get_text(self, url: str, **kwargs: Any) -> str:
         self._wait_rate_limit()
         assert_safe_outbound_url(url)

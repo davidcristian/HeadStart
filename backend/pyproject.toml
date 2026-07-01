@@ -9,6 +9,7 @@ description = "JobNotifier backend: API, scheduler, workers, scrapers, notifiers
 requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.111",
+    "python-multipart>=0.0.9",
     "uvicorn[standard]>=0.30",
     "sqlalchemy>=2.0.30",
     "alembic>=1.13",

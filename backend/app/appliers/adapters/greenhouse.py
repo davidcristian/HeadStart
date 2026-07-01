@@ -21,8 +21,9 @@ from typing import Any
 import httpx
 
 from app.appliers.base import Applier, register_applier
+from app.appliers.resume import greenhouse_resume_fields, resume_meta_for_payload
 from app.appliers.types import ApplyContext, ApplyResult
-from app.schemas.profile import ProfileData
+from app.schemas.profile import ApplyProfile, ProfileData
 
 GREENHOUSE_APPLY_URL = "https://boards-api.greenhouse.io/v1/boards/{board_token}/jobs/{job_id}"
 _BOARD_URL_RE = re.compile(r"boards\.greenhouse\.io/([^/]+)/jobs/", re.IGNORECASE)
@@ -50,6 +51,8 @@ class GreenhouseApplier(Applier):
                 ctx.company,
                 ctx.config,
                 cover_letter=ctx.cover_letter,
+                resume_file=ctx.resume_file,
+                include_resume_bytes=not ctx.dry_run,
             )
         except ValueError as exc:
             return ApplyResult(status="failed", error=str(exc))
@@ -130,14 +133,18 @@ def render_cover_letter(template: str, *, company: str, job_title: str) -> str:
 
 
 def build_application_payload(
-    profile: ProfileData,
+    profile: ProfileData | ApplyProfile,
     job_title: str,
     company: str,
     config: dict[str, Any],
     *,
     cover_letter: str | None = None,
+    resume_file: Any = None,
+    include_resume_bytes: bool = True,
 ) -> dict[str, Any]:
     """Map profile data to the Greenhouse Job Board application JSON shape."""
+    if resume_file is None and isinstance(profile, ApplyProfile):
+        resume_file = profile.resume_file
     first_name, last_name = split_name(profile.full_name)
     email = profile.email.strip()
     if not first_name or not last_name:
@@ -160,8 +167,15 @@ def build_application_payload(
         payload["location"] = location
 
     resume_text = profile.resume_text.strip()
-    if resume_text:
+    if resume_text and resume_file is None:
         payload["resume_text"] = resume_text
+
+    if include_resume_bytes:
+        payload.update(greenhouse_resume_fields(resume_file))
+
+    meta = resume_meta_for_payload(resume_file)
+    if meta is not None:
+        payload["resume_file"] = meta
 
     if cover_letter and cover_letter.strip():
         payload["cover_letter_text"] = cover_letter.strip()

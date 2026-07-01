@@ -4,7 +4,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-from app.schemas.profile import ProfileData
+from app.schemas.profile import ProfileData, ResumeFile
 
 
 class ApplyContext(BaseModel):
@@ -16,6 +16,7 @@ class ApplyContext(BaseModel):
     job_url: str
     config: dict[str, Any] = Field(default_factory=dict)
     profile: ProfileData
+    resume_file: ResumeFile | None = None
     credentials: dict[str, dict[str, str]] | None = None
     cover_letter: str | None = None
     dry_run: bool = False

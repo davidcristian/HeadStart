@@ -13,7 +13,7 @@ from app.appliers.adapters.greenhouse import (
     split_name,
 )
 from app.appliers.base import get_applier
-from app.schemas.profile import ProfileData
+from app.schemas.profile import ApplyProfile, ProfileData, ResumeFile
 from tests.conftest import load_fixture, make_http_client
 
 
@@ -78,6 +78,45 @@ def test_build_application_payload_requires_name_and_email() -> None:
         raise AssertionError("expected ValueError")
     except ValueError as exc:
         assert "last name" in str(exc)
+
+
+def test_build_application_payload_includes_resume_file_metadata_on_dry_run() -> None:
+    resume = ResumeFile(
+        filename="resume.pdf",
+        content_type="application/pdf",
+        size_bytes=4,
+        data=b"%PDF",
+    )
+    profile = ApplyProfile(**_profile().model_dump(), exists=True, resume_file=resume)
+    payload = build_application_payload(
+        profile,
+        job_title="Senior Engineer",
+        company="ACME",
+        config={},
+        include_resume_bytes=False,
+    )
+    assert "resume_content" not in payload
+    assert payload["resume_file"]["filename"] == "resume.pdf"
+    assert "resume_text" not in payload
+
+
+def test_build_application_payload_attaches_resume_bytes_for_live_submit() -> None:
+    resume = ResumeFile(
+        filename="resume.pdf",
+        content_type="application/pdf",
+        size_bytes=4,
+        data=b"%PDF",
+    )
+    profile = ApplyProfile(**_profile().model_dump(), exists=True, resume_file=resume)
+    payload = build_application_payload(
+        profile,
+        job_title="Senior Engineer",
+        company="ACME",
+        config={},
+        include_resume_bytes=True,
+    )
+    assert payload["resume_content_filename"] == "resume.pdf"
+    assert "resume_text" not in payload
 
 
 def test_dry_run_returns_payload_without_network() -> None:

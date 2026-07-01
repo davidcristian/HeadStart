@@ -25,7 +25,13 @@ describe("FreeTierAd", () => {
     clearCookieConsent();
     mockMeta.mockReturnValue({
       data: {
-        plan: { ...sampleAccountPlan, plan: "free", effective_plan: "free", unlimited: false, show_ads: true },
+        plan: {
+          ...sampleAccountPlan,
+          plan: "free",
+          effective_plan: "free",
+          unlimited: false,
+          show_ads: true,
+        },
         ads: { external_slot_url: null },
       },
     });
@@ -36,7 +42,10 @@ describe("FreeTierAd", () => {
 
     expect(screen.getByTestId("free-tier-ad")).toBeInTheDocument();
     expect(screen.getByText(/go ad-free with pro/i)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /view pro plans/i })).toHaveAttribute("href", "/pricing");
+    expect(screen.getByRole("link", { name: /view pro plans/i })).toHaveAttribute(
+      "href",
+      "/pricing",
+    );
   });
 
   it("renders nothing for paid plans", () => {
@@ -55,7 +64,13 @@ describe("FreeTierAd", () => {
   it("prompts for cookie consent before loading a partner ad slot", () => {
     mockMeta.mockReturnValue({
       data: {
-        plan: { ...sampleAccountPlan, plan: "free", effective_plan: "free", unlimited: false, show_ads: true },
+        plan: {
+          ...sampleAccountPlan,
+          plan: "free",
+          effective_plan: "free",
+          unlimited: false,
+          show_ads: true,
+        },
         ads: { external_slot_url: "https://ads.example.com/slot" },
       },
     });
@@ -70,7 +85,13 @@ describe("FreeTierAd", () => {
     setCookieConsent("all");
     mockMeta.mockReturnValue({
       data: {
-        plan: { ...sampleAccountPlan, plan: "free", effective_plan: "free", unlimited: false, show_ads: true },
+        plan: {
+          ...sampleAccountPlan,
+          plan: "free",
+          effective_plan: "free",
+          unlimited: false,
+          show_ads: true,
+        },
         ads: { external_slot_url: "https://ads.example.com/slot" },
       },
     });

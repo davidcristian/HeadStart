@@ -10,7 +10,12 @@ import { useEffect, useState } from "react";
 import { JsonEditor } from "../components/JsonEditor";
 import { Banner, Button, Card, EmptyState, Field } from "../components/ui";
 import { useApplicationLogs, useProfile } from "../hooks/queries";
-import { useDeleteProfile, useSaveProfile } from "../hooks/mutations";
+import {
+  useDeleteProfile,
+  useDeleteResume,
+  useSaveProfile,
+  useUploadResume,
+} from "../hooks/mutations";
 import type { Json } from "../types";
 
 const EMPTY = {
@@ -36,6 +41,8 @@ export function ProfilePage() {
   const applicationLogs = useApplicationLogs();
   const saveProfile = useSaveProfile();
   const deleteProfile = useDeleteProfile();
+  const uploadResume = useUploadResume();
+  const deleteResume = useDeleteResume();
   const [form, setForm] = useState({ ...EMPTY });
   const [answers, setAnswers] = useState<Json>({});
   const [answersValid, setAnswersValid] = useState(true);
@@ -93,6 +100,33 @@ export function ProfilePage() {
     } catch (err) {
       setError((err as Error).message);
     }
+  }
+
+  async function onResumeSelected(file: File | null) {
+    if (!file) return;
+    setError(undefined);
+    try {
+      await uploadResume.mutateAsync(file);
+      setSaved(true);
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  }
+
+  async function removeResume() {
+    setError(undefined);
+    try {
+      await deleteResume.mutateAsync();
+      setSaved(true);
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  }
+
+  function formatFileSize(bytes: number): string {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1_048_576) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / 1_048_576).toFixed(1)} MB`;
   }
 
   const existing = profile.data;
@@ -167,8 +201,31 @@ export function ProfilePage() {
         </div>
 
         <Field
+          label="Resume file"
+          hint="PDF or Word document attached when auto-applying (up to 2 MB). Optional if you use plain-text resume below."
+        >
+          {existing?.resume_file ? (
+            <div className="row-actions">
+              <span>
+                {existing.resume_file.filename} ({formatFileSize(existing.resume_file.size_bytes)})
+              </span>
+              <Button variant="danger" onClick={removeResume} disabled={deleteResume.isPending}>
+                Remove file
+              </Button>
+            </div>
+          ) : (
+            <input
+              type="file"
+              accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              onChange={(e) => onResumeSelected(e.target.files?.[0] ?? null)}
+              disabled={uploadResume.isPending}
+            />
+          )}
+        </Field>
+
+        <Field
           label="Resume / CV (plain text)"
-          hint="Paste your resume text; used to fill apply forms."
+          hint="Optional fallback when no file is uploaded; also appended to comments on some boards."
         >
           <textarea
             rows={8}

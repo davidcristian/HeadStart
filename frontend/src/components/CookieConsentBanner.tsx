@@ -25,8 +25,7 @@ export function CookieConsentBanner() {
             We use a strictly necessary httpOnly cookie to keep you signed in. Your consent choice
             is saved in this browser. Optional cookies for advertising or analytics are not loaded
             today; choose &quot;Accept all&quot; only if you are fine enabling them when we add
-            those features. See our{" "}
-            <Link to="/privacy">Privacy Policy</Link> for details.
+            those features. See our <Link to="/privacy">Privacy Policy</Link> for details.
           </p>
         </div>
         <div className="cookie-consent-actions">

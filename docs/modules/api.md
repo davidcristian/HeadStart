@@ -57,7 +57,9 @@ notification attempts with job title, URL, error, and timestamp).
 | PATCH  | `/credentials/{id}`   | Update credential                        |
 | DELETE | `/credentials/{id}`   | Delete credential                        |
 | GET    | `/profile`            | Get the application profile (empty defaults if unset) |
-| PUT    | `/profile`            | Create or fully replace the application profile |
+| PUT    | `/profile`            | Create or fully replace the application profile text fields |
+| PUT    | `/profile/resume`     | Upload or replace resume file (multipart `file`) |
+| DELETE | `/profile/resume`     | Remove the stored resume file only |
 | DELETE | `/profile`            | Clear the application profile            |
 | GET    | `/admin/users`        | List all users (admin only)              |
 | PATCH  | `/admin/users/{id}`   | Toggle `is_active` / `is_admin` (admin)  |

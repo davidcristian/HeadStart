@@ -76,6 +76,9 @@ class Settings(BaseSettings):
     #   python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
     credentials_secret_key: str = "dev-local-credentials-key-change-me"
 
+    # Max resume file size for application-profile uploads (bytes).
+    profile_resume_max_bytes: int = 2_097_152
+
     # ---- database ----
     postgres_user: str = "jobnotifier"
     postgres_password: str = "jobnotifier"

@@ -15,7 +15,7 @@ from app.appliers.adapters.ashby import (
     resolve_board,
 )
 from app.appliers.base import get_applier
-from app.schemas.profile import ProfileData
+from app.schemas.profile import ApplyProfile, ProfileData, ResumeFile
 from tests.conftest import load_fixture, make_http_client
 
 
@@ -44,7 +44,7 @@ def test_resolve_board_from_config_or_url() -> None:
 
 
 def test_build_application_payload_maps_profile_fields() -> None:
-    payload = build_application_payload(
+    built = build_application_payload(
         "7458d4e9-da2e-47bd-98cb-adfda43d42b2",
         _profile(),
         job_title="Senior Engineer",
@@ -55,6 +55,7 @@ def test_build_application_payload_maps_profile_fields() -> None:
             "cover_letter_path": "cover_letter_field",
         },
     )
+    payload = built["payload"]
     submissions = payload["applicationForm"]["fieldSubmissions"]
     by_path = {item["path"]: item["value"] for item in submissions}
     assert payload["jobPostingId"] == "7458d4e9-da2e-47bd-98cb-adfda43d42b2"
@@ -68,7 +69,7 @@ def test_build_application_payload_maps_profile_fields() -> None:
 
 
 def test_build_application_payload_uses_cover_letter_override() -> None:
-    payload = build_application_payload(
+    built = build_application_payload(
         "7458d4e9-da2e-47bd-98cb-adfda43d42b2",
         _profile(),
         job_title="Senior Engineer",
@@ -76,11 +77,35 @@ def test_build_application_payload_uses_cover_letter_override() -> None:
         config={"cover_letter_path": "cover_letter_field"},
         cover_letter="Custom letter for ACME",
     )
+    payload = built["payload"]
     submissions = payload["applicationForm"]["fieldSubmissions"]
     by_path = {item["path"]: item["value"] for item in submissions}
     assert by_path["cover_letter_field"] == (
         "Custom letter for ACME\n\nResume:\nExperienced engineer."
     )
+
+
+def test_build_application_payload_includes_resume_multipart() -> None:
+    resume = ResumeFile(
+        filename="resume.pdf",
+        content_type="application/pdf",
+        size_bytes=4,
+        data=b"%PDF",
+    )
+    profile = ApplyProfile(**_profile().model_dump(), exists=True, resume_file=resume)
+    built = build_application_payload(
+        "7458d4e9-da2e-47bd-98cb-adfda43d42b2",
+        profile,
+        job_title="Senior Engineer",
+        company="ACME",
+        config={},
+    )
+    payload = built["payload"]
+    submissions = payload["applicationForm"]["fieldSubmissions"]
+    by_path = {item["path"]: item["value"] for item in submissions}
+    assert by_path["_systemfield_resume"] == "resume_1"
+    assert built["multipart"]["files"]["resume_1"][0] == "resume.pdf"
+    assert "Resume:" not in str(payload)
 
 
 def test_build_application_payload_requires_name_and_email() -> None:

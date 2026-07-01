@@ -30,8 +30,7 @@ export function FreeTierAd({ variant = "sidebar" }: Props) {
       <div className="free-tier-ad-house">
         <p className="free-tier-ad-title">Go ad-free with Pro</p>
         <p className="free-tier-ad-copy">
-          Unlock digest mode, AI summaries, premium scrapers, and more — without sponsored
-          messages.
+          Unlock digest mode, AI summaries, premium scrapers, and more — without sponsored messages.
         </p>
         <Link className="btn btn-primary free-tier-ad-cta" to="/pricing">
           View Pro plans
@@ -51,8 +50,8 @@ export function FreeTierAd({ variant = "sidebar" }: Props) {
         ) : (
           <p className="free-tier-ad-consent muted">
             Accept optional cookies in{" "}
-            <Link to="/app/settings">Settings → Privacy &amp; cookies</Link> to show partner
-            offers here.
+            <Link to="/app/settings">Settings → Privacy &amp; cookies</Link> to show partner offers
+            here.
           </p>
         )
       ) : null}

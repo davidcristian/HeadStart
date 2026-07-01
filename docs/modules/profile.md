@@ -28,6 +28,11 @@ payload is a JSON object:
 }
 ```
 
+Optional **resume file** (PDF or Word, up to `PROFILE_RESUME_MAX_BYTES`, default 2 MB) is
+stored in the same encrypted blob as base64 alongside the JSON fields above. The API
+returns only metadata (`filename`, `content_type`, `size_bytes`) — never raw bytes on
+`GET /profile`.
+
 `answers` is a free-form map of recurring application questions to the user's
 canned response.
 
@@ -40,23 +45,28 @@ The profile is PII, not a shared secret like a login cookie, so — unlike
 owner** so it can be reviewed and edited in the UI. It is never exposed to other
 users (every route is scoped to `get_current_user`).
 
-`ProfileRead` adds two fields on top of the stored data:
+`ProfileRead` adds three fields on top of the stored data:
 
 - `exists` — `false` when the user has never saved a profile (the API returns
   empty defaults rather than a 404), so the UI can tell an empty default apart
   from a deliberately-cleared profile.
 - `updated_at` — when the profile was last saved.
+- `resume_file` — metadata for an uploaded resume attachment, or `null`.
 
 ## Endpoints (prefix `/api/v1/profile`)
 
 | Method | Path | Purpose                                            |
 | ------ | ---- | -------------------------------------------------- |
 | GET    | ``   | Get the profile (empty defaults if never saved)    |
-| PUT    | ``   | Create or **fully replace** the profile            |
+| PUT    | ``   | Create or **fully replace** the profile text fields |
+| PUT    | `/resume` | Upload or replace resume file (multipart `file`) |
+| DELETE | `/resume` | Remove the resume file only                     |
 | DELETE | ``   | Clear the profile (idempotent)                     |
 
-`PUT` is a whole-profile replacement (not a partial patch); the UI always sends
-the complete form. All routes require auth and are scoped to the current user.
+`PUT` on the root path is a whole-profile replacement for text fields (not a partial
+patch); the UI always sends the complete form. Uploading a resume does **not**
+clear other fields, and saving text fields does **not** remove an uploaded resume.
+All routes require auth and are scoped to the current user.
 
 ## Scope
 

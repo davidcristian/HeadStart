@@ -6,9 +6,20 @@ returned in full to its owner so they can review and edit it. `ProfileData` is
 both the write body (full replacement on PUT) and the core of the read view.
 """
 
+from __future__ import annotations
+
+import base64
 from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
+
+ALLOWED_RESUME_CONTENT_TYPES = frozenset(
+    {
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    }
+)
 
 
 class ProfileLinks(BaseModel):
@@ -32,8 +43,66 @@ class ProfileData(BaseModel):
     answers: dict[str, str] = Field(default_factory=dict)
 
 
+class ResumeFileMeta(BaseModel):
+    """Resume attachment metadata returned to the profile owner (no file bytes)."""
+
+    filename: str
+    content_type: str
+    size_bytes: int = Field(ge=0)
+
+
+class ResumeFile(ResumeFileMeta):
+    """Decrypted resume bytes used when submitting applications."""
+
+    data: bytes
+
+
+class ResumeFileStored(BaseModel):
+    """Resume attachment as stored inside the encrypted profile JSON blob."""
+
+    filename: str
+    content_type: str
+    data_b64: str
+
+    def to_resume_file(self) -> ResumeFile:
+        """Decode stored base64 into bytes for apply adapters."""
+        raw = base64.b64decode(self.data_b64)
+        return ResumeFile(
+            filename=self.filename,
+            content_type=self.content_type,
+            size_bytes=len(raw),
+            data=raw,
+        )
+
+    @classmethod
+    def from_bytes(cls, *, filename: str, content_type: str, data: bytes) -> ResumeFileStored:
+        """Encode resume bytes for encrypted profile storage."""
+        return cls(
+            filename=filename,
+            content_type=content_type,
+            data_b64=base64.b64encode(data).decode("ascii"),
+        )
+
+    def to_meta(self) -> ResumeFileMeta:
+        """Metadata only — safe for API responses and audit previews."""
+        raw = base64.b64decode(self.data_b64)
+        return ResumeFileMeta(
+            filename=self.filename,
+            content_type=self.content_type,
+            size_bytes=len(raw),
+        )
+
+
+class ApplyProfile(ProfileData):
+    """Profile payload passed to apply adapters, including optional resume bytes."""
+
+    exists: bool = False
+    resume_file: ResumeFile | None = None
+
+
 class ProfileRead(ProfileData):
     # True once the user has saved a profile at least once; lets the UI tell an
     # empty default apart from a deliberately-cleared profile.
     exists: bool = False
     updated_at: datetime | None = None
+    resume_file: ResumeFileMeta | None = None

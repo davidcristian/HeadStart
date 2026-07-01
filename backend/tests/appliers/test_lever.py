@@ -12,7 +12,7 @@ from app.appliers.adapters.lever import (
     resolve_site,
 )
 from app.appliers.base import get_applier
-from app.schemas.profile import ProfileData, ProfileLinks
+from app.schemas.profile import ApplyProfile, ProfileData, ProfileLinks, ResumeFile
 from tests.conftest import load_fixture, make_http_client
 
 
@@ -190,6 +190,41 @@ def test_live_submit_prefers_credential_api_key() -> None:
         )
     )
     assert "key=cred-key" in seen["url"]
+
+
+def test_live_submit_uses_multipart_when_resume_file_present() -> None:
+    seen: dict[str, object] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen["content_type"] = request.headers.get("content-type", "")
+        seen["has_resume"] = b'name="resume"' in request.content
+        return httpx.Response(200, json={"ok": True, "applicationId": "with-resume"})
+
+    resume = ResumeFile(
+        filename="resume.pdf",
+        content_type="application/pdf",
+        size_bytes=4,
+        data=b"%PDF",
+    )
+    profile = ApplyProfile(**_profile().model_dump(), exists=True, resume_file=resume)
+    applier = LeverApplier(http=make_http_client(handler))
+    result = applier.apply(
+        ApplyContext(
+            job_external_id="post-1",
+            job_title="Role",
+            company="ACME",
+            job_url="",
+            config={"site": "acme", "postings_api_key": "key"},
+            profile=profile,
+            resume_file=resume,
+            dry_run=False,
+        )
+    )
+    assert result.status == "submitted"
+    content_type = seen["content_type"]
+    assert isinstance(content_type, str)
+    assert "multipart/form-data" in content_type
+    assert seen["has_resume"] is True
 
 
 def test_missing_api_key_fails_with_helpful_error() -> None:

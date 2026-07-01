@@ -160,6 +160,22 @@ export function useDeleteProfile() {
   });
 }
 
+export function useUploadResume() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (file: File) => api.uploadResume(file),
+    onSuccess: () => invalidate(qc, queryKeys.profile),
+  });
+}
+
+export function useDeleteResume() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => api.deleteResume(),
+    onSuccess: () => invalidate(qc, queryKeys.profile),
+  });
+}
+
 export function useUpdateJob() {
   const qc = useQueryClient();
   return useMutation({

@@ -23,8 +23,13 @@ from urllib.parse import urlencode
 import httpx
 
 from app.appliers.base import Applier, register_applier
+from app.appliers.resume import (
+    flatten_lever_form_fields,
+    lever_resume_part,
+    resume_meta_for_payload,
+)
 from app.appliers.types import ApplyContext, ApplyResult
-from app.schemas.profile import ProfileData, ProfileLinks
+from app.schemas.profile import ApplyProfile, ProfileData, ProfileLinks
 
 LEVER_APPLY_URL = {
     "global": "https://api.lever.co/v0/postings/{site}/{posting_id}",
@@ -52,6 +57,7 @@ class LeverApplier(Applier):
                 ctx.company,
                 ctx.config,
                 cover_letter=ctx.cover_letter,
+                resume_file=ctx.resume_file,
             )
         except ValueError as exc:
             return ApplyResult(status="failed", error=str(exc))
@@ -74,8 +80,16 @@ class LeverApplier(Applier):
         base = LEVER_APPLY_URL.get(region, LEVER_APPLY_URL["global"])
         path = base.format(site=site, posting_id=ctx.job_external_id)
         url = f"{path}?{urlencode({'key': api_key})}"
+        resume_part = lever_resume_part(ctx.resume_file)
         try:
-            response = self.http.post_json(url, json=payload)
+            if resume_part is not None:
+                response = self.http.post_multipart(
+                    url,
+                    data=flatten_lever_form_fields(payload),
+                    files=dict([resume_part]),
+                )
+            else:
+                response = self.http.post_json(url, json=payload)
         except httpx.HTTPError as exc:
             return ApplyResult(status="failed", error=str(exc), payload=payload)
 
@@ -140,6 +154,7 @@ def build_comments(
     company: str,
     job_title: str,
     cover_letter: str | None,
+    include_resume_text: bool = True,
 ) -> str | None:
     """Cover letter (override or template) plus optional resume text."""
     parts: list[str] = []
@@ -150,22 +165,26 @@ def build_comments(
         if template:
             parts.append(render_cover_letter(template, company=company, job_title=job_title))
 
-    resume = profile.resume_text.strip()
-    if resume:
-        parts.append(f"Resume:\n{resume}")
+    if include_resume_text:
+        resume = profile.resume_text.strip()
+        if resume:
+            parts.append(f"Resume:\n{resume}")
 
     return "\n\n".join(parts) if parts else None
 
 
 def build_application_payload(
-    profile: ProfileData,
+    profile: ProfileData | ApplyProfile,
     job_title: str,
     company: str,
     config: dict[str, Any],
     *,
     cover_letter: str | None = None,
+    resume_file: Any = None,
 ) -> dict[str, Any]:
     """Map profile data to the Lever Postings apply JSON shape."""
+    if resume_file is None and isinstance(profile, ApplyProfile):
+        resume_file = profile.resume_file
     name = profile.full_name.strip()
     email = profile.email.strip()
     if not name:
@@ -191,10 +210,18 @@ def build_application_payload(
         payload["urls"] = urls
 
     comments = build_comments(
-        profile, company=company, job_title=job_title, cover_letter=cover_letter
+        profile,
+        company=company,
+        job_title=job_title,
+        cover_letter=cover_letter,
+        include_resume_text=resume_file is None,
     )
     if comments:
         payload["comments"] = comments
+
+    meta = resume_meta_for_payload(resume_file)
+    if meta is not None:
+        payload["resume_file"] = meta
 
     if config.get("silent_confirmations"):
         payload["silent"] = True

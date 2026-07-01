@@ -34,7 +34,7 @@ import type {
   PromoValidation,
   PromoType,
 } from "../types";
-import { request } from "./client";
+import { request, requestForm } from "./client";
 
 function buildJobQuery(searchId?: number, status?: string): string {
   const params = new URLSearchParams();
@@ -203,5 +203,11 @@ export const api = {
   getProfile: () => request<Profile>("/api/v1/profile"),
   saveProfile: (data: ProfileData) =>
     request<Profile>("/api/v1/profile", { method: "PUT", body: data }),
+  uploadResume: (file: File) => {
+    const body = new FormData();
+    body.append("file", file);
+    return requestForm<Profile>("/api/v1/profile/resume", { method: "PUT", body });
+  },
+  deleteResume: () => request<Profile>("/api/v1/profile/resume", { method: "DELETE" }),
   deleteProfile: () => request<void>("/api/v1/profile", { method: "DELETE" }),
 };

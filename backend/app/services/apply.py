@@ -46,8 +46,8 @@ class ApplyService:
                 "Enable auto-apply on this source before submitting live applications"
             )
 
-        profile = ProfileService(self.session).get(user_id)
-        if not profile.exists:
+        apply_profile = ProfileService(self.session).get_for_apply(user_id)
+        if not apply_profile.exists:
             raise ValidationError("Save an application profile before applying")
 
         config = {**source.default_config, **job.search.config}
@@ -59,7 +59,8 @@ class ApplyService:
             company=job.company,
             job_url=job.url,
             config=config,
-            profile=profile,
+            profile=apply_profile,
+            resume_file=apply_profile.resume_file,
             credentials=credentials,
             cover_letter=cover_letter,
             dry_run=dry_run,

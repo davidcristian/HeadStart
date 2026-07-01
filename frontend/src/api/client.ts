@@ -74,6 +74,42 @@ async function parse<T>(resp: Response): Promise<T> {
   return data as T;
 }
 
+/** Multipart upload (e.g. resume file). Does not set Content-Type — the browser adds the boundary. */
+export async function requestForm<T>(
+  path: string,
+  options: RequestOptions & { body: FormData },
+): Promise<T> {
+  const { method = "POST", body, skipAuth = false } = options;
+
+  async function doFetch(token: string): Promise<Response> {
+    const headers: Record<string, string> = {};
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    return fetch(`${getApiBaseUrl()}${path}`, {
+      method,
+      headers,
+      body,
+      credentials: "include",
+    });
+  }
+
+  if (skipAuth) {
+    return parse<T>(await doFetch(""));
+  }
+
+  let resp = await doFetch(getAccessToken());
+  if (resp.status === 401) {
+    const refreshed = await refreshSession();
+    if (refreshed) {
+      resp = await doFetch(getAccessToken());
+    }
+    if (resp.status === 401) {
+      clearAccessToken();
+      onUnauthorized?.();
+    }
+  }
+  return parse<T>(resp);
+}
+
 export async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { method = "GET", body, skipAuth = false } = options;
 

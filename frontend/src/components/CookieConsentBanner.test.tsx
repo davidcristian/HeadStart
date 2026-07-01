@@ -23,7 +23,10 @@ describe("CookieConsentBanner", () => {
     renderConsent();
 
     expect(screen.getByRole("dialog", { name: /cookies on headstart/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Privacy Policy" })).toHaveAttribute("href", "/privacy");
+    expect(screen.getByRole("link", { name: "Privacy Policy" })).toHaveAttribute(
+      "href",
+      "/privacy",
+    );
   });
 
   it("hides after essential-only consent", () => {

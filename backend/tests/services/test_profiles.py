@@ -98,3 +98,35 @@ def test_profiles_are_isolated_per_user(db_session: Session) -> None:
     svc.save(owner_id, ProfileData(full_name="Owner"))
     assert svc.get(other_id).exists is False
     assert svc.get(owner_id).full_name == "Owner"
+
+
+def test_resume_upload_persists_encrypted_and_survives_profile_save(db_session: Session) -> None:
+    user_id = _user(db_session)
+    svc = ProfileService(db_session)
+    svc.save(user_id, ProfileData(full_name="Ada", email="ada@example.test"))
+    svc.save_resume(
+        user_id,
+        filename="resume.pdf",
+        content_type="application/pdf",
+        data=b"%PDF-1.4",
+    )
+
+    row = db_session.query(ApplicationProfile).filter_by(user_id=user_id).one()
+    assert "%PDF-1.4" not in row.data_ciphertext
+
+    read = svc.get(user_id)
+    assert read.resume_file is not None
+    assert read.resume_file.filename == "resume.pdf"
+
+    apply_profile = svc.get_for_apply(user_id)
+    assert apply_profile.resume_file is not None
+    assert apply_profile.resume_file.data == b"%PDF-1.4"
+
+    svc.save(user_id, ProfileData(full_name="Ada Updated", email="ada@example.test"))
+    after_save = svc.get(user_id)
+    assert after_save.full_name == "Ada Updated"
+    assert after_save.resume_file is not None
+    assert after_save.resume_file.filename == "resume.pdf"
+
+    svc.delete_resume(user_id)
+    assert svc.get(user_id).resume_file is None

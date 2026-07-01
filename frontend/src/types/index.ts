@@ -332,9 +332,16 @@ export interface ProfileData {
   answers: Record<string, string>;
 }
 
+export interface ResumeFileMeta {
+  filename: string;
+  content_type: string;
+  size_bytes: number;
+}
+
 export interface Profile extends ProfileData {
   exists: boolean;
   updated_at: string | null;
+  resume_file: ResumeFileMeta | null;
 }
 
 export interface CredentialExport {

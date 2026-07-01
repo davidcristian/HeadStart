@@ -1,0 +1,54 @@
+"""Shared helpers for resume file attachments in apply adapters."""
+
+from __future__ import annotations
+
+import base64
+from typing import Any
+
+from app.schemas.profile import ResumeFile, ResumeFileMeta
+
+
+def resume_meta_for_payload(resume_file: ResumeFile | None) -> dict[str, Any] | None:
+    """Resume metadata safe to include in dry-run payloads (no file bytes)."""
+    if resume_file is None:
+        return None
+    return ResumeFileMeta(
+        filename=resume_file.filename,
+        content_type=resume_file.content_type,
+        size_bytes=resume_file.size_bytes,
+    ).model_dump()
+
+
+def greenhouse_resume_fields(resume_file: ResumeFile | None) -> dict[str, str]:
+    """Greenhouse JSON fields for a direct resume upload."""
+    if resume_file is None:
+        return {}
+    return {
+        "resume_content": base64.b64encode(resume_file.data).decode("ascii"),
+        "resume_content_filename": resume_file.filename,
+    }
+
+
+def lever_resume_part(resume_file: ResumeFile | None) -> tuple[str, tuple[str, bytes, str]] | None:
+    """Multipart file tuple for Lever's `resume` field."""
+    if resume_file is None:
+        return None
+    return ("resume", (resume_file.filename, resume_file.data, resume_file.content_type))
+
+
+def flatten_lever_form_fields(payload: dict[str, Any]) -> dict[str, str]:
+    """Flatten Lever JSON payload keys into multipart form field names."""
+    import json
+
+    parts: dict[str, str] = {}
+    for key, value in payload.items():
+        if key == "urls" and isinstance(value, dict):
+            for label, url in value.items():
+                parts[f"urls[{label}]"] = str(url)
+        elif key == "consent" and isinstance(value, dict):
+            parts["consent"] = json.dumps(value)
+        elif isinstance(value, bool):
+            parts[key] = "true" if value else "false"
+        else:
+            parts[key] = str(value)
+    return parts

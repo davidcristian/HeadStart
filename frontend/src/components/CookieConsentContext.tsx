@@ -1,18 +1,7 @@
 /** Cookie consent state shared by the banner and footer settings link. */
 
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useMemo,
-  useState,
-  type ReactNode,
-} from "react";
-import {
-  getCookieConsent,
-  setCookieConsent,
-  type CookieConsentChoice,
-} from "../lib/cookieConsent";
+import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
+import { getCookieConsent, setCookieConsent, type CookieConsentChoice } from "../lib/cookieConsent";
 import { CookieConsentBanner } from "./CookieConsentBanner";
 
 type CookieConsentContextValue = {

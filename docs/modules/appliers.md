@@ -70,6 +70,10 @@ credentials:
 `ApplyContext.dry_run=True`) returns the JSON payload without calling Greenhouse.
 Use this to preview applications before consent/audit UI ships.
 
+**Resume file:** when the application profile has an uploaded resume (see
+[profile](profile.md)), live submit adds `resume_content` + `resume_content_filename`
+to the JSON body. Plain `resume_text` is used only when no file is uploaded.
+
 **Live submit:** Greenhouse requires HTTP Basic auth with a per-board Job Board
 API key (created in the employer's Greenhouse admin under API Credentials). Store
 it in the source config or, preferably, in the linked [site
@@ -97,8 +101,9 @@ credentials:
 
 **Live submit:** requires a Postings API key (Super Admin → Integrations).
 Store in source config or, preferably, credential `session.postings_api_key`.
-Resume **files** are not uploaded in v1; `resume_text` is appended to
-`comments` when present.
+When the profile has an uploaded resume file, the adapter switches to
+`multipart/form-data` with a `resume` part; otherwise `resume_text` is appended
+to `comments` when present.
 
 ### Ashby
 
@@ -120,7 +125,10 @@ credentials:
 **Live submit:** requires an Ashby API key (Admin → Settings → API) with
 `candidatesWrite`. Store in source config or, preferably, credential
 `session.ashby_api_key`. System fields `_systemfield_name` and
-`_systemfield_email` are always sent; resume **files** are not uploaded in v1.
+`_systemfield_email` are always sent. When the profile has an uploaded resume,
+live submit uses `multipart/form-data` with `_systemfield_resume` (override via
+`config.resume_path`); otherwise `resume_text` may be appended to the
+cover-letter field.
 
 ### Workday
 
@@ -157,9 +165,9 @@ default `false`). Toggle from the Sources page (only for adapters with a
 registered applier). `ApplyService` rejects non–dry-run applies when opt-in is
 off; preview (`dry_run`) still works.
 
-**v1 limitations:** resume files are not uploaded; Workday questionnaires and
-multi-page flows are not automated; Indeed/LinkedIn/generic sources have no
-apply adapter. See [launch-checklist.md](../launch-checklist.md#7-auto-apply-optional--know-the-limits)
+**v1 limitations:** Workday questionnaires and multi-page flows are not
+automated; Indeed/LinkedIn/generic sources have no apply adapter. See
+[launch-checklist.md](../launch-checklist.md#7-auto-apply-optional--know-the-limits)
 before advertising auto-apply on a public instance.
 
 Every apply attempt (preview or live, success or failure) is recorded in

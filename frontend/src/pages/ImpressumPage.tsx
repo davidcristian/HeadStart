@@ -9,9 +9,9 @@ export function ImpressumPage() {
   return (
     <LegalPageLayout title="Impressum" effectiveDate={EFFECTIVE_DATE}>
       <p>
-        Angaben gemäß § 5 TMG und § 18 Abs. 2 MStV. Die folgenden Platzhalter müssen vom
-        Betreiber dieser HeadStart-Instanz durch die tatsächlichen Unternehmens- und
-        Kontaktdaten ersetzt werden, bevor die Seite öffentlich in Deutschland genutzt wird.
+        Angaben gemäß § 5 TMG und § 18 Abs. 2 MStV. Die folgenden Platzhalter müssen vom Betreiber
+        dieser HeadStart-Instanz durch die tatsächlichen Unternehmens- und Kontaktdaten ersetzt
+        werden, bevor die Seite öffentlich in Deutschland genutzt wird.
       </p>
 
       <section>
@@ -64,9 +64,7 @@ export function ImpressumPage() {
           Umsatzsteuer-Identifikationsnummer gemäß § 27a UStG: <strong>[DE…]</strong>
         </p>
         <p>
-          <em>
-            Nur ausfüllen, wenn eine USt-IdNr. vorliegt; sonst diesen Abschnitt entfernen.
-          </em>
+          <em>Nur ausfüllen, wenn eine USt-IdNr. vorliegt; sonst diesen Abschnitt entfernen.</em>
         </p>
       </section>
 
@@ -103,9 +101,9 @@ export function ImpressumPage() {
       <section>
         <h2>Hinweis für Betreiber</h2>
         <p>
-          Diese Seite ist eine Vorlage. Ersetzen Sie alle Platzhalter in eckigen Klammern durch
-          Ihre gültigen Angaben und entfernen Sie nicht zutreffende Abschnitte. Weitere
-          Informationen zur Datenverarbeitung finden Sie in unserer{" "}
+          Diese Seite ist eine Vorlage. Ersetzen Sie alle Platzhalter in eckigen Klammern durch Ihre
+          gültigen Angaben und entfernen Sie nicht zutreffende Abschnitte. Weitere Informationen zur
+          Datenverarbeitung finden Sie in unserer{" "}
           <Link to="/privacy">Datenschutzerklärung (Privacy Policy)</Link>.
         </p>
       </section>
