@@ -28,6 +28,18 @@ locals {
   )
 
   effective_cors = length(var.cors_origins) > 0 ? var.cors_origins : [local.app_base_url]
+
+  effective_smtp_from = var.smtp_from != "" ? var.smtp_from : (
+    var.domain_name != "" ? "noreply@${var.domain_name}" : ""
+  )
+
+  base_secret_values = {
+    POSTGRES_PASSWORD      = var.db_password
+    JWT_SECRET             = var.jwt_secret
+    CREDENTIALS_SECRET_KEY = var.credentials_secret_key
+  }
+  smtp_secret_values = var.smtp_password != "" ? { SMTP_PASSWORD = var.smtp_password } : {}
+  secret_values      = merge(local.base_secret_values, local.smtp_secret_values)
 }
 
 module "network" {
@@ -54,15 +66,11 @@ module "ecr" {
 }
 
 module "secrets" {
-  source       = "../secrets"
-  name         = local.name
-  secret_names = ["POSTGRES_PASSWORD", "JWT_SECRET", "CREDENTIALS_SECRET_KEY"]
-  secret_values = {
-    POSTGRES_PASSWORD      = var.db_password
-    JWT_SECRET             = var.jwt_secret
-    CREDENTIALS_SECRET_KEY = var.credentials_secret_key
-  }
-  tags = local.tags
+  source        = "../secrets"
+  name          = local.name
+  secret_names  = keys(local.secret_values)
+  secret_values = local.secret_values
+  tags          = local.tags
 }
 
 module "iam" {
@@ -128,6 +136,51 @@ module "redis" {
   tags              = local.tags
 }
 
+locals {
+  smtp_ecs_environment = var.smtp_host != "" ? merge(
+    {
+      SMTP_HOST    = var.smtp_host
+      SMTP_PORT    = tostring(var.smtp_port)
+      SMTP_USER    = var.smtp_user
+      SMTP_USE_TLS = var.smtp_use_tls ? "true" : "false"
+    },
+    local.effective_smtp_from != "" ? { SMTP_FROM = local.effective_smtp_from } : {},
+  ) : {}
+
+  ecs_environment = merge(
+    {
+      ENVIRONMENT                      = var.environment
+      LOG_LEVEL                        = "INFO"
+      POSTGRES_HOST                    = module.rds.address
+      POSTGRES_PORT                    = tostring(module.rds.port)
+      POSTGRES_DB                      = module.rds.db_name
+      POSTGRES_USER                    = var.db_username
+      REDIS_HOST                       = module.redis.address
+      REDIS_PORT                       = tostring(module.redis.port)
+      CORS_ORIGINS                     = join(",", local.effective_cors)
+      FRONTEND_BASE_URL                = local.app_base_url
+      NTFY_DEFAULT_SERVER_URL          = var.ntfy_default_server_url
+      NTFY_DEFAULT_TOPIC               = var.ntfy_default_topic
+      SCHEDULER_TICK_SECONDS           = "30"
+      SCHEDULER_MAX_CATCHUP            = "1"
+      PLAYWRIGHT_NAVIGATION_TIMEOUT_MS = "30000"
+      PLAYWRIGHT_MAX_RETRIES           = "1"
+    },
+    local.smtp_ecs_environment,
+  )
+
+  ecs_secrets = merge(
+    {
+      POSTGRES_PASSWORD      = module.secrets.secret_arns["POSTGRES_PASSWORD"]
+      JWT_SECRET             = module.secrets.secret_arns["JWT_SECRET"]
+      CREDENTIALS_SECRET_KEY = module.secrets.secret_arns["CREDENTIALS_SECRET_KEY"]
+    },
+    var.smtp_password != "" ? {
+      SMTP_PASSWORD = module.secrets.secret_arns["SMTP_PASSWORD"]
+    } : {},
+  )
+}
+
 module "ecs" {
   source                    = "../ecs"
   name                      = local.name
@@ -147,29 +200,8 @@ module "ecs" {
   api_target_group_arn      = module.alb.api_target_group_arn
   frontend_target_group_arn = module.alb.frontend_target_group_arn
 
-  environment = {
-    ENVIRONMENT                      = var.environment
-    LOG_LEVEL                        = "INFO"
-    POSTGRES_HOST                    = module.rds.address
-    POSTGRES_PORT                    = tostring(module.rds.port)
-    POSTGRES_DB                      = module.rds.db_name
-    POSTGRES_USER                    = var.db_username
-    REDIS_HOST                       = module.redis.address
-    REDIS_PORT                       = tostring(module.redis.port)
-    CORS_ORIGINS                     = join(",", local.effective_cors)
-    NTFY_DEFAULT_SERVER_URL          = var.ntfy_default_server_url
-    NTFY_DEFAULT_TOPIC               = var.ntfy_default_topic
-    SCHEDULER_TICK_SECONDS           = "30"
-    SCHEDULER_MAX_CATCHUP            = "1"
-    PLAYWRIGHT_NAVIGATION_TIMEOUT_MS = "30000"
-    PLAYWRIGHT_MAX_RETRIES           = "1"
-  }
-
-  secrets = {
-    POSTGRES_PASSWORD      = module.secrets.secret_arns["POSTGRES_PASSWORD"]
-    JWT_SECRET             = module.secrets.secret_arns["JWT_SECRET"]
-    CREDENTIALS_SECRET_KEY = module.secrets.secret_arns["CREDENTIALS_SECRET_KEY"]
-  }
+  environment = local.ecs_environment
+  secrets     = local.ecs_secrets
 
   tags = local.tags
 }

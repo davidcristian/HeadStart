@@ -1,0 +1,145 @@
+# Public launch checklist
+
+Use this list before inviting strangers to a hosted HeadStart instance. It
+complements [deploying-to-aws.md](deploying-to-aws.md) (infrastructure) and
+[getting-started.md](getting-started.md) (first user setup).
+
+---
+
+## 1. Domain & HTTPS
+
+- [ ] **Custom domain configured** — set `domain_name` + `route53_zone_id` (or
+  `acm_certificate_arn`) in Terraform. See
+  [deploying-to-aws.md#custom-domain--https](deploying-to-aws.md#custom-domain--https).
+- [ ] **`terraform output https_enabled`** is `true` and
+  **`terraform output app_url`** shows `https://…`.
+- [ ] **DNS resolves** — `curl "$(terraform output -raw app_url)/api/v1/health"`
+  returns `{"status":"ok"}` (or equivalent).
+- [ ] **`FRONTEND_BASE_URL` matches the public URL** — Terraform sets this
+  automatically from `app_url` on ECS tasks. Password-reset links and Stripe
+  return URLs depend on it. After changing the domain, run `terraform apply`
+  and roll ECS (`make deploy`).
+
+---
+
+## 2. CORS & cookies
+
+- [ ] **`CORS_ORIGINS`** includes your public origin (defaults to `app_url` when
+  `domain_name` is set). Add extra origins only if the UI is served from
+  another hostname.
+- [ ] **Auth cookies work over HTTPS** — `AUTH_COOKIE_SECURE` defaults to
+  `true` in production images. Do not serve the authenticated app over plain HTTP
+  on a public domain.
+
+---
+
+## 3. Transactional email
+
+Required for password reset and the **email** notification channel.
+
+- [ ] **SMTP relay configured** — set `smtp_host` (+ `smtp_user` /
+  `TF_VAR_smtp_password`) in Terraform or via `TF_VAR_*` during
+  `make aws-first-deploy`. Password is stored in Secrets Manager.
+- [ ] **`SMTP_FROM` uses your domain** — defaults to `noreply@<domain_name>`
+  when a custom domain is set. Verify SPF/DKIM (or your provider's domain
+  verification) so messages are not spam-foldered.
+- [ ] **Send a test** — trigger **Forgot password** for a test account and
+  confirm the email arrives with a link on your domain.
+
+Without SMTP, reset links are only logged in CloudWatch (not suitable for public
+users).
+
+---
+
+## 4. Legal & trust pages
+
+- [ ] **Privacy** (`/privacy`) and **Terms** (`/terms`) reviewed for your entity.
+- [ ] **Impressum** (`/impressum`) — replace placeholder operator details before
+  marketing to German users ([Phase 10](roadmap.md)).
+- [ ] **Subprocessors** (`/subprocessors`) accurate if you use Stripe, ads, or
+  external SMTP.
+- [ ] **Cookie consent** banner tested (Essential only vs Accept all).
+
+---
+
+## 5. Billing (if charging)
+
+- [ ] **Stripe** env vars set (`STRIPE_SECRET_KEY`, webhook secret, price IDs).
+  See [modules/billing.md](modules/billing.md).
+- [ ] **Checkout webhook** endpoint reachable at
+  `https://<domain>/api/v1/billing/webhook`.
+- [ ] **Pricing page** (`/pricing`) reflects your live plans and trial terms.
+
+---
+
+## 6. Core product smoke test
+
+- [ ] Register → onboarding wizard → create source, target, search → **Run now**
+  returns jobs or a clear error.
+- [ ] Notification delivers on at least one channel (ntfy, email, Slack, …).
+- [ ] **Searches page** shows `last_run_at` / `last_error` after a scheduled tick.
+
+---
+
+## 7. Auto-apply (optional — know the limits)
+
+Auto-apply is **off by default** per source (`auto_apply_enabled`). Only enable
+after reading [modules/appliers.md](modules/appliers.md).
+
+**Supported adapters (v1):** Greenhouse, Lever, Ashby, Workday. There are **no**
+apply adapters for Indeed, LinkedIn, or generic HTML/Playwright sources.
+
+**Not fully automated — set expectations before launch:**
+
+| Area | Limitation |
+| ---- | ---------- |
+| **Resume files** | Not uploaded. `resume_text` is appended to comments / cover-letter fields only. |
+| **Greenhouse / Lever / Ashby** | Live submit needs an employer-issued API key (Job Board / Postings / Ashby API). Store in encrypted [site credentials](modules/credentials.md), not plain source config. |
+| **Workday** | Requires logged-in candidate session cookies. Multi-page questionnaires, resume upload, and experience sections are **not** automated — finalize often fails until the candidate completes those steps manually on the employer site. |
+| **Custom questions** | Only fields mapped in the application profile (`answers`, config paths) are sent. Unmapped required questions can cause rejection. |
+| **Coverage** | Treat auto-apply as a **best-effort preview + submit helper**, not unattended bulk applying. Always use **dry run / preview** first. |
+
+Before advertising auto-apply:
+
+- [ ] Test **preview** (`dry_run`) and a live apply on each ATS you support.
+- [ ] Confirm `application_log` rows appear under **Application profile**.
+- [ ] Leave `auto_apply_enabled` off until operators understand the limits above.
+
+---
+
+## 8. Operations
+
+- [ ] **Secrets backed up** — `.aws-first-deploy-secrets.env` and Stripe keys
+  stored safely; they cannot be recovered from Terraform output alone.
+- [ ] **Metrics** — scrape API `/metrics` and worker `:9090/metrics` if you run
+  Prometheus ([modules/metrics.md](modules/metrics.md)).
+- [ ] **Runbook** — operators know how to tail CloudWatch logs and run
+  `make deploy` for rollouts ([runbook.md](runbook.md)).
+
+---
+
+## Quick reference: Terraform vars for a branded launch
+
+```hcl
+domain_name       = "jobs.example.com"
+route53_zone_id   = "Z0123456789ABCDEFGHIJ"
+smtp_host         = "email-smtp.us-east-2.amazonaws.com"
+smtp_user         = "AKIA..."
+# smtp_password via TF_VAR_smtp_password (Secrets Manager)
+# smtp_from       = "noreply@jobs.example.com"  # optional; defaults from domain
+```
+
+Or with `make aws-first-deploy`:
+
+```bash
+make aws-first-deploy PREFIX=yourname \
+  DOMAIN_NAME=jobs.example.com \
+  ROUTE53_ZONE_ID=Z0123456789ABCDEFGHIJ \
+  TF_VAR_smtp_host=email-smtp.us-east-2.amazonaws.com \
+  TF_VAR_smtp_user=AKIA... \
+  TF_VAR_smtp_password='...' \
+  YES=1
+```
+
+After apply: `eval "$(make aws-deploy-env)" && make deploy`, then work through
+the checklist above.

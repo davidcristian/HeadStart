@@ -157,6 +157,11 @@ default `false`). Toggle from the Sources page (only for adapters with a
 registered applier). `ApplyService` rejects non–dry-run applies when opt-in is
 off; preview (`dry_run`) still works.
 
+**v1 limitations:** resume files are not uploaded; Workday questionnaires and
+multi-page flows are not automated; Indeed/LinkedIn/generic sources have no
+apply adapter. See [launch-checklist.md](../launch-checklist.md#7-auto-apply-optional--know-the-limits)
+before advertising auto-apply on a public instance.
+
 Every apply attempt (preview or live, success or failure) is recorded in
 `application_log`. List recent rows via `GET /api/v1/application-logs`; the
 Application profile page shows the same audit trail.

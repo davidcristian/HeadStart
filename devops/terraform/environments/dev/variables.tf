@@ -52,3 +52,34 @@ variable "ntfy_default_topic" {
   type    = string
   default = "jobnotifier-change-me"
 }
+
+variable "smtp_host" {
+  type    = string
+  default = ""
+}
+
+variable "smtp_port" {
+  type    = number
+  default = 587
+}
+
+variable "smtp_user" {
+  type    = string
+  default = ""
+}
+
+variable "smtp_password" {
+  type      = string
+  sensitive = true
+  default   = ""
+}
+
+variable "smtp_from" {
+  type    = string
+  default = ""
+}
+
+variable "smtp_use_tls" {
+  type    = bool
+  default = true
+}

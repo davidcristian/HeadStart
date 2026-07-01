@@ -227,6 +227,10 @@ There is no `make seed` on AWS. Continue with
 [getting-started.md](getting-started.md) from **step 2** (create your account).
 The first registered user becomes admin.
 
+Before inviting public users, work through
+[launch-checklist.md](launch-checklist.md) (domain, SMTP, legal pages, auto-apply
+limits).
+
 ---
 
 ## Ongoing deploys
@@ -280,6 +284,25 @@ On `terraform apply`, Terraform will:
 3. Redirect HTTP → HTTPS on port 80
 4. Create a Route53 alias `A` record pointing at the ALB
 5. Set `CORS_ORIGINS` to `https://<domain_name>` unless you override `cors_origins`
+6. Set `FRONTEND_BASE_URL` to the same public URL (password-reset and Stripe links)
+
+### Transactional email (optional)
+
+Set SMTP variables so password reset and the **email** notifier work from your
+domain:
+
+```hcl
+smtp_host     = "email-smtp.us-east-2.amazonaws.com"
+smtp_user     = "AKIA..."
+# smtp_password via TF_VAR_smtp_password (stored in Secrets Manager)
+# smtp_from   = "noreply@jobs.example.com"   # defaults to noreply@<domain_name>
+```
+
+Or export `TF_VAR_smtp_host`, `TF_VAR_smtp_user`, and `TF_VAR_smtp_password`
+before `terraform apply` / `make aws-first-deploy`.
+
+Verify SPF/DKIM with your provider. Full go-live steps:
+[launch-checklist.md](launch-checklist.md).
 
 **Bring your own certificate:** if the cert is already issued in the same region
 as the ALB:

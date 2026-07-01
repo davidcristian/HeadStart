@@ -153,7 +153,7 @@ Final hosted-product details after billing works end-to-end.
 
 | Item | Why | Notes |
 | ---- | --- | ----- |
-| Custom domain & branding | Hosted product credibility | App on a real domain, consistent branding, transactional emails from the product domain |
+| ~~Custom domain & branding~~ | ~~Hosted product credibility~~ | **Shipped:** Terraform sets `FRONTEND_BASE_URL` + `CORS_ORIGINS` from `domain_name`; optional `smtp_*` vars for transactional email; [launch-checklist.md](launch-checklist.md) for go-live steps |
 | ~~GDPR / data compliance (full)~~ | ~~Enterprise and EU readiness~~ | **Shipped:** cookie consent banner; `/subprocessors` DPA/subprocessor page; `data_request_log` audit trail for export/deletion (`GET /admin/data-requests`) |
 
 **Done when:** the product runs on a branded domain with transactional email from
@@ -174,7 +174,7 @@ sessions) and the job lifecycle (`seen_job.status`).
 | Item | Why | Notes |
 | ---- | --- | ----- |
 | ~~User profile & resume storage~~ | ~~Applications need structured candidate data~~ | **Shipped:** one Fernet-encrypted profile per user (contact, links, resume text, cover-letter template, per-field answers); returned to its owner for editing. See [modules/profile.md](modules/profile.md) |
-| Per-site apply adapters | Each ATS/board has different apply flows | Pluggable adapters (same registry pattern as scrapers); **Greenhouse**, **Lever**, **Ashby**, and **Workday** shipped (Job Board / Postings / `applicationForm.submit` / CXS session apply + dry-run preview); others remain. See [modules/appliers.md](modules/appliers.md) |
+| Per-site apply adapters | Each ATS/board has different apply flows | Pluggable adapters (same registry pattern as scrapers); **Greenhouse**, **Lever**, **Ashby**, and **Workday** shipped (Job Board / Postings / `applicationForm.submit` / CXS session apply + dry-run preview); **v1 gaps** (no resume upload, Workday questionnaires, no Indeed/LinkedIn) — see [launch-checklist.md](launch-checklist.md#7-auto-apply-optional--know-the-limits) |
 | Apply orchestration service | Business rules live in services, not routers | **Shipped (minimal):** `ApplyService.apply_to_job` loads profile, credentials, and source config; delegates to applier; marks `seen_job` `applied` on success. Queueing, API routes, and audit log deferred. |
 | ~~Apply from the Jobs UI~~ | ~~Users need a one-click path~~ | **Shipped:** Apply button on supported jobs; confirm dialog with editable cover letter; preview (`dry_run`) and submit; success/failure feedback on Jobs page |
 | Safety & consent | Auto-apply is high-risk | Explicit opt-in per source, dry-run/preview mode, rate limits, and clear audit log of what was submitted | **Shipped:** `source.auto_apply_enabled` (default off); live apply blocked until enabled; `application_log` table + `GET /application-logs`; Sources toggle + Application profile history UI |

@@ -13,6 +13,12 @@ module "stack" {
   route53_zone_id        = var.route53_zone_id
   acm_certificate_arn    = var.acm_certificate_arn
   ntfy_default_topic     = var.ntfy_default_topic
+  smtp_host              = var.smtp_host
+  smtp_port              = var.smtp_port
+  smtp_user              = var.smtp_user
+  smtp_password          = var.smtp_password
+  smtp_from              = var.smtp_from
+  smtp_use_tls           = var.smtp_use_tls
 
   # Dev: small + cheap, no deletion protection.
   db_instance_class      = "db.t4g.micro"

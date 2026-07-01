@@ -17,5 +17,11 @@ credentials_secret_key = "change-me-long-random-credentials-key"
 # domain_name     = "jobs.example.com"
 # route53_zone_id = "Z0123456789ABCDEFGHIJ"
 # cors_origins = ["https://jobs.example.com"]
+#
+# Optional: transactional email (password reset + email notifier).
+# smtp_host     = "email-smtp.us-east-2.amazonaws.com"
+# smtp_user     = "..."
+# smtp_password = "..."   # prefer TF_VAR_smtp_password in the shell
+# smtp_from     = "noreply@jobs.example.com"   # defaults to noreply@<domain_name>
 
 ntfy_default_topic = "jobnotifier-change-me"

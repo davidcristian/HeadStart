@@ -53,8 +53,11 @@ terminate TLS:
   Route53 alias to the ALB.
 - Or pass a pre-validated `acm_certificate_arn` in the same region as the ALB.
 
-`app_url` and `CORS_ORIGINS` default to `https://<domain>` when HTTPS is
-enabled. See [deploying-to-aws.md](../deploying-to-aws.md#custom-domain--https).
+`app_url`, `CORS_ORIGINS`, and `FRONTEND_BASE_URL` default to `https://<domain>`
+when HTTPS is enabled. Optional `smtp_*` variables configure transactional email
+(`SMTP_PASSWORD` in Secrets Manager). See
+[deploying-to-aws.md](../deploying-to-aws.md#custom-domain--https) and
+[launch-checklist.md](../launch-checklist.md).
 
 ## Worker sizing (Playwright)
 

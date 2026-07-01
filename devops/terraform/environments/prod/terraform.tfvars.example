@@ -16,4 +16,10 @@ route53_zone_id = "Z0123456789ABCDEFGHIJ"
 # cors_origins defaults to https://jobs.example.com when domain_name is set.
 # cors_origins = ["https://jobs.example.com"]
 
+# Transactional email (password reset + email notifier). smtp_from defaults to
+# noreply@jobs.example.com when smtp_host is set and smtp_from is omitted.
+# smtp_host     = "email-smtp.us-east-2.amazonaws.com"
+# smtp_user     = "..."
+# smtp_password = "..."   # prefer TF_VAR_smtp_password in the shell
+
 ntfy_default_topic = "jobnotifier-change-me"

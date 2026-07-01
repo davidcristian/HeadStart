@@ -84,6 +84,42 @@ variable "ntfy_default_topic" {
   default = "jobnotifier-change-me"
 }
 
+# Optional SMTP for password-reset and email notifications.
+# When smtp_host is set, SMTP_PASSWORD (if provided) is stored in Secrets Manager.
+variable "smtp_host" {
+  type        = string
+  default     = ""
+  description = "SMTP relay hostname. Leave empty to disable outbound email."
+}
+
+variable "smtp_port" {
+  type    = number
+  default = 587
+}
+
+variable "smtp_user" {
+  type    = string
+  default = ""
+}
+
+variable "smtp_password" {
+  type        = string
+  sensitive   = true
+  default     = ""
+  description = "SMTP password or API key. Stored in Secrets Manager when non-empty."
+}
+
+variable "smtp_from" {
+  type        = string
+  default     = ""
+  description = "From address for transactional email. Defaults to noreply@<domain_name> when domain_name is set."
+}
+
+variable "smtp_use_tls" {
+  type    = bool
+  default = true
+}
+
 # Sizing / resilience knobs (prod overrides these).
 variable "db_instance_class" {
   type    = string
