@@ -43,6 +43,9 @@ For **Greenhouse auto-apply**, store a Job Board API key in the credential
 `session` object as `job_board_api_key` (see [appliers.md](appliers.md)). The
 key is employer-issued; it is encrypted like other credential material.
 
+For **Lever auto-apply**, store a Postings API key in the credential `session`
+as `postings_api_key`.
+
 ## Endpoints (prefix `/api/v1/credentials`)
 
 | Method | Path    | Purpose                                  |

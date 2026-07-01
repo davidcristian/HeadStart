@@ -49,6 +49,7 @@ source's `adapter_key` when that source supports auto-apply. Import the
 | Key          | Strategy                         | Notes |
 | ------------ | -------------------------------- | ----- |
 | `greenhouse` | Job Board API JSON POST          | `POST boards-api.greenhouse.io/v1/boards/<token>/jobs/<id>`; see below |
+| `lever`      | Postings API JSON POST           | `POST api.lever.co/v0/postings/<site>/<id>?key=...`; see below |
 
 ### Greenhouse
 
@@ -73,6 +74,29 @@ it in the source config or, preferably, in the linked [site
 credential](credentials.md) as `session.job_board_api_key` so it stays encrypted.
 
 On success, `ApplyService` marks the `seen_job` status `applied`.
+
+### Lever
+
+Maps `ProfileData` to the [Postings apply JSON
+shape](https://github.com/lever/postings-api#apply-to-a-job-posting). Config /
+credentials:
+
+| Field | Where | Purpose |
+| ----- | ----- | ------- |
+| `site` | source `default_config` or parsed from `job_url` | Board slug (`jobs.lever.co/<site>/...`) |
+| `region` | source/search config | `"eu"` selects `api.eu.lever.co` |
+| `postings_api_key` | `default_config` or credential `session` | Employer Postings API key for **live** submission |
+| `gdpr_consent` | source/search config | When true, sets `consent.store` |
+| `compliance_policy_id` | source/search config | Optional Lever compliance policy GUID |
+| `silent_confirmations` | source/search config | When true, sets `silent` so Lever skips candidate email |
+| `urls.<Label>` | profile `answers` | Extra profile URLs (e.g. `urls.Twitter`) |
+
+**Dry run:** same as Greenhouse — preview JSON without calling Lever.
+
+**Live submit:** requires a Postings API key (Super Admin → Integrations).
+Store in source config or, preferably, credential `session.postings_api_key`.
+Resume **files** are not uploaded in v1; `resume_text` is appended to
+`comments` when present.
 
 ## Adding one
 
