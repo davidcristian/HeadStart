@@ -1,8 +1,7 @@
 """Subscription plan definitions: caps and feature gates.
 
-Mirrors the public pricing page (`frontend/src/lib/pricing.ts`). Billing is not
-wired yet — every new account starts on ``free`` until an admin or future Stripe
-webhook changes the plan.
+Mirrors the public pricing page (`frontend/src/lib/pricing.ts`). Stripe webhooks
+and the admin panel update ``user.plan``; new accounts start on ``free``.
 """
 
 from __future__ import annotations

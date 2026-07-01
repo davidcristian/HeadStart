@@ -117,7 +117,7 @@ export const COMPARISON_ROWS: ComparisonRow[] = [
 export const PRICING_FAQ = [
   {
     q: "Can I change plans later?",
-    a: "Yes. When billing launches you’ll be able to upgrade or downgrade from Settings. Downgrades take effect at the end of your billing period.",
+    a: "Yes. Upgrade or downgrade from Settings → Manage subscription. Downgrades take effect at the end of your billing period.",
   },
   {
     q: "What happens to my data if I downgrade?",
@@ -125,7 +125,7 @@ export const PRICING_FAQ = [
   },
   {
     q: "Is there a trial for paid plans?",
-    a: "Pro will include a 14-day trial once checkout is live. Until then, the Free tier is fully usable with no credit card required.",
+    a: "Pro includes a 14-day free trial when billing is enabled on the server. The Free tier is fully usable with no credit card required.",
   },
   {
     q: "Do you offer refunds?",

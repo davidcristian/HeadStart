@@ -168,6 +168,17 @@ const mockApi = vi.hoisted(() => ({
     jobs: [],
   })),
   deleteAccount: vi.fn(async () => undefined),
+  billingStatus: vi.fn(async () => ({
+    configured: false,
+    plan: "free" as const,
+    subscription_status: null,
+    has_stripe_subscription: false,
+    can_checkout: false,
+    can_manage: false,
+    trial_days: 14,
+  })),
+  createCheckout: vi.fn(async () => ({ url: "https://checkout.stripe.test/session" })),
+  createBillingPortal: vi.fn(async () => ({ url: "https://billing.stripe.test/portal" })),
   getProfile: vi.fn(async (): Promise<Profile> => emptyProfile),
   saveProfile: vi.fn(async (data: ProfileData): Promise<Profile> => ({
     ...emptyProfile,

@@ -124,6 +124,15 @@ class Settings(BaseSettings):
     ntfy_default_server_url: str = "https://ntfy.sh"
     ntfy_default_topic: str = "jobnotifier-change-me"
 
+    # ---- Stripe billing (optional; leave empty to disable paid checkout) ----
+    stripe_secret_key: str = ""
+    stripe_webhook_secret: str = ""
+    # Stripe Price IDs for Pro (create in the Stripe Dashboard; must be recurring).
+    stripe_price_pro_monthly: str = ""
+    stripe_price_pro_annual: str = ""
+    # Optional trial length for new Pro subscriptions (days).
+    stripe_trial_days: int = 14
+
     # ---- seed (local demo account that owns the example data) ----
     seed_user_email: str = "demo@example.com"
     seed_user_password: str = "demo-password-change-me"
@@ -155,6 +164,17 @@ class Settings(BaseSettings):
     @property
     def result_backend(self) -> str:
         return self.celery_result_backend or f"redis://{self.redis_host}:{self.redis_port}/1"
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def billing_enabled(self) -> bool:
+        """True when Stripe keys and Pro price IDs are configured."""
+        return bool(
+            self.stripe_secret_key
+            and self.stripe_webhook_secret
+            and self.stripe_price_pro_monthly
+            and self.stripe_price_pro_annual
+        )
 
 
 @lru_cache

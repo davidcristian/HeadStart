@@ -61,10 +61,14 @@ notification attempts with job title, URL, error, and timestamp).
 | GET    | `/admin/users`        | List all users (admin only)              |
 | PATCH  | `/admin/users/{id}`   | Toggle `is_active` / `is_admin` (admin)  |
 | GET    | `/admin/stats`        | Global scrape/delivery aggregates (admin)|
+| GET    | `/billing/status`     | Billing capabilities + subscription state |
+| POST   | `/billing/checkout`   | Start Stripe Checkout for Pro            |
+| POST   | `/billing/portal`     | Open Stripe customer portal              |
+| POST   | `/billing/webhook`    | Stripe subscription webhooks (signed)    |
 
 ## Auth
 
-Multi-user with JWT. **Every** route except `/health`, `/feed/rss`, and the
+Multi-user with JWT. **Every** route except `/health`, `/feed/rss`, `/billing/webhook`, and the
 `/auth/register|login|refresh|forgot-password|reset-password` endpoints requires
 `Authorization: Bearer <access_token>` and is **scoped to the authenticated
 user** — including reads. Cross-user access returns 404. Full detail in

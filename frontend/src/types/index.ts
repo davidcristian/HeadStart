@@ -176,6 +176,18 @@ export interface User {
   created_at: string;
 }
 
+export type BillingPeriod = "monthly" | "annual";
+
+export interface BillingStatus {
+  configured: boolean;
+  plan: PlanId;
+  subscription_status: string | null;
+  has_stripe_subscription: boolean;
+  can_checkout: boolean;
+  can_manage: boolean;
+  trial_days: number;
+}
+
 export type AdminUser = User;
 
 export interface AdminSearchError {

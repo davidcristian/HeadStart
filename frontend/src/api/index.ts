@@ -23,6 +23,8 @@ import type {
   TargetCreate,
   User,
   UserDataExport,
+  BillingStatus,
+  BillingPeriod,
 } from "../types";
 import { request } from "./client";
 
@@ -75,6 +77,16 @@ export const api = {
   exportMyData: () => request<UserDataExport>("/api/v1/auth/me/export"),
   deleteAccount: (password: string) =>
     request<void>("/api/v1/auth/me", { method: "DELETE", body: { password } }),
+
+  // billing
+  billingStatus: () => request<BillingStatus>("/api/v1/billing/status"),
+  createCheckout: (billingPeriod: BillingPeriod = "monthly") =>
+    request<{ url: string }>("/api/v1/billing/checkout", {
+      method: "POST",
+      body: { plan: "pro", billing_period: billingPeriod },
+    }),
+  createBillingPortal: () =>
+    request<{ url: string }>("/api/v1/billing/portal", { method: "POST", body: {} }),
 
   // admin
   listAdminUsers: () => request<AdminUser[]>("/api/v1/admin/users"),

@@ -32,8 +32,11 @@ class User(Base, TimestampMixin):
     onboarding_completed_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
-    # Subscription tier (billing integration sets this later; default is free).
+    # Subscription tier (Stripe webhooks or admin panel).
     plan: Mapped[str] = mapped_column(String(20), default="free", nullable=False)
+    stripe_customer_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    stripe_subscription_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    subscription_status: Mapped[str | None] = mapped_column(String(50), nullable=True)
 
     sources: Mapped[list["Source"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"

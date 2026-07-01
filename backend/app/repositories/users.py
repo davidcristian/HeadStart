@@ -80,6 +80,30 @@ class UserRepository:
         self.session.flush()
         return user
 
+    def get_by_stripe_customer_id(self, customer_id: str) -> User | None:
+        return self.session.scalar(select(User).where(User.stripe_customer_id == customer_id))
+
+    def update_billing(
+        self,
+        user: User,
+        *,
+        stripe_customer_id: str | None = None,
+        stripe_subscription_id: str | None = None,
+        subscription_status: str | None = None,
+        plan: str | None = None,
+    ) -> User:
+        """Patch Stripe billing fields on a user."""
+        if stripe_customer_id is not None:
+            user.stripe_customer_id = stripe_customer_id
+        if stripe_subscription_id is not None:
+            user.stripe_subscription_id = stripe_subscription_id
+        if subscription_status is not None:
+            user.subscription_status = subscription_status
+        if plan is not None:
+            user.plan = plan
+        self.session.flush()
+        return user
+
     def delete(self, user: User) -> None:
         """Remove a user row (owned data cascades via FK / ORM)."""
         self.session.delete(user)

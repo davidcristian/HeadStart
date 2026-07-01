@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { api } from "../api";
 import { useAuth } from "../auth/AuthContext";
 import { Brand } from "../components/Brand";
 import { PublicFooter } from "../components/PublicFooter";
@@ -31,6 +32,21 @@ function ComparisonCell({ value }: { value: string | boolean }) {
 export function PricingPage() {
   const { user } = useAuth();
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>("monthly");
+  const [checkoutError, setCheckoutError] = useState<string>();
+  const [checkingOut, setCheckingOut] = useState(false);
+
+  async function startProCheckout() {
+    setCheckoutError(undefined);
+    if (!user) return;
+    setCheckingOut(true);
+    try {
+      const { url } = await api.createCheckout(billingPeriod);
+      window.location.assign(url);
+    } catch (err) {
+      setCheckoutError(err instanceof Error ? err.message : "Could not start checkout.");
+      setCheckingOut(false);
+    }
+  }
 
   return (
     <div className="landing pricing-page">
@@ -104,14 +120,18 @@ export function PricingPage() {
           </div>
         </section>
 
+        {checkoutError ? (
+          <p className="pricing-billing-note" role="alert">
+            {checkoutError}
+          </p>
+        ) : null}
+
         <section className="pricing-cards" aria-label="Plans">
           {PLANS.map((plan) => {
             const price = planDisplayPrice(plan, billingPeriod);
             const isFree = plan.id === "free";
-            const ctaHref =
-              isFree || plan.id === "pro"
-                ? "/register"
-                : "mailto:support@headstart.app?subject=HeadStart%20Team%20plan";
+            const isPro = plan.id === "pro";
+            const isTeam = plan.id === "team";
 
             return (
               <article
@@ -163,18 +183,27 @@ export function PricingPage() {
                   ))}
                 </ul>
 
-                {ctaHref.startsWith("mailto:") ? (
+                {isTeam ? (
                   <a
-                    href={ctaHref}
-                    className={
-                      plan.highlight ? "btn btn-primary btn-block" : "btn btn-ghost btn-block"
-                    }
+                    href="mailto:support@headstart.app?subject=HeadStart%20Team%20plan"
+                    className="btn btn-ghost btn-block"
                   >
                     {plan.cta}
                   </a>
+                ) : isPro && user ? (
+                  <button
+                    type="button"
+                    className={
+                      plan.highlight ? "btn btn-primary btn-block" : "btn btn-ghost btn-block"
+                    }
+                    disabled={checkingOut}
+                    onClick={() => void startProCheckout()}
+                  >
+                    {checkingOut ? "Redirecting…" : plan.cta}
+                  </button>
                 ) : (
                   <Link
-                    to={ctaHref}
+                    to={isFree ? "/register" : "/register"}
                     className={
                       plan.highlight ? "btn btn-primary btn-block" : "btn btn-ghost btn-block"
                     }
@@ -188,8 +217,8 @@ export function PricingPage() {
         </section>
 
         <p className="pricing-billing-note">
-          Paid checkout is coming soon — every plan above is available to try on the Free tier today
-          while we finish billing integration.
+          Pro includes a 14-day free trial when billing is enabled on the server. Team plans are
+          arranged manually — email support for a quote.
         </p>
 
         <section className="pricing-compare" aria-labelledby="compare-title">

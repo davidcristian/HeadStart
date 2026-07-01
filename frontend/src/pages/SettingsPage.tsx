@@ -1,16 +1,18 @@
-/** Connection settings (API base URL), account data controls, and ntfy help. */
+/** Connection settings (API base URL), billing, account data controls, and ntfy help. */
 
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Banner, Button, Card, Field } from "../components/ui";
 import { api } from "../api";
 import { useAuth } from "../auth/AuthContext";
 import { getApiBaseUrl, setApiBaseUrl } from "../lib/settings";
 import { planLabel } from "../lib/plan";
+import type { BillingPeriod, BillingStatus } from "../types";
 
 export function SettingsPage() {
   const navigate = useNavigate();
-  const { logout, user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { logout, user, refreshUser } = useAuth();
   const [baseUrl, setBaseUrl] = useState(getApiBaseUrl());
   const [saved, setSaved] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -18,6 +20,36 @@ export function SettingsPage() {
   const [deletePassword, setDeletePassword] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string>();
+  const [billing, setBilling] = useState<BillingStatus | null>(null);
+  const [billingError, setBillingError] = useState<string>();
+  const [billingBusy, setBillingBusy] = useState(false);
+  const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>("monthly");
+  const billingNotice = searchParams.get("billing");
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadBilling() {
+      try {
+        const status = await api.billingStatus();
+        if (!cancelled) setBilling(status);
+      } catch {
+        if (!cancelled) setBilling(null);
+      }
+    }
+    void loadBilling();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.plan]);
+
+  useEffect(() => {
+    if (billingNotice === "success") {
+      void refreshUser();
+      const next = new URLSearchParams(searchParams);
+      next.delete("billing");
+      setSearchParams(next, { replace: true });
+    }
+  }, [billingNotice, refreshUser, searchParams, setSearchParams]);
 
   function save() {
     setApiBaseUrl(baseUrl);
@@ -63,9 +95,100 @@ export function SettingsPage() {
     }
   }
 
+  async function startCheckout() {
+    setBillingError(undefined);
+    setBillingBusy(true);
+    try {
+      const { url } = await api.createCheckout(billingPeriod);
+      window.location.assign(url);
+    } catch (err) {
+      setBillingError(err instanceof Error ? err.message : "Could not start checkout.");
+      setBillingBusy(false);
+    }
+  }
+
+  async function openPortal() {
+    setBillingError(undefined);
+    setBillingBusy(true);
+    try {
+      const { url } = await api.createBillingPortal();
+      window.location.assign(url);
+    } catch (err) {
+      setBillingError(err instanceof Error ? err.message : "Could not open billing portal.");
+      setBillingBusy(false);
+    }
+  }
+
   return (
     <>
       <h1>Settings</h1>
+
+      {billingNotice === "success" && (
+        <Banner kind="success">Subscription updated. Your plan may take a moment to refresh.</Banner>
+      )}
+      {billingNotice === "cancel" && (
+        <Banner kind="info">Checkout was cancelled. No changes were made.</Banner>
+      )}
+
+      <Card title="Billing">
+        {user && (
+          <p>
+            Current plan: <strong>{planLabel(user.plan)}</strong>
+            {billing?.subscription_status ? (
+              <>
+                {" "}
+                (subscription: <code>{billing.subscription_status}</code>)
+              </>
+            ) : null}
+          </p>
+        )}
+        {billing?.configured ? (
+          <>
+            {billing.can_checkout ? (
+              <>
+                <p>Upgrade to Pro for more searches, digest mode, AI summaries, and premium scrapers.</p>
+                <Field label="Billing period">
+                  <select
+                    value={billingPeriod}
+                    onChange={(e) => setBillingPeriod(e.target.value as BillingPeriod)}
+                    aria-label="Billing period"
+                  >
+                    <option value="monthly">Monthly</option>
+                    <option value="annual">Annual (save ~17%)</option>
+                  </select>
+                </Field>
+                <p>
+                  <Button onClick={() => void startCheckout()} disabled={billingBusy}>
+                    {billingBusy ? "Redirecting…" : "Upgrade to Pro"}
+                  </Button>
+                </p>
+                {billing.trial_days > 0 ? (
+                  <p className="muted">Includes a {billing.trial_days}-day free trial.</p>
+                ) : null}
+              </>
+            ) : null}
+            {billing.can_manage ? (
+              <p>
+                <Button variant="ghost" onClick={() => void openPortal()} disabled={billingBusy}>
+                  {billingBusy ? "Opening…" : "Manage subscription"}
+                </Button>
+              </p>
+            ) : null}
+            {!billing.can_checkout && !billing.can_manage ? (
+              <p>
+                <a href="/pricing">View plans</a>
+              </p>
+            ) : null}
+          </>
+        ) : (
+          <p>
+            Paid checkout is not configured on this server.{" "}
+            <a href="/pricing">View plans</a> or contact the operator to enable billing.
+          </p>
+        )}
+        {billingError && <Banner kind="error">{billingError}</Banner>}
+      </Card>
+
       <Card title="Your account">
         {user && (
           <p>

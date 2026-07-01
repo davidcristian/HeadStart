@@ -1,5 +1,6 @@
 import { mockApi, resetMockApi } from "../test/mockApi";
 import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithClient } from "../test/renderWithClient";
 import { SettingsPage } from "./SettingsPage";
@@ -43,9 +44,18 @@ describe("SettingsPage", () => {
     });
   });
 
+  function renderSettings() {
+    return renderWithClient(
+      <MemoryRouter>
+        <SettingsPage />
+      </MemoryRouter>,
+    );
+  }
+
   it("renders account controls", () => {
-    renderWithClient(<SettingsPage />);
+    renderSettings();
     expect(screen.getByRole("heading", { name: "Settings" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Billing" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Export my data" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Delete my account" })).toBeInTheDocument();
   });
@@ -74,7 +84,7 @@ describe("SettingsPage", () => {
       .spyOn(HTMLAnchorElement.prototype, "click")
       .mockImplementation(() => undefined);
 
-    renderWithClient(<SettingsPage />);
+    renderSettings();
     fireEvent.click(screen.getByRole("button", { name: "Export my data" }));
 
     await waitFor(() => expect(mockApi.exportMyData).toHaveBeenCalled());
@@ -82,7 +92,7 @@ describe("SettingsPage", () => {
   });
 
   it("deletes the account after password confirmation", async () => {
-    renderWithClient(<SettingsPage />);
+    renderSettings();
     fireEvent.change(screen.getByLabelText("Confirm account deletion password"), {
       target: { value: "password123" },
     });
