@@ -66,9 +66,7 @@ export function EducationSection({ education, onEducationChange }: EducationSect
               <input
                 value={row.field_of_study}
                 onChange={(e) =>
-                  onEducationChange(
-                    updateRow(education, index, { field_of_study: e.target.value }),
-                  )
+                  onEducationChange(updateRow(education, index, { field_of_study: e.target.value }))
                 }
                 placeholder="Computer Science"
               />

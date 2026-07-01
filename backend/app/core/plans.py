@@ -37,6 +37,7 @@ class PlanFeatures:
     ai_summaries: bool
     site_credentials: bool
     rss_feed: bool
+    portal_search: bool
 
 
 _PLAN_LIMITS: dict[PlanId, PlanLimits] = {
@@ -51,18 +52,21 @@ _PLAN_FEATURES: dict[PlanId, PlanFeatures] = {
         ai_summaries=False,
         site_credentials=False,
         rss_feed=False,
+        portal_search=False,
     ),
     "pro": PlanFeatures(
         digest_mode=True,
         ai_summaries=True,
         site_credentials=True,
         rss_feed=True,
+        portal_search=True,
     ),
     "team": PlanFeatures(
         digest_mode=True,
         ai_summaries=True,
         site_credentials=True,
         rss_feed=True,
+        portal_search=True,
     ),
 }
 

@@ -18,3 +18,52 @@ export type PortalList = {
   items: Portal[];
   categories: PortalCategory[];
 };
+
+export type PortalSearchRequest = {
+  keywords: string;
+  category?: PortalCategory;
+  portal_ids?: string[];
+  location?: string;
+  workplace?: "remote" | "hybrid" | "onsite";
+};
+
+export type PortalJob = {
+  portal_id: string;
+  company_name: string;
+  external_id: string;
+  title: string;
+  location: string;
+  url: string;
+};
+
+export type PortalSearchError = {
+  portal_id: string;
+  company_name: string;
+  error: string;
+};
+
+export type PortalSearchResult = {
+  items: PortalJob[];
+  portals_searched: number;
+  portals_failed: number;
+  errors: PortalSearchError[];
+};
+
+export type PortalSubscribeRequest = {
+  portal_ids: string[];
+  keywords: string;
+  target_id: number;
+  interval_seconds?: number;
+  notification_mode?: "immediate" | "digest";
+  digest_interval_seconds?: number;
+  location?: string;
+  workplace?: "remote" | "hybrid" | "onsite";
+};
+
+export type PortalSubscribeResult = {
+  sources_created: number;
+  searches_created: number;
+  search_ids: number[];
+  skipped_portal_ids: string[];
+  message: string | null;
+};

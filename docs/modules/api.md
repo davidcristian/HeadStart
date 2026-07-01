@@ -26,6 +26,8 @@ never touch the DB directly (services use repositories). See
 | DELETE | `/auth/me`            | Permanently delete account (password)    |
 | GET    | `/sources`            | List sources                             |
 | GET    | `/portals`            | Curated employer portal catalog (category/q filters) |
+| POST   | `/portals/search`     | Cross-portal job search (Pro+; `portal_search` feature) |
+| POST   | `/portals/subscribe`  | Bulk create sources + searches for curated portals (Pro+) |
 | POST   | `/sources`            | Create a source (site + adapter_key)     |
 | POST   | `/sources/detect`     | Infer adapter + defaults from a careers URL |
 | GET    | `/sources/{id}`       | Get a source                             |

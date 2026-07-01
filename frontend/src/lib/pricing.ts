@@ -67,6 +67,7 @@ export const PLANS: Plan[] = [
       { label: "Digest mode to batch alerts", included: true },
       { label: "AI “why this matches” summaries", included: true },
       { label: "RSS export & signed webhooks", included: true },
+      { label: "Curated company portal search", included: true },
       { label: "Browser extension one-click capture", included: true },
       { label: "Priority email support", included: false },
     ],
@@ -110,6 +111,7 @@ export const COMPARISON_ROWS: ComparisonRow[] = [
   { label: "Indeed & LinkedIn scrapers", free: false, pro: true, team: true },
   { label: "Site credentials (auth-walled boards)", free: false, pro: true, team: true },
   { label: "RSS & outbound webhooks", free: false, pro: true, team: true },
+  { label: "Curated company portal search", free: false, pro: true, team: true },
   { label: "Browser extension", free: false, pro: true, team: true },
   { label: "Priority support", free: false, pro: false, team: true },
 ];

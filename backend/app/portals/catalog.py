@@ -234,3 +234,11 @@ def list_portal_presets(
         if needle:
             items = [p for p in items if needle in p.company_name.casefold() or needle in p.id]
     return items
+
+
+def get_portal_preset(portal_id: str) -> PortalPreset | None:
+    """Look up a curated portal by its stable id."""
+    for preset in CURATED_PORTALS:
+        if preset.id == portal_id:
+            return preset
+    return None

@@ -12,7 +12,8 @@ export const queryKeys = {
   health: ["health"] as const,
   meta: ["meta"] as const,
   me: ["me"] as const,
-  portals: (category?: string, query?: string) => ["portals", category ?? null, query ?? null] as const,
+  portals: (category?: string, query?: string) =>
+    ["portals", category ?? null, query ?? null] as const,
   sources: ["sources"] as const,
   searches: ["searches"] as const,
   targets: ["targets"] as const,

@@ -38,6 +38,28 @@ const samplePortals: PortalList = {
 const mockApi = vi.hoisted(() => ({
   meta: vi.fn(async () => sampleMeta),
   listPortals: vi.fn(async (): Promise<PortalList> => samplePortals),
+  searchPortals: vi.fn(async () => ({
+    items: [
+      {
+        portal_id: "stripe",
+        company_name: "Stripe",
+        external_id: "1",
+        title: "Software Engineer",
+        location: "Remote",
+        url: "https://example.com/jobs/1",
+      },
+    ],
+    portals_searched: 1,
+    portals_failed: 0,
+    errors: [],
+  })),
+  subscribePortals: vi.fn(async () => ({
+    sources_created: 1,
+    searches_created: 1,
+    search_ids: [42],
+    skipped_portal_ids: [],
+    message: null,
+  })),
   listSources: vi.fn(async (): Promise<Source[]> => []),
   detectSource: vi.fn(async () => ({
     adapter_key: "greenhouse",

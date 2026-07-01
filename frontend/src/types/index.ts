@@ -42,4 +42,12 @@ export type {
   Profile,
   UserDataExport,
 } from "./profile";
-export type { Portal, PortalCategory, PortalList } from "./portal";
+export type {
+  Portal,
+  PortalCategory,
+  PortalList,
+  PortalSearchRequest,
+  PortalSearchResult,
+  PortalSubscribeRequest,
+  PortalSubscribeResult,
+} from "./portal";

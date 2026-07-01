@@ -19,6 +19,7 @@ def test_free_plan_feature_gates() -> None:
     features = plan_features_for("free")
     assert features.digest_mode is False
     assert features.rss_feed is False
+    assert features.portal_search is False
 
 
 def test_premium_scrapers_gated_on_free() -> None:

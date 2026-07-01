@@ -239,7 +239,7 @@ about most, and give paid users a single place to search across them.
 | Item | Why | Notes |
 | ---- | --- | ----- |
 | FAANG / MAANG / MAMAA & unicorn portals | High-value employers use dedicated career sites and ATS boards that are not always obvious to configure | **Shipped:** `GET /portals` curated catalog (22 employers across Greenhouse, Lever, Ashby, Workday); category/search filters; one-click **Add source** on Sources page; `portal_id` in `default_config` for duplicate detection |
-| Paid portal search page | Paid users should discover and search all supported boards without manual source setup | Authenticated page (paid tier) to browse and search across all supported/curated job portals in one place; server-side plan gate; builds on curated portal catalog from the item above |
+| Paid portal search page | Paid users should discover and search all supported boards without manual source setup | **Shipped:** `/app/portals` searches curated portals in one request (`POST /portals/search`); bulk alert setup (`POST /portals/subscribe`) auto-creates sources + searches; Pro+ plan gate (`portal_search` feature) |
 
 **Done when:** a paid user can open one page, pick from curated FAANG/MAANG/MAMAA
 and unicorn company portals (plus other supported boards), run a search, and

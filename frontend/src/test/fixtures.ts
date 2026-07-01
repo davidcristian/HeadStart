@@ -14,6 +14,7 @@ export const sampleAccountPlan: AccountPlan = {
     ai_summaries: true,
     site_credentials: true,
     rss_feed: true,
+    portal_search: true,
   },
   allowed_scrapers: [
     "greenhouse",

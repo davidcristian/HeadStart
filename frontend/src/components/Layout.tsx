@@ -13,10 +13,11 @@ import { Button } from "./ui";
 const PRIMARY_NAV = [
   { to: "/app/jobs", label: "Jobs" },
   { to: "/app/searches", label: "Searches" },
-  { to: "/app/sources", label: "Sources" },
+  { to: "/app/portals", label: "Companies" },
 ];
 
 const MORE_NAV = [
+  { to: "/app/sources", label: "Sources" },
   { to: "/app/targets", label: "Notifications" },
   { to: "/app/credentials", label: "Site credentials" },
   { to: "/app/profile", label: "Application profile" },
@@ -26,6 +27,7 @@ const MORE_NAV = [
 const DESKTOP_NAV = [
   { to: "/app/searches", label: "Searches" },
   { to: "/app/jobs", label: "Jobs" },
+  { to: "/app/portals", label: "Companies" },
   { to: "/app/sources", label: "Sources" },
   { to: "/app/targets", label: "Notifications" },
   { to: "/app/credentials", label: "Site credentials" },

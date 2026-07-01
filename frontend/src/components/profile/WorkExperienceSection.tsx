@@ -31,9 +31,7 @@ export function WorkExperienceSection({
         <h2>Work experience</h2>
         <Button
           variant="ghost"
-          onClick={() =>
-            onWorkExperienceChange([...workExperience, { ...EMPTY_WORK_EXPERIENCE }])
-          }
+          onClick={() => onWorkExperienceChange([...workExperience, { ...EMPTY_WORK_EXPERIENCE }])}
         >
           Add role
         </Button>

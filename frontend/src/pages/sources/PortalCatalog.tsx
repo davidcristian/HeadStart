@@ -69,8 +69,8 @@ export function PortalCatalog({ onAdded, onError }: PortalCatalogProps) {
   return (
     <Card title="Browse companies">
       <p className="muted portal-catalog-intro">
-        One-click setup for curated FAANG-adjacent, unicorn, and AI employer career portals.
-        Each preset uses a verified public job-board API.
+        One-click setup for curated FAANG-adjacent, unicorn, and AI employer career portals. Each
+        preset uses a verified public job-board API.
       </p>
       <div className="portal-catalog-toolbar">
         <div className="portal-category-tabs" role="tablist" aria-label="Portal categories">

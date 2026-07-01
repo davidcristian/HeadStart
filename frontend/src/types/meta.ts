@@ -17,6 +17,7 @@ export interface PlanFeatures {
   ai_summaries: boolean;
   site_credentials: boolean;
   rss_feed: boolean;
+  portal_search: boolean;
 }
 
 export interface AccountPlan {

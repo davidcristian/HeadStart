@@ -118,6 +118,17 @@ def test_free_plan_blocks_rss_feed_url(client: TestClient) -> None:
     assert resp.json()["code"] == "rss_feed"
 
 
+def test_free_plan_blocks_portal_search(client: TestClient) -> None:
+    headers = _free_user_headers(client, "limits-portal@example.com")
+    resp = client.post(
+        "/api/v1/portals/search",
+        json={"keywords": "engineer", "portal_ids": ["stripe"]},
+        headers=headers,
+    )
+    assert resp.status_code == 402
+    assert resp.json()["code"] == "portal_search"
+
+
 def test_meta_includes_plan_snapshot(client: TestClient) -> None:
     headers = _free_user_headers(client, "limits-meta@example.com")
     resp = client.get("/api/v1/meta", headers=headers)

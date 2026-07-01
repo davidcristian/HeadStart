@@ -10,6 +10,7 @@ import { JobsPage } from "./pages/JobsPage";
 import { LandingPage } from "./pages/LandingPage";
 import { LoginPage } from "./pages/LoginPage";
 import { OnboardingPage } from "./pages/OnboardingPage";
+import { PortalsPage } from "./pages/PortalsPage";
 import { PricingPage } from "./pages/PricingPage";
 import { ImpressumPage } from "./pages/ImpressumPage";
 import { PrivacyPolicyPage } from "./pages/PrivacyPolicyPage";
@@ -29,6 +30,7 @@ const LEGACY_APP_PATHS = [
   "searches",
   "jobs",
   "sources",
+  "portals",
   "targets",
   "credentials",
   "profile",
@@ -58,6 +60,7 @@ export function App() {
             <Route path="searches" element={<SearchesPage />} />
             <Route path="jobs" element={<JobsPage />} />
             <Route path="sources" element={<SourcesPage />} />
+            <Route path="portals" element={<PortalsPage />} />
             <Route path="targets" element={<TargetsPage />} />
             <Route path="credentials" element={<CredentialsPage />} />
             <Route path="profile" element={<ProfilePage />} />

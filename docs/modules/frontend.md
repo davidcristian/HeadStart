@@ -58,6 +58,7 @@ other unknown path redirects to the landing page.
 | Register    | Create an account (first user becomes admin)                     |
 | Onboarding  | First-run wizard at `/app/onboarding`: source → notify → search → run |
 | Sources     | List/create/edit sources (name, adapter, base URL, config); browse curated company portals; test scrape |
+| Companies   | Pro+ cross-portal search at `/app/portals`: keyword search across curated FAANG/unicorn/AI boards, results preview, one-click alert setup |
 | Searches    | Create a search: pick source + target, query URL + structured filters (keywords, location, workplace, salary) + |
 |             | interval; enable/disable; run now (immediate results); view last |
 |             | run, scrape errors, and recent delivery failures                 |

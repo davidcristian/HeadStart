@@ -8,6 +8,8 @@ import { api } from "../api";
 import type {
   CredentialCreate,
   PlanId,
+  PortalSearchRequest,
+  PortalSubscribeRequest,
   ProfileData,
   SearchCreate,
   SourceCreate,
@@ -226,6 +228,23 @@ export function useUpdateAdminUser() {
     }) => api.updateAdminUser(id, patch),
     onSuccess: () => {
       invalidate(qc, queryKeys.adminUsers);
+      invalidate(qc, queryKeys.meta);
+    },
+  });
+}
+
+export function useSearchPortals() {
+  return useMutation({ mutationFn: (data: PortalSearchRequest) => api.searchPortals(data) });
+}
+
+export function useSubscribePortals() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: PortalSubscribeRequest) => api.subscribePortals(data),
+    onSuccess: () => {
+      invalidate(qc, queryKeys.sources);
+      invalidate(qc, queryKeys.searches);
+      invalidate(qc, queryKeys.portals());
       invalidate(qc, queryKeys.meta);
     },
   });

@@ -1906,3 +1906,60 @@ td .job-summary {
 .portal-chip-muted {
   background: var(--border);
 }
+
+.portal-page-intro {
+  margin: 0 0 8px;
+}
+
+.portal-select-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-bottom: 12px;
+}
+
+.portal-select-grid .portal-select-card {
+  padding: 0;
+}
+
+.portal-select-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px;
+  cursor: pointer;
+}
+
+.portal-select-card.selected {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 6%, var(--surface));
+}
+
+.portal-search-actions {
+  margin-top: 16px;
+}
+
+.portal-results-list {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.portal-result-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+.portal-search-errors {
+  margin: 0 0 12px;
+  padding-left: 1.2rem;
+  color: var(--danger, #b42318);
+}

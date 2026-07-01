@@ -17,6 +17,10 @@ import type {
   Profile,
   ProfileData,
   PortalList,
+  PortalSearchRequest,
+  PortalSearchResult,
+  PortalSubscribeRequest,
+  PortalSubscribeResult,
   Search,
   SearchCreate,
   SearchRunResult,
@@ -146,6 +150,10 @@ export const api = {
     const query = search.toString();
     return request<PortalList>(`/api/v1/portals${query ? `?${query}` : ""}`);
   },
+  searchPortals: (data: PortalSearchRequest) =>
+    request<PortalSearchResult>("/api/v1/portals/search", { method: "POST", body: data }),
+  subscribePortals: (data: PortalSubscribeRequest) =>
+    request<PortalSubscribeResult>("/api/v1/portals/subscribe", { method: "POST", body: data }),
   listSources: () => request<Source[]>("/api/v1/sources"),
   detectSource: (url: string, pageTitle?: string) =>
     request<SourceDetectResult>("/api/v1/sources/detect", {

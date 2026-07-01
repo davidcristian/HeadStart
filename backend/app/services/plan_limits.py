@@ -78,6 +78,7 @@ class PlanLimitsService:
                 "ai_summaries": features.ai_summaries,
                 "site_credentials": features.site_credentials,
                 "rss_feed": features.rss_feed,
+                "portal_search": features.portal_search,
             },
             "allowed_scrapers": self.allowed_scrapers(plan),
             "allowed_notifiers": self.allowed_notifiers(plan),
@@ -199,6 +200,19 @@ class PlanLimitsService:
             raise PlanLimitError(
                 f"RSS export requires a Pro or Team plan (you are on {plan_display_name(plan)}).",
                 code="rss_feed",
+                plan=plan,
+            )
+
+    def require_portal_search(self, user: User) -> None:
+        """Raise when cross-portal search is not on the user's plan."""
+        if user.is_admin:
+            return
+        plan = self.resolve_plan(user)
+        if not plan_features_for(plan).portal_search:
+            raise PlanLimitError(
+                "Curated portal search requires a Pro or Team plan "
+                f"(you are on {plan_display_name(plan)}).",
+                code="portal_search",
                 plan=plan,
             )
 
