@@ -20,7 +20,7 @@ def test_list_portal_presets_filters_query() -> None:
 def test_curated_portal_catalog_size() -> None:
     from app.portals.catalog import CURATED_PORTALS
 
-    assert len(CURATED_PORTALS) == 47
+    assert len(CURATED_PORTALS) == 68
 
 
 def test_curated_portal_apple_preset() -> None:
@@ -75,6 +75,22 @@ def test_curated_portal_microsoft_preset() -> None:
     assert preset.adapter_key == "microsoft_careers"
     assert preset.default_config["domain"] == "microsoft.com"
     assert preset.base_url == "https://apply.careers.microsoft.com/careers"
+
+
+def test_curated_portal_lucid_board_token() -> None:
+    from app.portals.catalog import CURATED_PORTALS
+
+    preset = next(p for p in CURATED_PORTALS if p.id == "lucid")
+    assert preset.default_config["board_token"] == "lucidmotors"
+
+
+def test_curated_portal_cisco_workday_config() -> None:
+    from app.portals.catalog import CURATED_PORTALS
+
+    preset = next(p for p in CURATED_PORTALS if p.id == "cisco")
+    assert preset.adapter_key == "workday"
+    assert preset.default_config["tenant"] == "cisco"
+    assert preset.default_config["site"] == "Cisco_Careers"
 
 
 def test_config_keys_match_greenhouse() -> None:

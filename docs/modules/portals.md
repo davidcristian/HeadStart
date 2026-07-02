@@ -20,8 +20,8 @@ helpers). Each `PortalPreset` carries:
 | `base_url` | Careers board URL passed to the scraper |
 | `default_config` | Adapter-specific config merged into new sources (always includes `portal_id`) |
 
-As of the current catalog: **47 employers** — 20 big tech, 19 unicorn, 8 AI —
-across Greenhouse (22), Ashby (9), Workday (8), Lever (3), Apple Careers (1),
+As of the current catalog: **68 employers** — 29 big tech, 28 unicorn, 11 AI —
+across Greenhouse (39), Ashby (11), Workday (9), Lever (4), Apple Careers (1),
 Google Careers (1), Meta Careers (1), Microsoft Careers (1), and Amazon Jobs (1).
 Meta uses the `meta_careers` scraper (Relay GraphQL search on metacareers.com).
 Apple uses the `apple_careers` scraper (hydration JSON embedded in search HTML).
