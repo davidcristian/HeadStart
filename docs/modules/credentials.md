@@ -59,6 +59,11 @@ For **Microsoft Careers auto-apply**, store logged-in session cookies from
 `apply.careers.microsoft.com` plus optional `session.csrf_token` from the apply
 page meta tag `_csrf`. The session is candidate-owned, not employer-issued.
 
+For **LinkedIn auto-apply**, store logged-in session cookies (`li_at`,
+`JSESSIONID`) from linkedin.com. Optional `session.csrf_token` overrides the
+CSRF header when Voyager requests fail with CSRF errors. The session is
+candidate-owned, not employer-issued. See [appliers.md](appliers.md).
+
 ## Endpoints (prefix `/api/v1/credentials`)
 
 | Method | Path    | Purpose                                  |

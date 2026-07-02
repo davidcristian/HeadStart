@@ -57,6 +57,7 @@ source's `adapter_key` when that source supports auto-apply. Import the
 | `microsoft_careers` | Eightfold SmartApply JSON (session cookies) | `POST apply.careers.microsoft.com/api/application/v2/submit`; see below |
 | `amazon_jobs` | amazon.jobs applicant JSON (session cookies) | `PUT /api/apply/applicant/` → draft → `submit_application`; see below |
 | `indeed` | Viewjob parse + downstream ATS delegation | Fetches `/viewjob?jk=…`, delegates to Greenhouse/Lever/Ashby/Workday/Google when the listing embeds an employer apply URL; see below |
+| `linkedin` | Guest job page + Voyager GraphQL + downstream ATS delegation | Fetches `/jobs-guest/jobs/api/jobPosting/{id}`, enriches offsite listings via Voyager when session cookies are present, delegates to Greenhouse/Lever/Ashby/Workday/Google/Microsoft/Amazon when the employer apply URL is recognized; see below |
 
 ### Greenhouse
 
@@ -362,7 +363,46 @@ in `profile.answers`. Cloudflare may block unauthenticated viewjob fetches —
 reuse [site credentials](credentials.md) session cookies from scraping.
 
 **Unsupported:** external apply URLs that are not a recognized ATS (e.g. custom
-career sites, Breezy, LinkedIn). LinkedIn sources still have no apply adapter.
+career sites, Breezy).
+
+### LinkedIn
+
+LinkedIn listings either expose **Easy Apply** on LinkedIn itself or redirect to
+an employer ATS. The adapter fetches the public guest job-posting page, optionally
+enriches offsite listings via authenticated Voyager GraphQL (`companyApplyUrl`),
+and **delegates** to Greenhouse, Lever, Ashby, Workday, Google Careers, Microsoft
+Careers, or Amazon Jobs when the downstream apply URL is recognized.
+
+Config / credentials:
+
+| Field | Where | Purpose |
+| ----- | ----- | ------- |
+| `external_apply_url` | source/search config | Optional override to skip the guest page fetch (pin a known employer apply URL) |
+| `li_at` + `JSESSIONID` | credential `cookies` | Logged-in LinkedIn account for Voyager enrichment and **LinkedIn-hosted** Easy Apply live submit |
+| `csrf_token` | credential `session` | Optional CSRF token for Voyager requests (defaults to the `JSESSIONID` cookie value) |
+
+**Dry run:** fetches the guest job-posting page (unless `external_apply_url` is
+set), resolves the apply route, and previews either the delegated ATS payload or
+the LinkedIn Easy Apply contact payload. Voyager enrichment for offsite listings
+requires session cookies but is not required for Easy Apply previews detected from
+the guest HTML.
+
+**Live submit (delegated):** uses the downstream adapter's requirements (API
+keys, Workday cookies, etc.) — the preview payload includes `linkedin_route` and
+`delegated_adapter` metadata.
+
+**Live submit (LinkedIn-hosted Easy Apply):** when the listing exposes an Easy
+Apply button, loads the application form via Voyager GraphQL and posts to
+`/voyager/api/voyagerJobsDashOnsiteApplyApplication?action=submitApplication`
+with the user's LinkedIn session cookies. Multi-step employer questionnaires are
+best-effort; map answers in `profile.answers` using the form element URN or a
+normalized field label key. Resume file upload via LinkedIn's Ambry endpoint is
+not automated in v1 — plain `resume_text` is included in the preview payload.
+
+**Unsupported:** external apply URLs that are not a recognized ATS when Voyager
+enrichment cannot resolve them (add session cookies or `external_apply_url`).
+Auth-walled guest pages need [site credentials](credentials.md) session cookies
+from scraping.
 
 ## Safety & consent
 
@@ -379,7 +419,7 @@ Careers live submit needs the candidate's own logged-in session on
 `apply.careers.microsoft.com`; country-specific screening questions are
 best-effort. Indeed
 delegates to downstream ATS adapters when possible; Indeed-hosted Easy Apply and
-LinkedIn sources are best-effort or unsupported. Branching questionnaires only
+LinkedIn Easy Apply are best-effort. Branching questionnaires only
 submit answers you explicitly map in `profile.answers`. See
 [launch-checklist.md](../launch-checklist.md#7-auto-apply-optional--know-the-limits)
 before advertising auto-apply on a public instance.

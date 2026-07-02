@@ -87,9 +87,10 @@ Auto-apply is **off by default** per source (`auto_apply_enabled`). Only enable
 after reading [modules/appliers.md](modules/appliers.md).
 
 **Supported adapters (v1):** Greenhouse, Lever, Ashby, Workday, Google Careers,
-**Microsoft Careers**, **Amazon Jobs**, and **Indeed** (delegates to those ATS
-adapters when the listing's employer apply URL is recognized). There is **no**
-apply adapter for LinkedIn or generic HTML/Playwright sources.
+**Microsoft Careers**, **Amazon Jobs**, **Indeed** (delegates to those ATS
+adapters when the listing's employer apply URL is recognized), and **LinkedIn**
+(delegates to those ATS adapters when possible; LinkedIn-hosted Easy Apply is
+best-effort). There is **no** apply adapter for generic HTML/Playwright sources.
 
 **Not fully automated — set expectations before launch:**
 
@@ -102,6 +103,7 @@ apply adapter for LinkedIn or generic HTML/Playwright sources.
 | **Microsoft Careers** | Requires the candidate's own logged-in session on `apply.careers.microsoft.com` plus optional `session.csrf_token`. Resume uploads via `/api/pcsx/upload_resume` before submit. Country-specific screening/consent questions are best-effort — map `profile.answers` when required. |
 | **Amazon Jobs** | Requires the candidate's own logged-in amazon.jobs session cookies. Resume files upload via `POST /api/apply/documents` before `submit_application`. Employer screening questions are best-effort — map `profile.answers` when required. Amazon may block unattended submits with CAPTCHA; preview via dry run first. |
 | **Indeed** | Fetches the viewjob page and delegates to Greenhouse/Lever/Ashby/Workday/Google/Microsoft/Amazon when the listing embeds a recognized employer apply URL (most Easy Apply jobs). Indeed-hosted Easy Apply (no external ATS) needs logged-in Indeed session cookies and is best-effort for multi-step questionnaires. Unsupported external URLs (custom career sites, Breezy, etc.) fail with a clear error. |
+| **LinkedIn** | Fetches the guest job-posting page and delegates to Greenhouse/Lever/Ashby/Workday/Google/Microsoft/Amazon when Voyager returns a recognized employer apply URL (offsite listings). LinkedIn-hosted Easy Apply needs logged-in `li_at` + `JSESSIONID` cookies; multi-step questionnaires are best-effort — map `profile.answers` when required. Resume PDF upload to LinkedIn is not automated in v1. |
 | **Custom questions** | Only fields mapped in the application profile (`answers`, config paths) are sent. Unmapped required questions can cause rejection. |
 | **Coverage** | Treat auto-apply as a **best-effort preview + submit helper**, not unattended bulk applying. Always use **dry run / preview** first. |
 

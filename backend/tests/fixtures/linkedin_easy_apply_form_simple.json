@@ -1,0 +1,50 @@
+{
+  "data": {
+    "jobsDashOnsiteApplyApplicationByJobPosting": {
+      "elements": [
+        {
+          "jobApplicationForms": [
+            {
+              "questionGroupings": [
+                {
+                  "formSection": {
+                    "formElementGroups": [
+                      {
+                        "formElements": [
+                          {
+                            "required": true,
+                            "title": { "text": "First name" },
+                            "entityUrn": "urn:li:fsd_formElement:(4434410881,1,text)",
+                            "formComponentResolutionResult": {
+                              "singleLineTextFormComponent": {}
+                            }
+                          },
+                          {
+                            "required": true,
+                            "title": { "text": "Last name" },
+                            "entityUrn": "urn:li:fsd_formElement:(4434410881,2,text)",
+                            "formComponentResolutionResult": {
+                              "singleLineTextFormComponent": {}
+                            }
+                          },
+                          {
+                            "required": true,
+                            "title": { "text": "Email address" },
+                            "entityUrn": "urn:li:fsd_formElement:(4434410881,3,text)",
+                            "formComponentResolutionResult": {
+                              "singleLineTextFormComponent": {}
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
