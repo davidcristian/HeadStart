@@ -1,0 +1,30 @@
+{
+  "error": null,
+  "hits": 4178,
+  "jobs": [
+    {
+      "id": "c6146408-c041-49e2-bdc4-6ec8c3ccf47b",
+      "id_icims": "10410605",
+      "title": "Software Development Manager, Flight Software",
+      "job_path": "/en/jobs/10410605/software-development-manager-flight-software",
+      "location": "US, WA, Redmond",
+      "normalized_location": "Redmond, Washington, USA",
+      "city": "Redmond",
+      "country_code": "USA",
+      "posted_date": "May  4, 2026",
+      "company_name": "Amazon Kuiper Manufacturing Enterprises LLC"
+    },
+    {
+      "id": "965aa8a3-cc7a-4f2b-b2ff-4d643bf2edc7",
+      "id_icims": "10460755",
+      "title": "Senior Software Development Engineer, Software Development",
+      "job_path": "/en/jobs/10460755/senior-software-development-engineer-software-development",
+      "location": "IN, KA, Bengaluru",
+      "normalized_location": "Bengaluru, Karnataka, IND",
+      "city": "Bengaluru",
+      "country_code": "IND",
+      "posted_date": "June 29, 2026",
+      "company_name": "ADCI - Karnataka"
+    }
+  ]
+}

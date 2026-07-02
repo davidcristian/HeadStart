@@ -5,6 +5,7 @@ else in the codebase needs to change (see docs/recipes.md).
 """
 
 from app.scrapers.adapters import (
+    amazon_jobs,
     ashby,
     generic_html,
     google_careers,
@@ -18,6 +19,7 @@ from app.scrapers.adapters import (
 )
 
 __all__ = [
+    "amazon_jobs",
     "ashby",
     "generic_html",
     "google_careers",

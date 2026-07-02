@@ -98,6 +98,31 @@ def test_detect_microsoft_careers_api_url() -> None:
     assert result.default_config["q"] == "kernel"
 
 
+def test_detect_amazon_jobs_search_url() -> None:
+    result = detect_source_from_url(
+        "https://www.amazon.jobs/en/search?base_query=software&loc_query=Seattle",
+        page_title="Software Jobs | Amazon.jobs",
+    )
+    assert result is not None
+    assert result.adapter_key == "amazon_jobs"
+    assert result.default_config["company"] == "Amazon"
+    assert result.default_config["base_query"] == "software"
+    assert result.default_config["loc_query"] == "Seattle"
+    assert result.default_config["locale"] == "en"
+    assert result.suggested_name == "Software"
+    assert result.base_url == "https://www.amazon.jobs/en/search"
+
+
+def test_detect_amazon_jobs_api_url() -> None:
+    result = detect_source_from_url(
+        "https://www.amazon.jobs/en/search.json?base_query=kernel&country=USA"
+    )
+    assert result is not None
+    assert result.adapter_key == "amazon_jobs"
+    assert result.default_config["base_query"] == "kernel"
+    assert result.default_config["country"] == "USA"
+
+
 def test_detect_indeed_search_url() -> None:
     result = detect_source_from_url(
         "https://www.indeed.com/jobs?q=python&l=remote",

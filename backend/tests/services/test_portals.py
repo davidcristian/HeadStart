@@ -20,7 +20,16 @@ def test_list_portal_presets_filters_query() -> None:
 def test_curated_portal_catalog_size() -> None:
     from app.portals.catalog import CURATED_PORTALS
 
-    assert len(CURATED_PORTALS) == 44
+    assert len(CURATED_PORTALS) == 45
+
+
+def test_curated_portal_amazon_preset() -> None:
+    from app.portals.catalog import CURATED_PORTALS
+
+    preset = next(p for p in CURATED_PORTALS if p.id == "amazon")
+    assert preset.adapter_key == "amazon_jobs"
+    assert preset.default_config["portal_id"] == "amazon"
+    assert preset.base_url == "https://www.amazon.jobs/en/search"
 
 
 def test_curated_portal_doordash_board_token() -> None:

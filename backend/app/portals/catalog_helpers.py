@@ -81,6 +81,24 @@ def workday_preset(
     )
 
 
+def amazon_jobs_preset(
+    *,
+    portal_id: str = "amazon",
+    company: str = "Amazon",
+    locale: str = "en",
+    category: PortalCategory = "big_tech",
+) -> PortalPreset:
+    base = f"https://www.amazon.jobs/{locale}/search"
+    return PortalPreset(
+        id=portal_id,
+        company_name=company,
+        category=category,
+        adapter_key="amazon_jobs",
+        base_url=base,
+        default_config={"company": company, "portal_id": portal_id, "locale": locale},
+    )
+
+
 def google_careers_preset(
     *,
     portal_id: str = "google",
