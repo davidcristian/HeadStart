@@ -7,7 +7,8 @@ SHELL := /bin/bash
 
 .PHONY: help setup up down logs dev test lint format typecheck check \
         migrate makemigration seed build push deploy ps restart \
-        terraform-bootstrap aws-deploy-env aws-first-deploy marketing-screenshots
+        terraform-bootstrap aws-deploy-env aws-first-deploy marketing-screenshots \
+        llamacpp
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -82,3 +83,6 @@ aws-first-deploy: ## First-time AWS deploy (PREFIX=yourname): bootstrap + terraf
 	SKIP_BOOTSTRAP="$(SKIP_BOOTSTRAP)" SKIP_DEPLOY="$(SKIP_DEPLOY)" \
 	DOMAIN_NAME="$(DOMAIN_NAME)" ROUTE53_ZONE_ID="$(ROUTE53_ZONE_ID)" \
 	./scripts/aws-first-deploy.sh $(if $(filter 1,$(YES)),--yes,)
+
+llamacpp: ## Start local llama.cpp server for AI summaries (needs LLAMACPP_MODEL_PATH)
+	./scripts/llamacpp-dev.sh

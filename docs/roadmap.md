@@ -255,7 +255,7 @@ hosted API.
 
 | Item | Why | Notes |
 | ---- | --- | ----- |
-| llama.cpp local summarizer | Faster iteration and zero API spend when developing locally | Build on the existing summarizer stack ([modules/summaries.md](modules/summaries.md)): the `openai` adapter already speaks OpenAI-compatible Chat Completions, which llama.cpp exposes. Add a `llamacpp` provider (or a documented local-dev preset) that points at a llama.cpp server (e.g. `http://localhost:8080/v1`), sets a local model id, and relaxes API-key requirements for dev. **Local dev only** — Terraform/deployed config keeps `SUMMARY_PROVIDER=openai` (or `heuristic`) with a real API key. Reuse prompts, truncation, notifier/feed plumbing, and tests with mocked HTTP; optional `scripts/` helper to start llama.cpp with a recommended model. |
+| llama.cpp local summarizer | Faster iteration and zero API spend when developing locally | **Shipped:** `@register_summarizer("llamacpp")` calls a local `llama-server` OpenAI-compatible endpoint (default `http://localhost:8080/v1`); optional API key; `make llamacpp` helper (`LLAMACPP_MODEL_PATH` required). Deployed config unchanged — use `openai` or `heuristic` in prod. |
 
 **Done when:** a developer can run summaries against a local llama.cpp server with
 a one-line env change (or `make` target), see blurbs in notifications and the Jobs
