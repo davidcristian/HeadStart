@@ -7,6 +7,7 @@ from typing import Any
 from urllib.parse import parse_qs, urlparse
 
 from app.scrapers.url_detect_amazon import detect_amazon_jobs
+from app.scrapers.url_detect_apple import detect_apple_careers
 from app.scrapers.url_detect_meta import detect_meta_careers
 from app.scrapers.url_detect_microsoft import detect_microsoft_careers
 from app.scrapers.url_detect_types import SourceDetection
@@ -31,6 +32,7 @@ def detect_source_from_url(url: str, *, page_title: str | None = None) -> Source
         _detect_google_careers,
         detect_microsoft_careers,
         detect_amazon_jobs,
+        detect_apple_careers,
         detect_meta_careers,
         _detect_indeed,
     ):

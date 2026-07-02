@@ -5,6 +5,7 @@ from __future__ import annotations
 from app.portals.catalog_helpers import (
     PortalPreset,
     amazon_jobs_preset,
+    apple_careers_preset,
     ashby_preset,
     gh_preset,
     google_careers_preset,
@@ -16,6 +17,7 @@ from app.portals.catalog_helpers import (
 
 CURATED_PORTALS: tuple[PortalPreset, ...] = (
     # Big tech (proprietary / dedicated career sites)
+    apple_careers_preset(),
     amazon_jobs_preset(),
     google_careers_preset(),
     meta_careers_preset(),

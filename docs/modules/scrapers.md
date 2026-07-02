@@ -51,6 +51,7 @@ everything. The worker resolves a scraper with `get_scraper(adapter_key)`.
 | `microsoft_careers` | Eightfold PCSX JSON search API       | `apply.careers.microsoft.com/api/pcsx/search`; config `domain` (default `microsoft.com`) + optional `q` / `location`; also accepts careers board URLs |
 | `meta_careers`      | Relay GraphQL search (form POST)       | `metacareers.com/graphql` with `CareersJobSearchResultsDataQuery`; config `q` + optional `graphql_doc_id`; also accepts `metacareers.com/jobsearch` URLs |
 | `amazon_jobs`   | Public search JSON API                    | `amazon.jobs/<locale>/search.json`; config `locale` (default `en`) + optional `base_query` / `loc_query` / `country`; also accepts search board URLs |
+| `apple_careers` | Embedded search JSON in HTML              | `jobs.apple.com/<locale>/search?...`; parses `window.__staticRouterHydrationData`; config `locale` (default `en-us`) + optional `search` / `location`; also accepts careers search URLs |
 | `indeed`        | Embedded search JSON in HTML (selectolax fallback) | `*.indeed.com/jobs?...`; parses `mosaic-provider-jobcards`; may need [credentials](credentials.md) for Cloudflare |
 | `linkedin`      | Guest search pagination API (HTML fragments) | Opt-in only (not URL-detected). `linkedin.com/jobs/search?...` → guest `seeMoreJobPostings/search`; may need [credentials](credentials.md) for auth walls |
 | `generic_html`  | CSS selectors from config (selectolax)    | For simple static pages; configured in the UI |

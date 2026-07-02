@@ -20,7 +20,16 @@ def test_list_portal_presets_filters_query() -> None:
 def test_curated_portal_catalog_size() -> None:
     from app.portals.catalog import CURATED_PORTALS
 
-    assert len(CURATED_PORTALS) == 46
+    assert len(CURATED_PORTALS) == 47
+
+
+def test_curated_portal_apple_preset() -> None:
+    from app.portals.catalog_presets import CURATED_PORTALS
+
+    preset = next(p for p in CURATED_PORTALS if p.id == "apple")
+    assert preset.adapter_key == "apple_careers"
+    assert preset.default_config["portal_id"] == "apple"
+    assert preset.base_url == "https://jobs.apple.com/en-us/search"
 
 
 def test_curated_portal_meta_preset() -> None:

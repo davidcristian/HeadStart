@@ -20,6 +20,7 @@ FREE_SCRAPERS: frozenset[str] = frozenset(
         "generic_html",
         "workday",
         "amazon_jobs",
+        "apple_careers",
         "google_careers",
         "meta_careers",
         "microsoft_careers",

@@ -137,6 +137,38 @@ def test_detect_meta_careers_search_url() -> None:
     assert result.base_url == "https://www.metacareers.com/jobsearch/"
 
 
+def test_detect_apple_careers_search_url() -> None:
+    result = detect_source_from_url(
+        "https://jobs.apple.com/en-us/search?search=software+engineer&location=united-states-USA",
+        page_title="Search Jobs — Apple Careers",
+    )
+    assert result is not None
+    assert result.adapter_key == "apple_careers"
+    assert result.default_config["company"] == "Apple"
+    assert result.default_config["search"] == "software engineer"
+    assert result.default_config["location"] == "united-states-USA"
+    assert result.default_config["portal_id"] == "apple"
+    assert result.default_config["locale"] == "en-us"
+    assert result.suggested_name == "Search Jobs"
+    assert result.base_url == "https://jobs.apple.com/en-us/search"
+
+
+def test_detect_apple_careers_root_search_url() -> None:
+    result = detect_source_from_url("https://jobs.apple.com/en-gb/search")
+    assert result is not None
+    assert result.adapter_key == "apple_careers"
+    assert result.default_config["locale"] == "en-gb"
+
+
+def test_detect_apple_careers_job_detail_returns_none() -> None:
+    assert (
+        detect_source_from_url(
+            "https://jobs.apple.com/en-us/details/200670239-0836/ml-research-engineer?team=MLAI"
+        )
+        is None
+    )
+
+
 def test_detect_meta_careers_root_url() -> None:
     result = detect_source_from_url("https://www.metacareers.com/jobs")
     assert result is not None
