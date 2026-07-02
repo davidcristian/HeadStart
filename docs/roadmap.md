@@ -247,6 +247,22 @@ subscribe to alerts without hand-configuring each company's career site.
 
 ---
 
+## Phase 12 — Local LLM dev (llama.cpp)
+
+Goal: let developers run AI match summaries locally during development without
+cloud API keys or per-token cost, while deployed environments keep calling a
+hosted API.
+
+| Item | Why | Notes |
+| ---- | --- | ----- |
+| llama.cpp local summarizer | Faster iteration and zero API spend when developing locally | Build on the existing summarizer stack ([modules/summaries.md](modules/summaries.md)): the `openai` adapter already speaks OpenAI-compatible Chat Completions, which llama.cpp exposes. Add a `llamacpp` provider (or a documented local-dev preset) that points at a llama.cpp server (e.g. `http://localhost:8080/v1`), sets a local model id, and relaxes API-key requirements for dev. **Local dev only** — Terraform/deployed config keeps `SUMMARY_PROVIDER=openai` (or `heuristic`) with a real API key. Reuse prompts, truncation, notifier/feed plumbing, and tests with mocked HTTP; optional `scripts/` helper to start llama.cpp with a recommended model. |
+
+**Done when:** a developer can run summaries against a local llama.cpp server with
+a one-line env change (or `make` target), see blurbs in notifications and the Jobs
+feed, and production deploys are unchanged.
+
+---
+
 ## Suggested starting points
 
 **Personal use (one job seeker):**
