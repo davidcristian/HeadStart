@@ -95,9 +95,9 @@ Pursue only if core alerting is solid and adapter coverage is good.
 | Item | Why |
 | ---- | --- |
 | ~~RSS / webhook export~~ | ~~Power users pipe jobs into their own tools~~ | **Shipped:** signed per-user RSS feed at `GET /feed/rss?token=...`; optional `search_id` / `status` filters; manage from Jobs page. **Shipped (webhook):** `webhook` notification target POSTs JSON per job (or digest batch) to a user-configured HTTPS URL with optional HMAC signing |
-| ~~Browser extension~~ | ~~"Add this search URL" one-click from a job board tab~~ | **Shipped:** Chrome MV3 extension in `browser-extension/`; `POST /sources/detect`; see [modules/browser-extension.md](modules/browser-extension.md) |
+| ~~Browser extension~~ | ~~"Add this search URL" one-click from a job board tab~~ | **Shipped:** Chrome MV3 extension in `browser-extension/`; `POST /sources/detect`; toolbar icons in `browser-extension/icons/`; see [modules/browser-extension.md](modules/browser-extension.md) |
 | ~~AI summarization~~ | ~~Short "why this matches" blurb in notifications~~ | **Shipped:** per-job blurb generated in the pipeline and shown in every notifier + the Jobs feed/RSS. Pluggable providers (`heuristic` offline default, `openai`); best-effort so failures never block alerts. See [modules/summaries.md](modules/summaries.md) |
-| ~~Mobile PWA~~ | ~~Lightweight jobs feed if ntfy alone is not enough~~ | **Shipped:** web manifest + service worker (offline shell); installable on mobile; bottom nav; job cards + pull-to-refresh on Jobs |
+| ~~Mobile PWA~~ | ~~Lightweight jobs feed if ntfy alone is not enough~~ | **Shipped:** web manifest + service worker (offline shell); installable on mobile; bottom nav; job cards + pull-to-refresh on Jobs; PNG icons in `frontend/public/` |
 
 ---
 
@@ -207,7 +207,7 @@ at signup or checkout. Builds on Phase 6c billing and plan enforcement.
 | ---- | --- | ----- |
 | ~~Promo code model & admin~~ | ~~Operators need to create and retire offers~~ | **Shipped:** `promo_code` table; admin CRUD at `GET/POST/PATCH /admin/promo-codes`; types `percent_off`, `fixed_amount`, `free_trial_days`, `plan_upgrade` |
 | ~~Redemption at checkout~~ | ~~Users expect to paste a code before paying~~ | **Shipped:** `POST /billing/promo/validate`; optional `promo_code` on checkout; Stripe Coupons/Promotion Codes synced on create |
-| ~~Free-trial promos~~ | ~~Acquisition lever without manual plan overrides~~ | **Shipped:** `free_trial_days` overrides `trial_period_days` on checkout session |
+| ~~Free-trial promos~~ | ~~Acquisition lever without manual plan overrides~~ | **Shipped:** `free_trial_days` overrides `trial_period_days` on checkout for any paid tier; default `STRIPE_TRIAL_DAYS` applies to Pro checkout only |
 | ~~Self-serve entry in UI~~ | ~~Codes should be discoverable in the funnel~~ | **Shipped:** promo field on `/pricing` and Settings → Billing; applied discount/trial shown after validation |
 | ~~Audit & abuse prevention~~ | ~~Promos affect revenue and must be traceable~~ | **Shipped:** `promo_redemption` audit log; one-per-user enforcement; validation rate limit (10 / 15 min) |
 

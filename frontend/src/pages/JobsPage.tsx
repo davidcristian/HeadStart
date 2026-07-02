@@ -114,7 +114,7 @@ export function JobsPage() {
         {!rssAllowed && meta.data && (
           <>
             <p className="muted">
-              RSS export is available on Pro and Team plans. You are on the{" "}
+              RSS export is available on the Pro plan. You are on the{" "}
               {planLabel(meta.data.plan.plan)} plan.
             </p>
             <p>

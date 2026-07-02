@@ -225,3 +225,33 @@ def test_checkout_applies_trial_promo(
     call_kwargs = mock_session_create.call_args.kwargs
     assert call_kwargs["subscription_data"]["trial_period_days"] == 90
     assert "discounts" not in call_kwargs
+
+
+@patch("app.services.billing.stripe.checkout.Session.create")
+@patch("app.services.billing.stripe.Customer.create")
+def test_checkout_applies_trial_promo_on_starter(
+    mock_customer_create: MagicMock,
+    mock_session_create: MagicMock,
+    client: TestClient,
+    billing_settings: None,
+) -> None:
+    headers = register_and_login(client, email="trial-starter@example.com", password="password123")
+    with _with_client_db() as db:
+        _add_promo(
+            db,
+            code="STARTER30",
+            promo_type="free_trial_days",
+            value_int=30,
+            stripe_promotion_code_id=None,
+        )
+    mock_customer_create.return_value = MagicMock(id="cus_trial_starter")
+    mock_session_create.return_value = MagicMock(url="https://checkout.stripe.test/starter")
+
+    resp = client.post(
+        "/api/v1/billing/checkout",
+        headers=headers,
+        json={"plan": "starter", "billing_period": "monthly", "promo_code": "STARTER30"},
+    )
+    assert resp.status_code == 200
+    call_kwargs = mock_session_create.call_args.kwargs
+    assert call_kwargs["subscription_data"]["trial_period_days"] == 30

@@ -111,7 +111,8 @@ class BillingService:
                 "plan_upgrade",
             }:
                 session_kwargs["discounts"] = [{"promotion_code": promo.stripe_promotion_code_id}]
-        if trial_days > 0 and plan == "pro":
+        promo_trial = promo is not None and promo.promo_type == "free_trial_days"
+        if trial_days > 0 and (promo_trial or plan == "pro"):
             session_kwargs["subscription_data"]["trial_period_days"] = trial_days
 
         session = stripe.checkout.Session.create(**session_kwargs)

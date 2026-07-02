@@ -41,8 +41,8 @@ describe("FreeTierAd", () => {
     renderAd();
 
     expect(screen.getByTestId("free-tier-ad")).toBeInTheDocument();
-    expect(screen.getByText(/go ad-free with pro/i)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /view pro plans/i })).toHaveAttribute(
+    expect(screen.getByText(/go ad-free with starter/i)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /view plans/i })).toHaveAttribute(
       "href",
       "/pricing",
     );

@@ -123,7 +123,7 @@ Server state is managed by **TanStack Query** (`@tanstack/react-query`). The
 
 Free-plan users (`plan.show_ads` from `GET /api/v1/meta`) see a non-intrusive **Sponsored**
 card in the app shell (`FreeTierAd` in `Layout.tsx`): sidebar on desktop, compact strip above
-the mobile bottom nav. Pro, Team, and admin accounts see nothing.
+the mobile bottom nav. Paid plans and admin accounts see nothing.
 
 - **House promotion** — built-in “Go ad-free with Pro” CTA linking to `/pricing` (no
   third-party tracking).

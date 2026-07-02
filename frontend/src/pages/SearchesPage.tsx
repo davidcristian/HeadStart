@@ -158,7 +158,7 @@ export function SearchesPage() {
           </Field>
           <Field
             label="Notification mode"
-            hint={digestAllowed ? undefined : "Digest mode requires a Pro or Team plan."}
+            hint={digestAllowed ? undefined : "Digest mode requires Starter or above."}
           >
             <select
               value={notificationMode}
@@ -166,7 +166,7 @@ export function SearchesPage() {
             >
               <option value="immediate">Immediate (one alert per job)</option>
               <option value="digest" disabled={!digestAllowed}>
-                Digest (batched summary){digestAllowed ? "" : " — Pro+"}
+                Digest (batched summary){digestAllowed ? "" : " — Starter+"}
               </option>
             </select>
           </Field>

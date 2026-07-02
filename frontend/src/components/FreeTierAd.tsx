@@ -28,12 +28,12 @@ export function FreeTierAd({ variant = "sidebar" }: Props) {
       <p className="free-tier-ad-label">Sponsored</p>
 
       <div className="free-tier-ad-house">
-        <p className="free-tier-ad-title">Go ad-free with Pro</p>
+        <p className="free-tier-ad-title">Go ad-free with Starter</p>
         <p className="free-tier-ad-copy">
-          Unlock digest mode, AI summaries, premium scrapers, and more — without sponsored messages.
+          Remove ads with Starter, or unlock AI summaries, premium scrapers, and more on Pro.
         </p>
         <Link className="btn btn-primary free-tier-ad-cta" to="/pricing">
-          View Pro plans
+          View plans
         </Link>
       </div>
 
