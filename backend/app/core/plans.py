@@ -4,7 +4,6 @@ Mirrors the public pricing page (`frontend/src/lib/pricing.ts`). Stripe webhooks
 and the admin panel update ``user.plan``; new accounts start on ``free``.
 
 See docs/adr/0010-four-tier-pricing.md for the tier ladder and feature matrix.
-Feature enforcement for Starter / Plus / Pro is refined in Phase 14b.
 """
 
 from __future__ import annotations
@@ -61,7 +60,6 @@ _PLAN_LIMITS: dict[PlanId, PlanLimits] = {
     "pro": PlanLimits(max_searches=20, max_sources=20, max_targets=5),
 }
 
-# Transitional feature flags for 14a — Phase 14b aligns gates with the ADR matrix.
 _PLAN_FEATURES: dict[PlanId, PlanFeatures] = {
     "free": PlanFeatures(
         digest_mode=False,
@@ -71,7 +69,7 @@ _PLAN_FEATURES: dict[PlanId, PlanFeatures] = {
         portal_search=False,
     ),
     "starter": PlanFeatures(
-        digest_mode=False,
+        digest_mode=True,
         ai_summaries=False,
         site_credentials=False,
         rss_feed=False,
@@ -79,10 +77,10 @@ _PLAN_FEATURES: dict[PlanId, PlanFeatures] = {
     ),
     "plus": PlanFeatures(
         digest_mode=True,
-        ai_summaries=True,
+        ai_summaries=False,
         site_credentials=True,
-        rss_feed=True,
-        portal_search=True,
+        rss_feed=False,
+        portal_search=False,
     ),
     "pro": PlanFeatures(
         digest_mode=True,
@@ -109,7 +107,7 @@ def scraper_allowed(plan: PlanId, adapter_key: str) -> bool:
     if adapter_key in FREE_SCRAPERS:
         return True
     if adapter_key in PREMIUM_SCRAPERS:
-        return plan == "pro"
+        return plan in ("plus", "pro")
     # Unknown adapters default to allowed so new scrapers are not accidentally blocked.
     return True
 
@@ -129,3 +127,12 @@ def plan_display_name(plan: PlanId) -> str:
         "plus": "Plus",
         "pro": "Pro",
     }[plan]
+
+
+def required_plan_phrase(minimum: Literal["starter", "plus", "pro"]) -> str:
+    """Human-readable minimum plan label for upgrade error messages."""
+    if minimum == "starter":
+        return "Starter, Plus, or Pro"
+    if minimum == "plus":
+        return "Plus or Pro"
+    return "Pro"

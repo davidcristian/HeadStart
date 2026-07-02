@@ -39,7 +39,7 @@ An account. The first one created becomes admin.
 | is_admin      | bool     | First registered user = true       |
 | feed_token_version | int | Incremented to revoke RSS feed URLs |
 | is_active     | bool     | Disabled accounts cannot log in    |
-| plan                  | str      | Subscription tier: `free`, `pro`, or `team` (default `free`) |
+| plan                  | str      | Subscription tier: `free`, `starter`, `plus`, or `pro` (default `free`) |
 | stripe_customer_id    | str?     | Stripe customer ID (set on first checkout) |
 | stripe_subscription_id | str?  | Active Stripe subscription ID |
 | subscription_status   | str?     | Last known Stripe status (`active`, `trialing`, `canceled`, …) |

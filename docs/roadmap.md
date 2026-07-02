@@ -335,11 +335,11 @@ Wire the feature matrix into enforcement — depends on **14a**.
 
 | Item | Why | Notes |
 | ---- | --- | ----- |
-| Per-tier feature flags | Starter ≠ Plus ≠ Pro | `plan_features_for`: digest on Starter+; premium scrapers + credentials on Plus+; AI, RSS, webhooks, portal on Pro only |
-| Scraper/notifier gates | Match matrix | Update `scraper_allowed` / `notifier_allowed` for `starter` and `plus` |
-| Error messages | Clear upgrade paths | “Requires Pro” / “Requires Plus or Pro” instead of “Pro or Team” |
-| Tests | Regression safety | Service tests for each gate boundary (digest, indeed, credentials, AI, portal) |
-| Docs | Enforcement doc matches code | `billing.md` + `auth.md` limit tables |
+| ~~Per-tier feature flags~~ | ~~Starter ≠ Plus ≠ Pro~~ | **Shipped:** `plan_features_for`: digest on Starter+; premium scrapers + credentials on Plus+; AI, RSS, webhooks, portal on Pro only |
+| ~~Scraper/notifier gates~~ | ~~Match matrix~~ | **Shipped:** `scraper_allowed` unlocks premium scrapers on Plus+; `notifier_allowed` keeps webhooks Pro-only |
+| ~~Error messages~~ | ~~Clear upgrade paths~~ | **Shipped:** `required_plan_phrase` — “Requires Pro” / “Requires Plus or Pro” / “Starter, Plus, or Pro” |
+| ~~Tests~~ | ~~Regression safety~~ | **Shipped:** unit + API tests for digest, indeed, credentials, AI, portal boundaries |
+| ~~Docs~~ | ~~Enforcement doc matches code~~ | **Shipped:** `billing.md` + `auth.md` limit tables |
 
 **Done when:** a Starter user gets digest but not Indeed; a Plus user gets Indeed
 but not AI summaries or portal search; Pro gets everything in the matrix.

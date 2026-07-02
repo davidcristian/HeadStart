@@ -16,6 +16,7 @@ from app.core.plans import (
     plan_display_name,
     plan_features_for,
     plan_limits_for,
+    required_plan_phrase,
     scraper_allowed,
 )
 from app.models.user import User
@@ -150,7 +151,7 @@ class PlanLimitsService:
         plan = self.resolve_plan(user)
         if not plan_features_for(plan).digest_mode:
             raise PlanLimitError(
-                "Digest notifications require a Pro plan "
+                f"Digest notifications require a {required_plan_phrase('starter')} plan "
                 f"(you are on {plan_display_name(plan)}).",
                 code="digest_mode",
                 plan=plan,
@@ -186,7 +187,8 @@ class PlanLimitsService:
         plan = self.resolve_plan(user)
         if not plan_features_for(plan).site_credentials:
             raise PlanLimitError(
-                "Site credentials require a Pro plan " f"(you are on {plan_display_name(plan)}).",
+                f"Site credentials require a {required_plan_phrase('plus')} plan "
+                f"(you are on {plan_display_name(plan)}).",
                 code="site_credentials",
                 plan=plan,
             )
@@ -198,7 +200,8 @@ class PlanLimitsService:
         plan = self.resolve_plan(user)
         if not plan_features_for(plan).rss_feed:
             raise PlanLimitError(
-                f"RSS export requires a Pro plan (you are on {plan_display_name(plan)}).",
+                f"RSS export requires a {required_plan_phrase('pro')} plan "
+                f"(you are on {plan_display_name(plan)}).",
                 code="rss_feed",
                 plan=plan,
             )
@@ -210,7 +213,7 @@ class PlanLimitsService:
         plan = self.resolve_plan(user)
         if not plan_features_for(plan).portal_search:
             raise PlanLimitError(
-                "Curated portal search requires a Pro plan "
+                f"Curated portal search requires a {required_plan_phrase('pro')} plan "
                 f"(you are on {plan_display_name(plan)}).",
                 code="portal_search",
                 plan=plan,
@@ -248,7 +251,8 @@ class PlanLimitsService:
             return
         label = plan_display_name(plan)
         raise PlanLimitError(
-            f"The '{adapter_key}' scraper requires a Pro plan (you are on {label}).",
+            f"The '{adapter_key}' scraper requires a {required_plan_phrase('plus')} plan "
+            f"(you are on {label}).",
             code="premium_scraper",
             plan=plan,
         )
@@ -259,7 +263,8 @@ class PlanLimitsService:
             return
         label = plan_display_name(plan)
         raise PlanLimitError(
-            f"The '{target_type}' notifier requires a Pro plan (you are on {label}).",
+            f"The '{target_type}' notifier requires a {required_plan_phrase('pro')} plan "
+            f"(you are on {label}).",
             code="premium_notifier",
             plan=plan,
         )

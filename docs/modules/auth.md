@@ -143,30 +143,30 @@ policy and site footer).
 
 ## Plan limits
 
-Every account has a `plan` (`free`, `pro`, or `team`; default `free`). Caps and
-feature gates are defined in `app/core/plans.py` (mirrors the public pricing
-page) and enforced in `PlanLimitsService` — **services raise `PlanLimitError`,
-mapped to HTTP 402**, never UI-only checks.
+Every account has a `plan` (`free`, `starter`, `plus`, or `pro`; default `free`).
+Caps and feature gates are defined in `app/core/plans.py` (mirrors the public
+pricing page) and enforced in `PlanLimitsService` — **services raise
+`PlanLimitError`, mapped to HTTP 402**, never UI-only checks.
 
-| Resource / feature | Free | Pro | Team |
-| ------------------ | ---- | --- | ---- |
-| Searches | 3 | 15 | 50 |
-| Sources | 3 | 15 | 50 |
-| Notification targets | 1 | 5 | 20 |
-| Digest mode | no | yes | yes |
-| AI summaries (pipeline) | no | yes | yes |
-| Site credentials | no | yes | yes |
-| RSS feed | no | yes | yes |
-| Premium scrapers (`indeed`, `linkedin`, `playwright`) | no | yes | yes |
-| Webhook notifier | no | yes | yes |
-| Cross-portal search (`/portals/search`) | no | yes | yes |
+| Resource / feature | Free | Starter | Plus | Pro |
+| ------------------ | ---- | ------- | ---- | --- |
+| Searches | 3 | 5 | 10 | 20 |
+| Sources | 3 | 5 | 10 | 20 |
+| Notification targets | 1 | 2 | 3 | 5 |
+| Digest mode | no | yes | yes | yes |
+| Premium scrapers (`indeed`, `linkedin`, `playwright`) | no | no | yes | yes |
+| Site credentials | no | no | yes | yes |
+| AI summaries (pipeline) | no | no | no | yes |
+| RSS feed | no | no | no | yes |
+| Webhook notifier | no | no | no | yes |
+| Cross-portal search (`/portals/search`) | no | no | no | yes |
 
 **Downgrade behaviour:** existing rows stay; create/update that would exceed a
 cap or use a gated feature is rejected. Admins bypass all limits.
 
 `GET /meta` returns an `AccountPlanRead` snapshot (limits, current usage,
 allowed scrapers/notifiers) so the UI can disable options proactively.
-`PATCH /admin/users/{id}` accepts `plan` until Stripe billing ships.
+`PATCH /admin/users/{id}` accepts `plan` for manual overrides.
 
 ## Admin
 

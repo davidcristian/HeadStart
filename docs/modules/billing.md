@@ -19,7 +19,8 @@ buttons are hidden.
 
 The legacy **Team** tier is deprecated (ADR-0010); existing `team` rows migrate
 to `pro`. Plan limits and feature gates are enforced in `PlanLimitsService`; see
-[auth.md](auth.md) and `app/core/plans.py`.
+[auth.md](auth.md) and `app/core/plans.py` for the four-tier matrix (Free /
+Starter / Plus / Pro).
 
 ## Configuration
 

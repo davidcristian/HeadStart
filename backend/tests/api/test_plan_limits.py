@@ -11,6 +11,19 @@ def _free_user_headers(client: TestClient, email: str) -> dict[str, str]:
     return register_and_login(client, email)
 
 
+def _user_headers_with_plan(client: TestClient, email: str, plan: str) -> dict[str, str]:
+    admin = register_and_login(client, f"admin-{email}")
+    user_headers = register_and_login(client, email)
+    user_id = client.get("/api/v1/auth/me", headers=user_headers).json()["id"]
+    patched = client.patch(
+        f"/api/v1/admin/users/{user_id}",
+        json={"plan": plan},
+        headers=admin,
+    )
+    assert patched.status_code == 200, patched.text
+    return user_headers
+
+
 def _create_source(client: TestClient, headers: dict[str, str], name: str) -> int:
     resp = client.post(
         "/api/v1/sources",
@@ -177,3 +190,101 @@ def test_admin_can_set_user_plan(client: TestClient) -> None:
 
     # Pro user can use RSS
     assert client.get("/api/v1/feed/url", headers=user_headers).status_code == 200
+
+
+def test_starter_plan_allows_digest_search(client: TestClient) -> None:
+    headers = _user_headers_with_plan(client, "starter-digest@example.com", "starter")
+    source_id = _create_source(client, headers, "ACME")
+    resp = client.post(
+        "/api/v1/searches",
+        json={
+            "name": "Digest watch",
+            "source_id": source_id,
+            "interval_seconds": 60,
+            "notification_mode": "digest",
+        },
+        headers=headers,
+    )
+    assert resp.status_code == 201, resp.text
+
+
+def test_starter_plan_blocks_premium_scraper(client: TestClient) -> None:
+    headers = _user_headers_with_plan(client, "starter-scraper@example.com", "starter")
+    resp = client.post(
+        "/api/v1/sources",
+        json={"name": "Indeed", "adapter_key": "indeed"},
+        headers=headers,
+    )
+    assert resp.status_code == 402
+    body = resp.json()
+    assert body["code"] == "premium_scraper"
+    assert "Plus or Pro" in body["detail"]
+
+
+def test_starter_plan_blocks_site_credentials(client: TestClient) -> None:
+    headers = _user_headers_with_plan(client, "starter-creds@example.com", "starter")
+    source_id = _create_source(client, headers, "ACME")
+    resp = client.post(
+        "/api/v1/credentials",
+        json={"source_id": source_id, "name": "Session", "cookies": {"sid": "x"}},
+        headers=headers,
+    )
+    assert resp.status_code == 402
+    body = resp.json()
+    assert body["code"] == "site_credentials"
+    assert "Plus or Pro" in body["detail"]
+
+
+def test_plus_plan_allows_premium_scraper_and_credentials(client: TestClient) -> None:
+    headers = _user_headers_with_plan(client, "plus-scraper@example.com", "plus")
+    source = client.post(
+        "/api/v1/sources",
+        json={"name": "Indeed", "adapter_key": "indeed"},
+        headers=headers,
+    )
+    assert source.status_code == 201, source.text
+    source_id = source.json()["id"]
+
+    creds = client.post(
+        "/api/v1/credentials",
+        json={"source_id": source_id, "name": "Session", "cookies": {"sid": "x"}},
+        headers=headers,
+    )
+    assert creds.status_code == 201, creds.text
+
+
+def test_plus_plan_blocks_rss_feed(client: TestClient) -> None:
+    headers = _user_headers_with_plan(client, "plus-rss@example.com", "plus")
+    resp = client.get("/api/v1/feed/url", headers=headers)
+    assert resp.status_code == 402
+    body = resp.json()
+    assert body["code"] == "rss_feed"
+    assert "Pro plan" in body["detail"]
+
+
+def test_plus_plan_blocks_webhook_target(client: TestClient) -> None:
+    headers = _user_headers_with_plan(client, "plus-webhook@example.com", "plus")
+    resp = client.post(
+        "/api/v1/targets",
+        json={
+            "name": "Hook",
+            "type": "webhook",
+            "config": {"webhook_url": "https://example.com/hook"},
+        },
+        headers=headers,
+    )
+    assert resp.status_code == 402
+    assert resp.json()["code"] == "premium_notifier"
+
+
+def test_plus_plan_blocks_portal_search(client: TestClient) -> None:
+    headers = _user_headers_with_plan(client, "plus-portal@example.com", "plus")
+    resp = client.post(
+        "/api/v1/portals/search",
+        json={"keywords": "engineer", "portal_ids": ["stripe"]},
+        headers=headers,
+    )
+    assert resp.status_code == 402
+    body = resp.json()
+    assert body["code"] == "portal_search"
+    assert "Pro plan" in body["detail"]
