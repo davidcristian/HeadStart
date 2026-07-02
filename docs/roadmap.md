@@ -3,10 +3,9 @@
 Living plan for JobNotifier — what to build next and why. Update this doc when
 priorities shift or a milestone ships.
 
-**Current baseline (2026-06):** core pipeline (schedule → scrape → dedupe → notify),
-multi-user auth, encrypted site credentials, three scrapers (`greenhouse`,
-`generic_html`, `playwright`), one notifier (`ntfy`), full CRUD UI, Docker +
-Terraform AWS deploy. See [architecture.md](architecture.md) for the system
+**Current baseline (2026-06):** Phases 1–15 shipped (four-tier pricing, per-user AI
+summary preferences, 68-employer portal catalog). Next up: Phase 16
+(SmartRecruiters adapter). See [architecture.md](architecture.md) for the system
 design.
 
 ---
@@ -238,7 +237,7 @@ about most, and give paid users a single place to search across them.
 
 | Item | Why | Notes |
 | ---- | --- | ----- |
-| FAANG / MAANG / MAMAA & unicorn portals | High-value employers use dedicated career sites and ATS boards that are not always obvious to configure | **Shipped:** `GET /portals` curated catalog (68 employers across Greenhouse, Lever, Ashby, Workday, Apple Careers, Google Careers, Meta Careers, Microsoft Careers, and Amazon Jobs); category/search filters; one-click **Add source** on Sources page; `portal_id` in `default_config` for duplicate detection. **Apple** uses the `apple_careers` scraper (hydration JSON embedded in search HTML on jobs.apple.com). **Google** uses the `google_careers` scraper (embedded JSON in careers search HTML). **Meta** uses the `meta_careers` scraper (Relay GraphQL search on metacareers.com). **Microsoft** uses the `microsoft_careers` scraper (Eightfold PCSX JSON API). **Amazon** uses the `amazon_jobs` scraper (public `search.json` API). |
+| FAANG / MAANG / MAMAA & unicorn portals | High-value employers use dedicated career sites and ATS boards that are not always obvious to configure | **Shipped:** `GET /portals` curated catalog (68 employers across Greenhouse, Lever, Ashby, Workday, Apple Careers, Google Careers, Meta Careers, Microsoft Careers, and Amazon Jobs); category/search filters; one-click **Add source** on Sources page; `portal_id` in `default_config` for duplicate detection. **MAMAA complete:** Meta (`meta_careers`), Apple (`apple_careers`), Microsoft (`microsoft_careers`), Amazon (`amazon_jobs`), Alphabet/Google (`google_careers`), Netflix (Lever), NVIDIA (Workday). **Apple** uses hydration JSON on jobs.apple.com; **Google** embedded JSON in careers search HTML; **Meta** Relay GraphQL on metacareers.com; **Microsoft** Eightfold PCSX JSON API; **Amazon** public `search.json` API. |
 | Paid portal search page | Paid users should discover and search all supported boards without manual source setup | **Shipped:** `/app/portals` searches curated portals in one request (`POST /portals/search`); bulk alert setup (`POST /portals/subscribe`) auto-creates sources + searches; Pro+ plan gate (`portal_search` feature) |
 
 **Done when:** a paid user can open one page, pick from curated FAANG/MAANG/MAMAA
@@ -409,6 +408,94 @@ against the correct eligible plans; Settings reflects the user's tier.
 **Phase 14 overall done when:** Team is fully removed; the public site and Stripe
 both offer Free / Starter / Plus / Pro; enforcement matches the feature matrix;
 admins retain unlimited access via `is_admin`.
+
+---
+
+## Phase 16 — SmartRecruiters adapter
+
+Goal: cover employers on SmartRecruiters — a common ATS with a documented public
+Postings API that is not yet supported. Unlocks a second wave of catalog growth
+without bespoke HTML per employer.
+
+| Item | Why | Notes |
+| ---- | --- | ----- |
+| SmartRecruiters scraper | Fills the ATS gap after Greenhouse / Lever / Ashby / Workday | `@register_scraper("smartrecruiters")`; `GET https://api.smartrecruiters.com/v1/companies/{company_id}/postings` with offset pagination; config `company_id` (slug from `careers.smartrecruiters.com/{company_id}`) |
+| Fixture + tests | CI safety | Sample JSON under `tests/fixtures/`; no live network |
+| Scraper docs | Operator discoverability | Row in [modules/scrapers.md](modules/scrapers.md) |
+| `sr_preset` catalog helper | Same factory pattern as `gh_preset` / `lever_preset` | Add to `catalog_helpers.py` |
+
+**Caveat:** public Postings API availability is tier-dependent on the customer's
+SmartRecruiters plan — verify each employer before adding a catalog preset.
+
+**Done when:** the adapter parses fixture postings into `JobPosting`s and at least
+one live employer (e.g. Atlassian) returns jobs in a manual smoke test.
+
+---
+
+## Phase 17 — Portal catalog batch 2 (SmartRecruiters)
+
+Goal: grow the curated catalog from **68 → ~80** employers using the Phase 16
+adapter. Each row must be verified against the live public Postings API before
+merge.
+
+| Employer | Category | `company_id` (verify) | Why |
+| -------- | -------- | --------------------- | --- |
+| Atlassian | `big_tech` | `Atlassian` | Jira/Confluence/Trello; very high job-search volume |
+| Square | `unicorn` | `Square` | Payments / fintech; complements Block (Greenhouse) |
+| Bosch | `big_tech` | `Bosch` | Enterprise IoT / automotive software |
+| LinkedIn | `big_tech` | `LinkedIn` | Only if SmartRecruiters feed is more stable than the existing `linkedin` scraper for careers-only use |
+| McDonald's | `unicorn` | `McDonaldsCorporation` | Large global employer; useful for non-tech seekers |
+
+Skip employers already in the catalog on another adapter (e.g. Visa on Workday,
+Lyft on Greenhouse).
+
+**Done when:** catalog count is ≥ 80; duplicate-detection tests pass; Pro portal
+search returns results for at least three new presets.
+
+---
+
+## Phase 18 — Custom career-site adapters
+
+Goal: cover high-value employers on proprietary ATS stacks that do not fit any
+existing adapter. These were called out as the next catalog blockers after the
+Phase 11 batch-1 expansion (Uber, Snowflake, Shopify).
+
+| Adapter | Employer | Likely strategy | Risk |
+| ------- | -------- | --------------- | ---- |
+| `uber_careers` | Uber | Reverse-engineer `uber.com/careers` search JSON or embedded hydration payload | Medium — custom stack, may change |
+| `snowflake_careers` | Snowflake | Public careers search API or embedded JSON on `careers.snowflake.com` | Medium — enterprise site |
+| `shopify_careers` | Shopify | Investigate: may be Greenhouse (`shopify`) or a custom `shopify.com/careers` endpoint | Low–medium — confirm ATS first |
+
+After each scraper ships, add the matching `*_careers_preset()` to
+`catalog_presets.py` and an apply adapter if the apply flow is automatable (see
+Phase 7 pattern for Google/Microsoft/Meta).
+
+**Done when:** all three employers appear in the curated catalog with working
+scrape + at least dry-run apply where the downstream ATS supports it.
+
+---
+
+## Phase 19 — Portal catalog batch 3 (existing adapters)
+
+Goal: reach **~95** employers with zero new scraper work — only presets on
+adapters already shipped. Good candidates (verify board tokens / Workday tenant
+pairs before adding):
+
+| Employer | Adapter | Category |
+| -------- | ------- | -------- |
+| HubSpot | Greenhouse | `unicorn` |
+| Zoom | Workday | `big_tech` |
+| ServiceNow | Workday | `big_tech` |
+| Splunk (Cisco) | Greenhouse or Workday | `big_tech` |
+| Rivian | Greenhouse | `unicorn` |
+| Canva | Greenhouse | `unicorn` |
+| Rippling | Ashby | `unicorn` |
+| Gusto | Greenhouse | `unicorn` |
+| HashiCorp (IBM) | Greenhouse | `big_tech` |
+| CrowdStrike | Greenhouse | `big_tech` |
+
+**Done when:** catalog count is ≥ 95; `/pricing` feature matrix still accurate;
+no duplicate `portal_id` rows.
 
 ---
 
