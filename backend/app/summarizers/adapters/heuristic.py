@@ -13,6 +13,7 @@ than imported from the services layer.
 from __future__ import annotations
 
 import re
+from typing import Any
 
 from app.scrapers.types import JobPosting
 from app.summarizers.base import Summarizer, register_summarizer
@@ -22,6 +23,9 @@ from app.summarizers.types import SummaryContext
 @register_summarizer("heuristic")
 class HeuristicSummarizer(Summarizer):
     """Explain a match using the search filters, with no external calls."""
+
+    def __init__(self, *, settings: Any = None) -> None:
+        pass
 
     def summarize(self, ctx: SummaryContext, jobs: list[JobPosting]) -> list[str]:
         return [self._blurb(ctx, job) for job in jobs]

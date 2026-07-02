@@ -104,6 +104,54 @@ const mockApi = vi.hoisted(() => ({
   })),
   deleteResume: vi.fn(async (): Promise<Profile> => emptyProfile),
   deleteProfile: vi.fn(async () => undefined),
+  getSummaryPreferences: vi.fn(async () => ({
+    enabled: false,
+    server_default_provider: "heuristic",
+    selected_provider: null,
+    effective_provider: "heuristic" as const,
+    has_custom_api_key: false,
+    providers: [
+      {
+        id: "heuristic" as const,
+        label: "Built-in",
+        description: "Offline filter-based blurbs.",
+        requires_api_key: false,
+      },
+      {
+        id: "openai" as const,
+        label: "OpenAI",
+        description: "OpenAI-compatible API.",
+        requires_api_key: true,
+      },
+      {
+        id: "gemini" as const,
+        label: "Google Gemini",
+        description: "Gemini API.",
+        requires_api_key: true,
+      },
+      {
+        id: "anthropic" as const,
+        label: "Anthropic Claude",
+        description: "Anthropic Messages API.",
+        requires_api_key: true,
+      },
+    ],
+  })),
+  updateSummaryPreferences: vi.fn(async (data: unknown) => ({
+    enabled: true,
+    server_default_provider: "heuristic",
+    selected_provider: (data as { provider?: string | null }).provider ?? null,
+    effective_provider: (data as { provider?: string | null }).provider ?? "heuristic",
+    has_custom_api_key: Boolean((data as { api_key?: string }).api_key),
+    providers: [
+      {
+        id: "heuristic" as const,
+        label: "Built-in",
+        description: "Offline filter-based blurbs.",
+        requires_api_key: false,
+      },
+    ],
+  })),
   listApplicationLogs: vi.fn(async (): Promise<ApplicationLog[]> => []),
   getApplicationLog: vi.fn(async (): Promise<ApplicationLog> => ({
     id: 1,

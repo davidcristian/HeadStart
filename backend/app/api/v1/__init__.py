@@ -15,6 +15,7 @@ from app.api.v1 import (
     profile,
     searches,
     sources,
+    summary_preferences,
     targets,
 )
 
@@ -34,5 +35,10 @@ api_router.include_router(feed.router, prefix="/feed", tags=["feed"])
 api_router.include_router(targets.router, prefix="/targets", tags=["targets"])
 api_router.include_router(credentials.router, prefix="/credentials", tags=["credentials"])
 api_router.include_router(profile.router, prefix="/profile", tags=["profile"])
+api_router.include_router(
+    summary_preferences.router,
+    prefix="/summary-preferences",
+    tags=["summary-preferences"],
+)
 
 __all__ = ["api_router"]

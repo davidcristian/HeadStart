@@ -17,6 +17,7 @@ from app.core.metrics import record_notification, record_pipeline_run, record_sc
 from app.models.base import utcnow
 from app.models.delivery_log import DeliveryLog
 from app.models.seen_job import SeenJob
+from app.models.user import User
 from app.notifiers import NotifyContext, get_notifier
 from app.notifiers.base import Notifier
 from app.repositories.jobs import SeenJobRepository
@@ -98,7 +99,13 @@ class PipelineService:
             result.new = len(new_postings)
             to_notify, result.skipped = self._filter_cross_search(search.user_id, new_postings)
             if PlanLimitsService(self.session).allows_summaries(search.user_id):
-                self.summaries.annotate(to_notify, search_name=search.name, filters=search.filters)
+                owner = self.session.get(User, search.user_id)
+                self.summaries.annotate(
+                    to_notify,
+                    search_name=search.name,
+                    filters=search.filters,
+                    user=owner,
+                )
             seen_rows = self._persist_new(search_id, new_postings)
             if to_notify:
                 if search.notification_mode == "digest":

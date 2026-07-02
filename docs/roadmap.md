@@ -281,6 +281,23 @@ appear in notifications and the Jobs feed, and failures remain best-effort
 
 ---
 
+## Phase 15 — Per-user AI summary provider
+
+Goal: let Pro users pick their summary provider (and optionally bring their own
+API key) instead of relying only on the operator's deployment-wide
+`SUMMARY_PROVIDER`.
+
+| Item | Why | Notes |
+| ---- | --- | ----- |
+| Per-user provider preference | Pro differentiator; users standardize on different LLM vendors | **Shipped:** `user.summary_provider` + encrypted `summary_api_key_ciphertext`; `GET/PATCH /summary-preferences`; pipeline uses `resolve_summary_settings` |
+| Settings UI | Self-serve configuration | **Shipped:** Settings → AI summaries card; upgrade CTA for non-Pro |
+| Docs | Operators and users need the split between env defaults and per-user overrides | **Shipped:** [modules/summaries.md](modules/summaries.md) |
+
+**Done when:** a Pro user can choose heuristic/OpenAI/Gemini/Anthropic (or server
+default), optionally save a BYOK API key, and new job blurbs use that provider.
+
+---
+
 ## Phase 14 — Four-tier pricing (replace Team)
 
 Goal: drop the admin-only **Team** tier and ship a classic decoy ladder —

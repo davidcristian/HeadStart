@@ -22,7 +22,8 @@ function promoSummary(code: PromoCode): string {
   if (code.promo_type === "percent_off") return `${code.value_int}% off`;
   if (code.promo_type === "fixed_amount") return `$${(code.value_int / 100).toFixed(2)} off`;
   if (code.promo_type === "free_trial_days") return `${code.value_int}-day trial`;
-  if (code.promo_type === "plan_upgrade") return `Upgrade to ${planLabel(code.plan_target ?? "free")}`;
+  if (code.promo_type === "plan_upgrade")
+    return `Upgrade to ${planLabel(code.plan_target ?? "free")}`;
   return code.promo_type;
 }
 

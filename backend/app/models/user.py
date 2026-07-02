@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, DateTime, String
+from sqlalchemy import Boolean, DateTime, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, TimestampMixin
@@ -42,6 +42,10 @@ class User(Base, TimestampMixin):
     stripe_customer_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
     stripe_subscription_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
     subscription_status: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    # Optional override for SUMMARY_PROVIDER; null uses the server default.
+    summary_provider: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    # Fernet-encrypted API key for the selected hosted provider (openai/gemini/anthropic).
+    summary_api_key_ciphertext: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     sources: Mapped[list["Source"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"

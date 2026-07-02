@@ -5,8 +5,7 @@ import type { Plan } from "../../lib/pricing";
 
 export function ComparisonCell({ value }: { value: string | boolean }) {
   if (typeof value === "boolean") {
-    const label =
-      value === true ? "Included" : value === false ? "Not included" : "Not applicable";
+    const label = value === true ? "Included" : value === false ? "Not included" : "Not applicable";
     return (
       <span className={value ? "pricing-check" : "pricing-dash"} aria-label={label}>
         {value ? "✓" : "—"}

@@ -11,6 +11,7 @@ one-file change, reached only through this interface.
 
 from abc import ABC, abstractmethod
 from collections.abc import Callable
+from typing import Any
 
 from app.scrapers.types import JobPosting
 from app.summarizers.types import SummaryContext
@@ -38,7 +39,7 @@ def register_summarizer(key: str) -> Callable[[type[Summarizer]], type[Summarize
     return decorator
 
 
-def get_summarizer(key: str) -> Summarizer:
+def get_summarizer(key: str, *, settings: Any | None = None) -> Summarizer:
     from app.summarizers import adapters  # noqa: F401  (triggers registration)
 
     try:
@@ -47,7 +48,9 @@ def get_summarizer(key: str) -> Summarizer:
         raise KeyError(
             f"No summarizer registered for '{key}'. Available: {sorted(_REGISTRY)}"
         ) from exc
-    return cls()
+    if settings is None:
+        return cls()
+    return cls(settings=settings)  # type: ignore[call-arg]
 
 
 def available_summarizers() -> list[str]:

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { NotificationHelpCard } from "../components/settings/NotificationHelpCard";
 import { SettingsBillingCard } from "../components/settings/SettingsBillingCard";
+import { SettingsSummaryCard } from "../components/settings/SettingsSummaryCard";
 import { Banner, Button, Card, Field } from "../components/ui";
 import { useCookieConsent } from "../components/CookieConsentContext";
 import { api } from "../api";
@@ -92,6 +93,7 @@ export function SettingsPage() {
       )}
 
       {user ? <SettingsBillingCard userPlan={user.plan} /> : null}
+      {user ? <SettingsSummaryCard /> : null}
 
       <Card title="Your account">
         {user && (

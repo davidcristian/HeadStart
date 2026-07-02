@@ -45,6 +45,21 @@ on the provider name; you add a file, not an `if`.
 | `anthropic` | You want hosted blurbs on Anthropic Claude instead of OpenAI/Gemini | Calls the Anthropic Messages REST API per job. Requires `ANTHROPIC_API_KEY`; honors `ANTHROPIC_MODEL`, `ANTHROPIC_BASE_URL`, and `ANTHROPIC_API_VERSION`. |
 | `llamacpp` | **Local dev only.** Free summaries against a local model | Calls a llama.cpp `llama-server` OpenAI-compatible endpoint (default `http://localhost:8080/v1`). No API key required unless your server expects one. Start a server with `make llamacpp` (needs `LLAMACPP_MODEL_PATH`). The helper script passes sensible defaults (`--flash-attn on`, `--ctx-size 2048`, `--n-gpu-layers 99`); override via `LLAMACPP_FLASH_ATTN`, `LLAMACPP_CTX_SIZE`, `LLAMACPP_NGL`. Do not use in deployed environments — keep `SUMMARY_PROVIDER=openai` or `heuristic` there. |
 
+## Per-user preferences (Pro)
+
+Pro users can override the deployment-wide `SUMMARY_PROVIDER` and optionally store
+their own API key for hosted providers (`openai`, `gemini`, `anthropic`).
+
+| Endpoint | Purpose |
+| -------- | ------- |
+| `GET /summary-preferences` | Current selection, effective provider, and available options |
+| `PATCH /summary-preferences` | Set `provider` (`heuristic` / `openai` / `gemini` / `anthropic`, or `null` for server default) and optional `api_key` (empty string clears a saved key) |
+
+Keys are Fernet-encrypted at rest (`summary_api_key_ciphertext` on `user`). The
+pipeline resolves per-user settings via `resolve_summary_settings` before calling
+the summarizer registry. Non-Pro users may read preferences but receive `402` on
+update (`feature_ai_summaries`). Settings UI: **Settings → AI summaries**.
+
 ## Configuration
 
 All via env (see `.env.example` / `app/core/config.py`):

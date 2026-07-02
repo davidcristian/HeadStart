@@ -51,3 +51,9 @@ export type {
   PortalSubscribeRequest,
   PortalSubscribeResult,
 } from "./portal";
+export type {
+  SummaryProviderId,
+  SummaryProviderOption,
+  SummaryPreferences,
+  SummaryPreferencesUpdate,
+} from "./summaryPreferences";

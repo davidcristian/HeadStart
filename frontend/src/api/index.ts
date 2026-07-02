@@ -21,6 +21,8 @@ import type {
   PortalSearchResult,
   PortalSubscribeRequest,
   PortalSubscribeResult,
+  SummaryPreferences,
+  SummaryPreferencesUpdate,
   Search,
   SearchCreate,
   SearchRunResult,
@@ -242,4 +244,9 @@ export const api = {
   },
   deleteResume: () => request<Profile>("/api/v1/profile/resume", { method: "DELETE" }),
   deleteProfile: () => request<void>("/api/v1/profile", { method: "DELETE" }),
+
+  // AI summary preferences (Pro)
+  getSummaryPreferences: () => request<SummaryPreferences>("/api/v1/summary-preferences"),
+  updateSummaryPreferences: (data: SummaryPreferencesUpdate) =>
+    request<SummaryPreferences>("/api/v1/summary-preferences", { method: "PATCH", body: data }),
 };

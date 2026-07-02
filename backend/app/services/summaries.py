@@ -13,9 +13,11 @@ from typing import Any
 
 from app.core.config import settings as default_settings
 from app.core.logging import get_logger
+from app.models.user import User
 from app.scrapers.types import JobPosting
 from app.summarizers import SummaryContext, get_summarizer
 from app.summarizers.base import Summarizer
+from app.summarizers.runtime_settings import resolve_summary_settings
 
 logger = get_logger(__name__)
 
@@ -38,21 +40,23 @@ class SummaryService:
         *,
         search_name: str | None = None,
         filters: dict[str, Any] | None = None,
+        user: User | None = None,
     ) -> None:
         """Set `posting.summary` in place for each posting; no-op when disabled."""
-        if not self._settings.summaries_enabled or not postings:
+        runtime_settings = resolve_summary_settings(self._settings, user)
+        if not runtime_settings.summaries_enabled or not postings:
             return
 
-        provider = str(self._settings.summary_provider)
+        provider = str(runtime_settings.summary_provider)
         ctx = SummaryContext(search_name=search_name, filters=filters or {})
         try:
-            summarizer = self._factory(provider)
+            summarizer = self._factory(provider, settings=runtime_settings)  # type: ignore[call-arg]
             blurbs = summarizer.summarize(ctx, postings)
         except Exception as exc:  # provider/network/credentials are best-effort
             logger.warning("summary provider %s failed: %s", provider, exc)
             return
 
-        max_chars = int(self._settings.summary_max_chars)
+        max_chars = int(runtime_settings.summary_max_chars)
         for posting, blurb in zip(postings, blurbs, strict=False):
             text = (blurb or "").strip()
             if text:
