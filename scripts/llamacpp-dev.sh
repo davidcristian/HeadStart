@@ -13,6 +13,11 @@ HOST="${LLAMACPP_HOST:-127.0.0.1}"
 MODEL_PATH="${LLAMACPP_MODEL_PATH:-}"
 MODEL_ID="${LLAMACPP_MODEL:-local}"
 
+# Sensible dev defaults for short one-sentence summaries (override via env).
+FLASH_ATTN="${LLAMACPP_FLASH_ATTN:-on}"       # on | off | auto
+CTX_SIZE="${LLAMACPP_CTX_SIZE:-2048}"         # blurbs need little context
+N_GPU_LAYERS="${LLAMACPP_NGL:-99}"            # offload all layers when a GPU backend exists
+
 usage() {
   cat <<EOF
 Usage: $(basename "$0") [--help]
@@ -24,6 +29,9 @@ Environment:
   LLAMACPP_PORT         Listen port (default: 8080)
   LLAMACPP_HOST         Bind address (default: 127.0.0.1)
   LLAMACPP_MODEL        Model id sent in API requests (default: local)
+  LLAMACPP_FLASH_ATTN   Flash Attention: on | off | auto (default: on)
+  LLAMACPP_CTX_SIZE     Context window in tokens (default: 2048)
+  LLAMACPP_NGL          GPU layers to offload; 0 = CPU only (default: 99)
 
 After the server is up, point the app at it:
   SUMMARY_PROVIDER=llamacpp
@@ -62,11 +70,22 @@ if [[ ! -f "${MODEL_PATH}" ]]; then
   die "Model file not found: ${MODEL_PATH}"
 fi
 
+case "${FLASH_ATTN}" in
+  on|off|auto) ;;
+  *)
+    die "LLAMACPP_FLASH_ATTN must be on, off, or auto (got: ${FLASH_ATTN})"
+    ;;
+esac
+
 log "Starting llama-server on http://${HOST}:${PORT}/v1"
 log "Model: ${MODEL_PATH} (id=${MODEL_ID})"
+log "Flags: flash-attn=${FLASH_ATTN} ctx=${CTX_SIZE} ngl=${N_GPU_LAYERS}"
 warn "Keep this terminal open; use Ctrl+C to stop."
 
 exec llama-server \
   --model "${MODEL_PATH}" \
   --host "${HOST}" \
-  --port "${PORT}"
+  --port "${PORT}" \
+  --flash-attn "${FLASH_ATTN}" \
+  --ctx-size "${CTX_SIZE}" \
+  --n-gpu-layers "${N_GPU_LAYERS}"

@@ -41,7 +41,7 @@ on the provider name; you add a file, not an `if`.
 | --- | ----------- | ----- |
 | `heuristic` | **Default.** Offline, free, deterministic | Builds the blurb from the search's own filters (matched keywords, workplace, location). No network or API key, so it is safe in CI/local/prod. Falls back to a neutral "New \<role\> at \<company\>" line when no filter matches. |
 | `openai` | You want richer, natural-language blurbs in hosted/prod | Calls an OpenAI-compatible Chat Completions endpoint per job. Requires `OPENAI_API_KEY`; honors `OPENAI_MODEL` and `OPENAI_BASE_URL`. |
-| `llamacpp` | **Local dev only.** Free summaries against a local model | Calls a llama.cpp `llama-server` OpenAI-compatible endpoint (default `http://localhost:8080/v1`). No API key required unless your server expects one. Start a server with `make llamacpp` (needs `LLAMACPP_MODEL_PATH`). Do not use in deployed environments — keep `SUMMARY_PROVIDER=openai` or `heuristic` there. |
+| `llamacpp` | **Local dev only.** Free summaries against a local model | Calls a llama.cpp `llama-server` OpenAI-compatible endpoint (default `http://localhost:8080/v1`). No API key required unless your server expects one. Start a server with `make llamacpp` (needs `LLAMACPP_MODEL_PATH`). The helper script passes sensible defaults (`--flash-attn on`, `--ctx-size 2048`, `--n-gpu-layers 99`); override via `LLAMACPP_FLASH_ATTN`, `LLAMACPP_CTX_SIZE`, `LLAMACPP_NGL`. Do not use in deployed environments — keep `SUMMARY_PROVIDER=openai` or `heuristic` there. |
 
 ## Configuration
 
