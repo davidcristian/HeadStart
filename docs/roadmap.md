@@ -381,10 +381,10 @@ Depends on **14a** + **14d**.
 
 | Item | Why | Notes |
 | ---- | --- | ----- |
-| Promo eligible plans | Codes target the right tier | Admin create form + validation: `starter` / `plus` / `pro` instead of `pro` / `team` |
-| `plan_upgrade` promos | Still work across tiers | Stripe coupon metadata + redemption sets intended plan |
-| Admin user panel | No Team in dropdown | Plan assign: free / starter / plus / pro |
-| Settings billing UI | Upgrade paths | Show current tier; upgrade CTAs respect new ladder |
+| ~~Promo eligible plans~~ | ~~Codes target the right tier~~ | **Shipped:** Admin create form + validation: `starter` / `plus` / `pro`; optional eligible-plans checkboxes |
+| ~~`plan_upgrade` promos~~ | ~~Still work across tiers~~ | **Shipped:** Stripe coupon metadata + redemption sets intended plan |
+| ~~Admin user panel~~ | ~~No Team in dropdown~~ | **Shipped:** Plan assign: free / starter / plus / pro |
+| ~~Settings billing UI~~ | ~~Upgrade paths~~ | **Shipped:** Show current tier; checkout defaults to next tier; plan picker when multiple upgrades available |
 
 **Done when:** admins can assign any of the four tiers; promo codes validate
 against the correct eligible plans; Settings reflects the user's tier.

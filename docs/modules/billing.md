@@ -1,8 +1,8 @@
 # Module: Billing
 
 **Paths:** `backend/app/services/billing.py`, `backend/app/api/v1/billing.py`,
-`backend/app/core/billing_prices.py`, `frontend/src/pages/SettingsPage.tsx`,
-`frontend/src/pages/PricingPage.tsx`
+`backend/app/core/billing_prices.py`, `frontend/src/components/settings/SettingsBillingCard.tsx`,
+`frontend/src/pages/SettingsPage.tsx`, `frontend/src/pages/PricingPage.tsx`
 
 Stripe-powered subscriptions for the four public tiers (Starter, Plus, Pro).
 Billing is **optional** — when `STRIPE_*` env vars are unset the API reports

@@ -1,4 +1,4 @@
-export type PlanId = "free" | "pro" | "team";
+export type PlanId = "free" | "starter" | "plus" | "pro";
 
 export interface PlanLimits {
   max_searches: number;

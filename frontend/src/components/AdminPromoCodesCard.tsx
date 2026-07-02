@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { Banner, Button, Card, EmptyState, Field } from "./ui";
 import { api } from "../api";
+import { ADMIN_PLAN_OPTIONS, planLabel } from "../lib/plan";
+import type { PaidPlanId } from "../lib/pricing";
 import type { PlanId, PromoCode, PromoType } from "../types";
 
 const PROMO_TYPES: { value: PromoType; label: string }[] = [
@@ -12,12 +14,21 @@ const PROMO_TYPES: { value: PromoType; label: string }[] = [
   { value: "plan_upgrade", label: "Plan upgrade (100% off)" },
 ];
 
+const PAID_PLAN_OPTIONS = ADMIN_PLAN_OPTIONS.filter(
+  (option): option is { value: PaidPlanId; label: string } => option.value !== "free",
+);
+
 function promoSummary(code: PromoCode): string {
   if (code.promo_type === "percent_off") return `${code.value_int}% off`;
   if (code.promo_type === "fixed_amount") return `$${(code.value_int / 100).toFixed(2)} off`;
   if (code.promo_type === "free_trial_days") return `${code.value_int}-day trial`;
-  if (code.promo_type === "plan_upgrade") return `Upgrade to ${code.plan_target ?? "?"}`;
+  if (code.promo_type === "plan_upgrade") return `Upgrade to ${planLabel(code.plan_target ?? "free")}`;
   return code.promo_type;
+}
+
+function eligiblePlansSummary(code: PromoCode): string {
+  if (!code.eligible_plans?.length) return "Any plan";
+  return code.eligible_plans.map(planLabel).join(", ");
 }
 
 export function AdminPromoCodesCard() {
@@ -29,8 +40,15 @@ export function AdminPromoCodesCard() {
   const [code, setCode] = useState("");
   const [promoType, setPromoType] = useState<PromoType>("percent_off");
   const [valueInt, setValueInt] = useState("20");
-  const [planTarget, setPlanTarget] = useState<PlanId>("pro");
+  const [planTarget, setPlanTarget] = useState<PaidPlanId>("pro");
+  const [eligiblePlans, setEligiblePlans] = useState<PlanId[]>([]);
   const [maxRedemptions, setMaxRedemptions] = useState("");
+
+  function toggleEligiblePlan(plan: PlanId) {
+    setEligiblePlans((prev) =>
+      prev.includes(plan) ? prev.filter((row) => row !== plan) : [...prev, plan],
+    );
+  }
 
   async function loadCodes() {
     setError(undefined);
@@ -52,11 +70,13 @@ export function AdminPromoCodesCard() {
         promo_type: promoType,
         value_int: Number(valueInt),
         plan_target: promoType === "plan_upgrade" ? planTarget : null,
+        eligible_plans: eligiblePlans.length > 0 ? eligiblePlans : null,
         max_redemptions: maxRedemptions ? Number(maxRedemptions) : null,
       });
       setCodes((prev) => [created, ...prev]);
       setCode("");
       setValueInt("20");
+      setEligiblePlans([]);
       setMaxRedemptions("");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not create promo code.");
@@ -123,14 +143,34 @@ export function AdminPromoCodesCard() {
           <Field label="Target plan">
             <select
               value={planTarget}
-              onChange={(e) => setPlanTarget(e.target.value as PlanId)}
+              onChange={(e) => setPlanTarget(e.target.value as PaidPlanId)}
               aria-label="Target plan"
             >
-              <option value="pro">Pro</option>
-              <option value="team">Team</option>
+              {PAID_PLAN_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
             </select>
           </Field>
         ) : null}
+        <Field
+          label="Eligible plans (optional)"
+          hint="Leave unchecked to allow any current plan. Check one or more to restrict redemption."
+        >
+          <div className="checkbox-row">
+            {ADMIN_PLAN_OPTIONS.map((option) => (
+              <label key={option.value}>
+                <input
+                  type="checkbox"
+                  checked={eligiblePlans.includes(option.value)}
+                  onChange={() => toggleEligiblePlan(option.value)}
+                />
+                {option.label}
+              </label>
+            ))}
+          </div>
+        </Field>
         <Field label="Max redemptions (optional)">
           <input
             type="number"
@@ -156,6 +196,7 @@ export function AdminPromoCodesCard() {
             <tr>
               <th>Code</th>
               <th>Offer</th>
+              <th>Eligible</th>
               <th>Redemptions</th>
               <th>Status</th>
               <th />
@@ -168,6 +209,7 @@ export function AdminPromoCodesCard() {
                   <code>{promo.code}</code>
                 </td>
                 <td>{promoSummary(promo)}</td>
+                <td className="muted">{eligiblePlansSummary(promo)}</td>
                 <td>
                   {promo.redemption_count}
                   {promo.max_redemptions ? ` / ${promo.max_redemptions}` : ""}

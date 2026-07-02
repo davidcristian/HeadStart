@@ -3,8 +3,8 @@
 import type { AccountPlan, Job, Meta, NotificationTarget, Profile, Search, Source } from "../types";
 
 export const sampleAccountPlan: AccountPlan = {
-  plan: "team",
-  effective_plan: "team",
+  plan: "pro",
+  effective_plan: "pro",
   unlimited: true,
   show_ads: false,
   limits: { max_searches: 50, max_sources: 50, max_targets: 20 },

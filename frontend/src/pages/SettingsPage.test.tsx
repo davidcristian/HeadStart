@@ -110,4 +110,25 @@ describe("SettingsPage", () => {
     expect(logout).toHaveBeenCalled();
     expect(navigate).toHaveBeenCalledWith("/");
   });
+
+  it("offers tier-aware checkout for free users", async () => {
+    mockApi.billingStatus.mockResolvedValue({
+      configured: true,
+      plan: "free",
+      subscription_status: null,
+      has_stripe_subscription: false,
+      can_checkout: true,
+      can_manage: false,
+      trial_days: 14,
+    });
+
+    renderSettings();
+
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Upgrade to Starter" })).toBeInTheDocument(),
+    );
+    expect(screen.getByLabelText("Checkout plan")).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Checkout plan"), { target: { value: "plus" } });
+    expect(screen.getByRole("button", { name: "Upgrade to Plus" })).toBeInTheDocument();
+  });
 });

@@ -51,7 +51,7 @@ other unknown path redirects to the landing page.
 | Page        | Purpose                                                          |
 | ----------- | ---------------------------------------------------------------- |
 | Landing     | Public marketing page at `/`: hero with app screenshots, tabbed product demo, integrations strip, how-it-works, features, FAQ, CTA to register/sign in |
-| Pricing     | Public pricing page at `/pricing`: Free / Starter / Plus / Pro tiers (mirrors backend `plans.py`), feature comparison table, monthly vs annual toggle; Free and paid CTAs link to register; Pro self-serve checkout when signed in (Starter/Plus checkout ships in Phase 14d) |
+| Pricing     | Public pricing page at `/pricing`: Free / Starter / Plus / Pro tiers (mirrors backend `plans.py`), feature comparison table, monthly vs annual toggle; Free and paid CTAs link to register; signed-in users can self-serve checkout for Starter, Plus, or Pro when billing is configured |
 | Privacy     | Public privacy policy at `/privacy` |
 | Terms       | Public terms of use at `/terms` |
 | Impressum   | Public German legal notice at `/impressum` (placeholder operator details; replace before DE launch) |
@@ -67,8 +67,8 @@ other unknown path redirects to the landing page.
 | Profile     | Application profile for auto-apply (contact, resume, experience, education, skills); application history table |
 | Targets     | Manage notification targets (e.g. ntfy server/topic); send test  |
 | Credentials | Per-source encrypted cookies/headers for bot-walled sites        |
-| Settings    | API base URL, ntfy help                                          |
-| Admin       | User management + global scrape/delivery stats (admin only)      |
+| Settings    | API base URL, billing (tier-aware upgrade checkout + portal), account export/delete, cookie prefs, ntfy help |
+| Admin       | User management (assign free/starter/plus/pro), promo codes, GDPR audit, global scrape/delivery stats (admin only) |
 
 ## Auth flow
 

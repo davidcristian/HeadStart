@@ -10,7 +10,7 @@ data isolation.
 ## Model
 
 - `user` table: `email` (unique), `password_hash` (bcrypt), `is_admin`,
-  `is_active`, `plan` (`free` / `pro` / `team`, default `free`),
+  `is_active`, `plan` (`free` / `starter` / `plus` / `pro`, default `free`),
   `email_verified_at` (null until the user confirms their address). See
   [data-model.md](data-model.md).
 - The **first** registered user becomes admin (`AuthService.register`). A

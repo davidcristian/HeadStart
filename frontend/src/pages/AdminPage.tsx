@@ -6,6 +6,7 @@ import { AdminDataRequestsCard } from "../components/AdminDataRequestsCard";
 import { AdminPromoCodesCard } from "../components/AdminPromoCodesCard";
 import { useAdminStats, useAdminUsers, useMe } from "../hooks/queries";
 import { useUpdateAdminUser } from "../hooks/mutations";
+import { ADMIN_PLAN_OPTIONS } from "../lib/plan";
 import type { AdminUser, PlanId } from "../types";
 
 function StatTile({ label, value }: { label: string; value: number }) {
@@ -47,9 +48,11 @@ function UserRow({
           onChange={(e) => onUpdate(user.id, { plan: e.target.value as PlanId })}
           aria-label={`Plan for ${user.email}`}
         >
-          <option value="free">Free</option>
-          <option value="pro">Pro</option>
-          <option value="team">Team</option>
+          {ADMIN_PLAN_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
         </select>
       </td>
       <td className="muted">{new Date(user.created_at).toLocaleDateString()}</td>
