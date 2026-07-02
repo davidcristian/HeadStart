@@ -40,6 +40,10 @@ _AMAZON_ACCOUNT_RE = re.compile(
     r"account\.amazon\.jobs/jobs/(?P<id>\d+)",
     re.IGNORECASE,
 )
+_META_CAREERS_RE = re.compile(
+    r"(?:www\.)?(?:metacareers|facebookcareers)\.com/(?:jobs|profile/job_details|profile/create_application)/(?P<id>\d+)",
+    re.IGNORECASE,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -224,6 +228,16 @@ def parse_ats_job_url(url: str) -> AtsJobTarget | None:
             external_id=job_id,
             job_url=normalized,
             config=amazon_config,
+        )
+
+    meta = _META_CAREERS_RE.search(normalized)
+    if meta:
+        job_id = meta.group("id")
+        return AtsJobTarget(
+            adapter_key="meta_careers",
+            external_id=job_id,
+            job_url=normalized,
+            config={"company": "Meta", "portal_id": "meta"},
         )
 
     return None

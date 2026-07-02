@@ -54,6 +54,12 @@ def test_parse_ats_job_urls_microsoft_and_amazon() -> None:
     assert amazon_account.external_id == "10410605"
     assert "locale" not in amazon_account.config
 
+    meta = parse_ats_job_url("https://www.metacareers.com/jobs/2132019417725760/")
+    assert meta is not None
+    assert meta.adapter_key == "meta_careers"
+    assert meta.external_id == "2132019417725760"
+    assert meta.config["portal_id"] == "meta"
+
 
 def test_resolve_apply_route_delegates_microsoft() -> None:
     html = load_fixture("indeed_viewjob_microsoft.html")

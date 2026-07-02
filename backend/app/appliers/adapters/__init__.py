@@ -13,6 +13,7 @@ from app.appliers.adapters import (
     indeed,
     lever,
     linkedin,
+    meta_careers,
     microsoft_careers,
     workday,
 )
@@ -26,6 +27,7 @@ __all__ = [
     "indeed",
     "lever",
     "linkedin",
+    "meta_careers",
     "microsoft_careers",
     "workday",
 ]

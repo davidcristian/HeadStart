@@ -57,8 +57,9 @@ source's `adapter_key` when that source supports auto-apply. Import the
 | `microsoft_careers` | Eightfold SmartApply JSON (session cookies) | `POST apply.careers.microsoft.com/api/application/v2/submit`; see below |
 | `amazon_jobs` | amazon.jobs applicant JSON (session cookies) | `PUT /api/apply/applicant/` → draft → `submit_application`; see below |
 | `apple_careers` | jobs.apple.com talent JSON (session cookies) | `PUT /api/v1/js/talent/<id>/applyJob` (+ resume upload); see below |
+| `meta_careers` | metacareers.com Relay GraphQL (session cookies) | `POST /api/graphql/` (`xcp_create_application_v2`); see below |
 | `indeed` | Viewjob parse + downstream ATS delegation | Fetches `/viewjob?jk=…`, delegates to Greenhouse/Lever/Ashby/Workday/Google when the listing embeds an employer apply URL; see below |
-| `linkedin` | Guest job page + Voyager GraphQL + downstream ATS delegation | Fetches `/jobs-guest/jobs/api/jobPosting/{id}`, enriches offsite listings via Voyager when session cookies are present, delegates to Greenhouse/Lever/Ashby/Workday/Google/Microsoft/Amazon when the employer apply URL is recognized; see below |
+| `linkedin` | Guest job page + Voyager GraphQL + downstream ATS delegation | Fetches `/jobs-guest/jobs/api/jobPosting/{id}`, enriches offsite listings via Voyager when session cookies are present, delegates to Greenhouse/Lever/Ashby/Workday/Google/Microsoft/Amazon/Meta when the employer apply URL is recognized; see below |
 
 ### Greenhouse
 
@@ -366,12 +367,43 @@ cookies, `talent_id`, and CSRF token. Resume files upload via
 source config. Treat live auto-apply as best-effort; always preview with dry run
 first.
 
+### Meta Careers
+
+Meta's candidate portal (`metacareers.com`) uses Relay GraphQL for job detail
+and application submission:
+
+| Step | Operation |
+| ---- | --------- |
+| Job detail (public) | `CandidatePortalJobDetailsViewQuery` on `/api/graphql/` |
+| Apply entry | `/profile/create_application/<requisition_id>/` |
+| Submit | `CandidateChatbotApplicationDetailSubmitMutation` → `xcp_create_application_v2` |
+
+Config / credentials:
+
+| Field | Where | Purpose |
+| ----- | ----- | ------- |
+| `requisition_id` | source/search config or parsed from job URL | Numeric Meta requisition id |
+| Meta Careers cookies | credential `cookies` | Logged-in candidate session from `metacareers.com` |
+| `session_id` | credential `session` | Browser session key from the apply flow |
+| `lsd` / `csrf_token` | credential `session` | Optional anti-CSRF token (otherwise fetched from the apply page) |
+| EEO / screening keys | profile `answers` | Voluntary self-ID and employer questions (best-effort) |
+
+**Dry run:** loads public job metadata via `CandidatePortalJobDetailsViewQuery`
+and returns the mapped application state that would be posted to
+`xcp_create_application_v2`. No Meta login required.
+
+**Live submit:** requires the candidate's own logged-in Meta Careers session
+cookies and `session_id`. Resume files upload via Relay multipart on the submit
+mutation. Meta's AI-assisted application flow may require additional
+`profile.answers` mappings for employer-specific questionnaires. Treat live
+auto-apply as best-effort; always preview with dry run first.
+
 ### Indeed
 
 Indeed listings rarely submit on Indeed itself — most **Easily apply** jobs
 redirect to an employer ATS. The adapter fetches the public viewjob page,
 parses embedded `window._initialData`, and **delegates** to Greenhouse, Lever,
-Ashby, Workday, Google Careers, Microsoft Careers, or Amazon Jobs when the
+Ashby, Workday, Google Careers, Microsoft Careers, Amazon Jobs, or Meta Careers when the
 downstream apply URL is recognized.
 Config / credentials:
 
@@ -406,7 +438,7 @@ LinkedIn listings either expose **Easy Apply** on LinkedIn itself or redirect to
 an employer ATS. The adapter fetches the public guest job-posting page, optionally
 enriches offsite listings via authenticated Voyager GraphQL (`companyApplyUrl`),
 and **delegates** to Greenhouse, Lever, Ashby, Workday, Google Careers, Microsoft
-Careers, or Amazon Jobs when the downstream apply URL is recognized.
+Careers, Amazon Jobs, or Meta Careers when the downstream apply URL is recognized.
 
 Config / credentials:
 
