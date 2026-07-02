@@ -139,9 +139,9 @@ Introduce paid tiers once the public shell and onboarding work.
 
 | Item | Why | Notes |
 | ---- | --- | ----- |
-| Pricing page | Users need to understand cost before committing | Tiered plans (e.g. free / pro / team), feature matrix, annual vs monthly toggle | **Shipped:** public `/pricing` with Free / Pro / Team cards, comparison table, billing-period toggle, and register CTAs; paid checkout deferred to billing item |
-| Plan limits & enforcement | Free and paid tiers need server-side guardrails | Per-plan caps on searches, sources, notification targets; enforce in services, not UI only | **Shipped:** `user.plan` (`free`/`pro`/`team`, default `free`); caps + feature gates in `PlanLimitsService`; `402` on limit/feature violations; `/meta` returns plan snapshot; admin can set plan; UI shows usage on create forms |
-| ~~Billing & payments~~ | Revenue and subscription lifecycle | Stripe (or similar): checkout, subscriptions, plan upgrades/downgrades, invoices, failed-payment handling, webhooks | **Shipped:** Stripe Checkout + Customer Portal; `POST /billing/webhook` updates `user.plan`; Pro monthly/annual with optional trial; see [modules/billing.md](modules/billing.md) |
+| ~~Pricing page~~ | ~~Users need to understand cost before committing~~ | **Shipped:** public `/pricing` with Free / Starter / Plus / Pro cards, comparison table, billing-period toggle, and Stripe checkout CTAs; see Phase 14c |
+| ~~Plan limits & enforcement~~ | ~~Free and paid tiers need server-side guardrails~~ | **Shipped:** `user.plan` (`free`/`starter`/`plus`/`pro`, default `free`); caps + feature gates in `PlanLimitsService`; `402` on limit/feature violations; `/meta` returns plan snapshot; admin can set plan; UI shows usage on create forms |
+| ~~Billing & payments~~ | ~~Revenue and subscription lifecycle~~ | **Shipped:** Stripe Checkout + Customer Portal for Starter / Plus / Pro; `POST /billing/webhook` updates `user.plan`; monthly/annual price pairs per tier with optional trial; see [modules/billing.md](modules/billing.md) |
 
 **Done when:** a user can pick a plan, pay, hit enforceable limits on the free
 tier, and upgrade without manual intervention.
@@ -173,11 +173,11 @@ sessions) and the job lifecycle (`seen_job.status`).
 | Item | Why | Notes |
 | ---- | --- | ----- |
 | ~~User profile & resume storage~~ | ~~Applications need structured candidate data~~ | **Shipped:** one Fernet-encrypted profile per user (contact, links, resume text, cover-letter template, per-field answers); returned to its owner for editing. See [modules/profile.md](modules/profile.md) |
-| Per-site apply adapters | Each ATS/board has different apply flows | **Shipped:** pluggable adapters for **Greenhouse**, **Lever**, **Ashby**, **Workday**, **Google Careers**, **Microsoft Careers**, **Amazon Jobs**, **Apple Careers**, **Meta Careers**, **Indeed** (delegates to downstream ATS when the listing embeds an employer apply URL), and **LinkedIn** (delegates to those ATS adapters when possible; LinkedIn-hosted Easy Apply with dry-run + best-effort live submit). See [launch-checklist.md](launch-checklist.md#7-auto-apply-optional--know-the-limits) |
+| ~~Per-site apply adapters~~ | ~~Each ATS/board has different apply flows~~ | **Shipped:** pluggable adapters for **Greenhouse**, **Lever**, **Ashby**, **Workday**, **Google Careers**, **Microsoft Careers**, **Amazon Jobs**, **Apple Careers**, **Meta Careers**, **Indeed** (delegates to downstream ATS when the listing embeds an employer apply URL), and **LinkedIn** (delegates to those ATS adapters when possible; LinkedIn-hosted Easy Apply with dry-run + best-effort live submit). See [launch-checklist.md](launch-checklist.md#7-auto-apply-optional--know-the-limits) |
 | ~~Resume file upload~~ | ~~Users expect PDF attachments when applying~~ | **Shipped:** encrypted resume file on application profile (`PUT /profile/resume`); attached on Greenhouse/Lever/Ashby/Workday live apply; plain `resume_text` fallback |
-| Apply orchestration service | Business rules live in services, not routers | **Shipped:** `ApplyService.apply_to_job` loads profile, credentials, and source config; delegates to applier; marks `seen_job` `applied` on success. Live submits queue via Celery (`apply_to_job` task); preview stays synchronous. |
+| ~~Apply orchestration service~~ | ~~Business rules live in services, not routers~~ | **Shipped:** `ApplyService.apply_to_job` loads profile, credentials, and source config; delegates to applier; marks `seen_job` `applied` on success. Live submits queue via Celery (`apply_to_job` task); preview stays synchronous. |
 | ~~Apply from the Jobs UI~~ | ~~Users need a one-click path~~ | **Shipped:** Apply button on supported jobs; confirm dialog with editable cover letter; preview (`dry_run`) and submit; success/failure feedback on Jobs page |
-| Safety & consent | Auto-apply is high-risk | Explicit opt-in per source, dry-run/preview mode, rate limits, and clear audit log of what was submitted | **Shipped:** `source.auto_apply_enabled` (default off); live apply blocked until enabled; `application_log` table + `GET /application-logs`; Sources toggle + Application profile history UI |
+| ~~Safety & consent~~ | ~~Auto-apply is high-risk~~ | **Shipped:** `source.auto_apply_enabled` (default off); live apply blocked until enabled; `application_log` table + `GET /application-logs`; Sources toggle + Application profile history UI |
 
 **Done when:** a user with a saved credential and profile can apply to a
 supported job from the Jobs page, see the result, and the job is marked
@@ -191,7 +191,7 @@ Goal: offset hosting costs for free users while keeping paid tiers ad-free.
 
 | Item | Why | Notes |
 | ---- | --- | ----- |
-| Ads for free users | Monetize the free tier without hard paywalls | **Shipped:** `plan.show_ads` on `GET /api/v1/meta`; `FreeTierAd` in app shell (sidebar / mobile strip); built-in Pro upgrade CTA; optional `ADS_EXTERNAL_SLOT_URL` iframe gated on cookie consent; `ADS_ENABLED=false` kill switch; see [modules/frontend.md](modules/frontend.md) |
+| ~~Ads for free users~~ | ~~Monetize the free tier without hard paywalls~~ | **Shipped:** `plan.show_ads` on `GET /api/v1/meta`; `FreeTierAd` in app shell (sidebar / mobile strip); built-in Pro upgrade CTA; optional `ADS_EXTERNAL_SLOT_URL` iframe gated on cookie consent; `ADS_ENABLED=false` kill switch; see [modules/frontend.md](modules/frontend.md) |
 
 **Done when:** free-tier users see ads in the app, paid users do not, and ad
 placement does not interfere with core job-alert workflows.
@@ -223,7 +223,7 @@ Goal: meet Germany-specific legal requirements for operating a public website.
 
 | Item | Why | Notes |
 | ---- | --- | ----- |
-| Placeholder Impressum | Required by German law (Impressumspflicht) for commercial websites | **Shipped:** `/impressum` with placeholder owner/contact sections (German); footer link on public shell |
+| ~~Placeholder Impressum~~ | ~~Required by German law (Impressumspflicht) for commercial websites~~ | **Shipped:** `/impressum` with placeholder owner/contact sections (German); footer link on public shell |
 
 **Done when:** visitors can open a linked Impressum page from the public footer
 before the operator replaces placeholder text with final legal details.
@@ -237,8 +237,8 @@ about most, and give paid users a single place to search across them.
 
 | Item | Why | Notes |
 | ---- | --- | ----- |
-| FAANG / MAANG / MAMAA & unicorn portals | High-value employers use dedicated career sites and ATS boards that are not always obvious to configure | **Shipped:** `GET /portals` curated catalog (68 employers across Greenhouse, Lever, Ashby, Workday, Apple Careers, Google Careers, Meta Careers, Microsoft Careers, and Amazon Jobs); category/search filters; one-click **Add source** on Sources page; `portal_id` in `default_config` for duplicate detection. **MAMAA complete:** Meta (`meta_careers`), Apple (`apple_careers`), Microsoft (`microsoft_careers`), Amazon (`amazon_jobs`), Alphabet/Google (`google_careers`), Netflix (Lever), NVIDIA (Workday). **Apple** uses hydration JSON on jobs.apple.com; **Google** embedded JSON in careers search HTML; **Meta** Relay GraphQL on metacareers.com; **Microsoft** Eightfold PCSX JSON API; **Amazon** public `search.json` API. |
-| Paid portal search page | Paid users should discover and search all supported boards without manual source setup | **Shipped:** `/app/portals` searches curated portals in one request (`POST /portals/search`); bulk alert setup (`POST /portals/subscribe`) auto-creates sources + searches; Pro+ plan gate (`portal_search` feature) |
+| ~~FAANG / MAANG / MAMAA & unicorn portals~~ | ~~High-value employers use dedicated career sites and ATS boards that are not always obvious to configure~~ | **Shipped:** `GET /portals` curated catalog (68 employers across Greenhouse, Lever, Ashby, Workday, Apple Careers, Google Careers, Meta Careers, Microsoft Careers, and Amazon Jobs); category/search filters; one-click **Add source** on Sources page; `portal_id` in `default_config` for duplicate detection. **MAMAA complete:** Meta (`meta_careers`), Apple (`apple_careers`), Microsoft (`microsoft_careers`), Amazon (`amazon_jobs`), Alphabet/Google (`google_careers`), Netflix (Lever), NVIDIA (Workday). **Apple** uses hydration JSON on jobs.apple.com; **Google** embedded JSON in careers search HTML; **Meta** Relay GraphQL on metacareers.com; **Microsoft** Eightfold PCSX JSON API; **Amazon** public `search.json` API. |
+| ~~Paid portal search page~~ | ~~Paid users should discover and search all supported boards without manual source setup~~ | **Shipped:** `/app/portals` searches curated portals in one request (`POST /portals/search`); bulk alert setup (`POST /portals/subscribe`) auto-creates sources + searches; Pro+ plan gate (`portal_search` feature) |
 
 **Done when:** a paid user can open one page, pick from curated FAANG/MAANG/MAMAA
 and unicorn company portals (plus other supported boards), run a search, and
@@ -254,7 +254,7 @@ hosted API.
 
 | Item | Why | Notes |
 | ---- | --- | ----- |
-| llama.cpp local summarizer | Faster iteration and zero API spend when developing locally | **Shipped:** `@register_summarizer("llamacpp")` calls a local `llama-server` OpenAI-compatible endpoint (default `http://localhost:8080/v1`); optional API key; `make llamacpp` helper (`LLAMACPP_MODEL_PATH` required). Deployed config unchanged — use `openai` or `heuristic` in prod. |
+| ~~llama.cpp local summarizer~~ | ~~Faster iteration and zero API spend when developing locally~~ | **Shipped:** `@register_summarizer("llamacpp")` calls a local `llama-server` OpenAI-compatible endpoint (default `http://localhost:8080/v1`); optional API key; `make llamacpp` helper (`LLAMACPP_MODEL_PATH` required). Deployed config unchanged — use `openai` or `heuristic` in prod. |
 
 **Done when:** a developer can run summaries against a local llama.cpp server with
 a one-line env change (or `make` target), see blurbs in notifications and the Jobs
@@ -270,7 +270,7 @@ services.
 
 | Item | Why | Notes |
 | ---- | --- | ----- |
-| Additional summarizer adapters | Users and operators already standardize on different LLM vendors | **Shipped (Gemini):** `@register_summarizer("gemini")` calls the Google AI `generateContent` API; env `GEMINI_API_KEY`, `GEMINI_MODEL`, `GEMINI_BASE_URL`; select with `SUMMARY_PROVIDER=gemini`. **Shipped (Anthropic):** `@register_summarizer("anthropic")` calls the Anthropic Messages API; env `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL`, `ANTHROPIC_BASE_URL`, `ANTHROPIC_API_VERSION`; select with `SUMMARY_PROVIDER=anthropic`. OpenAI-compatible gateways (OpenRouter, Azure) work via the existing `openai` provider and `OPENAI_BASE_URL`. See [modules/summaries.md](modules/summaries.md) and [recipes.md](recipes.md). |
+| ~~Additional summarizer adapters~~ | ~~Users and operators already standardize on different LLM vendors~~ | **Shipped (Gemini):** `@register_summarizer("gemini")` calls the Google AI `generateContent` API; env `GEMINI_API_KEY`, `GEMINI_MODEL`, `GEMINI_BASE_URL`; select with `SUMMARY_PROVIDER=gemini`. **Shipped (Anthropic):** `@register_summarizer("anthropic")` calls the Anthropic Messages API; env `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL`, `ANTHROPIC_BASE_URL`, `ANTHROPIC_API_VERSION`; select with `SUMMARY_PROVIDER=anthropic`. OpenAI-compatible gateways (OpenRouter, Azure) work via the existing `openai` provider and `OPENAI_BASE_URL`. See [modules/summaries.md](modules/summaries.md) and [recipes.md](recipes.md). |
 | ~~Provider docs & env surface~~ | ~~Operators need a clear, per-provider config matrix~~ | **Shipped:** per-provider env vars documented in `.env.example` and `modules/summaries.md` |
 
 **Done when:** an operator can switch `SUMMARY_PROVIDER` to at least one
@@ -288,9 +288,9 @@ API key) instead of relying only on the operator's deployment-wide
 
 | Item | Why | Notes |
 | ---- | --- | ----- |
-| Per-user provider preference | Pro differentiator; users standardize on different LLM vendors | **Shipped:** `user.summary_provider` + encrypted `summary_api_key_ciphertext`; `GET/PATCH /summary-preferences`; pipeline uses `resolve_summary_settings` |
-| Settings UI | Self-serve configuration | **Shipped:** Settings → AI summaries card; upgrade CTA for non-Pro |
-| Docs | Operators and users need the split between env defaults and per-user overrides | **Shipped:** [modules/summaries.md](modules/summaries.md) |
+| ~~Per-user provider preference~~ | ~~Pro differentiator; users standardize on different LLM vendors~~ | **Shipped:** `user.summary_provider` + encrypted `summary_api_key_ciphertext`; `GET/PATCH /summary-preferences`; pipeline uses `resolve_summary_settings` |
+| ~~Settings UI~~ | ~~Self-serve configuration~~ | **Shipped:** Settings → AI summaries card; upgrade CTA for non-Pro |
+| ~~Docs~~ | ~~Operators and users need the split between env defaults and per-user overrides~~ | **Shipped:** [modules/summaries.md](modules/summaries.md) |
 
 **Done when:** a Pro user can choose heuristic/OpenAI/Gemini/Anthropic (or server
 default), optionally save a BYOK API key, and new job blurbs use that provider.
