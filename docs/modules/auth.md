@@ -159,6 +159,7 @@ mapped to HTTP 402**, never UI-only checks.
 | RSS feed | no | yes | yes |
 | Premium scrapers (`indeed`, `linkedin`, `playwright`) | no | yes | yes |
 | Webhook notifier | no | yes | yes |
+| Cross-portal search (`/portals/search`) | no | yes | yes |
 
 **Downgrade behaviour:** existing rows stay; create/update that would exceed a
 cap or use a gated feature is rejected. Admins bypass all limits.

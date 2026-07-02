@@ -34,7 +34,8 @@ The frontend serves two surfaces from one bundle (see
   not use tracking cookies.
 - **Authenticated product** under **`/app/*`**, gated by `ProtectedRoute` and
   wrapped in the `Layout` shell (`/app/searches`, `/app/jobs`, …, `/app/admin`).
-  `/app` redirects to `/app/searches`. New accounts without
+  `/app` redirects to `/app/searches`. Unverified accounts are redirected to
+  `/verify-email` by `EmailVerificationGuard`. New accounts without
   `onboarding_completed_at` are redirected to **`/app/onboarding`** (guided
   setup wizard) before they can reach the main shell.
 
@@ -54,8 +55,8 @@ other unknown path redirects to the landing page.
 | Privacy     | Public privacy policy at `/privacy` |
 | Terms       | Public terms of use at `/terms` |
 | Impressum   | Public German legal notice at `/impressum` (placeholder operator details; replace before DE launch) |
-| Login       | Email + password sign-in                                         |
-| Register    | Create an account (first user becomes admin)                     |
+| Login/Register    | Email + password sign-in / sign-up                               |
+| Verify email      | Confirm address after signup at `/verify-email` (link or resend)   |
 | Onboarding  | First-run wizard at `/app/onboarding`: source → notify → search → run |
 | Sources     | List/create/edit sources (name, adapter, base URL, config); browse curated company portals; test scrape |
 | Companies   | Pro+ cross-portal search at `/app/portals`: keyword search across curated FAANG/unicorn/AI boards, results preview, one-click alert setup |
@@ -63,6 +64,7 @@ other unknown path redirects to the landing page.
 |             | interval; enable/disable; run now (immediate results); view last |
 |             | run, scrape errors, and recent delivery failures                 |
 | Jobs        | Feed of seen jobs, filterable by search and status; mark seen/applied/archived; **Apply** on supported sources (preview + submit); salary when scraped; copy RSS feed URL |
+| Profile     | Application profile for auto-apply (contact, resume, experience, education, skills); application history table |
 | Targets     | Manage notification targets (e.g. ntfy server/topic); send test  |
 | Credentials | Per-source encrypted cookies/headers for bot-walled sites        |
 | Settings    | API base URL, ntfy help                                          |
@@ -74,6 +76,8 @@ other unknown path redirects to the landing page.
   the refresh token is an httpOnly cookie set by the backend. See
   [auth.md](auth.md) and [adr/0007-httponly-refresh-cookie.md](../adr/0007-httponly-refresh-cookie.md).
 - `/forgot-password` and `/reset-password?token=...` for email-based password reset.
+- `/verify-email` and `/verify-email?token=...` for email verification after signup.
+  Unverified users can sign in but product routes return **403** until verified.
 - `src/api/client.ts` sends `credentials: "include"`, attaches the in-memory
   access token, and on a 401 calls `refreshSession()` (cookie-based) once before
   clearing the session.

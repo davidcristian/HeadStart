@@ -225,7 +225,7 @@ Audit of auto-apply attempts (preview and live).
 | ------------------------ | ----------- | ---------------------------------------- |
 | id                       | int PK      |                                          |
 | seen_job_id              | FK seen_job |                                          |
-| status                   | str         | `submitted` / `dry_run` / `failed`       |
+| status                   | str         | `queued` / `processing` / `submitted` / `dry_run` / `failed` |
 | dry_run                  | bool        | True when the attempt was a preview only |
 | error                    | text?       | Present when failed                      |
 | payload                  | JSON?       | Application body sent or previewed       |
