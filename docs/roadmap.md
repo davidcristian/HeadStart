@@ -281,6 +281,120 @@ appear in notifications and the Jobs feed, and failures remain best-effort
 
 ---
 
+## Phase 14 — Four-tier pricing (replace Team)
+
+Goal: drop the admin-only **Team** tier and ship a classic decoy ladder —
+**Free → Starter → Plus → Pro** — with three self-serve paid checkouts. Work the
+sub-phases in order; each is sized for a single agent with minimal context.
+
+**Target ladder (names final; prices TBD — see notes in 14a):**
+
+| Tier | ID | Role |
+| ---- | -- | ---- |
+| Free | `free` | Try the product; ads on |
+| Starter | `starter` | Cheap entry — remove ads + digest |
+| Plus | `plus` | **Trap** — serious price, missing HeadStart differentiators |
+| Pro | `pro` | Obvious best value; highlighted on `/pricing` |
+
+**Feature matrix (enforcement lands in 14b):**
+
+| | Free | Starter | Plus | Pro |
+| -- | ---- | ------- | ---- | --- |
+| Searches / sources / targets | 3 / 3 / 1 | 5 / 5 / 2 | 10 / 10 / 3 | 20 / 20 / 5 |
+| Ads | yes | no | no | no |
+| Digest mode | — | ✓ | ✓ | ✓ |
+| Indeed / LinkedIn / Playwright | — | — | ✓ | ✓ |
+| Site credentials | — | — | ✓ | ✓ |
+| AI summaries | — | — | — | ✓ |
+| RSS + outbound webhooks | — | — | — | ✓ |
+| Curated portal search | — | — | — | ✓ |
+
+Admins keep unlimited access via `is_admin` (no separate plan slug). Existing
+`team` subscribers migrate to `pro`.
+
+### 14a — ADR & plan model (backend only)
+
+Document the pricing strategy and replace `team` in the plan registry — **no**
+Stripe or pricing-page work yet.
+
+| Item | Why | Notes |
+| ---- | --- | ----- |
+| ADR: four-tier decoy pricing | Capture decision before code churn | Record tier names, feature matrix, admin handling, Team deprecation; **prices as TBD** with working defaults (e.g. Starter $2.99, Plus $7.99, Pro $9.99 monthly) so implementers can tune in Stripe without re-opening the ADR |
+| `app/core/plans.py` | Single source of truth for limits/gates | Add `starter` + `plus`; remove `team` from `PlanId` / `VALID_PLANS`; define caps per matrix above |
+| Admin effective plan | Operators stay unlimited | `PlanLimitsService.resolve_plan`: map `is_admin` to Pro limits (or a dedicated high cap), not `team` |
+| Data migration | No orphaned plan slug | Alembic: `UPDATE users SET plan = 'pro' WHERE plan = 'team'` |
+| Schema/types sweep | Compile-time safety | Update `PlanId` in `schemas/plan.py`, `schemas/auth.py`, promo model comments, tests |
+| Docs (partial) | Keep map accurate | Note Team deprecation in `billing.md` plan table |
+
+**Done when:** `make check` passes; `team` is gone from valid plans; existing Team
+users are `pro`; limits for all four tiers exist in `plans.py`.
+
+### 14b — Tiered feature gates
+
+Wire the feature matrix into enforcement — depends on **14a**.
+
+| Item | Why | Notes |
+| ---- | --- | ----- |
+| Per-tier feature flags | Starter ≠ Plus ≠ Pro | `plan_features_for`: digest on Starter+; premium scrapers + credentials on Plus+; AI, RSS, webhooks, portal on Pro only |
+| Scraper/notifier gates | Match matrix | Update `scraper_allowed` / `notifier_allowed` for `starter` and `plus` |
+| Error messages | Clear upgrade paths | “Requires Pro” / “Requires Plus or Pro” instead of “Pro or Team” |
+| Tests | Regression safety | Service tests for each gate boundary (digest, indeed, credentials, AI, portal) |
+| Docs | Enforcement doc matches code | `billing.md` + `auth.md` limit tables |
+
+**Done when:** a Starter user gets digest but not Indeed; a Plus user gets Indeed
+but not AI summaries or portal search; Pro gets everything in the matrix.
+
+### 14c — Pricing page UI
+
+Public-facing four-card layout — depends on **14a** (plan IDs); prices can use
+placeholders until **14d**.
+
+| Item | Why | Notes |
+| ---- | --- | ----- |
+| `frontend/src/lib/pricing.ts` | Mirror backend tiers | Four plans; remove Team; Pro `highlight: true`; comparison table rows for new gates |
+| `/pricing` page | Conversion surface | Four cards; annual/monthly toggle; remove Team mailto CTA |
+| Register CTAs | Funnel | Free → register; paid → checkout (disabled/hidden until Stripe prices exist) |
+| `modules/frontend.md` | Doc sync | Pricing section |
+
+**Done when:** `/pricing` shows Free / Starter / Plus / Pro with the correct
+feature matrix; Team is gone from the UI.
+
+### 14d — Stripe multi-plan checkout
+
+Three paid Stripe price pairs — depends on **14a** and ideally **14c**.
+
+| Item | Why | Notes |
+| ---- | --- | ----- |
+| Price env vars | One pair per paid tier | `STRIPE_PRICE_STARTER_*`, `STRIPE_PRICE_PLUS_*`, keep `STRIPE_PRICE_PRO_*`; document in `.env.example` |
+| `billing_prices.py` | Resolve price ID → plan | Map all six price IDs to `starter` / `plus` / `pro` |
+| Checkout API | Self-serve for all paid tiers | `POST /billing/checkout` accepts `plan: starter \| plus \| pro`; remove Team checkout blocks |
+| Webhook plan resolution | Subscription → `user.plan` | `checkout.session.completed` + subscription events set correct slug |
+| Billing status | UI hints | `can_checkout` for users not already on a paid plan |
+| Docs | Operator setup | Full `billing.md` rewrite for four tiers + Stripe Dashboard steps |
+
+**Done when:** a user can subscribe to Starter, Plus, or Pro via Stripe Checkout
+and webhooks persist the matching `user.plan`.
+
+### 14e — Promo codes & admin polish
+
+Depends on **14a** + **14d**.
+
+| Item | Why | Notes |
+| ---- | --- | ----- |
+| Promo eligible plans | Codes target the right tier | Admin create form + validation: `starter` / `plus` / `pro` instead of `pro` / `team` |
+| `plan_upgrade` promos | Still work across tiers | Stripe coupon metadata + redemption sets intended plan |
+| Admin user panel | No Team in dropdown | Plan assign: free / starter / plus / pro |
+| Settings billing UI | Upgrade paths | Show current tier; upgrade CTAs respect new ladder |
+
+**Done when:** admins can assign any of the four tiers; promo codes validate
+against the correct eligible plans; Settings reflects the user's tier.
+
+**Phase 14 overall done when:** Team is fully removed; the public site and Stripe
+both offer Free / Starter / Plus / Pro; enforcement matches the feature matrix;
+admins retain unlimited access via `is_admin`.
+
+---
+
 ## Suggested starting points
 
 **Personal use (one job seeker):**
