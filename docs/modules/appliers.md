@@ -56,6 +56,7 @@ source's `adapter_key` when that source supports auto-apply. Import the
 | `google_careers` | HiringCportal batchexecute RPC (session cookies) | `SaveCareersProfile` → `CreatePacket` → `SavePacket` → `SubmitPacket`; see below |
 | `microsoft_careers` | Eightfold SmartApply JSON (session cookies) | `POST apply.careers.microsoft.com/api/application/v2/submit`; see below |
 | `amazon_jobs` | amazon.jobs applicant JSON (session cookies) | `PUT /api/apply/applicant/` → draft → `submit_application`; see below |
+| `apple_careers` | jobs.apple.com talent JSON (session cookies) | `PUT /api/v1/js/talent/<id>/applyJob` (+ resume upload); see below |
 | `indeed` | Viewjob parse + downstream ATS delegation | Fetches `/viewjob?jk=…`, delegates to Greenhouse/Lever/Ashby/Workday/Google when the listing embeds an employer apply URL; see below |
 | `linkedin` | Guest job page + Voyager GraphQL + downstream ATS delegation | Fetches `/jobs-guest/jobs/api/jobPosting/{id}`, enriches offsite listings via Voyager when session cookies are present, delegates to Greenhouse/Lever/Ashby/Workday/Google/Microsoft/Amazon when the employer apply URL is recognized; see below |
 
@@ -330,6 +331,40 @@ cookies. Resume files upload via `/api/apply/documents` before submit.
 Employer-specific screening questions may need explicit `profile.answers`
 mappings. Amazon may enforce application limits and CAPTCHA on the apply portal;
 treat live auto-apply as best-effort and always preview with dry run first.
+
+### Apple Careers
+
+Apple's careers portal (`jobs.apple.com`) uses authenticated talent JSON
+endpoints behind the apply UI:
+
+| Step | Endpoint |
+| ---- | -------- |
+| Job detail (public) | Server-rendered `/en-us/details/<reqId>/<slug>` hydration JSON |
+| Questionnaire | `GET /api/v1/js/jobDetails/<positionId>/questionnaire` |
+| Resume upload | `POST /api/v1/js/talent/<talentId>/file/uploadFile` |
+| Submit | `PUT /api/v1/js/talent/<talentId>/applyJob` |
+
+Config / credentials:
+
+| Field | Where | Purpose |
+| ----- | ----- | ------- |
+| `locale` | source/search config | Path locale (default `en-us`) |
+| `post_locations` / `store_locations` | source/search config | Location objects for retail roles that require store selection |
+| Apple Careers cookies | credential `cookies` | Logged-in candidate session from `jobs.apple.com` |
+| `talent_id` | credential `session` | Apple talent id (`talentId` from the signed-in profile) |
+| `csrf_token` | credential `session` | `X-Apple-CSRF-Token` (from `GET /api/v1/js/CSRFToken`) |
+| Questionnaire keys | profile `answers` | Employer screening questions (best-effort) |
+
+**Dry run:** fetches the public job detail page, parses embedded hydration JSON,
+and returns the mapped `talent` + `roles` body that would be sent to `applyJob`.
+No Apple login required.
+
+**Live submit:** requires the candidate's own logged-in Apple Careers session
+cookies, `talent_id`, and CSRF token. Resume files upload via
+`/file/uploadFile` before submit. Retail **PIPE** roles with
+`role_location_selection` need explicit `store_locations` / `post_locations` in
+source config. Treat live auto-apply as best-effort; always preview with dry run
+first.
 
 ### Indeed
 
