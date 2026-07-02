@@ -6,6 +6,7 @@ import { api } from "../api";
 import { useAuth } from "../auth/AuthContext";
 import { Brand } from "../components/Brand";
 import { PromoCodeField } from "../components/PromoCodeField";
+import { ComparisonCell, PlanCta } from "../components/pricing/PricingParts";
 import { PublicFooter } from "../components/PublicFooter";
 import type { PromoValidation } from "../types";
 import {
@@ -13,23 +14,10 @@ import {
   PLANS,
   PRICING_FAQ,
   type BillingPeriod,
+  annualBilledTotal,
   formatUsd,
   planDisplayPrice,
 } from "../lib/pricing";
-
-function ComparisonCell({ value }: { value: string | boolean }) {
-  if (typeof value === "boolean") {
-    return (
-      <span
-        className={value ? "pricing-check" : "pricing-dash"}
-        aria-label={value ? "Included" : "Not included"}
-      >
-        {value ? "✓" : "—"}
-      </span>
-    );
-  }
-  return <span>{value}</span>;
-}
 
 export function PricingPage() {
   const { user } = useAuth();
@@ -139,15 +127,13 @@ export function PricingPage() {
           {PLANS.map((plan) => {
             const price = planDisplayPrice(plan, billingPeriod);
             const isFree = plan.id === "free";
-            const isPro = plan.id === "pro";
-            const isTeam = plan.id === "team";
 
             return (
               <article
                 key={plan.id}
                 className={plan.highlight ? "pricing-card pricing-card-highlight" : "pricing-card"}
               >
-                {plan.highlight ? <span className="pricing-card-badge">Most popular</span> : null}
+                {plan.highlight ? <span className="pricing-card-badge">Best value</span> : null}
                 <header className="pricing-card-header">
                   <h2>{plan.name}</h2>
                   <p className="pricing-card-desc">{plan.description}</p>
@@ -157,7 +143,7 @@ export function PricingPage() {
                   </div>
                   {!isFree && billingPeriod === "annual" ? (
                     <p className="pricing-card-billed">
-                      Billed annually ({formatUsd(price * 12)}/yr)
+                      Billed annually ({formatUsd(annualBilledTotal(plan))}/yr)
                     </p>
                   ) : null}
                   {!isFree && billingPeriod === "monthly" ? (
@@ -192,42 +178,20 @@ export function PricingPage() {
                   ))}
                 </ul>
 
-                {isTeam ? (
-                  <a
-                    href="mailto:support@headstart.app?subject=HeadStart%20Team%20plan"
-                    className="btn btn-ghost btn-block"
-                  >
-                    {plan.cta}
-                  </a>
-                ) : isPro && user ? (
-                  <button
-                    type="button"
-                    className={
-                      plan.highlight ? "btn btn-primary btn-block" : "btn btn-ghost btn-block"
-                    }
-                    disabled={checkingOut}
-                    onClick={() => void startProCheckout()}
-                  >
-                    {checkingOut ? "Redirecting…" : plan.cta}
-                  </button>
-                ) : (
-                  <Link
-                    to={isFree ? "/register" : "/register"}
-                    className={
-                      plan.highlight ? "btn btn-primary btn-block" : "btn btn-ghost btn-block"
-                    }
-                  >
-                    {plan.cta}
-                  </Link>
-                )}
+                <PlanCta
+                  plan={plan}
+                  user={user}
+                  checkingOut={checkingOut}
+                  onCheckout={() => void startProCheckout()}
+                />
               </article>
             );
           })}
         </section>
 
         <p className="pricing-billing-note">
-          Pro includes a 14-day free trial when billing is enabled on the server. Team plans are
-          arranged manually — email support for a quote.
+          Pro includes a 14-day free trial when billing is enabled on the server. Starter and Plus
+          self-serve checkout is rolling out soon — create a free account to get started today.
         </p>
 
         <section className="pricing-compare" aria-labelledby="compare-title">
@@ -239,24 +203,22 @@ export function PricingPage() {
               <thead>
                 <tr>
                   <th scope="col">Feature</th>
-                  <th scope="col">Free</th>
-                  <th scope="col">Pro</th>
-                  <th scope="col">Team</th>
+                  {PLANS.map((plan) => (
+                    <th key={plan.id} scope="col">
+                      {plan.name}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
                 {COMPARISON_ROWS.map((row) => (
                   <tr key={row.label}>
                     <th scope="row">{row.label}</th>
-                    <td>
-                      <ComparisonCell value={row.free} />
-                    </td>
-                    <td>
-                      <ComparisonCell value={row.pro} />
-                    </td>
-                    <td>
-                      <ComparisonCell value={row.team} />
-                    </td>
+                    {PLANS.map((plan) => (
+                      <td key={plan.id}>
+                        <ComparisonCell value={row[plan.id]} />
+                      </td>
+                    ))}
                   </tr>
                 ))}
               </tbody>

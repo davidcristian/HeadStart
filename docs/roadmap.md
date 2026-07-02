@@ -351,10 +351,10 @@ placeholders until **14d**.
 
 | Item | Why | Notes |
 | ---- | --- | ----- |
-| `frontend/src/lib/pricing.ts` | Mirror backend tiers | Four plans; remove Team; Pro `highlight: true`; comparison table rows for new gates |
-| `/pricing` page | Conversion surface | Four cards; annual/monthly toggle; remove Team mailto CTA |
-| Register CTAs | Funnel | Free → register; paid → checkout (disabled/hidden until Stripe prices exist) |
-| `modules/frontend.md` | Doc sync | Pricing section |
+| ~~`frontend/src/lib/pricing.ts`~~ | ~~Mirror backend tiers~~ | **Shipped:** four plans; remove Team; Pro `highlight: true`; comparison table rows for new gates |
+| ~~`/pricing` page~~ | ~~Conversion surface~~ | **Shipped:** four cards; annual/monthly toggle; remove Team mailto CTA |
+| ~~Register CTAs~~ | ~~Funnel~~ | **Shipped:** Free → register; paid → checkout (Pro only until Stripe prices exist; Starter/Plus show “Coming soon” when signed in) |
+| ~~`modules/frontend.md`~~ | ~~Doc sync~~ | **Shipped:** Pricing section |
 
 **Done when:** `/pricing` shows Free / Starter / Plus / Pro with the correct
 feature matrix; Team is gone from the UI.

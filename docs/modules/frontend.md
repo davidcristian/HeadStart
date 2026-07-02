@@ -51,7 +51,7 @@ other unknown path redirects to the landing page.
 | Page        | Purpose                                                          |
 | ----------- | ---------------------------------------------------------------- |
 | Landing     | Public marketing page at `/`: hero with app screenshots, tabbed product demo, integrations strip, how-it-works, features, FAQ, CTA to register/sign in |
-| Pricing     | Public pricing page at `/pricing`: Free / Pro / Team tiers, feature comparison, monthly vs annual toggle; CTAs to register (paid checkout coming soon) |
+| Pricing     | Public pricing page at `/pricing`: Free / Starter / Plus / Pro tiers (mirrors backend `plans.py`), feature comparison table, monthly vs annual toggle; Free and paid CTAs link to register; Pro self-serve checkout when signed in (Starter/Plus checkout ships in Phase 14d) |
 | Privacy     | Public privacy policy at `/privacy` |
 | Terms       | Public terms of use at `/terms` |
 | Impressum   | Public German legal notice at `/impressum` (placeholder operator details; replace before DE launch) |

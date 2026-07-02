@@ -2,7 +2,7 @@
 
 export type BillingPeriod = "monthly" | "annual";
 
-export type PlanId = "free" | "pro" | "team";
+export type PlanId = "free" | "starter" | "plus" | "pro";
 
 export type PlanFeature = {
   label: string;
@@ -16,6 +16,8 @@ export type Plan = {
   monthlyPrice: number;
   annualPricePerMonth: number;
   highlight?: boolean;
+  /** Self-serve Stripe checkout (14d adds Starter and Plus). */
+  checkoutEnabled?: boolean;
   cta: string;
   limits: {
     searches: string;
@@ -29,7 +31,7 @@ export const PLANS: Plan[] = [
   {
     id: "free",
     name: "Free",
-    description: "Everything you need to try HeadStart on a couple of watches.",
+    description: "Try HeadStart on a couple of watches — no credit card required.",
     monthlyPrice: 0,
     annualPricePerMonth: 0,
     cta: "Get started free",
@@ -39,58 +41,79 @@ export const PLANS: Plan[] = [
       targets: "1 channel",
     },
     features: [
-      { label: "Greenhouse, Lever, Ashby & generic HTML scrapers", included: true },
+      { label: "Greenhouse, Lever, Ashby, Workday & more", included: true },
       { label: "Keyword, location & workplace filters", included: true },
       { label: "Immediate notifications (ntfy, email, Slack, …)", included: true },
       { label: "Jobs feed & mobile PWA", included: true },
-      { label: "Digest mode & AI match summaries", included: false },
-      { label: "Indeed, LinkedIn & authenticated scrapers", included: false },
-      { label: "RSS feed & outbound webhooks", included: false },
+      { label: "Ad-free experience", included: false },
+      { label: "Digest mode", included: false },
+      { label: "Indeed, LinkedIn & site credentials", included: false },
+      { label: "AI summaries, RSS & portal search", included: false },
+    ],
+  },
+  {
+    id: "starter",
+    name: "Starter",
+    description: "Remove ads and batch alerts without paying for premium boards.",
+    monthlyPrice: 2.99,
+    annualPricePerMonth: 2.49,
+    cta: "Start with Starter",
+    limits: {
+      searches: "Up to 5",
+      sources: "Up to 5",
+      targets: "2 channels",
+    },
+    features: [
+      { label: "Everything in Free", included: true },
+      { label: "Ad-free in the app", included: true },
+      { label: "Digest mode to batch alerts", included: true },
+      { label: "Indeed, LinkedIn & Playwright scrapers", included: false },
+      { label: "Site credentials for auth-walled boards", included: false },
+      { label: "AI “why this matches” summaries", included: false },
+      { label: "RSS export & curated portal search", included: false },
+    ],
+  },
+  {
+    id: "plus",
+    name: "Plus",
+    description: "Unlock premium job boards and credentials for serious watchers.",
+    monthlyPrice: 7.99,
+    annualPricePerMonth: 6.99,
+    cta: "Start with Plus",
+    limits: {
+      searches: "Up to 10",
+      sources: "Up to 10",
+      targets: "3 channels",
+    },
+    features: [
+      { label: "Everything in Starter", included: true },
+      { label: "Indeed, LinkedIn & Playwright scrapers", included: true },
+      { label: "Encrypted site credentials", included: true },
+      { label: "AI “why this matches” summaries", included: false },
+      { label: "RSS export & signed webhooks", included: false },
+      { label: "Curated company portal search", included: false },
     ],
   },
   {
     id: "pro",
     name: "Pro",
-    description: "For active job seekers running several overlapping searches.",
-    monthlyPrice: 12,
-    annualPricePerMonth: 10,
+    description: "HeadStart’s full toolkit — AI summaries, RSS, and one-click portal search.",
+    monthlyPrice: 9.99,
+    annualPricePerMonth: 8.29,
     highlight: true,
+    checkoutEnabled: true,
     cta: "Start with Pro",
     limits: {
-      searches: "Up to 15",
-      sources: "Up to 15",
+      searches: "Up to 20",
+      sources: "Up to 20",
       targets: "5 channels",
     },
     features: [
-      { label: "Everything in Free", included: true },
-      { label: "Indeed, LinkedIn & site credentials", included: true },
-      { label: "Digest mode to batch alerts", included: true },
+      { label: "Everything in Plus", included: true },
       { label: "AI “why this matches” summaries", included: true },
       { label: "RSS export & signed webhooks", included: true },
-      { label: "Curated company portal search", included: true },
+      { label: "Curated FAANG/unicorn portal search", included: true },
       { label: "Browser extension one-click capture", included: true },
-      { label: "Priority email support", included: false },
-    ],
-  },
-  {
-    id: "team",
-    name: "Team",
-    description: "Higher limits and support for power users or small hiring pods.",
-    monthlyPrice: 29,
-    annualPricePerMonth: 24,
-    cta: "Contact for Team",
-    limits: {
-      searches: "Up to 50",
-      sources: "Up to 50",
-      targets: "20 channels",
-    },
-    features: [
-      { label: "Everything in Pro", included: true },
-      { label: "Priority email support", included: true },
-      { label: "Early access to new scrapers", included: true },
-      { label: "Higher scrape frequency defaults", included: true },
-      { label: "Shared webhook targets for a pod", included: true },
-      { label: "Multi-seat admin (coming soon)", included: false },
     ],
   },
 ];
@@ -98,22 +121,28 @@ export const PLANS: Plan[] = [
 export type ComparisonRow = {
   label: string;
   free: string | boolean;
+  starter: string | boolean;
+  plus: string | boolean;
   pro: string | boolean;
-  team: string | boolean;
 };
 
 export const COMPARISON_ROWS: ComparisonRow[] = [
-  { label: "Active searches", free: "3", pro: "15", team: "50" },
-  { label: "Sources", free: "3", pro: "15", team: "50" },
-  { label: "Notification channels", free: "1", pro: "5", team: "20" },
-  { label: "Digest notifications", free: false, pro: true, team: true },
-  { label: "AI match summaries", free: false, pro: true, team: true },
-  { label: "Indeed & LinkedIn scrapers", free: false, pro: true, team: true },
-  { label: "Site credentials (auth-walled boards)", free: false, pro: true, team: true },
-  { label: "RSS & outbound webhooks", free: false, pro: true, team: true },
-  { label: "Curated company portal search", free: false, pro: true, team: true },
-  { label: "Browser extension", free: false, pro: true, team: true },
-  { label: "Priority support", free: false, pro: false, team: true },
+  { label: "Active searches", free: "3", starter: "5", plus: "10", pro: "20" },
+  { label: "Sources", free: "3", starter: "5", plus: "10", pro: "20" },
+  { label: "Notification channels", free: "1", starter: "2", plus: "3", pro: "5" },
+  { label: "Ad-free experience", free: false, starter: true, plus: true, pro: true },
+  { label: "Digest notifications", free: false, starter: true, plus: true, pro: true },
+  { label: "Indeed, LinkedIn & Playwright", free: false, starter: false, plus: true, pro: true },
+  {
+    label: "Site credentials (auth-walled boards)",
+    free: false,
+    starter: false,
+    plus: true,
+    pro: true,
+  },
+  { label: "AI match summaries", free: false, starter: false, plus: false, pro: true },
+  { label: "RSS & outbound webhooks", free: false, starter: false, plus: false, pro: true },
+  { label: "Curated company portal search", free: false, starter: false, plus: false, pro: true },
 ];
 
 export const PRICING_FAQ = [
@@ -140,7 +169,15 @@ export function planDisplayPrice(plan: Plan, period: BillingPeriod): number {
   return period === "annual" ? plan.annualPricePerMonth : plan.monthlyPrice;
 }
 
-/** Format a USD price for display (whole dollars). */
+/** Format a USD price for display. */
 export function formatUsd(amount: number): string {
-  return amount === 0 ? "$0" : `$${amount}`;
+  if (amount === 0) {
+    return "$0";
+  }
+  return Number.isInteger(amount) ? `$${amount}` : `$${amount.toFixed(2)}`;
+}
+
+/** Annual total billed for a paid plan. */
+export function annualBilledTotal(plan: Plan): number {
+  return Math.round(plan.annualPricePerMonth * 12 * 100) / 100;
 }

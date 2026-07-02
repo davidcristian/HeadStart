@@ -17,13 +17,15 @@ describe("PricingPage", () => {
     clearCookieConsent();
   });
 
-  it("renders plan cards and comparison table", () => {
+  it("renders four plan cards and comparison table", () => {
     renderPricing();
 
     expect(screen.getByRole("heading", { name: "Pay for signal, not noise." })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Free" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Starter" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Plus" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Pro" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Team" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Team" })).not.toBeInTheDocument();
     expect(screen.getByRole("table", { name: "" })).toBeInTheDocument();
     expect(screen.getAllByRole("link", { name: "Pricing" })[0]).toHaveAttribute("href", "/pricing");
     expect(screen.getAllByRole("link", { name: "Get started free" })[0]).toHaveAttribute(
@@ -35,10 +37,10 @@ describe("PricingPage", () => {
   it("switches displayed prices when toggling annual billing", () => {
     renderPricing();
 
-    expect(screen.getByText("$12")).toBeInTheDocument();
+    expect(screen.getByText("$9.99")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /Annual/i }));
-    expect(screen.getByText("$10")).toBeInTheDocument();
-    expect(screen.getByText("Billed annually ($120/yr)")).toBeInTheDocument();
+    expect(screen.getByText("$8.29")).toBeInTheDocument();
+    expect(screen.getByText("Billed annually ($99.48/yr)")).toBeInTheDocument();
   });
 
   it("links to the app when signed in", () => {
@@ -50,5 +52,13 @@ describe("PricingPage", () => {
       "href",
       "/app",
     );
+  });
+
+  it("disables Starter and Plus checkout for signed-in users until Stripe prices ship", () => {
+    authState.user = { email: "user@example.com" };
+    renderPricing();
+
+    expect(screen.getAllByRole("button", { name: "Coming soon" })).toHaveLength(2);
+    expect(screen.getByRole("button", { name: "Start with Pro" })).toBeEnabled();
   });
 });
