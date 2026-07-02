@@ -116,6 +116,23 @@ def google_careers_preset(
     )
 
 
+def meta_careers_preset(
+    *,
+    portal_id: str = "meta",
+    company: str = "Meta",
+    category: PortalCategory = "big_tech",
+) -> PortalPreset:
+    base = "https://www.metacareers.com/jobsearch/"
+    return PortalPreset(
+        id=portal_id,
+        company_name=company,
+        category=category,
+        adapter_key="meta_careers",
+        base_url=base,
+        default_config={"company": company, "portal_id": portal_id},
+    )
+
+
 def microsoft_careers_preset(
     *,
     portal_id: str = "microsoft",

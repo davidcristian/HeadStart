@@ -49,6 +49,7 @@ everything. The worker resolves a scraper with `get_scraper(adapter_key)`.
 | `workday`       | Public Workday CXS jobs API (POST)        | `*.myworkdayjobs.com/wday/cxs/<tenant>/<site>/jobs`; also accepts careers board URLs |
 | `google_careers`| Embedded search JSON in HTML              | `google.com/about/careers/applications/jobs/results?...`; parses `AF_initDataCallback` `ds:1`; also accepts `careers.google.com` |
 | `microsoft_careers` | Eightfold PCSX JSON search API       | `apply.careers.microsoft.com/api/pcsx/search`; config `domain` (default `microsoft.com`) + optional `q` / `location`; also accepts careers board URLs |
+| `meta_careers`      | Relay GraphQL search (form POST)       | `metacareers.com/graphql` with `CareersJobSearchResultsDataQuery`; config `q` + optional `graphql_doc_id`; also accepts `metacareers.com/jobsearch` URLs |
 | `amazon_jobs`   | Public search JSON API                    | `amazon.jobs/<locale>/search.json`; config `locale` (default `en`) + optional `base_query` / `loc_query` / `country`; also accepts search board URLs |
 | `indeed`        | Embedded search JSON in HTML (selectolax fallback) | `*.indeed.com/jobs?...`; parses `mosaic-provider-jobcards`; may need [credentials](credentials.md) for Cloudflare |
 | `linkedin`      | Guest search pagination API (HTML fragments) | Opt-in only (not URL-detected). `linkedin.com/jobs/search?...` → guest `seeMoreJobPostings/search`; may need [credentials](credentials.md) for auth walls |
@@ -92,6 +93,7 @@ config value → adapter default → no limit.
 | `ashby`        | 1.0                  |
 | `workday`      | 2.5                  |
 | `google_careers` | 2.5                |
+| `meta_careers` | 3.0                  |
 | `microsoft_careers` | 2.5             |
 | `amazon_jobs`  | 2.5                  |
 | `indeed`       | 5.0                  |

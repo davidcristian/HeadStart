@@ -20,6 +20,7 @@ ADAPTER_DEFAULTS: dict[str, float] = {
     "workday": 2.5,
     "amazon_jobs": 2.5,
     "google_careers": 2.5,
+    "meta_careers": 3.0,
     "microsoft_careers": 2.5,
     "indeed": 5.0,
     "linkedin": 7.5,

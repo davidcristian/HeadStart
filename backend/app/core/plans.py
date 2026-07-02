@@ -21,6 +21,7 @@ FREE_SCRAPERS: frozenset[str] = frozenset(
         "workday",
         "amazon_jobs",
         "google_careers",
+        "meta_careers",
         "microsoft_careers",
     }
 )

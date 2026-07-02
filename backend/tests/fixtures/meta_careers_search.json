@@ -1,0 +1,22 @@
+{
+  "data": {
+    "job_search_with_featured_jobs": {
+      "all_jobs": [
+        {
+          "id": "2132019417725760",
+          "title": "Technical Program Manager, MTIA Software",
+          "locations": ["Menlo Park, CA"],
+          "teams": ["Technical Program Management"],
+          "sub_teams": ["Program Management"]
+        },
+        {
+          "id": "1361776752540617",
+          "title": "Optical Engineer, Release to Production (RTP) — Test Software & Transceiver NPI",
+          "locations": ["Menlo Park, CA"],
+          "teams": ["Facebook Reality Labs", "Data Center", "Infrastructure"],
+          "sub_teams": ["Hardware"]
+        }
+      ]
+    }
+  }
+}

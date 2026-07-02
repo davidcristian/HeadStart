@@ -123,6 +123,27 @@ def test_detect_amazon_jobs_api_url() -> None:
     assert result.default_config["country"] == "USA"
 
 
+def test_detect_meta_careers_search_url() -> None:
+    result = detect_source_from_url(
+        "https://www.metacareers.com/jobsearch/?q=software",
+        page_title="Meta Careers",
+    )
+    assert result is not None
+    assert result.adapter_key == "meta_careers"
+    assert result.default_config["company"] == "Meta"
+    assert result.default_config["q"] == "software"
+    assert result.default_config["portal_id"] == "meta"
+    assert result.suggested_name == "Meta"
+    assert result.base_url == "https://www.metacareers.com/jobsearch/"
+
+
+def test_detect_meta_careers_root_url() -> None:
+    result = detect_source_from_url("https://www.metacareers.com/jobs")
+    assert result is not None
+    assert result.adapter_key == "meta_careers"
+    assert result.default_config["portal_id"] == "meta"
+
+
 def test_detect_indeed_search_url() -> None:
     result = detect_source_from_url(
         "https://www.indeed.com/jobs?q=python&l=remote",
