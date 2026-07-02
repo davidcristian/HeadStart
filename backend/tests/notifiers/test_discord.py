@@ -1,6 +1,7 @@
 import json
 
 import httpx
+import pytest
 
 from app.notifiers import NotifyContext, get_notifier
 from app.notifiers.adapters.discord import DiscordNotifier
@@ -68,6 +69,16 @@ def test_discord_requires_webhook_url() -> None:
         raise AssertionError("expected ValueError")
     except ValueError as exc:
         assert "webhook_url" in str(exc)
+
+
+def test_discord_rejects_unsafe_url() -> None:
+    notifier = DiscordNotifier(client=httpx.Client())
+    ctx = NotifyContext(
+        target_type="discord",
+        config={"webhook_url": "http://127.0.0.1/hook"},
+    )
+    with pytest.raises(ValueError, match="not allowed|disallowed"):
+        notifier.send(ctx, [_job()])
 
 
 def test_registry_resolves_discord() -> None:

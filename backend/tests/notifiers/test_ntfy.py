@@ -1,4 +1,5 @@
 import httpx
+import pytest
 
 from app.notifiers import NotifyContext, get_notifier
 from app.notifiers.adapters.ntfy import NtfyNotifier
@@ -70,6 +71,16 @@ def test_ntfy_includes_summary_in_message() -> None:
     notifier.send(ctx, [job])
 
     assert "Matches your search: mentions engineer." in captured[0]["message"]
+
+
+def test_ntfy_rejects_unsafe_server_url() -> None:
+    notifier = NtfyNotifier(client=httpx.Client())
+    ctx = NotifyContext(
+        target_type="ntfy",
+        config={"topic": "secret", "server_url": "http://127.0.0.1:6379"},
+    )
+    with pytest.raises(ValueError, match="not allowed|disallowed"):
+        notifier.send(ctx, [_job()])
 
 
 def test_registry_resolves_ntfy() -> None:

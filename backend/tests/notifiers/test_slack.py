@@ -1,6 +1,7 @@
 import json
 
 import httpx
+import pytest
 
 from app.notifiers import NotifyContext, get_notifier
 from app.notifiers.adapters.slack import SlackNotifier
@@ -56,6 +57,16 @@ def test_slack_records_failure_without_raising() -> None:
 
     assert [r.status for r in results] == ["failed", "failed"]
     assert results[0].error
+
+
+def test_slack_rejects_unsafe_url() -> None:
+    notifier = SlackNotifier(client=httpx.Client())
+    ctx = NotifyContext(
+        target_type="slack",
+        config={"webhook_url": "http://127.0.0.1/hook"},
+    )
+    with pytest.raises(ValueError, match="not allowed|disallowed"):
+        notifier.send(ctx, [_job()])
 
 
 def test_slack_requires_webhook_url() -> None:

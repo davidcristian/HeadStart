@@ -18,6 +18,7 @@ from typing import Any
 import httpx
 
 from app.core.logging import get_logger
+from app.core.outbound_url import UnsafeOutboundUrlError, assert_safe_outbound_url
 from app.notifiers.base import Notifier, register_notifier
 from app.notifiers.digest_format import digest_plain_body, digest_title
 from app.notifiers.types import DeliveryResult, NotifyContext
@@ -43,6 +44,11 @@ class NtfyNotifier(Notifier):
         if not topic:
             raise ValueError("ntfy target requires config.topic")
         server_url = str(cfg.get("server_url") or DEFAULT_SERVER_URL).rstrip("/")
+        try:
+            assert_safe_outbound_url(server_url)
+        except UnsafeOutboundUrlError as exc:
+            raise ValueError(str(exc)) from exc
+
         priority = _PRIORITY_MAP.get(str(cfg.get("priority", "default")), 3)
         headers = self._auth_headers(cfg)
 

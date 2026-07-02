@@ -14,6 +14,7 @@ from typing import Any
 import httpx
 
 from app.core.logging import get_logger
+from app.core.outbound_url import UnsafeOutboundUrlError, assert_safe_outbound_url
 from app.notifiers.base import Notifier, register_notifier
 from app.notifiers.digest_format import digest_blocks, digest_title
 from app.notifiers.types import DeliveryResult, NotifyContext
@@ -38,6 +39,11 @@ class DiscordNotifier(Notifier):
             raise ValueError("discord target requires config.webhook_url")
 
         url = str(webhook_url).strip()
+        try:
+            assert_safe_outbound_url(url)
+        except UnsafeOutboundUrlError as exc:
+            raise ValueError(str(exc)) from exc
+
         if ctx.digest:
             return self._send_digest(url, ctx, jobs)
 

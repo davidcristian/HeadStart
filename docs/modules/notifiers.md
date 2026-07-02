@@ -50,7 +50,8 @@ For each new job it POSTs to `{server_url}/{topic}` with headers:
 - `Click`: the job URL (tap-through)
 
 Sends are best-effort per job and recorded in `delivery_log` with status/error.
-In digest mode, one batched push lists every new job in the window.
+In digest mode, one batched push lists every new job in the window. The
+`server_url` is validated against private/loopback addresses (SSRF protection).
 
 ## email adapter
 
@@ -81,6 +82,7 @@ Posts one Slack message per new job via an [incoming webhook](https://api.slack.
 Create the webhook in your Slack workspace (Apps → Incoming Webhooks), then paste
 the URL into the target config. Messages use mrkdwn with title, company,
 location, and an Apply link. Digest mode sends one message listing all jobs.
+Outbound URLs are validated against private/loopback addresses (SSRF protection).
 
 ## discord adapter
 
@@ -90,7 +92,8 @@ Posts one Discord message per new job via a [channel webhook](https://support.di
 Create the webhook in your server (Server Settings → Integrations → Webhooks),
 then paste the URL into the target config. Messages use a rich embed with title,
 company, location, and a clickable apply link. Digest mode uses one embed with
-a bullet list.
+a bullet list. Outbound URLs are validated against private/loopback addresses
+(SSRF protection).
 
 ## telegram adapter
 
