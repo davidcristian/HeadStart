@@ -271,11 +271,11 @@ services.
 
 | Item | Why | Notes |
 | ---- | --- | ----- |
-| Additional summarizer adapters | Users and operators already standardize on different LLM vendors | **Shipped (Gemini):** `@register_summarizer("gemini")` calls the Google AI `generateContent` API; env `GEMINI_API_KEY`, `GEMINI_MODEL`, `GEMINI_BASE_URL`; select with `SUMMARY_PROVIDER=gemini`. **Remaining:** e.g. `anthropic` and other OpenAI-compatible gateways (OpenRouter, Azure) — one adapter per provider via the same registry pattern. See [modules/summaries.md](modules/summaries.md) and [recipes.md](recipes.md). |
-| Provider docs & env surface | Operators need a clear, per-provider config matrix | Document required secrets and defaults in `.env.example` and `modules/summaries.md`; keep deployed Terraform on one chosen default until per-tenant selection is needed. |
+| Additional summarizer adapters | Users and operators already standardize on different LLM vendors | **Shipped (Gemini):** `@register_summarizer("gemini")` calls the Google AI `generateContent` API; env `GEMINI_API_KEY`, `GEMINI_MODEL`, `GEMINI_BASE_URL`; select with `SUMMARY_PROVIDER=gemini`. **Shipped (Anthropic):** `@register_summarizer("anthropic")` calls the Anthropic Messages API; env `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL`, `ANTHROPIC_BASE_URL`, `ANTHROPIC_API_VERSION`; select with `SUMMARY_PROVIDER=anthropic`. OpenAI-compatible gateways (OpenRouter, Azure) work via the existing `openai` provider and `OPENAI_BASE_URL`. See [modules/summaries.md](modules/summaries.md) and [recipes.md](recipes.md). |
+| ~~Provider docs & env surface~~ | ~~Operators need a clear, per-provider config matrix~~ | **Shipped:** per-provider env vars documented in `.env.example` and `modules/summaries.md` |
 
 **Done when:** an operator can switch `SUMMARY_PROVIDER` to at least one
-non-OpenAI hosted provider (e.g. Gemini) with only env changes, blurbs still
+non-OpenAI hosted provider (e.g. Gemini or Anthropic) with only env changes, blurbs still
 appear in notifications and the Jobs feed, and failures remain best-effort
 (non-blocking).
 

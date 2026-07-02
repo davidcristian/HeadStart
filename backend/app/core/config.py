@@ -115,7 +115,7 @@ class Settings(BaseSettings):
     # Jobs feed. The default provider is offline and free.
     summaries_enabled: bool = True
     # Registered summarizer key: "heuristic" (offline, default), "openai",
-    # "gemini", or "llamacpp" (local dev only).
+    # "gemini", "anthropic", or "llamacpp" (local dev only).
     summary_provider: str = "heuristic"
     # Hard cap on a blurb's length before it is stored/sent.
     summary_max_chars: int = 280
@@ -129,6 +129,12 @@ class Settings(BaseSettings):
     gemini_api_key: str = ""
     gemini_model: str = "gemini-2.0-flash"
     gemini_base_url: str = "https://generativelanguage.googleapis.com/v1beta"
+
+    # ---- Anthropic (used only when summary_provider = "anthropic") ----
+    anthropic_api_key: str = ""
+    anthropic_model: str = "claude-3-5-haiku-latest"
+    anthropic_base_url: str = "https://api.anthropic.com/v1"
+    anthropic_api_version: str = "2023-06-01"
 
     # ---- llama.cpp (used only when summary_provider = "llamacpp"; local dev) ----
     llamacpp_base_url: str = "http://localhost:8080/v1"
