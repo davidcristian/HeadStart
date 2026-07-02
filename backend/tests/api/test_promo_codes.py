@@ -27,6 +27,10 @@ from tests.conftest import register_and_login
 def billing_settings(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(settings, "stripe_secret_key", "sk_test_promo")
     monkeypatch.setattr(settings, "stripe_webhook_secret", "whsec_test_promo")
+    monkeypatch.setattr(settings, "stripe_price_starter_monthly", "price_starter_monthly")
+    monkeypatch.setattr(settings, "stripe_price_starter_annual", "price_starter_annual")
+    monkeypatch.setattr(settings, "stripe_price_plus_monthly", "price_plus_monthly")
+    monkeypatch.setattr(settings, "stripe_price_plus_annual", "price_plus_annual")
     monkeypatch.setattr(settings, "stripe_price_pro_monthly", "price_pro_monthly")
     monkeypatch.setattr(settings, "stripe_price_pro_annual", "price_pro_annual")
 

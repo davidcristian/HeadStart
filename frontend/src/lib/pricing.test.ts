@@ -18,6 +18,13 @@ describe("pricing", () => {
   it("lists four tiers without Team", () => {
     expect(PLANS.map((p) => p.id)).toEqual(["free", "starter", "plus", "pro"]);
     expect(PLANS.find((p) => p.id === "pro")?.highlight).toBe(true);
-    expect(PLANS.find((p) => p.id === "pro")?.checkoutEnabled).toBe(true);
+  });
+
+  it("enables self-serve checkout for all paid tiers", () => {
+    expect(PLANS.filter((p) => p.checkoutEnabled).map((p) => p.id)).toEqual([
+      "starter",
+      "plus",
+      "pro",
+    ]);
   });
 });

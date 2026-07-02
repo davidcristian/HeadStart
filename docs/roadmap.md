@@ -353,7 +353,7 @@ placeholders until **14d**.
 | ---- | --- | ----- |
 | ~~`frontend/src/lib/pricing.ts`~~ | ~~Mirror backend tiers~~ | **Shipped:** four plans; remove Team; Pro `highlight: true`; comparison table rows for new gates |
 | ~~`/pricing` page~~ | ~~Conversion surface~~ | **Shipped:** four cards; annual/monthly toggle; remove Team mailto CTA |
-| ~~Register CTAs~~ | ~~Funnel~~ | **Shipped:** Free → register; paid → checkout (Pro only until Stripe prices exist; Starter/Plus show “Coming soon” when signed in) |
+| ~~Register CTAs~~ | ~~Funnel~~ | **Shipped:** Free → register; paid tiers → checkout when billing is configured |
 | ~~`modules/frontend.md`~~ | ~~Doc sync~~ | **Shipped:** Pricing section |
 
 **Done when:** `/pricing` shows Free / Starter / Plus / Pro with the correct
@@ -365,12 +365,12 @@ Three paid Stripe price pairs — depends on **14a** and ideally **14c**.
 
 | Item | Why | Notes |
 | ---- | --- | ----- |
-| Price env vars | One pair per paid tier | `STRIPE_PRICE_STARTER_*`, `STRIPE_PRICE_PLUS_*`, keep `STRIPE_PRICE_PRO_*`; document in `.env.example` |
-| `billing_prices.py` | Resolve price ID → plan | Map all six price IDs to `starter` / `plus` / `pro` |
-| Checkout API | Self-serve for all paid tiers | `POST /billing/checkout` accepts `plan: starter \| plus \| pro`; remove Team checkout blocks |
-| Webhook plan resolution | Subscription → `user.plan` | `checkout.session.completed` + subscription events set correct slug |
-| Billing status | UI hints | `can_checkout` for users not already on a paid plan |
-| Docs | Operator setup | Full `billing.md` rewrite for four tiers + Stripe Dashboard steps |
+| ~~Price env vars~~ | ~~One pair per paid tier~~ | **Shipped:** `STRIPE_PRICE_STARTER_*`, `STRIPE_PRICE_PLUS_*`, keep `STRIPE_PRICE_PRO_*`; documented in `.env.example` |
+| ~~`billing_prices.py`~~ | ~~Resolve price ID → plan~~ | **Shipped:** Map all six price IDs to `starter` / `plus` / `pro` |
+| ~~Checkout API~~ | ~~Self-serve for all paid tiers~~ | **Shipped:** `POST /billing/checkout` accepts `plan: starter \| plus \| pro`; remove Team checkout blocks |
+| ~~Webhook plan resolution~~ | ~~Subscription → `user.plan`~~ | **Shipped:** `checkout.session.completed` + subscription events set correct slug |
+| ~~Billing status~~ | ~~UI hints~~ | **Shipped:** `can_checkout` for users not already on a paid plan |
+| ~~Docs~~ | ~~Operator setup~~ | **Shipped:** Full `billing.md` rewrite for four tiers + Stripe Dashboard steps |
 
 **Done when:** a user can subscribe to Starter, Plus, or Pro via Stripe Checkout
 and webhooks persist the matching `user.plan`.

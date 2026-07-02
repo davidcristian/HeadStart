@@ -4,18 +4,18 @@
 `backend/app/core/billing_prices.py`, `frontend/src/pages/SettingsPage.tsx`,
 `frontend/src/pages/PricingPage.tsx`
 
-Stripe-powered subscriptions for the Pro plan. Billing is **optional** — when
-`STRIPE_*` env vars are unset the API reports `configured: false` and checkout
-buttons are hidden.
+Stripe-powered subscriptions for the four public tiers (Starter, Plus, Pro).
+Billing is **optional** — when `STRIPE_*` env vars are unset the API reports
+`configured: false` and checkout buttons are hidden.
 
 ## Plans
 
 | Plan | How it is assigned |
 | ---- | ------------------ |
 | Free | Default for new accounts |
-| Starter | Self-serve checkout (Phase 14d) or admin panel |
-| Plus | Self-serve checkout (Phase 14d) or admin panel |
-| Pro | Active/trialing Stripe subscription or admin panel |
+| Starter | Self-serve checkout or admin panel |
+| Plus | Self-serve checkout or admin panel |
+| Pro | Self-serve checkout or admin panel |
 
 The legacy **Team** tier is deprecated (ADR-0010); existing `team` rows migrate
 to `pro`. Plan limits and feature gates are enforced in `PlanLimitsService`; see
@@ -30,21 +30,45 @@ Set all of the following to enable checkout:
 | ------- | ------- |
 | `STRIPE_SECRET_KEY` | Stripe API secret |
 | `STRIPE_WEBHOOK_SECRET` | Signing secret for `POST /billing/webhook` |
+| `STRIPE_PRICE_STARTER_MONTHLY` | Recurring price ID for monthly Starter |
+| `STRIPE_PRICE_STARTER_ANNUAL` | Recurring price ID for annual Starter |
+| `STRIPE_PRICE_PLUS_MONTHLY` | Recurring price ID for monthly Plus |
+| `STRIPE_PRICE_PLUS_ANNUAL` | Recurring price ID for annual Plus |
 | `STRIPE_PRICE_PRO_MONTHLY` | Recurring price ID for monthly Pro |
 | `STRIPE_PRICE_PRO_ANNUAL` | Recurring price ID for annual Pro |
-| `STRIPE_TRIAL_DAYS` | Optional trial length (default `14`; `0` disables) |
+| `STRIPE_TRIAL_DAYS` | Optional Pro trial length (default `14`; `0` disables) |
 
 `FRONTEND_BASE_URL` is used for Checkout success/cancel and portal return URLs.
+
+### Stripe Dashboard setup
+
+1. Create three Products (Starter, Plus, Pro) — or one product with three prices
+   per billing interval.
+2. For each paid tier, create **monthly** and **annual** recurring Prices in USD.
+3. Copy each Price ID (`price_…`) into the matching env var above.
+4. Configure the Customer Portal (Settings → Billing → Customer portal) so
+   subscribers can change plans or cancel.
+5. Add a webhook endpoint pointing at
+   `https://<your-domain>/api/v1/billing/webhook` and subscribe to:
+   `checkout.session.completed`, `customer.subscription.created`,
+   `customer.subscription.updated`, `customer.subscription.deleted`.
+6. Paste the webhook signing secret into `STRIPE_WEBHOOK_SECRET`.
+
+Promo codes (optional) create Stripe Coupon + Promotion Code objects when billing
+is enabled — see [Promo codes](#promo-codes) below.
 
 ## Endpoints (prefix `/api/v1/billing`)
 
 | Method | Path | Auth | Purpose |
 | ------ | ---- | ---- | ------- |
 | GET | `/status` | user | Billing capabilities + subscription state |
-| POST | `/checkout` | user | Start Stripe Checkout (`plan: pro`, `billing_period`, optional `promo_code`) |
+| POST | `/checkout` | user | Start Stripe Checkout (`plan: starter \| plus \| pro`, `billing_period`, optional `promo_code`) |
 | POST | `/promo/validate` | user | Validate a promo code for the signed-in user |
 | POST | `/portal` | user | Open Stripe customer portal |
 | POST | `/webhook` | Stripe signature | Subscription lifecycle events |
+
+Checkout applies `STRIPE_TRIAL_DAYS` only for **Pro**; Starter and Plus bill from
+day one unless a `free_trial_days` promo overrides the trial length.
 
 ## Promo codes
 
@@ -78,6 +102,9 @@ Webhook handler updates `user.stripe_customer_id`, `stripe_subscription_id`,
 - `customer.subscription.created` / `updated`
 - `customer.subscription.deleted` (downgrades to `free`)
 
+Plan resolution prefers the Stripe Price ID (`billing_prices.plan_for_price_id`);
+subscription metadata `plan` is a fallback.
+
 ## User fields
 
 On `user`:
@@ -89,8 +116,10 @@ On `user`:
 
 ## UI
 
-- **Pricing** (`/pricing`): signed-in users start Pro checkout with optional promo code; Team remains a mailto link.
-- **Settings** (`/app/settings`): upgrade to Pro with optional promo code, manage subscription, success/cancel banners.
+- **Pricing** (`/pricing`): signed-in users start Starter, Plus, or Pro checkout
+  with optional promo code; billing-period toggle applies to all paid tiers.
+- **Settings** (`/app/settings`): upgrade to Pro with optional promo code, manage
+  subscription, success/cancel banners. Other tiers link to `/pricing`.
 - **Admin** (`/app/admin`): create and retire promo codes.
 
 ## Local development

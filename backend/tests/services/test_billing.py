@@ -15,6 +15,10 @@ from app.services.billing import BillingService
 def billing_settings(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(settings, "stripe_secret_key", "sk_test_unit")
     monkeypatch.setattr(settings, "stripe_webhook_secret", "whsec_test_unit")
+    monkeypatch.setattr(settings, "stripe_price_starter_monthly", "price_starter_monthly")
+    monkeypatch.setattr(settings, "stripe_price_starter_annual", "price_starter_annual")
+    monkeypatch.setattr(settings, "stripe_price_plus_monthly", "price_plus_monthly")
+    monkeypatch.setattr(settings, "stripe_price_plus_annual", "price_plus_annual")
     monkeypatch.setattr(settings, "stripe_price_pro_monthly", "price_pro_monthly")
     monkeypatch.setattr(settings, "stripe_price_pro_annual", "price_pro_annual")
 
@@ -54,6 +58,17 @@ def test_create_checkout_creates_customer(
 
 def test_plan_from_subscription_price_mapping(db_session: Session, billing_settings: None) -> None:
     service = BillingService(db_session)
+    assert (
+        service._plan_from_subscription(
+            {
+                "status": "active",
+                "metadata": {},
+                "items": {"data": [{"price": {"id": "price_starter_annual"}}]},
+            },
+            "active",
+        )
+        == "starter"
+    )
     plan = service._plan_from_subscription(
         {
             "status": "active",

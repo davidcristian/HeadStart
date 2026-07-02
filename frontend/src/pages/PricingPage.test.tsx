@@ -54,11 +54,13 @@ describe("PricingPage", () => {
     );
   });
 
-  it("disables Starter and Plus checkout for signed-in users until Stripe prices ship", () => {
+  it("enables checkout for Starter, Plus, and Pro when signed in", () => {
     authState.user = { email: "user@example.com" };
     renderPricing();
 
-    expect(screen.getAllByRole("button", { name: "Coming soon" })).toHaveLength(2);
+    expect(screen.getByRole("button", { name: "Start with Starter" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Start with Plus" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Start with Pro" })).toBeEnabled();
+    expect(screen.queryByRole("button", { name: "Coming soon" })).not.toBeInTheDocument();
   });
 });

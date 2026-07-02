@@ -24,7 +24,7 @@ from app.services.promo_codes import PromoCodeService
 
 logger = logging.getLogger(__name__)
 
-_CHECKOUT_PLANS: frozenset[str] = frozenset({"pro"})
+_CHECKOUT_PLANS: frozenset[str] = frozenset({"starter", "plus", "pro"})
 
 
 class BillingService:
@@ -63,14 +63,17 @@ class BillingService:
         """Start a Stripe Checkout session and return its hosted URL."""
         self._require_billing_enabled()
         if plan not in _CHECKOUT_PLANS:
-            raise ValidationError("Only the Pro plan is available for self-serve checkout.")
+            raise ValidationError("Invalid checkout plan.")
         user = self._require_user(user_id)
         if user.subscription_status and subscription_grants_plan(user.subscription_status):
             raise ValidationError(
                 "You already have an active subscription. Manage billing from Settings."
             )
 
-        price_id = price_id_for("pro", billing_period)
+        try:
+            price_id = price_id_for(plan, billing_period)  # type: ignore[arg-type]
+        except ValueError as exc:
+            raise ValidationError("Billing is not fully configured for this plan.") from exc
         if not price_id:
             raise ValidationError("Billing is not fully configured for this plan.")
 
@@ -108,7 +111,7 @@ class BillingService:
                 "plan_upgrade",
             }:
                 session_kwargs["discounts"] = [{"promotion_code": promo.stripe_promotion_code_id}]
-        if trial_days > 0:
+        if trial_days > 0 and plan == "pro":
             session_kwargs["subscription_data"]["trial_period_days"] = trial_days
 
         session = stripe.checkout.Session.create(**session_kwargs)

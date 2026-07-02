@@ -19,6 +19,10 @@ from tests.conftest import register_and_login
 def billing_settings(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(settings, "stripe_secret_key", "sk_test_billing")
     monkeypatch.setattr(settings, "stripe_webhook_secret", "whsec_test_billing")
+    monkeypatch.setattr(settings, "stripe_price_starter_monthly", "price_starter_monthly")
+    monkeypatch.setattr(settings, "stripe_price_starter_annual", "price_starter_annual")
+    monkeypatch.setattr(settings, "stripe_price_plus_monthly", "price_plus_monthly")
+    monkeypatch.setattr(settings, "stripe_price_plus_annual", "price_plus_annual")
     monkeypatch.setattr(settings, "stripe_price_pro_monthly", "price_pro_monthly")
     monkeypatch.setattr(settings, "stripe_price_pro_annual", "price_pro_annual")
     monkeypatch.setattr(settings, "stripe_trial_days", 14)
@@ -56,6 +60,29 @@ def test_billing_status_configured(
     assert body["configured"] is True
     assert body["can_checkout"] is True
     assert body["trial_days"] == 14
+
+
+@patch("app.services.billing.stripe.checkout.Session.create")
+@patch("app.services.billing.stripe.Customer.create")
+def test_create_checkout_session_starter(
+    mock_customer_create: MagicMock,
+    mock_session_create: MagicMock,
+    client: TestClient,
+    auth_headers: dict[str, str],
+    billing_settings: None,
+) -> None:
+    mock_customer_create.return_value = MagicMock(id="cus_test_starter")
+    mock_session_create.return_value = MagicMock(url="https://checkout.stripe.test/starter")
+
+    resp = client.post(
+        "/api/v1/billing/checkout",
+        headers=auth_headers,
+        json={"plan": "starter", "billing_period": "monthly"},
+    )
+    assert resp.status_code == 200
+    call_kwargs = mock_session_create.call_args.kwargs
+    assert call_kwargs["line_items"] == [{"price": "price_starter_monthly", "quantity": 1}]
+    assert "trial_period_days" not in call_kwargs["subscription_data"]
 
 
 @patch("app.services.billing.stripe.checkout.Session.create")
@@ -110,6 +137,44 @@ def test_create_portal_session(
     resp = client.post("/api/v1/billing/portal", headers=headers, json={})
     assert resp.status_code == 200
     assert resp.json()["url"] == "https://billing.stripe.test/portal"
+
+
+@patch("app.services.billing.stripe.Webhook.construct_event")
+def test_webhook_maps_plus_price_to_plan(
+    mock_construct: MagicMock,
+    client: TestClient,
+    billing_settings: None,
+) -> None:
+    headers = register_and_login(client, email="plus@example.com", password="password123")
+    me = client.get("/api/v1/auth/me", headers=headers).json()
+    _patch_user_billing(
+        me["id"],
+        stripe_customer_id="cus_plus",
+        stripe_subscription_id="sub_plus",
+    )
+
+    mock_construct.return_value = {
+        "type": "customer.subscription.updated",
+        "data": {
+            "object": {
+                "id": "sub_plus",
+                "customer": "cus_plus",
+                "status": "active",
+                "metadata": {"user_id": str(me["id"]), "plan": "plus"},
+                "items": {"data": [{"price": {"id": "price_plus_monthly"}}]},
+            }
+        },
+    }
+
+    resp = client.post(
+        "/api/v1/billing/webhook",
+        data=b"{}",
+        headers={"stripe-signature": "sig_test"},
+    )
+    assert resp.status_code == 204
+
+    refreshed = client.get("/api/v1/auth/me", headers=headers).json()
+    assert refreshed["plan"] == "plus"
 
 
 @patch("app.services.billing.stripe.Webhook.construct_event")

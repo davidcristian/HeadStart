@@ -155,7 +155,11 @@ class Settings(BaseSettings):
     # ---- Stripe billing (optional; leave empty to disable paid checkout) ----
     stripe_secret_key: str = ""
     stripe_webhook_secret: str = ""
-    # Stripe Price IDs for Pro (create in the Stripe Dashboard; must be recurring).
+    # Stripe Price IDs (create in the Stripe Dashboard; must be recurring).
+    stripe_price_starter_monthly: str = ""
+    stripe_price_starter_annual: str = ""
+    stripe_price_plus_monthly: str = ""
+    stripe_price_plus_annual: str = ""
     stripe_price_pro_monthly: str = ""
     stripe_price_pro_annual: str = ""
     # Optional trial length for new Pro subscriptions (days).
@@ -196,10 +200,14 @@ class Settings(BaseSettings):
     @computed_field  # type: ignore[prop-decorator]
     @property
     def billing_enabled(self) -> bool:
-        """True when Stripe keys and Pro price IDs are configured."""
+        """True when Stripe keys and all paid-tier price IDs are configured."""
         return bool(
             self.stripe_secret_key
             and self.stripe_webhook_secret
+            and self.stripe_price_starter_monthly
+            and self.stripe_price_starter_annual
+            and self.stripe_price_plus_monthly
+            and self.stripe_price_plus_annual
             and self.stripe_price_pro_monthly
             and self.stripe_price_pro_annual
         )

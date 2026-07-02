@@ -104,7 +104,7 @@ export function SettingsPage() {
     setBillingError(undefined);
     setBillingBusy(true);
     try {
-      const { url } = await api.createCheckout(billingPeriod, appliedPromo?.code);
+      const { url } = await api.createCheckout("pro", billingPeriod, appliedPromo?.code);
       window.location.assign(url);
     } catch (err) {
       setBillingError(err instanceof Error ? err.message : "Could not start checkout.");

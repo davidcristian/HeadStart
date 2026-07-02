@@ -4,6 +4,8 @@ export type BillingPeriod = "monthly" | "annual";
 
 export type PlanId = "free" | "starter" | "plus" | "pro";
 
+export type PaidPlanId = Extract<PlanId, "starter" | "plus" | "pro">;
+
 export type PlanFeature = {
   label: string;
   included: boolean;
@@ -16,7 +18,7 @@ export type Plan = {
   monthlyPrice: number;
   annualPricePerMonth: number;
   highlight?: boolean;
-  /** Self-serve Stripe checkout (14d adds Starter and Plus). */
+  /** Self-serve Stripe checkout when billing is configured on the server. */
   checkoutEnabled?: boolean;
   cta: string;
   limits: {
@@ -57,6 +59,7 @@ export const PLANS: Plan[] = [
     description: "Remove ads and batch alerts without paying for premium boards.",
     monthlyPrice: 2.99,
     annualPricePerMonth: 2.49,
+    checkoutEnabled: true,
     cta: "Start with Starter",
     limits: {
       searches: "Up to 5",
@@ -79,6 +82,7 @@ export const PLANS: Plan[] = [
     description: "Unlock premium job boards and credentials for serious watchers.",
     monthlyPrice: 7.99,
     annualPricePerMonth: 6.99,
+    checkoutEnabled: true,
     cta: "Start with Plus",
     limits: {
       searches: "Up to 10",

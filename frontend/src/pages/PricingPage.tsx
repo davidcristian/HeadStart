@@ -14,6 +14,7 @@ import {
   PLANS,
   PRICING_FAQ,
   type BillingPeriod,
+  type PaidPlanId,
   annualBilledTotal,
   formatUsd,
   planDisplayPrice,
@@ -26,12 +27,12 @@ export function PricingPage() {
   const [checkingOut, setCheckingOut] = useState(false);
   const [appliedPromo, setAppliedPromo] = useState<PromoValidation | null>(null);
 
-  async function startProCheckout() {
+  async function startCheckout(plan: PaidPlanId) {
     setCheckoutError(undefined);
     if (!user) return;
     setCheckingOut(true);
     try {
-      const { url } = await api.createCheckout(billingPeriod, appliedPromo?.code);
+      const { url } = await api.createCheckout(plan, billingPeriod, appliedPromo?.code);
       window.location.assign(url);
     } catch (err) {
       setCheckoutError(err instanceof Error ? err.message : "Could not start checkout.");
@@ -182,7 +183,9 @@ export function PricingPage() {
                   plan={plan}
                   user={user}
                   checkingOut={checkingOut}
-                  onCheckout={() => void startProCheckout()}
+                  onCheckout={() => {
+                    if (plan.id !== "free") void startCheckout(plan.id);
+                  }}
                 />
               </article>
             );
@@ -191,7 +194,7 @@ export function PricingPage() {
 
         <p className="pricing-billing-note">
           Pro includes a 14-day free trial when billing is enabled on the server. Starter and Plus
-          self-serve checkout is rolling out soon — create a free account to get started today.
+          are billed from day one. Create a free account to explore before upgrading.
         </p>
 
         <section className="pricing-compare" aria-labelledby="compare-title">

@@ -39,6 +39,7 @@ import type {
   PromoValidation,
   PromoType,
 } from "../types";
+import type { PaidPlanId } from "../lib/pricing";
 import { request, requestForm } from "./client";
 
 function buildJobQuery(searchId?: number, status?: string): string {
@@ -108,11 +109,15 @@ export const api = {
       method: "POST",
       body: { code },
     }),
-  createCheckout: (billingPeriod: BillingPeriod = "monthly", promoCode?: string) =>
+  createCheckout: (
+    plan: PaidPlanId = "pro",
+    billingPeriod: BillingPeriod = "monthly",
+    promoCode?: string,
+  ) =>
     request<{ url: string }>("/api/v1/billing/checkout", {
       method: "POST",
       body: {
-        plan: "pro",
+        plan,
         billing_period: billingPeriod,
         ...(promoCode ? { promo_code: promoCode } : {}),
       },
