@@ -271,7 +271,7 @@ services.
 
 | Item | Why | Notes |
 | ---- | --- | ----- |
-| Additional summarizer adapters | Users and operators already standardize on different LLM vendors | Add one adapter per provider via `@register_summarizer("key")` — e.g. `gemini`, `anthropic`, and other OpenAI-compatible gateways (OpenRouter, Azure). Each adapter owns its auth, base URL, and model env vars; shared prompt/truncation logic stays in the existing stack. Select at runtime with `SUMMARY_PROVIDER=<key>`. Start with Gemini as the highest-demand gap; extend incrementally. See [modules/summaries.md](modules/summaries.md) and [recipes.md](recipes.md). |
+| Additional summarizer adapters | Users and operators already standardize on different LLM vendors | **Shipped (Gemini):** `@register_summarizer("gemini")` calls the Google AI `generateContent` API; env `GEMINI_API_KEY`, `GEMINI_MODEL`, `GEMINI_BASE_URL`; select with `SUMMARY_PROVIDER=gemini`. **Remaining:** e.g. `anthropic` and other OpenAI-compatible gateways (OpenRouter, Azure) — one adapter per provider via the same registry pattern. See [modules/summaries.md](modules/summaries.md) and [recipes.md](recipes.md). |
 | Provider docs & env surface | Operators need a clear, per-provider config matrix | Document required secrets and defaults in `.env.example` and `modules/summaries.md`; keep deployed Terraform on one chosen default until per-tenant selection is needed. |
 
 **Done when:** an operator can switch `SUMMARY_PROVIDER` to at least one

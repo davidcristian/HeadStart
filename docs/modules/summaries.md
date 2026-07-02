@@ -41,6 +41,7 @@ on the provider name; you add a file, not an `if`.
 | --- | ----------- | ----- |
 | `heuristic` | **Default.** Offline, free, deterministic | Builds the blurb from the search's own filters (matched keywords, workplace, location). No network or API key, so it is safe in CI/local/prod. Falls back to a neutral "New \<role\> at \<company\>" line when no filter matches. |
 | `openai` | You want richer, natural-language blurbs in hosted/prod | Calls an OpenAI-compatible Chat Completions endpoint per job. Requires `OPENAI_API_KEY`; honors `OPENAI_MODEL` and `OPENAI_BASE_URL`. |
+| `gemini` | You want hosted blurbs on Google AI instead of OpenAI | Calls the Gemini `generateContent` REST API per job. Requires `GEMINI_API_KEY`; honors `GEMINI_MODEL` and `GEMINI_BASE_URL`. |
 | `llamacpp` | **Local dev only.** Free summaries against a local model | Calls a llama.cpp `llama-server` OpenAI-compatible endpoint (default `http://localhost:8080/v1`). No API key required unless your server expects one. Start a server with `make llamacpp` (needs `LLAMACPP_MODEL_PATH`). The helper script passes sensible defaults (`--flash-attn on`, `--ctx-size 2048`, `--n-gpu-layers 99`); override via `LLAMACPP_FLASH_ATTN`, `LLAMACPP_CTX_SIZE`, `LLAMACPP_NGL`. Do not use in deployed environments — keep `SUMMARY_PROVIDER=openai` or `heuristic` there. |
 
 ## Configuration
@@ -50,11 +51,14 @@ All via env (see `.env.example` / `app/core/config.py`):
 | Setting | Default | Meaning |
 | ------- | ------- | ------- |
 | `SUMMARIES_ENABLED` | `true` | Master switch; when off, blurbs are never generated |
-| `SUMMARY_PROVIDER` | `heuristic` | Registered summarizer key (`heuristic`, `openai`, or `llamacpp`) |
+| `SUMMARY_PROVIDER` | `heuristic` | Registered summarizer key (`heuristic`, `openai`, `gemini`, or `llamacpp`) |
 | `SUMMARY_MAX_CHARS` | `280` | Blurbs longer than this are truncated with `…` |
 | `OPENAI_API_KEY` | _(empty)_ | Required for the `openai` provider |
 | `OPENAI_MODEL` | `gpt-4o-mini` | Chat model id |
 | `OPENAI_BASE_URL` | `https://api.openai.com/v1` | Override for Azure/OpenRouter/local servers |
+| `GEMINI_API_KEY` | _(empty)_ | Required for the `gemini` provider |
+| `GEMINI_MODEL` | `gemini-2.0-flash` | Gemini model id |
+| `GEMINI_BASE_URL` | `https://generativelanguage.googleapis.com/v1beta` | Override for proxies or alternate Google AI endpoints |
 | `LLAMACPP_BASE_URL` | `http://localhost:8080/v1` | llama.cpp server base URL (`llamacpp` provider only) |
 | `LLAMACPP_MODEL` | `local` | Model id sent in chat completion requests |
 | `LLAMACPP_API_KEY` | _(empty)_ | Optional bearer token when the local server requires auth |

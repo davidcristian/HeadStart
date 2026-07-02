@@ -114,8 +114,8 @@ class Settings(BaseSettings):
     # Generate a short blurb per new job and include it in notifications + the
     # Jobs feed. The default provider is offline and free.
     summaries_enabled: bool = True
-    # Registered summarizer key: "heuristic" (offline, default), "openai", or
-    # "llamacpp" (local dev only).
+    # Registered summarizer key: "heuristic" (offline, default), "openai",
+    # "gemini", or "llamacpp" (local dev only).
     summary_provider: str = "heuristic"
     # Hard cap on a blurb's length before it is stored/sent.
     summary_max_chars: int = 280
@@ -124,6 +124,11 @@ class Settings(BaseSettings):
     openai_api_key: str = ""
     openai_model: str = "gpt-4o-mini"
     openai_base_url: str = "https://api.openai.com/v1"
+
+    # ---- Gemini (used only when summary_provider = "gemini") ----
+    gemini_api_key: str = ""
+    gemini_model: str = "gemini-2.0-flash"
+    gemini_base_url: str = "https://generativelanguage.googleapis.com/v1beta"
 
     # ---- llama.cpp (used only when summary_provider = "llamacpp"; local dev) ----
     llamacpp_base_url: str = "http://localhost:8080/v1"
