@@ -87,19 +87,20 @@ Auto-apply is **off by default** per source (`auto_apply_enabled`). Only enable
 after reading [modules/appliers.md](modules/appliers.md).
 
 **Supported adapters (v1):** Greenhouse, Lever, Ashby, Workday, Google Careers,
-**Microsoft Careers**, and **Indeed** (delegates to those ATS adapters when the
-listing's employer apply URL is recognized). There is **no** apply adapter for
-LinkedIn or generic HTML/Playwright sources.
+**Microsoft Careers**, **Amazon Jobs**, and **Indeed** (delegates to those ATS
+adapters when the listing's employer apply URL is recognized). There is **no**
+apply adapter for LinkedIn or generic HTML/Playwright sources.
 
 **Not fully automated — set expectations before launch:**
 
 | Area | Limitation |
 | ---- | ---------- |
-| **Resume files** | Uploaded on the Application profile (PDF/Word, up to 2 MB). Attached on Greenhouse, Lever, Ashby, Workday, Microsoft Careers, and Google Careers live apply; plain `resume_text` is a fallback when no file is stored. Dry-run previews include resume metadata and (for Google Careers) the pending Scotty upload URL. |
+| **Resume files** | Uploaded on the Application profile (PDF/Word, up to 2 MB). Attached on Greenhouse, Lever, Ashby, Workday, Microsoft Careers, Amazon Jobs, and Google Careers live apply; plain `resume_text` is a fallback when no file is stored. Dry-run previews include resume metadata and (for Google Careers) the pending Scotty upload URL. |
 | **Greenhouse / Lever / Ashby** | Live submit needs an employer-issued API key (Job Board / Postings / Ashby API). Store in encrypted [site credentials](modules/credentials.md), not plain source config. |
 | **Workday** | Requires logged-in candidate session cookies. Primary/secondary/supplementary **questionnaires** are submitted when mapped in `profile.answers` (preview via dry run). **Work experience**, **education**, **skills**, and **languages** from the application profile are posted via CXS when present (preview via dry run). Degree, field-of-study, and skill values are resolved against tenant catalogs when session cookies are available; unmatched labels fall back to descriptors. Resume upload uses the stored file when available. Enable `auto_terms_consent` when the employer requires T&C acceptance. |
 | **Google Careers** | Requires the candidate's own logged-in Google account cookies plus CSRF token (`session.at`). Dry run resolves the apply URL and mapped Careers profile from the public job detail page. Live submit uploads resume files via Google's Scotty attachment endpoint, then runs the internal batchexecute RPC flow (best-effort; employer questions may need `profile.answers`). |
 | **Microsoft Careers** | Requires the candidate's own logged-in session on `apply.careers.microsoft.com` plus optional `session.csrf_token`. Resume uploads via `/api/pcsx/upload_resume` before submit. Country-specific screening/consent questions are best-effort — map `profile.answers` when required. |
+| **Amazon Jobs** | Requires the candidate's own logged-in amazon.jobs session cookies. Resume files upload via `POST /api/apply/documents` before `submit_application`. Employer screening questions are best-effort — map `profile.answers` when required. Amazon may block unattended submits with CAPTCHA; preview via dry run first. |
 | **Indeed** | Fetches the viewjob page and delegates to Greenhouse/Lever/Ashby/Workday/Google when the listing embeds a recognized employer apply URL (most Easy Apply jobs). Indeed-hosted Easy Apply (no external ATS) needs logged-in Indeed session cookies and is best-effort for multi-step questionnaires. Unsupported external URLs (custom career sites, Breezy, etc.) fail with a clear error. |
 | **Custom questions** | Only fields mapped in the application profile (`answers`, config paths) are sent. Unmapped required questions can cause rejection. |
 | **Coverage** | Treat auto-apply as a **best-effort preview + submit helper**, not unattended bulk applying. Always use **dry run / preview** first. |

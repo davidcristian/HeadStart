@@ -1,0 +1,67 @@
+{
+  "error": null,
+  "hits": 1,
+  "facets": {},
+  "content": {
+    "sidebar": {},
+    "search_results": {}
+  },
+  "jobs": [
+    {
+      "basic_qualifications": "- 3+ years of engineering team management experience<br/>- 7+ years of engineering experience<br/>- 8+ years of leading the definition and development of multi tier web services experience<br/>- 3+ years of Software Engineer, Software Developer, or related occupational experience<br/>- 1+ years of developing large-scale, multi-tiered distributed software systems using service-oriented architecture experience<br/>- Bachelor's degree or foreign equivalent in Computer Science, Engineering, Mathematics, or a related field<br/>- Knowledge of engineering practices and patterns for the full software/hardware/networks development life cycle, including coding standards, code reviews, source control management, build processes, testing, certification, and livesite operations",
+      "business_category": "alexa-and-amazon-devices",
+      "city": "Redmond",
+      "company_name": "Amazon Kuiper Manufacturing Enterprises LLC",
+      "country_code": "USA",
+      "description": "Amazon Leo is an initiative to launch a constellation of Low Earth Orbit satellites that will provide low-latency, high-speed broadband connectivity to unserved and underserved communities around the world. In this role, you will bring that vision to life by designing, developing and testing the embedded satellite software and ground services that control individual satellites.<br/><br/>In this role, you will manage a team responsible for embedded software and cloud services for the Leo satellites. Our focuses are on reliability, efficiency, safety, and security.<br/><br/>Export Control Requirement:<br/>Due to applicable export control laws and regulations, candidates must be a U.S. citizen or national, U.S. permanent resident (i.e., current Green Card holder), or lawfully admitted into the U.S. as a refugee or granted asylum.<br/><br/>Key job responsibilities<br/>Key job responsibilities<br/>- Hire and support top talent to meet goals of the team.<br/>- Define and drive the multi-year vision for the team.<br/>- Oversee resource allocation to ensure appropriate business and staff development goals are met.<br/>- Participate in strategic planning to achieve technical and business goals.<br/>- Work closely with engineers to architect and deliver the best technical designs and approaches.<br/>",
+      "department_cost_center": null,
+      "description_short": "Amazon Leo is an initiative to launch a constellation of Low Earth Orbit satellites that will provide low-latency, high-speed broadband connectivity to unserved and underserved communities around the world.",
+      "display_distance": null,
+      "id": "c6146408-c041-49e2-bdc4-6ec8c3ccf47b",
+      "id_icims": "10410605",
+      "is_intern": null,
+      "is_manager": null,
+      "job_category": "Software Development",
+      "job_family": "Software Development",
+      "job_function_id": null,
+      "job_path": "/en/jobs/10410605/software-development-manager-flight-software",
+      "job_schedule_type": "full-time",
+      "location": "US, WA, Redmond",
+      "locations": [
+        "{\"normalizedStateName\":\"Washington\",\"normalizedCountryCode\":\"USA\",\"city\":\"Redmond\",\"countryIso3a\":\"USA\",\"countryIso2a\":\"US\",\"locationNonStemming\":\"United States, WA, Redmond\",\"coordinates\":\"47.67858,-122.13158\",\"normalizedCountyName\":\"King\",\"type\":\"ONSITE\",\"normalizedCountryName\":\"United States\",\"normalizedLocation\":\"Redmond, Washington, USA\",\"location\":\"US, WA, Redmond\",\"region\":\"WA\",\"buildingCodeList\":[\"SEA114\"],\"normalizedCityName\":\"Redmond\"}"
+      ],
+      "normalized_location": "Redmond, Washington, USA",
+      "optional_search_labels": [],
+      "posted_date": "May  4, 2026",
+      "preferred_qualifications": "- Experience in communicating with users, other technical teams, and senior leadership to collect requirements, describe software product features, technical designs, and product strategy<br/>- Experience in recruiting, hiring, mentoring/coaching and managing teams of Software Engineers to improve their skills, and make them more effective, product software engineers<br/><br/>Amazon is an equal opportunity employer and does not discriminate on the basis of protected veteran status, disability, or other legally protected status.<br/><br/>Our inclusive culture empowers Amazonians to deliver the best results for our customers. If you have a disability and need a workplace accommodation or adjustment during the application and hiring process, including support for the interview or onboarding process, please visit <a href=\"https://amazon.jobs/content/en/how-we-hire/accommodations\">https://amazon.jobs/content/en/how-we-hire/accommodations</a> for more information. If the country/region you\u2019re applying in isn\u2019t listed, please contact your Recruiting Partner.<br/><br/><p><span style=\"color: rgb(35, 47, 62)\" class=\"ProseMirror-FontColor\">The base salary range for this position is listed below. Your Amazon package will include sign-on payments and restricted stock units (RSUs). Final compensation will be determined based on factors including experience, qualifications, and location. Amazon also offers comprehensive benefits including health insurance (medical, dental, vision, prescription, Basic Life &amp; AD&amp;D insurance and option for Supplemental life plans, EAP, Mental Health Support, Medical Advice Line, Flexible Spending Accounts, Adoption and Surrogacy Reimbursement coverage), 401(k) matching, paid time off, and parental leave. Learn more about our benefits at </span><a target=\"_blank\" rel=\"noopener noreferrer nofollow\" href=\"https://amazon.jobs/en/benefits\"><span style=\"color: rgb(35, 47, 62)\" class=\"ProseMirror-FontColor\">https://amazon.jobs/en/benefits</span></a><span style=\"color: rgb(35, 47, 62)\" class=\"ProseMirror-FontColor\">.</span></p><br/><br/>USA, WA, Redmond - 184,900.00 - 250,200.00 USD annually",
+      "primary_search_label": "alexa-and-amazon-devices.team-project-kuiper",
+      "source_system": "JobCreator",
+      "state": "WA",
+      "title": "Software Development Manager, Flight Software",
+      "university_job": null,
+      "updated_time": "18 days",
+      "url_next_step": "https://account.amazon.jobs/jobs/10410605/apply",
+      "team": {
+        "id": null,
+        "business_category_id": null,
+        "identifier": null,
+        "label": "team-project-kuiper",
+        "created_at": null,
+        "updated_at": null,
+        "image_file_name": null,
+        "image_content_type": null,
+        "image_file_size": null,
+        "image_updated_at": null,
+        "thumbnail_file_name": null,
+        "thumbnail_content_type": null,
+        "thumbnail_file_size": null,
+        "thumbnail_updated_at": null,
+        "hide_jobs": null,
+        "title": null,
+        "headline": null,
+        "description": null
+      }
+    }
+  ],
+  "job_posting_search_request": "{\"jobPostingSearchRequest\":{\"query\":\"10410605\",\"excludeFacets\":[{\"name\":\"businessCategory\",\"values\":[{\"name\":\"a-confidential-job\"}]},{\"name\":\"isPostedExternally\",\"values\":[{\"name\":\"0\"}]},{\"name\":\"isUnsearchable\",\"values\":[{\"name\":\"1\"}]}],\"filterFacets\":[],\"start\":0,\"size\":\"1\",\"sort\":{\"sortOrder\":\"DESCENDING\",\"sortType\":\"SCORE\"},\"location\":null,\"accessLevel\":\"EXTERNAL\",\"includeFacets\":[],\"locationFacets\":[],\"jobTypeFacets\":[],\"contentFilterFacets\":[],\"treatment\":\"OM\"}}"
+}

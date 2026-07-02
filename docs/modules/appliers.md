@@ -55,6 +55,7 @@ source's `adapter_key` when that source supports auto-apply. Import the
 | `workday`    | CXS apply flow (session cookies) | `POST …/jobpostings/<id>/jobapplications` then `…/name` + `…/finalize`; see below |
 | `google_careers` | HiringCportal batchexecute RPC (session cookies) | `SaveCareersProfile` → `CreatePacket` → `SavePacket` → `SubmitPacket`; see below |
 | `microsoft_careers` | Eightfold SmartApply JSON (session cookies) | `POST apply.careers.microsoft.com/api/application/v2/submit`; see below |
+| `amazon_jobs` | amazon.jobs applicant JSON (session cookies) | `PUT /api/apply/applicant/` → draft → `submit_application`; see below |
 | `indeed` | Viewjob parse + downstream ATS delegation | Fetches `/viewjob?jk=…`, delegates to Greenhouse/Lever/Ashby/Workday/Google when the listing embeds an employer apply URL; see below |
 
 ### Greenhouse
@@ -297,6 +298,37 @@ No Microsoft login required.
 cookies. Resume files upload via `/api/pcsx/upload_resume` before submit. Complex
 country-specific questionnaires (e.g. EEO, consent) may need explicit
 `profile.answers` mappings. Always preview with dry run first.
+
+### Amazon Jobs
+
+Amazon's external careers portal (`www.amazon.jobs` / `account.amazon.jobs`) uses
+authenticated applicant JSON endpoints:
+
+| Step | Endpoint |
+| ---- | -------- |
+| Job lookup (public) | `GET /<locale>/search.json?result_limit=1&base_query=<id_icims>` |
+| Applicant profile | `PUT /api/apply/applicant/` |
+| Resume upload | `POST /api/apply/documents` (multipart `file`) |
+| Draft application | `POST /api/apply/jobs/<id>/application/draft_application` |
+| Submit | `POST /api/apply/jobs/<id>/application/submit_application` |
+
+Config / credentials:
+
+| Field | Where | Purpose |
+| ----- | ----- | ------- |
+| `locale` | source/search config | Path locale for search.json (default `en`) |
+| `job_id` / `id_icims` | source/search config | Optional override when `job_url` / `external_id` are ambiguous |
+| `recruiting_source` | source/search config | Optional tag passed when creating the draft application |
+| amazon.jobs cookies | credential `cookies` | Logged-in candidate session from `www.amazon.jobs` or `account.amazon.jobs` |
+
+**Dry run:** loads the posting from public `search.json`, then returns the mapped
+applicant body plus the draft/submit endpoint URLs. No Amazon login required.
+
+**Live submit:** requires the candidate's own logged-in amazon.jobs session
+cookies. Resume files upload via `/api/apply/documents` before submit.
+Employer-specific screening questions may need explicit `profile.answers`
+mappings. Amazon may enforce application limits and CAPTCHA on the apply portal;
+treat live auto-apply as best-effort and always preview with dry run first.
 
 ### Indeed
 

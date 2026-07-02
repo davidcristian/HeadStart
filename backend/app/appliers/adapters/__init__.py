@@ -5,6 +5,7 @@ else in the codebase needs to change (see docs/recipes.md).
 """
 
 from app.appliers.adapters import (
+    amazon_jobs,
     ashby,
     google_careers,
     greenhouse,
@@ -15,6 +16,7 @@ from app.appliers.adapters import (
 )
 
 __all__ = [
+    "amazon_jobs",
     "ashby",
     "google_careers",
     "greenhouse",
