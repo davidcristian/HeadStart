@@ -5,12 +5,21 @@ from __future__ import annotations
 from typing import Any
 
 from app.appliers.adapters.google_careers_detail import GoogleCareersJobDetail
+from app.appliers.adapters.google_careers_resume import (
+    GoogleCareersResumeAttachment,
+    preview_resume_upload,
+    resume_attachment_for_payload,
+)
 from app.appliers.adapters.greenhouse import render_cover_letter, split_name
 from app.appliers.resume import resume_meta_for_payload
 from app.schemas.profile import ApplyProfile, ProfileData
 
 
-def build_careers_profile(profile: ProfileData | ApplyProfile) -> dict[str, Any]:
+def build_careers_profile(
+    profile: ProfileData | ApplyProfile,
+    *,
+    resume_attachment: GoogleCareersResumeAttachment | None = None,
+) -> dict[str, Any]:
     """Map HeadStart profile fields to a Google Careers profile object."""
     first_name, last_name = split_name(profile.full_name)
     email = profile.email.strip()
@@ -45,6 +54,8 @@ def build_careers_profile(profile: ProfileData | ApplyProfile) -> dict[str, Any]
 
     if profile.answers:
         careers_profile["answers"] = dict(profile.answers)
+    if resume_attachment is not None:
+        careers_profile["resumeAttachment"] = resume_attachment_for_payload(resume_attachment)
     return careers_profile
 
 
@@ -110,9 +121,10 @@ def build_application_payload(
     cover_letter: str | None = None,
     resume_file: Any = None,
     include_rpc_steps: bool = False,
+    resume_attachment: GoogleCareersResumeAttachment | None = None,
 ) -> dict[str, Any]:
     """Assemble the preview payload returned by dry-run apply."""
-    careers_profile = build_careers_profile(profile)
+    careers_profile = build_careers_profile(profile, resume_attachment=resume_attachment)
     payload: dict[str, Any] = {
         "apply_job_id": detail.apply_job_id,
         "apply_url": detail.apply_url,
@@ -136,6 +148,11 @@ def build_application_payload(
     meta = resume_meta_for_payload(resume_file)
     if meta is not None:
         payload["resume_file"] = meta
+    upload_preview = preview_resume_upload(resume_file)
+    if upload_preview is not None:
+        payload["resume_upload"] = upload_preview
+    if resume_attachment is not None:
+        payload["resume_attachment"] = resume_attachment_for_payload(resume_attachment)
 
     if include_rpc_steps:
         payload["rpc_steps"] = [

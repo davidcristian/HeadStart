@@ -27,6 +27,7 @@ from app.appliers.adapters.google_careers_payload import (
     extract_application_id,
     extract_packet_id,
 )
+from app.appliers.adapters.google_careers_resume import DEFAULT_UPLOAD_URL
 from app.appliers.base import get_applier
 from app.schemas.profile import ApplyProfile, ProfileData, ResumeFile
 from tests.conftest import load_fixture, make_http_client
@@ -100,6 +101,7 @@ def test_build_application_payload_includes_resume_metadata() -> None:
     )
     assert payload["apply_job_id"] == detail.apply_job_id
     assert payload["resume_file"]["filename"] == "resume.pdf"
+    assert payload["resume_upload"]["upload_url"] == DEFAULT_UPLOAD_URL
     assert payload["rpc_steps"][0]["rpc_id"] == "qvYBjf"
     assert "cover_letter" in payload
 

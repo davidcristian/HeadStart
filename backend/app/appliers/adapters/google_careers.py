@@ -48,6 +48,10 @@ from app.appliers.adapters.google_careers_payload import (
     extract_application_id,
     extract_packet_id,
 )
+from app.appliers.adapters.google_careers_resume import (
+    DEFAULT_UPLOAD_URL,
+    upload_resume_attachment,
+)
 from app.appliers.base import Applier, register_applier
 from app.appliers.types import ApplyContext, ApplyResult
 
@@ -101,9 +105,34 @@ class GoogleCareersApplier(Applier):
                 payload=payload,
             )
 
+        resume_attachment = None
+        if ctx.resume_file is not None:
+            try:
+                upload_url = str(ctx.config.get("resume_upload_url") or DEFAULT_UPLOAD_URL)
+                resume_attachment = upload_resume_attachment(
+                    self.http,
+                    ctx.resume_file,
+                    upload_url=upload_url,
+                    credentials=ctx.credentials,
+                )
+            except (httpx.HTTPError, ValueError) as exc:
+                return ApplyResult(status="failed", error=str(exc), payload=payload)
+            payload = build_application_payload(
+                detail,
+                ctx.profile,
+                job_title=ctx.job_title,
+                company=ctx.company,
+                cover_letter=ctx.cover_letter,
+                resume_file=ctx.resume_file,
+                resume_attachment=resume_attachment,
+            )
+
         try:
             wiz = self._load_wiz(ctx, detail)
-            careers_profile = build_careers_profile(ctx.profile)
+            careers_profile = build_careers_profile(
+                ctx.profile,
+                resume_attachment=resume_attachment,
+            )
             call_batchexecute(
                 self.http,
                 rpc_id=RPC_SAVE_PROFILE,

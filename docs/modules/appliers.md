@@ -242,6 +242,7 @@ Config / credentials:
 | `apply_job_id` | source/search config (optional) | Opaque apply token from the job's sign-in URL (`jobId=…`). Fetched automatically from the job detail page when omitted. |
 | `location_code` | source/search config | Two-letter country code (`loc` query param) when `apply_job_id` is set manually |
 | `company_resource` | source/search config | `gweb-careers-proto/…/companies/…` path when known |
+| `resume_upload_url` | source/search config | Optional override for Scotty resume upload endpoint (defaults to Google's `/about/careers/attachmentupload/upload`) |
 | Google account cookies | credential `cookies` | Logged-in session (`SID`, `SAPISID`, `__Secure-1PSID`, …) |
 | `at` / `csrf_token` | credential `session` | CSRF token (`SNlM0e`) from an authenticated apply page |
 
@@ -250,11 +251,14 @@ the apply token and `apply_url`, and returns the mapped Careers profile plus the
 RPC steps that would run. No Google login required.
 
 **Live submit:** requires the user's own Google account cookies and CSRF token.
-Resume file bytes are included in the preview metadata only — Google uses a
-separate attachment upload flow that is not automated in v1. Employer-specific
-screening questions may need explicit `profile.answers` mappings. RPC ids can
-change when Google redeploys the careers frontend; verify in DevTools if live
-submit starts failing after a Google UI update.
+When the application profile has an uploaded resume file, the adapter uploads it
+via Google's Scotty resumable attachment endpoint (`/about/careers/attachmentupload/upload`)
+before the batchexecute sequence and attaches the returned reference on the Careers
+profile (`resumeAttachment`). Override the upload URL with `resume_upload_url` in
+source/search config if Google changes the endpoint. Employer-specific screening
+questions may need explicit `profile.answers` mappings. RPC ids can change when
+Google redeploys the careers frontend; verify in DevTools if live submit starts
+failing after a Google UI update.
 
 **Limits:** Google enforces application rate limits in the UI (e.g. three jobs
 per 30 days). Treat live auto-apply as best-effort; always preview with dry run

@@ -61,6 +61,21 @@ class HttpClient:
         resp.raise_for_status()
         return resp.text
 
+    def post_raw(
+        self,
+        url: str,
+        *,
+        content: bytes | str = b"",
+        headers: dict[str, str] | None = None,
+        **kwargs: Any,
+    ) -> httpx.Response:
+        """POST raw bytes and return the full HTTP response (for header-driven flows)."""
+        self._wait_rate_limit()
+        assert_safe_outbound_url(url)
+        resp = self._client.post(url, content=content, headers=headers, **kwargs)
+        resp.raise_for_status()
+        return resp
+
     def put_json(self, url: str, *, json: Any = None, **kwargs: Any) -> Any:
         """PUT JSON and parse a JSON response body."""
         self._wait_rate_limit()
