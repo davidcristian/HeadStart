@@ -13,10 +13,12 @@ buttons are hidden.
 | Plan | How it is assigned |
 | ---- | ------------------ |
 | Free | Default for new accounts |
-| Pro  | Active/trialing Stripe subscription (monthly or annual price) |
-| Team | Admin panel only (`PATCH /admin/users/{id}`) — no self-serve checkout |
+| Starter | Self-serve checkout (Phase 14d) or admin panel |
+| Plus | Self-serve checkout (Phase 14d) or admin panel |
+| Pro | Active/trialing Stripe subscription or admin panel |
 
-Plan limits and feature gates are enforced in `PlanLimitsService`; see
+The legacy **Team** tier is deprecated (ADR-0010); existing `team` rows migrate
+to `pro`. Plan limits and feature gates are enforced in `PlanLimitsService`; see
 [auth.md](auth.md) and `app/core/plans.py`.
 
 ## Configuration
@@ -79,7 +81,7 @@ Webhook handler updates `user.stripe_customer_id`, `stripe_subscription_id`,
 
 On `user`:
 
-- `plan` — `free` / `pro` / `team`
+- `plan` — `free` / `starter` / `plus` / `pro`
 - `stripe_customer_id`
 - `stripe_subscription_id`
 - `subscription_status` — last known Stripe status (`active`, `trialing`, `past_due`, `canceled`, …)

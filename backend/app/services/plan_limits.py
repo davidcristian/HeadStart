@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from app.core.exceptions import PlanLimitError
 from app.core.plans import (
     DEFAULT_PLAN,
+    VALID_PLANS,
     PlanFeatures,
     PlanId,
     notifier_allowed,
@@ -35,10 +36,10 @@ class PlanLimitsService:
         self.targets = TargetRepository(session)
 
     def resolve_plan(self, user: User) -> PlanId:
-        """Effective plan for limits (admins are unlimited)."""
+        """Effective plan for limits (admins map to Pro caps for display)."""
         if user.is_admin:
-            return "team"
-        if user.plan in ("free", "pro", "team"):
+            return "pro"
+        if user.plan in VALID_PLANS:
             return cast(PlanId, user.plan)
         return DEFAULT_PLAN
 
@@ -149,7 +150,7 @@ class PlanLimitsService:
         plan = self.resolve_plan(user)
         if not plan_features_for(plan).digest_mode:
             raise PlanLimitError(
-                "Digest notifications require a Pro or Team plan "
+                "Digest notifications require a Pro plan "
                 f"(you are on {plan_display_name(plan)}).",
                 code="digest_mode",
                 plan=plan,
@@ -185,8 +186,7 @@ class PlanLimitsService:
         plan = self.resolve_plan(user)
         if not plan_features_for(plan).site_credentials:
             raise PlanLimitError(
-                "Site credentials require a Pro or Team plan "
-                f"(you are on {plan_display_name(plan)}).",
+                "Site credentials require a Pro plan " f"(you are on {plan_display_name(plan)}).",
                 code="site_credentials",
                 plan=plan,
             )
@@ -198,7 +198,7 @@ class PlanLimitsService:
         plan = self.resolve_plan(user)
         if not plan_features_for(plan).rss_feed:
             raise PlanLimitError(
-                f"RSS export requires a Pro or Team plan (you are on {plan_display_name(plan)}).",
+                f"RSS export requires a Pro plan (you are on {plan_display_name(plan)}).",
                 code="rss_feed",
                 plan=plan,
             )
@@ -210,7 +210,7 @@ class PlanLimitsService:
         plan = self.resolve_plan(user)
         if not plan_features_for(plan).portal_search:
             raise PlanLimitError(
-                "Curated portal search requires a Pro or Team plan "
+                "Curated portal search requires a Pro plan "
                 f"(you are on {plan_display_name(plan)}).",
                 code="portal_search",
                 plan=plan,
@@ -248,7 +248,7 @@ class PlanLimitsService:
             return
         label = plan_display_name(plan)
         raise PlanLimitError(
-            f"The '{adapter_key}' scraper requires a Pro or Team plan (you are on {label}).",
+            f"The '{adapter_key}' scraper requires a Pro plan (you are on {label}).",
             code="premium_scraper",
             plan=plan,
         )
@@ -259,7 +259,7 @@ class PlanLimitsService:
             return
         label = plan_display_name(plan)
         raise PlanLimitError(
-            f"The '{target_type}' notifier requires a Pro or Team plan (you are on {label}).",
+            f"The '{target_type}' notifier requires a Pro plan (you are on {label}).",
             code="premium_notifier",
             plan=plan,
         )

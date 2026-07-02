@@ -319,12 +319,12 @@ Stripe or pricing-page work yet.
 
 | Item | Why | Notes |
 | ---- | --- | ----- |
-| ADR: four-tier decoy pricing | Capture decision before code churn | Record tier names, feature matrix, admin handling, Team deprecation; **prices as TBD** with working defaults (e.g. Starter $2.99, Plus $7.99, Pro $9.99 monthly) so implementers can tune in Stripe without re-opening the ADR |
-| `app/core/plans.py` | Single source of truth for limits/gates | Add `starter` + `plus`; remove `team` from `PlanId` / `VALID_PLANS`; define caps per matrix above |
-| Admin effective plan | Operators stay unlimited | `PlanLimitsService.resolve_plan`: map `is_admin` to Pro limits (or a dedicated high cap), not `team` |
-| Data migration | No orphaned plan slug | Alembic: `UPDATE users SET plan = 'pro' WHERE plan = 'team'` |
-| Schema/types sweep | Compile-time safety | Update `PlanId` in `schemas/plan.py`, `schemas/auth.py`, promo model comments, tests |
-| Docs (partial) | Keep map accurate | Note Team deprecation in `billing.md` plan table |
+| ~~ADR: four-tier decoy pricing~~ | ~~Capture decision before code churn~~ | **Shipped:** [adr/0010-four-tier-pricing.md](adr/0010-four-tier-pricing.md) |
+| ~~`app/core/plans.py`~~ | ~~Single source of truth for limits/gates~~ | **Shipped:** `starter` + `plus` added; `team` removed; caps per matrix |
+| ~~Admin effective plan~~ | ~~Operators stay unlimited~~ | **Shipped:** `PlanLimitsService.resolve_plan` maps `is_admin` → `pro` |
+| ~~Data migration~~ | ~~No orphaned plan slug~~ | **Shipped:** Alembic `0019_migrate_team_to_pro` |
+| ~~Schema/types sweep~~ | ~~Compile-time safety~~ | **Shipped:** `PlanId` in `schemas/plan.py`, `schemas/auth.py`, promo comments, tests |
+| ~~Docs (partial)~~ | ~~Keep map accurate~~ | **Shipped:** Team deprecation in `billing.md` plan table |
 
 **Done when:** `make check` passes; `team` is gone from valid plans; existing Team
 users are `pro`; limits for all four tiers exist in `plans.py`.

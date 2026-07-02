@@ -47,7 +47,7 @@ class BillingService:
             plan=self._plan_id(user.plan),
             subscription_status=user.subscription_status,
             has_stripe_subscription=has_subscription,
-            can_checkout=configured and not active_subscription and user.plan != "team",
+            can_checkout=configured and not active_subscription,
             can_manage=configured and bool(user.stripe_customer_id),
             trial_days=settings.stripe_trial_days,
         )
@@ -65,10 +65,6 @@ class BillingService:
         if plan not in _CHECKOUT_PLANS:
             raise ValidationError("Only the Pro plan is available for self-serve checkout.")
         user = self._require_user(user_id)
-        if user.plan == "team":
-            raise ValidationError(
-                "Team plans are arranged manually. Contact support to change plans."
-            )
         if user.subscription_status and subscription_grants_plan(user.subscription_status):
             raise ValidationError(
                 "You already have an active subscription. Manage billing from Settings."

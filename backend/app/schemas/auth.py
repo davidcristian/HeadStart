@@ -51,7 +51,7 @@ class UserRead(BaseModel):
     email: EmailStr
     is_admin: bool
     is_active: bool
-    plan: Literal["free", "pro", "team"] = "free"
+    plan: Literal["free", "starter", "plus", "pro"] = "free"
     onboarding_completed_at: datetime | None = None
     email_verified_at: datetime | None = None
     created_at: datetime

@@ -20,7 +20,7 @@ class PromoCode(Base, TimestampMixin):
     promo_type: Mapped[str] = mapped_column(String(32), nullable=False)
     # percent (1-100), cents, trial days, or unused for plan_upgrade
     value_int: Mapped[int] = mapped_column(Integer, nullable=False)
-    # Target plan when promo_type is plan_upgrade (pro / team).
+    # Target plan when promo_type is plan_upgrade (starter / plus / pro).
     plan_target: Mapped[str | None] = mapped_column(String(20), nullable=True)
     max_redemptions: Mapped[int | None] = mapped_column(Integer, nullable=True)
     redemption_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)

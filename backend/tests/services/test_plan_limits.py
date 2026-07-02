@@ -1,6 +1,7 @@
 """Unit tests for plan limit helpers."""
 
 from app.core.plans import (
+    VALID_PLANS,
     plan_features_for,
     plan_limits_for,
     scraper_allowed,
@@ -8,11 +9,35 @@ from app.core.plans import (
 from app.services.plan_limits import PlanLimitsService
 
 
+def test_valid_plans_exclude_team() -> None:
+    assert "team" not in VALID_PLANS
+    assert frozenset({"free", "starter", "plus", "pro"}) == VALID_PLANS
+
+
 def test_free_plan_limits_match_pricing() -> None:
     limits = plan_limits_for("free")
     assert limits.max_searches == 3
     assert limits.max_sources == 3
     assert limits.max_targets == 1
+
+
+def test_starter_and_plus_limits_match_matrix() -> None:
+    starter = plan_limits_for("starter")
+    assert starter.max_searches == 5
+    assert starter.max_sources == 5
+    assert starter.max_targets == 2
+
+    plus = plan_limits_for("plus")
+    assert plus.max_searches == 10
+    assert plus.max_sources == 10
+    assert plus.max_targets == 3
+
+
+def test_pro_plan_limits_match_matrix() -> None:
+    limits = plan_limits_for("pro")
+    assert limits.max_searches == 20
+    assert limits.max_sources == 20
+    assert limits.max_targets == 5
 
 
 def test_free_plan_feature_gates() -> None:
@@ -42,7 +67,7 @@ def test_admin_snapshot_is_unlimited(db_session) -> None:
 
     snapshot = PlanLimitsService(db_session).snapshot(user)
     assert snapshot["unlimited"] is True
-    assert snapshot["effective_plan"] == "team"
+    assert snapshot["effective_plan"] == "pro"
 
 
 def test_show_ads_only_for_free_non_admin_users(db_session) -> None:

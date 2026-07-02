@@ -174,8 +174,6 @@ class PromoCodeService:
             raise ValidationError("You are not eligible for this promo code.")
         if promo.one_per_user and self.promos.count_user_redemptions(promo.id, user.id) > 0:
             raise ValidationError("You have already redeemed this promo code.")
-        if user.plan == "team":
-            raise ValidationError("Team accounts cannot redeem promo codes at checkout.")
         if user.subscription_status and user.subscription_status in {"active", "trialing"}:
             raise ValidationError(
                 "You already have an active subscription. Manage billing from Settings."

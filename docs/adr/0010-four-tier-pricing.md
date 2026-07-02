@@ -1,0 +1,79 @@
+# 0010. Four-tier decoy pricing
+
+- **Status:** Accepted
+- **Date:** 2026-07-02
+
+## Context
+
+HeadStart shipped with three tiers (`free`, `pro`, `team`). The admin-only
+**Team** tier was a manual override with high caps but no self-serve checkout.
+Phase 6c billing supports Pro checkout only. Product strategy now calls for a
+classic decoy ladder that nudges users toward **Pro** while keeping a low-friction
+**Free** entry and paid steps in between.
+
+Operators need a single backend source of truth for plan IDs, numeric caps, and
+(later) feature gates before Stripe multi-plan checkout and the public pricing
+page can ship.
+
+## Decision
+
+Replace **Team** with two new self-serve paid tiers and keep **Pro** as the
+highlighted best value:
+
+| Tier | ID | Role |
+| ---- | -- | ---- |
+| Free | `free` | Try the product; ads on |
+| Starter | `starter` | Cheap entry — remove ads + digest |
+| Plus | `plus` | Mid tier — missing HeadStart differentiators |
+| Pro | `pro` | Obvious best value |
+
+**Numeric caps (searches / sources / targets):**
+
+| Tier | Caps |
+| ---- | ---- |
+| Free | 3 / 3 / 1 |
+| Starter | 5 / 5 / 2 |
+| Plus | 10 / 10 / 3 |
+| Pro | 20 / 20 / 5 |
+
+**Feature matrix** (enforcement lands in Phase 14b):
+
+| | Free | Starter | Plus | Pro |
+| -- | ---- | ------- | ---- | --- |
+| Ads | yes | no | no | no |
+| Digest mode | — | ✓ | ✓ | ✓ |
+| Indeed / LinkedIn / Playwright | — | — | ✓ | ✓ |
+| Site credentials | — | — | ✓ | ✓ |
+| AI summaries | — | — | — | ✓ |
+| RSS + outbound webhooks | — | — | — | ✓ |
+| Curated portal search | — | — | — | ✓ |
+
+**Prices (TBD in Stripe):** working defaults for implementers — Starter $2.99,
+Plus $7.99, Pro $9.99 monthly (annual pairs to be set in Dashboard).
+
+**Admin handling:** `is_admin` users keep unlimited access via early returns in
+`PlanLimitsService`; `resolve_plan` maps admins to `pro` for display, not a
+separate slug.
+
+**Migration:** `UPDATE users SET plan = 'pro' WHERE plan = 'team'`.
+
+Phase 14a implements the plan registry and caps only. Feature gates, pricing UI,
+Stripe price pairs, and promo/admin polish follow in 14b–14e.
+
+## Consequences
+
+- `team` is removed from `PlanId`, `VALID_PLANS`, and admin assignment.
+- Existing Team subscribers become Pro (same premium features until 14b refines
+  Plus vs Pro gates).
+- Frontend and Stripe still reference Team until Phases 14c–14e; backend rejects
+  unknown plan slugs.
+- Pro caps increase from 15/15/5 to 20/20/5 per the new matrix.
+
+## Alternatives considered
+
+- **Keep Team as a fourth paid tier** — rejected; admin-only tier confuses the
+  public ladder and duplicates Pro positioning.
+- **Three tiers only (Free / Pro / Enterprise)** — rejected; decoy pricing needs a
+  visible mid tier (Plus) and a low entry (Starter).
+- **Grandfather Team users on a hidden slug** — rejected; one-time migration to
+  `pro` is simpler and Team had no Stripe linkage.

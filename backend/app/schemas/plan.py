@@ -4,7 +4,7 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-PlanId = Literal["free", "pro", "team"]
+PlanId = Literal["free", "starter", "plus", "pro"]
 
 
 class PlanLimitsRead(BaseModel):

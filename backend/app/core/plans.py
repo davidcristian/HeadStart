@@ -2,6 +2,9 @@
 
 Mirrors the public pricing page (`frontend/src/lib/pricing.ts`). Stripe webhooks
 and the admin panel update ``user.plan``; new accounts start on ``free``.
+
+See docs/adr/0010-four-tier-pricing.md for the tier ladder and feature matrix.
+Feature enforcement for Starter / Plus / Pro is refined in Phase 14b.
 """
 
 from __future__ import annotations
@@ -9,7 +12,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Literal
 
-PlanId = Literal["free", "pro", "team"]
+PlanId = Literal["free", "starter", "plus", "pro"]
 
 # Scrapers included on Free (common ATS + generic HTML). Pro unlocks the rest.
 FREE_SCRAPERS: frozenset[str] = frozenset(
@@ -32,7 +35,7 @@ PREMIUM_SCRAPERS: frozenset[str] = frozenset({"indeed", "linkedin", "playwright"
 PREMIUM_NOTIFIERS: frozenset[str] = frozenset({"webhook"})
 
 DEFAULT_PLAN: PlanId = "free"
-VALID_PLANS: frozenset[str] = frozenset({"free", "pro", "team"})
+VALID_PLANS: frozenset[str] = frozenset({"free", "starter", "plus", "pro"})
 
 
 @dataclass(frozen=True, slots=True)
@@ -53,10 +56,12 @@ class PlanFeatures:
 
 _PLAN_LIMITS: dict[PlanId, PlanLimits] = {
     "free": PlanLimits(max_searches=3, max_sources=3, max_targets=1),
-    "pro": PlanLimits(max_searches=15, max_sources=15, max_targets=5),
-    "team": PlanLimits(max_searches=50, max_sources=50, max_targets=20),
+    "starter": PlanLimits(max_searches=5, max_sources=5, max_targets=2),
+    "plus": PlanLimits(max_searches=10, max_sources=10, max_targets=3),
+    "pro": PlanLimits(max_searches=20, max_sources=20, max_targets=5),
 }
 
+# Transitional feature flags for 14a — Phase 14b aligns gates with the ADR matrix.
 _PLAN_FEATURES: dict[PlanId, PlanFeatures] = {
     "free": PlanFeatures(
         digest_mode=False,
@@ -65,14 +70,21 @@ _PLAN_FEATURES: dict[PlanId, PlanFeatures] = {
         rss_feed=False,
         portal_search=False,
     ),
-    "pro": PlanFeatures(
+    "starter": PlanFeatures(
+        digest_mode=False,
+        ai_summaries=False,
+        site_credentials=False,
+        rss_feed=False,
+        portal_search=False,
+    ),
+    "plus": PlanFeatures(
         digest_mode=True,
         ai_summaries=True,
         site_credentials=True,
         rss_feed=True,
         portal_search=True,
     ),
-    "team": PlanFeatures(
+    "pro": PlanFeatures(
         digest_mode=True,
         ai_summaries=True,
         site_credentials=True,
@@ -97,7 +109,7 @@ def scraper_allowed(plan: PlanId, adapter_key: str) -> bool:
     if adapter_key in FREE_SCRAPERS:
         return True
     if adapter_key in PREMIUM_SCRAPERS:
-        return plan in ("pro", "team")
+        return plan == "pro"
     # Unknown adapters default to allowed so new scrapers are not accidentally blocked.
     return True
 
@@ -105,10 +117,15 @@ def scraper_allowed(plan: PlanId, adapter_key: str) -> bool:
 def notifier_allowed(plan: PlanId, notifier_type: str) -> bool:
     """Whether a notifier type is available on the given plan."""
     if notifier_type in PREMIUM_NOTIFIERS:
-        return plan in ("pro", "team")
+        return plan == "pro"
     return True
 
 
 def plan_display_name(plan: PlanId) -> str:
     """Human label for error messages."""
-    return {"free": "Free", "pro": "Pro", "team": "Team"}[plan]
+    return {
+        "free": "Free",
+        "starter": "Starter",
+        "plus": "Plus",
+        "pro": "Pro",
+    }[plan]
