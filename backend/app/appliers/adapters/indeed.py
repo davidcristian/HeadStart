@@ -1,9 +1,9 @@
 """Indeed apply adapter.
 
 Indeed listings usually redirect Easy Apply jobs to an employer ATS (Greenhouse,
-Lever, Ashby, Workday, Google Careers). This adapter fetches the public viewjob
-page, parses embedded `_initialData`, and delegates to the matching downstream
-applier when possible. When the posting is hosted on Indeed itself, dry-run
+Lever, Ashby, Workday, Google Careers, Microsoft Careers, Amazon Jobs). This adapter
+fetches the public viewjob page, parses embedded `_initialData`, and delegates to
+the matching downstream applier when possible. When the posting is hosted on Indeed itself, dry-run
 previews the smartapply payload; live submit needs logged-in Indeed session
 cookies and posts to smartapply (best-effort — multi-step questionnaires may
 still require manual answers in `profile.answers`).

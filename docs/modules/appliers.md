@@ -335,7 +335,8 @@ treat live auto-apply as best-effort and always preview with dry run first.
 Indeed listings rarely submit on Indeed itself — most **Easily apply** jobs
 redirect to an employer ATS. The adapter fetches the public viewjob page,
 parses embedded `window._initialData`, and **delegates** to Greenhouse, Lever,
-Ashby, Workday, or Google Careers when the downstream apply URL is recognized.
+Ashby, Workday, Google Careers, Microsoft Careers, or Amazon Jobs when the
+downstream apply URL is recognized.
 Config / credentials:
 
 | Field | Where | Purpose |

@@ -28,6 +28,18 @@ _GOOGLE_JOB_RE = re.compile(
     r"/about/careers/applications/jobs/results/(\d+)",
     re.IGNORECASE,
 )
+_MICROSOFT_JOB_RE = re.compile(
+    r"careers\.microsoft\.com/careers/(?:job|apply)/(\d+)",
+    re.IGNORECASE,
+)
+_AMAZON_JOBS_RE = re.compile(
+    r"(?:www\.)?amazon\.jobs/(?:(?P<locale>[a-z]{2})/)?jobs/(?P<id>\d+)",
+    re.IGNORECASE,
+)
+_AMAZON_ACCOUNT_RE = re.compile(
+    r"account\.amazon\.jobs/jobs/(?P<id>\d+)",
+    re.IGNORECASE,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -184,6 +196,34 @@ def parse_ats_job_url(url: str) -> AtsJobTarget | None:
             external_id=google.group(1),
             job_url=normalized,
             config={"company": "Google", "portal_id": "google"},
+        )
+
+    microsoft = _MICROSOFT_JOB_RE.search(normalized)
+    if microsoft:
+        position_id = microsoft.group(1)
+        return AtsJobTarget(
+            adapter_key="microsoft_careers",
+            external_id=position_id,
+            job_url=normalized,
+            config={
+                "company": "Microsoft",
+                "portal_id": "microsoft",
+                "domain": "microsoft.com",
+            },
+        )
+
+    amazon = _AMAZON_JOBS_RE.search(normalized) or _AMAZON_ACCOUNT_RE.search(normalized)
+    if amazon:
+        job_id = amazon.group("id")
+        amazon_config: dict[str, Any] = {"company": "Amazon", "portal_id": "amazon"}
+        locale = amazon.groupdict().get("locale")
+        if locale:
+            amazon_config["locale"] = locale.lower()
+        return AtsJobTarget(
+            adapter_key="amazon_jobs",
+            external_id=job_id,
+            job_url=normalized,
+            config=amazon_config,
         )
 
     return None
