@@ -191,7 +191,7 @@ complete across all scrapers:
 | ---- | --- | ----- |
 | ~~SmartRecruiters apply adapter~~ | ~~12 catalog employers scrape via SR but cannot auto-apply~~ | **Shipped:** `@register_applier("smartrecruiters")` uses the Application API (`GET/POST api.smartrecruiters.com/postings/<uuid>/…`); posting UUID resolved from public Postings detail API; screening answers via `profile.answers` (`sr_<question_id>`); live submit requires `session.smart_token` or `session.access_token` |
 | ~~Shopify apply adapter~~ | ~~Phase 18 custom scraper is scrape-only~~ | **Shipped:** `@register_applier("shopify_careers")` delegates to Ashby with `board=shopify` |
-| Uber apply adapter | Phase 18 custom scraper is scrape-only | Proprietary apply flow; no apply adapter yet |
+| Uber apply adapter | Phase 18 custom scraper is scrape-only | **Shipped:** `@register_applier("uber_careers")` uses Careers Fusion GraphQL (`submitApplication`) + `getAdditionalQuestionsForJob`; live submit requires `session.session_token` from a logged-in Uber Careers account |
 | ~~LinkedIn Easy Apply resume PDF~~ | Many Easy Apply jobs require an attachment | **Shipped:** live submit uploads stored resume via Voyager media metadata + Ambry and maps the asset URN into `fileUploadResponses` when the form has a document-upload field |
 | ~~Indeed-hosted resume file~~ | Same class of gap as LinkedIn | **Shipped:** live smartapply submit includes `applicant.resume.file` (Base64) when the profile has a stored resume file |
 | Structured profile beyond Workday | UI stores experience/education/skills/languages | **Shipped (GH/Lever/Ashby):** Greenhouse maps `work_experience` → `employments` and `education` → `educations` (with catalog lookup/aliases); Lever appends formatted supplement to `comments`; Ashby supports `education_history_path`, `work_history_path`, and `skills_path`. Workday still owns `languages`. |
@@ -492,15 +492,15 @@ Phase 11 batch-1 expansion (Uber, Snowflake, Shopify).
 | ~~`uber_careers`~~ | ~~Uber~~ | ~~Reverse-engineer `uber.com/careers` search JSON or embedded hydration payload~~ | **Shipped:** `@register_scraper("uber_careers")` calls public `POST /api/loadSearchJobsResults`; offset pagination; `format_location()` handles multi-city `allLocations`; catalog preset added (97 employers) |
 | ~~`snowflake_careers`~~ | ~~Snowflake~~ | ~~Public careers search API or embedded JSON on `careers.snowflake.com`~~ | **Shipped:** Phenom careers site with Ashby backend; `@register_scraper("snowflake_careers")` calls public Ashby Postings API (`board=snowflake`); `@register_applier("snowflake_careers")` delegates to Ashby; catalog preset added (98 employers) |
 | ~~`shopify_careers` apply~~ | ~~Shopify uses Ashby for applications~~ | **Shipped:** `@register_applier("shopify_careers")` delegates to Ashby with `board=shopify` |
-| `uber_careers` apply | Uber has a proprietary apply flow | **Not shipped** — scrape-only |
+| `uber_careers` apply | Uber has a proprietary apply flow | **Shipped:** `@register_applier("uber_careers")`; GraphQL submit + screening questions API; session token required for live submit |
 
 After each scraper ships, add the matching `*_careers_preset()` to
 `catalog_presets.py` and an apply adapter if the apply flow is automatable (see
 Phase 7 pattern for Google/Microsoft/Meta).
 
 **Done when:** all three employers appear in the curated catalog with working
-scrape. Apply: Snowflake and Shopify support dry-run + live via Ashby delegation;
-Uber remains scrape-only until an apply adapter ships (see [Phase 7 polish](#phase-7-polish--remaining-gaps)).
+scrape. Apply: Snowflake, Shopify, and Uber support dry-run + live submit (Uber
+requires a logged-in careers session token); see [Phase 7 polish](#phase-7-polish--remaining-gaps).
 
 ---
 

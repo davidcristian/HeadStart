@@ -90,7 +90,7 @@ def test_pipeline_skips_auto_apply_for_unsupported_adapter(db_session: Session) 
     search = make_search(db_session)
     source = db_session.get(Source, search.source_id)
     assert source is not None
-    source.adapter_key = "uber_careers"
+    source.adapter_key = "generic_html"
     source.auto_apply_enabled = True
     db_session.flush()
     _save_profile(db_session, search.user_id)

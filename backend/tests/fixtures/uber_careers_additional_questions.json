@@ -1,0 +1,15 @@
+{
+  "status": "success",
+  "data": {
+    "jobId": 154672,
+    "additionalQuestions": [
+      {
+        "questionId": { "value": "Q123" },
+        "formQuestionId": "screening_years_experience",
+        "question": "How many years of experience do you have?",
+        "options": ["0-2", "3-5", "6+"],
+        "applicationSection": "APPLICATION_SECTION_JOB_SCREENING"
+      }
+    ]
+  }
+}

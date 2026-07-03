@@ -72,6 +72,7 @@ source's `adapter_key` when that source supports auto-apply. Import the
 | `linkedin` | Guest job page + Voyager GraphQL + downstream ATS delegation | Fetches `/jobs-guest/jobs/api/jobPosting/{id}`, enriches offsite listings via Voyager when session cookies are present, delegates to Greenhouse/Lever/Ashby/Workday/Google/Microsoft/Amazon/Meta when the employer apply URL is recognized; see below |
 | `snowflake_careers` | Delegates to Ashby | Snowflake's Phenom careers site uses Ashby for applications; delegates to the `ashby` adapter with `board=snowflake` |
 | `shopify_careers` | Delegates to Ashby | Shopify's careers site uses Ashby for applications; delegates to the `ashby` adapter with `board=shopify` |
+| `uber_careers` | Careers Fusion GraphQL | `POST /careers/apply/graphql` (`submitApplication`); screening questions via `getAdditionalQuestionsForJob`; see below |
 | `smartrecruiters` | Application API JSON POST | `GET api.smartrecruiters.com/postings/<uuid>/configuration` then `POST …/candidates`; see below |
 
 ### Scrapers without apply adapters
@@ -81,7 +82,6 @@ work, but the Jobs page **Apply** action is unavailable:
 
 | Scraper key | Notes |
 | ----------- | ----- |
-| `uber_careers` | Proprietary apply flow; scrape-only |
 | `playwright` / `generic_html` | Custom HTML sources; no generic apply path |
 
 `GET /portals` sets `supports_auto_apply: false` for these keys. See
@@ -193,6 +193,38 @@ Work history is sent as plain text; skills default to an array for
 live submit uses `multipart/form-data` with `_systemfield_resume` (override via
 `config.resume_path`); otherwise `resume_text` may be appended to the
 cover-letter field.
+
+### Uber Careers
+
+Submits applications through Uber's Careers Fusion stack:
+
+  POST `https://www.uber.com/careers/apply/api/getAdditionalQuestionsForJob`
+  POST `https://www.uber.com/careers/apply/graphql` (`submitApplication`)
+
+Config / credentials:
+
+| Field | Where | Purpose |
+| ----- | ----- | ------- |
+| `locale` | source/search config | API locale code (default `en`) |
+| `careers_locale_path` | source/search config | Careers URL prefix (default `us/en`) |
+| `job_id` | source/search config | Optional numeric job id override |
+| `session_token` / `sessionToken` | credential `session` | Logged-in Uber Careers session from `doSignIn` |
+| `legal_right_to_work`, `in_usa`, `require_visa_sponsorship` | profile `answers` | EEO / eligibility fields (`Yes`/`No`) |
+| `gender` / `sex`, `disability`, `veteran`, `race`, `sexual_orientation` | profile `answers` | Optional demographic fields when required |
+| `uber_<question_id>` or `<formQuestionId>` | profile `answers` | Job-specific screening questions from `getAdditionalQuestionsForJob` |
+
+**Structured profile:** maps `work_experience` to `positions` and `education` to
+`educations` using Uber's month/year objects. Resume files attach as base64
+`attachments` entries (`content` + `name`).
+
+**Dry run:** fetches screening questions, builds the `applicationFormRequest`
+preview (resume bytes redacted), and does not require a session token.
+
+**Live submit:** requires the candidate's own Uber Careers session token.
+Cover letters are not a first-class field on Uber's form — use screening-question
+answers or the Application profile cover-letter generator before submit. Uber does
+not expose a stable public employer API; this adapter reverse-engineers the same
+Fusion GraphQL flow as the careers site.
 
 ### SmartRecruiters
 
@@ -575,10 +607,10 @@ Google Careers live submit needs the candidate's own Google account session and
 CSRF token; resume upload and employer questionnaires are best-effort. Microsoft
 Careers live submit needs the candidate's own logged-in session on
 `apply.careers.microsoft.com`; country-specific screening questions are
-best-effort. Scrapers without any apply adapter (e.g.
-`smartrecruiters`, `uber_careers`) cannot use the Jobs page
-Apply action. Branching questionnaires only
-submit answers you explicitly map in `profile.answers`. See
+best-effort. Branching questionnaires only
+submit answers you explicitly map in `profile.answers`. Uber Careers live submit
+needs a logged-in careers session token; employer questionnaires map via
+`profile.answers`. See
 [launch-checklist.md](../launch-checklist.md#7-auto-apply-optional--know-the-limits)
 before advertising auto-apply on a public instance.
 
