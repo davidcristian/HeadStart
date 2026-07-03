@@ -23,6 +23,7 @@ class InboxRoutingConfig(BaseModel):
     enabled: bool = False
     auto_route_on_classify: bool = True
     label_folders: dict[str, str] = Field(default_factory=dict)
+    sender_allowlist: list[str] = Field(default_factory=list)
 
 
 def default_routing_config() -> InboxRoutingConfig:
@@ -46,6 +47,7 @@ def merge_routing_config(raw: dict | None) -> InboxRoutingConfig:
         enabled=stored.enabled,
         auto_route_on_classify=stored.auto_route_on_classify,
         label_folders=folders,
+        sender_allowlist=list(stored.sender_allowlist),
     )
 
 

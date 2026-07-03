@@ -5,8 +5,23 @@ from __future__ import annotations
 from datetime import datetime
 
 from app.email_classifiers.labels import GHOST_HEADER_TYPE, GHOST_HEADER_VALUE, GHOST_SUBJECT_PREFIX
-from app.inbox.types import OutboundMessage
+from app.inbox.types import InboxMessage, OutboundMessage
 from app.models.seen_job import SeenJob
+
+
+def is_self_ghost_archive_message(message: InboxMessage, mailbox_email: str) -> bool:
+    """Return True when inbound mail matches HeadStart ghost-archive markers."""
+    headers = {key.lower(): value for key, value in message.raw_headers.items()}
+    if headers.get(GHOST_HEADER_TYPE.lower(), "").strip().lower() == GHOST_HEADER_VALUE:
+        return True
+    if message.subject.strip().startswith(GHOST_SUBJECT_PREFIX):
+        return True
+    mailbox = mailbox_email.strip().lower()
+    if not mailbox:
+        return False
+    from_addr = message.from_addr.strip().lower()
+    to_addrs = [addr.strip().lower() for addr in message.to_addrs]
+    return from_addr == mailbox and mailbox in to_addrs
 
 
 def mailbox_self_address(*, imap_user: str, smtp_from: str) -> str:

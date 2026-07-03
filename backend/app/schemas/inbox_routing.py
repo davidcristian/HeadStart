@@ -15,6 +15,7 @@ class InboxRoutingConfigUpdate(BaseModel):
     enabled: bool | None = None
     auto_route_on_classify: bool | None = None
     label_folders: dict[str, str] | None = None
+    sender_allowlist: list[str] | None = None
 
 
 class InboxRouteRequest(BaseModel):

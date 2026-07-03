@@ -16,6 +16,7 @@ from app.repositories.users import UserRepository
 from app.schemas.inbox_classification import EmailClassifyRequest
 from app.services.email_classification import EmailClassificationService
 from app.services.inbox import InboxService
+from app.services.inbox_gate import InboxGateService
 
 logger = get_logger(__name__)
 
@@ -28,6 +29,7 @@ class InboxOrchestrationResult:
     fetched: int
     classified: int
     skipped: int
+    ignored: int
     failed: int
 
 
@@ -40,15 +42,19 @@ class InboxOrchestrationService:
         self.classifications = InboxClassificationRepository(session)
         self.users = UserRepository(session)
         self.classifier = EmailClassificationService(session)
+        self.gate = InboxGateService(session)
 
     def process_due(self) -> InboxOrchestrationResult:
         """Poll mailboxes, classify new messages, and route when configured."""
         if not settings.inbox_agent_enabled:
-            return InboxOrchestrationResult(users=0, fetched=0, classified=0, skipped=0, failed=0)
+            return InboxOrchestrationResult(
+                users=0, fetched=0, classified=0, skipped=0, ignored=0, failed=0
+            )
 
         fetched = 0
         classified = 0
         skipped = 0
+        ignored = 0
         failed = 0
         pollable = self._list_pollable_user_ids()
 
@@ -57,14 +63,19 @@ class InboxOrchestrationService:
             fetched += outcome.fetched
             classified += outcome.classified
             skipped += outcome.skipped
+            ignored += outcome.ignored
             failed += outcome.failed
 
-        if pollable and (fetched or classified or failed):
+        if pollable and (fetched or classified or ignored or failed):
             logger.info(
-                "inbox orchestration: users=%d fetched=%d classified=%d skipped=%d failed=%d",
+                (
+                    "inbox orchestration: users=%d fetched=%d classified=%d "
+                    "ignored=%d skipped=%d failed=%d"
+                ),
                 len(pollable),
                 fetched,
                 classified,
+                ignored,
                 skipped,
                 failed,
             )
@@ -73,6 +84,7 @@ class InboxOrchestrationService:
             fetched=fetched,
             classified=classified,
             skipped=skipped,
+            ignored=ignored,
             failed=failed,
         )
 
@@ -89,7 +101,9 @@ class InboxOrchestrationService:
 
     def _process_user(self, user_id: int) -> InboxOrchestrationResult:
         if self.inbox.resolve_context(user_id) is None:
-            return InboxOrchestrationResult(users=0, fetched=0, classified=0, skipped=1, failed=0)
+            return InboxOrchestrationResult(
+                users=0, fetched=0, classified=0, skipped=1, ignored=0, failed=0
+            )
 
         since_uid = self._resolve_since_uid(user_id)
         try:
@@ -100,7 +114,9 @@ class InboxOrchestrationService:
             )
         except Exception as exc:
             logger.warning("inbox fetch failed user=%s: %s", user_id, exc)
-            return InboxOrchestrationResult(users=1, fetched=0, classified=0, skipped=0, failed=1)
+            return InboxOrchestrationResult(
+                users=1, fetched=0, classified=0, skipped=0, ignored=0, failed=1
+            )
 
         return self._classify_fetched(user_id, fetch_result, since_uid=since_uid)
 
@@ -122,13 +138,21 @@ class InboxOrchestrationService:
         if not messages:
             if fetch_result.max_uid is not None and fetch_result.max_uid != since_uid:
                 self.poll_state.upsert_last_polled_uid(user_id, fetch_result.max_uid)
-            return InboxOrchestrationResult(users=1, fetched=0, classified=0, skipped=0, failed=0)
+            return InboxOrchestrationResult(
+                users=1, fetched=0, classified=0, skipped=0, ignored=0, failed=0
+            )
 
+        gate_context = self.gate.build_context(user_id)
         classified = 0
+        ignored = 0
         failed = 0
         last_success_uid: int | None = since_uid
 
         for message in messages:
+            if not self.gate.should_process(user_id, message, gate_context):
+                ignored += 1
+                last_success_uid = message.uid
+                continue
             try:
                 self.classifier.classify(
                     user_id,
@@ -154,5 +178,6 @@ class InboxOrchestrationService:
             fetched=len(messages),
             classified=classified,
             skipped=0,
+            ignored=ignored,
             failed=failed,
         )

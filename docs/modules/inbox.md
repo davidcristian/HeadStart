@@ -106,7 +106,7 @@ After classification, routable labels can be moved into configured IMAP folders
 (Gmail labels and Outlook folders are exposed as IMAP mailboxes).
 
 - **Config:** `routing_config` JSON on `mailbox_credential` (`enabled`,
-  `auto_route_on_classify`, `label_folders`). Defaults:
+  `auto_route_on_classify`, `label_folders`, optional `sender_allowlist`). Defaults:
   `HeadStart/General`, `HeadStart/Rejections`, `HeadStart/Ghost`.
 - **`out_of_scope`** is never routed (stays in the source mailbox).
 - **Connector:** `MailboxConnector.move_message` on `imap_smtp` (UID MOVE when
@@ -126,19 +126,20 @@ When `INBOX_AGENT_ENABLED=true`, beat runs `process_inbox_messages` every
    users when `INBOX_USE_ENV_CREDENTIALS=true`).
 2. Fetches inbound mail since `inbox_poll_state.last_polled_uid` (bootstraps from
    the highest persisted classification UID when unset).
-3. Classifies each message in UID order via `EmailClassificationService` (ghost
+3. Applies `InboxGateService` before classification — only messages tied to active
+   or ghosted applications (employer domain, thread headers, ghost self-mail, or
+   optional `sender_allowlist`) enter the classifier; unrelated mail is ignored and
+   the poll cursor advances past it without LLM calls or DB writes.
+4. Classifies gated messages in UID order via `EmailClassificationService` (ghost
    recovery, interview handoff, and folder routing run as on manual classify).
-4. Advances the poll cursor only through successfully classified messages;
-   classify failures stop the batch so the message retries on the next tick.
+5. Advances the poll cursor through classified and ignored messages; classify
+   failures stop the batch so the failed message retries on the next tick.
 
 Batch size per user per tick: `INBOX_POLL_BATCH_SIZE` (default 50). See
 [worker.md](worker.md).
 
-**Known gap:** the loop currently classifies every fetched message. Personal mail,
-newsletters, and other non-application senders are labeled (often `out_of_scope`)
-and persisted, but should eventually be **skipped before classification** when
-they cannot be linked to an active or ghosted application. See the
-*Application-scoped inbox gate* item in [roadmap.md](../roadmap.md).
+**Known gap:** none for the application-scoped gate — unrelated mail is skipped
+before classification. See `InboxGateService` in `app/services/inbox_gate.py`.
 
 ## Ghost recovery (Phase 20c)
 

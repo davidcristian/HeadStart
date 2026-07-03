@@ -162,5 +162,6 @@ def process_inbox_messages() -> dict[str, int]:
         "fetched": result.fetched,
         "classified": result.classified,
         "skipped": result.skipped,
+        "ignored": result.ignored,
         "failed": result.failed,
     }

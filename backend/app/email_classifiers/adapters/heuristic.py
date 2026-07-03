@@ -5,13 +5,9 @@ from __future__ import annotations
 import re
 
 from app.email_classifiers.base import EmailClassifier, register_email_classifier
-from app.email_classifiers.labels import (
-    GHOST_HEADER_TYPE,
-    GHOST_HEADER_VALUE,
-    GHOST_SUBJECT_PREFIX,
-)
 from app.email_classifiers.sanitize import looks_like_prompt_injection
 from app.email_classifiers.types import EmailClassificationResult, EmailClassifyContext
+from app.inbox.ghost_message import is_self_ghost_archive_message
 
 _REJECTION_PATTERNS: tuple[re.Pattern[str], ...] = (
     re.compile(r"unfortunately", re.I),
@@ -55,7 +51,7 @@ def _classify(ctx: EmailClassifyContext) -> EmailClassificationResult:
     message = ctx.message
     haystack = f"{message.subject}\n{message.body_text}"
 
-    if _is_self_ghost_archive(ctx):
+    if is_self_ghost_archive_message(message, ctx.mailbox_user_email):
         return EmailClassificationResult(
             label="self_ghost_archive",
             confidence=0.95,
@@ -95,21 +91,6 @@ def _classify(ctx: EmailClassifyContext) -> EmailClassificationResult:
         confidence=0.6,
         reason="General recruiter correspondence.",
     )
-
-
-def _is_self_ghost_archive(ctx: EmailClassifyContext) -> bool:
-    message = ctx.message
-    headers = {key.lower(): value for key, value in message.raw_headers.items()}
-    if headers.get(GHOST_HEADER_TYPE.lower(), "").strip().lower() == GHOST_HEADER_VALUE:
-        return True
-    if message.subject.strip().startswith(GHOST_SUBJECT_PREFIX):
-        return True
-    mailbox = ctx.mailbox_user_email.strip().lower()
-    if not mailbox:
-        return False
-    from_addr = message.from_addr.strip().lower()
-    to_addrs = [addr.strip().lower() for addr in message.to_addrs]
-    return from_addr == mailbox and mailbox in to_addrs
 
 
 def _matches_any(patterns: tuple[re.Pattern[str], ...], text: str) -> bool:

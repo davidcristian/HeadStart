@@ -117,10 +117,14 @@ every `INBOX_POLL_INTERVAL_SECONDS` (default 300). The task calls
 
 1. Fetch new mail since the stored UID cursor (`inbox_poll_state.last_polled_uid`,
    bootstrapped from the highest classified UID when unset).
-2. Classify each message via `EmailClassificationService` (link application,
+2. Skip unrelated mail via `InboxGateService` (employer domain, thread headers,
+   ghost self-mail, optional sender allowlist) — no classifier or DB write.
+3. Classify gated messages via `EmailClassificationService` (link application,
    ghost recovery, interview handoff, folder routing).
-3. Advance the cursor only through successfully classified messages; failures
+4. Advance the cursor through classified and ignored messages; classify failures
    retry on the next tick.
+
+The task return payload includes `ignored` (mail skipped by the gate).
 
 Poll batch size is capped by `INBOX_POLL_BATCH_SIZE` (default 50). See
 [inbox.md](inbox.md).
