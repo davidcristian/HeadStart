@@ -25,3 +25,13 @@ EMAIL_CLASSIFICATION_LABELS: frozenset[str] = frozenset(
 GHOST_SUBJECT_PREFIX = "[HeadStart Ghost]"
 GHOST_HEADER_TYPE = "X-HeadStart-Type"
 GHOST_HEADER_VALUE = "ghost"
+
+# Recruiter signals that clear ghost state when inbound mail matches a ghosted application.
+GHOST_RECOVERY_SIGNAL_LABELS: frozenset[str] = frozenset(
+    {
+        "general",
+        "rejection",
+        "follow_up",
+        "interview_request",
+    }
+)

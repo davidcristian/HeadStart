@@ -11,6 +11,8 @@ const STAGE_FILTERS: Array<{ value: "" | ApplicationPipelineStage; label: string
   { value: "queued", label: "Submitting" },
   { value: "awaiting_reply", label: "Awaiting reply" },
   { value: "ghosted", label: "Ghosted" },
+  { value: "interview_pending", label: "Interview pending" },
+  { value: "rejected", label: "Rejected" },
   { value: "apply_failed", label: "Apply failed" },
   { value: "closed", label: "Listing closed" },
   { value: "archived", label: "Archived" },

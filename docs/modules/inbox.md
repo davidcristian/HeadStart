@@ -119,6 +119,24 @@ After classification, routable labels can be moved into configured IMAP folders
 
 Ghost detection and the beat orchestration loop remain separate roadmap items.
 
+## Ghost recovery (Phase 20c)
+
+When inbound mail is classified for a **ghosted** application (`seen_job.ghosted_at`
+set) and the label is recruiter signal (`general`, `rejection`, `follow_up`,
+`interview_request` — not `self_ghost_archive` or `out_of_scope`):
+
+1. Clear `ghosted_at` and set `ghost_recovered_at`.
+2. Transition pipeline stage:
+   - `interview_request` → `interview_pending` (`interview_pending_at`)
+   - `rejection` → `rejected` (`recruiter_rejection_at`)
+   - `follow_up` / `general` → `awaiting_reply`
+3. Record recovery metadata on `inbox_classification.payload.ghost_recovery`.
+4. Send a high-priority alert via the search's notification target (or all user
+   targets when the search has none). ntfy uses `priority: high`.
+
+`EmailClassificationService.classify` invokes `GhostRecoveryService` after linking
+a job and before folder routing.
+
 ## Ghost detection (Phase 20c)
 
 When `INBOX_AGENT_ENABLED=true`, beat runs `detect_ghosted_applications` every

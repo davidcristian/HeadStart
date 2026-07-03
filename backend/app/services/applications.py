@@ -34,6 +34,10 @@ def derive_pipeline_stage(job: SeenJob, latest: ApplicationLog | None) -> Applic
         return "archived"
     if job.status == "closed":
         return "closed"
+    if job.recruiter_rejection_at is not None:
+        return "rejected"
+    if job.interview_pending_at is not None:
+        return "interview_pending"
     if job.ghosted_at is not None:
         return "ghosted"
     if latest is not None and latest.status in ("queued", "processing"):
@@ -78,6 +82,9 @@ class ApplicationPipelineService:
             pipeline_stage=derive_pipeline_stage(job, latest),
             applied_at=job.applied_at,
             ghosted_at=job.ghosted_at,
+            ghost_recovered_at=job.ghost_recovered_at,
+            interview_pending_at=job.interview_pending_at,
+            recruiter_rejection_at=job.recruiter_rejection_at,
             latest_attempt=self._attempt_summary(latest),
             attempts=[self._attempt_summary(log) for log in attempts],
         )

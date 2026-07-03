@@ -39,6 +39,15 @@ class SeenJob(Base):
     )
     applied_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     ghosted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    ghost_recovered_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    interview_pending_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    recruiter_rejection_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     search: Mapped["Search"] = relationship(back_populates="seen_jobs")
     deliveries: Mapped[list["DeliveryLog"]] = relationship(

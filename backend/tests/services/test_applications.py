@@ -57,6 +57,36 @@ def test_derive_pipeline_stage_ghosted(db_session: Session) -> None:
     assert derive_pipeline_stage(job, None) == "ghosted"
 
 
+def test_derive_pipeline_stage_interview_pending(db_session: Session) -> None:
+    _, job = _seed_job(db_session)
+    job.status = "applied"
+    job.applied_at = datetime(2026, 6, 28, 12, 0, tzinfo=UTC)
+    job.interview_pending_at = datetime(2026, 6, 30, 14, 0, tzinfo=UTC)
+    db_session.flush()
+
+    assert derive_pipeline_stage(job, None) == "interview_pending"
+
+
+def test_derive_pipeline_stage_rejected(db_session: Session) -> None:
+    _, job = _seed_job(db_session)
+    job.status = "applied"
+    job.applied_at = datetime(2026, 6, 28, 12, 0, tzinfo=UTC)
+    job.recruiter_rejection_at = datetime(2026, 6, 30, 14, 0, tzinfo=UTC)
+    db_session.flush()
+
+    assert derive_pipeline_stage(job, None) == "rejected"
+
+
+def test_derive_pipeline_stage_recovered_not_ghosted(db_session: Session) -> None:
+    _, job = _seed_job(db_session)
+    job.status = "applied"
+    job.applied_at = datetime(2026, 6, 28, 12, 0, tzinfo=UTC)
+    job.ghost_recovered_at = datetime(2026, 6, 30, 14, 0, tzinfo=UTC)
+    db_session.flush()
+
+    assert derive_pipeline_stage(job, None) == "awaiting_reply"
+
+
 def test_pipeline_service_filters_ghosted_stage(db_session: Session) -> None:
     user_id, job = _seed_job(db_session)
     job.status = "applied"

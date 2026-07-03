@@ -7,6 +7,8 @@ const LABELS: Record<ApplicationPipelineStage, string> = {
   apply_failed: "Apply failed",
   awaiting_reply: "Awaiting reply",
   ghosted: "Ghosted",
+  interview_pending: "Interview pending",
+  rejected: "Rejected",
   closed: "Listing closed",
   archived: "Archived",
 };
