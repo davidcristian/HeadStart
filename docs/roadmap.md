@@ -733,14 +733,36 @@ that failed API checks in earlier batches.
 | ~~Airtable~~ | ~~Greenhouse (`airtable`)~~ | ~~`unicorn`~~ | **Shipped** |
 | ~~Marqeta~~ | ~~Greenhouse (`marqeta`)~~ | ~~`unicorn`~~ | **Shipped** |
 
-Skipped (roadmap candidates still without a working public API at verification time):
-**Rippling** (Ashby 403), **CrowdStrike**, **HashiCorp**, **Splunk**, **Rivian**,
-**Palo Alto Networks**, **Grammarly**, **Zillow**, **SentinelOne**, **Snyk**.
-
 **Shipped:** 13 presets in `presets/`; catalog count **111**.
 
 **Done when:** catalog count is ≥ 110; duplicate-detection tests pass; Pro portal
 search returns results for at least three new presets.
+
+---
+
+## Phase 23 — Portal catalog batch 5 (blocked candidates)
+
+Goal: add high-value employers that failed public API verification during
+[Phase 22](#phase-22--portal-catalog-batch-4-existing-adapters). Each row needs a
+live smoke test before merge — either a working preset on an existing adapter or a
+new custom scraper if the careers site uses a proprietary stack.
+
+| Employer | Likely adapter | Category | Notes |
+| -------- | -------------- | -------- | ----- |
+| Rippling | Ashby (`rippling`) or custom | `unicorn` | Ashby Postings API returned 403 at Phase 22 verification; Greenhouse and SmartRecruiters tokens also failed |
+| CrowdStrike | Greenhouse or SmartRecruiters | `big_tech` | No working public board at `crowdstrike` / `CrowdStrike` tokens checked in Phase 22 |
+| HashiCorp | Greenhouse or SmartRecruiters | `unicorn` | No working public API at verification time (IBM acquisition may have moved apply flow) |
+| Splunk | Greenhouse, SmartRecruiters, or Workday | `big_tech` | No working public API at verification time (Cisco subsidiary; may need custom careers endpoint) |
+| Rivian | Greenhouse, Lever, SmartRecruiters, or Workday | `unicorn` | No working public API at `rivian` / `Rivian` tokens checked in Phase 22 |
+| Palo Alto Networks | Greenhouse or SmartRecruiters | `big_tech` | No working public board at `paloaltonetworks` / `PaloAltoNetworks` tokens checked in Phase 22 |
+| Grammarly | Greenhouse, Ashby, or SmartRecruiters | `unicorn` | No working public API at verification time |
+| Zillow | Greenhouse, SmartRecruiters, or Workday | `big_tech` | No working public board at `zillow` / `Zillow` tokens checked in Phase 22 |
+| SentinelOne | Greenhouse or Ashby | `unicorn` | No working public API at verification time |
+| Snyk | Greenhouse, Ashby, or SmartRecruiters | `unicorn` | No working public API at verification time |
+
+**Done when:** at least three employers from this list ship as verified presets (or
+new scrapers + presets where needed); skipped rows document why the public API
+still fails.
 
 ---
 
