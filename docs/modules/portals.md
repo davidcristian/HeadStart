@@ -8,8 +8,8 @@ maps to an existing scraper adapter with verified public API access.
 
 ## Catalog
 
-Presets live in `catalog_presets.py` (data) and `catalog_helpers.py` (factory
-helpers). Each `PortalPreset` carries:
+Presets live in `catalog_presets.py` (core data), `catalog_presets_batch3.py` (Phase 19
+expansion), and `catalog_helpers.py` (factory helpers). Each `PortalPreset` carries:
 
 | Field | Purpose |
 | ----- | ------- |
@@ -20,8 +20,8 @@ helpers). Each `PortalPreset` carries:
 | `base_url` | Careers board URL passed to the scraper |
 | `default_config` | Adapter-specific config merged into new sources (always includes `portal_id`) |
 
-As of the current catalog: **80 employers** — 39 big tech, 30 unicorn, 11 AI —
-across Greenhouse (39), Ashby (11), Workday (9), SmartRecruiters (12), Lever (4),
+As of the current catalog: **95 employers** — 42 big tech, 42 unicorn, 11 AI —
+across Greenhouse (53), Ashby (11), Workday (10), SmartRecruiters (12), Lever (4),
 Apple Careers (1), Google Careers (1), Meta Careers (1), Microsoft Careers (1), and
 Amazon Jobs (1).
 Meta uses the `meta_careers` scraper (Relay GraphQL search on metacareers.com).

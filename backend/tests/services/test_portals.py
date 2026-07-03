@@ -20,7 +20,7 @@ def test_list_portal_presets_filters_query() -> None:
 def test_curated_portal_catalog_size() -> None:
     from app.portals.catalog import CURATED_PORTALS
 
-    assert len(CURATED_PORTALS) == 80
+    assert len(CURATED_PORTALS) == 95
 
 
 def test_curated_portal_apple_preset() -> None:
@@ -109,6 +109,25 @@ def test_config_keys_match_greenhouse() -> None:
 
 def test_normalize_url_strips_trailing_slash() -> None:
     assert _normalize_url("https://example.com/") == _normalize_url("https://example.com")
+
+
+def test_curated_portal_hubspot_board_token() -> None:
+    from app.portals.catalog import CURATED_PORTALS
+
+    preset = next(p for p in CURATED_PORTALS if p.id == "hubspot")
+    assert preset.adapter_key == "greenhouse"
+    assert preset.default_config["board_token"] == "hubspotjobs"
+    assert preset.default_config["portal_id"] == "hubspot"
+
+
+def test_curated_portal_zoom_workday_config() -> None:
+    from app.portals.catalog import CURATED_PORTALS
+
+    preset = next(p for p in CURATED_PORTALS if p.id == "zoom")
+    assert preset.adapter_key == "workday"
+    assert preset.default_config["tenant"] == "zoom"
+    assert preset.default_config["site"] == "Zoom"
+    assert preset.default_config["region"] == "wd5"
 
 
 def test_curated_portal_atlassian_smartrecruiters_preset() -> None:

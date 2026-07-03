@@ -4,7 +4,7 @@ Living plan for JobNotifier — what to build next and why. Update this doc when
 priorities shift or a milestone ships.
 
 **Current baseline (2026-06):** Phases 1–17 shipped (four-tier pricing, per-user AI
-summary preferences, 80-employer portal catalog, SmartRecruiters adapter). Next up: Phase 18
+summary preferences, 95-employer portal catalog, SmartRecruiters adapter). Next up: Phase 18
 (custom career-site adapters). See [architecture.md](architecture.md) for the system
 design.
 
@@ -492,18 +492,29 @@ Goal: reach **~95** employers with zero new scraper work — only presets on
 adapters already shipped. Good candidates (verify board tokens / Workday tenant
 pairs before adding):
 
-| Employer | Adapter | Category |
-| -------- | ------- | -------- |
-| HubSpot | Greenhouse | `unicorn` |
-| Zoom | Workday | `big_tech` |
-| ServiceNow | Workday | `big_tech` |
-| Splunk (Cisco) | Greenhouse or Workday | `big_tech` |
-| Rivian | Greenhouse | `unicorn` |
-| Canva | Greenhouse | `unicorn` |
-| Rippling | Ashby | `unicorn` |
-| Gusto | Greenhouse | `unicorn` |
-| HashiCorp (IBM) | Greenhouse | `big_tech` |
-| CrowdStrike | Greenhouse | `big_tech` |
+| Employer | Adapter | Category | Status |
+| -------- | ------- | -------- | ------ |
+| ~~HubSpot~~ | ~~Greenhouse (`hubspotjobs`)~~ | ~~`unicorn`~~ | **Shipped** |
+| ~~Zoom~~ | ~~Workday (`zoom` / `Zoom` / `wd5`)~~ | ~~`big_tech`~~ | **Shipped** |
+| ~~Gusto~~ | ~~Greenhouse (`gusto`)~~ | ~~`unicorn`~~ | **Shipped** |
+| ~~Pure Storage~~ | ~~Greenhouse (`purestorage`)~~ | ~~`big_tech`~~ | **Shipped** |
+| ~~Samsara~~ | ~~Greenhouse (`samsara`)~~ | ~~`unicorn`~~ | **Shipped** |
+| ~~Roblox~~ | ~~Greenhouse (`roblox`)~~ | ~~`unicorn`~~ | **Shipped** |
+| ~~Unity~~ | ~~Greenhouse (`unity3d`)~~ | ~~`big_tech`~~ | **Shipped** |
+| ~~Klaviyo~~ | ~~Greenhouse (`klaviyo`)~~ | ~~`unicorn`~~ | **Shipped** |
+| ~~Riot Games~~ | ~~Greenhouse (`riotgames`)~~ | ~~`unicorn`~~ | **Shipped** |
+| ~~Chime~~ | ~~Greenhouse (`chime`)~~ | ~~`unicorn`~~ | **Shipped** |
+| ~~Checkr~~ | ~~Greenhouse (`checkr`)~~ | ~~`unicorn`~~ | **Shipped** |
+| ~~Mercury~~ | ~~Greenhouse (`mercury`)~~ | ~~`unicorn`~~ | **Shipped** |
+| ~~Fastly~~ | ~~Greenhouse (`fastly`)~~ | ~~`unicorn`~~ | **Shipped** |
+| ~~PagerDuty~~ | ~~Greenhouse (`pagerduty`)~~ | ~~`unicorn`~~ | **Shipped** |
+| ~~Squarespace~~ | ~~Greenhouse (`squarespace`)~~ | ~~`unicorn`~~ | **Shipped** |
+
+Skipped (roadmap candidates without a working public API at verification time):
+**ServiceNow** (already in catalog via SmartRecruiters), **Rivian**, **Canva**,
+**Rippling** (Ashby 403), **CrowdStrike**, **HashiCorp**, **Splunk**, **Shopify**.
+
+**Shipped:** 15 presets added in `catalog_presets.py`; catalog count **95**.
 
 **Done when:** catalog count is ≥ 95; `/pricing` feature matrix still accurate;
 no duplicate `portal_id` rows.
