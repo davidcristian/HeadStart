@@ -3,7 +3,7 @@
 from contextlib import contextmanager
 from unittest.mock import patch
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, sessionmaker
 
 from app.appliers.types import ApplyResult
 from app.models.application_log import ApplicationLog
@@ -14,6 +14,15 @@ from app.services.apply import ApplyService
 from app.services.profiles import ProfileService
 from app.worker.tasks import apply_to_job_task
 from tests.worker.test_pipeline import _make_search
+
+
+def _session_factory_for(session: Session) -> sessionmaker[Session]:
+    return sessionmaker(
+        bind=session.get_bind(),
+        autoflush=False,
+        expire_on_commit=False,
+        future=True,
+    )
 
 
 def _seed_greenhouse_job(session: Session) -> tuple[int, int, int]:
@@ -77,22 +86,17 @@ def test_apply_to_job_task_completes_queued_apply(db_session: Session) -> None:
 
 def test_apply_to_job_task_marks_failed_on_exception(db_session: Session) -> None:
     user_id, job_id, log_id = _seed_greenhouse_job(db_session)
-
-    @contextmanager
-    def test_scope():
-        yield db_session
-        db_session.commit()
+    factory = _session_factory_for(db_session)
 
     with (
-        patch("app.worker.tasks.session_scope", test_scope),
+        patch("app.core.db.SessionFactory", factory),
         patch.object(ApplyService, "apply_to_job", side_effect=RuntimeError("boom")),
     ):
-        try:
-            apply_to_job_task(log_id, user_id, job_id, None)
-            raise AssertionError("expected RuntimeError")
-        except RuntimeError:
-            pass
+        result = apply_to_job_task(log_id, user_id, job_id, None)
 
+    assert result["status"] == "failed"
+    assert result["error"] == "boom"
+    db_session.expire_all()
     log = db_session.get(ApplicationLog, log_id)
     assert log is not None
     assert log.status == "failed"

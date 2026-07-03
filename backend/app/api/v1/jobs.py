@@ -73,5 +73,7 @@ def apply_to_job(
         return _apply_result_from_service(db, user.id, job_id, result)
 
     log_id = service.enqueue_apply(user.id, job_id)
+    # Commit before enqueue so the worker can see the queued log row immediately.
+    db.commit()
     apply_to_job_task.delay(log_id, user.id, job_id, data.cover_letter)
     return JobApplyResult(status="queued", application_log_id=log_id)

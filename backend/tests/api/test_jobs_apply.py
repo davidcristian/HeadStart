@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from fastapi.testclient import TestClient
+from sqlalchemy.orm import Session
 
 from app.scrapers.types import JobPosting
 from app.services.pipeline import PipelineService
@@ -114,6 +115,50 @@ def test_apply_live_queues_and_returns_log_id(client: TestClient) -> None:
     )
     assert log_resp.status_code == 200
     assert log_resp.json()["status"] == "queued"
+
+
+def test_apply_live_commits_before_worker_enqueue(client: TestClient) -> None:
+    headers = register_and_login(client, "apply-commit-order@example.com")
+    job_id = _seed_greenhouse_job_via_api(client, headers)
+    source_id = client.get("/api/v1/sources", headers=headers).json()[0]["id"]
+    client.patch(
+        f"/api/v1/sources/{source_id}",
+        json={"auto_apply_enabled": True},
+        headers=headers,
+    )
+    client.put(
+        "/api/v1/profile",
+        json={
+            "full_name": "Ada Lovelace",
+            "email": "ada@example.com",
+            "resume_text": "CV",
+        },
+        headers=headers,
+    )
+
+    events: list[str] = []
+    original_commit = Session.commit
+
+    def tracking_commit(self: Session) -> None:
+        events.append("commit")
+        original_commit(self)
+
+    def tracking_delay(*_args: object, **_kwargs: object) -> None:
+        events.append("delay")
+
+    with (
+        patch.object(Session, "commit", tracking_commit),
+        patch.object(apply_to_job_task, "delay", tracking_delay),
+    ):
+        resp = client.post(
+            f"/api/v1/jobs/{job_id}/apply",
+            json={"dry_run": False},
+            headers=headers,
+        )
+
+    assert resp.status_code == 200
+    assert "delay" in events
+    assert events.index("delay") > events.index("commit")
 
 
 def test_get_application_log_scopes_by_user(client: TestClient) -> None:

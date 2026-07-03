@@ -68,25 +68,31 @@ def apply_to_job_task(
     cover_letter: str | None,
 ) -> dict[str, object]:
     """Run one queued live auto-apply in the worker."""
-    with session_scope() as session:
-        service = ApplyService(session)
-        try:
-            result = service.apply_to_job(
+    try:
+        with session_scope() as session:
+            result = ApplyService(session).apply_to_job(
                 user_id,
                 job_id,
                 dry_run=False,
                 cover_letter=cover_letter,
                 application_log_id=application_log_id,
             )
-        except Exception as exc:
-            service.fail_queued_apply(application_log_id, str(exc))
-            logger.exception(
-                "apply_to_job failed log=%s job=%s user=%s",
-                application_log_id,
-                job_id,
-                user_id,
-            )
-            raise
+    except Exception as exc:
+        # Persist failure in a separate transaction: session_scope rolls back on
+        # exception, so marking failed inside the same scope would be lost.
+        with session_scope() as session:
+            ApplyService(session).fail_queued_apply(application_log_id, str(exc))
+        logger.exception(
+            "apply_to_job failed log=%s job=%s user=%s",
+            application_log_id,
+            job_id,
+            user_id,
+        )
+        return {
+            "application_log_id": application_log_id,
+            "status": "failed",
+            "error": str(exc),
+        }
 
     logger.info(
         "apply_to_job log=%s job=%s user=%s status=%s",
