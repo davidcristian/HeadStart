@@ -4,7 +4,8 @@
 
 Dev-only mailbox connectors for Phase 20 application-pipeline automation.
 Recruiter replies land in email, not in the app — this subsystem reads and sends
-mail so later phases can classify, route, and draft replies.
+mail, classifies recruiter threads, routes folders, drafts follow-ups, and
+supports interview handoff (all behind `INBOX_AGENT_ENABLED`).
 
 **Do not enable on hosted multi-tenant production.** Gate with
 `INBOX_AGENT_ENABLED=true` (local/self-hosted dev only). See

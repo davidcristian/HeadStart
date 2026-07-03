@@ -3,9 +3,10 @@
 Living plan for HeadStart — what to build next and why. Update this doc when
 priorities shift or a milestone ships.
 
-**Current baseline (2026-06):** Phases 1–17, 18, and 19 shipped (four-tier pricing, per-user AI
+**Current baseline (2026-06):** Phases 1–20 shipped (four-tier pricing, per-user AI
 summary preferences, 98-employer portal catalog, SmartRecruiters adapter, custom career-site
-adapters for Shopify, Uber, and Snowflake). See [architecture.md](architecture.md) for the system design.
+adapters for Shopify, Uber, and Snowflake, and the dev-only local application agent). See
+[architecture.md](architecture.md) for the system design.
 
 ---
 
@@ -625,7 +626,7 @@ a job, review or edit the cover letter, and have both attached on apply.
 | Extend llama.cpp beyond summaries | Document curation, classification, and drafting need the same local stack | **Shipped:** `llamacpp` adapters in `resumes/`, `cover_letters/`, `email_classifiers/`, and `reply_drafters/`; per-purpose model routing via `resolve_ai_settings`; reuse `make llamacpp` / `LLAMACPP_*` env |
 | Input sanitization & scope lock | Small local models are easily hijacked by unrelated email content | **Shipped:** `email_classifiers/sanitize.py` pre-LLM; hard-scoped prompts; `out_of_scope` label; post-classification routing skips non-job mail |
 | ~~Agent orchestration loop~~ | ~~Poll inbox → classify → act → log~~ | **Shipped:** beat task `process_inbox_messages` when `INBOX_AGENT_ENABLED=true`; `InboxOrchestrationService` fetches since `inbox_poll_state.last_polled_uid`, applies application-scoped gate, classifies in UID order, routes via existing classification path; cursor advances on classified and ignored mail; `INBOX_POLL_INTERVAL_SECONDS` (default 300) + `INBOX_POLL_BATCH_SIZE` (default 50) |
-| Docs & ADR | Capture dev-only boundary and safety model | **Partial:** [modules/inbox.md](modules/inbox.md) + [adr/0011-inbox-dev-only.md](adr/0011-inbox-dev-only.md). Orchestration loop documented in [modules/inbox.md](modules/inbox.md) and [modules/worker.md](modules/worker.md) |
+| ~~Docs & ADR~~ | ~~Capture dev-only boundary and safety model~~ | **Shipped:** [adr/0011-inbox-dev-only.md](adr/0011-inbox-dev-only.md) updated with shipped Phase 20 scope; operator setup in [runbook.md → Local application agent](runbook.md#local-application-agent-phase-20-dev-only); subsystem detail in [modules/inbox.md](modules/inbox.md) and [modules/worker.md](modules/worker.md) |
 
 **Caveats:**
 
@@ -633,7 +634,8 @@ a job, review or edit the cover letter, and have both attached on apply.
   runbook that inbox automation requires local dev setup.
 - Legal/compliance: autonomous replies may violate employer terms or create
   misrepresentation risk; ship with prominent consent and dry-run defaults.
-- Gmail/Outlook API rate limits and OAuth are future work; **Gmail** is tracked in [Phase 20c](#20c--inbox-integration--email-triage); IMAP is the v1 path for self-hosters.
+- **Gmail** OAuth shipped in [Phase 20c](#20c--inbox-integration--email-triage); **Outlook**
+  / Microsoft Graph remains future work. IMAP works for providers that expose it.
 - Prompt injection: recruiter (or spam) mail may embed unrelated instructions;
   the agent must stay scoped to application workflow actions and refuse
   out-of-scope requests rather than complying.
