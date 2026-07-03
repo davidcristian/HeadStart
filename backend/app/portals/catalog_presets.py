@@ -12,6 +12,7 @@ from app.portals.catalog_helpers import (
     lever_preset,
     meta_careers_preset,
     microsoft_careers_preset,
+    shopify_careers_preset,
     workday_preset,
 )
 from app.portals.presets import PORTALS
@@ -23,6 +24,7 @@ CURATED_PORTALS: tuple[PortalPreset, ...] = (
     google_careers_preset(),
     meta_careers_preset(),
     microsoft_careers_preset(),
+    shopify_careers_preset(category="unicorn"),
     # Big tech (Workday-backed career sites with public CXS APIs)
     workday_preset(
         portal_id="nvidia",

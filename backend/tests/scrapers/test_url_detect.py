@@ -190,6 +190,23 @@ def test_detect_apple_careers_job_detail_returns_none() -> None:
     )
 
 
+def test_detect_shopify_careers_root_url() -> None:
+    result = detect_source_from_url("https://www.shopify.com/careers")
+    assert result is not None
+    assert result.adapter_key == "shopify_careers"
+    assert result.default_config["portal_id"] == "shopify"
+    assert result.base_url == "https://www.shopify.com/careers"
+
+
+def test_detect_shopify_careers_job_detail_returns_none() -> None:
+    assert (
+        detect_source_from_url(
+            "https://www.shopify.com/careers/workplace-technology-manager_f12820dc-3c96-4815-b4d2-506d680d034f"
+        )
+        is None
+    )
+
+
 def test_detect_meta_careers_root_url() -> None:
     result = detect_source_from_url("https://www.metacareers.com/jobs")
     assert result is not None

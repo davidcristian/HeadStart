@@ -3,10 +3,10 @@
 Living plan for JobNotifier — what to build next and why. Update this doc when
 priorities shift or a milestone ships.
 
-**Current baseline (2026-06):** Phases 1–17 shipped (four-tier pricing, per-user AI
-summary preferences, 95-employer portal catalog, SmartRecruiters adapter). Next up: Phase 18
-(custom career-site adapters). See [architecture.md](architecture.md) for the system
-design.
+**Current baseline (2026-06):** Phases 1–17 and 19 shipped (four-tier pricing, per-user AI
+summary preferences, 96-employer portal catalog, SmartRecruiters adapter). Phase 18
+(custom career-site adapters) is in progress — Shopify shipped; Uber and Snowflake remain.
+See [architecture.md](architecture.md) for the system design.
 
 ---
 
@@ -473,9 +473,9 @@ Phase 11 batch-1 expansion (Uber, Snowflake, Shopify).
 
 | Adapter | Employer | Likely strategy | Risk |
 | ------- | -------- | --------------- | ---- |
+| ~~`shopify_careers`~~ | ~~Shopify~~ | ~~Investigate: may be Greenhouse (`shopify`) or a custom `shopify.com/careers` endpoint~~ | **Shipped:** Ashby-backed careers site with disabled public Postings API; `@register_scraper("shopify_careers")` parses embedded React Router flight stream on `shopify.com/careers`; catalog preset added (96 employers) |
 | `uber_careers` | Uber | Reverse-engineer `uber.com/careers` search JSON or embedded hydration payload | Medium — custom stack, may change |
 | `snowflake_careers` | Snowflake | Public careers search API or embedded JSON on `careers.snowflake.com` | Medium — enterprise site |
-| `shopify_careers` | Shopify | Investigate: may be Greenhouse (`shopify`) or a custom `shopify.com/careers` endpoint | Low–medium — confirm ATS first |
 
 After each scraper ships, add the matching `*_careers_preset()` to
 `catalog_presets.py` and an apply adapter if the apply flow is automatable (see

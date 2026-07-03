@@ -170,6 +170,23 @@ def meta_careers_preset(
     )
 
 
+def shopify_careers_preset(
+    *,
+    portal_id: str = "shopify",
+    company: str = "Shopify",
+    category: PortalCategory = "unicorn",
+) -> PortalPreset:
+    base = "https://www.shopify.com/careers"
+    return PortalPreset(
+        id=portal_id,
+        company_name=company,
+        category=category,
+        adapter_key="shopify_careers",
+        base_url=base,
+        default_config={"company": company, "portal_id": portal_id},
+    )
+
+
 def microsoft_careers_preset(
     *,
     portal_id: str = "microsoft",

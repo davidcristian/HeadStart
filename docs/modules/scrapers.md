@@ -53,6 +53,7 @@ everything. The worker resolves a scraper with `get_scraper(adapter_key)`.
 | `meta_careers`      | Relay GraphQL search (form POST)       | `metacareers.com/graphql` with `CareersJobSearchResultsDataQuery`; config `q` + optional `graphql_doc_id`; also accepts `metacareers.com/jobsearch` URLs |
 | `amazon_jobs`   | Public search JSON API                    | `amazon.jobs/<locale>/search.json`; config `locale` (default `en`) + optional `base_query` / `loc_query` / `country`; also accepts search board URLs |
 | `apple_careers` | Embedded search JSON in HTML              | `jobs.apple.com/<locale>/search?...`; parses `window.__staticRouterHydrationData`; config `locale` (default `en-us`) + optional `search` / `location`; also accepts careers search URLs |
+| `shopify_careers` | Embedded React Router flight stream in HTML | `shopify.com/careers`; parses `window.__reactRouterContext.streamController.enqueue` loader data (Ashby-backed, no public Postings API); config optional `q` for client-side keyword filter |
 | `indeed`        | Embedded search JSON in HTML (selectolax fallback) | `*.indeed.com/jobs?...`; parses `mosaic-provider-jobcards`; may need [credentials](credentials.md) for Cloudflare |
 | `linkedin`      | Guest search pagination API (HTML fragments) | Opt-in only (not URL-detected). `linkedin.com/jobs/search?...` → guest `seeMoreJobPostings/search`; may need [credentials](credentials.md) for auth walls |
 | `generic_html`  | CSS selectors from config (selectolax)    | For simple static pages; configured in the UI |
