@@ -50,7 +50,9 @@ class ResumeService:
             lambda key, runtime: get_resume_curator(key, settings=runtime)
         )
         self._compile = compile_fn or compile_latex_to_pdf
-        self._bundle_compile = bundle_compile_fn or self._default_bundle_compile
+        # Keep the injected fn (or None for the default) so the identity check in
+        # `_compile_bundle` is reliable; a bound-method default breaks `is`.
+        self._bundle_compile = bundle_compile_fn
         self._settings = settings
 
     def generate(self, user_id: int, job_id: int) -> dict[str, str | int | bool]:
@@ -148,9 +150,8 @@ class ResumeService:
         return self._compile(source)
 
     def _compile_bundle(self, files: dict[str, bytes], entrypoint: str) -> bytes:
-        if self._bundle_compile is self._default_bundle_compile:
-            timeout = float(getattr(self._settings, "resume_compile_timeout_seconds", 60.0))
-            return compile_latex_workspace(files, entrypoint=entrypoint, timeout=timeout)
+        if self._bundle_compile is None:
+            return self._default_bundle_compile(files, entrypoint)
         return self._bundle_compile(files, entrypoint)
 
     def _default_bundle_compile(self, files: dict[str, bytes], entrypoint: str) -> bytes:

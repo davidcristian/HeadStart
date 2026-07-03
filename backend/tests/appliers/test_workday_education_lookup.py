@@ -126,6 +126,133 @@ def test_resolver_skips_lookup_when_disabled() -> None:
     assert resolver.degree_reference("Bachelor of Science") == {"descriptor": "Bachelor of Science"}
 
 
+def test_reference_workday_id_passthrough() -> None:
+    wid = "a1b2c3d4e5f6478990a1b2c3d4e5f678"
+    resolver = EducationLookupResolver(
+        make_http_client(_unexpected_request),
+        target=_target(),
+        job_path="loc/job",
+        config={},
+        csrf_token="csrf",
+        session_id="sess",
+        credentials=WORKDAY_CREDENTIALS,
+    )
+    assert resolver.degree_reference(wid) == {"id": wid}
+
+
+def test_reference_empty_value_returns_none() -> None:
+    resolver = EducationLookupResolver(
+        make_http_client(_unexpected_request),
+        target=_target(),
+        job_path="loc/job",
+        config={},
+        csrf_token="csrf",
+        session_id="sess",
+        credentials=WORKDAY_CREDENTIALS,
+    )
+    assert resolver.degree_reference("   ") is None
+
+
+def test_reference_caches_and_handles_http_error() -> None:
+    calls: list[str] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append(request.url.path)
+        return httpx.Response(500, text="boom")
+
+    resolver = EducationLookupResolver(
+        make_http_client(handler),
+        target=_target(),
+        job_path="loc/job",
+        config={},
+        csrf_token="csrf",
+        session_id="sess",
+        credentials=WORKDAY_CREDENTIALS,
+    )
+    assert resolver.degree_reference("Bachelor") == {"descriptor": "Bachelor"}
+    assert resolver.degree_reference("Bachelor") == {"descriptor": "Bachelor"}
+    assert len(calls) == 1
+
+
+def test_alias_normalized_key_matches() -> None:
+    wid = "a1b2c3d4e5f6478990a1b2c3d4e5f678"
+    resolver = EducationLookupResolver(
+        make_http_client(_unexpected_request),
+        target=_target(),
+        job_path="loc/job",
+        config={"education_lookup_aliases": {"degree:bachelorofscience": wid}},
+        csrf_token="csrf",
+        session_id="sess",
+        credentials=WORKDAY_CREDENTIALS,
+    )
+    assert resolver.degree_reference("Bachelor of Science") == {"id": wid}
+
+
+def test_alias_returns_none_without_match() -> None:
+    resolver = EducationLookupResolver(
+        make_http_client(_unexpected_request),
+        target=_target(),
+        job_path="loc/job",
+        config={"education_lookup_aliases": {"other": "x"}, "skip_education_lookup": True},
+        csrf_token="csrf",
+        session_id="sess",
+        credentials=WORKDAY_CREDENTIALS,
+    )
+    assert resolver.degree_reference("BS") == {"descriptor": "BS"}
+
+
+def test_alias_not_a_dict() -> None:
+    resolver = EducationLookupResolver(
+        make_http_client(_unexpected_request),
+        target=_target(),
+        job_path="loc/job",
+        config={"education_lookup_aliases": "nope", "skip_education_lookup": True},
+        csrf_token="csrf",
+        session_id="sess",
+        credentials=WORKDAY_CREDENTIALS,
+    )
+    assert resolver.degree_reference("BS") == {"descriptor": "BS"}
+
+
+def test_build_education_lookup_resolver_requires_http_and_target() -> None:
+    assert (
+        build_education_lookup_resolver(
+            None,
+            target=_target(),
+            job_path="loc/job",
+            config={},
+            csrf_token="csrf",
+            session_id="sess",
+            credentials=WORKDAY_CREDENTIALS,
+        )
+        is None
+    )
+    assert (
+        build_education_lookup_resolver(
+            make_http_client(_unexpected_request),
+            target=None,
+            job_path="loc/job",
+            config={},
+            csrf_token="csrf",
+            session_id="sess",
+            credentials=WORKDAY_CREDENTIALS,
+        )
+        is None
+    )
+    assert (
+        build_education_lookup_resolver(
+            make_http_client(_unexpected_request),
+            target=_target(),
+            job_path="loc/job",
+            config={},
+            csrf_token=None,
+            session_id="sess",
+            credentials=None,
+        )
+        is None
+    )
+
+
 def _unexpected_request(request: httpx.Request) -> httpx.Response:
     raise AssertionError(f"unexpected network call: {request.method} {request.url}")
 

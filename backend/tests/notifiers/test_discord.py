@@ -81,5 +81,110 @@ def test_discord_rejects_unsafe_url() -> None:
         notifier.send(ctx, [_job()])
 
 
+def test_discord_single_includes_summary_in_description() -> None:
+    captured: list[dict] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured.append(json.loads(request.content))
+        return httpx.Response(204)
+
+    notifier = DiscordNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
+    ctx = NotifyContext(
+        target_type="discord",
+        config={"webhook_url": "https://discord.com/api/webhooks/123/secret"},
+    )
+    job = _job()
+    job.summary = "strong python match"
+    notifier.send(ctx, [job])
+    assert "strong python match" in captured[0]["embeds"][0]["description"]
+
+
+def test_discord_payload_minimal_job_has_no_description_or_url() -> None:
+    captured: list[dict] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured.append(json.loads(request.content))
+        return httpx.Response(204)
+
+    notifier = DiscordNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
+    ctx = NotifyContext(
+        target_type="discord",
+        config={"webhook_url": "https://discord.com/api/webhooks/123/secret"},
+    )
+    # Title only: no company/summary/location/url means no description or url keys.
+    notifier.send(ctx, [JobPosting(external_id="1", title="")])
+    embed = captured[0]["embeds"][0]
+    assert embed["title"] == "New job"
+    assert "description" not in embed
+    assert "url" not in embed
+
+
+def test_discord_digest_sends_single_message() -> None:
+    captured: list[dict] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured.append(json.loads(request.content))
+        return httpx.Response(204)
+
+    notifier = DiscordNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
+    ctx = NotifyContext(
+        target_type="discord",
+        config={"webhook_url": "https://discord.com/api/webhooks/123/secret"},
+        digest=True,
+        search_name="Backend",
+    )
+    job = _job()
+    job.summary = "great match"
+    no_url = JobPosting(external_id="2", title="Data Scientist", company="ACME")
+    results = notifier.send(ctx, [job, no_url])
+
+    assert len(results) == 2
+    assert all(r.status == "sent" for r in results)
+    assert len(captured) == 1
+    embed = captured[0]["embeds"][0]
+    assert embed["title"] == "2 new jobs — Backend"
+    assert "great match" in embed["description"]
+    link = "[Software Engineer @ Google (Amsterdam)](https://careers.example/jobs/1)"
+    assert link in embed["description"]
+    assert "• Data Scientist @ ACME" in embed["description"]
+
+
+def test_discord_digest_empty_jobs_returns_empty() -> None:
+    notifier = DiscordNotifier(client=httpx.Client())
+    ctx = NotifyContext(
+        target_type="discord",
+        config={"webhook_url": "https://discord.com/api/webhooks/123/secret"},
+        digest=True,
+    )
+    assert notifier.send(ctx, []) == []
+
+
+def test_discord_digest_records_failure() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(500, text="boom")
+
+    notifier = DiscordNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
+    ctx = NotifyContext(
+        target_type="discord",
+        config={"webhook_url": "https://discord.com/api/webhooks/123/secret"},
+        digest=True,
+    )
+    results = notifier.send(ctx, [_job(), _job("2")])
+    assert [r.status for r in results] == ["failed", "failed"]
+    assert results[0].error
+
+
+def test_discord_close_behaviour() -> None:
+    notifier = DiscordNotifier()
+    notifier.close()
+    assert notifier._client.is_closed
+
+    client = httpx.Client()
+    injected = DiscordNotifier(client=client)
+    injected.close()
+    assert not client.is_closed
+    client.close()
+
+
 def test_registry_resolves_discord() -> None:
     assert isinstance(get_notifier("discord"), DiscordNotifier)

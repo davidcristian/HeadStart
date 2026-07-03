@@ -280,5 +280,176 @@ def test_missing_api_key_fails_with_helpful_error() -> None:
     assert result.payload is not None
 
 
+def test_apply_returns_failed_when_payload_build_raises() -> None:
+    applier = get_applier("ashby", http=make_http_client(_unexpected_request))
+    result = applier.apply(
+        ApplyContext(
+            job_external_id="job-1",
+            job_title="Role",
+            company="ACME",
+            job_url="",
+            config={},
+            profile=ProfileData(full_name="", email="ada@example.com"),
+            dry_run=True,
+        )
+    )
+    assert result.status == "failed"
+    assert "full_name" in (result.error or "")
+
+
+def test_build_application_payload_requires_email() -> None:
+    try:
+        build_application_payload(
+            "job-1",
+            ProfileData(full_name="Ada", email=""),
+            job_title="Role",
+            company="ACME",
+            config={},
+        )
+        raise AssertionError("expected ValueError")
+    except ValueError as exc:
+        assert "email" in str(exc)
+
+
+def test_build_application_payload_skips_blank_or_used_answers() -> None:
+    profile = _profile()
+    profile.answers = {
+        "_systemfield_name": "override attempt",
+        "blank_answer": "",
+        "extra_answer": "Yes",
+    }
+    built = build_application_payload(
+        "job-1",
+        profile,
+        job_title="Role",
+        company="ACME",
+        config={},
+    )
+    submissions = built["payload"]["applicationForm"]["fieldSubmissions"]
+    name_entries = [item for item in submissions if item["path"] == "_systemfield_name"]
+    assert name_entries == [{"path": "_systemfield_name", "value": "Ada Lovelace"}]
+    assert not any(item["path"] == "blank_answer" for item in submissions)
+    assert any(item["path"] == "extra_answer" for item in submissions)
+
+
+def test_resolve_api_key_falls_back_to_config_when_session_blank() -> None:
+    from app.appliers.adapters.ashby import resolve_api_key
+
+    key = resolve_api_key(
+        {"session": {"ashby_api_key": ""}, "cookies": {}, "headers": {}},
+        {"ashby_api_key": "config-key"},
+    )
+    assert key == "config-key"
+
+
+def test_resolve_api_key_none_when_nothing_configured() -> None:
+    from app.appliers.adapters.ashby import resolve_api_key
+
+    assert resolve_api_key(None, {}) is None
+
+
+def _resume() -> ResumeFile:
+    return ResumeFile(
+        filename="resume.pdf",
+        content_type="application/pdf",
+        size_bytes=4,
+        data=b"%PDF",
+    )
+
+
+def test_live_submit_posts_multipart_when_resume_present() -> None:
+    seen: dict[str, object] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen["content_type"] = request.headers.get("content-type", "")
+        return httpx.Response(
+            200,
+            json={"success": True, "results": {"submittedFormInstance": {"id": "app-9"}}},
+        )
+
+    profile = ApplyProfile(**_profile().model_dump(), exists=True, resume_file=_resume())
+    applier = AshbyApplier(http=make_http_client(handler))
+    result = applier.apply(
+        ApplyContext(
+            job_external_id="job-1",
+            job_title="Role",
+            company="ACME",
+            job_url="",
+            config={"ashby_api_key": "key"},
+            profile=profile,
+            resume_file=_resume(),
+            dry_run=False,
+        )
+    )
+    assert result.status == "submitted"
+    assert result.external_application_id == "app-9"
+    assert "multipart/form-data" in str(seen["content_type"])
+
+
+def test_build_application_payload_disallows_unpublished_in_json_and_multipart() -> None:
+    profile = ApplyProfile(**_profile().model_dump(), exists=True, resume_file=_resume())
+    built = build_application_payload(
+        "job-1",
+        profile,
+        job_title="Role",
+        company="ACME",
+        config={"allow_unpublished_job_posting": False},
+    )
+    assert built["payload"]["allowSubmissionForUnpublishedJobPosting"] is False
+    assert built["multipart"]["data"]["allowSubmissionForUnpublishedJobPosting"] == "false"
+
+
+def test_live_submit_handles_http_error() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        raise httpx.ConnectError("boom", request=request)
+
+    applier = AshbyApplier(http=make_http_client(handler))
+    result = applier.apply(
+        ApplyContext(
+            job_external_id="job-1",
+            job_title="Role",
+            company="ACME",
+            job_url="",
+            config={"ashby_api_key": "key"},
+            profile=_profile(),
+            dry_run=False,
+        )
+    )
+    assert result.status == "failed"
+    assert result.payload is not None
+
+
+def test_live_submit_surfaces_blocked_message() -> None:
+    applier = AshbyApplier(
+        http=make_http_client(
+            lambda _request: httpx.Response(
+                200,
+                json={
+                    "success": True,
+                    "results": {
+                        "formMessages": {
+                            "blocked": True,
+                            "blockMessageForCandidateHtml": "You already applied",
+                        }
+                    },
+                },
+            )
+        )
+    )
+    result = applier.apply(
+        ApplyContext(
+            job_external_id="job-1",
+            job_title="Role",
+            company="ACME",
+            job_url="",
+            config={"ashby_api_key": "key"},
+            profile=_profile(),
+            dry_run=False,
+        )
+    )
+    assert result.status == "failed"
+    assert result.error == "You already applied"
+
+
 def _unexpected_request(request: httpx.Request) -> httpx.Response:
     raise AssertionError(f"unexpected network call: {request.method} {request.url}")

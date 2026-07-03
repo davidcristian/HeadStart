@@ -3,9 +3,11 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+import stripe
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.core.exceptions import NotFoundError, ValidationError
 from app.models.promo_code import PromoCode
 from app.models.user import User
 from app.repositories.promo_codes import PromoCodeRepository
@@ -141,3 +143,402 @@ def test_plan_upgrade_promo_bills_target_plan_price(
     assert kwargs["metadata"]["plan"] == "pro"
     assert kwargs["subscription_data"]["metadata"]["plan"] == "pro"
     assert kwargs["discounts"] == [{"promotion_code": "promo_upgrade"}]
+
+
+# --- status / plan mapping ------------------------------------------------
+
+
+def test_status_with_active_subscription_cannot_checkout(
+    db_session: Session, billing_settings: None
+) -> None:
+    user = _add_user(db_session)
+    UserRepository(db_session).update_billing(
+        user,
+        stripe_customer_id="cus_x",
+        stripe_subscription_id="sub_x",
+        subscription_status="active",
+        plan="pro",
+    )
+    status = BillingService(db_session).status(user.id)
+    assert status.can_checkout is False
+    assert status.can_manage is True
+    assert status.has_stripe_subscription is True
+
+
+def test_plan_id_falls_back_to_free_for_unknown(
+    db_session: Session, billing_settings: None
+) -> None:
+    user = _add_user(db_session)
+    user.plan = "legacy"
+    db_session.flush()
+    status = BillingService(db_session).status(user.id)
+    assert status.plan == "free"
+
+
+def test_status_missing_user_raises(db_session: Session, billing_settings: None) -> None:
+    with pytest.raises(NotFoundError):
+        BillingService(db_session).status(999999)
+
+
+# --- checkout guards ------------------------------------------------------
+
+
+def test_checkout_requires_billing_enabled(db_session: Session) -> None:
+    user = _add_user(db_session)
+    with pytest.raises(ValidationError, match="not configured"):
+        BillingService(db_session).create_checkout_session(
+            user.id, plan="pro", billing_period="monthly"
+        )
+
+
+def test_checkout_rejects_invalid_plan(db_session: Session, billing_settings: None) -> None:
+    user = _add_user(db_session)
+    with pytest.raises(ValidationError, match="Invalid checkout plan"):
+        BillingService(db_session).create_checkout_session(
+            user.id, plan="ultra", billing_period="monthly"
+        )
+
+
+def test_checkout_rejects_when_already_subscribed(
+    db_session: Session, billing_settings: None
+) -> None:
+    user = _add_user(db_session)
+    UserRepository(db_session).update_billing(user, subscription_status="active")
+    with pytest.raises(ValidationError, match="already have an active subscription"):
+        BillingService(db_session).create_checkout_session(
+            user.id, plan="pro", billing_period="monthly"
+        )
+
+
+def test_checkout_unsupported_period_raises(db_session: Session, billing_settings: None) -> None:
+    user = _add_user(db_session)
+    with pytest.raises(ValidationError, match="not fully configured"):
+        BillingService(db_session).create_checkout_session(
+            user.id,
+            plan="pro",
+            billing_period="weekly",  # type: ignore[arg-type]
+        )
+
+
+@patch("app.services.billing.price_id_for", return_value="")
+def test_checkout_missing_price_raises(
+    _mock_price: MagicMock, db_session: Session, billing_settings: None
+) -> None:
+    # billing_enabled requires every price to be set, so an empty resolved price
+    # is only reachable by forcing price_id_for to return "".
+    user = _add_user(db_session)
+    with pytest.raises(ValidationError, match="not fully configured"):
+        BillingService(db_session).create_checkout_session(
+            user.id, plan="pro", billing_period="monthly"
+        )
+
+
+@patch("app.services.billing.stripe.checkout.Session.create")
+def test_checkout_free_trial_promo_sets_trial(
+    mock_session_create: MagicMock, db_session: Session, billing_settings: None
+) -> None:
+    user = _add_user(db_session)
+    UserRepository(db_session).update_billing(user, stripe_customer_id="cus_trial")
+    PromoCodeRepository(db_session).add(
+        PromoCode(code="FREE30", promo_type="free_trial_days", value_int=30)
+    )
+    mock_session_create.return_value = MagicMock(url="https://checkout.test/trial")
+
+    BillingService(db_session).create_checkout_session(
+        user.id, plan="starter", billing_period="monthly", promo_code="FREE30"
+    )
+    kwargs = mock_session_create.call_args.kwargs
+    assert kwargs["subscription_data"]["trial_period_days"] == 30
+    assert "discounts" not in kwargs
+
+
+@patch("app.services.billing.stripe.checkout.Session.create")
+def test_checkout_raises_when_stripe_returns_no_url(
+    mock_session_create: MagicMock, db_session: Session, billing_settings: None
+) -> None:
+    user = _add_user(db_session)
+    UserRepository(db_session).update_billing(user, stripe_customer_id="cus_nourl")
+    mock_session_create.return_value = MagicMock(url=None)
+    with pytest.raises(ValidationError, match="did not return a checkout URL"):
+        BillingService(db_session).create_checkout_session(
+            user.id, plan="starter", billing_period="monthly"
+        )
+
+
+def test_create_checkout_missing_user_raises(db_session: Session, billing_settings: None) -> None:
+    with pytest.raises(NotFoundError):
+        BillingService(db_session).create_checkout_session(
+            999999, plan="pro", billing_period="monthly"
+        )
+
+
+# --- portal ---------------------------------------------------------------
+
+
+def test_portal_requires_billing_enabled(db_session: Session) -> None:
+    user = _add_user(db_session)
+    with pytest.raises(ValidationError, match="not configured"):
+        BillingService(db_session).create_portal_session(user.id)
+
+
+def test_portal_requires_customer(db_session: Session, billing_settings: None) -> None:
+    user = _add_user(db_session)
+    with pytest.raises(ValidationError, match="No billing account"):
+        BillingService(db_session).create_portal_session(user.id)
+
+
+@patch("app.services.billing.stripe.billing_portal.Session.create")
+def test_portal_raises_when_no_url(
+    mock_portal_create: MagicMock, db_session: Session, billing_settings: None
+) -> None:
+    user = _add_user(db_session)
+    UserRepository(db_session).update_billing(user, stripe_customer_id="cus_portal")
+    mock_portal_create.return_value = MagicMock(url=None)
+    with pytest.raises(ValidationError, match="did not return a portal URL"):
+        BillingService(db_session).create_portal_session(user.id)
+
+
+@patch("app.services.billing.stripe.billing_portal.Session.create")
+def test_portal_returns_url(
+    mock_portal_create: MagicMock, db_session: Session, billing_settings: None
+) -> None:
+    user = _add_user(db_session)
+    UserRepository(db_session).update_billing(user, stripe_customer_id="cus_portal2")
+    mock_portal_create.return_value = MagicMock(url="https://billing.test/portal")
+    assert (
+        BillingService(db_session).create_portal_session(user.id) == "https://billing.test/portal"
+    )
+
+
+# --- webhook dispatch -----------------------------------------------------
+
+
+def test_webhook_requires_billing_enabled(db_session: Session) -> None:
+    with pytest.raises(ValidationError, match="not configured"):
+        BillingService(db_session).handle_webhook(b"{}", "sig")
+
+
+def test_webhook_missing_signature(db_session: Session, billing_settings: None) -> None:
+    with pytest.raises(ValidationError, match="Missing Stripe-Signature"):
+        BillingService(db_session).handle_webhook(b"{}", None)
+
+
+@patch("app.services.billing.stripe.Webhook.construct_event", side_effect=ValueError("bad"))
+def test_webhook_invalid_payload(
+    _mock: MagicMock, db_session: Session, billing_settings: None
+) -> None:
+    with pytest.raises(ValidationError, match="Invalid webhook payload"):
+        BillingService(db_session).handle_webhook(b"{}", "sig")
+
+
+@patch(
+    "app.services.billing.stripe.Webhook.construct_event",
+    side_effect=stripe.SignatureVerificationError("nope", "sig"),
+)
+def test_webhook_invalid_signature(
+    _mock: MagicMock, db_session: Session, billing_settings: None
+) -> None:
+    with pytest.raises(ValidationError, match="Invalid webhook signature"):
+        BillingService(db_session).handle_webhook(b"{}", "sig")
+
+
+@patch("app.services.billing.stripe.Webhook.construct_event")
+def test_webhook_ignores_unknown_event_type(
+    mock_construct: MagicMock, db_session: Session, billing_settings: None
+) -> None:
+    mock_construct.return_value = {"type": "invoice.paid", "data": {"object": {}}}
+    BillingService(db_session).handle_webhook(b"{}", "sig")
+
+
+@patch("app.services.billing.stripe.Webhook.construct_event")
+def test_webhook_checkout_completed_records_promo(
+    mock_construct: MagicMock, db_session: Session, billing_settings: None
+) -> None:
+    user = _add_user(db_session)
+    promo = PromoCodeRepository(db_session).add(
+        PromoCode(code="WELCOME", promo_type="percent_off", value_int=10)
+    )
+    mock_construct.return_value = {
+        "type": "checkout.session.completed",
+        "data": {
+            "object": {
+                "id": "cs_test",
+                "client_reference_id": str(user.id),
+                "customer": "cus_new",
+                "subscription": "sub_new",
+                "metadata": {"user_id": str(user.id), "promo_code_id": str(promo.id)},
+            }
+        },
+    }
+    BillingService(db_session).handle_webhook(b"{}", "sig")
+    db_session.refresh(user)
+    assert user.stripe_customer_id == "cus_new"
+    assert user.stripe_subscription_id == "sub_new"
+    assert PromoCodeRepository(db_session).count_user_redemptions(promo.id, user.id) == 1
+
+
+def test_on_checkout_completed_without_user_is_noop(
+    db_session: Session, billing_settings: None
+) -> None:
+    BillingService(db_session)._on_checkout_completed({"metadata": {}})
+
+
+def test_on_checkout_completed_without_promo_metadata(
+    db_session: Session, billing_settings: None
+) -> None:
+    user = _add_user(db_session)
+    service = BillingService(db_session)
+    service._on_checkout_completed(
+        {
+            "id": "cs_nopromo",
+            "client_reference_id": str(user.id),
+            "customer": "cus_nopromo",
+            "subscription": "sub_nopromo",
+            "metadata": {"user_id": str(user.id)},
+        }
+    )
+    db_session.refresh(user)
+    assert user.stripe_customer_id == "cus_nopromo"
+
+
+def test_on_checkout_completed_bad_promo_id_ignored(
+    db_session: Session, billing_settings: None
+) -> None:
+    user = _add_user(db_session)
+    service = BillingService(db_session)
+    service._on_checkout_completed(
+        {
+            "id": "cs_x",
+            "client_reference_id": str(user.id),
+            "metadata": {"user_id": str(user.id), "promo_code_id": "not-an-int"},
+        }
+    )
+    db_session.refresh(user)
+    assert user.stripe_customer_id is None
+
+
+def test_on_checkout_completed_unknown_promo_id_ignored(
+    db_session: Session, billing_settings: None
+) -> None:
+    user = _add_user(db_session)
+    service = BillingService(db_session)
+    service._on_checkout_completed(
+        {
+            "id": "cs_y",
+            "client_reference_id": str(user.id),
+            "metadata": {"user_id": str(user.id), "promo_code_id": "424242"},
+        }
+    )
+    db_session.refresh(user)
+    assert user.stripe_customer_id is None
+
+
+# --- subscription update / delete branches --------------------------------
+
+
+def test_on_subscription_updated_unknown_user_is_noop(
+    db_session: Session, billing_settings: None
+) -> None:
+    BillingService(db_session)._on_subscription_updated(
+        {"id": "sub_ghost", "customer": "cus_ghost", "status": "active", "metadata": {}}
+    )
+
+
+def test_on_subscription_deleted_unknown_user_is_noop(
+    db_session: Session, billing_settings: None
+) -> None:
+    BillingService(db_session)._on_subscription_deleted(
+        {"id": "sub_ghost", "customer": "cus_ghost", "metadata": {}}
+    )
+
+
+def test_plan_from_subscription_inactive_status_is_free(
+    db_session: Session, billing_settings: None
+) -> None:
+    service = BillingService(db_session)
+    assert (
+        service._plan_from_subscription({"status": "canceled", "metadata": {}}, "canceled")
+        == "free"
+    )
+
+
+def test_plan_from_subscription_non_string_price_falls_through_to_metadata(
+    db_session: Session, billing_settings: None
+) -> None:
+    service = BillingService(db_session)
+    plan = service._plan_from_subscription(
+        {
+            "id": "sub_np",
+            "status": "active",
+            "metadata": {"plan": "plus"},
+            "items": {"data": [{"price": {"id": 12345}}]},
+        },
+        "active",
+    )
+    assert plan == "plus"
+
+
+# --- user resolution helpers ----------------------------------------------
+
+
+def test_user_from_reference_bad_user_id_uses_customer(
+    db_session: Session, billing_settings: None
+) -> None:
+    user = _add_user(db_session)
+    UserRepository(db_session).update_billing(user, stripe_customer_id="cus_ref")
+    service = BillingService(db_session)
+    resolved = service._user_from_reference(
+        {"metadata": {"user_id": "not-int"}, "customer": "cus_ref"}
+    )
+    assert resolved is not None and resolved.id == user.id
+
+
+def test_user_from_reference_no_identifiers_returns_none(
+    db_session: Session, billing_settings: None
+) -> None:
+    assert BillingService(db_session)._user_from_reference({"metadata": {}}) is None
+
+
+def test_user_for_subscription_metadata_hit(db_session: Session, billing_settings: None) -> None:
+    user = _add_user(db_session)
+    service = BillingService(db_session)
+    resolved = service._user_for_subscription({"metadata": {"user_id": str(user.id)}})
+    assert resolved is not None and resolved.id == user.id
+
+
+def test_user_for_subscription_valid_but_missing_user_falls_back_to_customer(
+    db_session: Session, billing_settings: None
+) -> None:
+    user = _add_user(db_session)
+    UserRepository(db_session).update_billing(user, stripe_customer_id="cus_fallback")
+    service = BillingService(db_session)
+    # user_id parses to an int but no such user exists -> falls through to
+    # the customer lookup.
+    resolved = service._user_for_subscription(
+        {"metadata": {"user_id": "987654"}, "customer": "cus_fallback"}
+    )
+    assert resolved is not None and resolved.id == user.id
+
+
+def test_user_for_subscription_bad_metadata_uses_customer(
+    db_session: Session, billing_settings: None
+) -> None:
+    user = _add_user(db_session)
+    UserRepository(db_session).update_billing(user, stripe_customer_id="cus_sub")
+    service = BillingService(db_session)
+    resolved = service._user_for_subscription(
+        {"metadata": {"user_id": "nope"}, "customer": "cus_sub"}
+    )
+    assert resolved is not None and resolved.id == user.id
+
+
+def test_user_for_subscription_no_identifiers_returns_none(
+    db_session: Session, billing_settings: None
+) -> None:
+    assert BillingService(db_session)._user_for_subscription({"metadata": {}}) is None
+
+
+def test_ensure_customer_reuses_existing_id(db_session: Session, billing_settings: None) -> None:
+    user = _add_user(db_session)
+    UserRepository(db_session).update_billing(user, stripe_customer_id="cus_keep")
+    assert BillingService(db_session)._ensure_customer(user) == "cus_keep"

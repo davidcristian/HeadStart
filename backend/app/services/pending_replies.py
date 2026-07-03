@@ -87,19 +87,28 @@ class PendingReplyService:
         if existing is not None and existing.status in {"pending", "ready"}:
             return existing
 
-        if existing is not None:
-            self.pending.cancel_for_draft(user_id, draft.id)
-
         send_after = self.compute_send_after(anchor=anchor)
-        row = InboxPendingReply(
-            user_id=user_id,
-            inbox_reply_draft_id=draft.id,
-            send_after=send_after,
-            status="pending",
-            payload={"queued_at": utcnow().isoformat()},
-        )
         draft.status = "queued"
-        self.pending.add(row)
+        if existing is not None:
+            # A terminal (sent/failed/cancelled/blocked) row for this draft already exists; the
+            # unique constraint on inbox_reply_draft_id means we must re-queue it in place rather
+            # than insert a duplicate.
+            existing.status = "pending"
+            existing.send_after = send_after
+            existing.sent_at = None
+            existing.error = None
+            existing.payload = {"queued_at": utcnow().isoformat()}
+            row = existing
+        else:
+            row = InboxPendingReply(
+                user_id=user_id,
+                inbox_reply_draft_id=draft.id,
+                send_after=send_after,
+                status="pending",
+                payload={"queued_at": utcnow().isoformat()},
+            )
+            self.pending.add(row)
+        self.session.flush()
         self.safe_send.record(
             user_id,
             draft,

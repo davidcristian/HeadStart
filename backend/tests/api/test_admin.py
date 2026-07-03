@@ -2,6 +2,7 @@
 
 from datetime import UTC, datetime
 
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
@@ -180,6 +181,58 @@ def test_admin_stats_aggregate(db_session: Session) -> None:
     assert stats.deliveries_failed == 1
     assert len(stats.recent_errors) == 1
     assert stats.recent_errors[0].search_name == "Broken"
+
+
+def test_update_user_missing_raises_not_found(db_session: Session) -> None:
+    from app.core.exceptions import NotFoundError
+    from app.schemas.admin import AdminUserUpdate
+
+    with pytest.raises(NotFoundError):
+        AdminService(db_session).update_user(999, actor_id=1, data=AdminUserUpdate(plan="pro"))
+
+
+def test_update_user_rejects_unknown_plan(db_session: Session) -> None:
+    from app.core.exceptions import ValidationError
+    from app.schemas.admin import AdminUserUpdate
+
+    target = User(email="member@example.com", password_hash="x", is_admin=False, is_active=True)
+    db_session.add(target)
+    db_session.flush()
+
+    # The router-facing schema constrains plan to a Literal, so bypass validation
+    # to exercise the service's own defensive guard.
+    data = AdminUserUpdate.model_construct(plan="enterprise")
+    with pytest.raises(ValidationError, match="Unknown plan"):
+        AdminService(db_session).update_user(target.id, actor_id=1, data=data)
+
+
+def test_update_user_persists_flags(db_session: Session) -> None:
+    from app.schemas.admin import AdminUserUpdate
+
+    admin = User(email="admin@example.com", password_hash="x", is_admin=True, is_active=True)
+    member = User(email="member@example.com", password_hash="x", is_admin=False, is_active=True)
+    db_session.add_all([admin, member])
+    db_session.flush()
+
+    updated = AdminService(db_session).update_user(
+        member.id,
+        actor_id=admin.id,
+        data=AdminUserUpdate(is_active=False, is_admin=True, plan="pro"),
+    )
+    assert updated.is_active is False
+    assert updated.is_admin is True
+    assert updated.plan == "pro"
+
+
+def test_list_data_requests_returns_recent(db_session: Session) -> None:
+    from app.models.data_request_log import DataRequestLog
+
+    db_session.add(DataRequestLog(user_id=1, user_email="who@example.com", request_type="export"))
+    db_session.flush()
+
+    rows = AdminService(db_session).list_data_requests(limit=10)
+    assert len(rows) == 1
+    assert rows[0].request_type == "export"
 
 
 def test_admin_get_stats_endpoint(client: TestClient) -> None:

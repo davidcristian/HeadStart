@@ -182,5 +182,79 @@ def test_webhook_rejects_unsafe_url() -> None:
         notifier.send(ctx, [_job()])
 
 
+def test_webhook_digest_empty_jobs_returns_empty() -> None:
+    notifier = WebhookNotifier(client=httpx.Client())
+    ctx = NotifyContext(
+        target_type="webhook",
+        config={"webhook_url": "https://example.com/hooks/headstart"},
+        digest=True,
+    )
+    assert notifier.send(ctx, []) == []
+
+
+def test_webhook_digest_records_failure_without_raising() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(500, text="boom")
+
+    notifier = WebhookNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
+    ctx = NotifyContext(
+        target_type="webhook",
+        config={"webhook_url": "https://example.com/hooks/headstart"},
+        digest=True,
+    )
+    results = notifier.send(ctx, [_job("1"), _job("2")])
+    assert [r.status for r in results] == ["failed", "failed"]
+    assert results[0].error
+
+
+def test_webhook_skips_blank_custom_header_keys_and_values() -> None:
+    captured_headers: list[dict[str, str]] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured_headers.append(dict(request.headers))
+        return httpx.Response(200, text="ok")
+
+    notifier = WebhookNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
+    ctx = NotifyContext(
+        target_type="webhook",
+        config={
+            "webhook_url": "https://example.com/hooks/headstart",
+            "headers": {"X-Keep": "yes", "": "no-key", "X-None": None},
+        },
+    )
+    notifier.send(ctx, [_job()])
+    headers = captured_headers[0]
+    assert headers["x-keep"] == "yes"
+    assert "x-none" not in headers
+
+
+def test_webhook_ignores_non_dict_headers_config() -> None:
+    captured_headers: list[dict[str, str]] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured_headers.append(dict(request.headers))
+        return httpx.Response(200, text="ok")
+
+    notifier = WebhookNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
+    ctx = NotifyContext(
+        target_type="webhook",
+        config={"webhook_url": "https://example.com/hooks/headstart", "headers": "nope"},
+    )
+    notifier.send(ctx, [_job()])
+    assert captured_headers[0]["content-type"] == "application/json"
+
+
+def test_webhook_close_behaviour() -> None:
+    notifier = WebhookNotifier()
+    notifier.close()
+    assert notifier._client.is_closed
+
+    client = httpx.Client()
+    injected = WebhookNotifier(client=client)
+    injected.close()
+    assert not client.is_closed
+    client.close()
+
+
 def test_registry_resolves_webhook() -> None:
     assert isinstance(get_notifier("webhook"), WebhookNotifier)

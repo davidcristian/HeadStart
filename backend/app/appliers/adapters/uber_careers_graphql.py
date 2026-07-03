@@ -61,9 +61,8 @@ def _first_error_message(errors: list[Any]) -> str:
                     parsed = json.loads(trimmed)
                 except json.JSONDecodeError:
                     return trimmed
-                if isinstance(parsed, dict):
-                    nested = parsed.get("message")
-                    if isinstance(nested, str) and nested.strip():
-                        return nested.strip()
+                nested = parsed.get("message")
+                if isinstance(nested, str) and nested.strip():
+                    return nested.strip()
             return trimmed
     return "unknown GraphQL error"

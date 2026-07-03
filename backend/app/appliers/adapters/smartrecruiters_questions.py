@@ -133,10 +133,7 @@ def _map_field_answer(
             parsed = json.loads(cleaned)
         except json.JSONDecodeError:
             return [cleaned]
-        if isinstance(parsed, dict):
-            return [json.dumps(parsed)]
-        if isinstance(parsed, list):
-            return [str(item) for item in parsed]
+        return [json.dumps(parsed)]
     return [cleaned]
 
 

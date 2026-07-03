@@ -25,8 +25,6 @@ def decode_tailored_resume(data_b64: str | None) -> ResumeFile | None:
     except (binascii.Error, ValueError) as exc:
         raise ValidationError("Tailored resume must be valid base64") from exc
     max_bytes = settings.profile_resume_max_bytes
-    if len(raw) == 0:
-        raise ValidationError("Tailored resume PDF is empty")
     if len(raw) > max_bytes:
         raise ValidationError(f"Tailored resume exceeds the {max_bytes // 1_048_576} MB limit")
     if not raw.startswith(b"%PDF"):

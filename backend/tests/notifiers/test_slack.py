@@ -105,5 +105,99 @@ def test_slack_digest_includes_summary() -> None:
     assert "<https://careers.example/jobs/1|Apply>" in text
 
 
+def test_slack_text_omits_absent_fields() -> None:
+    captured: list[dict] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured.append(json.loads(request.content))
+        return httpx.Response(200, text="ok")
+
+    notifier = SlackNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
+    ctx = NotifyContext(
+        target_type="slack",
+        config={"webhook_url": "https://hooks.slack.com/services/T00/B00/secret"},
+    )
+    # Title only: no company/summary/location/url.
+    notifier.send(ctx, [JobPosting(external_id="1", title="")])
+    text = captured[0]["text"]
+    assert text == "New job"
+
+
+def test_slack_single_includes_summary() -> None:
+    captured: list[dict] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured.append(json.loads(request.content))
+        return httpx.Response(200, text="ok")
+
+    notifier = SlackNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
+    ctx = NotifyContext(
+        target_type="slack",
+        config={"webhook_url": "https://hooks.slack.com/services/T00/B00/secret"},
+    )
+    job = _job()
+    job.summary = "strong python match"
+    notifier.send(ctx, [job])
+    assert "strong python match" in captured[0]["text"]
+
+
+def test_slack_digest_empty_jobs_returns_empty() -> None:
+    notifier = SlackNotifier(client=httpx.Client())
+    ctx = NotifyContext(
+        target_type="slack",
+        config={"webhook_url": "https://hooks.slack.com/services/T00/B00/secret"},
+        digest=True,
+    )
+    assert notifier.send(ctx, []) == []
+
+
+def test_slack_digest_block_without_summary_or_url() -> None:
+    captured: list[dict] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured.append(json.loads(request.content))
+        return httpx.Response(200, text="ok")
+
+    notifier = SlackNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
+    ctx = NotifyContext(
+        target_type="slack",
+        config={"webhook_url": "https://hooks.slack.com/services/T00/B00/secret"},
+        digest=True,
+        search_name="Backend",
+    )
+    bare = JobPosting(external_id="1", title="Engineer", company="ACME")
+    notifier.send(ctx, [bare])
+    text = captured[0]["text"]
+    assert "• Engineer @ ACME" in text
+    assert "Apply" not in text
+
+
+def test_slack_digest_records_failure() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(500, text="boom")
+
+    notifier = SlackNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
+    ctx = NotifyContext(
+        target_type="slack",
+        config={"webhook_url": "https://hooks.slack.com/services/T00/B00/secret"},
+        digest=True,
+    )
+    results = notifier.send(ctx, [_job(), _job("2")])
+    assert [r.status for r in results] == ["failed", "failed"]
+    assert results[0].error
+
+
+def test_slack_close_behaviour() -> None:
+    notifier = SlackNotifier()
+    notifier.close()
+    assert notifier._client.is_closed
+
+    client = httpx.Client()
+    injected = SlackNotifier(client=client)
+    injected.close()
+    assert not client.is_closed
+    client.close()
+
+
 def test_registry_resolves_slack() -> None:
     assert isinstance(get_notifier("slack"), SlackNotifier)

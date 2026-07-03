@@ -259,3 +259,137 @@ def test_apply_form_url_matches_careers_locale_path() -> None:
         apply_form_url(154672, locale_path="global/en")
         == "https://www.uber.com/global/en/careers/apply/form/154672"
     )
+
+
+def test_apply_fails_without_resolvable_job_id() -> None:
+    applier = UberCareersApplier(http=make_http_client(lambda _: httpx.Response(200)))
+    result = applier.apply(
+        ApplyContext(
+            job_external_id="not-a-number",
+            job_title="Staff Software Engineer",
+            company="Uber",
+            job_url="https://example.com/jobs/nope",
+            config={},
+            profile=_profile(),
+            dry_run=True,
+        )
+    )
+    assert result.status == "failed"
+    assert "numeric job id" in (result.error or "")
+
+
+def test_live_apply_fails_when_required_answers_missing() -> None:
+    fixtures = _handlers()
+    profile = _profile()
+    profile.answers = {}
+    applier = UberCareersApplier(http=make_http_client(fixtures["handler"]))
+    result = applier.apply(
+        ApplyContext(
+            job_external_id=JOB_ID,
+            job_title="Staff Software Engineer",
+            company="Uber",
+            job_url=JOB_URL,
+            config={},
+            profile=profile,
+            credentials=_credentials(),
+            dry_run=False,
+        )
+    )
+    assert result.status == "failed"
+    assert "missing required screening answers" in (result.error or "")
+
+
+def test_apply_wraps_value_error_from_question_fetch() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json={"status": "error", "data": {"message": "boom"}})
+
+    applier = UberCareersApplier(http=make_http_client(handler))
+    result = applier.apply(
+        ApplyContext(
+            job_external_id=JOB_ID,
+            job_title="Staff Software Engineer",
+            company="Uber",
+            job_url=JOB_URL,
+            config={},
+            profile=_profile(),
+            dry_run=True,
+        )
+    )
+    assert result.status == "failed"
+    assert "boom" in (result.error or "")
+
+
+def test_apply_wraps_http_error_from_question_fetch() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(500, text="server error")
+
+    applier = UberCareersApplier(http=make_http_client(handler))
+    result = applier.apply(
+        ApplyContext(
+            job_external_id=JOB_ID,
+            job_title="Staff Software Engineer",
+            company="Uber",
+            job_url=JOB_URL,
+            config={},
+            profile=_profile(),
+            dry_run=True,
+        )
+    )
+    assert result.status == "failed"
+    assert result.error
+
+
+def test_live_submit_wraps_value_error_from_graphql() -> None:
+    questions = load_json_fixture("uber_careers_additional_questions.json")
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        url = str(request.url)
+        if url.startswith(api_url("getAdditionalQuestionsForJob")):
+            return httpx.Response(200, json=questions)
+        if url.endswith("/careers/apply/graphql"):
+            return httpx.Response(200, json={"errors": [{"message": "denied"}]})
+        return httpx.Response(404, text="not found")
+
+    applier = UberCareersApplier(http=make_http_client(handler))
+    result = applier.apply(
+        ApplyContext(
+            job_external_id=JOB_ID,
+            job_title="Staff Software Engineer",
+            company="Uber",
+            job_url=JOB_URL,
+            config={},
+            profile=_profile(),
+            credentials=_credentials(),
+            dry_run=False,
+        )
+    )
+    assert result.status == "failed"
+    assert "denied" in (result.error or "")
+
+
+def test_live_submit_wraps_http_error_from_graphql() -> None:
+    questions = load_json_fixture("uber_careers_additional_questions.json")
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        url = str(request.url)
+        if url.startswith(api_url("getAdditionalQuestionsForJob")):
+            return httpx.Response(200, json=questions)
+        if url.endswith("/careers/apply/graphql"):
+            return httpx.Response(502, text="bad gateway")
+        return httpx.Response(404, text="not found")
+
+    applier = UberCareersApplier(http=make_http_client(handler))
+    result = applier.apply(
+        ApplyContext(
+            job_external_id=JOB_ID,
+            job_title="Staff Software Engineer",
+            company="Uber",
+            job_url=JOB_URL,
+            config={},
+            profile=_profile(),
+            credentials=_credentials(),
+            dry_run=False,
+        )
+    )
+    assert result.status == "failed"
+    assert result.error

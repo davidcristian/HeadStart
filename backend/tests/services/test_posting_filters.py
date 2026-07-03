@@ -2,6 +2,12 @@
 
 from app.scrapers.types import JobPosting
 from app.services.posting_filters import (
+    _min_salary,
+    _normalize_workplace_text,
+    _normalize_workplace_token,
+    _salary_currency,
+    _terms,
+    _workplace_terms,
     apply_posting_filters,
     infer_workplace,
     matches_posting_filters,
@@ -78,3 +84,98 @@ def test_apply_posting_filters_counts_removed() -> None:
     assert len(kept) == 1
     assert removed == 1
     assert kept[0].title == "Backend Engineer"
+
+
+def test_apply_posting_filters_short_circuits_on_empty() -> None:
+    postings = [_posting()]
+    assert apply_posting_filters(postings, {}) == (postings, 0)
+    assert apply_posting_filters([], {"keywords": "x"}) == ([], 0)
+
+
+def test_infer_workplace_from_is_remote_flag() -> None:
+    assert infer_workplace(_posting(location="", raw={"isRemote": True})) == "remote"
+
+
+def test_infer_workplace_ignores_non_dict_raw() -> None:
+    # pydantic coerces `raw` to a dict on construction, so bypass validation to
+    # exercise the defensive `isinstance(raw, dict)` guard.
+    posting = JobPosting.model_construct(
+        external_id="2",
+        title="Engineer",
+        company="ACME",
+        location="Amsterdam",
+        url="https://acme.test/2",
+        raw="not-a-dict",
+    )
+    assert infer_workplace(posting) is None
+
+
+def test_infer_workplace_returns_none_when_nothing_matches() -> None:
+    assert infer_workplace(_posting(title="Engineer", location="Amsterdam", raw={})) is None
+
+
+def _salary_posting(min_value: int) -> JobPosting:
+    return _posting(
+        raw={
+            "compensation": {
+                "summaryComponents": [
+                    {
+                        "compensationType": "Salary",
+                        "interval": "1 YEAR",
+                        "currencyCode": "USD",
+                        "minValue": min_value,
+                        "maxValue": min_value + 20000,
+                    }
+                ]
+            }
+        }
+    )
+
+
+def test_min_salary_filter_applied() -> None:
+    filters = {"min_salary": 100000}
+    assert not matches_posting_filters(_salary_posting(50000), filters)
+    assert matches_posting_filters(_salary_posting(200000), filters)
+
+
+def test_terms_handles_list_and_non_string() -> None:
+    assert _terms(["senior backend", "remote"]) == ["senior", "backend", "remote"]
+    assert _terms("   ") == []
+    assert _terms(123) == ["123"]
+
+
+def test_workplace_terms_skips_unrecognized_tokens() -> None:
+    assert _workplace_terms("remote garbage hybrid") == {"remote", "hybrid"}
+
+
+def test_normalize_workplace_token_variants() -> None:
+    assert _normalize_workplace_token("") is None
+    assert _normalize_workplace_token("fully remote") == "remote"
+    assert _normalize_workplace_token("hybrid role") == "hybrid"
+    assert _normalize_workplace_token("on site only") == "onsite"
+    assert _normalize_workplace_token("flexible") is None
+
+
+def test_min_salary_coercions() -> None:
+    assert _min_salary(None) is None
+    assert _min_salary("") is None
+    assert _min_salary(True) is None
+    assert _min_salary(0) is None
+    assert _min_salary(120000) == 120000
+    assert _min_salary(99999.6) == 100000
+    assert _min_salary(0.0) is None
+    assert _min_salary("120,000") == 120000
+    assert _min_salary("-5") is None
+    assert _min_salary("not-a-number") is None
+    assert _min_salary([]) is None
+
+
+def test_salary_currency_defaults_and_normalizes() -> None:
+    assert _salary_currency("eur") == "EUR"
+    assert _salary_currency("") == "USD"
+    assert _salary_currency(None) == "USD"
+
+
+def test_normalize_workplace_text_empty_and_unmatched() -> None:
+    assert _normalize_workplace_text("") is None
+    assert _normalize_workplace_text("Amsterdam office") is None

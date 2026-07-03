@@ -30,3 +30,8 @@ def test_plan_for_price_id_round_trip(billing_prices: None) -> None:
     assert plan_for_price_id("price_plus_annual") == "plus"
     assert plan_for_price_id("price_pro_monthly") == "pro"
     assert plan_for_price_id("price_unknown") is None
+
+
+def test_price_id_for_rejects_unknown_plan() -> None:
+    with pytest.raises(ValueError, match="Unsupported checkout plan"):
+        price_id_for("enterprise", "monthly")  # type: ignore[arg-type]

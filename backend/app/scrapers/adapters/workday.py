@@ -64,7 +64,7 @@ class WorkdayScraper(Scraper):
                 )
             if total is None:
                 raw_total = data.get("total", len(jobs))
-                total = int(raw_total) if isinstance(raw_total, (int, float)) else len(jobs)
+                total = int(raw_total) if isinstance(raw_total, int | float) else len(jobs)
             if not jobs:
                 break
             postings.extend(self._to_posting(job, target) for job in jobs if isinstance(job, dict))
@@ -88,7 +88,7 @@ class WorkdayScraper(Scraper):
     @staticmethod
     def _page_size(config: dict[str, Any]) -> int:
         raw = config.get("page_size", _DEFAULT_PAGE_SIZE)
-        if not isinstance(raw, (int, float)) or isinstance(raw, bool):
+        if not isinstance(raw, int | float) or isinstance(raw, bool):
             raise ValueError("page_size must be a positive integer")
         size = int(raw)
         if size < 1:
@@ -137,8 +137,6 @@ class WorkdayScraper(Scraper):
         if len(parts) >= 4 and parts[0] == "wday" and parts[1] == "cxs":
             tenant = parts[2] or tenant
             site = parts[3]
-            if not tenant or not site:
-                raise ValueError("workday scraper could not determine tenant/site from query_url")
             return _WorkdayTarget(
                 tenant=tenant,
                 site=site,

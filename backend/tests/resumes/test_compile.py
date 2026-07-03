@@ -1,9 +1,23 @@
 """Tests for LaTeX PDF compilation helpers."""
 
+import subprocess
+from pathlib import Path
+
 import pytest
 
 from app.core.exceptions import ValidationError
-from app.resumes.compile import compile_latex_to_pdf, compile_latex_workspace
+from app.resumes.compile import (
+    _run_compiler_workspace,
+    compile_latex_to_pdf,
+    compile_latex_workspace,
+)
+
+
+class _FakeProc:
+    def __init__(self, returncode: int = 0, stderr: str = "", stdout: str = "") -> None:
+        self.returncode = returncode
+        self.stderr = stderr
+        self.stdout = stdout
 
 
 def test_compile_latex_workspace_rejects_missing_entrypoint() -> None:
@@ -74,3 +88,96 @@ def test_compile_latex_workspace_tries_next_compiler_when_pdf_missing(monkeypatc
     result = compile_latex_workspace({"main.tex": b"tex"}, entrypoint="main.tex")
     assert result == b"%PDF-second"
     assert calls == ["tectonic", "pdflatex"]
+
+
+def test_compile_latex_workspace_reports_timeout(monkeypatch) -> None:
+    monkeypatch.setattr("app.resumes.compile.shutil.which", lambda cmd: f"/usr/bin/{cmd}")
+
+    def timeout(*args, **kwargs):
+        raise subprocess.TimeoutExpired(cmd="tectonic", timeout=1.0)
+
+    monkeypatch.setattr("app.resumes.compile._run_compiler_workspace", timeout)
+    with pytest.raises(ValidationError, match="timed out"):
+        compile_latex_workspace({"main.tex": b"tex"}, entrypoint="main.tex", commands=("tectonic",))
+
+
+def test_compile_latex_workspace_reports_oserror(monkeypatch) -> None:
+    monkeypatch.setattr("app.resumes.compile.shutil.which", lambda cmd: f"/usr/bin/{cmd}")
+
+    def oserror(*args, **kwargs):
+        raise OSError("permission denied")
+
+    monkeypatch.setattr("app.resumes.compile._run_compiler_workspace", oserror)
+    with pytest.raises(ValidationError, match="permission denied"):
+        compile_latex_workspace({"main.tex": b"tex"}, entrypoint="main.tex", commands=("tectonic",))
+
+
+def test_run_compiler_workspace_tectonic_success(monkeypatch, tmp_path) -> None:
+    def fake_run(cmd_args, **kwargs):
+        # tectonic invocation: [exe, "--outdir", dir, texpath]
+        assert cmd_args[1] == "--outdir"
+        out_dir = Path(cmd_args[2])
+        (out_dir / "main.pdf").write_bytes(b"%PDF-tectonic")
+        return _FakeProc(returncode=0)
+
+    monkeypatch.setattr("app.resumes.compile.subprocess.run", fake_run)
+    pdf = _run_compiler_workspace(
+        "/usr/bin/tectonic",
+        "tectonic",
+        {"main.tex": b"content", "sub/part.tex": b"part"},
+        "main.tex",
+        timeout=5.0,
+    )
+    assert pdf == b"%PDF-tectonic"
+
+
+def test_run_compiler_workspace_pdflatex_success(monkeypatch) -> None:
+    def fake_run(cmd_args, **kwargs):
+        # pdflatex invocation uses -output-directory and cwd.
+        assert "-interaction=nonstopmode" in cmd_args
+        out_dir = Path(kwargs["cwd"])
+        (out_dir / "main.pdf").write_bytes(b"%PDF-pdflatex")
+        return _FakeProc(returncode=0)
+
+    monkeypatch.setattr("app.resumes.compile.subprocess.run", fake_run)
+    pdf = _run_compiler_workspace(
+        "/usr/bin/pdflatex",
+        "pdflatex",
+        {"main.tex": b"content"},
+        "main.tex",
+        timeout=5.0,
+    )
+    assert pdf == b"%PDF-pdflatex"
+
+
+def test_run_compiler_workspace_raises_on_nonzero_exit(monkeypatch) -> None:
+    def fake_run(cmd_args, **kwargs):
+        return _FakeProc(returncode=1, stderr="! LaTeX Error")
+
+    monkeypatch.setattr("app.resumes.compile.subprocess.run", fake_run)
+    with pytest.raises(ValidationError, match="LaTeX Error"):
+        _run_compiler_workspace(
+            "/usr/bin/tectonic", "tectonic", {"main.tex": b"x"}, "main.tex", timeout=5.0
+        )
+
+
+def test_run_compiler_workspace_nonzero_exit_without_output_uses_code(monkeypatch) -> None:
+    def fake_run(cmd_args, **kwargs):
+        return _FakeProc(returncode=2, stderr="", stdout="")
+
+    monkeypatch.setattr("app.resumes.compile.subprocess.run", fake_run)
+    with pytest.raises(ValidationError, match="exit code 2"):
+        _run_compiler_workspace(
+            "/usr/bin/tectonic", "tectonic", {"main.tex": b"x"}, "main.tex", timeout=5.0
+        )
+
+
+def test_run_compiler_workspace_returns_none_when_pdf_missing(monkeypatch) -> None:
+    def fake_run(cmd_args, **kwargs):
+        return _FakeProc(returncode=0)  # succeeds but writes no PDF
+
+    monkeypatch.setattr("app.resumes.compile.subprocess.run", fake_run)
+    result = _run_compiler_workspace(
+        "/usr/bin/tectonic", "tectonic", {"main.tex": b"x"}, "main.tex", timeout=5.0
+    )
+    assert result is None

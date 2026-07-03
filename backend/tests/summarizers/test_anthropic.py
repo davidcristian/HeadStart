@@ -74,3 +74,15 @@ def test_anthropic_raises_on_http_error() -> None:
     )
     with pytest.raises(httpx.HTTPError):
         summarizer.summarize(SummaryContext(), [_job()])
+
+
+def test_anthropic_close_behaviour() -> None:
+    summarizer = AnthropicSummarizer(settings=_Settings())
+    summarizer.close()
+    assert summarizer._client.is_closed
+
+    client = httpx.Client()
+    injected = AnthropicSummarizer(client=client, settings=_Settings())
+    injected.close()
+    assert not client.is_closed
+    client.close()

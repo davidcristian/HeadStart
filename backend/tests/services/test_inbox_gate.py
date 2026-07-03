@@ -201,3 +201,90 @@ def test_gate_excludes_archived_applications(db_session: Session, monkeypatch) -
 
     ctx = InboxGateService(db_session).build_context(user.id)
     assert ctx.employer_domains == frozenset()
+
+
+def test_should_process_allows_outbound_reference_match(db_session: Session, monkeypatch) -> None:
+    monkeypatch.setattr("app.services.inbox.settings.inbox_agent_enabled", True)
+    user = _user(db_session, email="gate-ref@example.test")
+    InboxService(db_session).upsert(
+        user.id,
+        MailboxCredentialUpsert(connector_type="imap_smtp", config=_mailbox_config()),
+    )
+    _seed_applied_job(db_session, user)
+    gate = InboxGateService(db_session)
+    ctx = gate.build_context(user.id)
+    message = InboxMessage(
+        uid=6,
+        from_addr="unknown@third-party.example",
+        in_reply_to="<apply-001@headstart.local>",
+        subject="Re: your application",
+        body_text="Thanks.",
+    )
+    assert gate.should_process(user.id, message, ctx) is True
+
+
+def test_build_context_falls_back_to_job_url_domain(db_session: Session, monkeypatch) -> None:
+    monkeypatch.setattr("app.services.inbox.settings.inbox_agent_enabled", True)
+    user = _user(db_session, email="gate-urlfallback@example.test")
+    InboxService(db_session).upsert(
+        user.id,
+        MailboxCredentialUpsert(connector_type="imap_smtp", config=_mailbox_config()),
+    )
+    search = _make_search(db_session, user=user)
+    job = SeenJob(
+        search_id=search.id,
+        external_id="job-url",
+        hash="url-h1",
+        title="Backend Engineer",
+        company="ACME",
+        location="Remote",
+        url="https://www.jobs.acme.com/jobs/9",
+        status="applied",
+        applied_at=datetime(2026, 6, 28, 12, 0, tzinfo=UTC),
+    )
+    db_session.add(job)
+    db_session.flush()
+    log = ApplicationLog(seen_job_id=job.id, status="submitted", dry_run=False, payload={})
+    db_session.add(log)
+    db_session.flush()
+    job.application_logs = [log]
+
+    ctx = InboxGateService(db_session).build_context(user.id)
+    assert "jobs.acme.com" in ctx.employer_domains
+
+
+def test_build_context_skips_job_without_domain(db_session: Session, monkeypatch) -> None:
+    monkeypatch.setattr("app.services.inbox.settings.inbox_agent_enabled", True)
+    user = _user(db_session, email="gate-nodomain@example.test")
+    InboxService(db_session).upsert(
+        user.id,
+        MailboxCredentialUpsert(connector_type="imap_smtp", config=_mailbox_config()),
+    )
+    search = _make_search(db_session, user=user)
+    job = SeenJob(
+        search_id=search.id,
+        external_id="job-nodomain",
+        hash="nd-h1",
+        title="Backend Engineer",
+        company="ACME",
+        location="Remote",
+        url="not-a-valid-url",
+        status="applied",
+        applied_at=datetime(2026, 6, 28, 12, 0, tzinfo=UTC),
+    )
+    db_session.add(job)
+    db_session.flush()
+    log = ApplicationLog(seen_job_id=job.id, status="submitted", dry_run=False, payload={})
+    db_session.add(log)
+    db_session.flush()
+    job.application_logs = [log]
+
+    ctx = InboxGateService(db_session).build_context(user.id)
+    assert ctx.employer_domains == frozenset()
+
+
+def test_sender_allowlist_empty_when_no_credential(db_session: Session, monkeypatch) -> None:
+    monkeypatch.setattr("app.services.inbox.settings.inbox_agent_enabled", True)
+    user = _user(db_session, email="gate-nocred@example.test")
+    gate = InboxGateService(db_session)
+    assert gate._sender_allowlist(user.id) == set()

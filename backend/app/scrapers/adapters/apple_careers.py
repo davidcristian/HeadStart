@@ -71,8 +71,6 @@ class AppleCareersScraper(Scraper):
                 break
             if total is not None and len(postings) >= total:
                 break
-            if len(page_postings) < _PAGE_SIZE and (total is None or len(postings) >= total):
-                break
             page += 1
 
         return postings
@@ -148,7 +146,7 @@ class AppleCareersScraper(Scraper):
     @staticmethod
     def _max_results(config: dict[str, Any]) -> int:
         raw = config.get("max_results", _DEFAULT_MAX_RESULTS)
-        if not isinstance(raw, (int, float)) or isinstance(raw, bool):
+        if not isinstance(raw, int | float) or isinstance(raw, bool):
             raise ValueError("max_results must be a positive integer")
         limit = int(raw)
         if limit <= 0:

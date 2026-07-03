@@ -135,9 +135,7 @@ class IndeedApplier(Applier):
     def _resolve_detail(self, ctx: ApplyContext) -> IndeedJobDetail:
         override = str(ctx.config.get("external_apply_url") or "").strip()
         if override:
-            detail = _detail_from_override(ctx, override)
-            if detail is not None:
-                return detail
+            return _detail_from_override(ctx, override)
 
         page_url = resolve_viewjob_url(ctx.job_external_id, ctx.job_url, ctx.config)
         html = self.http.get_text(page_url)
@@ -150,7 +148,7 @@ class IndeedApplier(Applier):
         return detail
 
 
-def _detail_from_override(ctx: ApplyContext, external_apply_url: str) -> IndeedJobDetail | None:
+def _detail_from_override(ctx: ApplyContext, external_apply_url: str) -> IndeedJobDetail:
     """Build a minimal detail record when operators pin the downstream apply URL."""
     return IndeedJobDetail(
         job_key=ctx.job_external_id,

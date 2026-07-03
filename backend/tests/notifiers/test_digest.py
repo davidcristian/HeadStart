@@ -2,6 +2,13 @@ import httpx
 
 from app.notifiers import NotifyContext
 from app.notifiers.adapters.ntfy import NtfyNotifier
+from app.notifiers.digest_format import (
+    digest_blocks,
+    digest_plain_body,
+    digest_text_lines,
+    digest_title,
+    job_headline,
+)
 from app.scrapers.types import JobPosting
 
 
@@ -41,3 +48,48 @@ def test_ntfy_digest_posts_single_batched_payload() -> None:
     assert body["title"] == "2 new jobs — Backend roles"
     assert "Software Engineer @ Google" in body["message"]
     assert "https://careers.example/jobs/1" in body["message"]
+
+
+def test_job_headline_without_company_uses_title_only() -> None:
+    assert job_headline(JobPosting(external_id="1", title="Engineer")) == "Engineer"
+    assert job_headline(JobPosting(external_id="1", title="")) == "New job"
+
+
+def test_digest_title_without_search_name_and_singular() -> None:
+    assert digest_title(1) == "1 new job"
+    assert digest_title(3) == "3 new jobs"
+
+
+def test_digest_blocks_omit_location_when_absent() -> None:
+    blocks = digest_blocks([JobPosting(external_id="1", title="Eng", company="ACME")])
+    assert blocks[0].headline == "Eng @ ACME"
+
+
+def test_digest_text_lines_omit_summary_and_url() -> None:
+    lines = digest_text_lines([JobPosting(external_id="1", title="Eng", company="ACME")])
+    assert lines == ["Eng @ ACME"]
+
+
+def test_digest_text_lines_include_summary_and_url() -> None:
+    job = JobPosting(
+        external_id="1",
+        title="Eng",
+        company="ACME",
+        location="Berlin",
+        url="https://x/1",
+        summary="great match",
+    )
+    (line,) = digest_text_lines([job])
+    assert "Eng @ ACME (Berlin)" in line
+    assert "great match" in line
+    assert "https://x/1" in line
+
+
+def test_digest_plain_body_joins_blocks() -> None:
+    jobs = [
+        JobPosting(external_id="1", title="A", company="X"),
+        JobPosting(external_id="2", title="B", company="Y"),
+    ]
+    body = digest_plain_body(jobs)
+    assert "A @ X" in body
+    assert "B @ Y" in body

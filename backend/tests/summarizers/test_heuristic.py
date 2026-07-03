@@ -54,3 +54,50 @@ def test_summarize_aligns_one_blurb_per_job() -> None:
     blurbs = HeuristicSummarizer().summarize(ctx, jobs)
     assert len(blurbs) == 2
     assert "Data Scientist" in blurbs[1]
+
+
+def test_workplace_and_location_filters_without_a_match_fall_back() -> None:
+    # workplace=onsite but job is remote; location=paris but job is in Berlin.
+    ctx = SummaryContext(
+        search_name="Remote roles",
+        filters={"workplace": "onsite", "location": "paris"},
+    )
+    (blurb,) = HeuristicSummarizer().summarize(ctx, [_job(location="Berlin (Remote)")])
+    assert "onsite role" not in blurb
+    assert "in " not in blurb
+    assert "Remote roles" in blurb
+
+
+def test_keywords_from_list_are_deduplicated() -> None:
+    ctx = SummaryContext(filters={"keywords_include": ["python", "python", 123]})
+    (blurb,) = HeuristicSummarizer().summarize(ctx, [_job(title="Python Python Engineer")])
+    assert blurb.count("python") == 1
+
+
+def test_hybrid_workplace_is_recognized() -> None:
+    ctx = SummaryContext(filters={"workplace": "hybrid"})
+    (blurb,) = HeuristicSummarizer().summarize(ctx, [_job(location="Berlin (Hybrid)")])
+    assert "hybrid role" in blurb
+
+
+def test_onsite_workplace_is_recognized() -> None:
+    ctx = SummaryContext(filters={"workplace": "on-site"})
+    (blurb,) = HeuristicSummarizer().summarize(ctx, [_job(location="Berlin on-site")])
+    assert "onsite role" in blurb
+
+
+def test_infer_workplace_returns_none_without_signals() -> None:
+    # workplace filter forces _infer_workplace to run, but the job has no
+    # remote/hybrid/onsite signal in title or location.
+    ctx = SummaryContext(search_name="X", filters={"workplace": "remote"})
+    (blurb,) = HeuristicSummarizer().summarize(ctx, [_job(title="Data Analyst", location="Berlin")])
+    assert "remote role" not in blurb
+    assert blurb.startswith("New match for 'X'")
+
+
+def test_unknown_workplace_token_is_ignored() -> None:
+    # A workplace token that maps to nothing leaves the workplaces set empty.
+    ctx = SummaryContext(search_name="X", filters={"workplace": "flexible"})
+    (blurb,) = HeuristicSummarizer().summarize(ctx, [_job(location="Berlin")])
+    assert "workplace" not in blurb
+    assert blurb.startswith("New match for 'X'")

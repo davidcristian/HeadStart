@@ -77,3 +77,15 @@ def test_llamacpp_raises_on_http_error() -> None:
     )
     with pytest.raises(httpx.HTTPError):
         summarizer.summarize(SummaryContext(), [_job()])
+
+
+def test_llamacpp_close_behaviour() -> None:
+    summarizer = LlamaCppSummarizer(settings=_Settings())
+    summarizer.close()
+    assert summarizer._client.is_closed
+
+    client = httpx.Client()
+    injected = LlamaCppSummarizer(client=client, settings=_Settings())
+    injected.close()
+    assert not client.is_closed
+    client.close()

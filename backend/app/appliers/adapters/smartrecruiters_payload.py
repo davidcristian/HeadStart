@@ -100,9 +100,7 @@ def build_application_payload(
         payload["answers"] = build_screening_answers(configuration, profile.answers)
 
     if resume_file is not None:
-        resume_meta = resume_meta_for_payload(resume_file)
-        if resume_meta is not None:
-            payload["resume_file"] = resume_meta
+        payload["resume_file"] = resume_meta_for_payload(resume_file)
         if include_file_bytes:
             payload["resume"] = {
                 "fileName": resume_file.filename,

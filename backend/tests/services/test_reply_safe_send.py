@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.inbox.types import SendResult
+from app.models.inbox_classification import InboxClassification
 from app.models.inbox_reply_send_log import InboxReplySendLog
 from app.services.pending_replies import PendingReplyService
 from app.services.reply_safe_send import ReplySafeSendService
@@ -99,3 +100,106 @@ def test_process_due_records_sent_audit_log(db_session: Session, monkeypatch) ->
     assert result.sent == 1
     logs = ReplySafeSendService(db_session).list_for_user(user_id, limit=10)
     assert any(log.outcome == "sent" for log in logs)
+
+
+def test_evaluate_before_send_blocks_on_topic(db_session: Session, monkeypatch) -> None:
+    monkeypatch.setattr(settings, "inbox_agent_enabled", True)
+    search = _make_search(db_session)
+    user_id = search.user_id
+    _seed_mailbox(db_session, user_id, auto_reply=True)
+    draft = _seed_draft(db_session, user_id)
+    draft.body_text = "Let's discuss the discrimination complaint you raised."
+    db_session.flush()
+    service = ReplySafeSendService(db_session)
+
+    decision = service.evaluate_before_send(user_id, draft, draft.classification)
+
+    assert decision.allowed is False
+    assert decision.outcome == "blocked_topic"
+    assert "matched_topics" in decision.payload
+
+
+def test_evaluate_before_send_blocks_on_daily_limit(db_session: Session, monkeypatch) -> None:
+    monkeypatch.setattr(settings, "inbox_agent_enabled", True)
+    monkeypatch.setattr(settings, "inbox_reply_max_per_hour", 0)
+    monkeypatch.setattr(settings, "inbox_reply_max_per_day", 1)
+    search = _make_search(db_session)
+    user_id = search.user_id
+    _seed_mailbox(db_session, user_id, auto_reply=True)
+    draft = _seed_draft(db_session, user_id)
+    service = ReplySafeSendService(db_session)
+    now = datetime(2026, 6, 30, 12, 0, tzinfo=UTC)
+
+    db_session.add(
+        InboxReplySendLog(
+            user_id=user_id,
+            inbox_reply_draft_id=draft.id,
+            outcome="sent",
+            reason="",
+            subject="Earlier",
+            body_excerpt="earlier",
+            created_at=now - timedelta(hours=3),
+        )
+    )
+    db_session.flush()
+
+    decision = service.evaluate_before_send(user_id, draft, draft.classification, now=now)
+
+    assert decision.allowed is False
+    assert decision.outcome == "blocked_rate_limit_day"
+    assert decision.payload["limit"] == 1
+
+
+def test_evaluate_before_send_allows_under_both_caps(db_session: Session, monkeypatch) -> None:
+    monkeypatch.setattr(settings, "inbox_agent_enabled", True)
+    monkeypatch.setattr(settings, "inbox_reply_max_per_hour", 5)
+    monkeypatch.setattr(settings, "inbox_reply_max_per_day", 10)
+    search = _make_search(db_session)
+    user_id = search.user_id
+    _seed_mailbox(db_session, user_id, auto_reply=True)
+    draft = _seed_draft(db_session, user_id)
+    service = ReplySafeSendService(db_session)
+    now = datetime(2026, 6, 30, 12, 0, tzinfo=UTC)
+
+    decision = service.evaluate_before_send(user_id, draft, draft.classification, now=now)
+
+    assert decision.allowed is True
+    assert decision.outcome == "sent"
+
+
+def test_inbound_body_empty_without_classification_or_payload(db_session: Session) -> None:
+    service = ReplySafeSendService(db_session)
+    assert service._inbound_body(None) == ""
+    row = InboxClassification(
+        user_id=1,
+        message_uid=1,
+        label="general",
+        confidence=1.0,
+        reason="r",
+        provider="heuristic",
+        payload=None,
+    )
+    assert service._inbound_body(row) == ""
+    non_str = InboxClassification(
+        user_id=1,
+        message_uid=1,
+        label="general",
+        confidence=1.0,
+        reason="r",
+        provider="heuristic",
+        payload={"body_excerpt": 123},
+    )
+    assert service._inbound_body(non_str) == ""
+
+
+def test_body_excerpt_truncates_long_body(db_session: Session) -> None:
+    service = ReplySafeSendService(db_session)
+    long_text = "a" * 800
+    excerpt = service._body_excerpt(long_text)
+    assert len(excerpt) == 500
+    assert excerpt.endswith("…")
+
+
+def test_body_excerpt_short_body_unchanged(db_session: Session) -> None:
+    service = ReplySafeSendService(db_session)
+    assert service._body_excerpt("  short  ") == "short"

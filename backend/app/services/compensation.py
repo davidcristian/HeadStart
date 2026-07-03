@@ -65,9 +65,10 @@ def format_compensation_display(posting: JobPosting) -> str:
         return f"{prefix}{min_text} – {prefix}{max_text}"
     if info.min_annual is not None:
         return f"{prefix}{_format_amount(info.min_annual)}+"
-    if info.max_annual is not None:
-        return f"Up to {prefix}{_format_amount(info.max_annual)}"
-    return ""
+    # Reaching here means max_annual is the only populated bound (the all-None
+    # case already returned above), so this narrowing always holds.
+    assert info.max_annual is not None
+    return f"Up to {prefix}{_format_amount(info.max_annual)}"
 
 
 def meets_min_salary(posting: JobPosting, min_salary: int, currency: str = "USD") -> bool:

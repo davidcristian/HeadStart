@@ -163,6 +163,115 @@ def test_interview_handoff_skips_when_already_pending(db_session: Session) -> No
     notify.assert_not_called()
 
 
+def test_interview_handoff_skips_inactive_application(db_session: Session) -> None:
+    user_id, job = _seed_applied_job(db_session)
+    # A closed job is not an active application, so handoff is skipped.
+    job.status = "closed"
+    db_session.flush()
+    service = InterviewHandoffService(db_session)
+    row = InboxClassification(
+        user_id=user_id,
+        seen_job_id=job.id,
+        message_uid=10,
+        label="interview_request",
+        confidence=0.9,
+        reason="stub",
+        provider="heuristic",
+        subject="Schedule a chat",
+        from_addr="hr@careers.acme.com",
+        payload={},
+    )
+
+    with patch.object(service.alerts, "notify_interview_handoff") as notify:
+        result = service.maybe_handoff_from_classification(user_id, job, row)
+
+    assert result.handed_off is False
+    assert job.interview_pending_at is None
+    notify.assert_not_called()
+
+
+def test_interview_handoff_active_via_submitted_log_when_not_applied(db_session: Session) -> None:
+    # status "new" but a submitted live attempt exists -> active via the log path.
+    search = _make_search(db_session)
+    job = SeenJob(
+        search_id=search.id,
+        external_id="job-new-submitted",
+        hash="h-new",
+        title="Backend Engineer",
+        company="ACME",
+        location="Remote",
+        url="https://careers.acme.com/jobs/2",
+        status="new",
+    )
+    db_session.add(job)
+    db_session.flush()
+    db_session.add(ApplicationLog(seen_job_id=job.id, status="submitted", dry_run=False))
+    db_session.flush()
+
+    service = InterviewHandoffService(db_session)
+    row = InboxClassification(
+        user_id=search.user_id,
+        seen_job_id=job.id,
+        message_uid=11,
+        label="interview_request",
+        confidence=0.9,
+        reason="stub",
+        provider="heuristic",
+        subject="Interview time?",
+        from_addr="hr@careers.acme.com",
+        payload={},
+    )
+
+    with patch.object(
+        service.alerts,
+        "notify_interview_handoff",
+        return_value=[DeliveryResult(external_id=job.external_id, status="sent")],
+    ):
+        result = service.maybe_handoff_from_classification(search.user_id, job, row)
+
+    assert result.handed_off is True
+    assert job.interview_pending_at is not None
+
+
+def test_interview_handoff_inactive_when_only_queued_log(db_session: Session) -> None:
+    # status "new" with only a queued (not submitted) log -> not active, skipped.
+    search = _make_search(db_session)
+    job = SeenJob(
+        search_id=search.id,
+        external_id="job-queued",
+        hash="h-queued",
+        title="Backend Engineer",
+        company="ACME",
+        location="Remote",
+        url="https://careers.acme.com/jobs/3",
+        status="new",
+    )
+    db_session.add(job)
+    db_session.flush()
+    db_session.add(ApplicationLog(seen_job_id=job.id, status="queued", dry_run=False))
+    db_session.flush()
+
+    service = InterviewHandoffService(db_session)
+    row = InboxClassification(
+        user_id=search.user_id,
+        seen_job_id=job.id,
+        message_uid=12,
+        label="interview_request",
+        confidence=0.9,
+        reason="stub",
+        provider="heuristic",
+        subject="Interview?",
+        from_addr="hr@careers.acme.com",
+        payload={},
+    )
+
+    with patch.object(service.alerts, "notify_interview_handoff") as notify:
+        result = service.maybe_handoff_from_classification(search.user_id, job, row)
+
+    assert result.handed_off is False
+    notify.assert_not_called()
+
+
 def test_classify_hands_off_interview_for_applied_job(db_session: Session, monkeypatch) -> None:
     monkeypatch.setattr(settings, "inbox_agent_enabled", True)
     user_id, job = _seed_applied_job(db_session)

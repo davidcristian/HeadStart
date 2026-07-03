@@ -226,3 +226,48 @@ def test_smartrecruiters_empty_location_for_non_dict() -> None:
     scraper = get_scraper("smartrecruiters", http=make_http_client(handler))
     postings = scraper.fetch(ScrapeContext(config={"company_id": "AcmeCorp"}))
     assert postings[0].location == ""
+
+
+def test_smartrecruiters_stops_on_empty_content_page() -> None:
+    """An empty content page terminates the loop even when total claims more remain."""
+    page1 = {
+        "totalFound": 5,
+        "content": [{"id": "1", "name": "Eng"}],
+    }
+    page2: dict = {"totalFound": 5, "content": []}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if "offset=0" in str(request.url):
+            return httpx.Response(200, json=page1)
+        return httpx.Response(200, json=page2)
+
+    scraper = get_scraper("smartrecruiters", http=make_http_client(handler))
+    postings = scraper.fetch(ScrapeContext(config={"company_id": "AcmeCorp"}))
+    assert len(postings) == 1
+
+
+def test_smartrecruiters_skips_non_dict_content_entries() -> None:
+    """Non-dict entries in content are ignored rather than crashing the run."""
+    payload = {
+        "totalFound": 2,
+        "content": ["garbage", {"id": "9", "name": "Real"}],
+    }
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json=payload)
+
+    scraper = get_scraper("smartrecruiters", http=make_http_client(handler))
+    postings = scraper.fetch(ScrapeContext(config={"company_id": "AcmeCorp"}))
+    assert [p.external_id for p in postings] == ["9"]
+
+
+def test_smartrecruiters_falls_back_on_non_numeric_total() -> None:
+    """A boolean/non-number totalFound falls back to the page size (coerce guard)."""
+    payload = {"totalFound": True, "content": [{"id": "3", "name": "Lead"}]}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json=payload)
+
+    scraper = get_scraper("smartrecruiters", http=make_http_client(handler))
+    postings = scraper.fetch(ScrapeContext(config={"company_id": "AcmeCorp"}))
+    assert len(postings) == 1

@@ -91,6 +91,125 @@ def test_notify_ghost_recovery_uses_rejection_copy(db_session: Session) -> None:
     assert "rejection" in postings[0].summary.lower()
 
 
+def test_alert_records_failure_when_notifier_raises(db_session: Session) -> None:
+    user_id, job, target = _seed_job_with_target(db_session)
+    service = ApplicationAlertService(db_session)
+    mock_notifier = MagicMock()
+    mock_notifier.send.side_effect = RuntimeError("ntfy down")
+
+    with patch("app.services.application_alerts.get_notifier", return_value=mock_notifier):
+        results = service.notify_interview_handoff(user_id, job)
+
+    assert len(results) == 1
+    assert results[0].status == "failed"
+    assert "ntfy down" in (results[0].error or "")
+    db_session.flush()
+    logs = db_session.query(DeliveryLog).filter_by(seen_job_id=job.id).all()
+    assert len(logs) == 1
+    assert logs[0].status == "failed"
+    # A notifier exposing close() gets closed in the finally block.
+    mock_notifier.close.assert_called_once()
+
+
+def test_alert_handles_notifier_without_close(db_session: Session) -> None:
+    user_id, job, target = _seed_job_with_target(db_session)
+    service = ApplicationAlertService(db_session)
+
+    class NotifierNoClose:
+        def send(self, ctx, jobs):
+            return [DeliveryResult(external_id=jobs[0].external_id, status="sent")]
+
+    with patch("app.services.application_alerts.get_notifier", return_value=NotifierNoClose()):
+        results = service.notify_interview_handoff(user_id, job)
+
+    assert results[0].status == "sent"
+
+
+def test_alert_falls_back_to_all_targets_when_search_target_missing(db_session: Session) -> None:
+    user_id, job, target = _seed_job_with_target(db_session)
+    # Drop the search's target link so resolution falls back to list_all.
+    job.search.target_id = None
+    db_session.flush()
+    service = ApplicationAlertService(db_session)
+    mock_notifier = MagicMock()
+    mock_notifier.send.return_value = [
+        DeliveryResult(external_id=f"interview-handoff-{job.id}", status="sent")
+    ]
+
+    with patch("app.services.application_alerts.get_notifier", return_value=mock_notifier):
+        results = service.notify_interview_handoff(user_id, job)
+
+    assert results[0].status == "sent"
+
+
+def test_alert_falls_back_when_search_target_id_unresolvable(db_session: Session) -> None:
+    user_id, job, target = _seed_job_with_target(db_session)
+    # target_id set but points at a row that does not resolve for this user.
+    job.search.target_id = 987654
+    db_session.flush()
+    service = ApplicationAlertService(db_session)
+    mock_notifier = MagicMock()
+    mock_notifier.send.return_value = [
+        DeliveryResult(external_id=f"interview-handoff-{job.id}", status="sent")
+    ]
+
+    with patch("app.services.application_alerts.get_notifier", return_value=mock_notifier):
+        results = service.notify_interview_handoff(user_id, job)
+
+    # Falls through to list_all, which still finds the seeded target.
+    assert results[0].status == "sent"
+
+
+def test_alert_non_ntfy_target_has_no_priority(db_session: Session) -> None:
+    user_id, job, target = _seed_job_with_target(db_session)
+    target.type = "email"
+    target.config = {"to": "me@example.com"}
+    db_session.flush()
+    service = ApplicationAlertService(db_session)
+    mock_notifier = MagicMock()
+    mock_notifier.send.return_value = [
+        DeliveryResult(external_id=f"interview-handoff-{job.id}", status="sent")
+    ]
+
+    with patch("app.services.application_alerts.get_notifier", return_value=mock_notifier):
+        service.notify_interview_handoff(user_id, job)
+
+    ctx = mock_notifier.send.call_args.args[0]
+    assert "priority" not in ctx.config
+
+
+def test_notify_ghost_recovery_uses_interview_copy(db_session: Session) -> None:
+    user_id, job, _target = _seed_job_with_target(db_session)
+    service = ApplicationAlertService(db_session)
+    mock_notifier = MagicMock()
+    mock_notifier.send.return_value = [
+        DeliveryResult(external_id=f"ghost-recovery-{job.id}", status="sent")
+    ]
+
+    with patch("app.services.application_alerts.get_notifier", return_value=mock_notifier):
+        service.notify_ghost_recovery(user_id, job, label="interview_request")
+
+    posting = mock_notifier.send.call_args.args[1][0]
+    assert "interview" in posting.summary.lower()
+    assert "Interview to schedule" in posting.title
+
+
+def test_notify_ghost_recovery_uses_generic_copy(db_session: Session) -> None:
+    user_id, job, _target = _seed_job_with_target(db_session)
+    service = ApplicationAlertService(db_session)
+    mock_notifier = MagicMock()
+    mock_notifier.send.return_value = [
+        DeliveryResult(external_id=f"ghost-recovery-{job.id}", status="sent")
+    ]
+
+    with patch("app.services.application_alerts.get_notifier", return_value=mock_notifier):
+        service.notify_ghost_recovery(user_id, job, label="follow_up")
+
+    posting = mock_notifier.send.call_args.args[1][0]
+    assert "responded" in posting.summary.lower()
+    assert "replied after you marked this ghosted" in posting.title
+
+
 def test_notify_returns_empty_when_user_has_no_targets(db_session: Session) -> None:
     user = make_user(db_session, email="no-targets@example.test")
     source = Source(

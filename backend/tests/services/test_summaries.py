@@ -124,6 +124,20 @@ def test_annotate_uses_user_provider_override() -> None:
     assert captured["provider"] == "openai"
 
 
+def test_annotate_skips_blank_blurbs() -> None:
+    """A blank/whitespace blurb leaves the posting summary untouched."""
+    fake = _FakeSummarizer(["   "])
+    service = SummaryService(
+        summarizer_factory=lambda key, **kwargs: fake,
+        settings=_Settings(),
+    )
+    jobs = [_job()]
+
+    service.annotate(jobs)
+
+    assert jobs[0].summary == ""
+
+
 def test_resolve_summary_settings_uses_user_api_key() -> None:
     user = User(
         email="pro@example.com",

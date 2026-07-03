@@ -91,6 +91,36 @@ def test_ghost_recovery_clears_ghost_and_sets_interview_pending(db_session: Sess
     notify.assert_called_once()
 
 
+def test_ghost_recovery_sets_rejected_for_rejection_label(db_session: Session) -> None:
+    user_id, job = _seed_ghosted_job(db_session)
+    service = GhostRecoveryService(db_session)
+    row = InboxClassification(
+        user_id=user_id,
+        seen_job_id=job.id,
+        message_uid=5,
+        label="rejection",
+        confidence=0.9,
+        reason="stub",
+        provider="heuristic",
+        subject="Update on your application",
+        from_addr="hr@careers.acme.com",
+        payload={},
+    )
+
+    with patch.object(
+        service.alerts,
+        "notify_ghost_recovery",
+        return_value=[DeliveryResult(external_id=job.external_id, status="sent")],
+    ):
+        result = service.maybe_recover_from_classification(user_id, job, row)
+
+    assert result.recovered is True
+    assert result.pipeline_stage == "rejected"
+    assert job.ghosted_at is None
+    assert job.recruiter_rejection_at is not None
+    assert job.interview_pending_at is None
+
+
 def test_ghost_recovery_ignored_for_non_signal_labels(db_session: Session) -> None:
     user_id, job = _seed_ghosted_job(db_session)
     service = GhostRecoveryService(db_session)

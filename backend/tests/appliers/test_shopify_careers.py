@@ -53,3 +53,41 @@ def test_has_applier_registers_shopify_careers() -> None:
     from app.appliers.base import has_applier
 
     assert has_applier("shopify_careers")
+
+
+def test_shopify_careers_uses_default_board_and_passes_through_none_payload() -> None:
+    profile = ApplyProfile(
+        full_name="Ada Lovelace",
+        email="ada@example.com",
+        phone="+1 555 0100",
+        location="Remote",
+        resume_text="Built databases.",
+        cover_letter_template="Dear team,",
+    )
+    ctx = ApplyContext(
+        job_external_id="7a204574-fb6c-4b27-84f3-d2a693739b18",
+        job_title="Account Executive",
+        company="Shopify",
+        job_url="https://www.shopify.com/careers?ashby_jid=7a204574",
+        config={},
+        profile=profile,
+        dry_run=False,
+    )
+
+    delegated_ctx: ApplyContext | None = None
+
+    def capture_apply(inner_ctx: ApplyContext) -> ApplyResult:
+        nonlocal delegated_ctx
+        delegated_ctx = inner_ctx
+        return ApplyResult(status="failed", error="boom", payload=None)
+
+    ashby = MagicMock()
+    ashby.apply.side_effect = capture_apply
+
+    with patch("app.appliers.adapters.shopify_careers.get_applier", return_value=ashby):
+        result = get_applier("shopify_careers").apply(ctx)
+
+    assert result.status == "failed"
+    assert result.payload is None
+    assert delegated_ctx is not None
+    assert delegated_ctx.config["board"] == "shopify"

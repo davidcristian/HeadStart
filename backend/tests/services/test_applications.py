@@ -5,6 +5,8 @@ from datetime import UTC, datetime
 from sqlalchemy.orm import Session
 
 from app.models.application_log import ApplicationLog
+from app.models.inbox_classification import InboxClassification
+from app.models.inbox_reply_draft import InboxReplyDraft
 from app.models.seen_job import SeenJob
 from app.services.applications import (
     ApplicationPipelineService,
@@ -183,3 +185,90 @@ def test_pipeline_service_filters_by_stage(db_session: Session) -> None:
     assert len(failed) == 1
     assert failed[0].pipeline_stage == "apply_failed"
     assert awaiting == []
+
+
+def test_derive_pipeline_stage_closed(db_session: Session) -> None:
+    _, job = _seed_job(db_session)
+    job.status = "closed"
+    db_session.flush()
+    assert derive_pipeline_stage(job, None) == "closed"
+
+
+def test_derive_pipeline_stage_archived(db_session: Session) -> None:
+    _, job = _seed_job(db_session)
+    job.status = "archived"
+    db_session.flush()
+    assert derive_pipeline_stage(job, None) == "archived"
+
+
+def test_derive_pipeline_stage_queued(db_session: Session) -> None:
+    _, job = _seed_job(db_session)
+    log = ApplicationLog(seen_job_id=job.id, status="queued", dry_run=False)
+    db_session.add(log)
+    db_session.flush()
+    assert derive_pipeline_stage(job, log) == "queued"
+
+
+def test_derive_pipeline_stage_defaults_to_awaiting_reply(db_session: Session) -> None:
+    _, job = _seed_job(db_session)
+    db_session.flush()
+    # status "new", no live attempt -> the fall-through default.
+    assert derive_pipeline_stage(job, None) == "awaiting_reply"
+
+
+def test_pipeline_row_includes_latest_reply_draft_and_classification(db_session: Session) -> None:
+    user_id, job = _seed_job(db_session)
+    job.status = "applied"
+    job.applied_at = datetime(2026, 6, 28, 12, 0, tzinfo=UTC)
+    db_session.add(ApplicationLog(seen_job_id=job.id, status="submitted", dry_run=False))
+    classification = InboxClassification(
+        user_id=user_id,
+        seen_job_id=job.id,
+        message_uid=1,
+        label="follow_up",
+        confidence=0.9,
+        reason="stub",
+        provider="heuristic",
+        subject="Re: your application",
+        from_addr="hr@acme.test",
+        payload={},
+    )
+    db_session.add(classification)
+    db_session.flush()
+    draft = InboxReplyDraft(
+        user_id=user_id,
+        seen_job_id=job.id,
+        inbox_classification_id=classification.id,
+        message_uid=1,
+        subject="Re: your application",
+        body_text="Thanks for reaching out.",
+        provider="heuristic",
+    )
+    db_session.add(draft)
+    db_session.flush()
+
+    rows = ApplicationPipelineService(db_session).list_for_user(user_id)
+    assert len(rows) == 1
+    row = rows[0]
+    assert row.latest_reply_draft is not None
+    assert row.latest_reply_draft.subject == "Re: your application"
+    assert row.latest_draftable_classification_id == classification.id
+
+
+def test_draft_and_classification_helpers_ignore_wrong_types(db_session: Session) -> None:
+    service = ApplicationPipelineService(db_session)
+    # None short-circuits, and a non-model object hits the defensive isinstance guard.
+    assert service._draft_summary(None) is None
+    assert service._draft_summary(object()) is None
+    assert service._classification_id(object()) is None
+
+
+def test_attempt_summary_none_for_no_attempts(db_session: Session) -> None:
+    user_id, job = _seed_job(db_session)
+    job.status = "applied"
+    db_session.flush()
+    # Applied status with no live application logs -> latest attempt is None.
+    rows = ApplicationPipelineService(db_session).list_for_user(user_id)
+    assert len(rows) == 1
+    assert rows[0].latest_attempt is None
+    assert rows[0].attempts == []

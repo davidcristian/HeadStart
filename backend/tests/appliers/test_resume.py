@@ -66,3 +66,46 @@ def test_indeed_resume_file_fields_base64_encodes_bytes() -> None:
 
 def test_workday_content_type_uses_octet_stream_fallback() -> None:
     assert workday_content_type("")["id"] == "Content_Type_ID=application/octet-stream"
+
+
+def test_resume_meta_for_payload_returns_none_without_file() -> None:
+    assert resume_meta_for_payload(None) is None
+
+
+def test_greenhouse_resume_fields_empty_without_file() -> None:
+    assert greenhouse_resume_fields(None) == {}
+
+
+def test_lever_resume_part_none_without_file() -> None:
+    assert lever_resume_part(None) is None
+
+
+def test_indeed_resume_file_fields_octet_stream_fallback() -> None:
+    from app.appliers.resume import indeed_resume_file_fields
+
+    resume = ResumeFile(
+        filename="resume.pdf",
+        content_type="  ",
+        size_bytes=4,
+        data=b"%PDF",
+    )
+    assert indeed_resume_file_fields(resume)["contentType"] == "application/octet-stream"
+
+
+def test_flatten_lever_form_fields_handles_urls_consent_bool_scalar() -> None:
+    from app.appliers.resume import flatten_lever_form_fields
+
+    parts = flatten_lever_form_fields(
+        {
+            "urls": {"LinkedIn": "https://linkedin.com/in/ada"},
+            "consent": {"marketing": True},
+            "opt_in": True,
+            "opt_out": False,
+            "name": "Ada",
+        }
+    )
+    assert parts["urls[LinkedIn]"] == "https://linkedin.com/in/ada"
+    assert parts["consent"] == '{"marketing": true}'
+    assert parts["opt_in"] == "true"
+    assert parts["opt_out"] == "false"
+    assert parts["name"] == "Ada"

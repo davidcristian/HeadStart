@@ -3,8 +3,10 @@
 import json
 
 import httpx
+import pytest
 
 from app.appliers.adapters.workday_skills import (
+    _response_error,
     applicable_languages,
     applicable_skills,
     build_language_body,
@@ -17,6 +19,10 @@ from app.appliers.adapters.workday_skills import (
 from app.schemas.profile import LanguageEntry, ProfileData
 from tests.appliers.workday_helpers import JOB_URL, WORKDAY_CREDENTIALS
 from tests.conftest import load_json_fixture, make_http_client
+
+
+def _unexpected(request: httpx.Request) -> httpx.Response:
+    raise AssertionError(f"unexpected request: {request.method} {request.url}")
 
 
 def test_build_skill_body_uses_descriptor() -> None:
@@ -136,6 +142,134 @@ def test_submit_languages_stops_on_workday_error() -> None:
     assert len(results) == 1
     assert results[0].ok is False
     assert results[0].error == "Unknown language"
+
+
+def test_build_skill_body_requires_non_empty_name() -> None:
+    with pytest.raises(ValueError, match="non-empty"):
+        build_skill_body("   ")
+
+
+def test_submit_skills_skipped_by_config() -> None:
+    assert (
+        submit_skills(
+            make_http_client(_unexpected),
+            target=_target(),
+            application_id="app-1",
+            profile=ProfileData(skills=["Python"]),
+            job_path="loc/job",
+            config={"skip_skills": True},
+            csrf_token="csrf",
+            session_id="sess",
+            credentials=None,
+        )
+        == []
+    )
+
+
+def test_submit_skills_stops_on_http_error() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path.endswith("/institutionvalues/skill"):
+            return httpx.Response(200, json={"total": 0, "data": []})
+        return httpx.Response(500, text="boom")
+
+    results = submit_skills(
+        make_http_client(handler),
+        target=_target(),
+        application_id="app-1",
+        profile=ProfileData(skills=["Python"]),
+        job_path="loc/job",
+        config={},
+        csrf_token="csrf",
+        session_id="sess",
+        credentials=None,
+    )
+    assert len(results) == 1
+    assert results[0].ok is False
+
+
+def test_submit_skills_stops_on_workday_error_body() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path.endswith("/institutionvalues/skill"):
+            return httpx.Response(200, json={"total": 0, "data": []})
+        return httpx.Response(200, json={"errorCode": "X", "message": "bad skill"})
+
+    results = submit_skills(
+        make_http_client(handler),
+        target=_target(),
+        application_id="app-1",
+        profile=ProfileData(skills=["Python"]),
+        job_path="loc/job",
+        config={},
+        csrf_token="csrf",
+        session_id="sess",
+        credentials=None,
+    )
+    assert results[0].error == "bad skill"
+
+
+def test_submit_languages_skipped_by_config() -> None:
+    assert (
+        submit_languages(
+            make_http_client(_unexpected),
+            target=_target(),
+            application_id="app-1",
+            profile=ProfileData(languages=[LanguageEntry(language="English")]),
+            job_path="loc/job",
+            config={"skip_languages": True},
+            csrf_token="csrf",
+            session_id="sess",
+            credentials=None,
+        )
+        == []
+    )
+
+
+def test_submit_languages_stops_on_http_error() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(500, text="boom")
+
+    results = submit_languages(
+        make_http_client(handler),
+        target=_target(),
+        application_id="app-1",
+        profile=ProfileData(languages=[LanguageEntry(language="English")]),
+        job_path="loc/job",
+        config={},
+        csrf_token="csrf",
+        session_id="sess",
+        credentials=None,
+    )
+    assert len(results) == 1
+    assert results[0].ok is False
+
+
+def test_submit_languages_posts_each_row() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path.endswith("/languages"):
+            return httpx.Response(200, json={"id": "lang-1"})
+        return _unexpected(request)
+
+    results = submit_languages(
+        make_http_client(handler),
+        target=_target(),
+        application_id="app-1",
+        profile=ProfileData(languages=[LanguageEntry(language="English")]),
+        job_path="loc/job",
+        config={},
+        csrf_token="csrf",
+        session_id="sess",
+        credentials=None,
+    )
+    assert len(results) == 1
+    assert results[0].ok
+
+
+def test_response_error_variants() -> None:
+    assert _response_error("not-a-dict") is None
+    assert _response_error({"ok": True}) is None
+    assert _response_error({"errorCode": "E1"}) == "E1"
+    assert _response_error({"errors": [{"error": "bad"}]}) == "bad"
+    assert _response_error({"errors": ["scalar"]}) is None
 
 
 def _target():

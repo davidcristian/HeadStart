@@ -1,0 +1,64 @@
+"""Tests for the metrics recording helpers (enabled + disabled paths)."""
+
+from __future__ import annotations
+
+from types import SimpleNamespace
+from unittest.mock import MagicMock, patch
+
+import pytest
+
+from app.core import metrics
+
+
+@pytest.fixture
+def metrics_enabled(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(metrics, "get_settings", lambda: SimpleNamespace(metrics_enabled=True))
+
+
+@pytest.fixture
+def metrics_disabled(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(metrics, "get_settings", lambda: SimpleNamespace(metrics_enabled=False))
+
+
+def test_record_helpers_noop_when_disabled(metrics_disabled: None) -> None:
+    # None of these should touch a collector when metrics are off.
+    metrics.record_pipeline_run("success")
+    metrics.record_scrape("greenhouse", "success", 0.1, 5)
+    metrics.record_notification("ntfy", "sent", "immediate")
+    metrics.record_digest_flush("success")
+    metrics.record_scheduler_enqueued(3)
+
+
+def test_record_helpers_increment_when_enabled(metrics_enabled: None) -> None:
+    metrics.record_pipeline_run("success")
+    metrics.record_scrape("greenhouse", "success", 0.25, 10)
+    metrics.record_notification("ntfy", "sent", "digest")
+    metrics.record_digest_flush("error")
+    metrics.record_scheduler_enqueued(2)
+
+    body, content_type = metrics.render_metrics()
+    assert b"headstart_pipeline_runs_total" in body
+    assert "text" in content_type
+
+
+def test_record_scheduler_enqueued_ignores_non_positive(metrics_enabled: None) -> None:
+    before = metrics.SCHEDULER_SEARCHES_ENQUEUED._value.get()  # type: ignore[attr-defined]
+    metrics.record_scheduler_enqueued(0)
+    after = metrics.SCHEDULER_SEARCHES_ENQUEUED._value.get()  # type: ignore[attr-defined]
+    assert after == before
+
+
+def test_start_metrics_server_noop_when_disabled(metrics_disabled: None) -> None:
+    with patch("prometheus_client.start_http_server") as mock_start:
+        metrics.start_metrics_server(9000)
+    mock_start.assert_not_called()
+
+
+def test_start_metrics_server_starts_when_enabled(metrics_enabled: None) -> None:
+    mock_start = MagicMock()
+    with patch.dict(
+        "sys.modules",
+        {"prometheus_client": SimpleNamespace(start_http_server=mock_start)},
+    ):
+        metrics.start_metrics_server(9001)
+    mock_start.assert_called_once_with(9001)

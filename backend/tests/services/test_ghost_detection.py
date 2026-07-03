@@ -166,6 +166,34 @@ def test_process_due_skips_without_mailbox(db_session: Session, monkeypatch) -> 
     assert job.ghosted_at is None
 
 
+def test_process_due_skips_when_mailbox_email_empty(db_session: Session, monkeypatch) -> None:
+    monkeypatch.setattr(settings, "inbox_agent_enabled", True)
+    monkeypatch.setattr(settings, "inbox_ghost_window_days", 1)
+    user_id = _user(db_session)
+    InboxService(db_session).upsert(
+        user_id,
+        MailboxCredentialUpsert(config=_mailbox_config()),
+    )
+    applied_at = datetime(2026, 6, 1, 12, 0, tzinfo=UTC)
+    job = _applied_job(db_session, user_id=user_id, applied_at=applied_at)
+
+    # Context resolves, but the derived mailbox address is blank -> skip.
+    monkeypatch.setattr(
+        "app.services.ghost_detection.mailbox_email_from_context",
+        lambda ctx: "",
+    )
+    send_mock = MagicMock(return_value=SendResult(status="sent"))
+    monkeypatch.setattr(InboxService, "send_message", send_mock)
+
+    now = datetime(2026, 6, 30, 12, 0, tzinfo=UTC)
+    result = GhostDetectionService(db_session).process_due(now=now)
+
+    assert result.checked == 1
+    assert result.skipped == 1
+    assert job.ghosted_at is None
+    send_mock.assert_not_called()
+
+
 def test_process_due_skips_failed_apply(db_session: Session, monkeypatch) -> None:
     monkeypatch.setattr(settings, "inbox_agent_enabled", True)
     monkeypatch.setattr(settings, "inbox_ghost_window_days", 1)

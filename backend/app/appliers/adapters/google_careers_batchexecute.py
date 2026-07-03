@@ -31,8 +31,6 @@ def extract_wiz_data(html: str) -> dict[str, Any]:
     if not match:
         raise ValueError("google_careers page is missing WIZ_global_data")
     data = json.loads(match.group(1))
-    if not isinstance(data, dict):
-        raise ValueError("google_careers WIZ_global_data is not an object")
     return data
 
 

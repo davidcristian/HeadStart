@@ -1,4 +1,5 @@
 import httpx
+import pytest
 
 from app.scrapers import ScrapeContext, get_scraper
 from tests.conftest import load_fixture, make_http_client
@@ -74,3 +75,41 @@ def test_snowflake_careers_include_compensation() -> None:
     scraper.fetch(ScrapeContext(config={"company": "Snowflake", "include_compensation": True}))
 
     assert "includeCompensation=true" in seen["url"]
+
+
+def test_snowflake_careers_rejects_non_dict_payload() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json=["not", "an", "object"])
+
+    scraper = get_scraper("snowflake_careers", http=make_http_client(handler))
+    with pytest.raises(ValueError, match="unexpected payload"):
+        scraper.fetch(ScrapeContext(config={"company": "Snowflake"}))
+
+
+def test_snowflake_careers_rejects_non_search_path() -> None:
+    scraper = get_scraper("snowflake_careers", http=make_http_client(lambda _: httpx.Response(200)))
+    with pytest.raises(ValueError, match="careers search section"):
+        scraper.fetch(
+            ScrapeContext(
+                query_url="https://careers.snowflake.com/some/other/page",
+                config={"company": "Snowflake"},
+            )
+        )
+
+
+def test_snowflake_careers_keyword_from_filters() -> None:
+    """When no config keyword is set, the filters keyword drives client-side filtering."""
+    fixture = load_fixture("snowflake_careers_postings.json")
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, text=fixture)
+
+    scraper = get_scraper("snowflake_careers", http=make_http_client(handler))
+    postings = scraper.fetch(
+        ScrapeContext(
+            config={"company": "Snowflake"},
+            filters={"keywords_include": "account executive"},
+        )
+    )
+    assert len(postings) == 1
+    assert postings[0].title == "Account Executive, Commercial"

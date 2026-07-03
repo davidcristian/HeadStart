@@ -7,7 +7,6 @@ from typing import Any
 from urllib.parse import parse_qs, unquote, urlparse
 
 _GUEST_JOB_POSTING_API = "https://www.linkedin.com/jobs-guest/jobs/api/jobPosting/{job_id}"
-_LINKEDIN_HOST_RE = re.compile(r"^(?:[a-z]{2}|www)\.linkedin\.com$|^linkedin\.com$", re.IGNORECASE)
 _JOB_ID_FROM_URL_RE = re.compile(r"-(\d+)(?:\?|$)")
 _CODE_COMMENT_RE = re.compile(r"<!--\s*\"?([^\"]+?)\"?\s*-->")
 
@@ -17,13 +16,6 @@ def resolve_job_posting_url(job_external_id: str, job_url: str) -> str:
     job_id = job_external_id.strip() or _job_id_from_url(job_url)
     if job_id:
         return _GUEST_JOB_POSTING_API.format(job_id=job_id)
-    if job_url:
-        parsed = urlparse(job_url.strip())
-        host = parsed.netloc.lower()
-        if _LINKEDIN_HOST_RE.match(host) and "/jobs/view/" in parsed.path:
-            extracted = _job_id_from_url(job_url)
-            if extracted:
-                return _GUEST_JOB_POSTING_API.format(job_id=extracted)
     raise ValueError("linkedin applier needs a numeric job id or linkedin.com/jobs/view URL")
 
 

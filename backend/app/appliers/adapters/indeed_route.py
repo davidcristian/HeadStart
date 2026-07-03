@@ -182,9 +182,7 @@ def parse_ats_job_url(url: str) -> AtsJobTarget | None:
         else:
             job_segment = workday.group(2)
             config = {"tenant": tenant}
-        site = _workday_site_from_url(normalized)
-        if site:
-            config["site"] = site
+        config["site"] = _workday_site_from_url(normalized)
         external_id = _workday_external_id(job_segment)
         return AtsJobTarget(
             adapter_key="workday",
@@ -243,12 +241,12 @@ def parse_ats_job_url(url: str) -> AtsJobTarget | None:
     return None
 
 
-def _workday_site_from_url(url: str) -> str | None:
+def _workday_site_from_url(url: str) -> str:
     parsed = urlparse(url)
     parts = [part for part in parsed.path.split("/") if part]
     if len(parts) >= 2 and _LOCALE_RE.match(parts[0]):
         return parts[1]
-    return parts[0] if parts else None
+    return parts[0] if parts else ""
 
 
 def _workday_external_id(job_segment: str) -> str:

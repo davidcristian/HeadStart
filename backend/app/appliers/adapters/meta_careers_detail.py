@@ -103,8 +103,7 @@ def _html_blob(raw: Any) -> str:
             payload = json.loads(text)
         except json.JSONDecodeError:
             return text
-        if isinstance(payload, dict):
-            html = payload.get("__html")
-            if isinstance(html, str):
-                return html
+        html = payload.get("__html") if isinstance(payload, dict) else None
+        if isinstance(html, str):
+            return html
     return text

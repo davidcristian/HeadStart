@@ -103,5 +103,107 @@ def test_telegram_requires_bot_token_and_chat_id() -> None:
         assert "chat_id" in str(exc)
 
 
+def test_telegram_single_includes_summary_line() -> None:
+    captured: list[dict] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured.append(json.loads(request.content))
+        return httpx.Response(200, json={"ok": True})
+
+    notifier = TelegramNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
+    ctx = NotifyContext(target_type="telegram", config={"bot_token": "t", "chat_id": "1"})
+    job = _job()
+    job.summary = "strong python match"
+    notifier.send(ctx, [job])
+    assert "strong python match" in captured[0]["text"]
+
+
+def test_telegram_text_omits_absent_fields() -> None:
+    captured: list[dict] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured.append(json.loads(request.content))
+        return httpx.Response(200, json={"ok": True})
+
+    notifier = TelegramNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
+    ctx = NotifyContext(
+        target_type="telegram",
+        config={"bot_token": "t", "chat_id": "1"},
+    )
+    job = JobPosting(external_id="1", title="")
+    notifier.send(ctx, [job])
+
+    text = captured[0]["text"]
+    assert "<b>New job</b>" in text
+    assert "@" not in text
+    assert "Apply" not in text
+
+
+def test_telegram_digest_sends_single_message() -> None:
+    captured: list[dict] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured.append(json.loads(request.content))
+        return httpx.Response(200, json={"ok": True})
+
+    notifier = TelegramNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
+    ctx = NotifyContext(
+        target_type="telegram",
+        config={"bot_token": "t", "chat_id": "1"},
+        digest=True,
+        search_name="Backend",
+    )
+    job = _job()
+    job.summary = "why it matches"
+    # Second job has no url so the digest block skips the Apply link.
+    no_url = JobPosting(external_id="2", title="Data Scientist", company="ACME")
+    results = notifier.send(ctx, [job, no_url])
+
+    assert len(results) == 2
+    assert all(r.status == "sent" for r in results)
+    assert len(captured) == 1
+    text = captured[0]["text"]
+    assert "2 new jobs — Backend" in text
+    assert "why it matches" in text
+    assert "Apply" in text
+
+
+def test_telegram_digest_empty_jobs_returns_empty() -> None:
+    notifier = TelegramNotifier(client=httpx.Client())
+    ctx = NotifyContext(
+        target_type="telegram",
+        config={"bot_token": "t", "chat_id": "1"},
+        digest=True,
+    )
+    assert notifier.send(ctx, []) == []
+
+
+def test_telegram_digest_records_failure() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(500, text="boom")
+
+    notifier = TelegramNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
+    ctx = NotifyContext(
+        target_type="telegram",
+        config={"bot_token": "t", "chat_id": "1"},
+        digest=True,
+    )
+    results = notifier.send(ctx, [_job(), _job("2")])
+    assert [r.status for r in results] == ["failed", "failed"]
+    assert results[0].error
+
+
+def test_telegram_close_behaviour() -> None:
+    notifier = TelegramNotifier()
+    notifier.close()
+    assert notifier._client.is_closed
+
+    client = httpx.Client()
+    injected = TelegramNotifier(client=client)
+    injected.close()
+    assert not client.is_closed
+    client.close()
+
+
 def test_registry_resolves_telegram() -> None:
     assert isinstance(get_notifier("telegram"), TelegramNotifier)

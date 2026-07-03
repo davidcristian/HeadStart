@@ -75,3 +75,31 @@ def test_format_helpers_handle_current_role_and_plain_school() -> None:
     assert plain_school == "- Example University"
 
     assert applicable_skills(ProfileData(skills=["  ", "Go"])) == ["Go"]
+
+
+def test_format_work_experience_entry_appends_description() -> None:
+    line = format_work_experience_entry(
+        WorkExperienceEntry(
+            job_title="Engineer",
+            company="ACME",
+            start_month=3,
+            start_year=2020,
+            description="Shipped features.",
+        )
+    )
+    assert "\n  Shipped features." in line
+
+
+def test_format_work_experience_entry_year_only_period() -> None:
+    line = format_work_experience_entry(
+        WorkExperienceEntry(
+            job_title="Engineer",
+            company="ACME",
+            start_year=2020,
+        )
+    )
+    assert "(2020)" in line
+
+
+def test_build_profile_supplement_returns_none_when_empty() -> None:
+    assert build_profile_supplement(ProfileData()) is None

@@ -31,10 +31,10 @@ class ApplicationArtifactService:
         content_type: str = "application/pdf",
     ) -> ApplicationArtifact:
         """Persist a tailored resume PDF, deduplicating by per-user content hash."""
-        if not data.startswith(b"%PDF"):
-            raise ValidationError("Artifact must be a PDF")
         if len(data) == 0:
             raise ValidationError("Artifact PDF is empty")
+        if not data.startswith(b"%PDF"):
+            raise ValidationError("Artifact must be a PDF")
 
         digest = hashlib.sha256(data).hexdigest()
         existing = self.repo.get_by_hash(user_id, digest)

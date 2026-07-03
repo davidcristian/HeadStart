@@ -291,5 +291,150 @@ def test_missing_api_key_fails_with_helpful_error() -> None:
     assert result.payload is not None
 
 
+def test_build_application_payload_uses_apply_profile_resume_file() -> None:
+    resume = ResumeFile(
+        filename="resume.pdf", content_type="application/pdf", size_bytes=4, data=b"%PDF"
+    )
+    profile = ApplyProfile(**_profile().model_dump(), exists=True, resume_file=resume)
+    payload = build_application_payload(profile, job_title="Role", company="ACME", config={})
+    # resume_file arg omitted, so it is pulled from the ApplyProfile; resume text
+    # is then excluded from comments.
+    assert payload["resume_file"]["filename"] == "resume.pdf"
+    assert "Resume:" not in (payload.get("comments") or "")
+
+
+def test_apply_without_site_fails() -> None:
+    applier = get_applier("lever", http=make_http_client(_unexpected_request))
+    result = applier.apply(
+        ApplyContext(
+            job_external_id="post-1",
+            job_title="Role",
+            company="ACME",
+            job_url="https://example.com/jobs/1",
+            config={},
+            profile=_profile(),
+            dry_run=True,
+        )
+    )
+    assert result.status == "failed"
+    assert "config.site" in (result.error or "")
+
+
+def test_apply_fails_when_payload_build_raises() -> None:
+    applier = get_applier("lever", http=make_http_client(_unexpected_request))
+    result = applier.apply(
+        ApplyContext(
+            job_external_id="post-1",
+            job_title="Role",
+            company="ACME",
+            job_url="",
+            config={"site": "acme"},
+            profile=ProfileData(full_name="", email="a@example.com"),
+            dry_run=True,
+        )
+    )
+    assert result.status == "failed"
+    assert "full_name" in (result.error or "")
+
+
+def test_build_application_payload_requires_email() -> None:
+    try:
+        build_application_payload(
+            ProfileData(full_name="Ada", email=""),
+            job_title="Role",
+            company="ACME",
+            config={},
+        )
+        raise AssertionError("expected ValueError")
+    except ValueError as exc:
+        assert "email" in str(exc)
+
+
+def test_build_application_payload_silent_and_compliance_and_url_answers() -> None:
+    profile = ProfileData(
+        full_name="Ada Lovelace",
+        email="ada@example.com",
+        answers={
+            "current_company": "ACME",
+            "blank": "",
+            "other_answer": "ignored",
+            "urls.Blog": "https://ada.blog",
+        },
+    )
+    payload = build_application_payload(
+        profile,
+        job_title="Role",
+        company="ACME",
+        config={
+            "silent_confirmations": True,
+            "gdpr_consent": True,
+            "compliance_policy_id": "policy-1",
+        },
+    )
+    assert payload["silent"] is True
+    assert payload["consent"]["store"]["compliancePolicyId"] == "policy-1"
+    assert payload["urls"]["Blog"] == "https://ada.blog"
+
+
+def test_live_submit_handles_http_error() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        raise httpx.ConnectError("boom", request=request)
+
+    applier = LeverApplier(http=make_http_client(handler))
+    result = applier.apply(
+        ApplyContext(
+            job_external_id="post-1",
+            job_title="Role",
+            company="ACME",
+            job_url="",
+            config={"site": "acme", "postings_api_key": "key"},
+            profile=_profile(),
+            dry_run=False,
+        )
+    )
+    assert result.status == "failed"
+    assert result.payload is not None
+
+
+def test_live_submit_surfaces_ok_false_error() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json={"ok": False, "error": "duplicate"})
+
+    applier = LeverApplier(http=make_http_client(handler))
+    result = applier.apply(
+        ApplyContext(
+            job_external_id="post-1",
+            job_title="Role",
+            company="ACME",
+            job_url="",
+            config={"site": "acme", "postings_api_key": "key"},
+            profile=_profile(),
+            dry_run=False,
+        )
+    )
+    assert result.status == "failed"
+    assert result.error == "duplicate"
+
+
+def test_resolve_api_key_falls_back_to_config() -> None:
+    from app.appliers.adapters.lever import resolve_api_key
+
+    assert (
+        resolve_api_key(
+            {"session": {"postings_api_key": ""}, "cookies": {}, "headers": {}},
+            {"postings_api_key": "config-key"},
+        )
+        == "config-key"
+    )
+    assert resolve_api_key(None, {}) is None
+
+
+def test_extract_application_id_none() -> None:
+    from app.appliers.adapters.lever import _extract_application_id
+
+    assert _extract_application_id("nope") is None
+    assert _extract_application_id({}) is None
+
+
 def _unexpected_request(request: httpx.Request) -> httpx.Response:
     raise AssertionError(f"unexpected network call: {request.method} {request.url}")

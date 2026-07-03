@@ -83,3 +83,16 @@ def test_derived_urls(monkeypatch: pytest.MonkeyPatch) -> None:
     assert "db:5432" in settings.sqlalchemy_url
     assert settings.broker_url == "redis://redis:6379/0"
     assert settings.result_backend == "redis://redis:6379/1"
+
+
+def test_database_url_overrides_derived(monkeypatch: pytest.MonkeyPatch) -> None:
+    """An explicit DATABASE_URL takes precedence over the derived Postgres URL."""
+    monkeypatch.setenv("DATABASE_URL", "sqlite+pysqlite:///:memory:")
+    settings = Settings(_env_file=None)  # type: ignore[call-arg]
+    assert settings.sqlalchemy_url == "sqlite+pysqlite:///:memory:"
+
+
+def test_samesite_normalizer_passes_through_non_string() -> None:
+    """The SameSite validator only lowercases strings; other types pass unchanged."""
+    assert Settings._normalize_samesite(None) is None
+    assert Settings._normalize_samesite(123) == 123

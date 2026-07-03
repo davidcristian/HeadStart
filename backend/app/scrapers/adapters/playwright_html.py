@@ -47,19 +47,16 @@ class PlaywrightScraper(Scraper):
             int(max_retries_raw) if max_retries_raw is not None else settings.playwright_max_retries
         )
 
-        last_exc: Exception | None = None
         for attempt in range(max_retries + 1):
             try:
                 return self._fetch_once(ctx, item_sel, timeout_ms, wait_until)
-            except Exception as exc:
-                last_exc = exc
+            except Exception:
                 if attempt < max_retries:
                     delay = min(2**attempt, 8)
                     time.sleep(delay)
                     continue
                 raise
-        if last_exc is not None:
-            raise last_exc
+        # Only reached when max_retries < 0 makes the loop empty (no attempt ran).
         return []
 
     def _fetch_once(

@@ -1,8 +1,18 @@
 """Tests for heuristic resume curation."""
 
+from app.resumes.adapters.heuristic import HeuristicResumeCurator
+from app.resumes.base import get_resume_curator
 from app.resumes.fields import heuristic_fields
 from app.resumes.types import ResumeCurationContext
 from app.schemas.profile import EducationEntry, ProfileData, WorkExperienceEntry
+
+
+def test_registry_resolves_and_curates_via_heuristic() -> None:
+    curator = get_resume_curator("heuristic")
+    assert isinstance(curator, HeuristicResumeCurator)
+    fields = curator.curate(ResumeCurationContext(job_title="Engineer", company="ACME"))
+    assert fields.job_title == "Engineer"
+    assert fields.company == "ACME"
 
 
 def test_heuristic_fields_include_job_context() -> None:

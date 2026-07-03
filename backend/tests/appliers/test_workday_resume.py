@@ -3,7 +3,9 @@
 import json
 
 import httpx
+import pytest
 
+from app.appliers.adapters import workday_resume
 from app.appliers.adapters.workday_resume import (
     build_resume_attachment_payload,
     preview_resume_attachment,
@@ -13,6 +15,23 @@ from app.appliers.adapters.workday_target import WorkdayTarget
 from app.appliers.resume import workday_content_type
 from app.schemas.profile import ResumeFile
 from tests.conftest import load_json_fixture, make_http_client
+
+
+def _unexpected(request: httpx.Request) -> httpx.Response:
+    raise AssertionError(f"unexpected request: {request.method} {request.url}")
+
+
+def _upload(handler, resume=None):
+    return upload_resume_attachment(
+        make_http_client(handler),
+        target=_target(),
+        application_id="app-1",
+        resume_file=resume or _resume(),
+        job_path="US-CA/Role_JR1",
+        csrf_token="csrf",
+        session_id="sess",
+        credentials=None,
+    )
 
 
 def _target() -> WorkdayTarget:
@@ -47,6 +66,98 @@ def test_preview_resume_attachment_omits_file_id() -> None:
     assert preview is not None
     assert preview["attachments"][0]["fileName"] == "resume.pdf"
     assert "file" not in preview["attachments"][0]
+
+
+def test_preview_resume_attachment_returns_none_without_file() -> None:
+    assert preview_resume_attachment(None) is None
+
+
+def test_preview_resume_attachment_returns_none_when_meta_missing(monkeypatch) -> None:
+    monkeypatch.setattr(workday_resume, "resume_meta_for_payload", lambda _f: None)
+    assert preview_resume_attachment(_resume()) is None
+
+
+def test_upload_rejects_non_dict_upload_response() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json=["not", "a", "dict"])
+
+    with pytest.raises(ValueError, match="unexpected response"):
+        _upload(handler)
+
+
+def test_upload_surfaces_upload_error_code() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json={"errorCode": "TOO_LARGE", "message": "file too large"})
+
+    with pytest.raises(ValueError, match="file too large"):
+        _upload(handler)
+
+
+def test_upload_error_code_without_message_uses_code() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json={"errorCode": "TOO_LARGE"})
+
+    with pytest.raises(ValueError, match="TOO_LARGE"):
+        _upload(handler)
+
+
+def test_upload_requires_file_id() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json={"contentType": {"id": "ct"}})
+
+    with pytest.raises(ValueError, match="did not return a file id"):
+        _upload(handler)
+
+
+def test_upload_defaults_content_type_when_missing_then_submits() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path.endswith("/attachments"):
+            return httpx.Response(200, json={"id": "file-1"})
+        if request.url.path.endswith("/resumeattachments"):
+            return httpx.Response(200, json={"ok": True})
+        return _unexpected(request)
+
+    result = _upload(handler)
+    assert result["upload"]["id"] == "file-1"
+    assert result["resumeAttachments"]["attachments"][0]["contentType"] == workday_content_type(
+        "application/pdf"
+    )
+
+
+def test_upload_submit_http_error_raises_value_error() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path.endswith("/attachments"):
+            return httpx.Response(200, json={"id": "file-1", "contentType": {"id": "ct"}})
+        if request.url.path.endswith("/resumeattachments"):
+            return httpx.Response(500, text="boom")
+        return _unexpected(request)
+
+    with pytest.raises(ValueError):
+        _upload(handler)
+
+
+def test_upload_submit_list_response_rejected() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path.endswith("/attachments"):
+            return httpx.Response(200, json={"id": "file-1", "contentType": {"id": "ct"}})
+        if request.url.path.endswith("/resumeattachments"):
+            return httpx.Response(200, json=["rejected"])
+        return _unexpected(request)
+
+    with pytest.raises(ValueError, match="rejected the upload"):
+        _upload(handler)
+
+
+def test_upload_submit_error_code_raises() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path.endswith("/attachments"):
+            return httpx.Response(200, json={"id": "file-1", "contentType": {"id": "ct"}})
+        if request.url.path.endswith("/resumeattachments"):
+            return httpx.Response(200, json={"errorCode": "BAD", "message": "invalid"})
+        return _unexpected(request)
+
+    with pytest.raises(ValueError, match="invalid"):
+        _upload(handler)
 
 
 def test_upload_resume_attachment_posts_file_then_resumeattachments() -> None:

@@ -25,6 +25,26 @@ def test_rate_limiter_waits_between_requests() -> None:
     sleep.assert_called_once_with(0.8)
 
 
+def test_rate_limiter_rejects_negative_interval() -> None:
+    with pytest.raises(ValueError, match="min_interval_seconds must be >= 0"):
+        RateLimiter(-1.0)
+
+
+def test_rate_limiter_no_sleep_when_elapsed_exceeds_interval() -> None:
+    limiter = RateLimiter(1.0)
+    # First wait records t=0; second wait sees elapsed=5.0 >= 1.0, so no sleep.
+    times = [0.0, 5.0]
+
+    with (
+        patch("app.scrapers.rate_limit.time.monotonic", side_effect=times),
+        patch("app.scrapers.rate_limit.time.sleep") as sleep,
+    ):
+        limiter.wait()
+        limiter.wait()
+
+    sleep.assert_not_called()
+
+
 def test_rate_limiter_zero_interval_is_noop() -> None:
     limiter = RateLimiter(0.0)
     with patch("app.scrapers.rate_limit.time.sleep") as sleep:

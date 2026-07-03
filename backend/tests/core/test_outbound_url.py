@@ -64,3 +64,23 @@ def test_reserved_test_tlds_resolved_in_production(monkeypatch: pytest.MonkeyPat
 
 def test_assert_safe_outbound_url_allows_public_https() -> None:
     assert_safe_outbound_url("https://example.com/jobs")
+
+
+def test_rejects_url_without_hostname() -> None:
+    with pytest.raises(UnsafeOutboundUrlError, match="missing a hostname"):
+        assert_safe_outbound_url("http:///path-only")
+
+
+def test_rejects_unresolvable_hostname(monkeypatch: pytest.MonkeyPatch) -> None:
+    def _raise(*_args: object, **_kwargs: object) -> None:
+        raise socket.gaierror("no such host")
+
+    monkeypatch.setattr(socket, "getaddrinfo", _raise)
+    with pytest.raises(UnsafeOutboundUrlError, match="Unable to resolve"):
+        assert_safe_outbound_url("https://does-not-exist.example.com/")
+
+
+def test_rejects_hostname_with_no_addresses(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(socket, "getaddrinfo", lambda *a, **k: [])
+    with pytest.raises(UnsafeOutboundUrlError, match="Unable to resolve"):
+        assert_safe_outbound_url("https://empty-dns.example.com/")

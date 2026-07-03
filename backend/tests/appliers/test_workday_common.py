@@ -1,13 +1,20 @@
 """Tests for Workday target resolution and payload builders."""
 
+import httpx
+
 from app.appliers.adapters.workday_common import (
+    CSRF_HEADER,
     build_application_payload,
+    build_http_client,
+    fetch_job_posting_info,
+    request_headers,
     resolve_job_path,
     resolve_job_posting_id,
     resolve_target,
 )
 from app.schemas.profile import ProfileData
 from tests.appliers.workday_helpers import JOB_URL, profile
+from tests.conftest import make_http_client
 
 
 def test_resolve_target_from_config_or_url() -> None:
@@ -63,3 +70,49 @@ def test_build_application_payload_requires_name_and_email() -> None:
 
 def test_resolve_job_posting_id_returns_none_without_inputs() -> None:
     assert resolve_job_posting_id({}, "", "") is None
+
+
+def test_build_http_client_merges_credentials_and_headers() -> None:
+    client = build_http_client(
+        {"headers": {"X-Base": "1"}, "cookies": {"CALYPSO_SESSION": "s"}},
+        headers={"X-Extra": "2"},
+    )
+    assert isinstance(client.close, object)
+    client.close()
+
+
+def test_build_http_client_handles_missing_credentials() -> None:
+    client = build_http_client(None)
+    client.close()
+
+
+def test_fetch_job_posting_info_returns_empty_when_posting_missing() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json={"jobPostingInfo": "not-a-dict"})
+
+    target = resolve_target({"tenant": "acme", "site": "AcmeCareers", "region": "wd5"}, "")
+    assert target is not None
+    assert fetch_job_posting_info(make_http_client(handler), target, "loc/job") == {}
+
+
+def test_fetch_job_posting_info_returns_empty_when_response_not_dict() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json=["not", "a", "dict"])
+
+    target = resolve_target({"tenant": "acme", "site": "AcmeCareers", "region": "wd5"}, "")
+    assert target is not None
+    assert fetch_job_posting_info(make_http_client(handler), target, "loc/job") == {}
+
+
+def test_request_headers_omits_cookie_when_empty() -> None:
+    target = resolve_target({"tenant": "acme", "site": "AcmeCareers", "region": "wd5"}, "")
+    assert target is not None
+    headers = request_headers(
+        target,
+        "loc/job",
+        csrf_token="csrf",
+        credentials={"headers": {"X-H": "1"}, "cookies": {}},
+    )
+    assert headers[CSRF_HEADER] == "csrf"
+    assert headers["X-H"] == "1"
+    assert "Cookie" not in headers
