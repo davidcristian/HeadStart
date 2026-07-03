@@ -50,6 +50,10 @@ class OutlookAuthorizeResponse(BaseModel):
     authorization_url: str
 
 
+class YahooAuthorizeResponse(BaseModel):
+    authorization_url: str
+
+
 class GmailOAuthCallbackResult(BaseModel):
     connector_type: str
     email_address: str

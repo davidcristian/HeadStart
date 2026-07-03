@@ -14,23 +14,7 @@ from app.inbox.credentials import (
     mailbox_config_for_export,
     mailbox_credential_to_read,
 )
-from app.inbox.gmail_oauth import (
-    build_gmail_authorization_url,
-    create_gmail_oauth_state,
-    decode_gmail_oauth_state,
-    exchange_gmail_code,
-    gmail_oauth_configured,
-    require_gmail_oauth_configured,
-)
 from app.inbox.mailbox_email import mailbox_email_from_read
-from app.inbox.outlook_oauth import (
-    build_outlook_authorization_url,
-    create_outlook_oauth_state,
-    decode_outlook_oauth_state,
-    exchange_outlook_code,
-    outlook_oauth_configured,
-    require_outlook_oauth_configured,
-)
 from app.inbox.types import (
     FetchResult,
     GmailMailboxConfig,
@@ -39,6 +23,7 @@ from app.inbox.types import (
     OutboundMessage,
     OutlookMailboxConfig,
     SendResult,
+    YahooMailboxConfig,
 )
 from app.models.mailbox_credential import MailboxCredential
 from app.repositories.mailbox_credentials import MailboxCredentialRepository
@@ -49,11 +34,13 @@ from app.schemas.mailbox import (
     MailboxCredentialUpsert,
     MailboxTestResponse,
     OutlookAuthorizeResponse,
+    YahooAuthorizeResponse,
 )
+from app.services import inbox_mailbox_oauth
 from app.services.inbox_oauth import (
     ensure_fresh_gmail_config,
     ensure_fresh_outlook_config,
-    persist_oauth_mailbox,
+    ensure_fresh_yahoo_config,
 )
 
 
@@ -91,8 +78,8 @@ class InboxService:
         if data.connector_type != "imap_smtp":
             raise ValidationError(
                 "Manual credential upsert supports imap_smtp only. "
-                "Connect Gmail via GET /inbox/gmail/authorize or Outlook via "
-                "GET /inbox/outlook/authorize."
+                "Connect Gmail via GET /inbox/gmail/authorize, Outlook via "
+                "GET /inbox/outlook/authorize, or Yahoo via GET /inbox/yahoo/authorize."
             )
         self._validate_connector_type(data.connector_type)
         credential = self.repo.get_for_user(user_id)
@@ -123,53 +110,52 @@ class InboxService:
     def gmail_authorize_url(self, user_id: int) -> GmailAuthorizeResponse:
         """Return a Google OAuth consent URL for the current user."""
         self.require_enabled()
-        require_gmail_oauth_configured()
-        state = create_gmail_oauth_state(user_id)
-        return GmailAuthorizeResponse(authorization_url=build_gmail_authorization_url(state=state))
+        return inbox_mailbox_oauth.gmail_authorize_url(user_id)
 
     def complete_gmail_oauth(self, *, code: str, state: str) -> GmailOAuthCallbackResult:
         """Exchange an OAuth callback for encrypted Gmail credentials."""
         self.require_enabled()
-        user_id = decode_gmail_oauth_state(state)
-        config = exchange_gmail_code(code)
-        return persist_oauth_mailbox(
-            self.session,
-            self.repo,
-            user_id=user_id,
-            connector_type="gmail",
-            config=config,
+        return inbox_mailbox_oauth.complete_gmail_oauth(
+            self.session, self.repo, code=code, state=state
         )
 
     @staticmethod
     def gmail_oauth_available() -> bool:
         """Whether the deployment exposes Gmail OAuth connect."""
-        return gmail_oauth_configured()
+        return inbox_mailbox_oauth.gmail_oauth_available()
 
     @staticmethod
     def outlook_oauth_available() -> bool:
         """Whether the deployment exposes Outlook OAuth connect."""
-        return outlook_oauth_configured()
+        return inbox_mailbox_oauth.outlook_oauth_available()
+
+    @staticmethod
+    def yahoo_oauth_available() -> bool:
+        """Whether the deployment exposes Yahoo OAuth connect."""
+        return inbox_mailbox_oauth.yahoo_oauth_available()
 
     def outlook_authorize_url(self, user_id: int) -> OutlookAuthorizeResponse:
         """Return a Microsoft OAuth consent URL for the current user."""
         self.require_enabled()
-        require_outlook_oauth_configured()
-        state = create_outlook_oauth_state(user_id)
-        return OutlookAuthorizeResponse(
-            authorization_url=build_outlook_authorization_url(state=state)
-        )
+        return inbox_mailbox_oauth.outlook_authorize_url(user_id)
 
     def complete_outlook_oauth(self, *, code: str, state: str) -> GmailOAuthCallbackResult:
         """Exchange an OAuth callback for encrypted Outlook credentials."""
         self.require_enabled()
-        user_id = decode_outlook_oauth_state(state)
-        config = exchange_outlook_code(code)
-        return persist_oauth_mailbox(
-            self.session,
-            self.repo,
-            user_id=user_id,
-            connector_type="outlook",
-            config=config,
+        return inbox_mailbox_oauth.complete_outlook_oauth(
+            self.session, self.repo, code=code, state=state
+        )
+
+    def yahoo_authorize_url(self, user_id: int) -> YahooAuthorizeResponse:
+        """Return a Yahoo OAuth consent URL for the current user."""
+        self.require_enabled()
+        return inbox_mailbox_oauth.yahoo_authorize_url(user_id)
+
+    def complete_yahoo_oauth(self, *, code: str, state: str) -> GmailOAuthCallbackResult:
+        """Exchange an OAuth callback for encrypted Yahoo credentials."""
+        self.require_enabled()
+        return inbox_mailbox_oauth.complete_yahoo_oauth(
+            self.session, self.repo, code=code, state=state
         )
 
     def test_connection(
@@ -217,6 +203,10 @@ class InboxService:
                 if not isinstance(config, OutlookMailboxConfig):
                     raise ValidationError("Stored Outlook credential is invalid")
                 config = ensure_fresh_outlook_config(self.session, credential, config)
+            elif credential.connector_type == "yahoo":
+                if not isinstance(config, YahooMailboxConfig):
+                    raise ValidationError("Stored Yahoo credential is invalid")
+                config = ensure_fresh_yahoo_config(self.session, credential, config)
             return MailboxContext(
                 connector_type=credential.connector_type,
                 config=config,

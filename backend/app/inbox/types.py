@@ -24,6 +24,15 @@ class OutlookMailboxConfig(BaseModel):
     token_expiry: str | None = None
 
 
+class YahooMailboxConfig(BaseModel):
+    """OAuth tokens for the Yahoo Mail IMAP/SMTP connector."""
+
+    email_address: str = Field(min_length=3, max_length=320)
+    access_token: str = Field(min_length=1, max_length=4096)
+    refresh_token: str = Field(min_length=1, max_length=4096)
+    token_expiry: str | None = None
+
+
 class MailboxConfig(BaseModel):
     """IMAP + SMTP connection settings for the imap_smtp connector."""
 
@@ -45,7 +54,7 @@ class MailboxContext(BaseModel):
     """Everything a mailbox connector needs for one user session."""
 
     connector_type: str
-    config: MailboxConfig | GmailMailboxConfig | OutlookMailboxConfig
+    config: MailboxConfig | GmailMailboxConfig | OutlookMailboxConfig | YahooMailboxConfig
     user_id: int | None = None
 
 

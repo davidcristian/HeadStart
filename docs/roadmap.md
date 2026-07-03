@@ -688,8 +688,8 @@ or via the pending-reply queue).
 
 | Item | Why | Notes |
 | ---- | --- | ----- |
-| Yahoo OAuth connector | Large consumer mailbox; app-password IMAP is a poor default UX | `@register_mailbox("yahoo")`; Yahoo OAuth where the Mail API permits read/send; same credential storage and routing contract as Gmail/Outlook |
-| Yahoo docs | Operators need env var and consent-screen steps | Row in [modules/inbox.md](modules/inbox.md); `.env.example` placeholders |
+| ~~Yahoo OAuth connector~~ | ~~Large consumer mailbox; app-password IMAP is a poor default UX~~ | **Shipped:** `@register_mailbox("yahoo")`; Yahoo identity OAuth; IMAP/SMTP with SASL OAUTHBEARER (`imap.mail.yahoo.com` / `smtp.mail.yahoo.com`); `GET /inbox/yahoo/authorize` + callback; `YAHOO_OAUTH_*` env vars; Settings → **Connect Yahoo** when `INBOX_AGENT_ENABLED=true` |
+| ~~Yahoo docs~~ | ~~Operators need env var and consent-screen steps~~ | **Shipped:** redirect URI, `mail-w` scope, and token refresh in [modules/inbox.md](modules/inbox.md) + [runbook.md](runbook.md) |
 
 **Done when:** a dev user can authorize Yahoo Mail and the inbox agent fetches and
 sends through the adapter (fixture tests in CI; optional live smoke outside CI).
@@ -706,7 +706,8 @@ messages without configuring raw IMAP hosts.
 
 **Phase 21 overall done when:** Outlook and at least one additional consumer
 provider (Yahoo or Fastmail) ship as registry adapters; IMAP remains documented
-as the escape hatch for other providers.
+as the escape hatch for other providers. **Yahoo shipped (21b);** Fastmail (21c)
+remains open.
 
 ---
 

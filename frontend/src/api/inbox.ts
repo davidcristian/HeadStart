@@ -10,11 +10,8 @@ import type {
 import { request } from "./client";
 
 export const inboxApi = {
-  draftReply: (data: {
-    classification_id?: number;
-    message_uid?: number;
-    regenerate?: boolean;
-  }) => request<ReplyDraftResult>("/api/v1/inbox/draft-reply", { method: "POST", body: data }),
+  draftReply: (data: { classification_id?: number; message_uid?: number; regenerate?: boolean }) =>
+    request<ReplyDraftResult>("/api/v1/inbox/draft-reply", { method: "POST", body: data }),
 
   listReplyDrafts: (seenJobId?: number) => {
     const query = seenJobId !== undefined ? `?seen_job_id=${seenJobId}` : "";
@@ -40,4 +37,6 @@ export const inboxApi = {
   gmailAuthorize: () => request<GmailAuthorizeResult>("/api/v1/inbox/gmail/authorize"),
 
   outlookAuthorize: () => request<GmailAuthorizeResult>("/api/v1/inbox/outlook/authorize"),
+
+  yahooAuthorize: () => request<GmailAuthorizeResult>("/api/v1/inbox/yahoo/authorize"),
 };

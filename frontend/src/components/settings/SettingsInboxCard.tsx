@@ -1,4 +1,4 @@
-/** Dev-only inbox mailbox settings (IMAP/SMTP, Gmail OAuth, or Outlook OAuth). */
+/** Dev-only inbox mailbox settings (IMAP/SMTP, Gmail OAuth, Outlook OAuth, or Yahoo OAuth). */
 
 import { useEffect, useState } from "react";
 import { Banner, Button, Card, Field } from "../ui";
@@ -71,6 +71,10 @@ export function SettingsInboxCard({ mailboxNotice }: SettingsInboxCardProps) {
       setNotice("Outlook connected successfully.");
     } else if (mailboxNotice === "outlook_error") {
       setError("Outlook connection failed. Try again or use IMAP credentials.");
+    } else if (mailboxNotice === "yahoo_connected") {
+      setNotice("Yahoo Mail connected successfully.");
+    } else if (mailboxNotice === "yahoo_error") {
+      setError("Yahoo Mail connection failed. Try again or use IMAP credentials.");
     }
   }, [mailboxNotice]);
 
@@ -94,6 +98,18 @@ export function SettingsInboxCard({ mailboxNotice }: SettingsInboxCardProps) {
       window.location.assign(authorization_url);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not start Outlook OAuth.");
+      setBusy(false);
+    }
+  }
+
+  async function connectYahoo() {
+    setError(undefined);
+    setBusy(true);
+    try {
+      const { authorization_url } = await api.yahooAuthorize();
+      window.location.assign(authorization_url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not start Yahoo OAuth.");
       setBusy(false);
     }
   }
@@ -178,12 +194,21 @@ export function SettingsInboxCard({ mailboxNotice }: SettingsInboxCardProps) {
         </p>
       ) : null}
 
+      {credential?.connector_type === "yahoo" ? (
+        <p>
+          Connected Yahoo Mail: <strong>{credential.email_address}</strong>
+        </p>
+      ) : null}
+
       <p>
         <Button type="button" onClick={() => void connectGmail()} disabled={busy}>
           Connect Gmail
         </Button>{" "}
         <Button type="button" onClick={() => void connectOutlook()} disabled={busy}>
           Connect Outlook
+        </Button>{" "}
+        <Button type="button" onClick={() => void connectYahoo()} disabled={busy}>
+          Connect Yahoo
         </Button>
       </p>
 

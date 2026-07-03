@@ -104,6 +104,38 @@ expiry (`app/inbox/gmail_oauth.py`).
 Token refresh runs automatically before fetch/send when the access token is near
 expiry (`app/inbox/outlook_oauth.py`).
 
+## yahoo adapter
+
+**Key:** `yahoo`. Uses Yahoo identity OAuth 2.0 and IMAP/SMTP with SASL
+OAUTHBEARER (`imap.mail.yahoo.com` / `smtp.mail.yahoo.com`). Yahoo does not
+publish a Gmail/Graph-style REST API — mail access is over standard protocols.
+
+- **Connect:** `GET /inbox/yahoo/authorize` (auth required) returns a Yahoo consent
+  URL; `GET /inbox/yahoo/callback` exchanges the code and stores encrypted tokens on
+  `mailbox_credential` (`connector_type=yahoo`).
+- **Fetch:** IMAP `UID SEARCH` + `UID FETCH (RFC822)` on the `Inbox` folder.
+- **Send:** SMTP with `AUTH OAUTHBEARER` after `STARTTLS`.
+- **Move / route:** IMAP `UID MOVE` (or COPY/STORE/EXPUNGE fallback) into folders
+  created on demand (same contract as `imap_smtp`).
+
+**Operator env** (all required for OAuth):
+
+- `YAHOO_OAUTH_CLIENT_ID` — Yahoo Developer Network app client ID
+- `YAHOO_OAUTH_CLIENT_SECRET` — client secret
+- `YAHOO_OAUTH_REDIRECT_URI` — e.g. `http://localhost:8000/api/v1/inbox/yahoo/callback`
+
+**Yahoo app registration (summary):**
+
+1. Request commercial Mail API access via [Yahoo Developer Network](https://developer.yahoo.com/)
+   (commercial access agreement may be required for production use).
+2. Create an app and add redirect URI **Web** → `YAHOO_OAUTH_REDIRECT_URI`.
+3. Enable Mail permissions with **Read/Write** scope (`mail-w` in the OAuth request;
+   do not combine `mail-r` and `mail-w`).
+4. Copy client ID and secret to `YAHOO_OAUTH_CLIENT_ID` / `YAHOO_OAUTH_CLIENT_SECRET`.
+
+Token refresh runs automatically before fetch/send when the access token is near
+expiry (`app/inbox/yahoo_oauth.py`).
+
 ## Credential storage
 
 Per-user encrypted row in `mailbox_credential` (one per account). Passwords are
@@ -117,7 +149,7 @@ write-only — `MailboxCredentialRead` exposes host/user metadata only.
 vars are set, users without a saved credential share the env mailbox (single-user
 local dev only).
 
-**Planned (Phase 21):** Yahoo Mail OAuth and Fastmail JMAP — see
+**Planned (Phase 21):** Fastmail JMAP — see
 [roadmap.md § Phase 21](../roadmap.md#phase-21--inbox-mailbox-providers-dev-only).
 `imap_smtp` remains the generic connector for any provider that exposes IMAP.
 
@@ -132,6 +164,8 @@ All routes require auth and `INBOX_AGENT_ENABLED=true`.
 | DELETE | `/credentials`    | Remove saved credentials                     |
 | GET    | `/gmail/authorize`| Start Gmail OAuth (returns consent URL)      |
 | GET    | `/gmail/callback` | OAuth redirect (stores Gmail tokens)         |
+| GET    | `/yahoo/authorize`| Start Yahoo OAuth (returns consent URL)      |
+| GET    | `/yahoo/callback` | OAuth redirect (stores Yahoo tokens)         |
 | POST   | `/test`           | Test IMAP + SMTP (optional inline config)    |
 | GET    | `/messages`       | Fetch inbound messages (`since_uid`, `limit`)|
 | POST   | `/classify`       | Classify one message (body or mailbox `uid`) |

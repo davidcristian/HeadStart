@@ -8,12 +8,13 @@ from app.core.crypto import encrypt
 from app.inbox.credentials import encode_mailbox_config
 from app.inbox.gmail_oauth import gmail_token_needs_refresh, refresh_gmail_access_token
 from app.inbox.outlook_oauth import outlook_token_needs_refresh, refresh_outlook_access_token
-from app.inbox.types import GmailMailboxConfig, OutlookMailboxConfig
+from app.inbox.types import GmailMailboxConfig, OutlookMailboxConfig, YahooMailboxConfig
+from app.inbox.yahoo_oauth import refresh_yahoo_access_token, yahoo_token_needs_refresh
 from app.models.mailbox_credential import MailboxCredential
 from app.repositories.mailbox_credentials import MailboxCredentialRepository
 from app.schemas.mailbox import GmailOAuthCallbackResult
 
-OAuthConfig = GmailMailboxConfig | OutlookMailboxConfig
+OAuthConfig = GmailMailboxConfig | OutlookMailboxConfig | YahooMailboxConfig
 
 
 def persist_oauth_mailbox(
@@ -69,6 +70,20 @@ def ensure_fresh_outlook_config(
     if not outlook_token_needs_refresh(config):
         return config
     refreshed = refresh_outlook_access_token(config)
+    credential.secret_ciphertext = encrypt(refreshed.model_dump_json())
+    session.flush()
+    return refreshed
+
+
+def ensure_fresh_yahoo_config(
+    session: Session,
+    credential: MailboxCredential,
+    config: YahooMailboxConfig,
+) -> YahooMailboxConfig:
+    """Refresh and persist Yahoo OAuth tokens when they are near expiry."""
+    if not yahoo_token_needs_refresh(config):
+        return config
+    refreshed = refresh_yahoo_access_token(config)
     credential.secret_ciphertext = encrypt(refreshed.model_dump_json())
     session.flush()
     return refreshed

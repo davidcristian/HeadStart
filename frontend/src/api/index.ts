@@ -244,6 +244,7 @@ export const api = {
   testMailbox: inboxApi.testMailbox,
   gmailAuthorize: inboxApi.gmailAuthorize,
   outlookAuthorize: inboxApi.outlookAuthorize,
+  yahooAuthorize: inboxApi.yahooAuthorize,
 
   // feed
   getFeedUrl: () => request<FeedUrl>("/api/v1/feed/url"),

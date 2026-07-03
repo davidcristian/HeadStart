@@ -29,6 +29,7 @@ from app.schemas.mailbox import (
     MailboxTestRequest,
     MailboxTestResponse,
     OutlookAuthorizeResponse,
+    YahooAuthorizeResponse,
 )
 from app.services.email_classification import EmailClassificationService
 from app.services.inbox import InboxService
@@ -139,6 +140,46 @@ def outlook_oauth_callback(
         )
     return RedirectResponse(
         url=f"{settings_url}?mailbox=outlook_connected",
+        status_code=status.HTTP_302_FOUND,
+    )
+
+
+@router.get("/yahoo/authorize", response_model=YahooAuthorizeResponse)
+def yahoo_authorize(
+    db: Session = Depends(get_db), user: User = Depends(get_verified_user)
+) -> YahooAuthorizeResponse:
+    """Return a Yahoo OAuth URL to connect Yahoo Mail for inbox automation."""
+    return InboxService(db).yahoo_authorize_url(user.id)
+
+
+@router.get("/yahoo/callback")
+def yahoo_oauth_callback(
+    code: str | None = Query(default=None),
+    state: str | None = Query(default=None),
+    error: str | None = Query(default=None),
+    db: Session = Depends(get_db),
+) -> RedirectResponse:
+    """OAuth redirect target — stores encrypted Yahoo tokens and returns to Settings."""
+    settings_url = f"{settings.frontend_base_url.rstrip('/')}/app/settings"
+    if error:
+        return RedirectResponse(
+            url=f"{settings_url}?mailbox=yahoo_error&reason={error}",
+            status_code=status.HTTP_302_FOUND,
+        )
+    if not code or not state:
+        return RedirectResponse(
+            url=f"{settings_url}?mailbox=yahoo_error&reason=missing_code",
+            status_code=status.HTTP_302_FOUND,
+        )
+    try:
+        InboxService(db).complete_yahoo_oauth(code=code, state=state)
+    except ValidationError:
+        return RedirectResponse(
+            url=f"{settings_url}?mailbox=yahoo_error",
+            status_code=status.HTTP_302_FOUND,
+        )
+    return RedirectResponse(
+        url=f"{settings_url}?mailbox=yahoo_connected",
         status_code=status.HTTP_302_FOUND,
     )
 
