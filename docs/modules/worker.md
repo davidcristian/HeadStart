@@ -29,9 +29,10 @@ After a run, the worker sets `last_run_at = now` and
 
 **Catch-up:** if the host was asleep/offline, many searches will be overdue on
 the next tick. They each run **once** (not once per missed interval) because
-`next_run_at` is recomputed from *now*, not advanced N times. `SCHEDULER_MAX_CATCHUP`
-documents/limits this collapse. Dedup via `seen_job` means a missed window only
-delays notifications; nothing is dropped or duplicated.
+`next_run_at` is recomputed from *now* (`next_run_from` in
+`services/scheduling.py`), not advanced N times, so many missed intervals
+collapse into a single catch-up run. Dedup via `seen_job` means a missed window
+only delays notifications; nothing is dropped or duplicated.
 
 ```mermaid
 flowchart TD

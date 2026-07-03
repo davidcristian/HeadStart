@@ -183,6 +183,8 @@ All routes require auth and `INBOX_AGENT_ENABLED=true`.
 | DELETE | `/credentials`    | Remove saved credentials                     |
 | GET    | `/gmail/authorize`| Start Gmail OAuth (returns consent URL)      |
 | GET    | `/gmail/callback` | OAuth redirect (stores Gmail tokens)         |
+| GET    | `/outlook/authorize`| Start Outlook OAuth (returns consent URL)  |
+| GET    | `/outlook/callback` | OAuth redirect (stores Outlook tokens)     |
 | GET    | `/yahoo/authorize`| Start Yahoo OAuth (returns consent URL)      |
 | GET    | `/yahoo/callback` | OAuth redirect (stores Yahoo tokens)         |
 | POST   | `/test`           | Test IMAP + SMTP (optional inline config)    |
@@ -194,6 +196,7 @@ All routes require auth and `INBOX_AGENT_ENABLED=true`.
 | POST   | `/route`          | Move a classified message to its folder      |
 | POST   | `/draft-reply`    | Draft a recruiter follow-up (dry-run preview; may queue auto-send) |
 | GET    | `/reply-drafts`   | List persisted reply drafts                    |
+| GET    | `/reply-send-logs`| List audit rows for auto reply decisions       |
 
 `GET /meta` includes `mailboxes` (registered connector keys) and
 `inbox_agent_enabled`.

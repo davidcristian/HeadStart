@@ -81,7 +81,7 @@ never touch the DB directly (services use repositories). See
 | PATCH  | `/admin/promo-codes/{id}` | Update a promo code (admin)          |
 | GET    | `/admin/promo-codes/{id}/redemptions` | List redemptions for a code (admin) |
 | GET    | `/billing/status`     | Billing capabilities + subscription state |
-| POST   | `/billing/checkout`   | Start Stripe Checkout for Pro            |
+| POST   | `/billing/checkout`   | Start Stripe Checkout for a paid plan    |
 | POST   | `/billing/promo/validate` | Validate a promo code for checkout |
 | POST   | `/billing/portal`     | Open Stripe customer portal              |
 | POST   | `/billing/webhook`    | Stripe subscription webhooks (signed)    |

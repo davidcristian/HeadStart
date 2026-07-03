@@ -162,7 +162,6 @@ locals {
       NTFY_DEFAULT_SERVER_URL          = var.ntfy_default_server_url
       NTFY_DEFAULT_TOPIC               = var.ntfy_default_topic
       SCHEDULER_TICK_SECONDS           = "30"
-      SCHEDULER_MAX_CATCHUP            = "1"
       PLAYWRIGHT_NAVIGATION_TIMEOUT_MS = "30000"
       PLAYWRIGHT_MAX_RETRIES           = "1"
     },

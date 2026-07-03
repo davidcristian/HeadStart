@@ -103,6 +103,10 @@ config value → adapter default → no limit.
 | `meta_careers` | 3.0                  |
 | `microsoft_careers` | 2.5             |
 | `amazon_jobs`  | 2.5                  |
+| `apple_careers` | 3.0                 |
+| `shopify_careers` | 3.0               |
+| `snowflake_careers` | 1.0             |
+| `uber_careers` | 2.5                  |
 | `indeed`       | 5.0                  |
 | `linkedin`     | 7.5                  |
 | `generic_html` | 2.0                  |

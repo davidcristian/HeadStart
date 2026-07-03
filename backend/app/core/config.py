@@ -99,7 +99,6 @@ class Settings(BaseSettings):
 
     # ---- scheduler ----
     scheduler_tick_seconds: int = 30
-    scheduler_max_catchup: int = 1
 
     # ---- playwright (worker / opt-in scraper) ----
     playwright_navigation_timeout_ms: int = 30_000

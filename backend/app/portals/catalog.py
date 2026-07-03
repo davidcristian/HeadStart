@@ -1,7 +1,10 @@
 """Static catalog of curated employer job portals.
 
 Each preset maps to an existing scraper adapter with verified public API access.
-Update catalog_presets.py when employers change ATS or board slugs.
+Add a new employer as ``presets/<portal_id>.py`` (exporting ``PORTAL``) and
+register it in ``presets/__init__.py``; ``catalog_presets.py`` holds the core
+catalog and splices those modules in. Update the relevant module when an
+employer changes ATS or board slugs.
 """
 
 from __future__ import annotations

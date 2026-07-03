@@ -60,9 +60,10 @@ notifier's host may sleep or restart (e.g. running locally on a laptop).
   `next_run_at` is in the past is enqueued.
 - Because dedup is based on `seen_job`, a missed window only **delays**
   notifications; it never drops or duplicates them.
-- `SCHEDULER_MAX_CATCHUP` collapses many missed intervals into a single
-  catch-up run, so coming back online after a long downtime does **not** trigger
-  a burst of N requests to a site.
+- Because `next_run_at` is recomputed from *now* (not advanced once per missed
+  interval), many missed intervals collapse into a single catch-up run, so
+  coming back online after a long downtime does **not** trigger a burst of N
+  requests to a site.
 
 See [modules/worker.md](modules/worker.md) for the implementation.
 

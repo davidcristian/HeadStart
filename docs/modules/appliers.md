@@ -138,8 +138,8 @@ credentials:
 | `site` | source `default_config` or parsed from `job_url` | Board slug (`jobs.lever.co/<site>/...`) |
 | `region` | source/search config | `"eu"` selects `api.eu.lever.co` |
 | `postings_api_key` | `default_config` or credential `session` | Employer Postings API key for **live** submission |
-| `gdpr_consent` | source/search config | When true, sets `consent.store` |
-| `compliance_policy_id` | source/search config | Optional Lever compliance policy GUID |
+| `gdpr_consent` | source/search config | When true, sets `consent` to `{"store": true, "marketing": false}` |
+| `compliance_policy_id` | source/search config | Optional Lever compliance policy GUID. **Only applied when `gdpr_consent` is also set** — it rewrites `consent.store` to `{"provided": true, "compliancePolicyId": …}`; without `gdpr_consent` it is a no-op |
 | `silent_confirmations` | source/search config | When true, sets `silent` so Lever skips candidate email |
 | `urls.<Label>` | profile `answers` | Extra profile URLs (e.g. `urls.Twitter`) |
 | `skip_structured_profile` | source/search config | When true, omit work history/education/skills from `comments` |
@@ -176,6 +176,7 @@ credentials:
 | `work_history_path` | source/search config | String field path for formatted profile `work_experience` |
 | `skills_path` | source/search config | `MultiValueSelect` or String field path for profile `skills` |
 | `skills_value_format` | source/search config | `"array"` (default) or `"string"` for `skills_path` |
+| `allow_unpublished_job_posting` | source/search config | Opt-out flag: set **`false`** to send `allowSubmissionForUnpublishedJobPosting: false` and refuse submitting to unpublished postings. Omitted or truthy leaves the flag off, so Ashby's default (allowing unpublished submissions) applies |
 
 **Structured profile:** when `education_history_path`, `work_history_path`, or
 `skills_path` are set, the adapter maps profile `education`, `work_experience`,
@@ -239,7 +240,7 @@ Bosch, ServiceNow, etc.) — they share the same API. Config / credentials:
 | `posting_uuid` | source/search config | Optional posting UUID override (else fetched from the public Postings detail API) |
 | `smart_token` | `default_config` or credential `session` | Application API token (`X-SmartToken`) for **live** submission |
 | `access_token` | `default_config` or credential `session` | OAuth bearer token alternative to `smart_token` |
-| `gdpr_consent` | source/search config | When true, sets `consentDecisions` (or legacy `consent`) on the payload |
+| `gdpr_consent` | source/search config | Drives the consent decision. When the posting exposes consent settings, the adapter always sends `consentDecisions` (per-scope for a `SEPARATED` model, `{"SINGLE": …}` otherwise) — consent is granted by default and only withheld when `gdpr_consent` is explicitly `false`. With no posting consent settings, a truthy flag sends `consentDecisions` `{"SINGLE": true}` and an explicit `false` sends `{"SINGLE": false}`; unset sends no consent |
 | `include_conditional_questions` | source/search config | When true, fetches conditional screening questions in configuration |
 | `sr_<question_id>` | profile `answers` | Screening answers keyed by SmartRecruiters question id (also accepts raw id or `question_<id>`) |
 

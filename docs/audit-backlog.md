@@ -6,8 +6,9 @@ features. Update the Status column (and strike the row) when an item ships; link
 
 Produced by a read-only multi-agent audit — 13 subsystem clusters, every finding
 adversarially verified against the code. **77 confirmed** findings (1 critical, 9 high,
-16 medium, 51 low). 9 are already resolved: the browser-extension cluster (6) via
-removal (WS8), plus the WS3 security-hardening trio (2 high + 1 low).
+16 medium, 51 low). 17 are already resolved: the browser-extension cluster (6) via
+removal (WS8), the WS3 security-hardening trio (2 high + 1 low), and the WS11 docs
+cluster (8: 1 med + 7 low).
 
 **Status legend:** ☐ open · 🔜 in progress · ✅ done
 **Type:** 🐞 bug · 🔒 security · 📝 doc · 🧪 test · ♻️ refactor · 🔁 consistency
@@ -128,18 +129,18 @@ dedicated consolidation PR. The Gemini security fix should ship regardless.
 | ⚪ LOW | ♻️ | Dead `logger` binding in all 4 summarizer adapters | `summarizers/adapters/openai.py:23` | ☐ |
 | ⚪ LOW | 🔁 | `heuristic.__init__` signature differs in `summarizers` only | `summarizers/adapters/heuristic.py:27` | ☐ |
 
-## WS11 — Documentation updates
+## WS11 — Documentation updates ✅ DONE (2026-07-01)
 (Doc rows also live under their subsystem above; these are the docs-cluster + infra items.)
 | Sev | Type | Item | Location | Status |
 | --- | ---- | ---- | -------- | ------ |
-| 🟡 MED | 📝 | `SCHEDULER_MAX_CATCHUP` is a dead setting — in config/.env/docs but never read. Delete it (preferred) or implement; fix worker.md + architecture.md | `docs/modules/worker.md:32` | ☐ |
-| ⚪ LOW | 📝 | 6 `config.py` Settings fields undocumented in `.env.example` | `.env.example:134` | ☐ |
-| ⚪ LOW | 📝 | `SUMMARY_PROVIDER` comment omits shipped `anthropic` provider | `.env.example:93` | ☐ |
-| ⚪ LOW | 📝 | `inbox.md` API table omits Outlook OAuth routes + `/reply-send-log` | `docs/modules/inbox.md:179` | ☐ |
-| ⚪ LOW | 📝 | `scrapers.md` rate-limit table lists 13 of 17 adapters | `docs/modules/scrapers.md:95` | ☐ |
-| ⚪ LOW | 📝 | `api.md` calls `/billing/checkout` Pro-only (accepts starter\|plus\|pro) | `docs/modules/api.md:84` | ☐ |
-| ⚪ LOW | 📝 | `appliers.md`: undocumented Ashby `allow_unpublished_job_posting`; stale SmartRecruiters `consent`; Lever `compliance_policy_id`/`gdpr_consent` coupling | `docs/modules/appliers.md`, `appliers/adapters/lever.py:240` | ☐ |
-| ⚪ LOW | 📝 | `catalog.py` docstring says edit `catalog_presets.py`, but ~40 employers now live in `presets/<id>.py` | `portals/catalog.py:4` | ☐ |
+| 🟡 MED | 📝 | `SCHEDULER_MAX_CATCHUP` is a dead setting — in config/.env/docs but never read. Deleted from `config.py`, `.env.example`, and terraform (occurrence the audit had missed); reworded worker.md + architecture.md to describe the recompute-from-now mechanism | `docs/modules/worker.md:32` | ✅ |
+| ⚪ LOW | 📝 | 6 `config.py` Settings fields undocumented in `.env.example` (JWT_ALGORITHM + 5 dev-only inbox-AI tunables) | `.env.example:134` | ✅ |
+| ⚪ LOW | 📝 | `SUMMARY_PROVIDER` comment omits shipped `anthropic` provider | `.env.example:93` | ✅ |
+| ⚪ LOW | 📝 | `inbox.md` API table omits Outlook OAuth routes + `/reply-send-log` | `docs/modules/inbox.md:179` | ✅ |
+| ⚪ LOW | 📝 | `scrapers.md` rate-limit table lists 13 of 17 adapters | `docs/modules/scrapers.md:95` | ✅ |
+| ⚪ LOW | 📝 | `api.md` calls `/billing/checkout` Pro-only (accepts starter\|plus\|pro) | `docs/modules/api.md:84` | ✅ |
+| ⚪ LOW | 📝 | `appliers.md`: undocumented Ashby `allow_unpublished_job_posting`; stale SmartRecruiters `consent`; Lever `compliance_policy_id`/`gdpr_consent` coupling | `docs/modules/appliers.md`, `appliers/adapters/lever.py:240` | ✅ |
+| ⚪ LOW | 📝 | `catalog.py` docstring says edit `catalog_presets.py`, but ~40 employers now live in `presets/<id>.py` | `portals/catalog.py:4` | ✅ |
 
 ## WS12 — Test-coverage backfill
 (Item-specific tests are tracked in each WS above; these are the standalone gaps.)
