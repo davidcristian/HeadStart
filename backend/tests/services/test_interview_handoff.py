@@ -199,5 +199,6 @@ def test_classify_hands_off_interview_for_applied_job(db_session: Session, monke
     assert result.label == "interview_request"
     db_session.refresh(job)
     assert job.interview_pending_at is not None
-    assert derive_pipeline_stage(job, latest_live_attempt(job.application_logs)) == "interview_pending"
+    latest = latest_live_attempt(job.application_logs)
+    assert derive_pipeline_stage(job, latest) == "interview_pending"
     get_notifier.assert_called_once()

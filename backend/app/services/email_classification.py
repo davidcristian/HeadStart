@@ -34,9 +34,9 @@ from app.schemas.inbox_classification import (
 from app.services.applications import latest_live_attempt
 from app.services.ghost_recovery import GhostRecoveryService
 from app.services.inbox import InboxService
-from app.services.interview_handoff import InterviewHandoffService
 from app.services.inbox_linking import link_message_to_job, linked_application_context
 from app.services.inbox_routing import InboxRoutingService
+from app.services.interview_handoff import InterviewHandoffService
 from app.services.plan_limits import PlanLimitsService
 
 logger = get_logger(__name__)
