@@ -62,6 +62,7 @@ source's `adapter_key` when that source supports auto-apply. Import the
 | `linkedin` | Guest job page + Voyager GraphQL + downstream ATS delegation | Fetches `/jobs-guest/jobs/api/jobPosting/{id}`, enriches offsite listings via Voyager when session cookies are present, delegates to Greenhouse/Lever/Ashby/Workday/Google/Microsoft/Amazon/Meta when the employer apply URL is recognized; see below |
 | `snowflake_careers` | Delegates to Ashby | Snowflake's Phenom careers site uses Ashby for applications; delegates to the `ashby` adapter with `board=snowflake` |
 | `shopify_careers` | Delegates to Ashby | Shopify's careers site uses Ashby for applications; delegates to the `ashby` adapter with `board=shopify` |
+| `smartrecruiters` | Application API JSON POST | `GET api.smartrecruiters.com/postings/<uuid>/configuration` then `POST …/candidates`; see below |
 
 ### Scrapers without apply adapters
 
@@ -70,7 +71,6 @@ work, but the Jobs page **Apply** action is unavailable:
 
 | Scraper key | Notes |
 | ----------- | ----- |
-| `smartrecruiters` | 12 catalog employers; apply adapter not started (unlike Google Careers, SR has no multi-file apply package under `adapters/` yet) |
 | `uber_careers` | Proprietary apply flow; scrape-only |
 | `playwright` / `generic_html` | Custom HTML sources; no generic apply path |
 
@@ -153,6 +153,35 @@ credentials:
 live submit uses `multipart/form-data` with `_systemfield_resume` (override via
 `config.resume_path`); otherwise `resume_text` may be appended to the
 cover-letter field.
+
+### SmartRecruiters
+
+Maps `ProfileData` to the [SmartRecruiters Application
+API](https://developers.smartrecruiters.com/docs/application-api) candidate
+shape. One adapter covers all SmartRecruiters-backed catalog employers (Atlassian,
+Bosch, ServiceNow, etc.) — they share the same API. Config / credentials:
+
+| Field | Where | Purpose |
+| ----- | ----- | ------- |
+| `company_id` | source `default_config` or parsed from `job_url` | Company slug (`jobs.smartrecruiters.com/<company_id>/...`) |
+| `posting_uuid` | source/search config | Optional posting UUID override (else fetched from the public Postings detail API) |
+| `smart_token` | `default_config` or credential `session` | Application API token (`X-SmartToken`) for **live** submission |
+| `access_token` | `default_config` or credential `session` | OAuth bearer token alternative to `smart_token` |
+| `gdpr_consent` | source/search config | When true, sets `consentDecisions` (or legacy `consent`) on the payload |
+| `include_conditional_questions` | source/search config | When true, fetches conditional screening questions in configuration |
+| `sr_<question_id>` | profile `answers` | Screening answers keyed by SmartRecruiters question id (also accepts raw id or `question_<id>`) |
+
+**Dry run:** resolves the posting UUID via the public Postings detail API,
+builds the candidate JSON, and — when an Application API token is present in
+credentials — fetches screening questions and reports any missing required
+answers in the preview payload.
+
+**Live submit:** requires a SmartRecruiters Application API token or OAuth
+bearer token with `candidate_applications_manage` scope. Store in source config
+or, preferably, credential `session.smart_token` / `session.access_token`.
+Resume files are sent as base64 in the `resume` object; cover letters use
+`messageToHiringManager`. Required screening questions must be mapped in
+`profile.answers` before live submit succeeds.
 
 ### Workday
 

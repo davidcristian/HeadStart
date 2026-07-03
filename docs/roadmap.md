@@ -189,7 +189,7 @@ complete across all scrapers:
 
 | Item | Why | Notes |
 | ---- | --- | ----- |
-| SmartRecruiters apply adapter | 12 catalog employers scrape via SR but cannot auto-apply | **Scraper only** (`@register_scraper("smartrecruiters")`); no `@register_applier` yet. Complex adapters (e.g. Google Careers) are split across multiple files under `app/appliers/adapters/` — SR apply work has not started. |
+| ~~SmartRecruiters apply adapter~~ | ~~12 catalog employers scrape via SR but cannot auto-apply~~ | **Shipped:** `@register_applier("smartrecruiters")` uses the Application API (`GET/POST api.smartrecruiters.com/postings/<uuid>/…`); posting UUID resolved from public Postings detail API; screening answers via `profile.answers` (`sr_<question_id>`); live submit requires `session.smart_token` or `session.access_token` |
 | ~~Shopify apply adapter~~ | ~~Phase 18 custom scraper is scrape-only~~ | **Shipped:** `@register_applier("shopify_careers")` delegates to Ashby with `board=shopify` |
 | Uber apply adapter | Phase 18 custom scraper is scrape-only | Proprietary apply flow; no apply adapter yet |
 | LinkedIn Easy Apply resume PDF | Many Easy Apply jobs require an attachment | Live submit sends `fileUploadResponses: []`; `resume_text` only |
@@ -437,7 +437,7 @@ without bespoke HTML per employer.
 | ~~Fixture + tests~~ | ~~CI safety~~ | **Shipped:** Sample JSON under `tests/fixtures/`; no live network |
 | ~~Scraper docs~~ | ~~Operator discoverability~~ | **Shipped:** Row in [modules/scrapers.md](modules/scrapers.md) |
 | ~~`sr_preset` catalog helper~~ | ~~Same factory pattern as `gh_preset` / `lever_preset`~~ | **Shipped:** Add to `catalog_helpers.py` |
-| SmartRecruiters apply adapter | Catalog employers need one-click apply | **Not shipped** — scrape-only today; see [Phase 7 polish](#phase-7-polish--remaining-gaps) |
+| ~~SmartRecruiters apply adapter~~ | ~~Catalog employers need one-click apply~~ | **Shipped:** `@register_applier("smartrecruiters")`; Application API with posting UUID resolution, screening-question mapping, and resume upload; see [modules/appliers.md](modules/appliers.md) |
 
 **Caveat:** public Postings API availability is tier-dependent on the customer's
 SmartRecruiters plan — verify each employer before adding a catalog preset.

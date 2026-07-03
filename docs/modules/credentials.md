@@ -64,6 +64,11 @@ For **LinkedIn auto-apply**, store logged-in session cookies (`li_at`,
 CSRF header when Voyager requests fail with CSRF errors. The session is
 candidate-owned, not employer-issued. See [appliers.md](appliers.md).
 
+For **SmartRecruiters auto-apply**, store an Application API token in credential
+`session.smart_token` (`X-SmartToken` header) or an OAuth bearer token in
+`session.access_token`. Tokens are partner/employer-issued via the SmartRecruiters
+developer portal — see [appliers.md](appliers.md).
+
 ## Endpoints (prefix `/api/v1/credentials`)
 
 | Method | Path    | Purpose                                  |

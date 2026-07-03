@@ -1,0 +1,19 @@
+{
+  "id": "744000120624847",
+  "name": "Senior Software Engineer",
+  "uuid": "9a79267a-1159-49ea-ac24-0a336fa6abdd",
+  "jobAdId": "899f9b70-a7d1-4fa1-9f74-709b9966501a",
+  "company": {
+    "identifier": "AcmeCorp",
+    "name": "ACME Corp"
+  },
+  "location": {
+    "city": "London",
+    "region": "England",
+    "country": "gb",
+    "fullLocation": "London, England, United Kingdom"
+  },
+  "releasedDate": "2026-04-14T07:57:07.974Z",
+  "postingUrl": "https://jobs.smartrecruiters.com/AcmeCorp/744000120624847-senior-software-engineer",
+  "applyUrl": "https://jobs.smartrecruiters.com/AcmeCorp/744000120624847-senior-software-engineer?oga=true"
+}

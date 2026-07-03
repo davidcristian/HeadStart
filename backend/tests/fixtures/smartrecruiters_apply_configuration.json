@@ -1,0 +1,45 @@
+{
+  "settings": {
+    "consentSettings": {
+      "consentModel": "SINGLE"
+    }
+  },
+  "questions": [
+    {
+      "id": "8fe4cfaf-7d0b-4224-998b-14a3085537bb",
+      "label": "Are you authorized to work in the UK?",
+      "repeatable": false,
+      "fields": [
+        {
+          "id": "value",
+          "label": "Value",
+          "type": "RADIO",
+          "required": true,
+          "values": [
+            {
+              "id": "1",
+              "label": "Yes"
+            },
+            {
+              "id": "0",
+              "label": "No"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "03bf8a6a-ba81-479f-8048-05ce9ef083c0",
+      "label": "What's your favorite book?",
+      "repeatable": false,
+      "fields": [
+        {
+          "id": "value",
+          "type": "INPUT_TEXT",
+          "required": false,
+          "values": []
+        }
+      ]
+    }
+  ]
+}
