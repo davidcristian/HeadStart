@@ -598,6 +598,7 @@ a job, review or edit the cover letter, and have both attached on apply.
 | Ghost detection & self-archive | Silent employers still need a paper trail | **Shipped:** beat task `detect_ghosted_applications` when `INBOX_AGENT_ENABLED=true`; configurable `INBOX_GHOST_WINDOW_DAYS` (default 14); self-email with `[HeadStart Ghost]` subject + `X-HeadStart-Type: ghost`; sets `seen_job.ghosted_at` and pipeline stage `ghosted` |
 | ~~Ghost recovery / late reply detection~~ | Employers sometimes respond weeks after the ghost window | **Shipped:** when inbound mail for a `ghosted` application classifies as recruiter signal (`follow_up`, `interview_request`, `general`, `rejection`), clear `ghosted_at`, set `ghost_recovered_at`, transition pipeline stage (`interview_pending`, `rejected`, or `awaiting_reply`), and push a high-priority notifier alert |
 | ~~Self-email re-ingestion~~ | ~~Ghost summaries must not pollute recruiter triage~~ | **Shipped:** heuristic classifier recognizes ghost markers (from/to self, subject prefix, `X-HeadStart-Type: ghost`) as `self_ghost_archive` and routes to the ghost folder |
+| Application-scoped inbox gate | Personal mail, newsletters, and unrelated senders must not enter the pipeline | **Gap today:** the beat orchestration loop classifies every fetched UID; `out_of_scope` skips folder routing but still runs the classifier and persists a row. **Target:** cheap pre-filter *before* classification — match only mail tied to **active** applications (`applied`, awaiting reply, interview pending) or **ghosted** applications (plus HeadStart ghost self-mail); use employer domain, `In-Reply-To` / `References` vs `application_log`, and optional sender allowlist; advance the poll cursor past skipped mail without LLM calls or DB writes; log ignored count for debugging. Unrelated mail (family, shopping, newsletters) stays untouched in the user's inbox |
 
 ### 20d — Autonomous follow-up responses
 
@@ -621,7 +622,7 @@ a job, review or edit the cover letter, and have both attached on apply.
 | ---- | --- | ----- |
 | Extend llama.cpp beyond summaries | Document curation, classification, and drafting need the same local stack | New `agents/` adapters (or extend summarizers) for `curate_resume`, `generate_cover_letter`, `classify_email`, and `draft_reply` prompts; reuse `make llamacpp` / `LLAMACPP_*` env; per-purpose model routing from [20a](#20a--tailored-application-documents) |
 | Input sanitization & scope lock | Small local models are easily hijacked by unrelated email content | **Pre-LLM:** strip HTML, cap body length, detect obvious injection patterns. **Prompt:** hard system scope — job-application triage only; structured JSON output schema (no free-form chat). **Post-LLM:** validate response against allowlisted labels/actions; reject out-of-scope completions (e.g. email says "give me the recipe for a pancake" → classify as `out_of_scope`, do not draft or send a reply). Never pass raw user email as executable instructions |
-| ~~Agent orchestration loop~~ | ~~Poll inbox → classify → act → log~~ | **Shipped:** beat task `process_inbox_messages` when `INBOX_AGENT_ENABLED=true`; `InboxOrchestrationService` fetches since `inbox_poll_state.last_polled_uid`, classifies in UID order, routes via existing classification path; cursor advances only on success; `INBOX_POLL_INTERVAL_SECONDS` (default 300) + `INBOX_POLL_BATCH_SIZE` (default 50) |
+| ~~Agent orchestration loop~~ | ~~Poll inbox → classify → act → log~~ | **Shipped:** beat task `process_inbox_messages` when `INBOX_AGENT_ENABLED=true`; `InboxOrchestrationService` fetches since `inbox_poll_state.last_polled_uid`, classifies in UID order, routes via existing classification path; cursor advances only on success; `INBOX_POLL_INTERVAL_SECONDS` (default 300) + `INBOX_POLL_BATCH_SIZE` (default 50). **Follow-up:** [application-scoped inbox gate](#20c--inbox-integration--email-triage) — do not classify personal/newsletter mail |
 | Docs & ADR | Capture dev-only boundary and safety model | **Partial:** [modules/inbox.md](modules/inbox.md) + [adr/0011-inbox-dev-only.md](adr/0011-inbox-dev-only.md). Orchestration loop documented in [modules/inbox.md](modules/inbox.md) and [modules/worker.md](modules/worker.md) |
 
 **Caveats:**
@@ -635,6 +636,11 @@ a job, review or edit the cover letter, and have both attached on apply.
 - Prompt injection: recruiter (or spam) mail may embed unrelated instructions;
   the agent must stay scoped to application workflow actions and refuse
   out-of-scope requests rather than complying.
+- **Shared mailbox reality:** most users receive personal mail, newsletters, and
+  other non-job traffic in the same inbox. The orchestration loop currently
+  classifies every fetched message; only `out_of_scope` routing is suppressed.
+  A pre-classification gate (see Phase 20c) should limit processing to mail
+  plausibly tied to active or ghosted applications.
 
 **Done when:** in a local dev environment with llama.cpp running, a user can
 upload a LaTeX resume template, configure one global model or per-purpose

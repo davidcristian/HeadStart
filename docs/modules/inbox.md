@@ -134,6 +134,12 @@ When `INBOX_AGENT_ENABLED=true`, beat runs `process_inbox_messages` every
 Batch size per user per tick: `INBOX_POLL_BATCH_SIZE` (default 50). See
 [worker.md](worker.md).
 
+**Known gap:** the loop currently classifies every fetched message. Personal mail,
+newsletters, and other non-application senders are labeled (often `out_of_scope`)
+and persisted, but should eventually be **skipped before classification** when
+they cannot be linked to an active or ghosted application. See the
+*Application-scoped inbox gate* item in [roadmap.md](../roadmap.md).
+
 ## Ghost recovery (Phase 20c)
 
 When inbound mail is classified for a **ghosted** application (`seen_job.ghosted_at`
