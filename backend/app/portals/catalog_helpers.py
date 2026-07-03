@@ -183,7 +183,11 @@ def shopify_careers_preset(
         category=category,
         adapter_key="shopify_careers",
         base_url=base,
-        default_config={"company": company, "portal_id": portal_id},
+        default_config={
+            "company": company,
+            "portal_id": portal_id,
+            "board": "shopify",
+        },
     )
 
 

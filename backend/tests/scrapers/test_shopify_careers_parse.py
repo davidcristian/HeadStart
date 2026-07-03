@@ -54,7 +54,7 @@ def test_parse_raises_when_stream_missing() -> None:
 
 def test_parse_raises_when_stream_json_invalid() -> None:
     html = (
-        '<html><body><script>'
+        "<html><body><script>"
         'window.__reactRouterContext.streamController.enqueue("not-json");'
         "</script></body></html>"
     )

@@ -155,6 +155,7 @@ def test_curated_portal_shopify_preset() -> None:
     preset = next(p for p in CURATED_PORTALS if p.id == "shopify")
     assert preset.adapter_key == "shopify_careers"
     assert preset.default_config["portal_id"] == "shopify"
+    assert preset.default_config["board"] == "shopify"
     assert preset.base_url == "https://www.shopify.com/careers"
 
 

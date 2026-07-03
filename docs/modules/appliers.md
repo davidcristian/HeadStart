@@ -61,6 +61,7 @@ source's `adapter_key` when that source supports auto-apply. Import the
 | `indeed` | Viewjob parse + downstream ATS delegation | Fetches `/viewjob?jk=…`, delegates to Greenhouse/Lever/Ashby/Workday/Google when the listing embeds an employer apply URL; see below |
 | `linkedin` | Guest job page + Voyager GraphQL + downstream ATS delegation | Fetches `/jobs-guest/jobs/api/jobPosting/{id}`, enriches offsite listings via Voyager when session cookies are present, delegates to Greenhouse/Lever/Ashby/Workday/Google/Microsoft/Amazon/Meta when the employer apply URL is recognized; see below |
 | `snowflake_careers` | Delegates to Ashby | Snowflake's Phenom careers site uses Ashby for applications; delegates to the `ashby` adapter with `board=snowflake` |
+| `shopify_careers` | Delegates to Ashby | Shopify's careers site uses Ashby for applications; delegates to the `ashby` adapter with `board=shopify` |
 
 ### Scrapers without apply adapters
 
@@ -70,7 +71,6 @@ work, but the Jobs page **Apply** action is unavailable:
 | Scraper key | Notes |
 | ----------- | ----- |
 | `smartrecruiters` | 12 catalog employers; apply adapter not started (unlike Google Careers, SR has no multi-file apply package under `adapters/` yet) |
-| `shopify_careers` | Ashby-backed site; could delegate to `ashby` like `snowflake_careers` |
 | `uber_careers` | Proprietary apply flow; scrape-only |
 | `playwright` / `generic_html` | Custom HTML sources; no generic apply path |
 
@@ -503,7 +503,7 @@ Careers live submit needs the candidate's own logged-in session on
 best-effort. Indeed-hosted Easy Apply does not attach the stored resume file on
 live submit (`resumeText` only). LinkedIn Easy Apply does not upload resume PDFs
 (`fileUploadResponses` is empty). Scrapers without any apply adapter (e.g.
-`smartrecruiters`, `shopify_careers`, `uber_careers`) cannot use the Jobs page
+`smartrecruiters`, `uber_careers`) cannot use the Jobs page
 Apply action. Branching questionnaires only
 submit answers you explicitly map in `profile.answers`. See
 [launch-checklist.md](../launch-checklist.md#7-auto-apply-optional--know-the-limits)
