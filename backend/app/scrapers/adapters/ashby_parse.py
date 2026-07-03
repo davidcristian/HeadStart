@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Any
 from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 
+from app.scrapers.dates import parse_iso8601
 from app.scrapers.types import JobPosting
 
 ASHBY_API = "https://api.ashbyhq.com/posting-api/job-board/{board}"
@@ -47,10 +47,7 @@ def to_posting(job: dict[str, Any], company: str) -> JobPosting:
         secondary = job["secondaryLocations"]
         if secondary and isinstance(secondary[0], dict):
             location = str(secondary[0].get("location") or "")
-    posted_at = None
-    published = job.get("publishedAt")
-    if isinstance(published, str) and published:
-        posted_at = datetime.fromisoformat(published.replace("Z", "+00:00"))
+    posted_at = parse_iso8601(job.get("publishedAt"))
     return JobPosting(
         external_id=str(job.get("id", "")),
         title=str(job.get("title", "")),

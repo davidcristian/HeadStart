@@ -6,7 +6,13 @@ import json
 
 import pytest
 
-from app.scrapers.adapters.shopify_careers_parse import parse_careers_html
+from app.scrapers.adapters.shopify_careers_parse import _resolve_node, parse_careers_html
+
+
+def test_resolve_node_tolerates_non_numeric_ref_key() -> None:
+    """A ref-map key that isn't `_<int>` must fall back to the literal key, not crash."""
+    stream = [{"_bad": 1, "_1": 2}, "resolved", "keyname"]
+    assert _resolve_node(0, stream) == {"_bad": "resolved", "resolved": "keyname"}
 
 
 def _make_shopify_html(stream: list) -> str:

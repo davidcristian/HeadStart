@@ -1,7 +1,25 @@
+import json
+
 import httpx
 
 from app.scrapers import ScrapeContext, get_scraper
 from tests.conftest import load_fixture, make_http_client
+
+
+def test_ashby_tolerates_malformed_published_date() -> None:
+    """One unparseable date must not abort the whole scrape (posted_at falls to None)."""
+    payload = json.dumps(
+        {"jobs": [{"id": "1", "title": "Eng", "jobUrl": "https://x/1", "publishedAt": "nope"}]}
+    )
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, text=payload, headers={"content-type": "application/json"})
+
+    scraper = get_scraper("ashby", http=make_http_client(handler))
+    postings = scraper.fetch(ScrapeContext(config={"board": "acme"}))
+
+    assert len(postings) == 1
+    assert postings[0].posted_at is None
 
 
 def test_ashby_parses_postings() -> None:

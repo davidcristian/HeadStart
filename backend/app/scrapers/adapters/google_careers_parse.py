@@ -52,7 +52,10 @@ def _extract_job_records(html: str) -> list[list[Any]]:
     blob = _balanced_json_value(html, start)
     if blob is None:
         return []
-    payload = json.loads(blob)
+    try:
+        payload = json.loads(blob)
+    except json.JSONDecodeError:
+        return []
     if not isinstance(payload, list) or not payload:
         return []
     jobs = payload[0]
@@ -143,7 +146,7 @@ def _posted_at_from_record(record: list[Any]) -> datetime | None:
     if len(record) <= 12 or not isinstance(record[12], list) or not record[12]:
         return None
     seconds = record[12][0]
-    if not isinstance(seconds, (int, float)):
+    if not isinstance(seconds, int | float):
         return None
     return datetime.fromtimestamp(float(seconds), tz=UTC)
 

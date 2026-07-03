@@ -13,11 +13,12 @@ Config / context:
 
 from __future__ import annotations
 
-from datetime import datetime
+import math
 from typing import Any
 from urllib.parse import urlencode, urlparse
 
 from app.scrapers.base import Scraper, register_scraper
+from app.scrapers.dates import parse_iso8601
 from app.scrapers.types import JobPosting, ScrapeContext
 
 SMARTRECRUITERS_API = "https://api.smartrecruiters.com/v1/companies/{company_id}/postings"
@@ -49,8 +50,7 @@ class SmartRecruitersScraper(Scraper):
                     "smartrecruiters API returned unexpected content field (expected a JSON array)"
                 )
             if total is None:
-                raw_total = data.get("totalFound", len(content))
-                total = int(raw_total) if isinstance(raw_total, (int, float)) else len(content)
+                total = self._coerce_count(data.get("totalFound"), len(content))
             if not content:
                 break
             for job in content:
@@ -105,12 +105,27 @@ class SmartRecruitersScraper(Scraper):
     @staticmethod
     def _page_size(config: dict[str, Any]) -> int:
         raw = config.get("page_size", _DEFAULT_PAGE_SIZE)
-        if not isinstance(raw, (int, float)) or isinstance(raw, bool):
+        if not isinstance(raw, int | float) or isinstance(raw, bool):
             raise ValueError("page_size must be a positive integer")
         size = int(raw)
         if size <= 0:
             raise ValueError("page_size must be a positive integer")
         return min(size, _MAX_PAGE_SIZE)
+
+    @staticmethod
+    def _coerce_count(raw: Any, default: int) -> int:
+        """Coerce an untrusted total into a non-negative int.
+
+        JSON ``Infinity`` / ``NaN`` (accepted by ``json.loads``) would raise on
+        ``int()``; a bad total falls back to the page size so the scrape stops
+        cleanly instead of crashing or looping forever.
+        """
+        if isinstance(raw, bool) or not isinstance(raw, int | float):
+            return default
+        if isinstance(raw, float) and not math.isfinite(raw):
+            return default
+        value = int(raw)
+        return value if value >= 0 else default
 
     @staticmethod
     def _humanize_slug(slug: str) -> str:
@@ -124,10 +139,7 @@ class SmartRecruitersScraper(Scraper):
         display_company = company
         if isinstance(company_payload, dict):
             display_company = str(company_payload.get("name") or company or company_id)
-        posted_at = None
-        released = job.get("releasedDate")
-        if isinstance(released, str) and released:
-            posted_at = datetime.fromisoformat(released.replace("Z", "+00:00"))
+        posted_at = parse_iso8601(job.get("releasedDate"))
         posting_id = str(job.get("id", ""))
         return JobPosting(
             external_id=posting_id,

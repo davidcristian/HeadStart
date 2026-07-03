@@ -1,7 +1,17 @@
 import httpx
 
 from app.scrapers import ScrapeContext, get_scraper
+from app.scrapers.adapters.google_careers_parse import parse_search_page
 from tests.conftest import load_fixture, make_http_client
+
+
+def test_google_careers_tolerates_malformed_json_blob() -> None:
+    """A balanced-but-invalid embedded JSON blob must yield no postings, not crash."""
+    html = "noise AF_initDataCallback({key: 'ds:1', data:[abc] });"
+    postings = parse_search_page(
+        html, company="Google", applications_base="https://careers.google.com", query_params={}
+    )
+    assert postings == []
 
 
 def test_google_careers_parses_postings() -> None:

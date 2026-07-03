@@ -77,11 +77,12 @@ def _resolve_node(index: int, stream: list[Any], stack: set[int] | None = None) 
         if value and all(str(key).startswith("_") for key in value):
             resolved: dict[str, Any] = {}
             for ref_key, ref_index in value.items():
-                key_index = int(ref_key[1:])
-                if isinstance(key_index, int) and key_index < len(stream):
-                    key = stream[key_index]
-                else:
+                try:
+                    key_index = int(ref_key[1:])
+                except ValueError:
                     key = ref_key
+                else:
+                    key = stream[key_index] if 0 <= key_index < len(stream) else ref_key
                 resolved[str(key)] = (
                     _resolve_node(ref_index, stream, stack)
                     if isinstance(ref_index, int)

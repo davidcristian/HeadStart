@@ -6,12 +6,11 @@ features. Update the Status column (and strike the row) when an item ships; link
 
 Produced by a read-only multi-agent audit — 13 subsystem clusters, every finding
 adversarially verified against the code. **77 confirmed** findings (1 critical, 9 high,
-16 medium, 51 low). 34 are already resolved: the browser-extension cluster (6) via
+16 medium, 51 low). 33 are already resolved: the browser-extension cluster (6) via
 removal (WS8), the WS3 security-hardening trio (2 high + 1 low), the WS11 docs
 cluster (8: 1 med + 7 low), all 6 WS1 inbox-UID items (1 crit + 1 high + 1 med
-+ 3 low), all 4 WS2 scheduler items (1 high + 3 low), and WS4 apply-correctness
-(7: 1 high + 3 med + 3 low). (WS5 billing + WS6 scrapers ship in parallel — PRs
-#175/#176; the WS4 dedup refactors follow separately.)
++ 3 low), all 4 WS2 scheduler items (1 high + 3 low), and all 6 WS6 scraper-hardening
+items (2 med + 4 low). (WS5 billing ships in parallel — PR #175.)
 
 **Status legend:** ☐ open · 🔜 in progress · ✅ done
 **Type:** 🐞 bug · 🔒 security · 📝 doc · 🧪 test · ♻️ refactor · 🔁 consistency
@@ -82,16 +81,17 @@ the three dedup refactors (items 8–10) follow in a separate PR.
 | ⚪ LOW | 🧪 | No test for webhook idempotency / duplicate redemption / global cap | `tests/api/test_promo_codes.py:114` | ☐ |
 | ⚪ LOW | 📝 | Billing doc omits promo model/repo/schema; overstates refund policy | `docs/modules/billing.md:3` | ☐ |
 
-## WS6 — Scraper input-hardening
-Untrusted upstream JSON/HTML aborts the whole scrape where siblings degrade to `None`/`[]`.
+## WS6 — Scraper input-hardening ✅ DONE (2026-07-01)
+Untrusted upstream JSON/HTML aborted the whole scrape where siblings degrade to `None`/`[]`;
+now every parse degrades gracefully (see the Error handling note in `docs/modules/scrapers.md`).
 | Sev | Type | Item | Location | Status |
 | --- | ---- | ---- | -------- | ------ |
-| 🟡 MED | 🐞 | Unguarded `datetime.fromisoformat` in ashby/smartrecruiters (also snowflake via ashby) → one bad date aborts the run | `scrapers/adapters/ashby_parse.py:53`, `smartrecruiters.py:130` | ☐ |
-| 🟡 MED | 🐞 | Unguarded `json.loads` on HTML-extracted blob crashes google_careers parse | `scrapers/adapters/google_careers_parse.py:55` | ☐ |
-| ⚪ LOW | 🐞 | Untrusted flight-stream ref key → `int(ref_key[1:])` crashes shopify `_resolve_node` | `scrapers/adapters/shopify_careers_parse.py:80` | ☐ |
-| ⚪ LOW | 🐞 | `int()` of untrusted total/count overflows on JSON `Infinity/NaN` | `scrapers/adapters/smartrecruiters.py:53` | ☐ |
-| ⚪ LOW | 🔁 | `post_json`/`post_form` skip the upfront `assert_safe_outbound_url` sibling methods do (hook still covers it) | `scrapers/http.py:51` | ☐ |
-| ⚪ LOW | 🧪 | No test for the test-TLD SSRF bypass or redirect re-validation | `tests/core/test_outbound_url.py:8` | ☐ |
+| 🟡 MED | 🐞 | Unguarded `datetime.fromisoformat` in ashby/smartrecruiters (also snowflake via ashby) → one bad date aborted the run; now via shared `scrapers/dates.py:parse_iso8601` (bad date → `None`) | `scrapers/adapters/ashby_parse.py`, `smartrecruiters.py` | ✅ |
+| 🟡 MED | 🐞 | Unguarded `json.loads` on the HTML-extracted blob crashed google_careers parse; now returns `[]` on `JSONDecodeError` | `scrapers/adapters/google_careers_parse.py:55` | ✅ |
+| ⚪ LOW | 🐞 | Untrusted flight-stream ref key → `int(ref_key[1:])` crashed shopify `_resolve_node`; now falls back to the literal key on `ValueError` and range-checks the index | `scrapers/adapters/shopify_careers_parse.py:80` | ✅ |
+| ⚪ LOW | 🐞 | `int()` of an untrusted total overflowed on JSON `Infinity/NaN`; now `_coerce_count` returns a safe default for non-finite/negative/non-numeric | `scrapers/adapters/smartrecruiters.py:53` | ✅ |
+| ⚪ LOW | 🔁 | `post_json`/`post_form` (and `put_json`/`post_multipart`) skipped the upfront `assert_safe_outbound_url` sibling methods do — matters for injected clients with no request hook; now all validate upfront | `scrapers/http.py:51` | ✅ |
+| ⚪ LOW | 🧪 | Test-TLD SSRF bypass already covered (WS3, `test_outbound_url.py`); added redirect re-validation + upfront-method SSRF tests | `tests/scrapers/test_http_safety.py` | ✅ |
 
 ## WS7 — Frontend correctness
 | Sev | Type | Item | Location | Status |

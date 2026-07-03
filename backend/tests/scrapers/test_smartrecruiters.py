@@ -5,6 +5,22 @@ from app.scrapers import ScrapeContext, get_scraper
 from tests.conftest import load_fixture, make_http_client
 
 
+def test_smartrecruiters_tolerates_bad_date_and_nonfinite_total() -> None:
+    """A malformed date and a JSON `Infinity` total must degrade, not crash the run."""
+    payload = (
+        '{"totalFound": Infinity, "content": [{"id": "1", "name": "Eng", "releasedDate": "x"}]}'
+    )
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, text=payload, headers={"content-type": "application/json"})
+
+    scraper = get_scraper("smartrecruiters", http=make_http_client(handler))
+    postings = scraper.fetch(ScrapeContext(config={"company_id": "AcmeCorp"}))
+
+    assert len(postings) == 1
+    assert postings[0].posted_at is None
+
+
 def test_smartrecruiters_parses_postings_with_pagination() -> None:
     page1 = load_fixture("smartrecruiters_postings_page1.json")
     page2 = load_fixture("smartrecruiters_postings_page2.json")

@@ -75,6 +75,13 @@ Tests must use saved fixtures and never hit the network.
 search without crashing. Be a polite client: real User-Agent, respect intervals,
 no retry storms.
 
+Upstream JSON/HTML is **untrusted**: a single bad field or record must not abort
+the run. Parse defensively — a malformed date becomes `None` (use
+`app.scrapers.dates.parse_iso8601`), a non-list/non-dict payload node is skipped,
+and a non-finite or out-of-range count/index falls back to a safe default rather
+than raising. Aborting is reserved for a payload that isn't recognizable at all
+(e.g. the expected top-level array/object is missing).
+
 Outbound HTTP from scrapers is restricted to public `http`/`https` destinations.
 Private, loopback, link-local, and cloud-metadata addresses are rejected in the
 shared `HttpClient` (including redirect targets) and on every Playwright request

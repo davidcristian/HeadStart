@@ -50,6 +50,7 @@ class HttpClient:
 
     def post_json(self, url: str, *, json: Any = None, **kwargs: Any) -> Any:
         self._wait_rate_limit()
+        assert_safe_outbound_url(url)
         resp = self._client.post(url, json=json, **kwargs)
         resp.raise_for_status()
         return resp.json()
@@ -57,6 +58,7 @@ class HttpClient:
     def post_form(self, url: str, *, data: dict[str, str], **kwargs: Any) -> str:
         """POST application/x-www-form-urlencoded and return the response text."""
         self._wait_rate_limit()
+        assert_safe_outbound_url(url)
         resp = self._client.post(url, data=data, **kwargs)
         resp.raise_for_status()
         return resp.text
@@ -79,6 +81,7 @@ class HttpClient:
     def put_json(self, url: str, *, json: Any = None, **kwargs: Any) -> Any:
         """PUT JSON and parse a JSON response body."""
         self._wait_rate_limit()
+        assert_safe_outbound_url(url)
         resp = self._client.put(url, json=json, **kwargs)
         resp.raise_for_status()
         return resp.json()
@@ -103,6 +106,7 @@ class HttpClient:
     ) -> Any:
         """POST multipart/form-data; returns JSON when the response is JSON."""
         self._wait_rate_limit()
+        assert_safe_outbound_url(url)
         resp = self._client.post(url, data=data, files=files, **kwargs)
         resp.raise_for_status()
         content_type = resp.headers.get("content-type", "")
