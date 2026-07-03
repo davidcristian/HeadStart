@@ -10,9 +10,7 @@ from app.appliers.adapters.apple_careers_detail import parse_job_detail_page
 def _make_html(data: object) -> str:
     payload = json.dumps(json.dumps(data))[1:-1]
     return (
-        "<html><body>"
-        f'window.__staticRouterHydrationData = JSON.parse("{payload}");'
-        "</body></html>"
+        f'<html><body>window.__staticRouterHydrationData = JSON.parse("{payload}");</body></html>'
     )
 
 

@@ -83,8 +83,7 @@ def test_linkedin_preserves_search_filters_from_query_url() -> None:
     fixture = load_fixture("linkedin_search.html")
     seen: dict[str, str] = {}
     search_url = (
-        "https://www.linkedin.com/jobs/search/?keywords=python&location=remote"
-        "&f_TPR=r604800&f_WT=2"
+        "https://www.linkedin.com/jobs/search/?keywords=python&location=remote&f_TPR=r604800&f_WT=2"
     )
 
     def handler(request: httpx.Request) -> httpx.Response:
