@@ -521,6 +521,83 @@ no duplicate `portal_id` rows.
 
 ---
 
+## Phase 20 — Application pipeline automation (dev / local agent)
+
+Goal: automate the full job-application lifecycle **up to the interview
+handoff** — apply, triage recruiter email, respond to follow-ups, and alert the
+user only when an interview needs to be scheduled. This is an ambitious stretch
+goal that builds on Phase 7 (auto-apply) and Phase 12 (local LLM via
+llama.cpp).
+
+**Scope boundary:** HeadStart takes over from "new match" through "interview
+requested." Once a human needs to pick a time slot or join a call, the system
+notifies the user and steps aside.
+
+**Environment constraint:** this phase is **dev-only / self-hosted**. It depends
+on a **local agent** (likely llama.cpp via the existing `llamacpp` summarizer
+stack, extended to classification + drafting) with direct access to the user's
+mailbox and browser session. It must **not** ship as a hosted SaaS feature —
+credentials, email content, and autonomous replies are too sensitive for
+multi-tenant operation without explicit user-controlled infrastructure.
+
+### 20a — Apply orchestration (extend Phase 7)
+
+| Item | Why | Notes |
+| ---- | --- | ----- |
+| Auto-apply queue from search matches | Users should not click Apply per job | Extend pipeline: when `source.auto_apply_enabled` and profile + credentials exist, enqueue apply on new `seen_job` rows that pass filters; respect existing `application_log` audit trail |
+| Apply outcome tracking | Downstream email triage needs a known baseline | Record `applied_at`, employer domain, and posting metadata on `seen_job` or a new `application` entity linked to the job |
+
+### 20b — Inbox integration & email triage
+
+| Item | Why | Notes |
+| ---- | --- | ----- |
+| Mailbox connector (IMAP + SMTP) | Recruiter replies land in email, not in the app | Dev-only adapter under a new `inbox/` subsystem (mirror scraper/notifier registry); user supplies IMAP/SMTP creds via env or encrypted credential store |
+| Email classification agent | Sort noise from signal without manual folders | Local LLM classifies inbound mail tied to known applications: `general`, `rejection`, `follow_up`, `interview_request`, `ghost_candidate` (no reply after N days) |
+| Folder / label routing | Keep the inbox usable | **General** recruiter mail → sort to a HeadStart folder/label; **Rejection** → separate folder; configurable per provider (Gmail labels, Outlook folders) |
+| Ghost detection & self-archive | Silent employers still need a paper trail | If no reply within configurable window (e.g. 14 days), send a summary email to self ("ghosted by {company} for {role}") and mark application `ghosted` in the app |
+
+### 20c — Autonomous follow-up responses
+
+| Item | Why | Notes |
+| ---- | --- | ----- |
+| Follow-up draft agent | Recruiters ask for availability, salary, work auth — repetitive | Local LLM drafts replies from application profile + job context; never send without explicit auto-reply policy or user pre-approval per template class |
+| Safe-send guardrails | Autonomous email is high-risk | Rate limits, blocklist for legal/HR-sensitive topics, dry-run log of every outbound draft; `inbox.auto_reply_enabled` default off |
+| Thread ↔ application linking | Classification must know which job a thread is about | Match on employer domain, job title fuzzy match, and `Message-ID` / `In-Reply-To` headers against `application_log` metadata |
+
+### 20d — Interview handoff & user notification
+
+| Item | Why | Notes |
+| ---- | --- | ----- |
+| Interview detection | User should only take over at the right moment | Classifier flags `interview_request` (scheduling link, Calendly, "let's set up a call"); mark application `interview_pending` |
+| Handoff notification | User checks their own calendar | Push via existing notifiers (email, Slack, ntfy, etc.): "Interview to schedule at {company} — take over from here" with thread link and job card |
+| UI: application pipeline view | User sees status at a glance | New `/app/applications` view: applied → awaiting reply → follow-up sent → interview pending / rejected / ghosted; filterable timeline per job |
+
+### 20e — Local agent runtime
+
+| Item | Why | Notes |
+| ---- | --- | ----- |
+| Extend llama.cpp beyond summaries | Classification + drafting need the same local stack | New `agents/` adapters (or extend summarizers) for `classify_email` and `draft_reply` prompts; reuse `make llamacpp` / `LLAMACPP_*` env |
+| Agent orchestration loop | Poll inbox → classify → act → log | Celery beat task or standalone dev daemon; runs only when `INBOX_AGENT_ENABLED=true` |
+| Docs & ADR | Capture dev-only boundary and safety model | ADR for why this stays off hosted prod; module doc under `modules/inbox.md` |
+
+**Caveats:**
+
+- Hosted HeadStart will **not** run this pipeline — document clearly in UI and
+  runbook that inbox automation requires local dev setup.
+- Legal/compliance: autonomous replies may violate employer terms or create
+  misrepresentation risk; ship with prominent consent and dry-run defaults.
+- Gmail/Outlook API rate limits and OAuth are future work; IMAP is the v1 path
+  for self-hosters.
+
+**Done when:** in a local dev environment with llama.cpp running, a user can
+enable auto-apply on a search, have recruiter email auto-sorted into
+general/rejection folders, receive a self-email on ghosted applications, see
+auto-drafted follow-up replies (with optional auto-send), and get a notifier
+alert when an interview needs scheduling — at which point they take over
+manually.
+
+---
+
 ## Suggested starting points
 
 **Personal use (one job seeker):**
