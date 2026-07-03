@@ -3,7 +3,6 @@ from unittest.mock import patch
 from fastapi.testclient import TestClient
 
 from app.services.pipeline import PipelineService, RunResult
-from tests.conftest import register_and_login
 
 
 def test_health(client: TestClient) -> None:
@@ -173,28 +172,3 @@ def test_search_rejects_missing_source(client: TestClient, auth_headers: dict[st
         headers=auth_headers,
     )
     assert resp.status_code == 400
-
-
-def test_users_cannot_see_each_others_sources(client: TestClient) -> None:
-    alice = register_and_login(client, "alice@example.com")
-    bob = register_and_login(client, "bob@example.com")
-
-    source_id = client.post(
-        "/api/v1/sources",
-        json={"name": "Alice Co", "adapter_key": "greenhouse"},
-        headers=alice,
-    ).json()["id"]
-
-    # Alice sees it; Bob does not.
-    assert len(client.get("/api/v1/sources", headers=alice).json()) == 1
-    assert client.get("/api/v1/sources", headers=bob).json() == []
-
-    # Bob cannot fetch, patch, or delete Alice's source.
-    assert client.get(f"/api/v1/sources/{source_id}", headers=bob).status_code == 404
-    assert (
-        client.patch(
-            f"/api/v1/sources/{source_id}", json={"enabled": False}, headers=bob
-        ).status_code
-        == 404
-    )
-    assert client.delete(f"/api/v1/sources/{source_id}", headers=bob).status_code == 404

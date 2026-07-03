@@ -57,8 +57,3 @@ class ApplicationPipelineRead(BaseModel):
     )
     latest_reply_draft: ReplyDraftSummary | None = None
     latest_draftable_classification_id: int | None = None
-
-
-class ApplicationPipelineListParams(BaseModel):
-    stage: ApplicationPipelineStage | None = None
-    limit: int = Field(default=100, ge=1, le=500)

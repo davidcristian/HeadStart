@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict
 
 from app.schemas.application_artifact import ApplicationArtifactMeta
 
@@ -23,7 +23,3 @@ class ApplicationLogRead(BaseModel):
     external_application_id: str | None = None
     tailored_resume_artifact: ApplicationArtifactMeta | None = None
     created_at: datetime
-
-
-class ApplicationLogListParams(BaseModel):
-    limit: int = Field(default=100, ge=1, le=500)

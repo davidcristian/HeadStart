@@ -16,6 +16,7 @@ from app.models.inbox_pending_reply import InboxPendingReply
 from app.models.inbox_reply_draft import InboxReplyDraft
 from app.models.inbox_reply_send_log import InboxReplySendLog
 from app.repositories.inbox_reply_send_logs import InboxReplySendLogRepository
+from app.services.inbox import InboxService
 
 SENT_OUTCOME = "sent"
 BLOCKED_TOPIC_OUTCOME = "blocked_topic"
@@ -38,6 +39,7 @@ class ReplySafeSendService:
     def __init__(self, session: Session) -> None:
         self.session = session
         self.logs = InboxReplySendLogRepository(session)
+        self.inbox = InboxService(session)
 
     def evaluate_before_queue(
         self,
@@ -131,6 +133,7 @@ class ReplySafeSendService:
 
     def list_for_user(self, user_id: int, *, limit: int = 50) -> list[InboxReplySendLog]:
         """Return recent auto-reply audit rows for one user."""
+        self.inbox.require_enabled()
         return self.logs.list_for_user(user_id, limit=limit)
 
     def _topic_block(

@@ -91,6 +91,7 @@ def _config_keys_match(preset: PortalPreset, source: Source) -> bool:
         return cfg.get("tenant") == pcfg.get("tenant") and cfg.get("site") == pcfg.get("site")
     if preset.adapter_key in {
         "amazon_jobs",
+        "apple_careers",
         "google_careers",
         "meta_careers",
         "microsoft_careers",

@@ -287,7 +287,6 @@ def list_inbox_reply_send_logs(
     user: User = Depends(get_verified_user),
 ) -> list[ReplySendLogRead]:
     """List audit rows for autonomous recruiter reply decisions."""
-    InboxService(db).require_enabled()
     params = ReplySendLogListParams(limit=limit)
     rows = ReplySafeSendService(db).list_for_user(user.id, limit=params.limit)
     return [ReplySendLogRead.model_validate(row) for row in rows]

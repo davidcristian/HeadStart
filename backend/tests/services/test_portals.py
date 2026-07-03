@@ -213,3 +213,33 @@ def test_config_keys_match_smartrecruiters() -> None:
         default_config={"company_id": "BoschGroup"},
     )
     assert _config_keys_match(preset, source) is True
+
+
+def test_config_keys_match_single_employer_apple() -> None:
+    # apple_careers is a portal_id-identified single-employer adapter; it must be
+    # in the single-employer branch alongside its siblings (was previously omitted).
+    from app.portals.catalog import CURATED_PORTALS
+
+    preset = next(p for p in CURATED_PORTALS if p.id == "apple")
+    source = Source(
+        user_id=1,
+        name="Apple",
+        adapter_key="apple_careers",
+        base_url="https://jobs.apple.com/en-us/search",
+        default_config={"portal_id": "apple"},
+    )
+    assert _config_keys_match(preset, source) is True
+
+
+def test_config_keys_match_single_employer_portal_id_mismatch() -> None:
+    from app.portals.catalog import CURATED_PORTALS
+
+    preset = next(p for p in CURATED_PORTALS if p.id == "apple")
+    source = Source(
+        user_id=1,
+        name="Not Apple",
+        adapter_key="apple_careers",
+        base_url="https://jobs.apple.com/en-us/search",
+        default_config={"portal_id": "google"},
+    )
+    assert _config_keys_match(preset, source) is False

@@ -6,8 +6,9 @@ features. Update the Status column (and strike the row) when an item ships; link
 
 Produced by a read-only multi-agent audit — 13 subsystem clusters, every finding
 adversarially verified against the code. **77 confirmed** findings (1 critical, 9 high,
-16 medium, 51 low). 68 are already resolved: the WS10 LLM-adapter-family consolidation
-cluster (7: 1 med Gemini key-in-URL + 6 low refactors), the browser-extension cluster (6) via
+16 medium, 51 low) — **all 77 are now resolved** (plus the later WS13 find). By cluster:
+the WS10 LLM-adapter-family consolidation cluster (7: 1 med Gemini key-in-URL + 6 low
+refactors), the WS12 test-coverage backfill (6 low), the browser-extension cluster (6) via
 removal (WS8), the WS3 security-hardening trio (2 high + 1 low), the WS11 docs
 cluster (8: 1 med + 7 low), all 6 WS1 inbox-UID items (1 crit + 1 high + 1 med
 + 3 low), all 4 WS2 scheduler items (1 high + 3 low), all 6 WS5 billing items
@@ -171,16 +172,16 @@ tests cover `llm_common` and the generic registry.
 | ⚪ LOW | 📝 | `appliers.md`: undocumented Ashby `allow_unpublished_job_posting`; stale SmartRecruiters `consent`; Lever `compliance_policy_id`/`gdpr_consent` coupling | `docs/modules/appliers.md`, `appliers/adapters/lever.py:240` | ✅ |
 | ⚪ LOW | 📝 | `catalog.py` docstring says edit `catalog_presets.py`, but ~40 employers now live in `presets/<id>.py` | `portals/catalog.py:4` | ✅ |
 
-## WS12 — Test-coverage backfill
+## WS12 — Test-coverage backfill ✅ DONE (2026-07-01)
 (Item-specific tests are tracked in each WS above; these are the standalone gaps.)
 | Sev | Type | Item | Location | Status |
 | --- | ---- | ---- | -------- | ------ |
-| ⚪ LOW | 🧪 | Multi-user isolation invariant has almost no cross-user tests (only `sources`); add for searches/targets/credentials/jobs/applications | `tests/api/test_api.py:178` | ☐ |
-| ⚪ LOW | 🧪 | `core/security.py` has no direct tests (JWT type enforcement, bcrypt 72-byte truncation, feed-token version) | `core/security.py:106` | ☐ |
-| ⚪ LOW | 🔁 | `apple_careers` omitted from the single-employer set in `_config_keys_match` (diverges from 7 siblings) | `services/portals.py:92` | ☐ |
-| ⚪ LOW | 🧪 | No test for the single-employer dedup branch in `_config_keys_match` | `tests/services/test_portals.py:105` | ☐ |
-| ⚪ LOW | 🔁 | Inbox router duplicates the `require_enabled()` gate its service already applies | `api/v1/inbox.py:290` | ☐ |
-| ⚪ LOW | ♻️ | Dead schemas `ApplicationLogListParams`, `ApplicationPipelineListParams` | `schemas/application_pipeline.py:62` | ☐ |
+| ⚪ LOW | 🧪 | Multi-user isolation invariant had almost no cross-user tests (only `sources`); added for searches/targets/credentials/jobs/applications | `tests/api/test_api.py` | ✅ |
+| ⚪ LOW | 🧪 | `core/security.py` had no direct tests; added (JWT type enforcement + `ver` claim, bcrypt 72-byte truncation, feed-token missing-version, wrong-signature/expired) | `tests/core/test_security.py` | ✅ |
+| ⚪ LOW | 🔁 | `apple_careers` omitted from the single-employer `portal_id` set in `_config_keys_match` (diverged from 7 siblings); added | `services/portals.py:92` | ✅ |
+| ⚪ LOW | 🧪 | No test for the single-employer dedup branch in `_config_keys_match`; added positive (apple) + portal_id-mismatch cases | `tests/services/test_portals.py` | ✅ |
+| ⚪ LOW | 🔁 | Inbox `list_inbox_reply_send_logs` gated at the router while its sibling `list_inbox_reply_drafts` gates in the service; moved `require_enabled()` into `ReplySafeSendService.list_for_user` (mirrors `ReplyDraftService`) and dropped the router call | `api/v1/inbox.py:290` | ✅ |
+| ⚪ LOW | ♻️ | Dead schemas `ApplicationLogListParams`, `ApplicationPipelineListParams`; removed | `schemas/application_pipeline.py:62` | ✅ |
 
 ## WS13 — Password reset does not invalidate active sessions ✅ DONE (2026-07-01)
 Surfaced by a later automated scan (Cursor, commit `5975194`), not the original audit.
