@@ -195,7 +195,7 @@ complete across all scrapers:
 | LinkedIn Easy Apply resume PDF | Many Easy Apply jobs require an attachment | Live submit sends `fileUploadResponses: []`; `resume_text` only |
 | Indeed-hosted resume file | Same class of gap as LinkedIn | Live smartapply submit forwards `resumeText` only, not the stored file |
 | Structured profile beyond Workday | UI stores experience/education/skills/languages | Only the Workday adapter consumes those fields today |
-| Pipeline auto-apply queue | Users still click Apply per job | Tracked in [Phase 20a](#20a--apply-orchestration-extend-phase-7) |
+| Pipeline auto-apply queue | Users still click Apply per job | Tracked in [Phase 20b](#20b--apply-orchestration-extend-phase-7) |
 
 ---
 
@@ -542,14 +542,17 @@ no duplicate `portal_id` rows.
 ## Phase 20 — Application pipeline automation (dev / local agent)
 
 Goal: automate the full job-application lifecycle **up to the interview
-handoff** — apply, triage recruiter email, respond to follow-ups, and alert the
-user only when an interview needs to be scheduled. This is an ambitious stretch
-goal that builds on Phase 7 (auto-apply) and Phase 12 (local LLM via
-llama.cpp).
+handoff** — tailor resume and cover letter per job, apply, triage recruiter
+email, respond to follow-ups, and alert the user only when an interview needs
+to be scheduled. This is an ambitious stretch goal that builds on Phase 7
+(auto-apply) and Phase 12 (local LLM via llama.cpp).
 
 **Scope boundary:** HeadStart takes over from "new match" through "interview
 requested." Once a human needs to pick a time slot or join a call, the system
-notifies the user and steps aside.
+notifies the user and steps aside. Before each apply, the pipeline can
+**tailor application documents** — a job-specific resume (from a user-supplied
+LaTeX template) and an auto-generated cover letter — using the same local-agent
+stack as inbox triage (see [20a](#20a--tailored-application-documents)).
 
 **Environment constraint:** this phase is **dev-only / self-hosted**. It depends
 on a **local agent** (likely llama.cpp via the existing `llamacpp` summarizer
@@ -558,14 +561,33 @@ mailbox and browser session. It must **not** ship as a hosted SaaS feature —
 credentials, email content, and autonomous replies are too sensitive for
 multi-tenant operation without explicit user-controlled infrastructure.
 
-### 20a — Apply orchestration (extend Phase 7)
+### 20a — Tailored application documents
+
+Goal: generate a **job-specific resume PDF** and **cover letter** before each
+apply (manual or queued). Builds on the application profile
+([modules/profile.md](modules/profile.md)) and extends Phase 15's per-user AI
+provider pattern to purpose-specific model selection.
 
 | Item | Why | Notes |
 | ---- | --- | ----- |
-| Auto-apply queue from search matches | Users should not click Apply per job | Extend pipeline: when `source.auto_apply_enabled` and profile + credentials exist, enqueue apply on new `seen_job` rows that pass filters; respect existing `application_log` audit trail |
+| LaTeX resume template storage | Tech resumes are commonly authored in LaTeX; users need consistent formatting | One or more encrypted `.tex` templates per user (or a default template library); template variables map to profile fields (`work_experience`, `education`, `skills`, `links`); optional `tectonic`/`pdflatex` compile step in the dev worker |
+| Job-aware resume curation | A generic resume underperforms; tailoring per posting improves response rates | LLM selects, rewords, and reorders bullets/skills to match the job description while staying within template constraints; output is compiled LaTeX → PDF attached on apply (replaces or supplements the static `resume_file` upload) |
+| Automatic cover letter generation | Placeholder templates (`{company}`, `{job_title}`) are not enough for competitive applications | LLM drafts a full cover letter from the job posting, curated resume highlights, and profile; surfaced in the existing apply confirm dialog for review/edit; optional auto-approve when pipeline auto-apply is on |
+| Per-purpose model preferences | Summarization, resume curation, cover letters, email classification, and reply drafting have different quality/latency tradeoffs | Extend per-user AI settings beyond Phase 15's single `summary_provider`: optional **global** provider + model + BYOK, or per-purpose overrides (`resume_curation`, `cover_letter`, `email_classify`, `email_draft`); unset purposes fall back to global, then env defaults (`SUMMARY_PROVIDER` / `LLAMACPP_*` for local dev) |
+| Document preview & audit | High-stakes generated content must be inspectable before live submit | Persist generated artifacts on `application` / `application_log` (cover letter text, resume PDF hash); preview in Jobs apply dialog and the Phase 20 pipeline view |
+
+**Done when:** a user can upload a LaTeX template, configure one global model or
+separate models per purpose, generate a tailored resume PDF and cover letter for
+a job, review or edit the cover letter, and have both attached on apply.
+
+### 20b — Apply orchestration (extend Phase 7)
+
+| Item | Why | Notes |
+| ---- | --- | ----- |
+| Auto-apply queue from search matches | Users should not click Apply per job | Extend pipeline: when `source.auto_apply_enabled` and profile + credentials exist, enqueue apply on new `seen_job` rows that pass filters; run [20a](#20a--tailored-application-documents) document generation first; respect existing `application_log` audit trail |
 | Apply outcome tracking | Downstream email triage needs a known baseline | Record `applied_at`, employer domain, and posting metadata on `seen_job` or a new `application` entity linked to the job |
 
-### 20b — Inbox integration & email triage
+### 20c — Inbox integration & email triage
 
 | Item | Why | Notes |
 | ---- | --- | ----- |
@@ -575,7 +597,7 @@ multi-tenant operation without explicit user-controlled infrastructure.
 | Ghost detection & self-archive | Silent employers still need a paper trail | If no reply within configurable window (e.g. 14 days), send a summary email to self with a fixed subject prefix / custom header (e.g. `[HeadStart Ghost]`) and mark application `ghosted` in the app |
 | Self-email re-ingestion | Ghost summaries must not pollute recruiter triage | When the self-sent ghost email arrives back in the inbox, classifier recognizes the marker (from/to self, subject prefix, `X-HeadStart-Type: ghost`) as `self_ghost_archive` and routes to the ghost folder — not treated as a recruiter reply or follow-up |
 
-### 20c — Autonomous follow-up responses
+### 20d — Autonomous follow-up responses
 
 | Item | Why | Notes |
 | ---- | --- | ----- |
@@ -583,7 +605,7 @@ multi-tenant operation without explicit user-controlled infrastructure.
 | Safe-send guardrails | Autonomous email is high-risk | Rate limits, blocklist for legal/HR-sensitive topics, dry-run log of every outbound draft; `inbox.auto_reply_enabled` default off |
 | Thread ↔ application linking | Classification must know which job a thread is about | Match on employer domain, job title fuzzy match, and `Message-ID` / `In-Reply-To` headers against `application_log` metadata |
 
-### 20d — Interview handoff & user notification
+### 20e — Interview handoff & user notification
 
 | Item | Why | Notes |
 | ---- | --- | ----- |
@@ -591,11 +613,11 @@ multi-tenant operation without explicit user-controlled infrastructure.
 | Handoff notification | User checks their own calendar | Push via existing notifiers (email, Slack, ntfy, etc.): "Interview to schedule at {company} — take over from here" with thread link and job card |
 | UI: application pipeline view | User sees status at a glance | New `/app/applications` view: applied → awaiting reply → follow-up sent → interview pending / rejected / ghosted; filterable timeline per job |
 
-### 20e — Local agent runtime
+### 20f — Local agent runtime
 
 | Item | Why | Notes |
 | ---- | --- | ----- |
-| Extend llama.cpp beyond summaries | Classification + drafting need the same local stack | New `agents/` adapters (or extend summarizers) for `classify_email` and `draft_reply` prompts; reuse `make llamacpp` / `LLAMACPP_*` env |
+| Extend llama.cpp beyond summaries | Document curation, classification, and drafting need the same local stack | New `agents/` adapters (or extend summarizers) for `curate_resume`, `generate_cover_letter`, `classify_email`, and `draft_reply` prompts; reuse `make llamacpp` / `LLAMACPP_*` env; per-purpose model routing from [20a](#20a--tailored-application-documents) |
 | Input sanitization & scope lock | Small local models are easily hijacked by unrelated email content | **Pre-LLM:** strip HTML, cap body length, detect obvious injection patterns. **Prompt:** hard system scope — job-application triage only; structured JSON output schema (no free-form chat). **Post-LLM:** validate response against allowlisted labels/actions; reject out-of-scope completions (e.g. email says "give me the recipe for a pancake" → classify as `out_of_scope`, do not draft or send a reply). Never pass raw user email as executable instructions |
 | Agent orchestration loop | Poll inbox → classify → act → log | Celery beat task or standalone dev daemon; runs only when `INBOX_AGENT_ENABLED=true` |
 | Docs & ADR | Capture dev-only boundary and safety model | ADR for why this stays off hosted prod; module doc under `modules/inbox.md` |
@@ -613,12 +635,14 @@ multi-tenant operation without explicit user-controlled infrastructure.
   out-of-scope requests rather than complying.
 
 **Done when:** in a local dev environment with llama.cpp running, a user can
-enable auto-apply on a search, have recruiter email auto-sorted into
-general/rejection folders, receive a self-email on ghosted applications that is
-recognized and sorted into a ghost archive folder on re-ingestion, see
-auto-drafted follow-up replies (with optional auto-send), reject out-of-scope
-email content without acting on it, and get a notifier alert when an interview
-needs scheduling — at which point they take over manually.
+upload a LaTeX resume template, configure one global model or per-purpose
+models, generate tailored resume PDFs and cover letters per job, enable
+auto-apply on a search (with generated documents attached), have recruiter email
+auto-sorted into general/rejection folders, receive a self-email on ghosted
+applications that is recognized and sorted into a ghost archive folder on
+re-ingestion, see auto-drafted follow-up replies (with optional auto-send),
+reject out-of-scope email content without acting on it, and get a notifier alert
+when an interview needs scheduling — at which point they take over manually.
 
 ---
 
