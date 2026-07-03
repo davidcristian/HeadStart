@@ -58,7 +58,11 @@ export function App() {
       <Route path="/verify-email" element={<VerifyEmailPage />} />
 
       <Route path="/app" element={<ProtectedRoute />}>
-        <Route path="settings" element={<SettingsPage />} />
+        {/* Settings is reachable before email verification/onboarding (e.g. to manage
+            billing or delete the account), but still needs the nav shell. */}
+        <Route element={<Layout />}>
+          <Route path="settings" element={<SettingsPage />} />
+        </Route>
         <Route element={<EmailVerificationGuard />}>
           <Route path="onboarding" element={<OnboardingPage />} />
           <Route element={<OnboardingGuard />}>

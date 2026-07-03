@@ -36,8 +36,13 @@ export function useApplyToJob() {
         tailored_resume_b64,
         tailored_resume_artifact_id,
       }),
-    onSuccess: (result) => {
+    onSuccess: (result, variables) => {
       invalidate(qc, queryKeys.applicationLogs);
+      // A live apply moves the job into the pipeline (queued / apply_failed / …), so
+      // refetch every stage-filtered applications cache. Dry-run previews don't.
+      if (!variables.dry_run) {
+        invalidate(qc, ["applications"]);
+      }
       if (result.status === "submitted") {
         qc.invalidateQueries({ queryKey: ["jobs"] });
       }

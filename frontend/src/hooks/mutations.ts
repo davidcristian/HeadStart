@@ -233,7 +233,9 @@ export function useSubscribePortals() {
     onSuccess: () => {
       invalidate(qc, queryKeys.sources);
       invalidate(qc, queryKeys.searches);
-      invalidate(qc, queryKeys.portals());
+      // Prefix key so every category/query-filtered portals cache refetches, not
+      // just the unfiltered ["portals", null, null] one.
+      invalidate(qc, ["portals"]);
       invalidate(qc, queryKeys.meta);
     },
   });
@@ -248,7 +250,9 @@ export function useDraftInboxReply() {
       regenerate?: boolean;
     }) => api.draftInboxReply(data),
     onSuccess: () => {
-      invalidate(qc, queryKeys.applications());
+      // Prefix key so every stage-filtered pipeline cache refetches, not just the
+      // unfiltered ["applications", null] one.
+      invalidate(qc, ["applications"]);
     },
   });
 }

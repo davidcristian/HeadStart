@@ -2,7 +2,7 @@
 
 import { Link } from "react-router-dom";
 import { useMeta } from "../hooks/queries";
-import { acceptsOptionalCookies } from "../lib/cookieConsent";
+import { useCookieConsent } from "./CookieConsentContext";
 
 type Props = {
   /** Sidebar card vs compact strip above mobile nav. */
@@ -11,13 +11,16 @@ type Props = {
 
 export function FreeTierAd({ variant = "sidebar" }: Props) {
   const meta = useMeta();
+  // Read consent from context (not localStorage) so the ad reacts when the user
+  // accepts or revokes optional cookies without a page reload.
+  const { choice } = useCookieConsent();
   const showAds = meta.data?.plan.show_ads ?? false;
   if (!showAds) {
     return null;
   }
 
   const externalSlot = meta.data?.ads.external_slot_url ?? null;
-  const showExternalAd = externalSlot !== null && acceptsOptionalCookies();
+  const showExternalAd = externalSlot !== null && choice === "all";
 
   return (
     <aside

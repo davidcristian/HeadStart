@@ -6,13 +6,13 @@ features. Update the Status column (and strike the row) when an item ships; link
 
 Produced by a read-only multi-agent audit — 13 subsystem clusters, every finding
 adversarially verified against the code. **77 confirmed** findings (1 critical, 9 high,
-16 medium, 51 low). 52 are already resolved: the browser-extension cluster (6) via
+16 medium, 51 low). 61 are already resolved: the browser-extension cluster (6) via
 removal (WS8), the WS3 security-hardening trio (2 high + 1 low), the WS11 docs
 cluster (8: 1 med + 7 low), all 6 WS1 inbox-UID items (1 crit + 1 high + 1 med
 + 3 low), all 4 WS2 scheduler items (1 high + 3 low), all 6 WS5 billing items
 (4 med + 2 low), all 6 WS6 scraper-hardening items (2 med + 4 low), all 10
-WS4 apply-adapter items (1 high + 3 med + 6 low), and all 3 WS9 reply-drafter
-sanitization items (1 med + 2 low).
+WS4 apply-adapter items (1 high + 3 med + 6 low), all 3 WS9 reply-drafter
+sanitization items (1 med + 2 low), and all 9 WS7 frontend items (3 med + 6 low).
 
 **Status legend:** ☐ open · 🔜 in progress · ✅ done
 **Type:** 🐞 bug · 🔒 security · 📝 doc · 🧪 test · ♻️ refactor · 🔁 consistency
@@ -95,18 +95,23 @@ now every parse degrades gracefully (see the Error handling note in `docs/module
 | ⚪ LOW | 🔁 | `post_json`/`post_form` (and `put_json`/`post_multipart`) skipped the upfront `assert_safe_outbound_url` sibling methods do — matters for injected clients with no request hook; now all validate upfront | `scrapers/http.py:51` | ✅ |
 | ⚪ LOW | 🧪 | Test-TLD SSRF bypass already covered (WS3, `test_outbound_url.py`); added redirect re-validation + upfront-method SSRF tests | `tests/scrapers/test_http_safety.py` | ✅ |
 
-## WS7 — Frontend correctness
+## WS7 — Frontend correctness ✅ DONE (2026-07-01)
+Cache-invalidation fixes use the root prefix key (React Query matches by prefix) so every
+stage/category-filtered cache refetches, not just the unfiltered one. `/app/settings` keeps its
+pre-onboarding accessibility but now renders inside `<Layout>`. Portals selection is only reset
+when the available catalog actually changes (keyed on the sorted id set), preserving manual
+deselection across plain refetches.
 | Sev | Type | Item | Location | Status |
 | --- | ---- | ---- | -------- | ------ |
-| 🟡 MED | 🐞 | `/app/settings` renders outside `<Layout>` → user stranded with no nav | `frontend/src/App.tsx:61` | ☐ |
-| 🟡 MED | 🐞 | `useDraftInboxReply` invalidates over-specific `["applications",null]` → stage-filtered pipeline never refreshes | `frontend/src/hooks/mutations.ts:251` | ☐ |
-| 🟡 MED | 🐞 | Portals effect resets `selectedIds` to all on every catalog refetch → undoes manual deselection | `frontend/src/pages/portals/usePortalsPage.ts:32` | ☐ |
-| ⚪ LOW | 🐞 | `useSubscribePortals` invalidates over-specific portals key → filtered caches stale | `frontend/src/hooks/mutations.ts:236` | ☐ |
-| ⚪ LOW | 🐞 | Applying from Jobs page never invalidates the `applications` pipeline cache | `frontend/src/hooks/jobMutations.ts:39` | ☐ |
-| ⚪ LOW | 🔁 | `FreeTierAd` reads consent from `localStorage`, not `CookieConsentContext` (non-reactive) | `frontend/src/components/FreeTierAd.tsx:20` | ☐ |
-| ⚪ LOW | 🧪 | Auth guards (EmailVerification/Onboarding/AdminRoute) have no tests | `frontend/src/App.test.tsx:40` | ☐ |
-| ⚪ LOW | 🧪 | `AuthContext.test` fixture omits the now-required `email_verified_at` | `frontend/src/auth/AuthContext.test.tsx:7` | ☐ |
-| ⚪ LOW | 📝 | Docs say register → `/app/onboarding`; code goes `/verify-email` | `frontend/src/pages/RegisterPage.tsx:32` | ☐ |
+| 🟡 MED | 🐞 | `/app/settings` rendered outside `<Layout>` (no nav); now wrapped in its own `<Layout>`, still outside the verify/onboarding guards so it stays reachable pre-onboarding | `frontend/src/App.tsx:61` | ✅ |
+| 🟡 MED | 🐞 | `useDraftInboxReply` invalidated over-specific `["applications",null]`; now invalidates the `["applications"]` prefix | `frontend/src/hooks/mutations.ts:251` | ✅ |
+| 🟡 MED | 🐞 | Portals effect reset `selectedIds` to all on every catalog refetch; now keyed on the sorted catalog id set so only a real catalog change resets (hook test added) | `frontend/src/pages/portals/usePortalsPage.ts:32` | ✅ |
+| ⚪ LOW | 🐞 | `useSubscribePortals` invalidated over-specific portals key; now invalidates the `["portals"]` prefix | `frontend/src/hooks/mutations.ts:236` | ✅ |
+| ⚪ LOW | 🐞 | Applying from Jobs page never invalidated the pipeline; live (non-dry-run) apply now invalidates `["applications"]` | `frontend/src/hooks/jobMutations.ts:39` | ✅ |
+| ⚪ LOW | 🔁 | `FreeTierAd` read consent from `localStorage`; now uses the reactive `useCookieConsent()` context (reactivity test added) | `frontend/src/components/FreeTierAd.tsx:20` | ✅ |
+| ⚪ LOW | 🧪 | Added `src/auth/guards.test.tsx` covering EmailVerification/Onboarding/AdminRoute redirect + pass-through paths | `frontend/src/auth/guards.test.tsx` | ✅ |
+| ⚪ LOW | 🧪 | `AuthContext.test` fixture now includes the required `email_verified_at` | `frontend/src/auth/AuthContext.test.tsx:7` | ✅ |
+| ⚪ LOW | 📝 | Docs said register → `/app/onboarding`; corrected to `/verify-email` in `frontend.md` | `frontend/src/pages/RegisterPage.tsx:32` | ✅ |
 
 ## WS8 — Remove the browser extension ✅ DONE (2026-07-01)
 We are no longer shipping a browser extension. Deleted `browser-extension/` and

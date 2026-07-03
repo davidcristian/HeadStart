@@ -1,9 +1,10 @@
-import { screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { clearCookieConsent, setCookieConsent } from "../lib/cookieConsent";
 import { sampleAccountPlan } from "../test/fixtures";
 import { renderWithClient } from "../test/renderWithClient";
+import { CookieConsentProvider } from "./CookieConsentContext";
 import { FreeTierAd } from "./FreeTierAd";
 
 const mockMeta = vi.hoisted(() => vi.fn());
@@ -15,9 +16,26 @@ vi.mock("../hooks/queries", () => ({
 function renderAd() {
   return renderWithClient(
     <MemoryRouter>
-      <FreeTierAd />
+      <CookieConsentProvider>
+        <FreeTierAd />
+      </CookieConsentProvider>
     </MemoryRouter>,
   );
+}
+
+function withExternalSlot() {
+  mockMeta.mockReturnValue({
+    data: {
+      plan: {
+        ...sampleAccountPlan,
+        plan: "free",
+        effective_plan: "free",
+        unlimited: false,
+        show_ads: true,
+      },
+      ads: { external_slot_url: "https://ads.example.com/slot" },
+    },
+  });
 }
 
 describe("FreeTierAd", () => {
@@ -80,18 +98,7 @@ describe("FreeTierAd", () => {
 
   it("loads the partner iframe when optional cookies are accepted", () => {
     setCookieConsent("all");
-    mockMeta.mockReturnValue({
-      data: {
-        plan: {
-          ...sampleAccountPlan,
-          plan: "free",
-          effective_plan: "free",
-          unlimited: false,
-          show_ads: true,
-        },
-        ads: { external_slot_url: "https://ads.example.com/slot" },
-      },
-    });
+    withExternalSlot();
 
     renderAd();
 
@@ -99,5 +106,18 @@ describe("FreeTierAd", () => {
       "src",
       "https://ads.example.com/slot",
     );
+  });
+
+  it("reveals the partner iframe reactively when consent is accepted, without a reload", () => {
+    clearCookieConsent();
+    withExternalSlot();
+
+    renderAd();
+    expect(screen.queryByTitle("Partner advertisement")).not.toBeInTheDocument();
+
+    // Accepting via the banner updates CookieConsentContext; the ad must react.
+    fireEvent.click(screen.getByRole("button", { name: "Accept all" }));
+
+    expect(screen.getByTitle("Partner advertisement")).toBeInTheDocument();
   });
 });

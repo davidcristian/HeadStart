@@ -1,6 +1,6 @@
 /** State and handlers for the cross-portal company search page. */
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMeta, usePortals, useTargets } from "../../hooks/queries";
 import { useSearchPortals, useSubscribePortals } from "../../hooks/mutations";
 import type { PortalCategory, PortalSearchResult } from "../../types";
@@ -29,10 +29,20 @@ export function usePortalsPage() {
     return items.filter((portal) => portal.allowed_on_plan);
   }, [portals.data?.items]);
 
+  // Select all portals when the available catalog changes (first load or a new
+  // category), but keep the user's manual selection across plain refetches that
+  // return the same set of portals.
+  const catalogKey = useMemo(
+    () => catalogItems.map((portal) => portal.id).sort().join("\n"),
+    [catalogItems],
+  );
+  const initializedKeyRef = useRef<string | null>(null);
   useEffect(() => {
     if (catalogItems.length === 0) return;
+    if (initializedKeyRef.current === catalogKey) return;
+    initializedKeyRef.current = catalogKey;
     setSelectedIds(new Set(catalogItems.map((portal) => portal.id)));
-  }, [catalogItems]);
+  }, [catalogItems, catalogKey]);
 
   function togglePortal(portalId: string) {
     setSelectedIds((current) => {

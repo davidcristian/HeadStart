@@ -28,9 +28,10 @@ The frontend serves two surfaces from one bundle (see
   asks for **Essential only** vs **Accept all** on first visit. The choice is stored in
   `localStorage` (`headstart.cookieConsent`), not a cookie. Visitors can reopen the banner
   from **Cookie settings** in the public footer or **Settings → Privacy & cookies** in the
-  app. Use `acceptsOptionalCookies()` from `src/lib/cookieConsent.ts` before loading optional
-  third-party ad iframes (see **Free-tier ads** below). The built-in upgrade promotion does
-  not use tracking cookies.
+  app. Components gate optional third-party content (e.g. ad iframes, see **Free-tier ads**
+  below) on the reactive `useCookieConsent()` context; `acceptsOptionalCookies()` from
+  `src/lib/cookieConsent.ts` is the non-reactive equivalent for one-off checks. The built-in
+  upgrade promotion does not use tracking cookies.
 - **Authenticated product** under **`/app/*`**, gated by `ProtectedRoute` and
   wrapped in the `Layout` shell (`/app/searches`, `/app/jobs`, …, `/app/admin`).
   `/app` redirects to `/app/searches`. Unverified accounts are redirected to
@@ -38,8 +39,9 @@ The frontend serves two surfaces from one bundle (see
   `onboarding_completed_at` are redirected to **`/app/onboarding`** (guided
   setup wizard) before they can reach the main shell.
 
-Login/Register send new users to `/app/onboarding` on success (register) or
-`/app` (login, which the onboarding guard redirects). Already-authenticated
+Register sends new accounts to `/verify-email` on success; Login sends users to
+`/app`, where the verification and onboarding guards redirect as needed.
+Already-authenticated
 visitors to auth screens bounce to `/app`. Legacy top-level paths (`/jobs`,
 `/searches`, …) 301-style redirect to their `/app/*` equivalent so old
 bookmarks and the installed PWA (`start_url: /app/jobs`) keep working. Any
@@ -128,9 +130,10 @@ the mobile bottom nav. Paid plans and admin accounts see nothing.
 - **House promotion** — built-in “Go ad-free with Pro” CTA linking to `/pricing` (no
   third-party tracking).
 - **Partner slot (optional)** — operators set `ADS_EXTERNAL_SLOT_URL` (HTTPS iframe URL) in
-  the backend env. The iframe loads only when the user has accepted optional cookies
-  (`acceptsOptionalCookies()`). Otherwise a short link to **Settings → Privacy & cookies** is
-  shown.
+  the backend env. The iframe loads only when the user has accepted optional cookies —
+  `FreeTierAd` reads the choice from `CookieConsentContext` (not `localStorage` directly) so it
+  reacts to consent changes without a reload. Otherwise a short link to
+  **Settings → Privacy & cookies** is shown.
 - **Kill switch** — `ADS_ENABLED=false` hides all in-app ads (house + partner).
 
 ## Dev
