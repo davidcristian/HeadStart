@@ -149,6 +149,15 @@ def test_curated_portal_atlassian_smartrecruiters_preset() -> None:
     assert preset.base_url == "https://careers.smartrecruiters.com/Atlassian2"
 
 
+def test_curated_portal_shopify_preset() -> None:
+    from app.portals.catalog import CURATED_PORTALS
+
+    preset = next(p for p in CURATED_PORTALS if p.id == "shopify")
+    assert preset.adapter_key == "shopify_careers"
+    assert preset.default_config["portal_id"] == "shopify"
+    assert preset.base_url == "https://www.shopify.com/careers"
+
+
 def test_curated_portal_catalog_unique_portal_ids() -> None:
     from app.portals.catalog import CURATED_PORTALS
 

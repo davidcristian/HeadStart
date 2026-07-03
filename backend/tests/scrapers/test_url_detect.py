@@ -198,6 +198,26 @@ def test_detect_shopify_careers_root_url() -> None:
     assert result.base_url == "https://www.shopify.com/careers"
 
 
+def test_detect_shopify_careers_search_query() -> None:
+    result = detect_source_from_url("https://www.shopify.com/careers?q=engineer")
+    assert result is not None
+    assert result.default_config["q"] == "engineer"
+    assert result.suggested_name == "Shopify / engineer"
+
+
+def test_detect_shopify_careers_page_title() -> None:
+    result = detect_source_from_url(
+        "https://www.shopify.com/careers",
+        page_title="Engineering Careers | Shopify",
+    )
+    assert result is not None
+    assert result.suggested_name == "Engineering"
+
+
+def test_detect_shopify_non_careers_path_returns_none() -> None:
+    assert detect_source_from_url("https://www.shopify.com/about") is None
+
+
 def test_detect_shopify_careers_job_detail_returns_none() -> None:
     assert (
         detect_source_from_url(
