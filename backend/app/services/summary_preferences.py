@@ -76,13 +76,13 @@ _PURPOSE_OPTIONS: tuple[AiPurposeOption, ...] = (
     AiPurposeOption(
         id="email_classify",
         label="Inbox classification",
-        description="Future: sort recruiter email into folders during dev inbox automation.",
+        description="Sort recruiter email into folders during dev inbox automation.",
         overridable=True,
     ),
     AiPurposeOption(
         id="email_draft",
         label="Email reply drafts",
-        description="Future: draft follow-up replies to recruiter messages.",
+        description="Draft follow-up replies to recruiter messages (dev inbox automation).",
         overridable=True,
     ),
 )

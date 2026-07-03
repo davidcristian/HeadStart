@@ -1,4 +1,4 @@
-"""Dev-only mailbox credential and connectivity endpoints."""
+"""Dev-only mailbox credential, connectivity, and classification endpoints."""
 
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
@@ -6,12 +6,18 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_db, get_verified_user
 from app.inbox.types import FetchResult
 from app.models.user import User
+from app.schemas.inbox_classification import (
+    EmailClassificationListParams,
+    EmailClassificationRead,
+    EmailClassifyRequest,
+)
 from app.schemas.mailbox import (
     MailboxCredentialRead,
     MailboxCredentialUpsert,
     MailboxTestRequest,
     MailboxTestResponse,
 )
+from app.services.email_classification import EmailClassificationService
 from app.services.inbox import InboxService
 
 router = APIRouter()
@@ -58,6 +64,27 @@ def fetch_mailbox_messages(
     db: Session = Depends(get_db),
     user: User = Depends(get_verified_user),
 ) -> FetchResult:
-    """Fetch inbound messages (dev tooling; classification lands in Phase 20c follow-ups)."""
+    """Fetch inbound messages from the configured mailbox."""
     bounded_limit = min(max(limit, 1), 100)
     return InboxService(db).fetch_messages(user.id, since_uid=since_uid, limit=bounded_limit)
+
+
+@router.post("/classify", response_model=EmailClassificationRead)
+def classify_inbox_message(
+    data: EmailClassifyRequest,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_verified_user),
+) -> EmailClassificationRead:
+    """Classify one inbound message and link it to a known application when possible."""
+    return EmailClassificationService(db).classify(user.id, data)
+
+
+@router.get("/classifications", response_model=list[EmailClassificationRead])
+def list_inbox_classifications(
+    limit: int = 50,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_verified_user),
+) -> list[EmailClassificationRead]:
+    """List recent persisted email classifications for the current user."""
+    params = EmailClassificationListParams(limit=limit)
+    return EmailClassificationService(db).list_for_user(user.id, limit=params.limit)

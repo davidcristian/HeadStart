@@ -134,6 +134,10 @@ class Settings(BaseSettings):
     resume_curation_max_tokens: int = 1200
     resume_compile_timeout_seconds: float = 60.0
 
+    # ---- AI inbox email classification (dev-only inbox agent) ----
+    email_classify_max_body_chars: int = 8000
+    email_classify_max_tokens: int = 256
+
     # ---- OpenAI (used only when summary_provider = "openai") ----
     openai_api_key: str = ""
     openai_model: str = "gpt-4o-mini"

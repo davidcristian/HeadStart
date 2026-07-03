@@ -61,18 +61,46 @@ local dev only).
 
 All routes require auth and `INBOX_AGENT_ENABLED=true`.
 
-| Method | Path           | Purpose                                      |
-| ------ | -------------- | -------------------------------------------- |
-| GET    | `/credentials` | Read saved mailbox metadata                  |
-| PUT    | `/credentials` | Upsert encrypted IMAP/SMTP settings          |
-| DELETE | `/credentials` | Remove saved credentials                     |
-| POST   | `/test`        | Test IMAP + SMTP (optional inline config)    |
-| GET    | `/messages`    | Fetch inbound messages (`since_uid`, `limit`)|
+| Method | Path              | Purpose                                      |
+| ------ | ----------------- | -------------------------------------------- |
+| GET    | `/credentials`    | Read saved mailbox metadata                  |
+| PUT    | `/credentials`    | Upsert encrypted IMAP/SMTP settings          |
+| DELETE | `/credentials`    | Remove saved credentials                     |
+| POST   | `/test`           | Test IMAP + SMTP (optional inline config)    |
+| GET    | `/messages`       | Fetch inbound messages (`since_uid`, `limit`)|
+| POST   | `/classify`       | Classify one message (body or mailbox `uid`) |
+| GET    | `/classifications`| List recent persisted classifications        |
 
 `GET /meta` includes `mailboxes` (registered connector keys) and
 `inbox_agent_enabled`.
 
+## Email classification (Phase 20c)
+
+**Path:** `backend/app/email_classifiers/`
+
+Pluggable classifiers label inbound recruiter email tied to known applications.
+Labels: `general`, `rejection`, `follow_up`, `interview_request`,
+`self_ghost_archive`, `out_of_scope`.
+
+- **Registry:** `@register_email_classifier("key")`; resolve with
+  `get_email_classifier(key)`.
+- **Heuristic default:** keyword/header rules (offline); used for free-tier users
+  and as LLM fallback.
+- **LLM providers:** `openai`, `gemini`, `anthropic`, `llamacpp` — selected via
+  `resolve_ai_settings(..., "email_classify")` (Pro users can override per-purpose
+  in Settings → AI models).
+- **Sanitization:** HTML stripped, body capped (`EMAIL_CLASSIFY_MAX_BODY_CHARS`);
+  obvious prompt-injection patterns map to `out_of_scope`.
+- **Thread linking:** `app/services/inbox_linking.py` scores employer domain,
+  job title/company mentions, and optional `In-Reply-To` against
+  `application_log.payload`.
+- **Persistence:** `inbox_classification` table (one row per user + mailbox UID);
+  `EmailClassificationService` orchestrates classify + link + store.
+
+Folder routing, ghost detection, and the beat orchestration loop remain separate
+roadmap items.
+
 ## Follow-ups (Phase 20c+)
 
-Email classification, folder routing, ghost detection, and the Celery beat
-orchestration loop are separate roadmap items — they build on this connector.
+Folder / label routing, ghost detection, autonomous reply drafts, and the Celery
+beat orchestration loop build on classification — see [roadmap.md](../roadmap.md).
