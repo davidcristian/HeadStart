@@ -81,8 +81,9 @@ write-only — `MailboxCredentialRead` exposes host/user metadata only.
 vars are set, users without a saved credential share the env mailbox (single-user
 local dev only).
 
-**Planned:** none — Gmail OAuth shipped in Phase 20c (`@register_mailbox("gmail")`).
-IMAP remains the generic connector for any provider.
+**Planned (Phase 21):** Outlook / Microsoft Graph, Yahoo Mail OAuth, and Fastmail
+JMAP — see [roadmap.md § Phase 21](../roadmap.md#phase-21--inbox-mailbox-providers-dev-only).
+`imap_smtp` remains the generic connector for any provider that exposes IMAP.
 
 ## API (prefix `/api/v1/inbox`)
 

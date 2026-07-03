@@ -53,8 +53,9 @@ Subsystem detail: [modules/inbox.md](../modules/inbox.md).
   mailbox access on production HeadStart Cloud.
 - Services must call `InboxService.require_enabled()` before mailbox I/O.
 - New inbox features reuse the same adapter contract, credential model, and flag.
-- **Gmail OAuth** shipped in Phase 20c; **Outlook / Microsoft Graph** remains
-  deferred (IMAP works for Outlook.com when the provider allows it).
+- **Gmail OAuth** shipped in Phase 20c; **Outlook, Yahoo, and Fastmail**
+  connectors are planned in [roadmap.md § Phase 21](../roadmap.md#phase-21--inbox-mailbox-providers-dev-only).
+  IMAP (`imap_smtp`) works as a fallback when a provider allows it.
 - Autonomous email carries legal and misrepresentation risk; defaults keep
   `auto_reply_enabled` off and apply safe-send caps — see [modules/inbox.md](../modules/inbox.md).
 

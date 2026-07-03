@@ -53,7 +53,7 @@ other unknown path redirects to the landing page.
 | Pricing     | Public pricing page at `/pricing`: Free / Starter / Plus / Pro tiers (mirrors backend `plans.py`), feature comparison table, monthly vs annual toggle; Free and paid CTAs link to register; signed-in users can self-serve checkout for Starter, Plus, or Pro when billing is configured |
 | Privacy     | Public privacy policy at `/privacy` |
 | Terms       | Public terms of use at `/terms` |
-| Impressum   | Public German legal notice at `/impressum` (placeholder operator details; replace before DE launch) |
+| Impressum   | Public German legal notice at `/impressum`; operators customize content per [launch-checklist.md §4](../launch-checklist.md#4-legal--trust-pages) |
 | Login/Register    | Email + password sign-in / sign-up                               |
 | Verify email      | Confirm address after signup at `/verify-email` (link or resend)   |
 | Onboarding  | First-run wizard at `/app/onboarding`: source → notify → search → run |

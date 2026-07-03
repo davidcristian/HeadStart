@@ -4,7 +4,7 @@ Living plan for HeadStart — what to build next and why. Update this doc when
 priorities shift or a milestone ships.
 
 **Current baseline (2026-06):** Phases 1–20 shipped (four-tier pricing, per-user AI
-summary preferences, 98-employer portal catalog, SmartRecruiters adapter, custom career-site
+summary preferences, curated employer portal catalog, SmartRecruiters adapter, custom career-site
 adapters for Shopify, Uber, and Snowflake, and the dev-only local application agent). See
 [architecture.md](architecture.md) for the system design.
 
@@ -237,10 +237,10 @@ Goal: meet Germany-specific legal requirements for operating a public website.
 
 | Item | Why | Notes |
 | ---- | --- | ----- |
-| ~~Placeholder Impressum~~ | ~~Required by German law (Impressumspflicht) for commercial websites~~ | **Shipped:** `/impressum` with placeholder owner/contact sections (German); footer link on public shell |
+| ~~Impressum page~~ | ~~Required by German law (Impressumspflicht) for commercial websites~~ | **Shipped:** `/impressum` (German); footer link on the public shell. Operators customize placeholder legal details before marketing to German users — see [launch-checklist.md §4](launch-checklist.md#4-legal--trust-pages). |
 
-**Done when:** visitors can open a linked Impressum page from the public footer
-before the operator replaces placeholder text with final legal details.
+**Done when:** visitors can open a linked Impressum page from the public footer.
+Operator-specific legal text is a launch checklist item, not product engineering.
 
 ---
 
@@ -251,7 +251,7 @@ about most, and give paid users a single place to search across them.
 
 | Item | Why | Notes |
 | ---- | --- | ----- |
-| ~~FAANG / MAANG / MAMAA & unicorn portals~~ | ~~High-value employers use dedicated career sites and ATS boards that are not always obvious to configure~~ | **Shipped:** `GET /portals` curated catalog (68 employers across Greenhouse, Lever, Ashby, Workday, Apple Careers, Google Careers, Meta Careers, Microsoft Careers, and Amazon Jobs); category/search filters; one-click **Add source** on Sources page; `portal_id` in `default_config` for duplicate detection. **MAMAA complete:** Meta (`meta_careers`), Apple (`apple_careers`), Microsoft (`microsoft_careers`), Amazon (`amazon_jobs`), Alphabet/Google (`google_careers`), Netflix (Lever), NVIDIA (Workday). **Apple** uses hydration JSON on jobs.apple.com; **Google** embedded JSON in careers search HTML; **Meta** Relay GraphQL on metacareers.com; **Microsoft** Eightfold PCSX JSON API; **Amazon** public `search.json` API. |
+| ~~FAANG / MAANG / MAMAA & unicorn portals~~ | ~~High-value employers use dedicated career sites and ATS boards that are not always obvious to configure~~ | **Shipped:** `GET /portals` curated catalog across Greenhouse, Lever, Ashby, Workday, Apple Careers, Google Careers, Meta Careers, Microsoft Careers, and Amazon Jobs; category/search filters; one-click **Add source** on Sources page; `portal_id` in `default_config` for duplicate detection. **MAMAA complete:** Meta (`meta_careers`), Apple (`apple_careers`), Microsoft (`microsoft_careers`), Amazon (`amazon_jobs`), Alphabet/Google (`google_careers`), Netflix (Lever), NVIDIA (Workday). **Apple** uses hydration JSON on jobs.apple.com; **Google** embedded JSON in careers search HTML; **Meta** Relay GraphQL on metacareers.com; **Microsoft** Eightfold PCSX JSON API; **Amazon** public `search.json` API. |
 | ~~Paid portal search page~~ | ~~Paid users should discover and search all supported boards without manual source setup~~ | **Shipped:** `/app/portals` searches curated portals in one request (`POST /portals/search`); bulk alert setup (`POST /portals/subscribe`) auto-creates sources + searches; Pro+ plan gate (`portal_search` feature) |
 
 **Done when:** a paid user can open one page, pick from curated FAANG/MAANG/MAMAA
@@ -633,8 +633,9 @@ a job, review or edit the cover letter, and have both attached on apply.
   runbook that inbox automation requires local dev setup.
 - Legal/compliance: autonomous replies may violate employer terms or create
   misrepresentation risk; ship with prominent consent and dry-run defaults.
-- **Gmail** OAuth shipped in [Phase 20c](#20c--inbox-integration--email-triage); **Outlook**
-  / Microsoft Graph remains future work. IMAP works for providers that expose it.
+- Additional mailbox OAuth connectors (Outlook, Yahoo, …) are tracked in
+  [Phase 21](#phase-21--inbox-mailbox-providers-dev-only). IMAP remains the
+  generic fallback for providers that expose it.
 - Prompt injection: recruiter (or spam) mail may embed unrelated instructions;
   the agent must stay scoped to application workflow actions and refuse
   out-of-scope requests rather than complying.
@@ -657,6 +658,55 @@ auto-drafted follow-up replies (with optional auto-send after a human-like
 delay),
 reject out-of-scope email content without acting on it, and get a notifier alert
 when an interview needs scheduling — at which point they take over manually.
+
+---
+
+## Phase 21 — Inbox mailbox providers (dev-only)
+
+Goal: add first-class OAuth/API mailbox connectors beyond Gmail so the Phase 20
+local application agent works for more users without brittle IMAP setup. Each
+provider is one `@register_mailbox("key")` adapter — mirror the Gmail pattern in
+`backend/app/inbox/adapters/gmail.py`. All items stay behind
+`INBOX_AGENT_ENABLED` (not a hosted SaaS feature). See
+[adr/0011-inbox-dev-only.md](adr/0011-inbox-dev-only.md).
+
+**Already shipped (Phase 20c):** `imap_smtp` (generic IMAP/SMTP) and `gmail`
+(Google OAuth + Gmail API).
+
+### 21a — Microsoft Outlook / Graph
+
+| Item | Why | Notes |
+| ---- | --- | ----- |
+| Outlook OAuth connector | Outlook and Microsoft 365 are common for job seekers; consumer IMAP is increasingly restricted | `@register_mailbox("outlook")`; Microsoft identity OAuth; Graph API `messages` read/send; folder routing via `mailFolders` + `move`; `GET /inbox/outlook/authorize` + callback; `OUTLOOK_OAUTH_*` env vars; Settings → **Connect Outlook** when `INBOX_AGENT_ENABLED=true` |
+| Outlook docs & operator setup | Self-hosters need a clear Azure app-registration path | Document redirect URI, `Mail.Read` / `Mail.Send` (or equivalent) scopes, and token refresh in [modules/inbox.md](modules/inbox.md) + [runbook.md](runbook.md) |
+
+**Done when:** a dev user can connect Outlook via OAuth, poll inbound recruiter
+mail through the beat orchestration loop, route folders, and send replies (manual
+or via the pending-reply queue).
+
+### 21b — Yahoo Mail
+
+| Item | Why | Notes |
+| ---- | --- | ----- |
+| Yahoo OAuth connector | Large consumer mailbox; app-password IMAP is a poor default UX | `@register_mailbox("yahoo")`; Yahoo OAuth where the Mail API permits read/send; same credential storage and routing contract as Gmail/Outlook |
+| Yahoo docs | Operators need env var and consent-screen steps | Row in [modules/inbox.md](modules/inbox.md); `.env.example` placeholders |
+
+**Done when:** a dev user can authorize Yahoo Mail and the inbox agent fetches and
+sends through the adapter (fixture tests in CI; optional live smoke outside CI).
+
+### 21c — Fastmail (JMAP)
+
+| Item | Why | Notes |
+| ---- | --- | ----- |
+| Fastmail JMAP connector | Popular with technical users; JMAP is cleaner than IMAP for automation | `@register_mailbox("fastmail")` using JMAP session + email APIs; API token auth (Fastmail does not use OAuth for third-party apps the same way as Google/Microsoft) |
+| JMAP routing | Folder moves must work with `InboxRoutingService` | Map classification labels to Fastmail mailboxes; tests with fixtures |
+
+**Done when:** Fastmail users can store an API token, poll inbound mail, and route
+messages without configuring raw IMAP hosts.
+
+**Phase 21 overall done when:** Outlook and at least one additional consumer
+provider (Yahoo or Fastmail) ship as registry adapters; IMAP remains documented
+as the escape hatch for other providers.
 
 ---
 

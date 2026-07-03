@@ -54,8 +54,9 @@ users).
 ## 4. Legal & trust pages
 
 - [ ] **Privacy** (`/privacy`) and **Terms** (`/terms`) reviewed for your entity.
-- [ ] **Impressum** (`/impressum`) — replace placeholder operator details before
-  marketing to German users ([Phase 10](roadmap.md)).
+- [ ] **Impressum** (`/impressum`) — customize placeholder operator details before
+  marketing to German users (page and footer link are shipped; see
+  [roadmap Phase 10](roadmap.md#phase-10--german-legal-compliance)).
 - [ ] **Subprocessors** (`/subprocessors`) accurate if you use Stripe, ads, or
   external SMTP.
 - [ ] **Cookie consent** banner tested (Essential only vs Accept all).
