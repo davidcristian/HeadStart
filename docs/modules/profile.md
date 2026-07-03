@@ -67,16 +67,22 @@ Workday, Google Careers, Microsoft Careers, Amazon Jobs, Apple Careers, and Meta
 Careers. LinkedIn-hosted and Indeed-hosted Easy Apply use `resume_text` only today
 (see [appliers.md](appliers.md)).
 
-Optional **LaTeX resume template** (`.tex`, up to `PROFILE_RESUME_TEMPLATE_MAX_BYTES`,
-default 512 KB) is stored encrypted alongside the profile. Upload via
-`PUT /profile/resume-template`; metadata is returned on `GET /profile` as
-`resume_template`. Placeholders use `[[full_name]]`, `[[skills]]`, `[[experience]]`,
-`[[education]]`, `[[summary]]`, `[[job_title]]`, `[[company]]`, and related contact
-fields. When no template is uploaded, a built-in default template is used.
-`POST /jobs/{id}/generate-resume` curates placeholders (Pro users: `resume_curation`
-AI purpose), renders LaTeX, and compiles a tailored PDF (requires `tectonic` or
-`pdflatex` locally). Pass the generated PDF on apply via `tailored_resume_b64` on
-`POST /jobs/{id}/apply` to attach it instead of the static resume file.
+Optional **LaTeX resume template** (`.tex` or `.zip` bundle, up to
+`PROFILE_RESUME_TEMPLATE_MAX_BYTES` for a single file or
+`PROFILE_RESUME_TEMPLATE_BUNDLE_MAX_BYTES` for a bundle, default 512 KB / 2 MB) is
+stored encrypted alongside the profile. Upload via `PUT /profile/resume-template`;
+metadata is returned on `GET /profile` as `resume_template` (`format`: `single` or
+`bundle`, plus `entrypoint` and `file_count` for bundles). Placeholders use
+`[[full_name]]`, `[[skills]]`, `[[experience]]`, `[[education]]`, `[[summary]]`,
+`[[job_title]]`, `[[company]]`, and related contact fields. Substitution runs on
+every `.tex` file in a bundle. Bundle archives must include `main.tex` or
+`resume.tex` (or a single `.tex` file); allowed member types are `.tex`, `.sty`,
+`.cls`, `.bib`, and common image formats. When no template is uploaded, a
+built-in default template is used. `POST /jobs/{id}/generate-resume` curates
+placeholders (Pro users: `resume_curation` AI purpose), renders LaTeX, and
+compiles a tailored PDF (requires `tectonic` or `pdflatex` locally). Pass the
+generated PDF on apply via `tailored_resume_b64` on `POST /jobs/{id}/apply` to
+attach it instead of the static resume file.
 
 `answers` is a free-form map of recurring application questions to the user's
 canned response.

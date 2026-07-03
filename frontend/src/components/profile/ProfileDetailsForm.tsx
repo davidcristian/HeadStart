@@ -154,13 +154,17 @@ export function ProfileDetailsForm({
 
       <Field
         label="LaTeX resume template"
-        hint="Optional .tex file with [[full_name]], [[skills]], [[experience]], and other placeholders. A built-in template is used when none is uploaded."
+        hint="Optional .tex file or .zip bundle (with main.tex) using [[full_name]], [[skills]], [[experience]], and other placeholders. A built-in template is used when none is uploaded."
       >
         {existing?.resume_template ? (
           <div className="row-actions">
             <span>
               {existing.resume_template.filename} (
-              {formatFileSize(existing.resume_template.size_bytes)})
+              {formatFileSize(existing.resume_template.size_bytes)}
+              {existing.resume_template.format === "bundle" && existing.resume_template.file_count
+                ? `, ${existing.resume_template.file_count} files, entry ${existing.resume_template.entrypoint}`
+                : ""}
+              )
             </span>
             <Button
               variant="danger"
@@ -173,7 +177,7 @@ export function ProfileDetailsForm({
         ) : (
           <input
             type="file"
-            accept=".tex,application/x-tex,text/plain"
+            accept=".tex,.zip,application/x-tex,text/plain,application/zip"
             onChange={(e) => onResumeTemplateSelected(e.target.files?.[0] ?? null)}
             disabled={uploadTemplatePending}
           />

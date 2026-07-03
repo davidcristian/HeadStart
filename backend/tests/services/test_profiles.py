@@ -154,3 +154,38 @@ def test_resume_template_upload_and_delete(db_session: Session) -> None:
     svc.delete_resume_template(user_id)
     assert svc.get(user_id).resume_template is None
     assert svc.get_resume_template_tex(user_id) is None
+
+
+def test_resume_template_bundle_upload_and_round_trip(db_session: Session) -> None:
+    user_id = _user(db_session)
+    svc = ProfileService(db_session)
+    bundle = _bundle_zip_bytes()
+    svc.save_resume_template(
+        user_id,
+        filename="resume.zip",
+        content_type="application/zip",
+        data=bundle,
+    )
+
+    read = svc.get(user_id)
+    assert read.resume_template is not None
+    assert read.resume_template.format == "bundle"
+    assert read.resume_template.entrypoint == "main.tex"
+    assert read.resume_template.file_count == 2
+    assert svc.get_resume_template_tex(user_id) is None
+
+    parsed = svc.get_resume_template_bundle(user_id)
+    assert parsed is not None
+    assert parsed.entrypoint == "main.tex"
+    assert "section.tex" in parsed.files
+
+
+def _bundle_zip_bytes() -> bytes:
+    import io
+    import zipfile
+
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w") as archive:
+        archive.writestr("main.tex", rb"\documentclass{article}\begin{document}Hi\end{document}")
+        archive.writestr("section.tex", b"Section")
+    return buf.getvalue()

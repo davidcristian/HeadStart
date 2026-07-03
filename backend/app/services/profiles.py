@@ -16,14 +16,18 @@ from app.core.crypto import decrypt, encrypt
 from app.core.exceptions import ValidationError
 from app.models.application_profile import ApplicationProfile
 from app.repositories.profiles import ProfileRepository
+from app.resumes.template_bundle import ResumeTemplateBundle, parse_template_bundle
 from app.schemas.profile import (
     ALLOWED_RESUME_CONTENT_TYPES,
-    ALLOWED_RESUME_TEMPLATE_CONTENT_TYPES,
     ApplyProfile,
     ProfileData,
     ProfileRead,
     ResumeFileStored,
     ResumeTemplateStored,
+)
+from app.services.profile_resume_template import (
+    build_resume_template_stored,
+    validate_resume_template_upload,
 )
 
 
@@ -58,14 +62,24 @@ class ProfileService:
         return ApplyProfile(**data.model_dump(), exists=True, resume_file=resume_file)
 
     def get_resume_template_tex(self, user_id: int) -> str | None:
-        """Return the user's uploaded LaTeX template source, if any."""
+        """Return the user's uploaded single-file LaTeX template source, if any."""
         profile = self.repo.get(user_id)
         if profile is None:
             return None
         _data, _stored_resume, stored_template = self._decode(profile)
-        if stored_template is None:
+        if stored_template is None or stored_template.format != "single":
             return None
         return stored_template.decode_tex()
+
+    def get_resume_template_bundle(self, user_id: int) -> ResumeTemplateBundle | None:
+        """Return the user's uploaded multi-file LaTeX template bundle, if any."""
+        profile = self.repo.get(user_id)
+        if profile is None:
+            return None
+        _data, _stored_resume, stored_template = self._decode(profile)
+        if stored_template is None or stored_template.format != "bundle":
+            return None
+        return parse_template_bundle(stored_template.decode_bundle_zip())
 
     def save(self, user_id: int, data: ProfileData) -> ProfileRead:
         """Create or fully replace the user's profile text fields (resume preserved)."""
@@ -132,12 +146,16 @@ class ProfileService:
         data: bytes,
     ) -> ProfileRead:
         """Store or replace the user's LaTeX resume template."""
-        self._validate_resume_template_upload(
+        validate_resume_template_upload(
             filename=filename,
             content_type=content_type,
             data=data,
         )
-        stored_template = ResumeTemplateStored.from_bytes(filename=filename, data=data)
+        stored_template = build_resume_template_stored(
+            filename=filename,
+            content_type=content_type,
+            data=data,
+        )
         profile = self.repo.get(user_id)
         base, stored_resume, _stored_template = (
             self._decode(profile) if profile is not None else (ProfileData(), None, None)
@@ -211,27 +229,6 @@ class ProfileService:
             raise ValidationError("Resume file is empty")
         if len(data) > max_bytes:
             raise ValidationError(f"Resume file exceeds the {max_bytes // 1_048_576} MB limit")
-
-    @staticmethod
-    def _validate_resume_template_upload(*, filename: str, content_type: str, data: bytes) -> None:
-        name = filename.strip()
-        if not name:
-            raise ValidationError("Resume template filename is required")
-        if not name.lower().endswith(".tex"):
-            raise ValidationError("Resume template must be a .tex file")
-        if content_type not in ALLOWED_RESUME_TEMPLATE_CONTENT_TYPES:
-            raise ValidationError(
-                "Resume template must be LaTeX source (application/x-tex or text/plain)"
-            )
-        max_bytes = settings.profile_resume_template_max_bytes
-        if len(data) == 0:
-            raise ValidationError("Resume template file is empty")
-        if len(data) > max_bytes:
-            raise ValidationError(f"Resume template exceeds the {max_bytes // 1024} KB limit")
-        try:
-            data.decode("utf-8")
-        except UnicodeDecodeError as exc:
-            raise ValidationError("Resume template must be valid UTF-8 text") from exc
 
     @staticmethod
     def _encode(

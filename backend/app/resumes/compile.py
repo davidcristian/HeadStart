@@ -17,6 +17,25 @@ def compile_latex_to_pdf(
     timeout: float = 60.0,
 ) -> bytes:
     """Render LaTeX source to PDF bytes using an installed compiler."""
+    return compile_latex_workspace(
+        {"resume.tex": source.encode("utf-8")},
+        entrypoint="resume.tex",
+        commands=commands,
+        timeout=timeout,
+    )
+
+
+def compile_latex_workspace(
+    files: dict[str, bytes],
+    *,
+    entrypoint: str,
+    commands: tuple[str, ...] | None = None,
+    timeout: float = 60.0,
+) -> bytes:
+    """Render a multi-file LaTeX workspace to PDF bytes."""
+    if entrypoint not in files:
+        raise ValidationError(f"LaTeX entrypoint not found in template bundle: {entrypoint}")
+
     tried: list[str] = []
     last_error = ""
     for cmd in commands or _default_commands():
@@ -25,10 +44,10 @@ def compile_latex_to_pdf(
             tried.append(f"{cmd} (not installed)")
             continue
         try:
-            pdf = _run_compiler(exe, cmd, source, timeout=timeout)
+            pdf = _run_compiler_workspace(exe, cmd, files, entrypoint, timeout=timeout)
             if pdf is not None:
                 return pdf
-            last_error = f"{cmd} did not produce resume.pdf"
+            last_error = f"{cmd} did not produce {entrypoint.replace('.tex', '.pdf')}"
         except subprocess.TimeoutExpired:
             last_error = f"{cmd} timed out after {timeout:.0f}s"
         except OSError as exc:
@@ -46,20 +65,24 @@ def _default_commands() -> tuple[str, ...]:
     return ("tectonic", "pdflatex")
 
 
-def _run_compiler(
+def _run_compiler_workspace(
     exe: str,
     cmd: str,
-    source: str,
+    files: dict[str, bytes],
+    entrypoint: str,
     *,
     timeout: float,
 ) -> bytes | None:
     with tempfile.TemporaryDirectory(prefix="headstart-resume-") as tmp:
         tmp_path = Path(tmp)
-        tex_path = tmp_path / "resume.tex"
-        tex_path.write_text(source, encoding="utf-8")
+        for rel_path, data in files.items():
+            out_path = tmp_path / rel_path
+            out_path.parent.mkdir(parents=True, exist_ok=True)
+            out_path.write_bytes(data)
+        tex_path = tmp_path / entrypoint
         if cmd == "tectonic":
             proc = subprocess.run(
-                [exe, "--outdir", str(tmp_path), str(tex_path)],
+                [exe, "--outdir", str(tex_path.parent), str(tex_path)],
                 capture_output=True,
                 timeout=timeout,
                 text=True,
@@ -71,19 +94,20 @@ def _run_compiler(
                     exe,
                     "-interaction=nonstopmode",
                     "-output-directory",
-                    str(tmp_path),
+                    str(tex_path.parent),
                     str(tex_path.name),
                 ],
                 capture_output=True,
                 timeout=timeout,
                 text=True,
                 check=False,
-                cwd=tmp_path,
+                cwd=tex_path.parent,
             )
         if proc.returncode != 0:
             stderr = (proc.stderr or proc.stdout or "").strip()
             raise ValidationError(stderr or f"{cmd} failed with exit code {proc.returncode}")
-        pdf_path = tmp_path / "resume.pdf"
+        pdf_name = entrypoint.replace(".tex", ".pdf")
+        pdf_path = tex_path.parent / pdf_name
         if not pdf_path.is_file():
             return None
         return pdf_path.read_bytes()

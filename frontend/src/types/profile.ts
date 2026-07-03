@@ -62,6 +62,9 @@ export interface ResumeFileMeta {
 export interface ResumeTemplateMeta {
   filename: string;
   size_bytes: number;
+  format: "single" | "bundle";
+  entrypoint: string | null;
+  file_count: number | null;
 }
 
 export interface Profile extends ProfileData {

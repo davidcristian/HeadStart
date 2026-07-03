@@ -81,6 +81,8 @@ class Settings(BaseSettings):
     profile_resume_max_bytes: int = 2_097_152
     # Max LaTeX resume template size (bytes).
     profile_resume_template_max_bytes: int = 524_288
+    # Max multi-file LaTeX template bundle (.zip) size (bytes).
+    profile_resume_template_bundle_max_bytes: int = 2_097_152
 
     # ---- database ----
     postgres_user: str = "headstart"

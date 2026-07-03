@@ -16,8 +16,9 @@ from app.core.logging import get_logger
 from app.models.user import User
 from app.repositories.users import UserRepository
 from app.resumes import ResumeCurationContext, ResumeCurator, get_resume_curator
-from app.resumes.compile import compile_latex_to_pdf
+from app.resumes.compile import compile_latex_to_pdf, compile_latex_workspace
 from app.resumes.template import default_template_tex, render_resume_template
+from app.resumes.template_bundle import render_template_bundle
 from app.resumes.types import CuratedResumeFields
 from app.schemas.profile import ProfileData
 from app.services.jobs import JobService
@@ -29,6 +30,7 @@ logger = get_logger(__name__)
 LLM_PROVIDERS = frozenset({"openai", "gemini", "anthropic", "llamacpp"})
 CuratorFactory = Callable[[str, Any], ResumeCurator]
 CompileFn = Callable[[str], bytes]
+BundleCompileFn = Callable[[dict[str, bytes], str], bytes]
 
 
 class ResumeService:
@@ -38,6 +40,7 @@ class ResumeService:
         *,
         curator_factory: CuratorFactory | None = None,
         compile_fn: CompileFn | None = None,
+        bundle_compile_fn: BundleCompileFn | None = None,
         settings: Any = default_settings,
     ) -> None:
         self.session = session
@@ -46,6 +49,7 @@ class ResumeService:
             lambda key, runtime: get_resume_curator(key, settings=runtime)
         )
         self._compile = compile_fn or compile_latex_to_pdf
+        self._bundle_compile = bundle_compile_fn or self._default_bundle_compile
         self._settings = settings
 
     def generate(self, user_id: int, job_id: int) -> dict[str, str | int | bool]:
@@ -63,7 +67,7 @@ class ResumeService:
         if not profile.exists:
             raise ValidationError("Save an application profile before generating a resume")
 
-        template_tex = profile_service.get_resume_template_tex(user_id) or default_template_tex()
+        bundle = profile_service.get_resume_template_bundle(user_id)
         ctx = ResumeCurationContext(
             job_title=job.title,
             company=job.company,
@@ -76,8 +80,15 @@ class ResumeService:
 
         requested = self._resolve_provider(user)
         fields, provider, fallback = self._curate_fields(requested, user, ctx)
-        rendered = render_resume_template(template_tex, fields)
-        pdf_bytes = self._compile_pdf(rendered)
+        if bundle is not None:
+            rendered_files = render_template_bundle(bundle, fields)
+            pdf_bytes = self._compile_bundle(rendered_files, bundle.entrypoint)
+        else:
+            template_tex = (
+                profile_service.get_resume_template_tex(user_id) or default_template_tex()
+            )
+            rendered = render_resume_template(template_tex, fields)
+            pdf_bytes = self._compile_pdf(rendered)
         self._validate_pdf(pdf_bytes)
 
         filename = _tailored_filename(job.company, job.title)
@@ -128,6 +139,16 @@ class ResumeService:
             timeout = float(getattr(self._settings, "resume_compile_timeout_seconds", 60.0))
             return compile_latex_to_pdf(source, timeout=timeout)
         return self._compile(source)
+
+    def _compile_bundle(self, files: dict[str, bytes], entrypoint: str) -> bytes:
+        if self._bundle_compile is self._default_bundle_compile:
+            timeout = float(getattr(self._settings, "resume_compile_timeout_seconds", 60.0))
+            return compile_latex_workspace(files, entrypoint=entrypoint, timeout=timeout)
+        return self._bundle_compile(files, entrypoint)
+
+    def _default_bundle_compile(self, files: dict[str, bytes], entrypoint: str) -> bytes:
+        timeout = float(getattr(self._settings, "resume_compile_timeout_seconds", 60.0))
+        return compile_latex_workspace(files, entrypoint=entrypoint, timeout=timeout)
 
     @staticmethod
     def _validate_pdf(data: bytes) -> None:

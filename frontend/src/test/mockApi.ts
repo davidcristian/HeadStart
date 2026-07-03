@@ -125,6 +125,9 @@ const mockApi = vi.hoisted(() => ({
     resume_template: {
       filename: "resume.tex",
       size_bytes: 512,
+      format: "single",
+      entrypoint: null,
+      file_count: null,
     },
   })),
   deleteResumeTemplate: vi.fn(async (): Promise<Profile> => emptyProfile),

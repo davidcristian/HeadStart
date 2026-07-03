@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import base64
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -27,6 +28,14 @@ ALLOWED_RESUME_TEMPLATE_CONTENT_TYPES = frozenset(
         "application/x-latex",
         "text/plain",
         "text/x-tex",
+    }
+)
+
+ALLOWED_RESUME_TEMPLATE_BUNDLE_CONTENT_TYPES = frozenset(
+    {
+        "application/zip",
+        "application/x-zip-compressed",
+        "application/octet-stream",
     }
 )
 
@@ -119,6 +128,9 @@ class ResumeTemplateMeta(BaseModel):
 
     filename: str
     size_bytes: int = Field(ge=0)
+    format: Literal["single", "bundle"] = "single"
+    entrypoint: str | None = None
+    file_count: int | None = Field(default=None, ge=1)
 
 
 class ResumeTemplateStored(BaseModel):
@@ -126,21 +138,61 @@ class ResumeTemplateStored(BaseModel):
 
     filename: str
     data_b64: str
+    format: Literal["single", "bundle"] = "single"
+    entrypoint: str | None = None
+    file_count: int | None = Field(default=None, ge=1)
 
     def to_meta(self) -> ResumeTemplateMeta:
         raw = base64.b64decode(self.data_b64)
-        return ResumeTemplateMeta(filename=self.filename, size_bytes=len(raw))
+        return ResumeTemplateMeta(
+            filename=self.filename,
+            size_bytes=len(raw),
+            format=self.format,
+            entrypoint=self.entrypoint,
+            file_count=self.file_count,
+        )
 
     @classmethod
-    def from_bytes(cls, *, filename: str, data: bytes) -> ResumeTemplateStored:
+    def from_single_tex(cls, *, filename: str, data: bytes) -> ResumeTemplateStored:
         return cls(
             filename=filename,
             data_b64=base64.b64encode(data).decode("ascii"),
+            format="single",
         )
 
+    @classmethod
+    def from_bundle_zip(
+        cls,
+        *,
+        filename: str,
+        data: bytes,
+        entrypoint: str,
+        file_count: int,
+    ) -> ResumeTemplateStored:
+        return cls(
+            filename=filename,
+            data_b64=base64.b64encode(data).decode("ascii"),
+            format="bundle",
+            entrypoint=entrypoint,
+            file_count=file_count,
+        )
+
+    @classmethod
+    def from_bytes(cls, *, filename: str, data: bytes) -> ResumeTemplateStored:
+        """Backward-compatible helper for single .tex uploads."""
+        return cls.from_single_tex(filename=filename, data=data)
+
     def decode_tex(self) -> str:
-        """Decode stored template bytes as UTF-8 LaTeX source."""
+        """Decode stored single-file template bytes as UTF-8 LaTeX source."""
+        if self.format != "single":
+            raise ValueError("decode_tex is only valid for single-file templates")
         return base64.b64decode(self.data_b64).decode("utf-8")
+
+    def decode_bundle_zip(self) -> bytes:
+        """Decode stored bundle bytes."""
+        if self.format != "bundle":
+            raise ValueError("decode_bundle_zip is only valid for bundle templates")
+        return base64.b64decode(self.data_b64)
 
 
 class ResumeFileStored(BaseModel):

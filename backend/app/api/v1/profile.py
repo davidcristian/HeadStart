@@ -80,10 +80,15 @@ async def upload_resume_template(
     db: Session = Depends(get_db),
     user: User = Depends(get_verified_user),
 ) -> ProfileRead:
-    """Upload or replace the user's LaTeX resume template."""
-    content = await _read_bounded_upload(file, settings.profile_resume_template_max_bytes)
-    content_type = file.content_type or "application/octet-stream"
+    """Upload or replace the user's LaTeX resume template (.tex or .zip bundle)."""
     filename = file.filename or "resume.tex"
+    max_bytes = (
+        settings.profile_resume_template_bundle_max_bytes
+        if filename.lower().endswith(".zip")
+        else settings.profile_resume_template_max_bytes
+    )
+    content = await _read_bounded_upload(file, max_bytes)
+    content_type = file.content_type or "application/octet-stream"
     return ProfileService(db).save_resume_template(
         user.id,
         filename=filename,
