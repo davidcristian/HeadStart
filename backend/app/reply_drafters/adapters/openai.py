@@ -6,8 +6,8 @@ from typing import Any
 
 import httpx
 
+from app.ai.llm_common import extract_openai_content
 from app.core.config import settings as default_settings
-from app.reply_drafters.adapters.llm_common import extract_openai_content
 from app.reply_drafters.base import ReplyDrafter, register_reply_drafter
 from app.reply_drafters.prompts import SYSTEM_PROMPT, parse_reply_json, user_prompt
 from app.reply_drafters.types import ReplyDraftContext, ReplyDraftResult

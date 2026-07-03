@@ -15,18 +15,12 @@ from typing import Any
 
 import httpx
 
+from app.ai.llm_common import auth_headers, extract_openai_content
 from app.core.config import settings as default_settings
-from app.core.logging import get_logger
 from app.scrapers.types import JobPosting
-from app.summarizers.adapters.openai import (
-    _SYSTEM_PROMPT,
-    _extract_content,
-    _user_prompt,
-)
+from app.summarizers.adapters.openai import _SYSTEM_PROMPT, _user_prompt
 from app.summarizers.base import Summarizer, register_summarizer
 from app.summarizers.types import SummaryContext
-
-logger = get_logger(__name__)
 
 
 @register_summarizer("llamacpp")
@@ -47,7 +41,7 @@ class LlamaCppSummarizer(Summarizer):
         base_url = str(self._settings.llamacpp_base_url).rstrip("/")
         model = str(self._settings.llamacpp_model)
         url = f"{base_url}/chat/completions"
-        headers = _auth_headers(str(getattr(self._settings, "llamacpp_api_key", "") or ""))
+        headers = auth_headers(str(getattr(self._settings, "llamacpp_api_key", "") or ""))
         return [self._summarize_one(url, headers, model, ctx, job) for job in jobs]
 
     def _summarize_one(
@@ -69,15 +63,8 @@ class LlamaCppSummarizer(Summarizer):
         }
         resp = self._client.post(url, json=payload, headers=headers)
         resp.raise_for_status()
-        return _extract_content(resp.json())
+        return extract_openai_content(resp.json())
 
     def close(self) -> None:
         if self._owns_client:
             self._client.close()
-
-
-def _auth_headers(api_key: str) -> dict[str, str]:
-    key = api_key.strip()
-    if not key:
-        return {}
-    return {"Authorization": f"Bearer {key}"}

@@ -6,8 +6,8 @@ from typing import Any
 
 import httpx
 
+from app.ai.llm_common import extract_gemini_content, gemini_headers, gemini_url
 from app.core.config import settings as default_settings
-from app.email_classifiers.adapters.llm_common import extract_gemini_content
 from app.email_classifiers.base import EmailClassifier, register_email_classifier
 from app.email_classifiers.prompts import SYSTEM_PROMPT, parse_classification_json, user_prompt
 from app.email_classifiers.types import EmailClassificationResult, EmailClassifyContext
@@ -31,10 +31,8 @@ class GeminiEmailClassifier(EmailClassifier):
         api_key = str(getattr(self._settings, "gemini_api_key", "") or "").strip()
         if not api_key:
             raise ValueError("gemini email classifier requires GEMINI_API_KEY")
-        model = str(self._settings.gemini_model)
-        base_url = str(self._settings.gemini_base_url).rstrip("/")
-        url = f"{base_url}/models/{model}:generateContent"
-        headers = {"x-goog-api-key": api_key}
+        url = gemini_url(str(self._settings.gemini_base_url), str(self._settings.gemini_model))
+        headers = gemini_headers(api_key)
         max_tokens = int(getattr(self._settings, "email_classify_max_tokens", 256))
         payload = {
             "systemInstruction": {"parts": [{"text": SYSTEM_PROMPT}]},

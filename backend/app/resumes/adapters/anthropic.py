@@ -6,11 +6,10 @@ from typing import Any
 
 import httpx
 
+from app.ai.llm_common import extract_anthropic_content
 from app.core.config import settings as default_settings
-from app.cover_letters.adapters.llm_common import extract_anthropic_content
-from app.resumes.adapters.llm_common import SYSTEM_PROMPT, user_prompt
 from app.resumes.base import ResumeCurator, register_resume_curator
-from app.resumes.prompts import parse_curated_json
+from app.resumes.prompts import SYSTEM_PROMPT, parse_curated_json, user_prompt
 from app.resumes.types import CuratedResumeFields, ResumeCurationContext
 
 

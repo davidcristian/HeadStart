@@ -11,18 +11,15 @@ Network and credentials live here, at the edge. Failures raise; the calling
 from __future__ import annotations
 
 from typing import Any
-from urllib.parse import quote
 
 import httpx
 
+from app.ai.llm_common import extract_gemini_content, gemini_headers, gemini_url
 from app.core.config import settings as default_settings
-from app.core.logging import get_logger
 from app.scrapers.types import JobPosting
 from app.summarizers.adapters.openai import _SYSTEM_PROMPT, _user_prompt
 from app.summarizers.base import Summarizer, register_summarizer
 from app.summarizers.types import SummaryContext
-
-logger = get_logger(__name__)
 
 
 @register_summarizer("gemini")
@@ -43,11 +40,8 @@ class GeminiSummarizer(Summarizer):
         api_key = str(getattr(self._settings, "gemini_api_key", "") or "").strip()
         if not api_key:
             raise ValueError("gemini summarizer requires GEMINI_API_KEY")
-        base_url = str(self._settings.gemini_base_url).rstrip("/")
-        model = str(self._settings.gemini_model)
-        model_path = quote(model, safe="")
-        url = f"{base_url}/models/{model_path}:generateContent"
-        headers = {"x-goog-api-key": api_key}
+        url = gemini_url(str(self._settings.gemini_base_url), str(self._settings.gemini_model))
+        headers = gemini_headers(api_key)
         return [self._summarize_one(url, headers, ctx, job) for job in jobs]
 
     def _summarize_one(
@@ -68,17 +62,8 @@ class GeminiSummarizer(Summarizer):
         }
         resp = self._client.post(url, json=payload, headers=headers)
         resp.raise_for_status()
-        return _extract_content(resp.json())
+        return extract_gemini_content(resp.json())
 
     def close(self) -> None:
         if self._owns_client:
             self._client.close()
-
-
-def _extract_content(data: dict[str, Any]) -> str:
-    try:
-        parts = data["candidates"][0]["content"]["parts"]
-        text = parts[0]["text"]
-    except (KeyError, IndexError, TypeError) as exc:
-        raise ValueError("unexpected Gemini response shape") from exc
-    return str(text or "").strip()

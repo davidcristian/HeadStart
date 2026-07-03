@@ -14,14 +14,12 @@ from typing import Any
 
 import httpx
 
+from app.ai.llm_common import extract_anthropic_content
 from app.core.config import settings as default_settings
-from app.core.logging import get_logger
 from app.scrapers.types import JobPosting
 from app.summarizers.adapters.openai import _SYSTEM_PROMPT, _user_prompt
 from app.summarizers.base import Summarizer, register_summarizer
 from app.summarizers.types import SummaryContext
-
-logger = get_logger(__name__)
 
 
 @register_summarizer("anthropic")
@@ -70,17 +68,8 @@ class AnthropicSummarizer(Summarizer):
         }
         resp = self._client.post(url, json=payload, headers=headers)
         resp.raise_for_status()
-        return _extract_content(resp.json())
+        return extract_anthropic_content(resp.json())
 
     def close(self) -> None:
         if self._owns_client:
             self._client.close()
-
-
-def _extract_content(data: dict[str, Any]) -> str:
-    try:
-        blocks = data["content"]
-        text = blocks[0]["text"]
-    except (KeyError, IndexError, TypeError) as exc:
-        raise ValueError("unexpected Anthropic response shape") from exc
-    return str(text or "").strip()

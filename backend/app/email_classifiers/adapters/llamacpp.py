@@ -6,8 +6,8 @@ from typing import Any
 
 import httpx
 
+from app.ai.llm_common import auth_headers, extract_openai_content
 from app.core.config import settings as default_settings
-from app.email_classifiers.adapters.llm_common import auth_headers, extract_openai_content
 from app.email_classifiers.base import EmailClassifier, register_email_classifier
 from app.email_classifiers.prompts import SYSTEM_PROMPT, parse_classification_json, user_prompt
 from app.email_classifiers.types import EmailClassificationResult, EmailClassifyContext

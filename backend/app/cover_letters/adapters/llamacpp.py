@@ -6,8 +6,8 @@ from typing import Any
 
 import httpx
 
+from app.ai.llm_common import auth_headers, extract_openai_content
 from app.core.config import settings as default_settings
-from app.cover_letters.adapters.llm_common import auth_headers, extract_openai_content
 from app.cover_letters.base import CoverLetterGenerator, register_cover_letter_generator
 from app.cover_letters.prompts import SYSTEM_PROMPT, user_prompt
 from app.cover_letters.types import CoverLetterContext

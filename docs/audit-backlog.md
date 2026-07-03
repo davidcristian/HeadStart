@@ -6,8 +6,8 @@ features. Update the Status column (and strike the row) when an item ships; link
 
 Produced by a read-only multi-agent audit — 13 subsystem clusters, every finding
 adversarially verified against the code. **77 confirmed** findings (1 critical, 9 high,
-16 medium, 51 low). 62 are already resolved: the WS10 Gemini key-in-URL security fix
-(1 med), the browser-extension cluster (6) via
+16 medium, 51 low). 68 are already resolved: the WS10 LLM-adapter-family consolidation
+cluster (7: 1 med Gemini key-in-URL + 6 low refactors), the browser-extension cluster (6) via
 removal (WS8), the WS3 security-hardening trio (2 high + 1 low), the WS11 docs
 cluster (8: 1 med + 7 low), all 6 WS1 inbox-UID items (1 crit + 1 high + 1 med
 + 3 low), all 4 WS2 scheduler items (1 high + 3 low), all 6 WS5 billing items
@@ -135,23 +135,28 @@ payloads are caught.
 | ⚪ LOW | 📝 | Docs implied only the classifier guards injection; reply-drafter section now documents its sanitization + LLM-bypass-on-injection behavior | `docs/modules/inbox.md:338` | ✅ |
 | ⚪ LOW | 🧪 | Added reply-draft regression tests: HTML-obfuscated body injection (pins sanitize-before-detect ordering), subject injection, and HTML-stripping on the clean path | `tests/services/test_reply_drafts.py` | ✅ |
 
-## WS10 — LLM-adapter-family consolidation (refactor, ~1,800 LOC)
+## WS10 — LLM-adapter-family consolidation (refactor) ✅ DONE (2026-07-01)
 Five families (`summarizers`/`resumes`/`cover_letters`/`email_classifiers`/`reply_drafters`)
-reimplement near-identical provider adapters + registries. **Approved direction:** one
-dedicated consolidation PR. The Gemini security fix shipped separately first (below).
-The Gemini key-in-URL security fix (item 1) shipped as its own PR — all four leaking
-families now send `x-goog-api-key` as a header (matching `email_classifiers`), with a
-per-family regression test asserting the key never lands in the URL. Items 2–7 (the
-consolidation refactor) remain for the dedicated PR.
+reimplemented near-identical provider adapters + registries. Shipped in two PRs: the Gemini
+key-in-URL **security fix (item 1) first** (all four leaking families now send the key as an
+`x-goog-api-key` header, per-family regression test that the key never lands in the URL), then
+the **consolidation refactor (items 2–7)**. The shared response/auth helpers now live in
+`app/ai/llm_common.py` (moved out of `cover_letters/adapters/`; the per-family re-export shims are
+deleted), every family's Gemini adapter builds its URL via the one `gemini_url`/`gemini_headers`
+pair, the summarizer adapters use those shared extractors (dropping their private copies + dead
+`logger` bindings), the 5× copy-paste registries collapse into the generic
+`app/ai/registry.AdapterRegistry` (families keep their `register_*`/`get_*`/`available_*` names by
+delegation), and the summarizer `heuristic.__init__` signature matches its four siblings. New unit
+tests cover `llm_common` and the generic registry.
 | Sev | Type | Item | Location | Status |
 | --- | ---- | ---- | -------- | ------ |
 | 🟡 MED | 🔒 | Gemini API key in URL query string in 4 of 5 families (loggable); now sends `x-goog-api-key` header like `email_classifiers` | `*/adapters/gemini.py` | ✅ |
-| ⚪ LOW | 🔁 | Gemini adapters diverge (key-in-URL vs header; model quoting) | `email_classifiers/adapters/gemini.py:36` | ☐ |
-| ⚪ LOW | ♻️ | `summarizers/` duplicate all response/auth helpers instead of using shared `llm_common` (already drifted) | `summarizers/adapters/openai.py:113` | ☐ |
-| ⚪ LOW | ♻️ | Shared helpers oddly live under `cover_letters/adapters/llm_common.py`, re-exported by peers (layering smell) | `cover_letters/adapters/llm_common.py:1` | ☐ |
-| ⚪ LOW | ♻️ | Per-family `base.py` registry is 5× copy-paste | `reply_drafters/base.py:19` | ☐ |
-| ⚪ LOW | ♻️ | Dead `logger` binding in all 4 summarizer adapters | `summarizers/adapters/openai.py:23` | ☐ |
-| ⚪ LOW | 🔁 | `heuristic.__init__` signature differs in `summarizers` only | `summarizers/adapters/heuristic.py:27` | ☐ |
+| ⚪ LOW | 🔁 | Gemini adapters diverged (key-in-URL vs header; model quoting); now all route through shared `gemini_url`/`gemini_headers` | `app/ai/llm_common.py` | ✅ |
+| ⚪ LOW | ♻️ | `summarizers/` duplicated all response/auth helpers; now import them from shared `app/ai/llm_common.py` | `summarizers/adapters/openai.py` | ✅ |
+| ⚪ LOW | ♻️ | Shared helpers lived under `cover_letters/adapters/llm_common.py`, re-exported by peers (layering smell); moved to `app/ai/llm_common.py`, shims deleted | `app/ai/llm_common.py` | ✅ |
+| ⚪ LOW | ♻️ | Per-family `base.py` registry was 5× copy-paste; now delegates to generic `app/ai/registry.AdapterRegistry` | `app/ai/registry.py` | ✅ |
+| ⚪ LOW | ♻️ | Dead `logger` binding in all 4 summarizer adapters; removed | `summarizers/adapters/openai.py` | ✅ |
+| ⚪ LOW | 🔁 | `heuristic.__init__` signature differed in `summarizers` only; now `settings: object \| None = None` like siblings | `summarizers/adapters/heuristic.py:27` | ✅ |
 
 ## WS11 — Documentation updates ✅ DONE (2026-07-01)
 (Doc rows also live under their subsystem above; these are the docs-cluster + infra items.)

@@ -14,13 +14,11 @@ from typing import Any
 
 import httpx
 
+from app.ai.llm_common import extract_openai_content
 from app.core.config import settings as default_settings
-from app.core.logging import get_logger
 from app.scrapers.types import JobPosting
 from app.summarizers.base import Summarizer, register_summarizer
 from app.summarizers.types import SummaryContext
-
-logger = get_logger(__name__)
 
 _SYSTEM_PROMPT = (
     "You help a job seeker triage new postings. In ONE short sentence (max 30 "
@@ -72,8 +70,7 @@ class OpenAISummarizer(Summarizer):
         }
         resp = self._client.post(url, json=payload, headers=headers)
         resp.raise_for_status()
-        data = resp.json()
-        return _extract_content(data)
+        return extract_openai_content(resp.json())
 
     def close(self) -> None:
         if self._owns_client:
@@ -108,11 +105,3 @@ def _describe_filters(filters: dict[str, Any]) -> str:
         currency = filters.get("salary_currency") or "USD"
         parts.append(f"min_salary={min_salary} {currency}")
     return "; ".join(parts) if parts else "none"
-
-
-def _extract_content(data: dict[str, Any]) -> str:
-    try:
-        content = data["choices"][0]["message"]["content"]
-    except (KeyError, IndexError, TypeError) as exc:
-        raise ValueError("unexpected OpenAI response shape") from exc
-    return str(content or "").strip()
