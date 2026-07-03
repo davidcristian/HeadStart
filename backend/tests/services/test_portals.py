@@ -20,7 +20,7 @@ def test_list_portal_presets_filters_query() -> None:
 def test_curated_portal_catalog_size() -> None:
     from app.portals.catalog import CURATED_PORTALS
 
-    assert len(CURATED_PORTALS) == 96
+    assert len(CURATED_PORTALS) == 97
 
 
 def test_curated_portal_apple_preset() -> None:
@@ -48,6 +48,15 @@ def test_curated_portal_amazon_preset() -> None:
     assert preset.adapter_key == "amazon_jobs"
     assert preset.default_config["portal_id"] == "amazon"
     assert preset.base_url == "https://www.amazon.jobs/en/search"
+
+
+def test_curated_portal_uber_preset() -> None:
+    from app.portals.catalog import CURATED_PORTALS
+
+    preset = next(p for p in CURATED_PORTALS if p.id == "uber")
+    assert preset.adapter_key == "uber_careers"
+    assert preset.default_config["portal_id"] == "uber"
+    assert preset.base_url == "https://www.uber.com/us/en/careers/list/"
 
 
 def test_curated_portal_doordash_board_token() -> None:

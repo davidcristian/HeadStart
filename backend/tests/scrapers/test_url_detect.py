@@ -207,6 +207,19 @@ def test_detect_shopify_careers_job_detail_returns_none() -> None:
     )
 
 
+def test_detect_uber_careers_root_url() -> None:
+    result = detect_source_from_url("https://www.uber.com/us/en/careers/list/")
+    assert result is not None
+    assert result.adapter_key == "uber_careers"
+    assert result.default_config["portal_id"] == "uber"
+    assert result.default_config["careers_locale_path"] == "us/en"
+    assert result.base_url == "https://www.uber.com/us/en/careers/list/"
+
+
+def test_detect_uber_careers_job_detail_returns_none() -> None:
+    assert detect_source_from_url("https://www.uber.com/us/en/careers/list/154672") is None
+
+
 def test_detect_meta_careers_root_url() -> None:
     result = detect_source_from_url("https://www.metacareers.com/jobs")
     assert result is not None

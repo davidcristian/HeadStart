@@ -1,0 +1,104 @@
+{
+  "status": "success",
+  "data": {
+    "totalResults": {
+      "low": 2,
+      "high": 0,
+      "unsigned": false
+    },
+    "results": [
+      {
+        "id": 154672,
+        "title": "Staff Software Engineer - Fulfillment Optimization",
+        "description": "**About the Role**\n\nGrocery is Uber\u2019s newest and fastest growing business line, delighting customers with next-hour delivery of household essentials from their favorite local stores. The Grocery Fulfi...",
+        "department": "Engineering",
+        "type": "",
+        "programAndPlatform": "",
+        "location": {
+          "country": "USA",
+          "region": "California",
+          "city": "San Francisco",
+          "countryName": "United States"
+        },
+        "featured": false,
+        "level": "5B",
+        "creationDate": "2026-01-29T07:00:00.000Z",
+        "otherLevels": null,
+        "team": "Backend",
+        "portalID": "EXTERNAL",
+        "isPipeline": false,
+        "statusID": "D31001",
+        "statusName": "Approved",
+        "updatedDate": "2026-06-27T00:17:00.000Z",
+        "uniqueSkills": "",
+        "timeType": "Full-Time",
+        "allLocations": [
+          {
+            "country": "USA",
+            "region": "New York",
+            "city": "New York",
+            "countryName": "United States"
+          },
+          {
+            "country": "USA",
+            "region": "California",
+            "city": "San Francisco",
+            "countryName": "United States"
+          },
+          {
+            "country": "USA",
+            "region": "Santa Clara",
+            "city": "Sunnyvale",
+            "countryName": "United States"
+          }
+        ]
+      },
+      {
+        "id": 160090,
+        "title": "Senior Account Executive - Global Delivery Partnerships",
+        "description": "**About the Role**\n\nThe Uber Eats team is looking for sharp, highly motivated individuals to join our Global Delivery Partnerships team with a focus on managing and expanding relationships with the la...",
+        "department": "Sales & Account Management",
+        "type": "",
+        "programAndPlatform": "",
+        "location": {
+          "country": "USA",
+          "region": "Cook",
+          "city": "Chicago",
+          "countryName": "United States"
+        },
+        "featured": false,
+        "level": "5",
+        "creationDate": "2026-06-10T16:54:00.000Z",
+        "otherLevels": null,
+        "team": "Sales",
+        "portalID": "EXTERNAL",
+        "isPipeline": false,
+        "statusID": "D31001",
+        "statusName": "Approved",
+        "updatedDate": "2026-06-27T00:17:00.000Z",
+        "uniqueSkills": "",
+        "timeType": "Full-Time",
+        "allLocations": [
+          {
+            "country": "USA",
+            "region": "New York",
+            "city": "New York",
+            "countryName": "United States"
+          },
+          {
+            "country": "USA",
+            "region": "California",
+            "city": "San Francisco",
+            "countryName": "United States"
+          },
+          {
+            "country": "USA",
+            "region": "Cook",
+            "city": "Chicago",
+            "countryName": "United States"
+          }
+        ]
+      }
+    ]
+  }
+}

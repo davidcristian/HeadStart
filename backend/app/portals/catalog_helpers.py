@@ -187,6 +187,27 @@ def shopify_careers_preset(
     )
 
 
+def uber_careers_preset(
+    *,
+    portal_id: str = "uber",
+    company: str = "Uber",
+    category: PortalCategory = "big_tech",
+) -> PortalPreset:
+    base = "https://www.uber.com/us/en/careers/list/"
+    return PortalPreset(
+        id=portal_id,
+        company_name=company,
+        category=category,
+        adapter_key="uber_careers",
+        base_url=base,
+        default_config={
+            "company": company,
+            "portal_id": portal_id,
+            "careers_locale_path": "us/en",
+        },
+    )
+
+
 def microsoft_careers_preset(
     *,
     portal_id: str = "microsoft",

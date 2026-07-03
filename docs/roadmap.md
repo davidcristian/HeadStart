@@ -4,8 +4,8 @@ Living plan for JobNotifier — what to build next and why. Update this doc when
 priorities shift or a milestone ships.
 
 **Current baseline (2026-06):** Phases 1–17 and 19 shipped (four-tier pricing, per-user AI
-summary preferences, 96-employer portal catalog, SmartRecruiters adapter). Phase 18
-(custom career-site adapters) is in progress — Shopify shipped; Uber and Snowflake remain.
+summary preferences, 97-employer portal catalog, SmartRecruiters adapter). Phase 18
+(custom career-site adapters) is in progress — Shopify and Uber shipped; Snowflake remains.
 See [architecture.md](architecture.md) for the system design.
 
 ---
@@ -474,7 +474,7 @@ Phase 11 batch-1 expansion (Uber, Snowflake, Shopify).
 | Adapter | Employer | Likely strategy | Risk |
 | ------- | -------- | --------------- | ---- |
 | ~~`shopify_careers`~~ | ~~Shopify~~ | ~~Investigate: may be Greenhouse (`shopify`) or a custom `shopify.com/careers` endpoint~~ | **Shipped:** Ashby-backed careers site with disabled public Postings API; `@register_scraper("shopify_careers")` parses embedded React Router flight stream on `shopify.com/careers`; catalog preset added (96 employers) |
-| `uber_careers` | Uber | Reverse-engineer `uber.com/careers` search JSON or embedded hydration payload | Medium — custom stack, may change |
+| ~~`uber_careers`~~ | ~~Uber~~ | ~~Reverse-engineer `uber.com/careers` search JSON or embedded hydration payload~~ | **Shipped:** `@register_scraper("uber_careers")` calls public `POST /api/loadSearchJobsResults`; offset pagination; `format_location()` handles multi-city `allLocations`; catalog preset added (97 employers) |
 | `snowflake_careers` | Snowflake | Public careers search API or embedded JSON on `careers.snowflake.com` | Medium — enterprise site |
 
 After each scraper ships, add the matching `*_careers_preset()` to

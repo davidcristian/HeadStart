@@ -13,6 +13,7 @@ from app.scrapers.url_detect_microsoft import detect_microsoft_careers
 from app.scrapers.url_detect_shopify import detect_shopify_careers
 from app.scrapers.url_detect_smartrecruiters import detect_smartrecruiters
 from app.scrapers.url_detect_types import SourceDetection
+from app.scrapers.url_detect_uber import detect_uber_careers
 
 _LOCALE_RE = re.compile(r"^[a-z]{2}-[A-Z]{2}$")
 _WORKDAY_HOST_WITH_REGION = re.compile(r"^([^.]+)\.(wd\d+)\.myworkdayjobs\.com$", re.IGNORECASE)
@@ -38,6 +39,7 @@ def detect_source_from_url(url: str, *, page_title: str | None = None) -> Source
         detect_apple_careers,
         detect_meta_careers,
         detect_shopify_careers,
+        detect_uber_careers,
         _detect_indeed,
     ):
         result = detector(parsed, host, page_title)
