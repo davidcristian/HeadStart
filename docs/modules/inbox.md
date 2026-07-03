@@ -222,8 +222,11 @@ Supported classification labels: `follow_up`, `general`.
 - **Applications UI:** `/app/applications` shows the latest draft per job and a
   **Draft reply** button when a draftable classification exists.
 
-**Not shipped yet:** safe-send guardrails beyond the default-off toggle. See
-[roadmap.md](../roadmap.md) (Phase 20d).
+**Safe-send guardrails:** built-in legal/HR topic blocklist on inbound + draft
+text; per-user hourly/daily caps (`INBOX_REPLY_MAX_PER_HOUR`,
+`INBOX_REPLY_MAX_PER_DAY`); audit log at `GET /inbox/reply-send-logs` for queue,
+send, and blocked decisions. Blocked sends set `inbox_pending_reply.status=blocked`
+and leave the draft in `draft` for manual review.
 
 ## Response delay queue (Phase 20d)
 
@@ -240,4 +243,6 @@ optional random jitter (`INBOX_REPLY_DELAY_JITTER_SECONDS`, default 900).
 - **Send:** beat task `process_pending_replies` every
   `INBOX_REPLY_SEND_INTERVAL_SECONDS` (default 60) calls
   `PendingReplyService.process_due` to SMTP-send due rows and mark drafts `sent`.
+- **Safe-send:** topic blocklist, hourly/daily caps, and audit log via
+  `ReplySafeSendService`; see [Follow-ups (Phase 20d)](#follow-ups-phase-20d).
 - **API fields:** `ReplyDraftRead.queue_status` and `send_after` expose queue state.

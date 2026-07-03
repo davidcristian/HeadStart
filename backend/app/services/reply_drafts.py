@@ -123,6 +123,7 @@ class ReplyDraftService:
             },
         )
         self.drafts.add(row)
+        row.classification = classification
         self.pending_replies.enqueue_for_draft(
             user_id,
             row,

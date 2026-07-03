@@ -179,4 +179,5 @@ def process_pending_replies() -> dict[str, int]:
         "sent": result.sent,
         "failed": result.failed,
         "skipped": result.skipped,
+        "blocked": result.blocked,
     }

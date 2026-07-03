@@ -15,6 +15,7 @@ if TYPE_CHECKING:
     from app.models.inbox_pending_reply import InboxPendingReply
     from app.models.inbox_poll_state import InboxPollState
     from app.models.inbox_reply_draft import InboxReplyDraft
+    from app.models.inbox_reply_send_log import InboxReplySendLog
     from app.models.mailbox_credential import MailboxCredential
     from app.models.notification_target import NotificationTarget
     from app.models.password_reset_token import PasswordResetToken
@@ -90,5 +91,8 @@ class User(Base, TimestampMixin):
         back_populates="user", cascade="all, delete-orphan"
     )
     inbox_pending_replies: Mapped[list["InboxPendingReply"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+    inbox_reply_send_logs: Mapped[list["InboxReplySendLog"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )

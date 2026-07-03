@@ -1,0 +1,40 @@
+"""Inbox reply send audit log persistence."""
+
+from datetime import datetime
+
+from sqlalchemy import func, select
+from sqlalchemy.orm import Session
+
+from app.models.inbox_reply_send_log import InboxReplySendLog
+
+
+class InboxReplySendLogRepository:
+    def __init__(self, session: Session) -> None:
+        self.session = session
+
+    def add(self, row: InboxReplySendLog) -> InboxReplySendLog:
+        self.session.add(row)
+        self.session.flush()
+        return row
+
+    def count_sent_since(self, user_id: int, *, since: datetime) -> int:
+        """Count successful auto-sent replies since a timestamp."""
+        count = self.session.scalar(
+            select(func.count())
+            .select_from(InboxReplySendLog)
+            .where(
+                InboxReplySendLog.user_id == user_id,
+                InboxReplySendLog.outcome == "sent",
+                InboxReplySendLog.created_at >= since,
+            )
+        )
+        return int(count or 0)
+
+    def list_for_user(self, user_id: int, *, limit: int = 50) -> list[InboxReplySendLog]:
+        stmt = (
+            select(InboxReplySendLog)
+            .where(InboxReplySendLog.user_id == user_id)
+            .order_by(InboxReplySendLog.created_at.desc())
+            .limit(limit)
+        )
+        return list(self.session.scalars(stmt))

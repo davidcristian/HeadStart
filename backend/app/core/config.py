@@ -206,6 +206,10 @@ class Settings(BaseSettings):
     inbox_reply_delay_jitter_seconds: int = 900
     # How often beat processes due pending auto-replies (seconds).
     inbox_reply_send_interval_seconds: int = 60
+    # Max autonomous recruiter replies per user per hour (0 = unlimited).
+    inbox_reply_max_per_hour: int = 10
+    # Max autonomous recruiter replies per user per day (0 = unlimited).
+    inbox_reply_max_per_day: int = 30
 
     # ---- Stripe billing (optional; leave empty to disable paid checkout) ----
     stripe_secret_key: str = ""

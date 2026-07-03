@@ -605,8 +605,8 @@ a job, review or edit the cover letter, and have both attached on apply.
 | Item | Why | Notes |
 | ---- | --- | ----- |
 | ~~Follow-up draft agent~~ | ~~Recruiters ask for availability, salary, work auth — repetitive~~ | **Shipped (dry-run):** `@register_reply_drafter` adapters (`heuristic` + LLM providers); `POST /inbox/draft-reply` + `GET /inbox/reply-drafts`; persisted in `inbox_reply_draft`; uses `email_draft` AI purpose; preview on `/app/applications`. **Not yet:** auto-send |
-| Response delay (human-like timing) | Instant replies look automated; real candidates take minutes to hours | **Shipped:** `inbox_pending_reply` rows with `send_after`; `INBOX_REPLY_MIN_DELAY_SECONDS` + optional jitter; beat task `process_pending_replies`; `auto_reply_enabled` on routing config (default off); drafts preview immediately, SMTP send waits for the window. **Not yet:** rate limits and topic blocklist (safe-send guardrails) |
-| Safe-send guardrails | Autonomous email is high-risk | Rate limits, blocklist for legal/HR-sensitive topics, dry-run log of every outbound draft; `inbox.auto_reply_enabled` default off |
+| Response delay (human-like timing) | Instant replies look automated; real candidates take minutes to hours | **Shipped:** `inbox_pending_reply` rows with `send_after`; `INBOX_REPLY_MIN_DELAY_SECONDS` + optional jitter; beat task `process_pending_replies`; `auto_reply_enabled` on routing config (default off); drafts preview immediately, SMTP send waits for the window |
+| ~~Safe-send guardrails~~ | Autonomous email is high-risk | **Shipped:** built-in legal/HR topic blocklist on inbound + draft text; per-user hourly/daily caps (`INBOX_REPLY_MAX_PER_HOUR`, `INBOX_REPLY_MAX_PER_DAY`); `inbox_reply_send_log` audit trail + `GET /inbox/reply-send-logs`; blocked sends leave drafts in `draft` for manual review; `auto_reply_enabled` default off |
 | ~~Thread ↔ application linking~~ | ~~Classification must know which job a thread is about~~ | **Shipped (Phase 20c):** `inbox_linking.py` matches employer domain, job title, and thread headers against `application_log` |
 
 ### 20e — Interview handoff & user notification

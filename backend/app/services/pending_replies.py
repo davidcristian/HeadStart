@@ -18,6 +18,7 @@ from app.models.inbox_reply_draft import InboxReplyDraft
 from app.repositories.inbox_pending_replies import InboxPendingReplyRepository
 from app.repositories.mailbox_credentials import MailboxCredentialRepository
 from app.services.inbox import InboxService
+from app.services.reply_safe_send import ReplySafeSendService
 
 logger = get_logger(__name__)
 
@@ -32,6 +33,7 @@ class PendingReplyProcessResult:
     sent: int
     failed: int
     skipped: int
+    blocked: int
 
 
 class PendingReplyService:
@@ -40,6 +42,7 @@ class PendingReplyService:
         self.inbox = InboxService(session)
         self.credentials = MailboxCredentialRepository(session)
         self.pending = InboxPendingReplyRepository(session)
+        self.safe_send = ReplySafeSendService(session)
 
     def auto_reply_enabled(self, user_id: int) -> bool:
         """Return whether the user opted into autonomous recruiter replies."""
@@ -74,6 +77,12 @@ class PendingReplyService:
         if not self.auto_reply_enabled(user_id):
             return None
 
+        classification = draft.classification
+        queue_decision = self.safe_send.evaluate_before_queue(draft, classification)
+        if not queue_decision.allowed:
+            self.safe_send.record(user_id, draft, queue_decision, classification=classification)
+            return None
+
         existing = self.pending.get_by_draft(user_id, draft.id)
         if existing is not None and existing.status in {"pending", "ready"}:
             return existing
@@ -91,18 +100,26 @@ class PendingReplyService:
         )
         draft.status = "queued"
         self.pending.add(row)
+        self.safe_send.record(
+            user_id,
+            draft,
+            queue_decision,
+            pending=row,
+            classification=classification,
+        )
         return row
 
     def process_due(self, *, now: datetime | None = None) -> PendingReplyProcessResult:
         """Send due pending replies for users with auto-reply enabled."""
         if not settings.inbox_agent_enabled:
-            return PendingReplyProcessResult(checked=0, sent=0, failed=0, skipped=0)
+            return PendingReplyProcessResult(checked=0, sent=0, failed=0, skipped=0, blocked=0)
 
         current = now or utcnow()
         checked = 0
         sent = 0
         failed = 0
         skipped = 0
+        blocked = 0
 
         for row in self.pending.list_due(now=current):
             checked += 1
@@ -111,22 +128,26 @@ class PendingReplyService:
                 sent += 1
             elif outcome == "failed":
                 failed += 1
+            elif outcome == "blocked":
+                blocked += 1
             else:
                 skipped += 1
 
-        if sent or failed:
+        if sent or failed or blocked:
             logger.info(
-                "pending replies: checked=%d sent=%d failed=%d skipped=%d",
+                "pending replies: checked=%d sent=%d failed=%d skipped=%d blocked=%d",
                 checked,
                 sent,
                 failed,
                 skipped,
+                blocked,
             )
         return PendingReplyProcessResult(
             checked=checked,
             sent=sent,
             failed=failed,
             skipped=skipped,
+            blocked=blocked,
         )
 
     def _send_one(self, row: InboxPendingReply, *, now: datetime) -> str:
@@ -152,6 +173,26 @@ class PendingReplyService:
             self.session.flush()
             return "failed"
 
+        send_decision = self.safe_send.evaluate_before_send(
+            row.user_id,
+            draft,
+            classification,
+            now=now,
+        )
+        if not send_decision.allowed:
+            row.status = "blocked"
+            row.error = send_decision.reason
+            draft.status = "draft"
+            self.safe_send.record(
+                row.user_id,
+                draft,
+                send_decision,
+                pending=row,
+                classification=classification,
+            )
+            self.session.flush()
+            return "blocked"
+
         try:
             message = build_recruiter_reply_message(draft=draft, classification=classification)
             result = self.inbox.send_message(row.user_id, message)
@@ -176,6 +217,13 @@ class PendingReplyService:
         payload = dict(row.payload or {})
         payload["sent_via"] = "auto_reply"
         row.payload = payload
+        self.safe_send.record(
+            row.user_id,
+            draft,
+            send_decision,
+            pending=row,
+            classification=classification,
+        )
         self.session.flush()
         return "sent"
 

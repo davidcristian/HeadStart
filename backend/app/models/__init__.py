@@ -12,6 +12,7 @@ from app.models.inbox_classification import InboxClassification
 from app.models.inbox_pending_reply import InboxPendingReply
 from app.models.inbox_poll_state import InboxPollState
 from app.models.inbox_reply_draft import InboxReplyDraft
+from app.models.inbox_reply_send_log import InboxReplySendLog
 from app.models.mailbox_credential import MailboxCredential
 from app.models.notification_target import NotificationTarget
 from app.models.password_reset_token import PasswordResetToken
@@ -36,6 +37,7 @@ __all__ = [
     "InboxPendingReply",
     "InboxPollState",
     "InboxReplyDraft",
+    "InboxReplySendLog",
     "MailboxCredential",
     "EmailVerificationToken",
     "NotificationTarget",

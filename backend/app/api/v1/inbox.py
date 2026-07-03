@@ -12,6 +12,7 @@ from app.schemas.inbox_classification import (
     EmailClassifyRequest,
 )
 from app.schemas.inbox_reply_draft import ReplyDraftListParams, ReplyDraftRead, ReplyDraftRequest
+from app.schemas.inbox_reply_send_log import ReplySendLogListParams, ReplySendLogRead
 from app.schemas.inbox_routing import (
     InboxRouteRequest,
     InboxRouteResponse,
@@ -28,6 +29,7 @@ from app.services.email_classification import EmailClassificationService
 from app.services.inbox import InboxService
 from app.services.inbox_routing import InboxRoutingService
 from app.services.reply_drafts import ReplyDraftService
+from app.services.reply_safe_send import ReplySafeSendService
 
 router = APIRouter()
 
@@ -149,3 +151,16 @@ def list_inbox_reply_drafts(
     return ReplyDraftService(db).list_for_user(
         user.id, seen_job_id=params.seen_job_id, limit=params.limit
     )
+
+
+@router.get("/reply-send-logs", response_model=list[ReplySendLogRead])
+def list_inbox_reply_send_logs(
+    limit: int = 50,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_verified_user),
+) -> list[ReplySendLogRead]:
+    """List audit rows for autonomous recruiter reply decisions."""
+    InboxService(db).require_enabled()
+    params = ReplySendLogListParams(limit=limit)
+    rows = ReplySafeSendService(db).list_for_user(user.id, limit=params.limit)
+    return [ReplySendLogRead.model_validate(row) for row in rows]

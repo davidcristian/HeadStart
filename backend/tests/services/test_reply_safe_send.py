@@ -1,0 +1,101 @@
+"""Service tests for reply safe-send guardrails."""
+
+from datetime import UTC, datetime, timedelta
+from unittest.mock import patch
+
+from sqlalchemy.orm import Session
+
+from app.core.config import settings
+from app.inbox.types import SendResult
+from app.models.inbox_reply_send_log import InboxReplySendLog
+from app.services.pending_replies import PendingReplyService
+from app.services.reply_safe_send import ReplySafeSendService
+from tests.services.test_pending_replies import _seed_draft, _seed_mailbox
+from tests.worker.test_pipeline import _make_search
+
+
+def test_enqueue_blocks_sensitive_topic_and_writes_audit_log(
+    db_session: Session, monkeypatch
+) -> None:
+    monkeypatch.setattr(settings, "inbox_agent_enabled", True)
+    search = _make_search(db_session)
+    user_id = search.user_id
+    _seed_mailbox(db_session, user_id, auto_reply=True)
+    draft = _seed_draft(db_session, user_id)
+    draft.body_text = "Happy to discuss the discrimination complaint with HR."
+    service = PendingReplyService(db_session)
+
+    row = service.enqueue_for_draft(user_id, draft)
+
+    assert row is None
+    assert draft.status == "draft"
+    logs = ReplySafeSendService(db_session).list_for_user(user_id)
+    assert len(logs) == 1
+    assert logs[0].outcome == "blocked_topic"
+    assert "discrimination" in logs[0].reason
+
+
+def test_process_due_blocks_hourly_rate_limit(db_session: Session, monkeypatch) -> None:
+    monkeypatch.setattr(settings, "inbox_agent_enabled", True)
+    monkeypatch.setattr(settings, "inbox_reply_max_per_hour", 1)
+    monkeypatch.setattr(settings, "inbox_reply_max_per_day", 0)
+    search = _make_search(db_session)
+    user_id = search.user_id
+    _seed_mailbox(db_session, user_id, auto_reply=True)
+    draft = _seed_draft(db_session, user_id)
+    service = PendingReplyService(db_session)
+    now = datetime(2026, 6, 30, 12, 0, tzinfo=UTC)
+
+    db_session.add(
+        InboxReplySendLog(
+            user_id=user_id,
+            inbox_reply_draft_id=draft.id,
+            outcome="sent",
+            reason="",
+            subject="Earlier reply",
+            body_excerpt="sent earlier",
+            created_at=now - timedelta(minutes=10),
+        )
+    )
+    db_session.flush()
+
+    row = service.enqueue_for_draft(user_id, draft, anchor=now - timedelta(hours=1))
+    assert row is not None
+    row.send_after = now - timedelta(minutes=1)
+
+    with patch.object(
+        service.inbox,
+        "send_message",
+        return_value=SendResult(status="sent"),
+    ) as send_mock:
+        result = service.process_due(now=now)
+
+    assert result.blocked == 1
+    assert result.sent == 0
+    send_mock.assert_not_called()
+    assert row.status == "blocked"
+    assert draft.status == "draft"
+    logs = ReplySafeSendService(db_session).list_for_user(user_id, limit=10)
+    assert any(log.outcome == "blocked_rate_limit_hour" for log in logs)
+
+
+def test_process_due_records_sent_audit_log(db_session: Session, monkeypatch) -> None:
+    monkeypatch.setattr(settings, "inbox_agent_enabled", True)
+    monkeypatch.setattr(settings, "inbox_reply_max_per_hour", 0)
+    monkeypatch.setattr(settings, "inbox_reply_max_per_day", 0)
+    search = _make_search(db_session)
+    user_id = search.user_id
+    _seed_mailbox(db_session, user_id, auto_reply=True)
+    draft = _seed_draft(db_session, user_id)
+    service = PendingReplyService(db_session)
+    now = datetime(2026, 6, 30, 12, 0, tzinfo=UTC)
+    row = service.enqueue_for_draft(user_id, draft, anchor=now - timedelta(hours=1))
+    assert row is not None
+    row.send_after = now - timedelta(minutes=1)
+
+    with patch.object(service.inbox, "send_message", return_value=SendResult(status="sent")):
+        result = service.process_due(now=now)
+
+    assert result.sent == 1
+    logs = ReplySafeSendService(db_session).list_for_user(user_id, limit=10)
+    assert any(log.outcome == "sent" for log in logs)
