@@ -29,6 +29,13 @@ from app.inbox.types import (
 logger = get_logger(__name__)
 
 
+def _imap_config(ctx: MailboxContext) -> MailboxConfig:
+    config = ctx.config
+    if not isinstance(config, MailboxConfig):
+        raise TypeError("imap_smtp connector requires MailboxConfig")
+    return config
+
+
 @register_mailbox("imap_smtp")
 class ImapSmtpMailbox(MailboxConnector):
     """Read mail over IMAP and send over SMTP."""
@@ -40,7 +47,7 @@ class ImapSmtpMailbox(MailboxConnector):
         since_uid: int | None = None,
         limit: int = 50,
     ) -> FetchResult:
-        config = ctx.config
+        config = _imap_config(ctx)
         client = self._imap_connect(config)
         try:
             client.select(config.imap_mailbox, readonly=True)
@@ -69,7 +76,7 @@ class ImapSmtpMailbox(MailboxConnector):
             self._imap_logout(client)
 
     def send_message(self, ctx: MailboxContext, message: OutboundMessage) -> SendResult:
-        config = ctx.config
+        config = _imap_config(ctx)
         email = EmailMessage()
         email["Subject"] = message.subject
         email["From"] = config.smtp_from or config.imap_user
@@ -94,7 +101,7 @@ class ImapSmtpMailbox(MailboxConnector):
             return SendResult(status="failed", error=str(exc))
 
     def test_connection(self, ctx: MailboxContext) -> ConnectionTestResult:
-        config = ctx.config
+        config = _imap_config(ctx)
         imap_ok = False
         smtp_ok = False
         errors: list[str] = []
@@ -134,7 +141,7 @@ class ImapSmtpMailbox(MailboxConnector):
         destination: str,
     ) -> MoveResult:
         """Copy the message to `destination` and remove it from the source mailbox."""
-        config = ctx.config
+        config = _imap_config(ctx)
         source = config.imap_mailbox
         if destination == source:
             return MoveResult(status="skipped", destination=destination)

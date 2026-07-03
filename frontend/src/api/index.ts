@@ -14,7 +14,6 @@ import type {
   ApplicationLog,
   ApplicationPipelineItem,
   ApplicationPipelineStage,
-  ReplyDraftResult,
   FeedUrl,
   Meta,
   NotificationTarget,
@@ -47,6 +46,7 @@ import type {
   PromoType,
 } from "../types";
 import type { PaidPlanId } from "../lib/pricing";
+import { inboxApi } from "./inbox";
 import { request, requestBlob, requestForm } from "./client";
 
 function buildJobQuery(searchId?: number, status?: string): string {
@@ -236,15 +236,13 @@ export const api = {
     return request<ApplicationPipelineItem[]>(`/api/v1/applications${query}`);
   },
 
-  draftInboxReply: (data: {
-    classification_id?: number;
-    message_uid?: number;
-    regenerate?: boolean;
-  }) => request<ReplyDraftResult>("/api/v1/inbox/draft-reply", { method: "POST", body: data }),
-  listInboxReplyDrafts: (seenJobId?: number) => {
-    const query = seenJobId !== undefined ? `?seen_job_id=${seenJobId}` : "";
-    return request<ReplyDraftResult[]>(`/api/v1/inbox/reply-drafts${query}`);
-  },
+  draftInboxReply: inboxApi.draftReply,
+  listInboxReplyDrafts: inboxApi.listReplyDrafts,
+  getMailboxCredentials: inboxApi.getMailboxCredentials,
+  upsertMailboxCredentials: inboxApi.upsertMailboxCredentials,
+  deleteMailboxCredentials: inboxApi.deleteMailboxCredentials,
+  testMailbox: inboxApi.testMailbox,
+  gmailAuthorize: inboxApi.gmailAuthorize,
 
   // feed
   getFeedUrl: () => request<FeedUrl>("/api/v1/feed/url"),

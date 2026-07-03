@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.logging import get_logger
+from app.inbox.credentials import env_mailbox_config
 from app.inbox.types import FetchResult
 from app.repositories.inbox_classifications import InboxClassificationRepository
 from app.repositories.inbox_poll_state import InboxPollStateRepository
@@ -96,7 +97,7 @@ class InboxOrchestrationService:
     def _list_pollable_user_ids(self) -> list[int]:
         """Users with a resolvable mailbox context for polling."""
         user_ids = {credential.user_id for credential in self.credentials.list_enabled()}
-        if settings.inbox_use_env_credentials and InboxService._env_config() is not None:
+        if settings.inbox_use_env_credentials and env_mailbox_config() is not None:
             for user in self.users.list_all():
                 if user.id in user_ids:
                     continue

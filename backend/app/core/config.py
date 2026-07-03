@@ -192,6 +192,10 @@ class Settings(BaseSettings):
     inbox_smtp_user: str = ""
     inbox_smtp_password: str = ""
     inbox_smtp_from: str = ""
+    # Gmail OAuth (dev-only inbox connector; optional)
+    gmail_oauth_client_id: str = ""
+    gmail_oauth_client_secret: str = ""
+    gmail_oauth_redirect_uri: str = ""
     # Days without recruiter reply before a self-sent ghost summary is emailed.
     inbox_ghost_window_days: int = 14
     # How often beat checks for stale applications (seconds).

@@ -44,6 +44,29 @@ Adapters self-register with `@register_mailbox("key")`. Modules are imported in
 Config shape matches `MailboxConfig` in `app/inbox/types.py` (IMAP host/port/SSL,
 SMTP host/port/TLS, credentials, optional `smtp_from`).
 
+## gmail adapter
+
+**Key:** `gmail`. Uses Google OAuth 2.0 and the Gmail REST API (`httpx`).
+
+- **Connect:** `GET /inbox/gmail/authorize` (auth required) returns a Google consent
+  URL; `GET /inbox/gmail/callback` exchanges the code and stores encrypted tokens on
+  `mailbox_credential` (`connector_type=gmail`).
+- **Fetch:** `users.messages.list` (INBOX) + `users.messages.get` (`format=raw`);
+  Gmail API message ids map to integer `uid` values for poll cursors.
+- **Send:** `users.messages.send` with a base64url-encoded MIME payload.
+- **Move / route:** `users.labels.create` (when missing) + `users.messages.modify`
+  (add label, remove INBOX).
+- **Test:** `users.getProfile` and match `emailAddress` to the stored credential.
+
+**Operator env** (all required for OAuth):
+
+- `GMAIL_OAUTH_CLIENT_ID`
+- `GMAIL_OAUTH_CLIENT_SECRET`
+- `GMAIL_OAUTH_REDIRECT_URI` — e.g. `http://localhost:8000/api/v1/inbox/gmail/callback`
+
+Token refresh runs automatically before fetch/send when the access token is near
+expiry (`app/inbox/gmail_oauth.py`).
+
 ## Credential storage
 
 Per-user encrypted row in `mailbox_credential` (one per account). Passwords are
@@ -57,9 +80,8 @@ write-only — `MailboxCredentialRead` exposes host/user metadata only.
 vars are set, users without a saved credential share the env mailbox (single-user
 local dev only).
 
-**Planned:** `@register_mailbox("gmail")` — OAuth 2.0 + Gmail API read/send for
-the majority of users on Gmail (see [roadmap.md → Phase 20c](../roadmap.md#20c--inbox-integration--email-triage)).
-IMAP remains the v1 connector for any provider.
+**Planned:** none — Gmail OAuth shipped in Phase 20c (`@register_mailbox("gmail")`).
+IMAP remains the generic connector for any provider.
 
 ## API (prefix `/api/v1/inbox`)
 
@@ -70,6 +92,8 @@ All routes require auth and `INBOX_AGENT_ENABLED=true`.
 | GET    | `/credentials`    | Read saved mailbox metadata                  |
 | PUT    | `/credentials`    | Upsert encrypted IMAP/SMTP settings          |
 | DELETE | `/credentials`    | Remove saved credentials                     |
+| GET    | `/gmail/authorize`| Start Gmail OAuth (returns consent URL)      |
+| GET    | `/gmail/callback` | OAuth redirect (stores Gmail tokens)         |
 | POST   | `/test`           | Test IMAP + SMTP (optional inline config)    |
 | GET    | `/messages`       | Fetch inbound messages (`since_uid`, `limit`)|
 | POST   | `/classify`       | Classify one message (body or mailbox `uid`) |

@@ -190,12 +190,7 @@ class ReplyDraftService:
         )
 
     def _mailbox_user_email(self, user_id: int) -> str:
-        credential = self.inbox.get_read_optional(user_id)
-        if credential is not None and credential.imap_user:
-            return credential.imap_user
-        if self._settings.inbox_use_env_credentials and self._settings.inbox_imap_user:
-            return str(self._settings.inbox_imap_user)
-        return ""
+        return self.inbox.mailbox_user_email(user_id)
 
     def _resolve_provider(self, user: User) -> str:
         if not PlanLimitsService(self.session).allows_summaries(user.id):

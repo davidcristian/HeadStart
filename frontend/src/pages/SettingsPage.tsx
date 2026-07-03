@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { NotificationHelpCard } from "../components/settings/NotificationHelpCard";
 import { SettingsBillingCard } from "../components/settings/SettingsBillingCard";
+import { SettingsInboxCard } from "../components/settings/SettingsInboxCard";
 import { SettingsSummaryCard } from "../components/settings/SettingsSummaryCard";
 import { Banner, Button, Card, Field } from "../components/ui";
 import { useCookieConsent } from "../components/CookieConsentContext";
@@ -11,6 +12,7 @@ import { api } from "../api";
 import { useAuth } from "../auth/AuthContext";
 import { getApiBaseUrl, setApiBaseUrl } from "../lib/settings";
 import { planLabel } from "../lib/plan";
+import type { Meta } from "../types";
 
 export function SettingsPage() {
   const navigate = useNavigate();
@@ -24,7 +26,25 @@ export function SettingsPage() {
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string>();
   const billingNotice = searchParams.get("billing");
+  const mailboxNotice = searchParams.get("mailbox");
   const { choice, openCookieSettings } = useCookieConsent();
+  const [meta, setMeta] = useState<Meta | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadMeta() {
+      try {
+        const data = await api.meta();
+        if (!cancelled) setMeta(data);
+      } catch {
+        if (!cancelled) setMeta(null);
+      }
+    }
+    void loadMeta();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (billingNotice === "success") {
@@ -94,6 +114,9 @@ export function SettingsPage() {
 
       {user ? <SettingsBillingCard userPlan={user.plan} /> : null}
       {user ? <SettingsSummaryCard /> : null}
+      {user && meta?.inbox_agent_enabled ? (
+        <SettingsInboxCard mailboxNotice={mailboxNotice} />
+      ) : null}
 
       <Card title="Your account">
         {user && (

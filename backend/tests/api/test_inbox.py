@@ -88,4 +88,24 @@ def test_meta_includes_inbox_capabilities(client: TestClient, auth_headers: dict
     assert resp.status_code == 200
     body = resp.json()
     assert "imap_smtp" in body["mailboxes"]
+    assert "gmail" in body["mailboxes"]
     assert body["inbox_agent_enabled"] is False
+
+
+def test_gmail_authorize_requires_oauth_config(client: TestClient, monkeypatch) -> None:
+    monkeypatch.setattr(settings, "inbox_agent_enabled", True)
+    monkeypatch.setattr(settings, "gmail_oauth_client_id", "")
+    headers = register_and_login(client, "gmail-auth@example.com")
+    resp = client.get("/api/v1/inbox/gmail/authorize", headers=headers)
+    assert resp.status_code == 400
+
+
+def test_upsert_rejects_non_imap_connector_type(client: TestClient, monkeypatch) -> None:
+    monkeypatch.setattr(settings, "inbox_agent_enabled", True)
+    headers = register_and_login(client, "gmail-upsert@example.com")
+    resp = client.put(
+        "/api/v1/inbox/credentials",
+        headers=headers,
+        json={"connector_type": "gmail", "config": MAILBOX_CONFIG},
+    )
+    assert resp.status_code == 400

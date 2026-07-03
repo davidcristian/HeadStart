@@ -1,9 +1,12 @@
 """Dev-only mailbox credential, connectivity, and classification endpoints."""
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Query, status
+from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db, get_verified_user
+from app.core.config import settings
+from app.core.exceptions import ValidationError
 from app.inbox.types import FetchResult
 from app.models.user import User
 from app.schemas.inbox_classification import (
@@ -20,6 +23,7 @@ from app.schemas.inbox_routing import (
     InboxRoutingConfigUpdate,
 )
 from app.schemas.mailbox import (
+    GmailAuthorizeResponse,
     MailboxCredentialRead,
     MailboxCredentialUpsert,
     MailboxTestRequest,
@@ -56,6 +60,46 @@ def delete_mailbox_credentials(
     db: Session = Depends(get_db), user: User = Depends(get_verified_user)
 ) -> None:
     InboxService(db).delete(user.id)
+
+
+@router.get("/gmail/authorize", response_model=GmailAuthorizeResponse)
+def gmail_authorize(
+    db: Session = Depends(get_db), user: User = Depends(get_verified_user)
+) -> GmailAuthorizeResponse:
+    """Return a Google OAuth URL to connect Gmail for inbox automation."""
+    return InboxService(db).gmail_authorize_url(user.id)
+
+
+@router.get("/gmail/callback")
+def gmail_oauth_callback(
+    code: str | None = Query(default=None),
+    state: str | None = Query(default=None),
+    error: str | None = Query(default=None),
+    db: Session = Depends(get_db),
+) -> RedirectResponse:
+    """OAuth redirect target — stores encrypted Gmail tokens and returns to Settings."""
+    settings_url = f"{settings.frontend_base_url.rstrip('/')}/app/settings"
+    if error:
+        return RedirectResponse(
+            url=f"{settings_url}?mailbox=gmail_error&reason={error}",
+            status_code=status.HTTP_302_FOUND,
+        )
+    if not code or not state:
+        return RedirectResponse(
+            url=f"{settings_url}?mailbox=gmail_error&reason=missing_code",
+            status_code=status.HTTP_302_FOUND,
+        )
+    try:
+        InboxService(db).complete_gmail_oauth(code=code, state=state)
+    except ValidationError:
+        return RedirectResponse(
+            url=f"{settings_url}?mailbox=gmail_error",
+            status_code=status.HTTP_302_FOUND,
+        )
+    return RedirectResponse(
+        url=f"{settings_url}?mailbox=gmail_connected",
+        status_code=status.HTTP_302_FOUND,
+    )
 
 
 @router.post("/test", response_model=MailboxTestResponse)

@@ -42,6 +42,8 @@ export const sampleMeta: Meta = {
   scrapers: sampleAccountPlan.allowed_scrapers,
   notifiers: sampleAccountPlan.allowed_notifiers,
   appliers: ["greenhouse", "lever", "ashby"],
+  mailboxes: ["imap_smtp", "gmail"],
+  inbox_agent_enabled: false,
   plan: sampleAccountPlan,
   ads: { external_slot_url: null },
 };

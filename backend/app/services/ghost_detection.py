@@ -9,7 +9,8 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.logging import get_logger
-from app.inbox.ghost_message import build_ghost_summary_message, mailbox_self_address
+from app.inbox.ghost_message import build_ghost_summary_message
+from app.inbox.mailbox_email import mailbox_email_from_context
 from app.models.base import utcnow
 from app.models.seen_job import SeenJob
 from app.repositories.ghost_detection import GhostDetectionRepository
@@ -80,10 +81,7 @@ class GhostDetectionService:
         if ctx is None:
             return "skipped"
 
-        mailbox_email = mailbox_self_address(
-            imap_user=ctx.config.imap_user,
-            smtp_from=ctx.config.smtp_from,
-        )
+        mailbox_email = mailbox_email_from_context(ctx)
         if not mailbox_email:
             return "skipped"
 

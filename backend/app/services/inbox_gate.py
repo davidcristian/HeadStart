@@ -88,10 +88,7 @@ class InboxGateService:
         return {addr.strip().lower() for addr in config.sender_allowlist if addr.strip()}
 
     def _mailbox_user_email(self, user_id: int) -> str:
-        credential = self.inbox.get_read_optional(user_id)
-        if credential is not None and credential.imap_user:
-            return credential.imap_user
-        return ""
+        return self.inbox.mailbox_user_email(user_id)
 
 
 def email_domain_from_job_url(job: SeenJob) -> str:

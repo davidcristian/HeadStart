@@ -1,0 +1,36 @@
+export interface MailboxConfig {
+  imap_host: string;
+  imap_port?: number;
+  imap_use_ssl?: boolean;
+  imap_user: string;
+  imap_password: string;
+  imap_mailbox?: string;
+  smtp_host: string;
+  smtp_port?: number;
+  smtp_use_tls?: boolean;
+  smtp_user?: string;
+  smtp_password?: string;
+  smtp_from?: string;
+}
+
+export interface MailboxCredential {
+  id: number;
+  connector_type: string;
+  enabled: boolean;
+  created_at: string;
+  has_config: boolean;
+  imap_host?: string | null;
+  smtp_host?: string | null;
+  imap_user?: string | null;
+  email_address?: string | null;
+}
+
+export interface MailboxTestResult {
+  imap_ok: boolean;
+  smtp_ok: boolean;
+  error?: string | null;
+}
+
+export interface GmailAuthorizeResult {
+  authorization_url: string;
+}

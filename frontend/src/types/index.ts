@@ -76,3 +76,9 @@ export type {
   SummaryPreferences,
   SummaryPreferencesUpdate,
 } from "./summaryPreferences";
+export type {
+  MailboxConfig,
+  MailboxCredential,
+  MailboxTestResult,
+  GmailAuthorizeResult,
+} from "./mailbox";

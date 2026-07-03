@@ -30,6 +30,7 @@ def test_meta_lists_capabilities(client: TestClient, auth_headers: dict[str, str
     assert "ashby" in body["appliers"]
     assert "workday" in body["appliers"]
     assert "imap_smtp" in body["mailboxes"]
+    assert "gmail" in body["mailboxes"]
     assert body["inbox_agent_enabled"] is False
     assert body["plan"]["limits"]["max_sources"] >= 3
     assert "usage" in body["plan"]

@@ -2,16 +2,33 @@
 
 from __future__ import annotations
 
-import json
-
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.core.crypto import decrypt, encrypt
+from app.core.crypto import encrypt
 from app.core.exceptions import NotFoundError, ValidationError
 from app.inbox.base import get_mailbox
+from app.inbox.credentials import (
+    decode_mailbox_config,
+    encode_mailbox_config,
+    env_mailbox_config,
+    mailbox_config_for_export,
+    mailbox_credential_to_read,
+)
+from app.inbox.gmail_oauth import (
+    build_gmail_authorization_url,
+    create_gmail_oauth_state,
+    decode_gmail_oauth_state,
+    exchange_gmail_code,
+    gmail_oauth_configured,
+    gmail_token_needs_refresh,
+    refresh_gmail_access_token,
+    require_gmail_oauth_configured,
+)
+from app.inbox.mailbox_email import mailbox_email_from_read
 from app.inbox.types import (
     FetchResult,
+    GmailMailboxConfig,
     MailboxConfig,
     MailboxContext,
     OutboundMessage,
@@ -19,7 +36,13 @@ from app.inbox.types import (
 )
 from app.models.mailbox_credential import MailboxCredential
 from app.repositories.mailbox_credentials import MailboxCredentialRepository
-from app.schemas.mailbox import MailboxCredentialRead, MailboxCredentialUpsert, MailboxTestResponse
+from app.schemas.mailbox import (
+    GmailAuthorizeResponse,
+    GmailOAuthCallbackResult,
+    MailboxCredentialRead,
+    MailboxCredentialUpsert,
+    MailboxTestResponse,
+)
 
 
 class InboxNotEnabledError(ValidationError):
@@ -43,33 +66,38 @@ class InboxService:
         credential = self.repo.get_for_user(user_id)
         if credential is None:
             raise NotFoundError("Mailbox credentials are not configured")
-        return self.to_read(credential)
+        return mailbox_credential_to_read(credential)
 
     def get_read_optional(self, user_id: int) -> MailboxCredentialRead | None:
         credential = self.repo.get_for_user(user_id)
         if credential is None:
             return None
-        return self.to_read(credential)
+        return mailbox_credential_to_read(credential)
 
     def upsert(self, user_id: int, data: MailboxCredentialUpsert) -> MailboxCredentialRead:
         self.require_enabled()
+        if data.connector_type != "imap_smtp":
+            raise ValidationError(
+                "Manual credential upsert supports imap_smtp only. "
+                "Connect Gmail via GET /inbox/gmail/authorize."
+            )
         self._validate_connector_type(data.connector_type)
-        payload = data.config.model_dump()
         credential = self.repo.get_for_user(user_id)
+        ciphertext = encode_mailbox_config(data.config)
         if credential is None:
             credential = MailboxCredential(
                 user_id=user_id,
                 connector_type=data.connector_type,
                 enabled=data.enabled,
-                secret_ciphertext=encrypt(json.dumps(payload)),
+                secret_ciphertext=ciphertext,
             )
             self.repo.add(credential)
         else:
             credential.connector_type = data.connector_type
             credential.enabled = data.enabled
-            credential.secret_ciphertext = encrypt(json.dumps(payload))
+            credential.secret_ciphertext = ciphertext
             self.session.flush()
-        return self.to_read(credential)
+        return mailbox_credential_to_read(credential)
 
     def delete(self, user_id: int) -> None:
         self.require_enabled()
@@ -78,6 +106,43 @@ class InboxService:
             raise NotFoundError("Mailbox credentials are not configured")
         self.repo.delete(credential)
         self.session.flush()
+
+    def gmail_authorize_url(self, user_id: int) -> GmailAuthorizeResponse:
+        """Return a Google OAuth consent URL for the current user."""
+        self.require_enabled()
+        require_gmail_oauth_configured()
+        state = create_gmail_oauth_state(user_id)
+        return GmailAuthorizeResponse(authorization_url=build_gmail_authorization_url(state=state))
+
+    def complete_gmail_oauth(self, *, code: str, state: str) -> GmailOAuthCallbackResult:
+        """Exchange an OAuth callback for encrypted Gmail credentials."""
+        self.require_enabled()
+        user_id = decode_gmail_oauth_state(state)
+        config = exchange_gmail_code(code)
+        credential = self.repo.get_for_user(user_id)
+        ciphertext = encode_mailbox_config(config)
+        if credential is None:
+            credential = MailboxCredential(
+                user_id=user_id,
+                connector_type="gmail",
+                enabled=True,
+                secret_ciphertext=ciphertext,
+            )
+            self.repo.add(credential)
+        else:
+            credential.connector_type = "gmail"
+            credential.enabled = True
+            credential.secret_ciphertext = ciphertext
+            self.session.flush()
+        return GmailOAuthCallbackResult(
+            connector_type="gmail",
+            email_address=config.email_address,
+        )
+
+    @staticmethod
+    def gmail_oauth_available() -> bool:
+        """Whether the deployment exposes Gmail OAuth connect."""
+        return gmail_oauth_configured()
 
     def test_connection(
         self, user_id: int, config: MailboxConfig | None = None
@@ -115,13 +180,17 @@ class InboxService:
         """Return a connector context for the user, or None when unconfigured."""
         credential = self.repo.get_for_user(user_id)
         if credential is not None and credential.enabled:
-            config = self._decode_config(credential)
+            config = decode_mailbox_config(credential)
+            if credential.connector_type == "gmail":
+                if not isinstance(config, GmailMailboxConfig):
+                    raise ValidationError("Stored Gmail credential is invalid")
+                config = self._ensure_fresh_gmail_config(credential, config)
             return MailboxContext(
                 connector_type=credential.connector_type,
                 config=config,
                 user_id=user_id,
             )
-        env_config = self._env_config()
+        env_config = env_mailbox_config()
         if env_config is not None:
             return MailboxContext(
                 connector_type="imap_smtp",
@@ -130,31 +199,37 @@ class InboxService:
             )
         return None
 
-    def config_for_export(self, user_id: int) -> MailboxConfig | None:
-        """Decrypted mailbox config for GDPR export, when present."""
+    def mailbox_user_email(self, user_id: int) -> str:
+        """Return the connected mailbox address for classification and gating."""
+        read = self.get_read_optional(user_id)
+        if read is not None:
+            return mailbox_email_from_read(
+                connector_type=read.connector_type,
+                imap_user=read.imap_user,
+                email_address=read.email_address,
+            )
+        if settings.inbox_use_env_credentials and settings.inbox_imap_user:
+            return str(settings.inbox_imap_user)
+        return ""
+
+    def config_for_export(self, user_id: int) -> dict[str, object] | None:
+        """Decrypted mailbox config for GDPR export, when present (secrets redacted)."""
         credential = self.repo.get_for_user(user_id)
         if credential is None:
             return None
-        return self._decode_config(credential)
+        return mailbox_config_for_export(credential)
 
-    @staticmethod
-    def to_read(credential: MailboxCredential) -> MailboxCredentialRead:
-        config = InboxService._decode_config(credential)
-        return MailboxCredentialRead(
-            id=credential.id,
-            connector_type=credential.connector_type,
-            enabled=credential.enabled,
-            created_at=credential.created_at,
-            has_config=True,
-            imap_host=config.imap_host,
-            smtp_host=config.smtp_host,
-            imap_user=config.imap_user,
-        )
-
-    @staticmethod
-    def _decode_config(credential: MailboxCredential) -> MailboxConfig:
-        raw = json.loads(decrypt(credential.secret_ciphertext))
-        return MailboxConfig.model_validate(raw)
+    def _ensure_fresh_gmail_config(
+        self,
+        credential: MailboxCredential,
+        config: GmailMailboxConfig,
+    ) -> GmailMailboxConfig:
+        if not gmail_token_needs_refresh(config):
+            return config
+        refreshed = refresh_gmail_access_token(config)
+        credential.secret_ciphertext = encrypt(refreshed.model_dump_json())
+        self.session.flush()
+        return refreshed
 
     @staticmethod
     def _validate_connector_type(connector_type: str) -> None:
@@ -166,31 +241,3 @@ class InboxService:
     @staticmethod
     def _context_from_config(user_id: int, config: MailboxConfig) -> MailboxContext:
         return MailboxContext(connector_type="imap_smtp", config=config, user_id=user_id)
-
-    @staticmethod
-    def _env_config() -> MailboxConfig | None:
-        """Dev-only fallback when INBOX_USE_ENV_CREDENTIALS=true and vars are set."""
-        if not settings.inbox_use_env_credentials:
-            return None
-        required = (
-            settings.inbox_imap_host,
-            settings.inbox_imap_user,
-            settings.inbox_imap_password,
-            settings.inbox_smtp_host,
-        )
-        if not all(required):
-            return None
-        return MailboxConfig(
-            imap_host=settings.inbox_imap_host,
-            imap_port=settings.inbox_imap_port,
-            imap_use_ssl=settings.inbox_imap_use_ssl,
-            imap_user=settings.inbox_imap_user,
-            imap_password=settings.inbox_imap_password,
-            imap_mailbox=settings.inbox_imap_mailbox,
-            smtp_host=settings.inbox_smtp_host,
-            smtp_port=settings.inbox_smtp_port,
-            smtp_use_tls=settings.inbox_smtp_use_tls,
-            smtp_user=settings.inbox_smtp_user,
-            smtp_password=settings.inbox_smtp_password,
-            smtp_from=settings.inbox_smtp_from,
-        )

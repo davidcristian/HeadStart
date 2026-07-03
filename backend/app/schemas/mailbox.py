@@ -1,6 +1,6 @@
 """Mailbox credential request/response schemas.
 
-Passwords are accepted on write but NEVER returned on read.
+Passwords and OAuth tokens are accepted on write but NEVER returned on read.
 """
 
 from datetime import datetime
@@ -16,11 +16,6 @@ class MailboxCredentialUpsert(BaseModel):
     config: MailboxConfig
 
 
-class MailboxCredentialUpdate(BaseModel):
-    enabled: bool | None = None
-    config: MailboxConfig | None = None
-
-
 class MailboxCredentialRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -32,6 +27,7 @@ class MailboxCredentialRead(BaseModel):
     imap_host: str | None = None
     smtp_host: str | None = None
     imap_user: str | None = None
+    email_address: str | None = None
 
 
 class MailboxTestRequest(BaseModel):
@@ -44,3 +40,12 @@ class MailboxTestResponse(BaseModel):
     imap_ok: bool
     smtp_ok: bool
     error: str | None = None
+
+
+class GmailAuthorizeResponse(BaseModel):
+    authorization_url: str
+
+
+class GmailOAuthCallbackResult(BaseModel):
+    connector_type: str
+    email_address: str

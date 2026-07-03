@@ -1,0 +1,221 @@
+"""Gmail API mailbox connector (OAuth + REST).
+
+Fetches inbound mail via users.messages.list/get and sends via users.messages.send.
+Label routing uses users.messages.modify and users.labels.create.
+"""
+
+from __future__ import annotations
+
+import base64
+from email.message import EmailMessage
+from typing import Any
+
+import httpx
+
+from app.core.logging import get_logger
+from app.inbox.base import MailboxConnector, register_mailbox
+from app.inbox.gmail_ids import gmail_id_to_uid, uid_to_gmail_id
+from app.inbox.parse import parse_rfc822
+from app.inbox.types import (
+    ConnectionTestResult,
+    FetchResult,
+    GmailMailboxConfig,
+    MailboxContext,
+    MoveResult,
+    OutboundMessage,
+    SendResult,
+)
+
+logger = get_logger(__name__)
+
+GMAIL_API_BASE = "https://gmail.googleapis.com/gmail/v1"
+INBOX_LABEL_ID = "INBOX"
+
+
+@register_mailbox("gmail")
+class GmailMailbox(MailboxConnector):
+    """Read and send mail through the Gmail API."""
+
+    def fetch_messages(
+        self,
+        ctx: MailboxContext,
+        *,
+        since_uid: int | None = None,
+        limit: int = 50,
+    ) -> FetchResult:
+        config = self._config(ctx)
+        headers = self._auth_headers(config)
+        list_limit = max(limit * 3, limit)
+        response = httpx.get(
+            f"{GMAIL_API_BASE}/users/me/messages",
+            headers=headers,
+            params={"labelIds": INBOX_LABEL_ID, "maxResults": list_limit},
+            timeout=30.0,
+        )
+        response.raise_for_status()
+        entries = response.json().get("messages") or []
+        gmail_ids = [entry["id"] for entry in entries if isinstance(entry.get("id"), str)]
+        messages = []
+        max_uid = since_uid
+        for gmail_id in gmail_ids:
+            uid = gmail_id_to_uid(gmail_id)
+            if since_uid is not None and uid <= since_uid:
+                continue
+            raw = self._fetch_raw_message(headers, gmail_id)
+            if raw is None:
+                continue
+            message = parse_rfc822(uid, raw)
+            messages.append(message)
+            max_uid = max(max_uid or 0, uid)
+            if len(messages) >= limit:
+                break
+        messages.sort(key=lambda row: row.uid)
+        return FetchResult(messages=messages, max_uid=max_uid)
+
+    def send_message(self, ctx: MailboxContext, message: OutboundMessage) -> SendResult:
+        config = self._config(ctx)
+        headers = self._auth_headers(config)
+        email = EmailMessage()
+        email["Subject"] = message.subject
+        email["From"] = config.email_address
+        email["To"] = ", ".join(message.to)
+        if message.in_reply_to:
+            email["In-Reply-To"] = message.in_reply_to
+        if message.references:
+            email["References"] = message.references
+        for key, value in message.extra_headers.items():
+            email[key] = value
+        email.set_content(message.body)
+        raw = base64.urlsafe_b64encode(email.as_bytes()).decode("ascii")
+        try:
+            response = httpx.post(
+                f"{GMAIL_API_BASE}/users/me/messages/send",
+                headers=headers,
+                json={"raw": raw},
+                timeout=30.0,
+            )
+            response.raise_for_status()
+            return SendResult(status="sent")
+        except httpx.HTTPError as exc:
+            logger.warning("gmail send failed: %s", exc)
+            return SendResult(status="failed", error=str(exc))
+
+    def test_connection(self, ctx: MailboxContext) -> ConnectionTestResult:
+        config = self._config(ctx)
+        try:
+            response = httpx.get(
+                f"{GMAIL_API_BASE}/users/me/profile",
+                headers=self._auth_headers(config),
+                timeout=30.0,
+            )
+            response.raise_for_status()
+            profile = response.json()
+            email_address = profile.get("emailAddress")
+            if email_address != config.email_address:
+                return ConnectionTestResult(
+                    imap_ok=False,
+                    smtp_ok=False,
+                    error="Gmail profile email does not match stored credential.",
+                )
+            return ConnectionTestResult(
+                imap_ok=True,
+                smtp_ok=True,
+                details={"email_address": email_address},
+            )
+        except httpx.HTTPError as exc:
+            return ConnectionTestResult(imap_ok=False, smtp_ok=False, error=str(exc))
+
+    def move_message(
+        self,
+        ctx: MailboxContext,
+        *,
+        uid: int,
+        destination: str,
+    ) -> MoveResult:
+        """Apply a Gmail label and remove INBOX (folder routing)."""
+        config = self._config(ctx)
+        headers = self._auth_headers(config)
+        gmail_id = uid_to_gmail_id(uid)
+        try:
+            label_id = self._ensure_label_id(headers, destination)
+            if label_id is None:
+                return MoveResult(
+                    status="failed",
+                    destination=destination,
+                    error=f"Could not create Gmail label '{destination}'",
+                )
+            response = httpx.post(
+                f"{GMAIL_API_BASE}/users/me/messages/{gmail_id}/modify",
+                headers=headers,
+                json={"addLabelIds": [label_id], "removeLabelIds": [INBOX_LABEL_ID]},
+                timeout=30.0,
+            )
+            response.raise_for_status()
+            return MoveResult(status="moved", destination=destination)
+        except httpx.HTTPError as exc:
+            logger.warning("gmail move failed uid=%s dest=%s: %s", uid, destination, exc)
+            return MoveResult(status="failed", destination=destination, error=str(exc))
+
+    @staticmethod
+    def _config(ctx: MailboxContext) -> GmailMailboxConfig:
+        if ctx.connector_type != "gmail":
+            raise TypeError("GmailMailbox requires connector_type='gmail'")
+        config = ctx.config
+        if not isinstance(config, GmailMailboxConfig):
+            raise TypeError("GmailMailbox requires GmailMailboxConfig")
+        return config
+
+    @staticmethod
+    def _auth_headers(config: GmailMailboxConfig) -> dict[str, str]:
+        return {"Authorization": f"Bearer {config.access_token}"}
+
+    @staticmethod
+    def _fetch_raw_message(headers: dict[str, str], gmail_id: str) -> bytes | None:
+        response = httpx.get(
+            f"{GMAIL_API_BASE}/users/me/messages/{gmail_id}",
+            headers=headers,
+            params={"format": "raw"},
+            timeout=30.0,
+        )
+        if response.status_code >= 400:
+            return None
+        raw_data = response.json().get("raw")
+        if not isinstance(raw_data, str):
+            return None
+        padded = raw_data + "=" * (-len(raw_data) % 4)
+        return base64.urlsafe_b64decode(padded.encode("ascii"))
+
+    @staticmethod
+    def _ensure_label_id(headers: dict[str, str], label_name: str) -> str | None:
+        labels = GmailMailbox._list_labels(headers)
+        for label in labels:
+            if label.get("name") == label_name and isinstance(label.get("id"), str):
+                return label["id"]
+        response = httpx.post(
+            f"{GMAIL_API_BASE}/users/me/labels",
+            headers=headers,
+            json={
+                "name": label_name,
+                "labelListVisibility": "labelShow",
+                "messageListVisibility": "show",
+            },
+            timeout=30.0,
+        )
+        if response.status_code >= 400:
+            return None
+        label_id = response.json().get("id")
+        return label_id if isinstance(label_id, str) else None
+
+    @staticmethod
+    def _list_labels(headers: dict[str, str]) -> list[dict[str, Any]]:
+        response = httpx.get(
+            f"{GMAIL_API_BASE}/users/me/labels",
+            headers=headers,
+            timeout=30.0,
+        )
+        if response.status_code >= 400:
+            return []
+        labels = response.json().get("labels")
+        if not isinstance(labels, list):
+            return []
+        return [label for label in labels if isinstance(label, dict)]

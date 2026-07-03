@@ -40,6 +40,8 @@ export interface Meta {
   scrapers: string[];
   notifiers: string[];
   appliers: string[];
+  mailboxes: string[];
+  inbox_agent_enabled: boolean;
   plan: AccountPlan;
   ads: AdsConfig;
 }
