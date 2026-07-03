@@ -89,6 +89,18 @@ credentials:
 | `job_board_api_key` | `default_config` or credential `session` | Employer Job Board API key for **live** submission |
 | `gdpr_consent` | source/search config | When true, sets `data_compliance` consent flags |
 | `question_<id>` | profile `answers` | Custom application questions (`question_5555`, etc.) |
+| `skip_work_experience` | source/search config | When true, omit `employments` even when the profile has rows |
+| `skip_education` | source/search config | When true, omit `educations` even when the profile has rows |
+| `skip_education_lookup` | source/search config | When true, only numeric IDs and `education_id_aliases` resolve educations |
+| `education_id_aliases` | source/search config | Map `school:<label>`, `degree:<label>`, or `discipline:<label>` to Greenhouse catalog ids |
+| `default_degree_id` / `default_discipline_id` | source/search config | Fallback catalog ids when a profile row omits degree or field of study |
+
+**Structured profile:** when the application profile has `work_experience`,
+`education`, or `skills`, the adapter maps them to Greenhouse `employments` and
+`educations` arrays. Work experience needs title, company, and start month/year.
+Education rows need a resolvable `school_name_id`, `degree_id`, and
+`discipline_id` (numeric profile values, `education_id_aliases`, or public List
+Schools/Degrees/Disciplines lookup when `skip_education_lookup` is false).
 
 **Dry run:** `ApplyService.apply_to_job(..., dry_run=True)` (or
 `ApplyContext.dry_run=True`) returns the JSON payload without calling Greenhouse.
@@ -120,6 +132,13 @@ credentials:
 | `compliance_policy_id` | source/search config | Optional Lever compliance policy GUID |
 | `silent_confirmations` | source/search config | When true, sets `silent` so Lever skips candidate email |
 | `urls.<Label>` | profile `answers` | Extra profile URLs (e.g. `urls.Twitter`) |
+| `skip_structured_profile` | source/search config | When true, omit work history/education/skills from `comments` |
+
+**Structured profile:** when the application profile has `work_experience`,
+`education`, or `skills`, the adapter appends a formatted supplement to
+`comments` (after the cover letter and optional `resume_text`). Lever's Postings
+API has no native employment/education fields — use this for human-readable
+context or configure custom questions via `answers`.
 
 **Dry run:** same as Greenhouse — preview JSON without calling Lever.
 
@@ -143,6 +162,17 @@ credentials:
 | `phone_path` | source/search config | Optional form field path for the profile phone |
 | `location_path` | source/search config | Optional form field path for the profile location |
 | `<form path>` | profile `answers` | Custom application questions (Ashby field `path` values) |
+| `education_history_path` | source/search config | Ashby `EducationHistory` field path for profile `education` rows |
+| `work_history_path` | source/search config | String field path for formatted profile `work_experience` |
+| `skills_path` | source/search config | `MultiValueSelect` or String field path for profile `skills` |
+| `skills_value_format` | source/search config | `"array"` (default) or `"string"` for `skills_path` |
+
+**Structured profile:** when `education_history_path`, `work_history_path`, or
+`skills_path` are set, the adapter maps profile `education`, `work_experience`,
+and `skills` to Ashby field submissions. Education uses the Ashby
+`EducationHistory` shape (`schoolName`, optional `degree`/`major`/dates).
+Work history is sent as plain text; skills default to an array for
+`MultiValueSelect` fields.
 
 **Dry run:** same as Greenhouse — preview JSON without calling Ashby.
 

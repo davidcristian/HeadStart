@@ -194,7 +194,7 @@ complete across all scrapers:
 | Uber apply adapter | Phase 18 custom scraper is scrape-only | Proprietary apply flow; no apply adapter yet |
 | ~~LinkedIn Easy Apply resume PDF~~ | Many Easy Apply jobs require an attachment | **Shipped:** live submit uploads stored resume via Voyager media metadata + Ambry and maps the asset URN into `fileUploadResponses` when the form has a document-upload field |
 | ~~Indeed-hosted resume file~~ | Same class of gap as LinkedIn | **Shipped:** live smartapply submit includes `applicant.resume.file` (Base64) when the profile has a stored resume file |
-| Structured profile beyond Workday | UI stores experience/education/skills/languages | Only the Workday adapter consumes those fields today |
+| Structured profile beyond Workday | UI stores experience/education/skills/languages | **Shipped (GH/Lever/Ashby):** Greenhouse maps `work_experience` → `employments` and `education` → `educations` (with catalog lookup/aliases); Lever appends formatted supplement to `comments`; Ashby supports `education_history_path`, `work_history_path`, and `skills_path`. Workday still owns `languages`. |
 | Pipeline auto-apply queue | Users still click Apply per job | Tracked in [Phase 20b](#20b--apply-orchestration-extend-phase-7) |
 
 ---

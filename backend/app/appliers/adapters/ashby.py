@@ -26,6 +26,12 @@ from typing import Any
 
 import httpx
 
+from app.appliers.adapters.ashby_response import (
+    extract_application_id,
+    extract_blocked_message,
+    extract_error_message,
+)
+from app.appliers.adapters.ashby_structured import append_structured_profile_submissions
 from app.appliers.base import Applier, register_applier
 from app.appliers.resume import resume_meta_for_payload
 from app.appliers.types import ApplyContext, ApplyResult
@@ -220,6 +226,8 @@ def build_application_payload(
         submissions.append({"path": resume_path, "value": resume_field_key})
         used_paths.add(resume_path)
 
+    append_structured_profile_submissions(submissions, used_paths, profile, config)
+
     for key, value in profile.answers.items():
         if not value or key in used_paths:
             continue
@@ -253,46 +261,3 @@ def build_application_payload(
             },
         }
     return result
-
-
-def extract_application_id(response: Any) -> str | None:
-    """Submitted form instance id from a successful Ashby response."""
-    if not isinstance(response, dict):
-        return None
-    results = response.get("results")
-    if not isinstance(results, dict):
-        return None
-    instance = results.get("submittedFormInstance")
-    if not isinstance(instance, dict):
-        return None
-    instance_id = instance.get("id")
-    return str(instance_id) if instance_id is not None else None
-
-
-def extract_blocked_message(response: Any) -> str | None:
-    """Return a candidate-facing block message when Ashby rejects the submission."""
-    if not isinstance(response, dict):
-        return None
-    results = response.get("results")
-    if not isinstance(results, dict):
-        return None
-    form_messages = results.get("formMessages")
-    if not isinstance(form_messages, dict) or not form_messages.get("blocked"):
-        return None
-    message = form_messages.get("blockMessageForCandidateHtml")
-    if isinstance(message, str) and message.strip():
-        return message.strip()
-    return "ashby blocked this application due to configured application limits"
-
-
-def extract_error_message(response: dict[str, Any]) -> str:
-    """Best-effort error string from an Ashby error response."""
-    error_info = response.get("errorInfo")
-    if isinstance(error_info, dict):
-        message = error_info.get("message")
-        if message:
-            return str(message)
-    errors = response.get("errors")
-    if isinstance(errors, list) and errors:
-        return "; ".join(str(item) for item in errors)
-    return "ashby apply rejected the submission"

@@ -9,10 +9,12 @@ from app.appliers.adapters.ashby import (
     AshbyApplier,
     basic_auth_header,
     build_application_payload,
+    resolve_board,
+)
+from app.appliers.adapters.ashby_response import (
     extract_application_id,
     extract_blocked_message,
     extract_error_message,
-    resolve_board,
 )
 from app.appliers.base import get_applier
 from app.schemas.profile import ApplyProfile, ProfileData, ResumeFile

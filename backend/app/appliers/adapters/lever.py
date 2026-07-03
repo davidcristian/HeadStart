@@ -28,6 +28,7 @@ from app.appliers.resume import (
     lever_resume_part,
     resume_meta_for_payload,
 )
+from app.appliers.structured_profile import build_profile_supplement
 from app.appliers.types import ApplyContext, ApplyResult
 from app.schemas.profile import ApplyProfile, ProfileData, ProfileLinks
 
@@ -155,6 +156,7 @@ def build_comments(
     job_title: str,
     cover_letter: str | None,
     include_resume_text: bool = True,
+    config: dict[str, Any] | None = None,
 ) -> str | None:
     """Cover letter (override or template) plus optional resume text."""
     parts: list[str] = []
@@ -169,6 +171,11 @@ def build_comments(
         resume = profile.resume_text.strip()
         if resume:
             parts.append(f"Resume:\n{resume}")
+
+    if not (config or {}).get("skip_structured_profile"):
+        supplement = build_profile_supplement(profile)
+        if supplement:
+            parts.append(supplement)
 
     return "\n\n".join(parts) if parts else None
 
@@ -215,6 +222,7 @@ def build_application_payload(
         job_title=job_title,
         cover_letter=cover_letter,
         include_resume_text=resume_file is None,
+        config=config,
     )
     if comments:
         payload["comments"] = comments

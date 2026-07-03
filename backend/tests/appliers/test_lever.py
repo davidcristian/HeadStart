@@ -12,7 +12,14 @@ from app.appliers.adapters.lever import (
     resolve_site,
 )
 from app.appliers.base import get_applier
-from app.schemas.profile import ApplyProfile, ProfileData, ProfileLinks, ResumeFile
+from app.schemas.profile import (
+    ApplyProfile,
+    EducationEntry,
+    ProfileData,
+    ProfileLinks,
+    ResumeFile,
+    WorkExperienceEntry,
+)
 from tests.conftest import load_fixture, make_http_client
 
 
@@ -72,6 +79,45 @@ def test_build_application_payload_uses_cover_letter_override() -> None:
         cover_letter="Custom letter for ACME",
     )
     assert payload["comments"] == "Custom letter for ACME\n\nResume:\nExperienced engineer."
+
+
+def test_build_application_payload_appends_structured_profile_supplement() -> None:
+    profile = ProfileData(
+        full_name="Ada Lovelace",
+        email="ada@example.com",
+        work_experience=[
+            WorkExperienceEntry(
+                job_title="Engineer",
+                company="ACME",
+                start_month=3,
+                start_year=2020,
+            )
+        ],
+        education=[EducationEntry(school="Example University", start_year=2016, end_year=2020)],
+        skills=["Python"],
+    )
+    payload = build_application_payload(
+        profile, job_title="Senior Engineer", company="ACME", config={}
+    )
+    assert payload["comments"] is not None
+    assert "Work experience:" in payload["comments"]
+    assert "Education:" in payload["comments"]
+    assert "Skills: Python" in payload["comments"]
+
+
+def test_build_application_payload_can_skip_structured_profile_supplement() -> None:
+    profile = ProfileData(
+        full_name="Ada Lovelace",
+        email="ada@example.com",
+        skills=["Python"],
+    )
+    payload = build_application_payload(
+        profile,
+        job_title="Senior Engineer",
+        company="ACME",
+        config={"skip_structured_profile": True},
+    )
+    assert payload.get("comments") is None
 
 
 def test_build_application_payload_requires_name_and_email() -> None:

@@ -20,6 +20,10 @@ from typing import Any
 
 import httpx
 
+from app.appliers.adapters.greenhouse_structured import (
+    build_education_lookup_resolver,
+    build_employments,
+)
 from app.appliers.base import Applier, register_applier
 from app.appliers.resume import greenhouse_resume_fields, resume_meta_for_payload
 from app.appliers.types import ApplyContext, ApplyResult
@@ -44,6 +48,18 @@ class GreenhouseApplier(Applier):
                 ),
             )
 
+        resolver = build_education_lookup_resolver(
+            self.http,
+            board_token=board_token,
+            config=ctx.config,
+        )
+        educations: list[dict[str, Any]] = []
+        if not ctx.config.get("skip_education") and resolver is not None:
+            educations = resolver.resolve_all(ctx.profile)
+        employments: list[dict[str, Any]] = []
+        if not ctx.config.get("skip_work_experience"):
+            employments = build_employments(ctx.profile)
+
         try:
             payload = build_application_payload(
                 ctx.profile,
@@ -53,6 +69,8 @@ class GreenhouseApplier(Applier):
                 cover_letter=ctx.cover_letter,
                 resume_file=ctx.resume_file,
                 include_resume_bytes=not ctx.dry_run,
+                employments=employments,
+                educations=educations,
             )
         except ValueError as exc:
             return ApplyResult(status="failed", error=str(exc))
@@ -141,6 +159,8 @@ def build_application_payload(
     cover_letter: str | None = None,
     resume_file: Any = None,
     include_resume_bytes: bool = True,
+    employments: list[dict[str, Any]] | None = None,
+    educations: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """Map profile data to the Greenhouse Job Board application JSON shape."""
     if resume_file is None and isinstance(profile, ApplyProfile):
@@ -197,6 +217,11 @@ def build_application_payload(
             "gdpr_processing_consent_given": True,
             "gdpr_retention_consent_given": True,
         }
+
+    if employments:
+        payload["employments"] = employments
+    if educations:
+        payload["educations"] = educations
 
     return payload
 

@@ -1,0 +1,16 @@
+{
+  "items": [
+    {
+      "id": 5494452,
+      "text": "Bachelor of Science"
+    },
+    {
+      "id": 5494453,
+      "text": "Master of Science"
+    }
+  ],
+  "meta": {
+    "total_count": 2,
+    "per_page": 100
+  }
+}

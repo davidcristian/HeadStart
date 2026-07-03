@@ -70,14 +70,18 @@ Careers. LinkedIn-hosted and Indeed-hosted Easy Apply use `resume_text` only tod
 `answers` is a free-form map of recurring application questions to the user's
 canned response.
 
-`work_experience` and `education` are structured lists used by the Workday
-apply adapter (and future apply adapters). Each work-experience row needs a job
-title, company, and start month/year; education rows need at least a school
-name.
+`work_experience` and `education` are structured lists used by apply adapters.
+Work experience needs a job title, company, and start month/year; education rows
+need at least a school name. Greenhouse also needs resolvable degree and field of
+study catalog ids (or `default_degree_id` / `default_discipline_id` in source
+config). Ashby uses these rows when `education_history_path` is configured;
+Lever includes a formatted summary in `comments`.
 
 `skills` is a list of skill names (up to 100 entries, 200 characters each).
 `languages` is a structured list with language name, optional proficiency label,
 and an optional native-language flag — used by the Workday apply adapter.
+Greenhouse, Lever, and Ashby consume `skills` when their adapter config enables
+structured profile mapping (see [appliers.md](appliers.md)).
 
 ## Encryption & read safety
 
