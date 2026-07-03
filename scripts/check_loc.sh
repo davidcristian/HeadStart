@@ -14,6 +14,11 @@ mapfile -t offenders < <(
     | while read -r file; do
         case "${file}" in
           */alembic/versions/*) continue ;;
+          # The ~300-line cap targets source modules (low-context, one
+          # responsibility). Test files map to one module and grow with the
+          # number of cases, so they are exempt.
+          */tests/*) continue ;;
+          *.test.ts | *.test.tsx) continue ;;
         esac
         lines=$(wc -l < "${file}")
         if (( lines > MAX_LOC )); then

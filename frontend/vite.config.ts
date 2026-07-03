@@ -61,9 +61,10 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       include: ["src/**"],
-      // Only genuinely-uncoverable files are excluded: pure type declarations
-      // and the spec files themselves. Everything else needs a real test.
-      exclude: ["src/types/**", "**/*.d.ts", "**/*.test.{ts,tsx}", "src/test/setup.ts"],
+      // Excluded from the 100% gate: pure type declarations, the spec files
+      // themselves, the app entry point (bootstrap only), and test
+      // infrastructure (fixtures/mocks/helpers). Everything else needs a test.
+      exclude: ["src/types/**", "**/*.d.ts", "**/*.test.{ts,tsx}", "src/main.tsx", "src/test/**"],
       reporter: ["text", "text-summary"],
       thresholds: {
         lines: 100,
