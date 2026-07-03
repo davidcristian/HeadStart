@@ -57,6 +57,10 @@ export type {
   PortalSubscribeResult,
 } from "./portal";
 export type {
+  AiPurposeId,
+  AiPurposeOption,
+  PurposePreference,
+  PurposePreferencePatch,
   SummaryProviderId,
   SummaryProviderOption,
   SummaryPreferences,

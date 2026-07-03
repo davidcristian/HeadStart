@@ -17,6 +17,8 @@ def test_free_user_can_read_but_not_update_summary_preferences(client: TestClien
     assert body["enabled"] is False
     assert body["effective_provider"] == "heuristic"
     assert len(body["providers"]) == 4
+    assert len(body["purposes"]) == 5
+    assert "cover_letter" in body["purpose_preferences"]
 
     blocked = client.patch(
         "/api/v1/summary-preferences",
@@ -61,3 +63,26 @@ def test_pro_user_rejects_unknown_summary_provider(client: TestClient) -> None:
         headers=headers,
     )
     assert resp.status_code == 422
+
+
+def test_pro_user_updates_cover_letter_purpose_override(client: TestClient) -> None:
+    headers = _user_headers_with_plan(client, "purpose-pro@example.com", "pro")
+
+    updated = client.patch(
+        "/api/v1/summary-preferences",
+        json={
+            "provider": "gemini",
+            "purpose_preferences": {
+                "cover_letter": {"provider": "anthropic", "model": "claude-sonnet-4"},
+            },
+        },
+        headers=headers,
+    )
+    assert updated.status_code == 200
+    body = updated.json()
+    assert body["selected_provider"] == "gemini"
+    cover = body["purpose_preferences"]["cover_letter"]
+    assert cover["selected_provider"] == "anthropic"
+    assert cover["effective_provider"] == "anthropic"
+    assert cover["selected_model"] == "claude-sonnet-4"
+    assert len(body["purposes"]) == 5

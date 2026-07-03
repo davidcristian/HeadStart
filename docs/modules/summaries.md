@@ -48,17 +48,21 @@ on the provider name; you add a file, not an `if`.
 ## Per-user preferences (Pro)
 
 Pro users can override the deployment-wide `SUMMARY_PROVIDER` and optionally store
-their own API key for hosted providers (`openai`, `gemini`, `anthropic`).
+their own API key for hosted providers (`openai`, `gemini`, `anthropic`). They can
+also set **per-purpose** provider and model overrides for cover letters and future
+inbox/resume agents — unset purposes inherit the global default, then env defaults.
 
 | Endpoint | Purpose |
 | -------- | ------- |
-| `GET /summary-preferences` | Current selection, effective provider, and available options |
-| `PATCH /summary-preferences` | Set `provider` (`heuristic` / `openai` / `gemini` / `anthropic`, or `null` for server default) and optional `api_key` (empty string clears a saved key) |
+| `GET /summary-preferences` | Global + per-purpose selection, effective providers/models, and available options |
+| `PATCH /summary-preferences` | Set global `provider` and optional `api_key`; patch `purpose_preferences` for `cover_letter`, `resume_curation`, `email_classify`, `email_draft` |
 
-Keys are Fernet-encrypted at rest (`summary_api_key_ciphertext` on `user`). The
-pipeline resolves per-user settings via `resolve_summary_settings` before calling
-the summarizer registry. Non-Pro users may read preferences but receive `402` on
-update (`feature_ai_summaries`). Settings UI: **Settings → AI summaries**.
+Keys are Fernet-encrypted at rest (`summary_api_key_ciphertext` on `user`). Purpose
+overrides live in `ai_purpose_providers` / `ai_purpose_models` JSON columns. The
+pipeline resolves per-user settings via `resolve_summary_settings` (summaries) or
+`resolve_ai_settings(..., purpose)` (cover letters and future agents). Non-Pro users
+may read preferences but receive `402` on update (`feature_ai_summaries`). Settings
+UI: **Settings → AI models**.
 
 ## Configuration
 

@@ -62,7 +62,7 @@ describe("SettingsPage", () => {
     renderSettings();
     expect(screen.getByRole("heading", { name: "Settings" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Billing" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "AI summaries" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "AI models" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Privacy & cookies" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Export my data" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Delete my account" })).toBeInTheDocument();

@@ -142,6 +142,34 @@ const mockApi = vi.hoisted(() => ({
         requires_api_key: true,
       },
     ],
+    purposes: [
+      {
+        id: "summary" as const,
+        label: "Job match summaries",
+        description: "Blurbs in notifications.",
+        overridable: false,
+      },
+      {
+        id: "cover_letter" as const,
+        label: "Cover letters",
+        description: "Apply dialog cover letters.",
+        overridable: true,
+      },
+    ],
+    purpose_preferences: {
+      summary: {
+        selected_provider: null,
+        effective_provider: "heuristic" as const,
+        selected_model: null,
+        effective_model: null,
+      },
+      cover_letter: {
+        selected_provider: null,
+        effective_provider: "heuristic" as const,
+        selected_model: null,
+        effective_model: null,
+      },
+    },
   })),
   updateSummaryPreferences: vi.fn(async (data: unknown) => ({
     enabled: true,
@@ -157,6 +185,8 @@ const mockApi = vi.hoisted(() => ({
         requires_api_key: false,
       },
     ],
+    purposes: [],
+    purpose_preferences: {},
   })),
   listApplicationLogs: vi.fn(async (): Promise<ApplicationLog[]> => []),
   listApplications: vi.fn(async (): Promise<ApplicationPipelineItem[]> => []),

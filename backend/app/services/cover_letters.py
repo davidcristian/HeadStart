@@ -7,6 +7,7 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
+from app.ai.runtime_settings import resolve_ai_settings
 from app.core.config import settings as default_settings
 from app.core.exceptions import NotFoundError, ValidationError
 from app.core.logging import get_logger
@@ -17,7 +18,6 @@ from app.schemas.profile import ProfileData
 from app.services.jobs import JobService
 from app.services.plan_limits import PlanLimitsService
 from app.services.profiles import ProfileService
-from app.summarizers.runtime_settings import resolve_summary_settings
 
 logger = get_logger(__name__)
 
@@ -86,14 +86,14 @@ class CoverLetterService:
     def _resolve_provider(self, user: User) -> str:
         if not PlanLimitsService(self.session).allows_summaries(user.id):
             return "heuristic"
-        runtime = resolve_summary_settings(self._settings, user)
+        runtime = resolve_ai_settings(self._settings, user, "cover_letter")
         provider = str(runtime.summary_provider)
         if provider in LLM_PROVIDERS:
             return provider
         return "heuristic"
 
     def _generate_with(self, provider: str, user: User, ctx: CoverLetterContext) -> str:
-        runtime = resolve_summary_settings(self._settings, user)
+        runtime = resolve_ai_settings(self._settings, user, "cover_letter")
         generator = self._factory(provider, runtime)
         text = generator.generate(ctx).strip()
         if not text:
