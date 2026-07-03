@@ -24,7 +24,9 @@ def upgrade() -> None:
         "user",
         sa.Column("email_verified_at", sa.DateTime(timezone=True), nullable=True),
     )
-    op.execute("UPDATE user SET email_verified_at = created_at WHERE email_verified_at IS NULL")
+    op.execute(
+        'UPDATE "user" SET email_verified_at = created_at WHERE email_verified_at IS NULL'
+    )
 
     op.create_table(
         "email_verification_token",
