@@ -63,7 +63,7 @@ class SourceTestResult(BaseModel):
 
 
 class SourceDetectRequest(BaseModel):
-    """Input for POST /sources/detect (browser extension and UI helpers)."""
+    """Input for POST /sources/detect (onboarding source-detect helper)."""
 
     url: str = Field(min_length=1, max_length=2000)
     page_title: str | None = Field(default=None, max_length=500)

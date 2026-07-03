@@ -41,7 +41,7 @@ def detect_source(
     db: Session = Depends(get_db),
     user: User = Depends(get_verified_user),
 ) -> SourceDetectResult:
-    """Suggest source fields from a job-board URL (browser extension helper)."""
+    """Suggest source fields from a job-board URL (onboarding detect helper)."""
     return SourceService(db).detect(data)
 
 

@@ -117,7 +117,6 @@ export const PLANS: Plan[] = [
       { label: "AI “why this matches” summaries", included: true },
       { label: "RSS export & signed webhooks", included: true },
       { label: "Curated FAANG/unicorn portal search", included: true },
-      { label: "Browser extension one-click capture", included: true },
     ],
   },
 ];

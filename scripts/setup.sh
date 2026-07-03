@@ -42,9 +42,6 @@ if have npm; then
   log "Installing frontend dependencies"
   ( cd "${FRONTEND_DIR}" && npm install )
   ok "Frontend ready."
-  log "Installing browser extension dependencies"
-  ( cd "${REPO_ROOT}/browser-extension" && npm install )
-  ok "Browser extension ready."
 else
   warn "npm not found; skipping frontend setup."
 fi

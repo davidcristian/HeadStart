@@ -18,15 +18,6 @@ run_frontend() {
   fi
 }
 
-run_extension() {
-  if [[ -d "${REPO_ROOT}/browser-extension/node_modules" ]]; then
-    log "Browser extension tests (vitest)"
-    ( cd "${REPO_ROOT}/browser-extension" && npm run test --silent )
-  else
-    warn "browser-extension/node_modules missing; skipping. Run 'npm install' in browser-extension/."
-  fi
-}
-
 run_scripts() {
   log "Shell script validation"
   "${REPO_ROOT}/scripts/validate-shell-scripts.sh"
@@ -35,10 +26,9 @@ run_scripts() {
 case "${scope}" in
   --backend)   run_backend ;;
   --frontend)  run_frontend ;;
-  --extension) run_extension ;;
   --scripts)   run_scripts ;;
-  all)         run_backend; run_frontend; run_extension; run_scripts ;;
-  *)           die "Unknown scope '${scope}'. Use --backend|--frontend|--extension|--scripts|all" ;;
+  all)         run_backend; run_frontend; run_scripts ;;
+  *)           die "Unknown scope '${scope}'. Use --backend|--frontend|--scripts|all" ;;
 esac
 
 ok "Tests complete."

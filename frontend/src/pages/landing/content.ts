@@ -15,7 +15,7 @@ export const STEPS = [
   {
     step: "1",
     title: "Connect the boards you watch",
-    body: "Add company career pages and job sites — or use the browser extension to capture a search URL in one click.",
+    body: "Add company career pages and job sites, or paste a job-board URL and let HeadStart detect the source for you.",
   },
   {
     step: "2",
