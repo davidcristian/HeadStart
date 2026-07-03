@@ -1,5 +1,7 @@
 """FastAPI application factory."""
 
+import hmac
+
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -47,7 +49,7 @@ def create_app() -> FastAPI:
         if cfg.metrics_token:
             auth = request.headers.get("Authorization", "")
             expected = f"Bearer {cfg.metrics_token}"
-            if auth != expected:
+            if not hmac.compare_digest(auth.encode(), expected.encode()):
                 return Response(status_code=401)
         body, content_type = render_metrics()
         return Response(content=body, media_type=content_type)

@@ -6,8 +6,8 @@ features. Update the Status column (and strike the row) when an item ships; link
 
 Produced by a read-only multi-agent audit — 13 subsystem clusters, every finding
 adversarially verified against the code. **77 confirmed** findings (1 critical, 9 high,
-16 medium, 51 low). 6 of them (the whole browser-extension cluster) are already resolved
-by removing the extension.
+16 medium, 51 low). 9 are already resolved: the browser-extension cluster (6) via
+removal (WS8), plus the WS3 security-hardening trio (2 high + 1 low).
 
 **Status legend:** ☐ open · 🔜 in progress · ✅ done
 **Type:** 🐞 bug · 🔒 security · 📝 doc · 🧪 test · ♻️ refactor · 🔁 consistency
@@ -21,8 +21,6 @@ by removing the extension.
 | 🔴 CRIT | Outlook/Fastmail message UIDs (~1.8e21) overflow even `BigInteger`; columns are 32-bit `Integer` — breaks inbox on Postgres | `inbox/outlook_ids.py`, `inbox/fastmail_ids.py` |
 | 🟠 HIGH | Gmail hex→int UID overflows 32-bit `Integer` poll/classification columns | `inbox/gmail_ids.py:9` |
 | 🟠 HIGH | Scheduler enqueues due searches with no lease → overlapping ticks double-notify | `worker/tasks.py:67` |
-| 🟠 HIGH | Default `jwt_secret`/`credentials_secret_key` not rejected in prod (forgeable tokens) | `core/config.py:38` |
-| 🟠 HIGH | `.localhost` (and reserved TLDs) skip all SSRF DNS/IP checks | `core/outbound_url.py:42` |
 | 🟠 HIGH | Meta apply: work-history parallel arrays desync → wrong employer/title/date pairing | `appliers/adapters/meta_careers_payload.py:58` |
 
 ---
@@ -48,12 +46,12 @@ message arrives (SQLite's arbitrary-precision ints hide it in tests).
 | ⚪ LOW | 🔁 | Ghost-recovery / interview-handoff alerts skip the `DeliveryLog` audit row every other path writes | `services/email_classification.py:142` | ☐ |
 | ⚪ LOW | 🧪 | No test for `enqueue_due_searches` / beat double-enqueue | `worker/tasks.py:58` | ☐ |
 
-## WS3 — Security hardening
+## WS3 — Security hardening ✅ DONE (2026-07-01)
 | Sev | Type | Item | Location | Status |
 | --- | ---- | ---- | -------- | ------ |
-| 🟠 HIGH | 🔒 | No validator rejects placeholder `jwt_secret`/`credentials_secret_key` when `environment` is non-local (forgeable JWTs, decryptable secrets). Add `@model_validator` that fails fast | `core/config.py:38` | ☐ |
-| 🟠 HIGH | 🔒 | `host.endswith(_TEST_TLD_SUFFIXES)` early-returns for `.localhost` (resolves to loopback) → SSRF bypass on user source URLs. Drop `.localhost` / gate behind a test flag | `core/outbound_url.py:42` | ☐ |
-| ⚪ LOW | 🔒 | `/metrics` bearer token compared with `!=` (not constant-time) → use `hmac.compare_digest` | `main.py:50` | ☐ |
+| 🟠 HIGH | 🔒 | No validator rejects placeholder `jwt_secret`/`credentials_secret_key` when `environment` is non-local (forgeable JWTs, decryptable secrets). Add `@model_validator` that fails fast | `core/config.py:38` | ✅ |
+| 🟠 HIGH | 🔒 | `host.endswith(_TEST_TLD_SUFFIXES)` early-returns for `.localhost` (resolves to loopback) → SSRF bypass on user source URLs. Dropped `.localhost`; the remaining `.test/.example/.invalid` escape hatch is now gated to local/test so prod resolves + IP-checks them | `core/outbound_url.py:42` | ✅ |
+| ⚪ LOW | 🔒 | `/metrics` bearer token compared with `!=` (not constant-time) → use `hmac.compare_digest` | `main.py:50` | ✅ |
 
 ## WS4 — Apply-adapter correctness
 | Sev | Type | Item | Location | Status |

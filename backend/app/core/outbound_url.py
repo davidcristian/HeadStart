@@ -10,13 +10,22 @@ import ipaddress
 import socket
 from urllib.parse import urlparse
 
+from app.core.config import get_settings
+
 _BLOCKED_HOSTNAMES = frozenset(
     {
         "localhost",
         "metadata.google.internal",
     }
 )
-_TEST_TLD_SUFFIXES = (".test", ".example", ".invalid", ".localhost")
+# Reserved TLDs that don't resolve on a compliant resolver (RFC 2606/6761). They
+# are a DNS-free escape hatch for tests ONLY: in local/test the resolution + IP
+# checks are skipped (see `_reserved_test_tld_bypass_allowed`), but production
+# resolves them normally so a rogue / split-horizon resolver can't smuggle an
+# internal address past the SSRF checks. `.localhost` is excluded entirely — it
+# resolves to loopback and must always be checked.
+_TEST_TLD_SUFFIXES = (".test", ".example", ".invalid")
+_LOCAL_ENVIRONMENTS = frozenset({"local", "test"})
 
 
 class UnsafeOutboundUrlError(ValueError):
@@ -39,7 +48,7 @@ def assert_safe_outbound_url(url: str) -> None:
     if _hostname_is_blocked_ip(host):
         raise UnsafeOutboundUrlError(f"Hostname '{hostname}' is not allowed.")
 
-    if host.endswith(_TEST_TLD_SUFFIXES):
+    if _reserved_test_tld_bypass_allowed() and host.endswith(_TEST_TLD_SUFFIXES):
         return
 
     port = parsed.port or (443 if parsed.scheme == "https" else 80)
@@ -60,6 +69,11 @@ def assert_safe_outbound_url(url: str) -> None:
         ip = ipaddress.ip_address(info[4][0])
         if _is_blocked_ip(ip):
             raise UnsafeOutboundUrlError(f"Hostname '{hostname}' resolves to a disallowed address.")
+
+
+def _reserved_test_tld_bypass_allowed() -> bool:
+    """Reserved test TLDs skip DNS only in local/test; prod resolves + IP-checks them."""
+    return get_settings().environment.strip().lower() in _LOCAL_ENVIRONMENTS
 
 
 def _hostname_is_blocked_ip(host: str) -> bool:

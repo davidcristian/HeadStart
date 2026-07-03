@@ -7,8 +7,10 @@ This is the single place that reads configuration. Everything else imports the
 from functools import lru_cache
 from typing import Annotated
 
-from pydantic import computed_field, field_validator
+from pydantic import computed_field, field_validator, model_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
+
+from app.core import secret_policy
 
 
 class Settings(BaseSettings):
@@ -24,18 +26,16 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
 
     # ---- api ----
-    # NoDecode: keep pydantic-settings from JSON-parsing the env var so our
-    # validator can accept a plain comma-separated string.
+    # NoDecode: stop pydantic-settings JSON-parsing the env var so the validator accepts CSV.
     cors_origins: Annotated[list[str], NoDecode] = [
         "http://localhost:5173",
         "http://localhost:8080",
     ]
 
     # ---- auth (JWT) ----
-    # Secret used to sign access/refresh JWTs. MUST be overridden in any
-    # non-local deployment; a stable random value keeps sessions valid across
-    # restarts.
-    jwt_secret: str = "dev-local-jwt-secret-change-me-to-a-long-random-value"
+    # Secret signing access/refresh JWTs; a stable random value keeps sessions valid across
+    # restarts. Rejected at startup outside local/test — see core/secret_policy.py.
+    jwt_secret: str = secret_policy.DEV_JWT_SECRET
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
     refresh_token_expire_days: int = 7
@@ -72,10 +72,9 @@ class Settings(BaseSettings):
     smtp_use_tls: bool = True
 
     # ---- credential encryption ----
-    # Fernet key (urlsafe base64, 32 bytes) used to encrypt per-site
-    # credentials at rest. Generate with:
+    # Fernet key (base64, 32 bytes) encrypting per-site credentials at rest. Generate with:
     #   python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
-    credentials_secret_key: str = "dev-local-credentials-key-change-me"
+    credentials_secret_key: str = secret_policy.DEV_CREDENTIALS_SECRET_KEY
 
     # Max resume file size for application-profile uploads (bytes).
     profile_resume_max_bytes: int = 2_097_152
@@ -247,6 +246,14 @@ class Settings(BaseSettings):
         if isinstance(value, str):
             return [item.strip() for item in value.split(",") if item.strip()]
         return value
+
+    @model_validator(mode="after")
+    def _reject_placeholder_secrets_outside_local(self) -> "Settings":
+        """Refuse to boot a non-local deployment using the dev placeholder secrets."""
+        secret_policy.assert_secrets_safe_for_environment(
+            self.environment, self.jwt_secret, self.credentials_secret_key
+        )
+        return self
 
     @computed_field  # type: ignore[prop-decorator]
     @property
