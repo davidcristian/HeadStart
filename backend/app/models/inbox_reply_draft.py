@@ -10,6 +10,7 @@ from app.models.base import Base, utcnow
 
 if TYPE_CHECKING:
     from app.models.inbox_classification import InboxClassification
+    from app.models.inbox_pending_reply import InboxPendingReply
     from app.models.seen_job import SeenJob
     from app.models.user import User
 
@@ -49,3 +50,6 @@ class InboxReplyDraft(Base):
     user: Mapped["User"] = relationship(back_populates="inbox_reply_drafts")
     classification: Mapped["InboxClassification"] = relationship()
     seen_job: Mapped["SeenJob | None"] = relationship()
+    pending_reply: Mapped["InboxPendingReply | None"] = relationship(
+        back_populates="draft", uselist=False
+    )

@@ -200,6 +200,12 @@ class Settings(BaseSettings):
     inbox_poll_interval_seconds: int = 300
     # Max messages to fetch and classify per user per poll tick.
     inbox_poll_batch_size: int = 50
+    # Minimum delay before auto-sent recruiter replies (seconds; never below 60).
+    inbox_reply_min_delay_seconds: int = 1800
+    # Random extra delay added on top of the minimum (seconds).
+    inbox_reply_delay_jitter_seconds: int = 900
+    # How often beat processes due pending auto-replies (seconds).
+    inbox_reply_send_interval_seconds: int = 60
 
     # ---- Stripe billing (optional; leave empty to disable paid checkout) ----
     stripe_secret_key: str = ""

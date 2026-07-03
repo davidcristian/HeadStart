@@ -25,6 +25,7 @@ from app.schemas.profile import ProfileData
 from app.services.applications import latest_live_attempt
 from app.services.inbox import InboxService
 from app.services.inbox_linking import linked_application_context
+from app.services.pending_replies import PendingReplyService
 from app.services.plan_limits import PlanLimitsService
 from app.services.profiles import ProfileService
 
@@ -48,6 +49,7 @@ class ReplyDraftService:
         self.inbox = InboxService(session)
         self.classifications = InboxClassificationRepository(session)
         self.drafts = InboxReplyDraftRepository(session)
+        self.pending_replies = PendingReplyService(session)
         self._factory = drafter_factory or (
             lambda key, runtime: get_reply_drafter(key, settings=runtime)
         )
@@ -100,6 +102,7 @@ class ReplyDraftService:
         if data.regenerate:
             existing = self.drafts.get_by_classification(user_id, classification.id)
             if existing is not None:
+                self.pending_replies.pending.cancel_for_draft(user_id, existing.id)
                 self.drafts.delete(existing)
 
         row = InboxReplyDraft(
@@ -120,6 +123,11 @@ class ReplyDraftService:
             },
         )
         self.drafts.add(row)
+        self.pending_replies.enqueue_for_draft(
+            user_id,
+            row,
+            anchor=classification.created_at,
+        )
         return self._to_read(row, notes=notes)
 
     def list_for_user(
@@ -220,6 +228,7 @@ class ReplyDraftService:
         payload_notes = ""
         if row.payload and isinstance(row.payload.get("notes"), str):
             payload_notes = row.payload["notes"]
+        queue_status, send_after = self.pending_replies.queue_snapshot(row.user_id, row.id)
         return ReplyDraftRead(
             id=row.id,
             classification_id=row.inbox_classification_id,
@@ -231,6 +240,8 @@ class ReplyDraftService:
             fallback=row.fallback,
             status=row.status,
             notes=notes if notes is not None else payload_notes,
+            queue_status=queue_status,
+            send_after=send_after,
             created_at=row.created_at,
         )
 

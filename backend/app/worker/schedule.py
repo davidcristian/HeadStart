@@ -29,4 +29,8 @@ def beat_schedule() -> dict[str, dict[str, object]]:
             "task": "app.worker.tasks.process_inbox_messages",
             "schedule": float(settings.inbox_poll_interval_seconds),
         }
+        schedule["process-pending-replies"] = {
+            "task": "app.worker.tasks.process_pending_replies",
+            "schedule": float(settings.inbox_reply_send_interval_seconds),
+        }
     return schedule

@@ -14,9 +14,12 @@ from app.repositories.inbox_poll_state import InboxPollStateRepository
 from app.repositories.mailbox_credentials import MailboxCredentialRepository
 from app.repositories.users import UserRepository
 from app.schemas.inbox_classification import EmailClassifyRequest
+from app.schemas.inbox_reply_draft import ReplyDraftRequest
 from app.services.email_classification import EmailClassificationService
 from app.services.inbox import InboxService
 from app.services.inbox_gate import InboxGateService
+from app.services.pending_replies import PendingReplyService
+from app.services.reply_drafts import DRAFTABLE_LABELS, ReplyDraftService
 
 logger = get_logger(__name__)
 
@@ -43,6 +46,8 @@ class InboxOrchestrationService:
         self.users = UserRepository(session)
         self.classifier = EmailClassificationService(session)
         self.gate = InboxGateService(session)
+        self.pending_replies = PendingReplyService(session)
+        self.reply_drafts = ReplyDraftService(session)
 
     def process_due(self) -> InboxOrchestrationResult:
         """Poll mailboxes, classify new messages, and route when configured."""
@@ -169,6 +174,7 @@ class InboxOrchestrationService:
                 break
             classified += 1
             last_success_uid = message.uid
+            self._maybe_auto_draft_reply(user_id, message.uid)
 
         if last_success_uid is not None and last_success_uid != since_uid:
             self.poll_state.upsert_last_polled_uid(user_id, last_success_uid)
@@ -181,3 +187,23 @@ class InboxOrchestrationService:
             ignored=ignored,
             failed=failed,
         )
+
+    def _maybe_auto_draft_reply(self, user_id: int, message_uid: int) -> None:
+        """Draft and queue a delayed reply when auto-reply is enabled."""
+        if not self.pending_replies.auto_reply_enabled(user_id):
+            return
+        row = self.classifications.get_by_user_and_uid(user_id, message_uid)
+        if row is None or row.label not in DRAFTABLE_LABELS:
+            return
+        try:
+            self.reply_drafts.draft(
+                user_id,
+                ReplyDraftRequest(message_uid=message_uid),
+            )
+        except Exception as exc:
+            logger.warning(
+                "inbox auto-draft failed user=%s uid=%s: %s",
+                user_id,
+                message_uid,
+                exc,
+            )

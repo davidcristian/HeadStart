@@ -32,6 +32,8 @@ class ReplyDraftRead(BaseModel):
     fallback: bool
     status: str
     notes: str = ""
+    queue_status: str | None = None
+    send_after: datetime | None = None
     created_at: datetime
 
 

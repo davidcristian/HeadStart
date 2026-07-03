@@ -129,6 +129,14 @@ The task return payload includes `ignored` (mail skipped by the gate).
 Poll batch size is capped by `INBOX_POLL_BATCH_SIZE` (default 50). See
 [inbox.md](inbox.md).
 
+## Pending reply auto-send (dev inbox)
+
+When `INBOX_AGENT_ENABLED=true`, beat also schedules `process_pending_replies`
+every `INBOX_REPLY_SEND_INTERVAL_SECONDS` (default 60). The task calls
+`PendingReplyService.process_due` to SMTP-send recruiter replies whose
+`send_after` delay has elapsed for users with `auto_reply_enabled` on their
+routing config. See [inbox.md](inbox.md).
+
 ## Testing
 
 - Integration test drives the full pipeline against scraper fixtures + a fake

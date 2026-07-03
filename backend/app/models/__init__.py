@@ -9,6 +9,7 @@ from app.models.data_request_log import DataRequestLog
 from app.models.delivery_log import DeliveryLog
 from app.models.email_verification_token import EmailVerificationToken
 from app.models.inbox_classification import InboxClassification
+from app.models.inbox_pending_reply import InboxPendingReply
 from app.models.inbox_poll_state import InboxPollState
 from app.models.inbox_reply_draft import InboxReplyDraft
 from app.models.mailbox_credential import MailboxCredential
@@ -32,6 +33,7 @@ __all__ = [
     "DataRequestLog",
     "DeliveryLog",
     "InboxClassification",
+    "InboxPendingReply",
     "InboxPollState",
     "InboxReplyDraft",
     "MailboxCredential",

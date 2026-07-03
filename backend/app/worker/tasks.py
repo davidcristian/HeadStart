@@ -16,6 +16,7 @@ from app.services.apply import ApplyService
 from app.services.digest import DigestService
 from app.services.ghost_detection import GhostDetectionService
 from app.services.inbox_orchestration import InboxOrchestrationService
+from app.services.pending_replies import PendingReplyService
 from app.services.pipeline import PipelineService
 from app.worker.celery_app import celery_app
 
@@ -164,4 +165,18 @@ def process_inbox_messages() -> dict[str, int]:
         "skipped": result.skipped,
         "ignored": result.ignored,
         "failed": result.failed,
+    }
+
+
+@celery_app.task(name="app.worker.tasks.process_pending_replies")
+def process_pending_replies() -> dict[str, int]:
+    """Beat tick: send recruiter replies whose human-like delay has elapsed."""
+    with session_scope() as session:
+        result = PendingReplyService(session).process_due(now=utcnow())
+
+    return {
+        "checked": result.checked,
+        "sent": result.sent,
+        "failed": result.failed,
+        "skipped": result.skipped,
     }

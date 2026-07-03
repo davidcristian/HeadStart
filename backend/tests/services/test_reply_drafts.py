@@ -97,6 +97,7 @@ def test_draft_persists_heuristic_reply(db_session: Session, monkeypatch) -> Non
         )
     assert result.provider == "heuristic"
     assert result.status == "draft"
+    assert result.queue_status is None
     assert "salary" in result.body_text.lower() or "$150" in result.body_text
     assert result.classification_id == classification.id
 

@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from app.models.application_profile import ApplicationProfile
     from app.models.email_verification_token import EmailVerificationToken
     from app.models.inbox_classification import InboxClassification
+    from app.models.inbox_pending_reply import InboxPendingReply
     from app.models.inbox_poll_state import InboxPollState
     from app.models.inbox_reply_draft import InboxReplyDraft
     from app.models.mailbox_credential import MailboxCredential
@@ -86,5 +87,8 @@ class User(Base, TimestampMixin):
         back_populates="user", uselist=False, cascade="all, delete-orphan"
     )
     inbox_reply_drafts: Mapped[list["InboxReplyDraft"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+    inbox_pending_replies: Mapped[list["InboxPendingReply"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )

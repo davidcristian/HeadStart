@@ -116,6 +116,8 @@ class EmailClassificationService:
             payload={
                 "body_excerpt": message.body_text[:500],
                 "linked_application": linked_payload,
+                "in_reply_to": message.in_reply_to,
+                "references": message.references,
             },
         )
         self.classifications.add(row)

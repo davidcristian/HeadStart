@@ -73,7 +73,7 @@ All routes require auth and `INBOX_AGENT_ENABLED=true`.
 | GET    | `/routing`        | Read label→folder routing settings           |
 | PUT    | `/routing`        | Update label→folder routing settings         |
 | POST   | `/route`          | Move a classified message to its folder      |
-| POST   | `/draft-reply`    | Draft a recruiter follow-up (dry-run)        |
+| POST   | `/draft-reply`    | Draft a recruiter follow-up (dry-run preview; may queue auto-send) |
 | GET    | `/reply-drafts`   | List persisted reply drafts                    |
 
 `GET /meta` includes `mailboxes` (registered connector keys) and
@@ -108,7 +108,8 @@ After classification, routable labels can be moved into configured IMAP folders
 (Gmail labels and Outlook folders are exposed as IMAP mailboxes).
 
 - **Config:** `routing_config` JSON on `mailbox_credential` (`enabled`,
-  `auto_route_on_classify`, `label_folders`, optional `sender_allowlist`). Defaults:
+  `auto_route_on_classify`, `auto_reply_enabled`, `label_folders`, optional
+  `sender_allowlist`). Defaults:
   `HeadStart/General`, `HeadStart/Rejections`, `HeadStart/Ghost`.
 - **`out_of_scope`** is never routed (stays in the source mailbox).
 - **Connector:** `MailboxConnector.move_message` on `imap_smtp` (UID MOVE when
@@ -199,9 +200,9 @@ When the summary email returns to the inbox, the existing classifier labels it
 
 ## Follow-ups (Phase 20d)
 
-Autonomous reply drafts build on classification and routing. **Dry-run only** in this
-slice — drafts are persisted and previewed in the UI; SMTP send and auto-reply
-delay land in a follow-up.
+Autonomous reply drafts build on classification and routing. Drafts are persisted
+and previewed immediately; when `auto_reply_enabled` is on, SMTP send is queued
+with a human-like delay (see [Response delay queue](#response-delay-queue-phase-20d)).
 
 **Path:** `backend/app/reply_drafters/`
 
@@ -221,6 +222,22 @@ Supported classification labels: `follow_up`, `general`.
 - **Applications UI:** `/app/applications` shows the latest draft per job and a
   **Draft reply** button when a draftable classification exists.
 
-**Not shipped yet:** response delay queue, safe-send guardrails, and auto-send
-(`inbox.auto_reply_enabled` remains future work). See
+**Not shipped yet:** safe-send guardrails beyond the default-off toggle. See
 [roadmap.md](../roadmap.md) (Phase 20d).
+
+## Response delay queue (Phase 20d)
+
+When `auto_reply_enabled` is true on the user's routing config, each new reply
+draft is queued in `inbox_pending_reply` with a `send_after` timestamp. The
+delay is `INBOX_REPLY_MIN_DELAY_SECONDS` (default 1800, never below 60) plus
+optional random jitter (`INBOX_REPLY_DELAY_JITTER_SECONDS`, default 900).
+
+- **Opt-in:** `auto_reply_enabled` on `GET/PUT /inbox/routing` (default off).
+- **Enqueue:** `ReplyDraftService` queues after draft creation; beat orchestration
+  auto-drafts for `follow_up` / `general` when auto-reply is on.
+- **Preview:** drafts are visible immediately via `GET /inbox/reply-drafts`; only
+  SMTP send waits for the delay window.
+- **Send:** beat task `process_pending_replies` every
+  `INBOX_REPLY_SEND_INTERVAL_SECONDS` (default 60) calls
+  `PendingReplyService.process_due` to SMTP-send due rows and mark drafts `sent`.
+- **API fields:** `ReplyDraftRead.queue_status` and `send_after` expose queue state.
