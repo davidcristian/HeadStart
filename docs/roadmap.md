@@ -3,9 +3,9 @@
 Living plan for JobNotifier — what to build next and why. Update this doc when
 priorities shift or a milestone ships.
 
-**Current baseline (2026-06):** Phases 1–15 shipped (four-tier pricing, per-user AI
-summary preferences, 68-employer portal catalog). Next up: Phase 16
-(SmartRecruiters adapter). See [architecture.md](architecture.md) for the system
+**Current baseline (2026-06):** Phases 1–16 shipped (four-tier pricing, per-user AI
+summary preferences, 68-employer portal catalog, SmartRecruiters adapter). Next up: Phase 17
+(portal catalog batch 2). See [architecture.md](architecture.md) for the system
 design.
 
 ---
@@ -419,10 +419,10 @@ without bespoke HTML per employer.
 
 | Item | Why | Notes |
 | ---- | --- | ----- |
-| SmartRecruiters scraper | Fills the ATS gap after Greenhouse / Lever / Ashby / Workday | `@register_scraper("smartrecruiters")`; `GET https://api.smartrecruiters.com/v1/companies/{company_id}/postings` with offset pagination; config `company_id` (slug from `careers.smartrecruiters.com/{company_id}`) |
-| Fixture + tests | CI safety | Sample JSON under `tests/fixtures/`; no live network |
-| Scraper docs | Operator discoverability | Row in [modules/scrapers.md](modules/scrapers.md) |
-| `sr_preset` catalog helper | Same factory pattern as `gh_preset` / `lever_preset` | Add to `catalog_helpers.py` |
+| ~~SmartRecruiters scraper~~ | ~~Fills the ATS gap after Greenhouse / Lever / Ashby / Workday~~ | **Shipped:** `@register_scraper("smartrecruiters")`; `GET https://api.smartrecruiters.com/v1/companies/{company_id}/postings` with offset pagination; config `company_id` (slug from `careers.smartrecruiters.com/{company_id}`) |
+| ~~Fixture + tests~~ | ~~CI safety~~ | **Shipped:** Sample JSON under `tests/fixtures/`; no live network |
+| ~~Scraper docs~~ | ~~Operator discoverability~~ | **Shipped:** Row in [modules/scrapers.md](modules/scrapers.md) |
+| ~~`sr_preset` catalog helper~~ | ~~Same factory pattern as `gh_preset` / `lever_preset`~~ | **Shipped:** Add to `catalog_helpers.py` |
 
 **Caveat:** public Postings API availability is tier-dependent on the customer's
 SmartRecruiters plan — verify each employer before adding a catalog preset.

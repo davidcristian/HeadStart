@@ -17,6 +17,7 @@ ADAPTER_DEFAULTS: dict[str, float] = {
     "greenhouse": 1.0,
     "lever": 1.0,
     "ashby": 1.0,
+    "smartrecruiters": 1.0,
     "workday": 2.5,
     "amazon_jobs": 2.5,
     "apple_careers": 3.0,

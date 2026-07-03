@@ -53,6 +53,19 @@ def ashby_preset(board: str, company: str, *, category: PortalCategory = "unicor
     )
 
 
+def sr_preset(
+    company_id: str, company: str, *, category: PortalCategory = "unicorn"
+) -> PortalPreset:
+    return PortalPreset(
+        id=company_id,
+        company_name=company,
+        category=category,
+        adapter_key="smartrecruiters",
+        base_url=f"https://careers.smartrecruiters.com/{company_id}",
+        default_config={"company_id": company_id, "company": company, "portal_id": company_id},
+    )
+
+
 def workday_preset(
     *,
     portal_id: str,

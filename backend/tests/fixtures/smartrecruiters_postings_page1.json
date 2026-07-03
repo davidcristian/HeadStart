@@ -1,0 +1,42 @@
+{
+  "offset": 0,
+  "limit": 2,
+  "totalFound": 3,
+  "content": [
+    {
+      "id": "744000120624847",
+      "name": "Senior Software Engineer",
+      "uuid": "9a79267a-1159-49ea-ac24-0a336fa6abdd",
+      "company": {
+        "identifier": "AcmeCorp",
+        "name": "ACME Corp"
+      },
+      "releasedDate": "2026-04-14T07:57:07.974Z",
+      "location": {
+        "city": "London",
+        "region": "England",
+        "country": "gb",
+        "fullLocation": "London, England, United Kingdom"
+      },
+      "visibility": "PUBLIC",
+      "ref": "https://api.smartrecruiters.com/v1/companies/AcmeCorp/postings/744000120624847"
+    },
+    {
+      "id": "744000114147537",
+      "name": "Staff Backend Engineer",
+      "uuid": "bdea78df-a3ae-4c8e-90cd-ffdd1c443ebd",
+      "company": {
+        "identifier": "AcmeCorp",
+        "name": "ACME Corp"
+      },
+      "releasedDate": "2026-03-11T20:52:54.488Z",
+      "location": {
+        "city": "Berlin",
+        "region": "Berlin",
+        "country": "de"
+      },
+      "visibility": "PUBLIC",
+      "ref": "https://api.smartrecruiters.com/v1/companies/AcmeCorp/postings/744000114147537"
+    }
+  ]
+}

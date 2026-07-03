@@ -17,6 +17,7 @@ from app.scrapers.adapters import (
     meta_careers,
     microsoft_careers,
     playwright_html,
+    smartrecruiters,
     workday,
 )
 
@@ -33,5 +34,6 @@ __all__ = [
     "meta_careers",
     "microsoft_careers",
     "playwright_html",
+    "smartrecruiters",
     "workday",
 ]

@@ -84,7 +84,8 @@ prompt). Presets whose scraper is premium-only (`indeed`, `linkedin`,
    (test with `POST /sources/detect` or a unit-test fixture).
 2. Add a factory call in `catalog_presets.py` using the helpers in
    `catalog_helpers.py` (`gh_preset`, `lever_preset`, `ashby_preset`,
-   `workday_preset`, `google_careers_preset`, `microsoft_careers_preset`).
+   `sr_preset`, `workday_preset`, `google_careers_preset`,
+   `microsoft_careers_preset`).
 3. Set a unique `portal_id` in `default_config` (the factory helpers do this
    automatically).
 4. Pick `category` (`big_tech`, `unicorn`, `ai`).

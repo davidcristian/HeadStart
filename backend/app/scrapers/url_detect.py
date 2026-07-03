@@ -10,6 +10,7 @@ from app.scrapers.url_detect_amazon import detect_amazon_jobs
 from app.scrapers.url_detect_apple import detect_apple_careers
 from app.scrapers.url_detect_meta import detect_meta_careers
 from app.scrapers.url_detect_microsoft import detect_microsoft_careers
+from app.scrapers.url_detect_smartrecruiters import detect_smartrecruiters
 from app.scrapers.url_detect_types import SourceDetection
 
 _LOCALE_RE = re.compile(r"^[a-z]{2}-[A-Z]{2}$")
@@ -28,6 +29,7 @@ def detect_source_from_url(url: str, *, page_title: str | None = None) -> Source
         _detect_greenhouse,
         _detect_lever,
         _detect_ashby,
+        detect_smartrecruiters,
         _detect_workday,
         _detect_google_careers,
         detect_microsoft_careers,

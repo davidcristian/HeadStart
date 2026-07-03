@@ -1,0 +1,22 @@
+{
+  "offset": 2,
+  "limit": 2,
+  "totalFound": 3,
+  "content": [
+    {
+      "id": "744000100000001",
+      "name": "Product Manager",
+      "uuid": "c1ea78df-a3ae-4c8e-90cd-ffdd1c443ebe",
+      "company": {
+        "identifier": "AcmeCorp",
+        "name": "ACME Corp"
+      },
+      "releasedDate": "2026-02-01T12:00:00.000Z",
+      "location": {
+        "fullLocation": "Remote, United States"
+      },
+      "visibility": "PUBLIC",
+      "ref": "https://api.smartrecruiters.com/v1/companies/AcmeCorp/postings/744000100000001"
+    }
+  ]
+}

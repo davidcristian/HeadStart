@@ -45,6 +45,27 @@ def test_detect_ashby_board_url() -> None:
     assert result.default_config["board"] == "notion"
 
 
+def test_detect_smartrecruiters_careers_board_url() -> None:
+    result = detect_source_from_url(
+        "https://careers.smartrecruiters.com/Atlassian",
+        page_title="Atlassian Careers",
+    )
+    assert result is not None
+    assert result.adapter_key == "smartrecruiters"
+    assert result.default_config["company_id"] == "Atlassian"
+    assert result.suggested_name == "Atlassian"
+    assert result.base_url == "https://careers.smartrecruiters.com/Atlassian"
+
+
+def test_detect_smartrecruiters_api_url() -> None:
+    result = detect_source_from_url(
+        "https://api.smartrecruiters.com/v1/companies/AcmeCorp/postings?limit=100"
+    )
+    assert result is not None
+    assert result.adapter_key == "smartrecruiters"
+    assert result.default_config["company_id"] == "AcmeCorp"
+
+
 def test_detect_workday_board_url() -> None:
     result = detect_source_from_url("https://acme.wd5.myworkdayjobs.com/en-US/External/jobs/123")
     assert result is not None
