@@ -63,3 +63,32 @@ def test_heuristic_classifies_out_of_scope_injection() -> None:
     )
     result = classifier.classify(ctx)
     assert result.label == "out_of_scope"
+
+
+def test_heuristic_classifies_follow_up_questions() -> None:
+    classifier = get_email_classifier("heuristic")
+    ctx = EmailClassifyContext(
+        message=InboxMessage(
+            uid=5,
+            from_addr="recruiter@acme.com",
+            subject="Quick question",
+            body_text="What are your salary expectations for this role?",
+        )
+    )
+    result = classifier.classify(ctx)
+    assert result.label == "follow_up"
+    assert result.confidence >= 0.7
+
+
+def test_heuristic_defaults_to_general_correspondence() -> None:
+    classifier = get_email_classifier("heuristic")
+    ctx = EmailClassifyContext(
+        message=InboxMessage(
+            uid=6,
+            from_addr="recruiter@acme.com",
+            subject="Application received",
+            body_text="Thanks for applying. We will review your materials shortly.",
+        )
+    )
+    result = classifier.classify(ctx)
+    assert result.label == "general"
