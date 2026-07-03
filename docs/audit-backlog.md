@@ -6,11 +6,13 @@ features. Update the Status column (and strike the row) when an item ships; link
 
 Produced by a read-only multi-agent audit — 13 subsystem clusters, every finding
 adversarially verified against the code. **77 confirmed** findings (1 critical, 9 high,
-16 medium, 51 low). 33 are already resolved: the browser-extension cluster (6) via
+16 medium, 51 low). 52 are already resolved: the browser-extension cluster (6) via
 removal (WS8), the WS3 security-hardening trio (2 high + 1 low), the WS11 docs
 cluster (8: 1 med + 7 low), all 6 WS1 inbox-UID items (1 crit + 1 high + 1 med
-+ 3 low), all 4 WS2 scheduler items (1 high + 3 low), and all 6 WS5 billing items
-(4 med + 2 low).
++ 3 low), all 4 WS2 scheduler items (1 high + 3 low), all 6 WS5 billing items
+(4 med + 2 low), all 6 WS6 scraper-hardening items (2 med + 4 low), all 10
+WS4 apply-adapter items (1 high + 3 med + 6 low), and all 3 WS9 reply-drafter
+sanitization items (1 med + 2 low).
 
 **Status legend:** ☐ open · 🔜 in progress · ✅ done
 **Type:** 🐞 bug · 🔒 security · 📝 doc · 🧪 test · ♻️ refactor · 🔁 consistency
@@ -112,12 +114,18 @@ We are no longer shipping a browser extension. Deleted `browser-extension/` and
 pricing/landing copy, and setup/test scripts; kept `POST /sources/detect` (used by
 onboarding). This resolved 6 findings that were open against the extension (4 high, 2 low).
 
-## WS9 — Reply-drafter prompt-injection sanitization
+## WS9 — Reply-drafter prompt-injection sanitization ✅ DONE (2026-07-01)
+The reply drafter can auto-send over SMTP, so the raw recruiter subject/body was the
+highest-risk injection sink. Now both the stored `body_excerpt` **and** the subject are run
+through `email_classifiers/sanitize.py` before they reach any drafter, and either matching
+injection patterns bypasses the LLM entirely (heuristic drafts instead; flagged via
+`injection_guarded` + a draft note). Detection runs on the sanitized text so HTML-encoded
+payloads are caught.
 | Sev | Type | Item | Location | Status |
 | --- | ---- | ---- | -------- | ------ |
-| 🟡 MED | 🔒 | Reply drafter feeds **raw** recruiter body into the LLM (this path can auto-send over SMTP). Sanitize via existing `email_classifiers/sanitize.py` | `services/reply_drafts.py:185` | ☐ |
-| ⚪ LOW | 📝 | Docs imply only the classifier guards injection; reply-drafter gap undocumented | `docs/modules/inbox.md:216` | ☐ |
-| ⚪ LOW | 🧪 | No test for reply-draft injection handling | `tests/email_classifiers/test_sanitize.py:1` | ☐ |
+| 🟡 MED | 🔒 | Reply drafter fed **raw** recruiter subject+body into the LLM (this path can auto-send over SMTP). Now `sanitize_message_body` strips/caps both in `_build_context`, and `looks_like_prompt_injection` on either forces the offline heuristic (never the LLM) | `services/reply_drafts.py:91` | ✅ |
+| ⚪ LOW | 📝 | Docs implied only the classifier guards injection; reply-drafter section now documents its sanitization + LLM-bypass-on-injection behavior | `docs/modules/inbox.md:338` | ✅ |
+| ⚪ LOW | 🧪 | Added reply-draft regression tests: HTML-obfuscated body injection (pins sanitize-before-detect ordering), subject injection, and HTML-stripping on the clean path | `tests/services/test_reply_drafts.py` | ✅ |
 
 ## WS10 — LLM-adapter-family consolidation (refactor, ~1,800 LOC)
 Five families (`summarizers`/`resumes`/`cover_letters`/`email_classifiers`/`reply_drafters`)

@@ -11,6 +11,7 @@ from app.ai.runtime_settings import resolve_ai_settings
 from app.core.config import settings as default_settings
 from app.core.exceptions import NotFoundError, ValidationError
 from app.core.logging import get_logger
+from app.email_classifiers.sanitize import looks_like_prompt_injection, sanitize_message_body
 from app.email_classifiers.types import LinkedApplicationContext
 from app.models.inbox_classification import InboxClassification
 from app.models.inbox_reply_draft import InboxReplyDraft
@@ -34,6 +35,11 @@ logger = get_logger(__name__)
 LLM_PROVIDERS = frozenset({"openai", "gemini", "anthropic", "llamacpp"})
 DRAFTABLE_LABELS = frozenset({"follow_up", "general"})
 DrafterFactory = Callable[[str, Any], ReplyDrafter]
+
+_INJECTION_GUARD_NOTE = (
+    "Inbound message flagged for possible instruction injection; drafted offline "
+    "with the heuristic template instead of an AI provider."
+)
 
 
 class ReplyDraftService:
@@ -83,6 +89,18 @@ class ReplyDraftService:
 
         ctx = self._build_context(user_id, classification, profile)
         requested = self._resolve_provider(user)
+        injection = requested != "heuristic" and (
+            looks_like_prompt_injection(ctx.inbound_body)
+            or looks_like_prompt_injection(ctx.inbound_subject)
+        )
+        if injection:
+            logger.warning(
+                "reply draft for classification %s: inbound subject/body matched injection "
+                "patterns; forcing heuristic drafter",
+                classification.id,
+            )
+            requested = "heuristic"
+
         fallback = False
         provider = requested
         notes = ""
@@ -99,6 +117,8 @@ class ReplyDraftService:
             result = self._draft_with("heuristic", user, ctx)
 
         notes = result.notes
+        if injection:
+            notes = f"{_INJECTION_GUARD_NOTE} {notes}".strip()
         if data.regenerate:
             existing = self.drafts.get_by_classification(user_id, classification.id)
             if existing is not None:
@@ -120,6 +140,7 @@ class ReplyDraftService:
                 "classification_label": classification.label,
                 "inbound_subject": classification.subject,
                 "inbound_from": classification.from_addr,
+                "injection_guarded": injection,
             },
         )
         self.drafts.add(row)
@@ -163,9 +184,13 @@ class ReplyDraftService:
         classification: InboxClassification,
         profile: Any,
     ) -> ReplyDraftContext:
+        max_chars = int(getattr(self._settings, "email_draft_max_chars", 4000))
         body_excerpt = ""
         if classification.payload and isinstance(classification.payload.get("body_excerpt"), str):
-            body_excerpt = classification.payload["body_excerpt"]
+            body_excerpt = sanitize_message_body(
+                classification.payload["body_excerpt"], max_chars=max_chars
+            )
+        inbound_subject = sanitize_message_body(classification.subject or "", max_chars=max_chars)
         linked_application = None
         if classification.seen_job is not None:
             raw = linked_application_context(
@@ -180,7 +205,7 @@ class ReplyDraftService:
                 classification.payload["linked_application"]
             )
         return ReplyDraftContext(
-            inbound_subject=classification.subject,
+            inbound_subject=inbound_subject,
             inbound_from=classification.from_addr,
             inbound_body=body_excerpt,
             classification_label=classification.label,

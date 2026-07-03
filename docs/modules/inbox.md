@@ -341,6 +341,13 @@ Supported classification labels: `follow_up`, `general`.
 - **LLM providers:** `openai`, `gemini`, `anthropic`, `llamacpp` — selected via
   `resolve_ai_settings(..., "email_draft")` (Pro users can override per-purpose
   in Settings → AI models).
+- **Sanitization:** the drafter reuses `email_classifiers/sanitize.py` on the
+  stored recruiter subject and `body_excerpt` before either reaches an LLM (HTML
+  stripped, text capped). Because this path can auto-send over SMTP, a **subject
+  or body** matching instruction-injection patterns bypasses the LLM entirely and
+  is drafted by the offline heuristic instead — recorded as `injection_guarded` in
+  the draft payload and surfaced in the draft `notes`. Detection runs on the
+  sanitized text, so HTML-encoded payloads (e.g. `&#105;gnore…`) are caught.
 - **Persistence:** `inbox_reply_draft` table (one row per user + classification);
   `ReplyDraftService` orchestrates draft + store.
 - **API:** `POST /inbox/draft-reply` (`classification_id` or `message_uid`,
