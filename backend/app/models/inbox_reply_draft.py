@@ -3,7 +3,16 @@
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
-from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, String, Text, UniqueConstraint
+from sqlalchemy import (
+    JSON,
+    BigInteger,
+    Boolean,
+    DateTime,
+    ForeignKey,
+    String,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, utcnow
@@ -36,7 +45,7 @@ class InboxReplyDraft(Base):
         ForeignKey("seen_job.id", ondelete="SET NULL"), index=True, nullable=True
     )
 
-    message_uid: Mapped[int] = mapped_column(nullable=False)
+    message_uid: Mapped[int] = mapped_column(BigInteger, nullable=False)
     subject: Mapped[str] = mapped_column(String(998), nullable=False, default="")
     body_text: Mapped[str] = mapped_column(Text, nullable=False)
     provider: Mapped[str] = mapped_column(String(32), nullable=False)

@@ -6,9 +6,10 @@ features. Update the Status column (and strike the row) when an item ships; link
 
 Produced by a read-only multi-agent audit — 13 subsystem clusters, every finding
 adversarially verified against the code. **77 confirmed** findings (1 critical, 9 high,
-16 medium, 51 low). 17 are already resolved: the browser-extension cluster (6) via
-removal (WS8), the WS3 security-hardening trio (2 high + 1 low), and the WS11 docs
-cluster (8: 1 med + 7 low).
+16 medium, 51 low). 22 are already resolved: the browser-extension cluster (6) via
+removal (WS8), the WS3 security-hardening trio (2 high + 1 low), the WS11 docs
+cluster (8: 1 med + 7 low), and 5 of the 6 WS1 inbox-UID items (1 crit + 1 high +
+3 low; the Gmail chronological-ordering med is deferred).
 
 **Status legend:** ☐ open · 🔜 in progress · ✅ done
 **Type:** 🐞 bug · 🔒 security · 📝 doc · 🧪 test · ♻️ refactor · 🔁 consistency
@@ -19,8 +20,6 @@ cluster (8: 1 med + 7 low).
 
 | Sev | Item | Where |
 | --- | ---- | ----- |
-| 🔴 CRIT | Outlook/Fastmail message UIDs (~1.8e21) overflow even `BigInteger`; columns are 32-bit `Integer` — breaks inbox on Postgres | `inbox/outlook_ids.py`, `inbox/fastmail_ids.py` |
-| 🟠 HIGH | Gmail hex→int UID overflows 32-bit `Integer` poll/classification columns | `inbox/gmail_ids.py:9` |
 | 🟠 HIGH | Scheduler enqueues due searches with no lease → overlapping ticks double-notify | `worker/tasks.py:67` |
 | 🟠 HIGH | Meta apply: work-history parallel arrays desync → wrong employer/title/date pairing | `appliers/adapters/meta_careers_payload.py:58` |
 
@@ -28,16 +27,19 @@ cluster (8: 1 med + 7 low).
 
 ## WS1 — Inbox message-UID integer overflow
 Dev-only feature (`inbox_agent_enabled=False`), but broken on Postgres the moment a real
-message arrives (SQLite's arbitrary-precision ints hide it in tests).
+message arrives (SQLite's arbitrary-precision ints hide it in tests). Overflow, OAuth, and
+doc items fixed; the Gmail chronological-ordering med is deferred to its own PR — the
+correct fix is Gmail's `history.list` incremental-sync model, since the list API exposes
+no `internalDate` for a cheap time-ordered cursor.
 
 | Sev | Type | Item | Location | Status |
 | --- | ---- | ---- | -------- | ------ |
-| 🔴 CRIT | 🐞 | Outlook/Fastmail `micros * (1<<20)` ≈ 1.8e21 (~71-bit) exceeds `BigInteger`; narrow the encoding (seconds + smaller tail → <2⁶³) **and** widen columns | `inbox/outlook_ids.py:17` | ☐ |
-| 🟠 HIGH | 🐞 | Gmail `int(gmail_id,16)` ≈ 61-bit overflows 32-bit `Integer`; widen `last_polled_uid`/`message_uid` cols to `BigInteger` (+ migration) | `inbox/gmail_ids.py:9` | ☐ |
+| 🔴 CRIT | 🐞 | Outlook/Fastmail `micros * (1<<20)` ≈ 1.8e21 (~71-bit) exceeded `BigInteger`; narrowed encoding to **milliseconds** (`millis<<20` ≈ 62-bit, safe to ~2255) **and** widened columns | `inbox/outlook_ids.py:17` | ✅ |
+| 🟠 HIGH | 🐞 | Gmail `int(gmail_id,16)` ≈ 61-bit overflowed 32-bit `Integer`; widened `last_polled_uid`/`message_uid` cols to `BigInteger` (migration 0033) | `inbox/gmail_ids.py:9` | ✅ |
 | 🟡 MED | 🐞 | Gmail hex ids aren't chronologically ordered → #168 oldest-first sort unreliable, can permanently skip mail; add a time component | `inbox/adapters/gmail.py:202` | ☐ |
-| ⚪ LOW | 🔁 | OAuth refresh persists config via `model_dump_json()` while readers expect `encode_mailbox_config` | `services/inbox_oauth.py:59` | ☐ |
-| ⚪ LOW | 🧪 | Yahoo/IMAP oldest-first (#168) has no test guarding the drop-old-mail regression | `inbox/adapters/yahoo.py:62` | ☐ |
-| ⚪ LOW | 📝 | `inbox.md` says Gmail ids map to "integer uid values" without noting the overflow | `docs/modules/inbox.md:56` | ☐ |
+| ⚪ LOW | 🔁 | OAuth refresh persisted config via `model_dump_json()` while readers expect `encode_mailbox_config`; unified on the shared encoder | `services/inbox_oauth.py:59` | ✅ |
+| ⚪ LOW | 🧪 | Yahoo/IMAP oldest-first (#168) drop-old-mail regression — already guarded by the `*_over_limit` tests in `test_yahoo.py`/`test_imap_smtp.py` | `inbox/adapters/yahoo.py:62` | ✅ |
+| ⚪ LOW | 📝 | `inbox.md` said Gmail ids map to "integer uid values" without noting the overflow; now documents `BigInteger` storage | `docs/modules/inbox.md:56` | ✅ |
 
 ## WS2 — Scheduler double-enqueue → duplicate notifications
 | Sev | Type | Item | Location | Status |

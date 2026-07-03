@@ -53,7 +53,9 @@ SMTP host/port/TLS, credentials, optional `smtp_from`).
   URL; `GET /inbox/gmail/callback` exchanges the code and stores encrypted tokens on
   `mailbox_credential` (`connector_type=gmail`).
 - **Fetch:** `users.messages.list` (INBOX) + `users.messages.get` (`format=raw`);
-  Gmail API message ids map to integer `uid` values for poll cursors.
+  Gmail API message ids parse from hex into ~61-bit `uid` poll cursors. All inbox
+  `uid` columns are `BigInteger` — a 32-bit `Integer` overflows for both Gmail's
+  ~61-bit ids and the time-ordered Outlook/Fastmail uids.
 - **Send:** `users.messages.send` with a base64url-encoded MIME payload.
 - **Move / route:** `users.labels.create` (when missing) + `users.messages.modify`
   (add label, remove INBOX).

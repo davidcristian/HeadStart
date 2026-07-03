@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from sqlalchemy.orm import Session
 
-from app.core.crypto import encrypt
 from app.inbox.credentials import encode_mailbox_config
 from app.inbox.gmail_oauth import gmail_token_needs_refresh, refresh_gmail_access_token
 from app.inbox.outlook_oauth import outlook_token_needs_refresh, refresh_outlook_access_token
@@ -56,7 +55,7 @@ def ensure_fresh_gmail_config(
     if not gmail_token_needs_refresh(config):
         return config
     refreshed = refresh_gmail_access_token(config)
-    credential.secret_ciphertext = encrypt(refreshed.model_dump_json())
+    credential.secret_ciphertext = encode_mailbox_config(refreshed)
     session.flush()
     return refreshed
 
@@ -70,7 +69,7 @@ def ensure_fresh_outlook_config(
     if not outlook_token_needs_refresh(config):
         return config
     refreshed = refresh_outlook_access_token(config)
-    credential.secret_ciphertext = encrypt(refreshed.model_dump_json())
+    credential.secret_ciphertext = encode_mailbox_config(refreshed)
     session.flush()
     return refreshed
 
@@ -84,6 +83,6 @@ def ensure_fresh_yahoo_config(
     if not yahoo_token_needs_refresh(config):
         return config
     refreshed = refresh_yahoo_access_token(config)
-    credential.secret_ciphertext = encrypt(refreshed.model_dump_json())
+    credential.secret_ciphertext = encode_mailbox_config(refreshed)
     session.flush()
     return refreshed
