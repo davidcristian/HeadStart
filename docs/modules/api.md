@@ -51,6 +51,7 @@ never touch the DB directly (services use repositories). See
 | POST   | `/jobs/{id}/generate-cover-letter` | Draft a tailored cover letter from the job + application profile (`provider`, `fallback`). Pro users use the effective `SUMMARY_PROVIDER`; others get the offline heuristic generator. |
 | GET    | `/application-logs` | List recent auto-apply attempts (`limit`, default 100) |
 | GET    | `/application-logs/{id}` | Poll one queued/live apply log until terminal status |
+| GET    | `/applications` | Application pipeline rows (`stage` filter optional): job + derived `pipeline_stage`, `latest_attempt`, chronological `attempts` |
 | GET    | `/feed/url`           | Signed RSS feed URL for the current user             |
 | POST   | `/feed/rotate`        | Invalidate prior feed URLs and issue a new one       |
 | GET    | `/feed/rss`           | RSS 2.0 job feed (public; `token` query param)     |

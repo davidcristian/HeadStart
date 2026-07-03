@@ -1,6 +1,15 @@
 /** Sample API payloads for frontend smoke tests. */
 
-import type { AccountPlan, Job, Meta, NotificationTarget, Profile, Search, Source } from "../types";
+import type {
+  AccountPlan,
+  ApplicationPipelineItem,
+  Job,
+  Meta,
+  NotificationTarget,
+  Profile,
+  Search,
+  Source,
+} from "../types";
 
 export const sampleAccountPlan: AccountPlan = {
   plan: "pro",
@@ -125,4 +134,32 @@ export const sampleJob: Job = {
   status: "new",
   first_seen_at: "2026-06-28T12:00:00Z",
   applied_at: null,
+};
+
+export const sampleApplicationPipelineItem: ApplicationPipelineItem = {
+  job_id: sampleJob.id,
+  search_id: sampleSearch.id,
+  title: sampleJob.title,
+  company: sampleJob.company,
+  location: sampleJob.location,
+  url: sampleJob.url,
+  job_status: "applied",
+  pipeline_stage: "awaiting_reply",
+  applied_at: "2026-06-28T13:00:00Z",
+  latest_attempt: {
+    id: 1,
+    status: "submitted",
+    error: null,
+    external_application_id: "gh-123",
+    created_at: "2026-06-28T13:00:00Z",
+  },
+  attempts: [
+    {
+      id: 1,
+      status: "submitted",
+      error: null,
+      external_application_id: "gh-123",
+      created_at: "2026-06-28T13:00:00Z",
+    },
+  ],
 };

@@ -12,6 +12,7 @@ import { Button } from "./ui";
 
 const PRIMARY_NAV = [
   { to: "/app/jobs", label: "Jobs" },
+  { to: "/app/applications", label: "Applications" },
   { to: "/app/searches", label: "Searches" },
   { to: "/app/portals", label: "Companies" },
 ];
@@ -27,6 +28,7 @@ const MORE_NAV = [
 const DESKTOP_NAV = [
   { to: "/app/searches", label: "Searches" },
   { to: "/app/jobs", label: "Jobs" },
+  { to: "/app/applications", label: "Applications" },
   { to: "/app/portals", label: "Companies" },
   { to: "/app/sources", label: "Sources" },
   { to: "/app/targets", label: "Notifications" },

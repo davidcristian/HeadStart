@@ -4,6 +4,7 @@ import { vi } from "vitest";
 import type {
   AdminUser,
   ApplicationLog,
+  ApplicationPipelineItem,
   DataRequestLog,
   Job,
   NotificationTarget,
@@ -158,6 +159,7 @@ const mockApi = vi.hoisted(() => ({
     ],
   })),
   listApplicationLogs: vi.fn(async (): Promise<ApplicationLog[]> => []),
+  listApplications: vi.fn(async (): Promise<ApplicationPipelineItem[]> => []),
   getApplicationLog: vi.fn(async (): Promise<ApplicationLog> => ({
     id: 1,
     seen_job_id: sampleJob.id,
@@ -202,6 +204,7 @@ export function resetMockApi(): void {
   mockApi.listSources.mockResolvedValue([]);
   mockApi.listSearches.mockResolvedValue([]);
   mockApi.listJobs.mockResolvedValue([]);
+  mockApi.listApplications.mockResolvedValue([]);
   mockApi.listTargets.mockResolvedValue([]);
   mockApi.getProfile.mockResolvedValue(emptyProfile);
 }

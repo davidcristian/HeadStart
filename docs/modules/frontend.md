@@ -63,6 +63,7 @@ other unknown path redirects to the landing page.
 |             | interval; enable/disable; run now (immediate results); view last |
 |             | run, scrape errors, and recent delivery failures                 |
 | Jobs        | Feed of seen jobs, filterable by search and status; mark seen/applied/archived; **Apply** on supported sources (preview + submit); salary when scraped; copy RSS feed URL |
+| Applications | Pipeline view at `/app/applications`: applied jobs with derived stage (`queued`, `awaiting_reply`, `apply_failed`, `closed`, `archived`), attempt timeline, and stage filter; see `GET /applications` |
 | Profile     | Application profile for auto-apply (contact, resume, experience, education, skills); application history table |
 | Targets     | Manage notification targets (e.g. ntfy server/topic); send test  |
 | Credentials | Per-source encrypted cookies/headers for bot-walled sites        |
@@ -114,7 +115,7 @@ Server state is managed by **TanStack Query** (`@tanstack/react-query`). The
   `src/api/` via `src/test/mockApi.ts` and shared fixtures in `src/test/fixtures.ts`.
   Pages are rendered with `renderWithClient` (`src/test/renderWithClient.tsx`),
   which wraps them in a fresh React Query client per test.
-- Covered pages: Sources, Searches, Targets, Jobs, Admin (render, empty state, list data,
+- Covered pages: Sources, Searches, Targets, Jobs, Applications, Admin (render, empty state, list data,
   and primary actions like create/delete/test/run).
 - `FreeTierAd.test.tsx` covers free vs paid gating and optional-cookie gating for partner slots.
 

@@ -11,6 +11,8 @@ import type {
   JobApplyResult,
   JobCoverLetterResult,
   ApplicationLog,
+  ApplicationPipelineItem,
+  ApplicationPipelineStage,
   FeedUrl,
   Meta,
   NotificationTarget,
@@ -212,6 +214,11 @@ export const api = {
   listApplicationLogs: (limit = 100) =>
     request<ApplicationLog[]>(`/api/v1/application-logs?limit=${limit}`),
   getApplicationLog: (id: number) => request<ApplicationLog>(`/api/v1/application-logs/${id}`),
+
+  listApplications: (stage?: ApplicationPipelineStage) => {
+    const query = stage ? `?stage=${encodeURIComponent(stage)}` : "";
+    return request<ApplicationPipelineItem[]>(`/api/v1/applications${query}`);
+  },
 
   // feed
   getFeedUrl: () => request<FeedUrl>("/api/v1/feed/url"),

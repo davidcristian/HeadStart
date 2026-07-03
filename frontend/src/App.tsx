@@ -4,6 +4,7 @@ import { EmailVerificationGuard } from "./auth/EmailVerificationGuard";
 import { OnboardingGuard } from "./auth/OnboardingGuard";
 import { ProtectedRoute } from "./auth/ProtectedRoute";
 import { Layout } from "./components/Layout";
+import { ApplicationsPage } from "./pages/ApplicationsPage";
 import { AdminPage } from "./pages/AdminPage";
 import { CredentialsPage } from "./pages/CredentialsPage";
 import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
@@ -31,6 +32,7 @@ import { TargetsPage } from "./pages/TargetsPage";
 const LEGACY_APP_PATHS = [
   "searches",
   "jobs",
+  "applications",
   "sources",
   "portals",
   "targets",
@@ -64,6 +66,7 @@ export function App() {
               <Route index element={<Navigate to="/app/searches" replace />} />
               <Route path="searches" element={<SearchesPage />} />
               <Route path="jobs" element={<JobsPage />} />
+              <Route path="applications" element={<ApplicationsPage />} />
               <Route path="sources" element={<SourcesPage />} />
               <Route path="portals" element={<PortalsPage />} />
               <Route path="targets" element={<TargetsPage />} />

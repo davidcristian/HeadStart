@@ -12,6 +12,11 @@ export type { DeliveryFailure, Search, SearchCreate, SearchRunResult, FeedUrl } 
 export type { NotificationTarget, TargetCreate } from "./target";
 export type { JobStatus, Job, JobApplyResult, JobCoverLetterResult, ApplicationLog } from "./job";
 export type {
+  ApplicationPipelineStage,
+  ApplicationAttemptSummary,
+  ApplicationPipelineItem,
+} from "./application";
+export type {
   PlanId,
   PlanLimits,
   PlanUsage,

@@ -611,7 +611,7 @@ a job, review or edit the cover letter, and have both attached on apply.
 | ---- | --- | ----- |
 | Interview detection | User should only take over at the right moment | Classifier flags `interview_request` (scheduling link, Calendly, "let's set up a call"); mark application `interview_pending` |
 | Handoff notification | User checks their own calendar | Push via existing notifiers (email, Slack, ntfy, etc.): "Interview to schedule at {company} — take over from here" with thread link and job card |
-| UI: application pipeline view | User sees status at a glance | New `/app/applications` view: applied → awaiting reply → follow-up sent → interview pending / rejected / ghosted; filterable timeline per job |
+| UI: application pipeline view | User sees status at a glance | **Shipped:** `/app/applications` lists jobs with live apply activity; derived stages (`queued`, `awaiting_reply`, `apply_failed`, `closed`, `archived`); expandable attempt timeline; `GET /applications?stage=…`. Interview/rejection/ghost stages land with Phase 20c inbox integration. |
 
 ### 20f — Local agent runtime
 

@@ -417,6 +417,26 @@ code {
   background: rgba(239, 68, 68, 0.12);
   color: var(--danger);
 }
+.badge-pipeline-queued {
+  background: rgba(59, 130, 246, 0.15);
+  color: #93c5fd;
+}
+.badge-pipeline-apply_failed {
+  background: rgba(239, 68, 68, 0.12);
+  color: var(--danger);
+}
+.badge-pipeline-awaiting_reply {
+  background: rgba(34, 197, 94, 0.15);
+  color: var(--success);
+}
+.badge-pipeline-closed {
+  background: rgba(139, 152, 165, 0.15);
+  color: var(--muted);
+}
+.badge-pipeline-archived {
+  background: rgba(139, 152, 165, 0.1);
+  color: var(--muted);
+}
 .health-details {
   margin-top: 8px;
   font-size: 12px;
@@ -678,6 +698,59 @@ td .job-summary {
 .job-actions {
   justify-content: flex-start;
   flex-wrap: wrap;
+}
+
+.application-cards {
+  display: block;
+}
+
+.application-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  margin-bottom: 12px;
+  background: var(--bg);
+}
+
+.application-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.application-card-meta,
+.application-card-applied,
+.application-card-latest {
+  margin: 0 0 8px;
+  font-size: 13px;
+}
+
+.application-timeline {
+  margin: 12px 0 0;
+  padding-left: 18px;
+  font-size: 13px;
+}
+
+.application-timeline-item {
+  margin-bottom: 8px;
+}
+
+.application-timeline-status {
+  margin: 0 8px;
+  font-weight: 600;
+}
+
+.application-timeline-error {
+  display: block;
+  color: var(--danger);
+  margin-top: 2px;
+}
+
+.application-timeline-row td {
+  background: rgba(139, 152, 165, 0.06);
+  border-top: none;
 }
 
 .apply-dialog-backdrop {

@@ -6,7 +6,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api";
-import type { JobStatus } from "../types";
+import type { JobStatus, ApplicationPipelineStage } from "../types";
 
 export const queryKeys = {
   health: ["health"] as const,
@@ -20,6 +20,7 @@ export const queryKeys = {
   credentials: ["credentials"] as const,
   profile: ["profile"] as const,
   applicationLogs: ["application-logs"] as const,
+  applications: (stage?: ApplicationPipelineStage) => ["applications", stage ?? null] as const,
   feedUrl: ["feed-url"] as const,
   jobs: (searchId?: number, status?: JobStatus) =>
     ["jobs", searchId ?? null, status ?? null] as const,
@@ -71,6 +72,13 @@ export function useApplicationLogs(limit = 100) {
   return useQuery({
     queryKey: [...queryKeys.applicationLogs, limit] as const,
     queryFn: () => api.listApplicationLogs(limit),
+  });
+}
+
+export function useApplications(stage?: ApplicationPipelineStage) {
+  return useQuery({
+    queryKey: queryKeys.applications(stage),
+    queryFn: () => api.listApplications(stage),
   });
 }
 
