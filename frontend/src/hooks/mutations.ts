@@ -279,3 +279,17 @@ export function useSubscribePortals() {
     },
   });
 }
+
+export function useDraftInboxReply() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: {
+      classification_id?: number;
+      message_uid?: number;
+      regenerate?: boolean;
+    }) => api.draftInboxReply(data),
+    onSuccess: () => {
+      invalidate(qc, queryKeys.applications());
+    },
+  });
+}

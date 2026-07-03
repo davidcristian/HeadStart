@@ -18,6 +18,23 @@ export interface ApplicationAttemptSummary {
   created_at: string;
 }
 
+export interface ReplyDraftSummary {
+  id: number;
+  classification_id: number;
+  subject: string;
+  body_text: string;
+  provider: string;
+  created_at: string;
+}
+
+export interface ReplyDraftResult extends ReplyDraftSummary {
+  seen_job_id: number | null;
+  message_uid: number;
+  fallback: boolean;
+  status: string;
+  notes: string;
+}
+
 export interface ApplicationPipelineItem {
   job_id: number;
   search_id: number;
@@ -34,4 +51,6 @@ export interface ApplicationPipelineItem {
   recruiter_rejection_at: string | null;
   latest_attempt: ApplicationAttemptSummary | null;
   attempts: ApplicationAttemptSummary[];
+  latest_reply_draft: ReplyDraftSummary | null;
+  latest_draftable_classification_id: number | null;
 }

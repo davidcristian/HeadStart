@@ -138,6 +138,11 @@ class Settings(BaseSettings):
     email_classify_max_body_chars: int = 8000
     email_classify_max_tokens: int = 256
 
+    # ---- AI inbox reply drafting (dev-only; dry-run, no auto-send) ----
+    reply_drafts_enabled: bool = True
+    email_draft_max_chars: int = 4000
+    email_draft_max_tokens: int = 600
+
     # ---- OpenAI (used only when summary_provider = "openai") ----
     openai_api_key: str = ""
     openai_model: str = "gpt-4o-mini"

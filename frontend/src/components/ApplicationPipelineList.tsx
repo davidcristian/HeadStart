@@ -1,9 +1,10 @@
-/** Application pipeline cards with expandable attempt timeline. */
+/** Application pipeline cards with expandable attempt timeline and reply drafts. */
 
 import { useState } from "react";
 import { ApplicationStageBadge } from "./ApplicationStageBadge";
 import { Button } from "./ui";
 import { useMediaQuery } from "../hooks/useMediaQuery";
+import { useDraftInboxReply } from "../hooks/mutations";
 import type { ApplicationPipelineItem } from "../types";
 
 const ATTEMPT_LABELS: Record<string, string> = {
@@ -55,6 +56,7 @@ function ApplicationPipelineRow({ item }: { item: ApplicationPipelineItem }) {
         <td>
           <JobSummary item={item} />
           {item.company && <div className="muted">{item.company}</div>}
+          <ReplyDraftSection item={item} />
         </td>
         <td>
           <ApplicationStageBadge stage={item.pipeline_stage} />
@@ -94,6 +96,7 @@ function ApplicationPipelineCard({ item }: { item: ApplicationPipelineItem }) {
       </p>
       <p className="application-card-applied muted">Applied {formatAppliedAt(item.applied_at)}</p>
       <p className="application-card-latest muted">{formatLatestAttempt(item)}</p>
+      <ReplyDraftSection item={item} />
       {item.attempts.length > 0 && (
         <>
           <Button variant="ghost" onClick={() => setOpen((value) => !value)}>
@@ -103,6 +106,55 @@ function ApplicationPipelineCard({ item }: { item: ApplicationPipelineItem }) {
         </>
       )}
     </article>
+  );
+}
+
+function ReplyDraftSection({ item }: { item: ApplicationPipelineItem }) {
+  const draftReply = useDraftInboxReply();
+  const draft = item.latest_reply_draft;
+  const classificationId = item.latest_draftable_classification_id;
+
+  if (!draft && !classificationId) {
+    return null;
+  }
+
+  const handleDraft = () => {
+    if (!classificationId) return;
+    draftReply.mutate({ classification_id: classificationId });
+  };
+
+  return (
+    <div className="application-reply-draft">
+      {draft ? (
+        <details className="application-reply-draft-details">
+          <summary className="application-reply-draft-summary">
+            Reply draft ({draft.provider})
+          </summary>
+          <p className="muted application-reply-draft-subject">{draft.subject}</p>
+          <pre className="application-reply-draft-body">{draft.body_text}</pre>
+          {classificationId && (
+            <Button
+              variant="ghost"
+              disabled={draftReply.isPending}
+              onClick={() =>
+                draftReply.mutate({ classification_id: classificationId, regenerate: true })
+              }
+            >
+              {draftReply.isPending ? "Regenerating…" : "Regenerate draft"}
+            </Button>
+          )}
+        </details>
+      ) : (
+        <Button variant="ghost" disabled={draftReply.isPending} onClick={handleDraft}>
+          {draftReply.isPending ? "Drafting…" : "Draft reply"}
+        </Button>
+      )}
+      {draftReply.isError && (
+        <p className="status-bad application-reply-draft-error">
+          Could not draft a reply. Save your application profile and try again.
+        </p>
+      )}
+    </div>
   );
 }
 

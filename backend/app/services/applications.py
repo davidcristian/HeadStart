@@ -9,11 +9,14 @@ from sqlalchemy.orm import Session
 from app.models.application_log import ApplicationLog
 from app.models.seen_job import SeenJob
 from app.repositories.applications import ApplicationPipelineRepository
+from app.repositories.inbox_classifications import InboxClassificationRepository
+from app.repositories.inbox_reply_drafts import InboxReplyDraftRepository
 from app.schemas.application_pipeline import (
     ApplicationAttemptSummary,
     ApplicationPipelineRead,
     ApplicationPipelineStage,
 )
+from app.schemas.inbox_reply_draft import ReplyDraftSummary
 from app.schemas.job import JobStatus
 
 
@@ -53,6 +56,8 @@ class ApplicationPipelineService:
     def __init__(self, session: Session) -> None:
         self.session = session
         self.repo = ApplicationPipelineRepository(session)
+        self.reply_drafts = InboxReplyDraftRepository(session)
+        self.classifications = InboxClassificationRepository(session)
 
     def list_for_user(
         self,
@@ -63,12 +68,27 @@ class ApplicationPipelineService:
     ) -> list[ApplicationPipelineRead]:
         """Return pipeline rows for jobs with live apply activity."""
         jobs = self.repo.list_jobs_for_user(user_id, limit=limit)
-        rows = [self._to_read(job) for job in jobs]
+        job_ids = [job.id for job in jobs]
+        latest_drafts = self.reply_drafts.latest_by_seen_job_ids(user_id, job_ids)
+        draftable = self.classifications.latest_draftable_by_seen_job_ids(user_id, job_ids)
+        rows = [
+            self._to_read(
+                job,
+                latest_drafts.get(job.id),
+                draftable.get(job.id),
+            )
+            for job in jobs
+        ]
         if stage is None:
             return rows
         return [row for row in rows if row.pipeline_stage == stage]
 
-    def _to_read(self, job: SeenJob) -> ApplicationPipelineRead:
+    def _to_read(
+        self,
+        job: SeenJob,
+        draft: object | None = None,
+        draftable_classification: object | None = None,
+    ) -> ApplicationPipelineRead:
         attempts = live_attempts(job.application_logs)
         latest = attempts[-1] if attempts else None
         return ApplicationPipelineRead(
@@ -87,6 +107,31 @@ class ApplicationPipelineService:
             recruiter_rejection_at=job.recruiter_rejection_at,
             latest_attempt=self._attempt_summary(latest),
             attempts=[self._attempt_summary(log) for log in attempts],
+            latest_reply_draft=self._draft_summary(draft),
+            latest_draftable_classification_id=self._classification_id(draftable_classification),
+        )
+
+    def _classification_id(self, classification: object | None) -> int | None:
+        from app.models.inbox_classification import InboxClassification
+
+        if isinstance(classification, InboxClassification):
+            return classification.id
+        return None
+
+    def _draft_summary(self, draft: object | None) -> ReplyDraftSummary | None:
+        if draft is None:
+            return None
+        from app.models.inbox_reply_draft import InboxReplyDraft
+
+        if not isinstance(draft, InboxReplyDraft):
+            return None
+        return ReplyDraftSummary(
+            id=draft.id,
+            classification_id=draft.inbox_classification_id,
+            subject=draft.subject,
+            body_text=draft.body_text,
+            provider=draft.provider,
+            created_at=draft.created_at,
         )
 
     def _attempt_summary(self, log: ApplicationLog | None) -> ApplicationAttemptSummary | None:

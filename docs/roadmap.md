@@ -604,10 +604,10 @@ a job, review or edit the cover letter, and have both attached on apply.
 
 | Item | Why | Notes |
 | ---- | --- | ----- |
-| Follow-up draft agent | Recruiters ask for availability, salary, work auth — repetitive | Local LLM drafts replies from application profile + job context; never send without explicit auto-reply policy or user pre-approval per template class |
+| ~~Follow-up draft agent~~ | ~~Recruiters ask for availability, salary, work auth — repetitive~~ | **Shipped (dry-run):** `@register_reply_drafter` adapters (`heuristic` + LLM providers); `POST /inbox/draft-reply` + `GET /inbox/reply-drafts`; persisted in `inbox_reply_draft`; uses `email_draft` AI purpose; preview on `/app/applications`. **Not yet:** auto-send |
 | Response delay (human-like timing) | Instant replies look automated; real candidates take minutes to hours | Do not send (or surface as ready-to-send) until a configurable minimum delay has elapsed since the inbound message arrived — e.g. `INBOX_REPLY_MIN_DELAY_SECONDS` (default ≥ 15–30 min, never sub-minute). Optional jitter (`INBOX_REPLY_DELAY_JITTER_SECONDS`) so sends are not on a fixed clock. Beat/orchestration enqueues `pending_reply` rows with `send_after`; SMTP send runs only after the window. User can still preview drafts earlier; auto-send respects the delay |
 | Safe-send guardrails | Autonomous email is high-risk | Rate limits, blocklist for legal/HR-sensitive topics, dry-run log of every outbound draft; `inbox.auto_reply_enabled` default off |
-| Thread ↔ application linking | Classification must know which job a thread is about | Match on employer domain, job title fuzzy match, and `Message-ID` / `In-Reply-To` headers against `application_log` metadata |
+| ~~Thread ↔ application linking~~ | ~~Classification must know which job a thread is about~~ | **Shipped (Phase 20c):** `inbox_linking.py` matches employer domain, job title, and thread headers against `application_log` |
 
 ### 20e — Interview handoff & user notification
 

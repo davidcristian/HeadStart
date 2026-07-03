@@ -55,3 +55,25 @@ class InboxClassificationRepository:
             )
         )
         return int(value) if value is not None else None
+
+    def latest_draftable_by_seen_job_ids(
+        self, user_id: int, seen_job_ids: list[int]
+    ) -> dict[int, InboxClassification]:
+        """Newest follow-up/general classification per job for reply drafting."""
+        if not seen_job_ids:
+            return {}
+        stmt = (
+            select(InboxClassification)
+            .where(
+                InboxClassification.user_id == user_id,
+                InboxClassification.seen_job_id.in_(seen_job_ids),
+                InboxClassification.label.in_(("follow_up", "general")),
+            )
+            .order_by(InboxClassification.seen_job_id, InboxClassification.created_at.desc())
+        )
+        rows = list(self.session.scalars(stmt))
+        latest: dict[int, InboxClassification] = {}
+        for row in rows:
+            if row.seen_job_id is not None and row.seen_job_id not in latest:
+                latest[row.seen_job_id] = row
+        return latest

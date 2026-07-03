@@ -5,6 +5,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.schemas.inbox_reply_draft import ReplyDraftSummary
 from app.schemas.job import JobStatus
 
 ApplicationPipelineStage = Literal[
@@ -52,6 +53,8 @@ class ApplicationPipelineRead(BaseModel):
         default_factory=list,
         description="Chronological live apply attempts (oldest first)",
     )
+    latest_reply_draft: ReplyDraftSummary | None = None
+    latest_draftable_classification_id: int | None = None
 
 
 class ApplicationPipelineListParams(BaseModel):

@@ -739,6 +739,41 @@ td .job-summary {
   font-size: 13px;
 }
 
+.application-reply-draft {
+  margin-top: 10px;
+}
+
+.application-reply-draft-details {
+  font-size: 13px;
+}
+
+.application-reply-draft-summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.application-reply-draft-subject {
+  margin: 8px 0 4px;
+}
+
+.application-reply-draft-body {
+  margin: 0 0 8px;
+  padding: 10px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--bg-muted);
+  white-space: pre-wrap;
+  font-family: inherit;
+  font-size: 13px;
+  max-height: 200px;
+  overflow: auto;
+}
+
+.application-reply-draft-error {
+  margin: 6px 0 0;
+  font-size: 13px;
+}
+
 .application-timeline {
   margin: 12px 0 0;
   padding-left: 18px;

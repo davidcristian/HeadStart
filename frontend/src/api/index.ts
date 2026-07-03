@@ -14,6 +14,7 @@ import type {
   ApplicationLog,
   ApplicationPipelineItem,
   ApplicationPipelineStage,
+  ReplyDraftResult,
   FeedUrl,
   Meta,
   NotificationTarget,
@@ -226,6 +227,16 @@ export const api = {
   listApplications: (stage?: ApplicationPipelineStage) => {
     const query = stage ? `?stage=${encodeURIComponent(stage)}` : "";
     return request<ApplicationPipelineItem[]>(`/api/v1/applications${query}`);
+  },
+
+  draftInboxReply: (data: {
+    classification_id?: number;
+    message_uid?: number;
+    regenerate?: boolean;
+  }) => request<ReplyDraftResult>("/api/v1/inbox/draft-reply", { method: "POST", body: data }),
+  listInboxReplyDrafts: (seenJobId?: number) => {
+    const query = seenJobId !== undefined ? `?seen_job_id=${seenJobId}` : "";
+    return request<ReplyDraftResult[]>(`/api/v1/inbox/reply-drafts${query}`);
   },
 
   // feed

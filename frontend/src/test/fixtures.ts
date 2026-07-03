@@ -168,4 +168,6 @@ export const sampleApplicationPipelineItem: ApplicationPipelineItem = {
       created_at: "2026-06-28T13:00:00Z",
     },
   ],
+  latest_reply_draft: null,
+  latest_draftable_classification_id: null,
 };

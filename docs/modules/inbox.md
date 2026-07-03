@@ -73,6 +73,8 @@ All routes require auth and `INBOX_AGENT_ENABLED=true`.
 | GET    | `/routing`        | Read label→folder routing settings           |
 | PUT    | `/routing`        | Update label→folder routing settings         |
 | POST   | `/route`          | Move a classified message to its folder      |
+| POST   | `/draft-reply`    | Draft a recruiter follow-up (dry-run)        |
+| GET    | `/reply-drafts`   | List persisted reply drafts                    |
 
 `GET /meta` includes `mailboxes` (registered connector keys) and
 `inbox_agent_enabled`.
@@ -197,9 +199,28 @@ When the summary email returns to the inbox, the existing classifier labels it
 
 ## Follow-ups (Phase 20d)
 
-Autonomous reply drafts build on classification and routing — see
-[roadmap.md](../roadmap.md) (Phase 20d). Planned behavior includes a
-**response delay** before auto-send: drafts may be generated soon after
-classification, but outbound mail waits until a configurable minimum elapsed time
-(since inbound arrival) so replies do not go out seconds after the recruiter's
-message.
+Autonomous reply drafts build on classification and routing. **Dry-run only** in this
+slice — drafts are persisted and previewed in the UI; SMTP send and auto-reply
+delay land in a follow-up.
+
+**Path:** `backend/app/reply_drafters/`
+
+Pluggable drafters produce recruiter follow-up replies for classified inbound mail.
+Supported classification labels: `follow_up`, `general`.
+
+- **Registry:** `@register_reply_drafter("key")`; resolve with `get_reply_drafter(key)`.
+- **Heuristic default:** template replies from profile `answers` (salary, work auth,
+  availability) and job context; offline.
+- **LLM providers:** `openai`, `gemini`, `anthropic`, `llamacpp` — selected via
+  `resolve_ai_settings(..., "email_draft")` (Pro users can override per-purpose
+  in Settings → AI models).
+- **Persistence:** `inbox_reply_draft` table (one row per user + classification);
+  `ReplyDraftService` orchestrates draft + store.
+- **API:** `POST /inbox/draft-reply` (`classification_id` or `message_uid`,
+  optional `regenerate`); `GET /inbox/reply-drafts` (`seen_job_id` filter).
+- **Applications UI:** `/app/applications` shows the latest draft per job and a
+  **Draft reply** button when a draftable classification exists.
+
+**Not shipped yet:** response delay queue, safe-send guardrails, and auto-send
+(`inbox.auto_reply_enabled` remains future work). See
+[roadmap.md](../roadmap.md) (Phase 20d).

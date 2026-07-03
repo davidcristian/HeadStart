@@ -11,6 +11,7 @@ from app.schemas.inbox_classification import (
     EmailClassificationRead,
     EmailClassifyRequest,
 )
+from app.schemas.inbox_reply_draft import ReplyDraftListParams, ReplyDraftRead, ReplyDraftRequest
 from app.schemas.inbox_routing import (
     InboxRouteRequest,
     InboxRouteResponse,
@@ -26,6 +27,7 @@ from app.schemas.mailbox import (
 from app.services.email_classification import EmailClassificationService
 from app.services.inbox import InboxService
 from app.services.inbox_routing import InboxRoutingService
+from app.services.reply_drafts import ReplyDraftService
 
 router = APIRouter()
 
@@ -123,3 +125,27 @@ def route_inbox_message(
 ) -> InboxRouteResponse:
     """Move a classified message into its configured IMAP folder."""
     return InboxRoutingService(db).route_by_request(user.id, data)
+
+
+@router.post("/draft-reply", response_model=ReplyDraftRead)
+def draft_inbox_reply(
+    data: ReplyDraftRequest,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_verified_user),
+) -> ReplyDraftRead:
+    """Draft a recruiter follow-up reply for one classified message (dry-run only)."""
+    return ReplyDraftService(db).draft(user.id, data)
+
+
+@router.get("/reply-drafts", response_model=list[ReplyDraftRead])
+def list_inbox_reply_drafts(
+    seen_job_id: int | None = None,
+    limit: int = 50,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_verified_user),
+) -> list[ReplyDraftRead]:
+    """List persisted reply drafts for the current user."""
+    params = ReplyDraftListParams(seen_job_id=seen_job_id, limit=limit)
+    return ReplyDraftService(db).list_for_user(
+        user.id, seen_job_id=params.seen_job_id, limit=params.limit
+    )

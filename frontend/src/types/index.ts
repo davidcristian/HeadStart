@@ -22,6 +22,8 @@ export type {
   ApplicationPipelineStage,
   ApplicationAttemptSummary,
   ApplicationPipelineItem,
+  ReplyDraftSummary,
+  ReplyDraftResult,
 } from "./application";
 export type {
   PlanId,
