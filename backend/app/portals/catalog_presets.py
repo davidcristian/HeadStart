@@ -14,7 +14,6 @@ from app.portals.catalog_helpers import (
     microsoft_careers_preset,
     workday_preset,
 )
-from app.portals.catalog_presets_smartrecruiters import SMARTRECRUITERS_PORTALS
 from app.portals.presets import PORTALS
 
 CURATED_PORTALS: tuple[PortalPreset, ...] = (
@@ -274,5 +273,4 @@ CURATED_PORTALS: tuple[PortalPreset, ...] = (
         default_config={"board_token": "scaleai", "company": "Scale AI", "portal_id": "scaleai"},
     ),
     *PORTALS,
-    *SMARTRECRUITERS_PORTALS,
 )
