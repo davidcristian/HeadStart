@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import func, select, update
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.models.promo_code import PromoCode
@@ -73,6 +74,42 @@ class PromoCodeRepository:
         self.session.add(redemption)
         self.session.flush()
         return redemption
+
+    def add_redemption_if_absent(self, redemption: PromoRedemption) -> bool:
+        """Insert a redemption row, returning False if the unique row already exists.
+
+        Contained in a SAVEPOINT so a concurrent duplicate (webhook retry) rolls
+        back only this insert, leaving the surrounding transaction usable.
+        """
+        try:
+            with self.session.begin_nested():
+                self.session.add(redemption)
+                self.session.flush()
+        except IntegrityError:
+            return False
+        return True
+
+    def reserve_global_slot(self, promo_id: int, max_redemptions: int) -> bool:
+        """Atomically claim one slot against the global cap; False when full.
+
+        A single conditional UPDATE avoids the read-then-write race, so promos
+        that Stripe cannot cap (free_trial_days) still honor max_redemptions
+        under concurrent checkouts.
+        """
+        result = self.session.execute(
+            update(PromoCode)
+            .where(PromoCode.id == promo_id, PromoCode.redemption_count < max_redemptions)
+            .values(redemption_count=PromoCode.redemption_count + 1)
+        )
+        return bool(getattr(result, "rowcount", 0))
+
+    def release_global_slot(self, promo_id: int) -> None:
+        """Return a reserved slot (e.g. a concurrent duplicate for the same user)."""
+        self.session.execute(
+            update(PromoCode)
+            .where(PromoCode.id == promo_id, PromoCode.redemption_count > 0)
+            .values(redemption_count=PromoCode.redemption_count - 1)
+        )
 
     def record_validation_attempt(self, user_id: int, code: str) -> None:
         attempt = PromoValidationAttempt(

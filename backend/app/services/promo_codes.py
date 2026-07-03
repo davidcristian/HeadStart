@@ -106,12 +106,13 @@ class PromoCodeService:
         return self._to_validate_response(promo)
 
     def resolve_for_checkout(self, user_id: int, code: str) -> PromoCode:
-        """Validate and return a promo for checkout (does not record redemption yet)."""
+        """Validate a promo for checkout; reserve its slot when Stripe cannot cap it."""
         user = self._require_user(user_id)
         promo = self.promos.get_by_code(code)
         if promo is None:
             raise ValidationError("Invalid promo code.")
         self._assert_redeemable(promo, user)
+        self._reserve_uncapped_promo(promo, user.id)
         return promo
 
     def record_redemption(
@@ -121,17 +122,43 @@ class PromoCodeService:
         *,
         checkout_session_id: str | None = None,
     ) -> None:
-        """Persist a redemption and bump the global counter."""
+        """Persist a redemption and bump the global counter (idempotent).
+
+        A webhook retry, a concurrent delivery, or a slot already reserved at
+        checkout (free_trial_days promos) leaves the row and counter untouched.
+        """
         if self.promos.count_user_redemptions(promo.id, user_id) > 0:
             return
-        self.promos.add_redemption(
+        inserted = self.promos.add_redemption_if_absent(
             PromoRedemption(
                 promo_code_id=promo.id,
                 user_id=user_id,
                 stripe_checkout_session_id=checkout_session_id,
             )
         )
-        self.promos.increment_redemption_count(promo.id)
+        if inserted:
+            self.promos.increment_redemption_count(promo.id)
+
+    def _reserve_uncapped_promo(self, promo: PromoCode, user_id: int) -> None:
+        """Claim a slot at checkout for promos Stripe cannot cap.
+
+        free_trial_days promos have no Stripe promotion code, so max_redemptions
+        would otherwise only be enforced at webhook time -- too late to stop
+        concurrent checkouts from overrunning the cap. Claim the global slot and a
+        per-user row now. A slot reserved here is only released if the checkout
+        request itself fails (single request transaction); an abandoned checkout
+        keeps its reservation, which is the intended cap behavior.
+        """
+        if promo.promo_type != "free_trial_days" or promo.max_redemptions is None:
+            return
+        if not self.promos.reserve_global_slot(promo.id, promo.max_redemptions):
+            raise ValidationError("This promo code has been fully redeemed.")
+        reserved = self.promos.add_redemption_if_absent(
+            PromoRedemption(promo_code_id=promo.id, user_id=user_id)
+        )
+        if not reserved:
+            # This user already holds a reservation; don't consume a second slot.
+            self.promos.release_global_slot(promo.id)
 
     def describe(self, promo: PromoCode) -> str:
         """Human-readable summary for UI and notifications."""

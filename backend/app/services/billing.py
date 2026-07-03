@@ -25,6 +25,9 @@ from app.services.promo_codes import PromoCodeService
 logger = logging.getLogger(__name__)
 
 _CHECKOUT_PLANS: frozenset[str] = frozenset({"starter", "plus", "pro"})
+# Fallback for an active subscription whose price/metadata can't be mapped: the
+# lowest paid tier, never the top tier (which would grant Pro for free).
+_UNRESOLVED_PLAN: PlanId = "starter"
 
 
 class BillingService:
@@ -70,17 +73,23 @@ class BillingService:
                 "You already have an active subscription. Manage billing from Settings."
             )
 
-        try:
-            price_id = price_id_for(plan, billing_period)  # type: ignore[arg-type]
-        except ValueError as exc:
-            raise ValidationError("Billing is not fully configured for this plan.") from exc
-        if not price_id:
-            raise ValidationError("Billing is not fully configured for this plan.")
-
         promo_service = PromoCodeService(self.session)
         promo = None
         if promo_code:
             promo = promo_service.resolve_for_checkout(user_id, promo_code)
+
+        # A plan_upgrade promo bills (and grants) its target plan, not the requested
+        # one, so the line item must use the target plan's price.
+        checkout_plan = plan
+        if promo and promo.promo_type == "plan_upgrade" and promo.plan_target:
+            checkout_plan = promo.plan_target
+
+        try:
+            price_id = price_id_for(checkout_plan, billing_period)  # type: ignore[arg-type]
+        except ValueError as exc:
+            raise ValidationError("Billing is not fully configured for this plan.") from exc
+        if not price_id:
+            raise ValidationError("Billing is not fully configured for this plan.")
 
         customer_id = self._ensure_customer(user)
         trial_days = settings.stripe_trial_days
@@ -94,17 +103,14 @@ class BillingService:
             "success_url": f"{settings.frontend_base_url}/app/settings?billing=success",
             "cancel_url": f"{settings.frontend_base_url}/app/settings?billing=cancel",
             "client_reference_id": str(user.id),
-            "metadata": {"user_id": str(user.id), "plan": plan},
+            "metadata": {"user_id": str(user.id), "plan": checkout_plan},
             "subscription_data": {
-                "metadata": {"user_id": str(user.id), "plan": plan},
+                "metadata": {"user_id": str(user.id), "plan": checkout_plan},
             },
         }
         if promo:
             session_kwargs["metadata"]["promo_code_id"] = str(promo.id)
             session_kwargs["subscription_data"]["metadata"]["promo_code_id"] = str(promo.id)
-            if promo.promo_type == "plan_upgrade" and promo.plan_target:
-                session_kwargs["metadata"]["plan"] = promo.plan_target
-                session_kwargs["subscription_data"]["metadata"]["plan"] = promo.plan_target
             if promo.stripe_promotion_code_id and promo.promo_type in {
                 "percent_off",
                 "fixed_amount",
@@ -224,18 +230,22 @@ class BillingService:
         if not subscription_grants_plan(status):
             return "free"
         items = subscription.get("items", {}).get("data", [])
-        if not items:
-            return "pro"
-        price = items[0].get("price", {})
-        price_id = price.get("id")
-        if isinstance(price_id, str):
-            resolved = plan_for_price_id(price_id)
-            if resolved:
-                return resolved
+        if items:
+            price = items[0].get("price", {})
+            price_id = price.get("id")
+            if isinstance(price_id, str):
+                resolved = plan_for_price_id(price_id)
+                if resolved:
+                    return resolved
         metadata_plan = subscription.get("metadata", {}).get("plan")
         if isinstance(metadata_plan, str) and metadata_plan in VALID_PLANS:
             return metadata_plan  # type: ignore[return-value]
-        return "pro"
+        logger.warning(
+            "subscription %s grants a plan but price/metadata is unrecognized; defaulting to %s",
+            subscription.get("id"),
+            _UNRESOLVED_PLAN,
+        )
+        return _UNRESOLVED_PLAN
 
     def _user_from_reference(self, session: dict[str, Any]) -> User | None:
         metadata = session.get("metadata") or {}

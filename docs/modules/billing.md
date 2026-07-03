@@ -80,11 +80,45 @@ redeemed at checkout.
 | `percent_off` | Stripe coupon (% off subscription) |
 | `fixed_amount` | Stripe coupon (USD cents off) |
 | `free_trial_days` | Overrides checkout `trial_period_days` |
-| `plan_upgrade` | 100% off coupon; sets subscription metadata plan |
+| `plan_upgrade` | Bills the `plan_target` price (not the requested plan) with a 100%-off coupon; sets subscription metadata plan |
 
 When billing is enabled, creating a promo code also creates matching Stripe
 Coupon + Promotion Code objects. Validation is rate-limited (10 attempts per
 15 minutes per user). Redemptions are logged in `promo_redemption`.
+
+### Data model & code
+
+- **Models** — `models/promo_code.py` (`promo_code`), `models/promo_redemption.py`
+  (`promo_redemption`, one row per user per promo), `models/promo_validation_attempt.py`
+  (`promo_validation_attempt`, for rate limiting).
+- **Repository** — `repositories/promo_codes.py`: lookups, the atomic
+  `reserve_global_slot`/`release_global_slot`, and `add_redemption_if_absent`.
+- **Service** — `services/promo_codes.py`: validation, admin CRUD, Stripe sync,
+  `resolve_for_checkout`, `record_redemption`.
+- **Schemas** — `schemas/promo.py`: `PromoCodeCreate` / `Update` / `Read`,
+  `PromoValidateRequest` / `Response`, `PromoRedemptionRead`.
+
+### Redemption caps & idempotency
+
+- **Per-user uniqueness** — a `UniqueConstraint(promo_code_id, user_id)` backs
+  `promo_redemption`, so a Stripe webhook retry or a concurrent delivery is a
+  no-op (`record_redemption` catches the `IntegrityError`) instead of
+  double-counting `redemption_count`.
+- **Global cap** — for `percent_off` / `fixed_amount` / `plan_upgrade`, Stripe's
+  Promotion Code enforces `max_redemptions`. `free_trial_days` promos have **no**
+  Stripe promotion code, so their cap is reserved at checkout: `resolve_for_checkout`
+  atomically claims a slot (conditional counter bump + per-user row) before the
+  Stripe session is created. An **abandoned** checkout keeps its reservation — that
+  is intentional, so the cap can't be overrun; a failed checkout request rolls the
+  reservation back with the rest of the transaction.
+
+### Refunds
+
+Refunds are **not** automated: the webhook handler ignores `charge.refunded` /
+`charge.dispute.*` and no code issues refunds. The "annual plans refundable within
+14 days" line in the pricing FAQ (`frontend/src/lib/pricing.ts`) is a policy
+honored **manually** via the Stripe Dashboard; a manual refund/cancellation then
+arrives here as `customer.subscription.deleted` (downgrades to `free`).
 
 Admin endpoints (prefix `/api/v1/admin`):
 
@@ -103,7 +137,9 @@ Webhook handler updates `user.stripe_customer_id`, `stripe_subscription_id`,
 - `customer.subscription.deleted` (downgrades to `free`)
 
 Plan resolution prefers the Stripe Price ID (`billing_prices.plan_for_price_id`);
-subscription metadata `plan` is a fallback.
+subscription metadata `plan` is a fallback. An active subscription whose price and
+metadata are both unrecognized defaults to the **lowest paid tier** (`starter`)
+and logs a warning — it never silently grants Pro.
 
 ## User fields
 

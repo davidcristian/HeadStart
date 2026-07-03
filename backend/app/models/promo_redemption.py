@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, ForeignKey, String
+from sqlalchemy import DateTime, ForeignKey, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, utcnow
@@ -15,6 +15,11 @@ if TYPE_CHECKING:
 
 class PromoRedemption(Base):
     __tablename__ = "promo_redemption"
+    # One redemption per user per promo: makes webhook retries / concurrent
+    # deliveries a no-op instead of double-counting (see PromoCodeService).
+    __table_args__ = (
+        UniqueConstraint("promo_code_id", "user_id", name="uq_promo_redemption_user"),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     promo_code_id: Mapped[int] = mapped_column(

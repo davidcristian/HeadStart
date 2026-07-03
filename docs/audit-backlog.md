@@ -9,8 +9,8 @@ adversarially verified against the code. **77 confirmed** findings (1 critical, 
 16 medium, 51 low). 33 are already resolved: the browser-extension cluster (6) via
 removal (WS8), the WS3 security-hardening trio (2 high + 1 low), the WS11 docs
 cluster (8: 1 med + 7 low), all 6 WS1 inbox-UID items (1 crit + 1 high + 1 med
-+ 3 low), all 4 WS2 scheduler items (1 high + 3 low), and all 6 WS6 scraper-hardening
-items (2 med + 4 low). (WS5 billing ships in parallel — PR #175.)
++ 3 low), all 4 WS2 scheduler items (1 high + 3 low), and all 6 WS5 billing items
+(4 med + 2 low).
 
 **Status legend:** ☐ open · 🔜 in progress · ✅ done
 **Type:** 🐞 bug · 🔒 security · 📝 doc · 🧪 test · ♻️ refactor · 🔁 consistency
@@ -71,15 +71,15 @@ the three dedup refactors (items 8–10) follow in a separate PR.
 | ⚪ LOW | ♻️ | Workday re-implements `structured_profile.applicable_*` verbatim (Uber imports them) | `appliers/adapters/workday_experience.py:45` | ☐ |
 | ⚪ LOW | ♻️ | SmartRecruiters `consent` fallback branch is dead code | `appliers/adapters/smartrecruiters_payload.py:110` | ☐ |
 
-## WS5 — Billing correctness
+## WS5 — Billing correctness ✅ DONE (2026-07-01)
 | Sev | Type | Item | Location | Status |
 | --- | ---- | ---- | -------- | ------ |
-| 🟡 MED | 🐞 | `plan_upgrade` promo never upgrades — line item keeps requested plan's price; recompute `price_id` from `promo.plan_target` | `services/billing.py:105` | ☐ |
-| 🟡 MED | 🐞 | Unknown/absent subscription price silently returns `"pro"` (grants top tier free); default to `free`/`starter` + warn | `services/billing.py:228` | ☐ |
-| 🟡 MED | 🐞 | Promo redemption read-then-write with no unique constraint → webhook retry/concurrency double-counts. Add `UniqueConstraint(promo_code_id,user_id)` + `IntegrityError` no-op | `services/promo_codes.py:117` | ☐ |
-| 🟡 MED | 🐞 | `free_trial_days` promos get no Stripe cap and no effective global cap (counter only bumps at webhook). Reserve at checkout | `services/promo_codes.py:73` | ☐ |
-| ⚪ LOW | 🧪 | No test for webhook idempotency / duplicate redemption / global cap | `tests/api/test_promo_codes.py:114` | ☐ |
-| ⚪ LOW | 📝 | Billing doc omits promo model/repo/schema; overstates refund policy | `docs/modules/billing.md:3` | ☐ |
+| 🟡 MED | 🐞 | `plan_upgrade` promo never upgraded — line item kept the requested plan's price; now the checkout price is recomputed from `promo.plan_target` (and metadata follows) | `services/billing.py:105` | ✅ |
+| 🟡 MED | 🐞 | Unknown/absent subscription price silently returned `"pro"` (granted top tier free); now defaults to the lowest paid tier (`starter`) + logs a warning | `services/billing.py:228` | ✅ |
+| 🟡 MED | 🐞 | Promo redemption read-then-write had no unique constraint → webhook retry/concurrency double-counted. Added `UniqueConstraint(promo_code_id,user_id)` (migration 0034) + `IntegrityError` no-op via savepoint | `services/promo_codes.py:117` | ✅ |
+| 🟡 MED | 🐞 | `free_trial_days` promos had no Stripe cap and no effective global cap (counter only bumped at webhook); now reserved atomically at checkout (`reserve_global_slot` + per-user row) | `services/promo_codes.py:73` | ✅ |
+| ⚪ LOW | 🧪 | Added tests for webhook idempotency, concurrent-duplicate redemption, and the global-cap reservation | `tests/services/test_promo_codes.py`, `tests/services/test_billing.py` | ✅ |
+| ⚪ LOW | 📝 | Billing doc now documents the promo model/repo/schema, the cap/idempotency rules, and the (manual, non-automated) refund reality | `docs/modules/billing.md` | ✅ |
 
 ## WS6 — Scraper input-hardening ✅ DONE (2026-07-01)
 Untrusted upstream JSON/HTML aborted the whole scrape where siblings degrade to `None`/`[]`;
