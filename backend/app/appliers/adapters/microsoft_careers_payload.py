@@ -5,9 +5,9 @@ from __future__ import annotations
 import base64
 from typing import Any
 
-from app.appliers.adapters.greenhouse import render_cover_letter, split_name
 from app.appliers.adapters.microsoft_careers_common import apply_page_url
 from app.appliers.resume import resume_meta_for_payload
+from app.appliers.text import render_cover_letter, split_name
 from app.schemas.profile import ApplyProfile, ProfileData, ResumeFile
 
 

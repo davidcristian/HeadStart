@@ -29,6 +29,7 @@ from app.appliers.resume import (
     resume_meta_for_payload,
 )
 from app.appliers.structured_profile import build_profile_supplement
+from app.appliers.text import render_cover_letter
 from app.appliers.types import ApplyContext, ApplyResult
 from app.schemas.profile import ApplyProfile, ProfileData, ProfileLinks
 
@@ -124,19 +125,6 @@ def resolve_api_key(
             return str(session_key)
     config_key = config.get("postings_api_key")
     return str(config_key) if config_key else None
-
-
-def render_cover_letter(template: str, *, company: str, job_title: str) -> str:
-    """Substitute simple placeholders in a cover-letter template."""
-    replacements = {
-        "{company}": company,
-        "{job_title}": job_title,
-        "{title}": job_title,
-    }
-    result = template
-    for placeholder, value in replacements.items():
-        result = result.replace(placeholder, value)
-    return result
 
 
 def build_urls(links: ProfileLinks) -> dict[str, str]:

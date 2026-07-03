@@ -4,30 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from app.appliers.text import render_cover_letter, split_name
 from app.schemas.profile import ProfileData
-
-
-def split_name(full_name: str) -> tuple[str, str]:
-    """Split a display name into first and last components."""
-    parts = full_name.strip().split(None, 1)
-    if not parts:
-        return "", ""
-    if len(parts) == 1:
-        return parts[0], ""
-    return parts[0], parts[1]
-
-
-def render_cover_letter(template: str, *, company: str, job_title: str) -> str:
-    """Substitute simple placeholders in a cover-letter template."""
-    replacements = {
-        "{company}": company,
-        "{job_title}": job_title,
-        "{title}": job_title,
-    }
-    result = template
-    for placeholder, value in replacements.items():
-        result = result.replace(placeholder, value)
-    return result
 
 
 def build_supplemental_text(

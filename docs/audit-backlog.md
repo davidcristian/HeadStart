@@ -6,10 +6,12 @@ features. Update the Status column (and strike the row) when an item ships; link
 
 Produced by a read-only multi-agent audit — 13 subsystem clusters, every finding
 adversarially verified against the code. **77 confirmed** findings (1 critical, 9 high,
-16 medium, 51 low). 27 are already resolved: the browser-extension cluster (6) via
+16 medium, 51 low). 30 are already resolved: the browser-extension cluster (6) via
 removal (WS8), the WS3 security-hardening trio (2 high + 1 low), the WS11 docs
-cluster (8: 1 med + 7 low), and all 6 WS1 inbox-UID items (1 crit + 1 high + 1 med
-+ 3 low), and all 4 WS2 scheduler items (1 high + 3 low).
+cluster (8: 1 med + 7 low), all 6 WS1 inbox-UID items (1 crit + 1 high + 1 med
++ 3 low), all 4 WS2 scheduler items (1 high + 3 low), and the 3 WS4 apply-adapter
+dedup refactors (3 low). (WS5 billing, WS6 scrapers, and WS4 apply-correctness ship
+in parallel — PRs #175/#176/#177.)
 
 **Status legend:** ☐ open · 🔜 in progress · ✅ done
 **Type:** 🐞 bug · 🔒 security · 📝 doc · 🧪 test · ♻️ refactor · 🔁 consistency
@@ -55,6 +57,8 @@ ordering (uid from `internalDate`; the list `after:` filter bounds the scan), an
 | ⚪ LOW | 🔒 | `/metrics` bearer token compared with `!=` (not constant-time) → use `hmac.compare_digest` | `main.py:50` | ✅ |
 
 ## WS4 — Apply-adapter correctness
+Two scoped PRs: correctness bugs + tests (items 1–7) in the sibling PR; the three dedup
+**refactors (items 8–10) ✅ DONE (2026-07-01)** here.
 | Sev | Type | Item | Location | Status |
 | --- | ---- | ---- | -------- | ------ |
 | 🟠 HIGH | 🐞 | Meta `build_application_state` filters name/title/location per-column but iterates all rows for dates → arrays desync, wrong pairing. Build every `work*` column from one filtered list | `appliers/adapters/meta_careers_payload.py:58` | ☐ |
@@ -64,9 +68,9 @@ ordering (uid from `internalDate`; the list `after:` filter bounds the scan), an
 | ⚪ LOW | 🐞 | Uber treats every additional question as required → blocks live apply on optional questions | `appliers/adapters/uber_careers_questions.py:80` | ☐ |
 | ⚪ LOW | 🔁 | Greenhouse live submit lacks the post-2xx error-body check its siblings have | `appliers/adapters/greenhouse.py:95` | ☐ |
 | ⚪ LOW | 🧪 | No test for Ashby multipart dropping the guard | `tests/appliers/test_ashby.py:90` | ☐ |
-| ⚪ LOW | ♻️ | `render_cover_letter`/`split_name` copy-pasted across 5/3 appliers; extract a shared helper | `appliers/adapters/workday_payload.py:20`, `ashby.py:135` | ☐ |
-| ⚪ LOW | ♻️ | Workday re-implements `structured_profile.applicable_*` verbatim (Uber imports them) | `appliers/adapters/workday_experience.py:45` | ☐ |
-| ⚪ LOW | ♻️ | SmartRecruiters `consent` fallback branch is dead code | `appliers/adapters/smartrecruiters_payload.py:110` | ☐ |
+| ⚪ LOW | ♻️ | `render_cover_letter` (5 copies) + the common `split_name` (greenhouse/workday) now live in `app/appliers/text.py`; all adapters import it. SmartRecruiters keeps its distinct `(name, name)` `split_name` variant | `appliers/text.py` | ✅ |
+| ⚪ LOW | ♻️ | Workday now imports `applicable_work_experience`/`applicable_education` from `structured_profile` instead of re-implementing them | `appliers/adapters/workday_experience.py:45` | ✅ |
+| ⚪ LOW | ♻️ | SmartRecruiters `consent` fallback branch removed — `consent_decisions` already returns non-None whenever `gdpr_consent` is truthy, so the `elif` was unreachable | `appliers/adapters/smartrecruiters_payload.py:110` | ✅ |
 
 ## WS5 — Billing correctness
 | Sev | Type | Item | Location | Status |

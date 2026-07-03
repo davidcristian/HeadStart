@@ -5,7 +5,6 @@ from __future__ import annotations
 import base64
 from typing import Any
 
-from app.appliers.adapters.greenhouse import split_name
 from app.appliers.adapters.uber_careers_common import (
     _SOURCE_ORIGIN,
     yes_no_answer,
@@ -16,6 +15,7 @@ from app.appliers.adapters.uber_careers_questions import (
 )
 from app.appliers.resume import resume_meta_for_payload
 from app.appliers.structured_profile import applicable_education, applicable_work_experience
+from app.appliers.text import split_name
 from app.schemas.profile import ProfileData, ResumeFile
 
 

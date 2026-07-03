@@ -12,8 +12,8 @@ from app.appliers.adapters.apple_careers_common import (
     upload_resume_url,
 )
 from app.appliers.adapters.apple_careers_detail import AppleCareersJobDetail
-from app.appliers.adapters.greenhouse import split_name
 from app.appliers.resume import resume_meta_for_payload
+from app.appliers.text import split_name
 from app.schemas.profile import ApplyProfile, ProfileData, ResumeFile
 
 

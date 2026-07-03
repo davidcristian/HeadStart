@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from typing import Any
 
-from app.appliers.adapters.greenhouse import render_cover_letter, split_name
 from app.appliers.adapters.meta_careers_common import apply_url, public_job_url
 from app.appliers.adapters.meta_careers_detail import MetaCareersJobDetail
 from app.appliers.resume import resume_meta_for_payload
+from app.appliers.text import render_cover_letter, split_name
 from app.schemas.profile import ApplyProfile, ProfileData, ResumeFile
 
 

@@ -10,8 +10,8 @@ from app.appliers.adapters.google_careers_resume import (
     preview_resume_upload,
     resume_attachment_for_payload,
 )
-from app.appliers.adapters.greenhouse import render_cover_letter, split_name
 from app.appliers.resume import resume_meta_for_payload
+from app.appliers.text import render_cover_letter, split_name
 from app.schemas.profile import ApplyProfile, ProfileData
 
 

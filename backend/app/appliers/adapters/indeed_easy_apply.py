@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from app.appliers.adapters.greenhouse import split_name
 from app.appliers.adapters.indeed_detail import IndeedJobDetail
 from app.appliers.resume import indeed_resume_file_fields, resume_meta_for_payload
+from app.appliers.text import split_name
 from app.schemas.profile import ApplyProfile, ProfileData, ResumeFile
 
 SMARTAPPLY_SUBMIT_URL = "https://smartapply.indeed.com/beta/indeedapply/v2/applications"

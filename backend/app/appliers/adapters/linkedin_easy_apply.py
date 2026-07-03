@@ -6,7 +6,6 @@ import re
 import uuid
 from typing import Any
 
-from app.appliers.adapters.greenhouse import split_name
 from app.appliers.adapters.linkedin_detail import LinkedInJobDetail
 from app.appliers.adapters.linkedin_easy_apply_form import (
     element_title,
@@ -14,6 +13,7 @@ from app.appliers.adapters.linkedin_easy_apply_form import (
     iter_form_elements,
 )
 from app.appliers.resume import resume_meta_for_payload
+from app.appliers.text import split_name
 from app.schemas.profile import ApplyProfile, ProfileData, ResumeFile
 
 SUBMIT_URL = (

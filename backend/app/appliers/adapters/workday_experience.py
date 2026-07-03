@@ -15,6 +15,7 @@ from app.appliers.adapters.workday_education_lookup import (
     EducationLookupResolver,
     build_education_lookup_resolver,
 )
+from app.appliers.structured_profile import applicable_education, applicable_work_experience
 from app.schemas.profile import EducationEntry, ProfileData, WorkExperienceEntry
 from app.scrapers.http import HttpClient
 
@@ -40,25 +41,6 @@ class SectionSubmitResult:
     @property
     def ok(self) -> bool:
         return self.error is None
-
-
-def applicable_work_experience(profile: ProfileData) -> list[WorkExperienceEntry]:
-    """Profile rows with the minimum fields Workday needs to create an entry."""
-    return [
-        entry
-        for entry in profile.work_experience
-        if (
-            entry.job_title.strip()
-            and entry.company.strip()
-            and entry.start_year
-            and entry.start_month
-        )
-    ]
-
-
-def applicable_education(profile: ProfileData) -> list[EducationEntry]:
-    """Profile rows with the minimum fields Workday needs to create an entry."""
-    return [entry for entry in profile.education if entry.school.strip()]
 
 
 def build_work_experience_body(entry: WorkExperienceEntry) -> dict[str, Any]:

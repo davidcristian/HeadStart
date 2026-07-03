@@ -26,6 +26,7 @@ from app.appliers.adapters.greenhouse_structured import (
 )
 from app.appliers.base import Applier, register_applier
 from app.appliers.resume import greenhouse_resume_fields, resume_meta_for_payload
+from app.appliers.text import render_cover_letter, split_name
 from app.appliers.types import ApplyContext, ApplyResult
 from app.schemas.profile import ApplyProfile, ProfileData
 
@@ -125,29 +126,6 @@ def basic_auth_header(api_key: str) -> str:
     """Greenhouse expects HTTP Basic auth with the API key as username."""
     encoded = base64.b64encode(f"{api_key}:".encode()).decode()
     return f"Basic {encoded}"
-
-
-def split_name(full_name: str) -> tuple[str, str]:
-    """Split a display name into first and last components."""
-    parts = full_name.strip().split(None, 1)
-    if not parts:
-        return "", ""
-    if len(parts) == 1:
-        return parts[0], ""
-    return parts[0], parts[1]
-
-
-def render_cover_letter(template: str, *, company: str, job_title: str) -> str:
-    """Substitute simple placeholders in a cover-letter template."""
-    replacements = {
-        "{company}": company,
-        "{job_title}": job_title,
-        "{title}": job_title,
-    }
-    result = template
-    for placeholder, value in replacements.items():
-        result = result.replace(placeholder, value)
-    return result
 
 
 def build_application_payload(

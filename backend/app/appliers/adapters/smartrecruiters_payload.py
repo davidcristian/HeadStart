@@ -9,20 +9,8 @@ from app.appliers.adapters.smartrecruiters_common import split_name
 from app.appliers.adapters.smartrecruiters_configuration import consent_decisions
 from app.appliers.adapters.smartrecruiters_questions import build_screening_answers
 from app.appliers.resume import resume_meta_for_payload
+from app.appliers.text import render_cover_letter
 from app.schemas.profile import ApplyProfile, ProfileData, ResumeFile
-
-
-def render_cover_letter(template: str, *, company: str, job_title: str) -> str:
-    """Substitute simple placeholders in a cover-letter template."""
-    replacements = {
-        "{company}": company,
-        "{job_title}": job_title,
-        "{title}": job_title,
-    }
-    result = template
-    for placeholder, value in replacements.items():
-        result = result.replace(placeholder, value)
-    return result
 
 
 def build_message_to_hiring_manager(
@@ -107,8 +95,6 @@ def build_application_payload(
     consent = consent_decisions(configuration, config)
     if consent is not None:
         payload["consentDecisions"] = consent
-    elif config.get("gdpr_consent"):
-        payload["consent"] = True
 
     if configuration is not None:
         payload["answers"] = build_screening_answers(configuration, profile.answers)
