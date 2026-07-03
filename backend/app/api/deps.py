@@ -46,6 +46,8 @@ def get_current_user(
     user = UserRepository(db).get(int(payload["sub"]))
     if user is None or not user.is_active:
         raise _UNAUTHORIZED
+    if payload.get("ver") != user.token_version:
+        raise _UNAUTHORIZED
     return user
 
 

@@ -35,6 +35,9 @@ class User(Base, TimestampMixin):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     # Incremented to invalidate previously issued RSS feed URLs.
     feed_token_version: Mapped[int] = mapped_column(default=0, nullable=False)
+    # Incremented to invalidate previously issued access/refresh tokens
+    # (e.g. on password reset), so credential rotation terminates active sessions.
+    token_version: Mapped[int] = mapped_column(default=0, nullable=False)
     # Set when the first-run onboarding wizard is finished (or skipped).
     onboarding_completed_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True

@@ -21,9 +21,11 @@ sanitization items (1 med + 2 low), and all 9 WS7 frontend items (3 med + 6 low)
 
 ## At a glance — highest priority (open)
 
-| Sev | Item | Where |
-| --- | ---- | ----- |
-| 🟠 HIGH | Meta apply: work-history parallel arrays desync → wrong employer/title/date pairing | `appliers/adapters/meta_careers_payload.py:58` |
+No open critical/high-severity items remain from the original audit — the last one (Meta
+apply work-history array desync) is fixed in WS4. A later automated scan (Cursor, against
+commit `5975194`) surfaced one **medium 🔒** item — password reset did not invalidate active
+refresh sessions — now fixed in **WS13**. See the workstream tables below for the open
+medium/low items.
 
 ---
 
@@ -169,6 +171,21 @@ dedicated consolidation PR. The Gemini security fix should ship regardless.
 | ⚪ LOW | 🧪 | No test for the single-employer dedup branch in `_config_keys_match` | `tests/services/test_portals.py:105` | ☐ |
 | ⚪ LOW | 🔁 | Inbox router duplicates the `require_enabled()` gate its service already applies | `api/v1/inbox.py:290` | ☐ |
 | ⚪ LOW | ♻️ | Dead schemas `ApplicationLogListParams`, `ApplicationPipelineListParams` | `schemas/application_pipeline.py:62` | ☐ |
+
+## WS13 — Password reset does not invalidate active sessions ✅ DONE (2026-07-01)
+Surfaced by a later automated scan (Cursor, commit `5975194`), not the original audit.
+Refresh tokens are stateless bearer JWTs with no server-side revocation, so
+`reset_password` rotated only `password_hash` — a refresh token captured before recovery
+(XSS on a non-browser API client, shared machine, network capture when
+`AUTH_COOKIE_SECURE=false`, etc.) could be replayed via `POST /auth/refresh` to mint fresh
+access tokens for up to `REFRESH_TOKEN_EXPIRE_DAYS` (7). Fix mirrors the existing
+`feed_token_version` pattern: a `user.token_version` bumped on reset and embedded as a `ver`
+claim in access+refresh tokens; `refresh` and `get_current_user` reject stale-`ver` tokens
+(so reset also kills live access tokens, not just refresh). Deactivation already blocks
+access via the `is_active` check, so it needs no separate bump.
+| Sev | Type | Item | Location | Status |
+| --- | ---- | ---- | -------- | ------ |
+| 🟡 MED | 🔒 | `reset_password` updated only `password_hash`; a pre-reset refresh JWT still minted access tokens. Now bumps `token_version`, tokens carry `ver`, and `refresh`/`get_current_user` reject stale versions | `services/auth.py:130` | ✅ |
 
 ---
 

@@ -80,26 +80,27 @@ def hash_password_reset_token(token: str) -> str:
     return hashlib.sha256(token.encode("utf-8")).hexdigest()
 
 
-def _create_token(subject: str, token_type: TokenType, expires: timedelta) -> str:
+def _create_token(subject: str, token_type: TokenType, expires: timedelta, version: int) -> str:
     now = utcnow()
     payload = {
         "sub": subject,
         "type": token_type,
+        "ver": version,
         "iat": now,
         "exp": now + expires,
     }
     return jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
 
 
-def create_access_token(subject: str | int) -> str:
+def create_access_token(subject: str | int, *, version: int) -> str:
     return _create_token(
-        str(subject), "access", timedelta(minutes=settings.access_token_expire_minutes)
+        str(subject), "access", timedelta(minutes=settings.access_token_expire_minutes), version
     )
 
 
-def create_refresh_token(subject: str | int) -> str:
+def create_refresh_token(subject: str | int, *, version: int) -> str:
     return _create_token(
-        str(subject), "refresh", timedelta(days=settings.refresh_token_expire_days)
+        str(subject), "refresh", timedelta(days=settings.refresh_token_expire_days), version
     )
 
 

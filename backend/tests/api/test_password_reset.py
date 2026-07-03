@@ -1,8 +1,11 @@
+from datetime import timedelta
 from unittest.mock import patch
 
+import jwt
 import pytest
 from fastapi.testclient import TestClient
 
+from app.core.config import settings
 from app.core.exceptions import ValidationError
 from app.core.security import hash_password_reset_token
 from app.models.base import utcnow
@@ -64,6 +67,142 @@ def test_forgot_and_reset_password_flow(
             json={"email": "reset@example.com", "password": "new-password-99"},
         ).status_code
         == 200
+    )
+
+
+@patch("app.services.auth.send_password_reset_email")
+@patch("app.services.auth.generate_password_reset_token", return_value="known-reset-token")
+def test_reset_password_invalidates_captured_refresh_token(
+    _mock_token: object,
+    _mock_email: object,
+    client: TestClient,
+) -> None:
+    """A refresh token captured before recovery must not survive the reset."""
+    _register(client)
+    login = client.post(
+        "/api/v1/auth/login",
+        json={"email": "reset@example.com", "password": "password123"},
+    )
+    assert login.status_code == 200
+    captured_refresh = client.cookies.get("headstart_refresh")
+    assert captured_refresh
+
+    # Simulate a non-browser API client replaying the captured token (no cookie):
+    # it works before the reset...
+    client.cookies.clear()
+    assert (
+        client.post("/api/v1/auth/refresh", json={"refresh_token": captured_refresh}).status_code
+        == 200
+    )
+
+    client.cookies.clear()
+    client.post("/api/v1/auth/forgot-password", json={"email": "reset@example.com"})
+    reset = client.post(
+        "/api/v1/auth/reset-password",
+        json={"token": "known-reset-token", "password": "new-password-99"},
+    )
+    assert reset.status_code == 200
+
+    # ...and is rejected afterwards.
+    client.cookies.clear()
+    assert (
+        client.post("/api/v1/auth/refresh", json={"refresh_token": captured_refresh}).status_code
+        == 400
+    )
+
+
+@patch("app.services.auth.send_password_reset_email")
+@patch("app.services.auth.generate_password_reset_token", return_value="known-reset-token")
+def test_reset_password_invalidates_existing_access_token(
+    _mock_token: object,
+    _mock_email: object,
+    client: TestClient,
+) -> None:
+    """An access token issued before the reset stops authenticating after it."""
+    _register(client)
+    login = client.post(
+        "/api/v1/auth/login",
+        json={"email": "reset@example.com", "password": "password123"},
+    )
+    headers = {"Authorization": f"Bearer {login.json()['access_token']}"}
+    assert client.get("/api/v1/auth/me", headers=headers).status_code == 200
+
+    client.cookies.clear()
+    client.post("/api/v1/auth/forgot-password", json={"email": "reset@example.com"})
+    assert (
+        client.post(
+            "/api/v1/auth/reset-password",
+            json={"token": "known-reset-token", "password": "new-password-99"},
+        ).status_code
+        == 200
+    )
+
+    assert client.get("/api/v1/auth/me", headers=headers).status_code == 401
+
+
+def test_reset_password_bumps_token_version(db_session) -> None:
+    user = UserRepository(db_session).add(
+        User(
+            email="ver@example.com",
+            password_hash="hash",
+            is_admin=False,
+            is_active=True,
+        )
+    )
+    PasswordResetTokenRepository(db_session).add(
+        PasswordResetToken(
+            user_id=user.id,
+            token_hash=hash_password_reset_token("ver-token"),
+            expires_at=utcnow() + timedelta(hours=1),
+        )
+    )
+    db_session.commit()
+    assert user.token_version == 0
+
+    AuthService(db_session).reset_password(
+        ResetPasswordRequest(token="ver-token", password="new-password-99")
+    )
+    db_session.refresh(user)
+    assert user.token_version == 1
+
+
+def test_token_without_ver_claim_is_rejected(client: TestClient) -> None:
+    """Legacy tokens minted before this feature carry no `ver` and must be treated
+    as stale — guards against a future `payload.get("ver", user.token_version)`
+    regression that would silently revive them across a reset."""
+    _register(client)
+    login = client.post(
+        "/api/v1/auth/login",
+        json={"email": "reset@example.com", "password": "password123"},
+    )
+    user_id = jwt.decode(
+        login.json()["access_token"],
+        settings.jwt_secret,
+        algorithms=[settings.jwt_algorithm],
+    )["sub"]
+
+    now = utcnow()
+
+    def _legacy(token_type: str, ttl: timedelta) -> str:
+        return jwt.encode(
+            {"sub": str(user_id), "type": token_type, "iat": now, "exp": now + ttl},
+            settings.jwt_secret,
+            algorithm=settings.jwt_algorithm,
+        )
+
+    legacy_access = _legacy("access", timedelta(minutes=30))
+    assert (
+        client.get(
+            "/api/v1/auth/me", headers={"Authorization": f"Bearer {legacy_access}"}
+        ).status_code
+        == 401
+    )
+
+    client.cookies.clear()
+    legacy_refresh = _legacy("refresh", timedelta(days=7))
+    assert (
+        client.post("/api/v1/auth/refresh", json={"refresh_token": legacy_refresh}).status_code
+        == 400
     )
 
 

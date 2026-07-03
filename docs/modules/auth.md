@@ -23,9 +23,17 @@ data isolation.
 ## Tokens
 
 - `create_access_token` / `create_refresh_token` (PyJWT, `HS256`) sign a payload
-  of `{sub: user_id, type, iat, exp}` with `settings.jwt_secret`.
+  of `{sub: user_id, type, ver, iat, exp}` with `settings.jwt_secret`.
 - Access tokens are short-lived (`ACCESS_TOKEN_EXPIRE_MINUTES`, default 30);
   refresh tokens last `REFRESH_TOKEN_EXPIRE_DAYS` (default 7).
+- **Session revocation:** `ver` carries `user.token_version`. `get_current_user`
+  (access) and `/refresh` reject any token whose `ver` no longer matches the
+  user's current version, so bumping `token_version` invalidates every
+  outstanding access **and** refresh token at once. Password reset bumps it (see
+  below); account deactivation needs no bump because the `is_active` check
+  already blocks those tokens. This mirrors `feed_token_version` for RSS URLs.
+  Because pre-existing tokens carry no `ver`, they are treated as stale and
+  forced to re-authenticate the first time this ships.
 - **Token delivery:** `/login` and `/refresh` return the **access token in the
   response body** and set the **refresh token as an httpOnly cookie**
   (`AUTH_COOKIE_*`). The refresh token is never exposed to JavaScript, so XSS
@@ -104,6 +112,9 @@ read from the httpOnly cookie (falls back to a `refresh_token` body field).
 3. The email link opens `/reset-password?token=...` → `POST /auth/reset-password`
    with the token and new password.
 4. Valid tokens are deleted after use; expired tokens are rejected.
+5. The reset **bumps `token_version`**, so any access/refresh token issued before
+   the reset (e.g. one captured from a compromised session) immediately stops
+   validating — the user must sign in again everywhere.
 
 **Email delivery:** configure SMTP via `SMTP_*` env vars. When `SMTP_HOST` is
 empty (typical local dev), the API logs the reset URL at INFO instead of sending

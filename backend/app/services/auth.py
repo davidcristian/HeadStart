@@ -90,6 +90,8 @@ class AuthService:
         user = self.repo.get(int(payload["sub"]))
         if user is None or not user.is_active:
             raise ValidationError("Account is no longer active.")
+        if payload.get("ver") != user.token_version:
+            raise ValidationError("Session is no longer valid. Please sign in again.")
         return self._issue_tokens(user)
 
     def me(self, user_id: int) -> User:
@@ -140,6 +142,10 @@ class AuthService:
             raise ValidationError("Invalid or expired reset link. Request a new one.")
 
         self.repo.update_password(user, hash_password(data.password))
+        # Terminate sessions that may have been opened with a compromised
+        # credential: bump the token version so outstanding access/refresh
+        # tokens (which carry the old `ver`) stop validating.
+        self.repo.bump_token_version(user)
         self.reset_tokens.delete_for_user(user.id)
 
     def verify_email(self, data: VerifyEmailRequest) -> User:
@@ -218,6 +224,6 @@ class AuthService:
     @staticmethod
     def _issue_tokens(user: User) -> TokenResponse:
         return TokenResponse(
-            access_token=create_access_token(user.id),
-            refresh_token=create_refresh_token(user.id),
+            access_token=create_access_token(user.id, version=user.token_version),
+            refresh_token=create_refresh_token(user.id, version=user.token_version),
         )

@@ -25,6 +25,12 @@ class UserRepository:
         self.session.flush()
         return user
 
+    def bump_token_version(self, user: User) -> User:
+        """Invalidate outstanding access/refresh tokens by incrementing the version."""
+        user.token_version += 1
+        self.session.flush()
+        return user
+
     def count(self) -> int:
         return int(self.session.scalar(select(func.count()).select_from(User)) or 0)
 
