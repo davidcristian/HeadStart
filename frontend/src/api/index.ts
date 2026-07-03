@@ -243,6 +243,7 @@ export const api = {
   deleteMailboxCredentials: inboxApi.deleteMailboxCredentials,
   testMailbox: inboxApi.testMailbox,
   gmailAuthorize: inboxApi.gmailAuthorize,
+  outlookAuthorize: inboxApi.outlookAuthorize,
 
   // feed
   getFeedUrl: () => request<FeedUrl>("/api/v1/feed/url"),

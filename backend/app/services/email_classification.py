@@ -43,6 +43,23 @@ logger = get_logger(__name__)
 
 LLM_PROVIDERS = frozenset({"openai", "gemini", "anthropic", "llamacpp"})
 ClassifierFactory = Callable[[str, Any], EmailClassifier]
+GRAPH_MESSAGE_ID_HEADER = "x-ms-graph-id"
+
+
+def _classification_payload(
+    message: InboxMessage,
+    linked_payload: dict[str, object] | None,
+) -> dict[str, object]:
+    payload: dict[str, object] = {
+        "body_excerpt": message.body_text[:500],
+        "linked_application": linked_payload,
+        "in_reply_to": message.in_reply_to,
+        "references": message.references,
+    }
+    graph_id = message.raw_headers.get(GRAPH_MESSAGE_ID_HEADER)
+    if isinstance(graph_id, str) and graph_id:
+        payload["graph_message_id"] = graph_id
+    return payload
 
 
 class EmailClassificationService:
@@ -113,12 +130,7 @@ class EmailClassificationService:
             fallback=fallback,
             subject=message.subject,
             from_addr=message.from_addr,
-            payload={
-                "body_excerpt": message.body_text[:500],
-                "linked_application": linked_payload,
-                "in_reply_to": message.in_reply_to,
-                "references": message.references,
-            },
+            payload=_classification_payload(message, linked_payload),
         )
         self.classifications.add(row)
         if linked_job is not None:

@@ -131,6 +131,7 @@ class GmailMailbox(MailboxConnector):
         *,
         uid: int,
         destination: str,
+        provider_message_id: str | None = None,
     ) -> MoveResult:
         """Apply a Gmail label and remove INBOX (folder routing)."""
         config = self._config(ctx)

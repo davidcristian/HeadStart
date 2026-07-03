@@ -68,6 +68,42 @@ SMTP host/port/TLS, credentials, optional `smtp_from`).
 Token refresh runs automatically before fetch/send when the access token is near
 expiry (`app/inbox/gmail_oauth.py`).
 
+## outlook adapter
+
+**Key:** `outlook`. Uses Microsoft identity OAuth 2.0 and Microsoft Graph mail APIs
+(`httpx`).
+
+- **Connect:** `GET /inbox/outlook/authorize` (auth required) returns a Microsoft
+  consent URL; `GET /inbox/outlook/callback` exchanges the code and stores encrypted
+  tokens on `mailbox_credential` (`connector_type=outlook`).
+- **Fetch:** `GET /me/mailFolders/inbox/messages` (ordered by `receivedDateTime`) +
+  `GET /me/messages/{id}/$value` for RFC 822 MIME; Graph message ids are stored in
+  `raw_headers["x-ms-graph-id"]` and in classification `payload.graph_message_id` for
+  folder routing.
+- **Send:** `POST /me/sendMail` with a plain-text body and optional threading headers.
+- **Move / route:** `mailFolders` lookup/create for nested paths (e.g.
+  `HeadStart/General`) + `POST /me/messages/{id}/move`.
+- **Test:** `GET /me` and match `mail` / `userPrincipalName` to the stored credential.
+
+**Operator env** (all required for OAuth):
+
+- `OUTLOOK_OAUTH_CLIENT_ID` — Azure app registration application (client) ID
+- `OUTLOOK_OAUTH_CLIENT_SECRET` — client secret value
+- `OUTLOOK_OAUTH_REDIRECT_URI` — e.g. `http://localhost:8000/api/v1/inbox/outlook/callback`
+
+**Azure app registration (summary):**
+
+1. Register an app in [Microsoft Entra admin center](https://entra.microsoft.com/)
+   (or Azure Portal → App registrations).
+2. Add redirect URI **Web** → `OUTLOOK_OAUTH_REDIRECT_URI`.
+3. Under **API permissions**, add Microsoft Graph delegated permissions:
+   `Mail.Read`, `Mail.ReadWrite`, `Mail.Send`, and `User.Read` (plus `offline_access`
+   via the OAuth scope list).
+4. Create a client secret and copy it to `OUTLOOK_OAUTH_CLIENT_SECRET`.
+
+Token refresh runs automatically before fetch/send when the access token is near
+expiry (`app/inbox/outlook_oauth.py`).
+
 ## Credential storage
 
 Per-user encrypted row in `mailbox_credential` (one per account). Passwords are
@@ -81,8 +117,8 @@ write-only — `MailboxCredentialRead` exposes host/user metadata only.
 vars are set, users without a saved credential share the env mailbox (single-user
 local dev only).
 
-**Planned (Phase 21):** Outlook / Microsoft Graph, Yahoo Mail OAuth, and Fastmail
-JMAP — see [roadmap.md § Phase 21](../roadmap.md#phase-21--inbox-mailbox-providers-dev-only).
+**Planned (Phase 21):** Yahoo Mail OAuth and Fastmail JMAP — see
+[roadmap.md § Phase 21](../roadmap.md#phase-21--inbox-mailbox-providers-dev-only).
 `imap_smtp` remains the generic connector for any provider that exposes IMAP.
 
 ## API (prefix `/api/v1/inbox`)

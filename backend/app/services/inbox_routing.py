@@ -77,7 +77,10 @@ class InboxRoutingService:
             raise ValidationError("No mailbox credentials configured")
 
         result = get_mailbox(ctx.connector_type).move_message(
-            ctx, uid=row.message_uid, destination=destination
+            ctx,
+            uid=row.message_uid,
+            destination=destination,
+            provider_message_id=_graph_message_id_from_classification(row),
         )
         self._apply_move_result(row, result)
         self.session.flush()
@@ -130,3 +133,10 @@ class InboxRoutingService:
             routed_to=row.routed_to,
             routing_error=row.routing_error,
         )
+
+
+def _graph_message_id_from_classification(row: InboxClassification) -> str | None:
+    if not row.payload or not isinstance(row.payload, dict):
+        return None
+    graph_id = row.payload.get("graph_message_id")
+    return graph_id if isinstance(graph_id, str) and graph_id else None

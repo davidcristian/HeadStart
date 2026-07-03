@@ -38,4 +38,6 @@ export const inboxApi = {
     }),
 
   gmailAuthorize: () => request<GmailAuthorizeResult>("/api/v1/inbox/gmail/authorize"),
+
+  outlookAuthorize: () => request<GmailAuthorizeResult>("/api/v1/inbox/outlook/authorize"),
 };

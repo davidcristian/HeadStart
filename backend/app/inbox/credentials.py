@@ -6,20 +6,26 @@ import json
 
 from app.core.config import settings
 from app.core.crypto import decrypt, encrypt
-from app.inbox.types import GmailMailboxConfig, MailboxConfig
+from app.inbox.types import GmailMailboxConfig, MailboxConfig, OutlookMailboxConfig
 from app.models.mailbox_credential import MailboxCredential
 from app.schemas.mailbox import MailboxCredentialRead
 
 
-def decode_mailbox_config(credential: MailboxCredential) -> MailboxConfig | GmailMailboxConfig:
+def decode_mailbox_config(
+    credential: MailboxCredential,
+) -> MailboxConfig | GmailMailboxConfig | OutlookMailboxConfig:
     """Decrypt and validate the stored connector config."""
     raw = json.loads(decrypt(credential.secret_ciphertext))
     if credential.connector_type == "gmail":
         return GmailMailboxConfig.model_validate(raw)
+    if credential.connector_type == "outlook":
+        return OutlookMailboxConfig.model_validate(raw)
     return MailboxConfig.model_validate(raw)
 
 
-def encode_mailbox_config(config: MailboxConfig | GmailMailboxConfig) -> str:
+def encode_mailbox_config(
+    config: MailboxConfig | GmailMailboxConfig | OutlookMailboxConfig,
+) -> str:
     """Encrypt a connector config for persistence."""
     return encrypt(json.dumps(config.model_dump()))
 
@@ -27,7 +33,7 @@ def encode_mailbox_config(config: MailboxConfig | GmailMailboxConfig) -> str:
 def mailbox_credential_to_read(credential: MailboxCredential) -> MailboxCredentialRead:
     """Map a credential row to the public read DTO."""
     config = decode_mailbox_config(credential)
-    if isinstance(config, GmailMailboxConfig):
+    if isinstance(config, (GmailMailboxConfig, OutlookMailboxConfig)):
         return MailboxCredentialRead(
             id=credential.id,
             connector_type=credential.connector_type,
@@ -54,6 +60,13 @@ def mailbox_config_for_export(credential: MailboxCredential) -> dict[str, object
     if isinstance(config, GmailMailboxConfig):
         return {
             "connector_type": "gmail",
+            "email_address": config.email_address,
+            "access_token": "[redacted]",
+            "refresh_token": "[redacted]",
+        }
+    if isinstance(config, OutlookMailboxConfig):
+        return {
+            "connector_type": "outlook",
             "email_address": config.email_address,
             "access_token": "[redacted]",
             "refresh_token": "[redacted]",

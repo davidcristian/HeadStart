@@ -46,6 +46,10 @@ class GmailAuthorizeResponse(BaseModel):
     authorization_url: str
 
 
+class OutlookAuthorizeResponse(BaseModel):
+    authorization_url: str
+
+
 class GmailOAuthCallbackResult(BaseModel):
     connector_type: str
     email_address: str

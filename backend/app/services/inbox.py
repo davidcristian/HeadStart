@@ -5,7 +5,6 @@ from __future__ import annotations
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.core.crypto import encrypt
 from app.core.exceptions import NotFoundError, ValidationError
 from app.inbox.base import get_mailbox
 from app.inbox.credentials import (
@@ -21,17 +20,24 @@ from app.inbox.gmail_oauth import (
     decode_gmail_oauth_state,
     exchange_gmail_code,
     gmail_oauth_configured,
-    gmail_token_needs_refresh,
-    refresh_gmail_access_token,
     require_gmail_oauth_configured,
 )
 from app.inbox.mailbox_email import mailbox_email_from_read
+from app.inbox.outlook_oauth import (
+    build_outlook_authorization_url,
+    create_outlook_oauth_state,
+    decode_outlook_oauth_state,
+    exchange_outlook_code,
+    outlook_oauth_configured,
+    require_outlook_oauth_configured,
+)
 from app.inbox.types import (
     FetchResult,
     GmailMailboxConfig,
     MailboxConfig,
     MailboxContext,
     OutboundMessage,
+    OutlookMailboxConfig,
     SendResult,
 )
 from app.models.mailbox_credential import MailboxCredential
@@ -42,6 +48,12 @@ from app.schemas.mailbox import (
     MailboxCredentialRead,
     MailboxCredentialUpsert,
     MailboxTestResponse,
+    OutlookAuthorizeResponse,
+)
+from app.services.inbox_oauth import (
+    ensure_fresh_gmail_config,
+    ensure_fresh_outlook_config,
+    persist_oauth_mailbox,
 )
 
 
@@ -79,7 +91,8 @@ class InboxService:
         if data.connector_type != "imap_smtp":
             raise ValidationError(
                 "Manual credential upsert supports imap_smtp only. "
-                "Connect Gmail via GET /inbox/gmail/authorize."
+                "Connect Gmail via GET /inbox/gmail/authorize or Outlook via "
+                "GET /inbox/outlook/authorize."
             )
         self._validate_connector_type(data.connector_type)
         credential = self.repo.get_for_user(user_id)
@@ -119,30 +132,45 @@ class InboxService:
         self.require_enabled()
         user_id = decode_gmail_oauth_state(state)
         config = exchange_gmail_code(code)
-        credential = self.repo.get_for_user(user_id)
-        ciphertext = encode_mailbox_config(config)
-        if credential is None:
-            credential = MailboxCredential(
-                user_id=user_id,
-                connector_type="gmail",
-                enabled=True,
-                secret_ciphertext=ciphertext,
-            )
-            self.repo.add(credential)
-        else:
-            credential.connector_type = "gmail"
-            credential.enabled = True
-            credential.secret_ciphertext = ciphertext
-            self.session.flush()
-        return GmailOAuthCallbackResult(
+        return persist_oauth_mailbox(
+            self.session,
+            self.repo,
+            user_id=user_id,
             connector_type="gmail",
-            email_address=config.email_address,
+            config=config,
         )
 
     @staticmethod
     def gmail_oauth_available() -> bool:
         """Whether the deployment exposes Gmail OAuth connect."""
         return gmail_oauth_configured()
+
+    @staticmethod
+    def outlook_oauth_available() -> bool:
+        """Whether the deployment exposes Outlook OAuth connect."""
+        return outlook_oauth_configured()
+
+    def outlook_authorize_url(self, user_id: int) -> OutlookAuthorizeResponse:
+        """Return a Microsoft OAuth consent URL for the current user."""
+        self.require_enabled()
+        require_outlook_oauth_configured()
+        state = create_outlook_oauth_state(user_id)
+        return OutlookAuthorizeResponse(
+            authorization_url=build_outlook_authorization_url(state=state)
+        )
+
+    def complete_outlook_oauth(self, *, code: str, state: str) -> GmailOAuthCallbackResult:
+        """Exchange an OAuth callback for encrypted Outlook credentials."""
+        self.require_enabled()
+        user_id = decode_outlook_oauth_state(state)
+        config = exchange_outlook_code(code)
+        return persist_oauth_mailbox(
+            self.session,
+            self.repo,
+            user_id=user_id,
+            connector_type="outlook",
+            config=config,
+        )
 
     def test_connection(
         self, user_id: int, config: MailboxConfig | None = None
@@ -184,7 +212,11 @@ class InboxService:
             if credential.connector_type == "gmail":
                 if not isinstance(config, GmailMailboxConfig):
                     raise ValidationError("Stored Gmail credential is invalid")
-                config = self._ensure_fresh_gmail_config(credential, config)
+                config = ensure_fresh_gmail_config(self.session, credential, config)
+            elif credential.connector_type == "outlook":
+                if not isinstance(config, OutlookMailboxConfig):
+                    raise ValidationError("Stored Outlook credential is invalid")
+                config = ensure_fresh_outlook_config(self.session, credential, config)
             return MailboxContext(
                 connector_type=credential.connector_type,
                 config=config,
@@ -218,18 +250,6 @@ class InboxService:
         if credential is None:
             return None
         return mailbox_config_for_export(credential)
-
-    def _ensure_fresh_gmail_config(
-        self,
-        credential: MailboxCredential,
-        config: GmailMailboxConfig,
-    ) -> GmailMailboxConfig:
-        if not gmail_token_needs_refresh(config):
-            return config
-        refreshed = refresh_gmail_access_token(config)
-        credential.secret_ciphertext = encrypt(refreshed.model_dump_json())
-        self.session.flush()
-        return refreshed
 
     @staticmethod
     def _validate_connector_type(connector_type: str) -> None:

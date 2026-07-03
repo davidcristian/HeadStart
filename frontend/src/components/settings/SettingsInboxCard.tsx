@@ -1,4 +1,4 @@
-/** Dev-only inbox mailbox settings (IMAP/SMTP or Gmail OAuth). */
+/** Dev-only inbox mailbox settings (IMAP/SMTP, Gmail OAuth, or Outlook OAuth). */
 
 import { useEffect, useState } from "react";
 import { Banner, Button, Card, Field } from "../ui";
@@ -67,6 +67,10 @@ export function SettingsInboxCard({ mailboxNotice }: SettingsInboxCardProps) {
       setNotice("Gmail connected successfully.");
     } else if (mailboxNotice === "gmail_error") {
       setError("Gmail connection failed. Try again or use IMAP credentials.");
+    } else if (mailboxNotice === "outlook_connected") {
+      setNotice("Outlook connected successfully.");
+    } else if (mailboxNotice === "outlook_error") {
+      setError("Outlook connection failed. Try again or use IMAP credentials.");
     }
   }, [mailboxNotice]);
 
@@ -78,6 +82,18 @@ export function SettingsInboxCard({ mailboxNotice }: SettingsInboxCardProps) {
       window.location.assign(authorization_url);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not start Gmail OAuth.");
+      setBusy(false);
+    }
+  }
+
+  async function connectOutlook() {
+    setError(undefined);
+    setBusy(true);
+    try {
+      const { authorization_url } = await api.outlookAuthorize();
+      window.location.assign(authorization_url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not start Outlook OAuth.");
       setBusy(false);
     }
   }
@@ -156,9 +172,18 @@ export function SettingsInboxCard({ mailboxNotice }: SettingsInboxCardProps) {
         </p>
       ) : null}
 
+      {credential?.connector_type === "outlook" ? (
+        <p>
+          Connected Outlook: <strong>{credential.email_address}</strong>
+        </p>
+      ) : null}
+
       <p>
         <Button type="button" onClick={() => void connectGmail()} disabled={busy}>
           Connect Gmail
+        </Button>{" "}
+        <Button type="button" onClick={() => void connectOutlook()} disabled={busy}>
+          Connect Outlook
         </Button>
       </p>
 

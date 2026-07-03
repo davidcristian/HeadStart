@@ -48,6 +48,7 @@ class MailboxConnector(ABC):
         *,
         uid: int,
         destination: str,
+        provider_message_id: str | None = None,
     ) -> MoveResult:
         """Move one message from the configured mailbox into `destination`."""
         raise NotImplementedError

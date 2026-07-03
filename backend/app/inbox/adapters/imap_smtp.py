@@ -139,6 +139,7 @@ class ImapSmtpMailbox(MailboxConnector):
         *,
         uid: int,
         destination: str,
+        provider_message_id: str | None = None,
     ) -> MoveResult:
         """Copy the message to `destination` and remove it from the source mailbox."""
         config = _imap_config(ctx)

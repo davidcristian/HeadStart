@@ -677,8 +677,8 @@ provider is one `@register_mailbox("key")` adapter — mirror the Gmail pattern 
 
 | Item | Why | Notes |
 | ---- | --- | ----- |
-| Outlook OAuth connector | Outlook and Microsoft 365 are common for job seekers; consumer IMAP is increasingly restricted | `@register_mailbox("outlook")`; Microsoft identity OAuth; Graph API `messages` read/send; folder routing via `mailFolders` + `move`; `GET /inbox/outlook/authorize` + callback; `OUTLOOK_OAUTH_*` env vars; Settings → **Connect Outlook** when `INBOX_AGENT_ENABLED=true` |
-| Outlook docs & operator setup | Self-hosters need a clear Azure app-registration path | Document redirect URI, `Mail.Read` / `Mail.Send` (or equivalent) scopes, and token refresh in [modules/inbox.md](modules/inbox.md) + [runbook.md](runbook.md) |
+| ~~Outlook OAuth connector~~ | ~~Outlook and Microsoft 365 are common for job seekers; consumer IMAP is increasingly restricted~~ | **Shipped:** `@register_mailbox("outlook")`; Microsoft identity OAuth; Graph API `messages` read/send; folder routing via `mailFolders` + `move`; `GET /inbox/outlook/authorize` + callback; `OUTLOOK_OAUTH_*` env vars; Settings → **Connect Outlook** when `INBOX_AGENT_ENABLED=true` |
+| ~~Outlook docs & operator setup~~ | ~~Self-hosters need a clear Azure app-registration path~~ | **Shipped:** redirect URI, Graph delegated scopes, and token refresh in [modules/inbox.md](modules/inbox.md) + [runbook.md](runbook.md) |
 
 **Done when:** a dev user can connect Outlook via OAuth, poll inbound recruiter
 mail through the beat orchestration loop, route folders, and send replies (manual
