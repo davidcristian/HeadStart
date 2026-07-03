@@ -46,7 +46,7 @@ everything. The worker resolves a scraper with `get_scraper(adapter_key)`.
 | `greenhouse`    | Public Greenhouse job board JSON API      | `boards-api.greenhouse.io/v1/boards/<token>/jobs` |
 | `lever`         | Public Lever Postings API                 | `api.lever.co/v0/postings/<site>?mode=json`; also accepts `jobs.lever.co/<site>` URLs |
 | `ashby`         | Public Ashby Postings API                 | `api.ashbyhq.com/posting-api/job-board/<board>`; also accepts `jobs.ashbyhq.com/<board>` URLs |
-| `smartrecruiters` | Public SmartRecruiters Postings API     | `api.smartrecruiters.com/v1/companies/<company_id>/postings`; also accepts `careers.smartrecruiters.com/<company_id>` URLs |
+| `smartrecruiters` | Public SmartRecruiters Postings API     | `api.smartrecruiters.com/v1/companies/<company_id>/postings`; also accepts `careers.smartrecruiters.com/<company_id>` URLs. **No apply adapter** — see [appliers.md](appliers.md) |
 | `workday`       | Public Workday CXS jobs API (POST)        | `*.myworkdayjobs.com/wday/cxs/<tenant>/<site>/jobs`; also accepts careers board URLs |
 | `google_careers`| Embedded search JSON in HTML              | `google.com/about/careers/applications/jobs/results?...`; parses `AF_initDataCallback` `ds:1`; also accepts `careers.google.com` |
 | `microsoft_careers` | Eightfold PCSX JSON search API       | `apply.careers.microsoft.com/api/pcsx/search`; config `domain` (default `microsoft.com`) + optional `q` / `location`; also accepts careers board URLs |

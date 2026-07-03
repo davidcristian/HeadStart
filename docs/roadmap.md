@@ -173,7 +173,7 @@ sessions) and the job lifecycle (`seen_job.status`).
 | ---- | --- | ----- |
 | ~~User profile & resume storage~~ | ~~Applications need structured candidate data~~ | **Shipped:** one Fernet-encrypted profile per user (contact, links, resume text, cover-letter template, per-field answers); returned to its owner for editing. See [modules/profile.md](modules/profile.md) |
 | ~~Per-site apply adapters~~ | ~~Each ATS/board has different apply flows~~ | **Shipped:** pluggable adapters for **Greenhouse**, **Lever**, **Ashby**, **Workday**, **Google Careers**, **Microsoft Careers**, **Amazon Jobs**, **Apple Careers**, **Meta Careers**, **Indeed** (delegates to downstream ATS when the listing embeds an employer apply URL), and **LinkedIn** (delegates to those ATS adapters when possible; LinkedIn-hosted Easy Apply with dry-run + best-effort live submit). See [launch-checklist.md](launch-checklist.md#7-auto-apply-optional--know-the-limits) |
-| ~~Resume file upload~~ | ~~Users expect PDF attachments when applying~~ | **Shipped:** encrypted resume file on application profile (`PUT /profile/resume`); attached on Greenhouse/Lever/Ashby/Workday live apply; plain `resume_text` fallback |
+| ~~Resume file upload~~ | ~~Users expect PDF attachments when applying~~ | **Shipped:** encrypted resume file on application profile (`PUT /profile/resume`); attached on live apply for Greenhouse, Lever, Ashby, Workday, Google Careers, Microsoft Careers, Amazon Jobs, Apple Careers, and Meta Careers; plain `resume_text` fallback when no file is stored. **Not yet:** resume PDF on LinkedIn-hosted Easy Apply or Indeed-hosted Easy Apply (preview shows metadata only). See [modules/appliers.md](modules/appliers.md) |
 | ~~Apply orchestration service~~ | ~~Business rules live in services, not routers~~ | **Shipped:** `ApplyService.apply_to_job` loads profile, credentials, and source config; delegates to applier; marks `seen_job` `applied` on success. Live submits queue via Celery (`apply_to_job` task); preview stays synchronous. |
 | ~~Apply from the Jobs UI~~ | ~~Users need a one-click path~~ | **Shipped:** Apply button on supported jobs; confirm dialog with editable cover letter; preview (`dry_run`) and submit; success/failure feedback on Jobs page |
 | ~~Safety & consent~~ | ~~Auto-apply is high-risk~~ | **Shipped:** `source.auto_apply_enabled` (default off); live apply blocked until enabled; `application_log` table + `GET /application-logs`; Sources toggle + Application profile history UI |
@@ -181,6 +181,20 @@ sessions) and the job lifecycle (`seen_job.status`).
 **Done when:** a user with a saved credential and profile can apply to a
 supported job from the Jobs page, see the result, and the job is marked
 `applied` — with a clear audit trail and no silent failures.
+
+### Phase 7 polish — remaining gaps
+
+Core Phase 7 shipped; these items are follow-ups before treating auto-apply as
+complete across all scrapers:
+
+| Item | Why | Notes |
+| ---- | --- | ----- |
+| SmartRecruiters apply adapter | 12 catalog employers scrape via SR but cannot auto-apply | **Scraper only** (`@register_scraper("smartrecruiters")`); no `@register_applier` yet. Complex adapters (e.g. Google Careers) are split across multiple files under `app/appliers/adapters/` — SR apply work has not started. |
+| Shopify / Uber apply adapters | Phase 18 custom scrapers are scrape-only | Snowflake delegates to Ashby; Shopify (Ashby-backed) and Uber have no apply adapter |
+| LinkedIn Easy Apply resume PDF | Many Easy Apply jobs require an attachment | Live submit sends `fileUploadResponses: []`; `resume_text` only |
+| Indeed-hosted resume file | Same class of gap as LinkedIn | Live smartapply submit forwards `resumeText` only, not the stored file |
+| Structured profile beyond Workday | UI stores experience/education/skills/languages | Only the Workday adapter consumes those fields today |
+| Pipeline auto-apply queue | Users still click Apply per job | Tracked in [Phase 20a](#20a--apply-orchestration-extend-phase-7) |
 
 ---
 
@@ -422,6 +436,7 @@ without bespoke HTML per employer.
 | ~~Fixture + tests~~ | ~~CI safety~~ | **Shipped:** Sample JSON under `tests/fixtures/`; no live network |
 | ~~Scraper docs~~ | ~~Operator discoverability~~ | **Shipped:** Row in [modules/scrapers.md](modules/scrapers.md) |
 | ~~`sr_preset` catalog helper~~ | ~~Same factory pattern as `gh_preset` / `lever_preset`~~ | **Shipped:** Add to `catalog_helpers.py` |
+| SmartRecruiters apply adapter | Catalog employers need one-click apply | **Not shipped** — scrape-only today; see [Phase 7 polish](#phase-7-polish--remaining-gaps) |
 
 **Caveat:** public Postings API availability is tier-dependent on the customer's
 SmartRecruiters plan — verify each employer before adding a catalog preset.
@@ -475,13 +490,16 @@ Phase 11 batch-1 expansion (Uber, Snowflake, Shopify).
 | ~~`shopify_careers`~~ | ~~Shopify~~ | ~~Investigate: may be Greenhouse (`shopify`) or a custom `shopify.com/careers` endpoint~~ | **Shipped:** Ashby-backed careers site with disabled public Postings API; `@register_scraper("shopify_careers")` parses embedded React Router flight stream on `shopify.com/careers`; catalog preset added (96 employers) |
 | ~~`uber_careers`~~ | ~~Uber~~ | ~~Reverse-engineer `uber.com/careers` search JSON or embedded hydration payload~~ | **Shipped:** `@register_scraper("uber_careers")` calls public `POST /api/loadSearchJobsResults`; offset pagination; `format_location()` handles multi-city `allLocations`; catalog preset added (97 employers) |
 | ~~`snowflake_careers`~~ | ~~Snowflake~~ | ~~Public careers search API or embedded JSON on `careers.snowflake.com`~~ | **Shipped:** Phenom careers site with Ashby backend; `@register_scraper("snowflake_careers")` calls public Ashby Postings API (`board=snowflake`); `@register_applier("snowflake_careers")` delegates to Ashby; catalog preset added (98 employers) |
+| `shopify_careers` apply | Shopify uses Ashby for applications | **Not shipped** — scrape-only; could delegate to `ashby` like Snowflake |
+| `uber_careers` apply | Uber has a proprietary apply flow | **Not shipped** — scrape-only |
 
 After each scraper ships, add the matching `*_careers_preset()` to
 `catalog_presets.py` and an apply adapter if the apply flow is automatable (see
 Phase 7 pattern for Google/Microsoft/Meta).
 
 **Done when:** all three employers appear in the curated catalog with working
-scrape + at least dry-run apply where the downstream ATS supports it.
+scrape. Apply: Snowflake supports dry-run + live via Ashby delegation; Shopify
+and Uber remain scrape-only until apply adapters ship (see [Phase 7 polish](#phase-7-polish--remaining-gaps)).
 
 ---
 

@@ -62,6 +62,21 @@ source's `adapter_key` when that source supports auto-apply. Import the
 | `linkedin` | Guest job page + Voyager GraphQL + downstream ATS delegation | Fetches `/jobs-guest/jobs/api/jobPosting/{id}`, enriches offsite listings via Voyager when session cookies are present, delegates to Greenhouse/Lever/Ashby/Workday/Google/Microsoft/Amazon/Meta when the employer apply URL is recognized; see below |
 | `snowflake_careers` | Delegates to Ashby | Snowflake's Phenom careers site uses Ashby for applications; delegates to the `ashby` adapter with `board=snowflake` |
 
+### Scrapers without apply adapters
+
+These scraper keys have **no** registered applier — alerts and manual apply links
+work, but the Jobs page **Apply** action is unavailable:
+
+| Scraper key | Notes |
+| ----------- | ----- |
+| `smartrecruiters` | 12 catalog employers; apply adapter not started (unlike Google Careers, SR has no multi-file apply package under `adapters/` yet) |
+| `shopify_careers` | Ashby-backed site; could delegate to `ashby` like `snowflake_careers` |
+| `uber_careers` | Proprietary apply flow; scrape-only |
+| `playwright` / `generic_html` | Custom HTML sources; no generic apply path |
+
+`GET /portals` sets `supports_auto_apply: false` for these keys. See
+[roadmap.md → Phase 7 polish](../roadmap.md#phase-7-polish--remaining-gaps).
+
 ### Greenhouse
 
 Maps `ProfileData` to the [Job Board application JSON
@@ -485,9 +500,11 @@ Google Careers live submit needs the candidate's own Google account session and
 CSRF token; resume upload and employer questionnaires are best-effort. Microsoft
 Careers live submit needs the candidate's own logged-in session on
 `apply.careers.microsoft.com`; country-specific screening questions are
-best-effort. Indeed
-delegates to downstream ATS adapters when possible; Indeed-hosted Easy Apply and
-LinkedIn Easy Apply are best-effort. Branching questionnaires only
+best-effort. Indeed-hosted Easy Apply does not attach the stored resume file on
+live submit (`resumeText` only). LinkedIn Easy Apply does not upload resume PDFs
+(`fileUploadResponses` is empty). Scrapers without any apply adapter (e.g.
+`smartrecruiters`, `shopify_careers`, `uber_careers`) cannot use the Jobs page
+Apply action. Branching questionnaires only
 submit answers you explicitly map in `profile.answers`. See
 [launch-checklist.md](../launch-checklist.md#7-auto-apply-optional--know-the-limits)
 before advertising auto-apply on a public instance.

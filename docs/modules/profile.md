@@ -6,9 +6,9 @@
 `backend/app/api/v1/profile.py`, `frontend/src/pages/ProfilePage.tsx`
 
 The candidate data an **auto-apply** flow needs to submit applications on the
-user's behalf. This is the first piece of [Phase 7 — Auto-apply](../roadmap.md);
-it covers **storage only**. Submitting applications (apply adapters,
-orchestration) is intentionally out of scope here.
+user's behalf. Storage and retrieval live here; [apply adapters](appliers.md)
+read the decrypted profile at submit time. See [Phase 7 — Auto-apply](../roadmap.md)
+for orchestration and per-site apply behavior.
 
 ## What is stored
 
@@ -62,7 +62,10 @@ payload is a JSON object:
 Optional **resume file** (PDF or Word, up to `PROFILE_RESUME_MAX_BYTES`, default 2 MB) is
 stored in the same encrypted blob as base64 alongside the JSON fields above. The API
 returns only metadata (`filename`, `content_type`, `size_bytes`) — never raw bytes on
-`GET /profile`.
+`GET /profile`. On live apply, the file is attached for Greenhouse, Lever, Ashby,
+Workday, Google Careers, Microsoft Careers, Amazon Jobs, Apple Careers, and Meta
+Careers. LinkedIn-hosted and Indeed-hosted Easy Apply use `resume_text` only today
+(see [appliers.md](appliers.md)).
 
 `answers` is a free-form map of recurring application questions to the user's
 canned response.
@@ -110,8 +113,9 @@ All routes require auth and are scoped to the current user.
 
 ## Scope
 
-Storage + retrieval only. Apply adapters, orchestration, and the
-"Apply" action on the Jobs page are tracked in [roadmap.md → Phase
-7](../roadmap.md) and [modules/appliers.md](appliers.md). See
+This module owns encrypted storage, the profile API, and the Application profile
+UI. Apply adapters and orchestration are documented in [appliers.md](appliers.md);
+remaining gaps (e.g. SmartRecruiters apply, LinkedIn resume PDF) are listed under
+[roadmap.md → Phase 7 polish](../roadmap.md#phase-7-polish--remaining-gaps). See
 [adr/0008-application-profile.md](../adr/0008-application-profile.md) for the
 decision record.
