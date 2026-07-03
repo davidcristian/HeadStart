@@ -7,7 +7,7 @@ injected to make testing trivial (no network).
 
 import time
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 from sqlalchemy.orm import Session
@@ -28,9 +28,11 @@ from app.scrapers.http import HttpClient
 from app.scrapers.rate_limit import RateLimiter, resolve_min_interval
 from app.scrapers.types import JobPosting
 from app.scrapers.url import normalize_job_url
+from app.services.apply import ApplyService, QueuedAutoApply
 from app.services.compensation import format_compensation_display
 from app.services.credentials import CredentialService
 from app.services.digest import DigestService
+from app.services.pipeline_auto_apply import queue_auto_applies_for_new_jobs
 from app.services.plan_limits import PlanLimitsService
 from app.services.posting_filters import apply_posting_filters
 from app.services.scheduling import next_run_from
@@ -53,6 +55,8 @@ class RunResult:
     filtered: int = 0
     queued: int = 0
     closed: int = 0
+    auto_apply_queued: int = 0
+    pending_auto_applies: list[QueuedAutoApply] = field(default_factory=list)
     error: str | None = None
 
 
@@ -113,6 +117,13 @@ class PipelineService:
                 else:
                     sent, failed = self._notify(search, to_notify, seen_rows)
                     result.notified, result.failed = sent, failed
+            result.pending_auto_applies = queue_auto_applies_for_new_jobs(
+                ApplyService(self.session),
+                search.user_id,
+                new_postings,
+                seen_rows,
+            )
+            result.auto_apply_queued = len(result.pending_auto_applies)
         except Exception as exc:  # adapters/network are untrusted; never crash the worker
             logger.exception("run_search %s failed: %s", search_id, exc)
             result.error = str(exc)

@@ -44,6 +44,8 @@ flowchart TD
   record_only --> reschedule
   notify --> record["write seen_job + delivery_log\n(or pending_digest)"]
   record --> reschedule["last_run_at=now; next_run_at=now+interval"]
+  record --> autoapply{"source.auto_apply_enabled\n+ profile + applier?"}
+  autoapply -->|yes| enqueue_apply["queue apply_to_job per new match"]
 ```
 
 ## Pipeline (`run_search`)
@@ -61,6 +63,11 @@ flowchart TD
    or queue them in `pending_digest` when `notification_mode` is `digest`.
 8. Persist `seen_job` rows and `delivery_log` entries (immediate mode only);
    update schedule fields.
+9. When `source.auto_apply_enabled`, the user has an application profile, and the
+   adapter supports apply: queue a live `apply_to_job` Celery task for each new
+   match (including jobs skipped for notification by cross-search dedup). Uses the
+   profile cover-letter template (no per-job override). Respects existing
+   `application_log` in-flight rows.
 
 A separate beat task `flush_due_digests` sends batched notifications for digest
 searches whose interval has elapsed, then clears the queue and sets
@@ -73,11 +80,17 @@ running.
 
 Live submissions from `POST /jobs/{id}/apply` (non–dry-run) are validated in the
 API, written to `application_log` with status `queued`, and enqueued as
-`apply_to_job`. A Celery worker runs `ApplyService.apply_to_job` with the queued
-log id, updates the audit row to `processing` then `submitted` or `failed`, and
-marks the job `applied` on success. Preview (`dry_run: true`) still runs
+`apply_to_job`. The same queue path runs from the pipeline when
+`source.auto_apply_enabled` is on and a new match appears during `run_search`
+(see step 9 above). A Celery worker runs `ApplyService.apply_to_job` with the queued
+log id, updates the audit row to `processing` then `submitted` or `failed`, sets
+`seen_job.applied_at` and marks the job `applied` on success. Preview (`dry_run: true`) still runs
 synchronously in the API. Clients poll `GET /application-logs/{id}` until the
 log reaches a terminal status.
+
+Every `application_log` row includes baseline tracking metadata in `payload`
+(`employer_domain`, `posting` title/company/url) for downstream inbox triage
+(Phase 20).
 
 When a scrape uses the `playwright` adapter, the worker reuses a process-scoped
 headless Chromium browser (see [scrapers.md](scrapers.md)). Use the worker Docker

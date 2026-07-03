@@ -23,10 +23,21 @@ logger = get_logger(__name__)
 @celery_app.task(name="app.worker.tasks.run_search", bind=True, max_retries=0)
 def run_search(self: object, search_id: int) -> dict[str, object]:
     """Run one search's pipeline (scrape -> dedupe -> notify -> record)."""
+    pending_applies: list = []
     with session_scope() as session:
         result = PipelineService(session).run(search_id)
+        pending_applies = list(result.pending_auto_applies)
+
+    for queued in pending_applies:
+        apply_to_job_task.delay(
+            queued.application_log_id,
+            queued.user_id,
+            queued.job_id,
+            queued.cover_letter,
+        )
+
     logger.info(
-        "run_search %s: found=%d filtered=%d new=%d notified=%d queued=%d failed=%d",
+        "run_search %s: found=%d filtered=%d new=%d notified=%d queued=%d failed=%d auto_apply=%d",
         result.search_id,
         result.found,
         result.filtered,
@@ -34,8 +45,11 @@ def run_search(self: object, search_id: int) -> dict[str, object]:
         result.notified,
         result.queued,
         result.failed,
+        result.auto_apply_queued,
     )
-    return asdict(result)
+    payload = asdict(result)
+    payload.pop("pending_auto_applies", None)
+    return payload
 
 
 @celery_app.task(name="app.worker.tasks.enqueue_due_searches")

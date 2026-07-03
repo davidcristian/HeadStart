@@ -141,6 +141,7 @@ dedup is also applied across a user's searches by normalized job URL (see
 | summary       | str         | "Why this matches" blurb (optional); see [summaries.md](summaries.md) |
 | status        | str         | `new` / `seen` / `applied` / `archived` / `closed` |
 | first_seen_at | datetime    |                                               |
+| applied_at    | datetime    | Set when a live apply succeeds (manual or pipeline) |
 |               |             | **Unique (search_id, external_id)**           |
 
 **`status` lifecycle:**
@@ -149,7 +150,7 @@ dedup is also applied across a user's searches by normalized job URL (see
 | ------ | ------ | ------- |
 | `new` | Pipeline | First time this job was seen for the search |
 | `seen` | User or pipeline | User acknowledged, or a previously closed listing reappeared |
-| `applied` | User | User applied (or is tracking application) |
+| `applied` | User or apply pipeline | User applied, or auto-apply succeeded |
 | `archived` | User | Hidden from active triage; not auto-closed on re-scrape |
 | `closed` | Pipeline | Job no longer appears in scrape results (applied/archived rows are left alone) |
 
@@ -228,7 +229,7 @@ Audit of auto-apply attempts (preview and live).
 | status                   | str         | `queued` / `processing` / `submitted` / `dry_run` / `failed` |
 | dry_run                  | bool        | True when the attempt was a preview only |
 | error                    | text?       | Present when failed                      |
-| payload                  | JSON?       | Application body sent or previewed       |
+| payload                  | JSON?       | Adapter body plus `employer_domain` + `posting` metadata for triage |
 | external_application_id  | str?        | Board-assigned ID on success             |
 | created_at               | datetime    |                                          |
 

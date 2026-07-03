@@ -23,6 +23,7 @@ class JobRead(BaseModel):
     summary: str
     status: JobStatus
     first_seen_at: datetime
+    applied_at: datetime | None = None
 
 
 class JobUpdate(BaseModel):

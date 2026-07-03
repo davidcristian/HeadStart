@@ -37,6 +37,7 @@ class SeenJob(Base):
     first_seen_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, nullable=False
     )
+    applied_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     search: Mapped["Search"] = relationship(back_populates="seen_jobs")
     deliveries: Mapped[list["DeliveryLog"]] = relationship(

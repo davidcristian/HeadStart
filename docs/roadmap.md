@@ -195,7 +195,7 @@ complete across all scrapers:
 | ~~LinkedIn Easy Apply resume PDF~~ | Many Easy Apply jobs require an attachment | **Shipped:** live submit uploads stored resume via Voyager media metadata + Ambry and maps the asset URN into `fileUploadResponses` when the form has a document-upload field |
 | ~~Indeed-hosted resume file~~ | Same class of gap as LinkedIn | **Shipped:** live smartapply submit includes `applicant.resume.file` (Base64) when the profile has a stored resume file |
 | Structured profile beyond Workday | UI stores experience/education/skills/languages | **Shipped (GH/Lever/Ashby):** Greenhouse maps `work_experience` → `employments` and `education` → `educations` (with catalog lookup/aliases); Lever appends formatted supplement to `comments`; Ashby supports `education_history_path`, `work_history_path`, and `skills_path`. Workday still owns `languages`. |
-| Pipeline auto-apply queue | Users still click Apply per job | Tracked in [Phase 20b](#20b--apply-orchestration-extend-phase-7) |
+| Pipeline auto-apply queue | Users still click Apply per job | Tracked in [Phase 20b](#20b--apply-orchestration-extend-phase-7) — **shipped** |
 
 ---
 
@@ -584,8 +584,8 @@ a job, review or edit the cover letter, and have both attached on apply.
 
 | Item | Why | Notes |
 | ---- | --- | ----- |
-| Auto-apply queue from search matches | Users should not click Apply per job | Extend pipeline: when `source.auto_apply_enabled` and profile + credentials exist, enqueue apply on new `seen_job` rows that pass filters; run [20a](#20a--tailored-application-documents) document generation first; respect existing `application_log` audit trail |
-| Apply outcome tracking | Downstream email triage needs a known baseline | Record `applied_at`, employer domain, and posting metadata on `seen_job` or a new `application` entity linked to the job |
+| ~~Auto-apply queue from search matches~~ | ~~Users should not click Apply per job~~ | **Shipped:** when `source.auto_apply_enabled` and profile exist, `run_search` queues `apply_to_job` for each new filtered match; Celery dispatches after DB commit; see [modules/worker.md](modules/worker.md) |
+| ~~Apply outcome tracking~~ | ~~Downstream email triage needs a known baseline~~ | **Shipped:** `seen_job.applied_at` on successful live apply; `application_log.payload` includes `employer_domain` and `posting` metadata |
 
 ### 20c — Inbox integration & email triage
 

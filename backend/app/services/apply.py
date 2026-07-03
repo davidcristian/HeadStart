@@ -2,19 +2,37 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+from typing import Any
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
 from app.appliers import ApplyContext, ApplyResult, get_applier, has_applier
 from app.core.exceptions import NotFoundError, ValidationError
+from app.core.logging import get_logger
 from app.models.application_log import ApplicationLog
+from app.models.base import utcnow
 from app.models.search import Search
 from app.models.seen_job import SeenJob
 from app.models.source import Source
 from app.repositories.application_logs import ApplicationLogRepository
 from app.repositories.sources import SourceRepository
+from app.services.apply_tracking import application_tracking_payload
 from app.services.credentials import CredentialService
 from app.services.profiles import ProfileService
+
+logger = get_logger(__name__)
+
+
+@dataclass(frozen=True)
+class QueuedAutoApply:
+    """A live apply queued during the pipeline; dispatch after the DB commit."""
+
+    application_log_id: int
+    user_id: int
+    job_id: int
+    cover_letter: str | None
 
 
 class ApplyService:
@@ -34,9 +52,39 @@ class ApplyService:
                 seen_job_id=job.id,
                 status="queued",
                 dry_run=False,
+                payload=application_tracking_payload(job),
             )
         )
         return log.id
+
+    def enqueue_auto_apply_from_pipeline(
+        self,
+        user_id: int,
+        job_id: int,
+    ) -> QueuedAutoApply | None:
+        """Queue a live apply when pipeline prerequisites are met; skip silently otherwise."""
+        job = self._load_job(job_id, user_id)
+        source = self.sources.get(job.search.source_id, user_id)
+        if source is None or not self._pipeline_auto_apply_eligible(job, source, user_id):
+            return None
+        if self.application_logs.get_pending_for_job(job.id) is not None:
+            return None
+
+        log = self.application_logs.add(
+            ApplicationLog(
+                seen_job_id=job.id,
+                status="queued",
+                dry_run=False,
+                payload=application_tracking_payload(job),
+            )
+        )
+        logger.info(
+            "pipeline auto-apply queued log=%s job=%s user=%s",
+            log.id,
+            job.id,
+            user_id,
+        )
+        return QueuedAutoApply(log.id, user_id, job.id, None)
 
     def apply_to_job(
         self,
@@ -77,12 +125,13 @@ class ApplyService:
         result = get_applier(source.adapter_key).apply(ctx)
 
         if existing_log is not None:
-            self._update_log(existing_log, result)
+            self._update_log(existing_log, job, result)
         else:
             self._record_attempt(job, result, dry_run=dry_run)
 
         if result.status == "submitted":
             job.status = "applied"
+            job.applied_at = utcnow()
             self.session.flush()
 
         return result
@@ -132,18 +181,40 @@ class ApplyService:
                 status=result.status,
                 dry_run=dry_run,
                 error=result.error,
-                payload=result.payload,
+                payload=self._merge_tracking_payload(job, result.payload),
                 external_application_id=result.external_application_id,
             )
         )
 
-    def _update_log(self, log: ApplicationLog, result: ApplyResult) -> None:
+    def _update_log(self, log: ApplicationLog, job: SeenJob, result: ApplyResult) -> None:
         """Update an existing queued log with the final apply outcome."""
         log.status = result.status
         log.error = result.error
-        log.payload = result.payload
+        log.payload = self._merge_tracking_payload(job, result.payload)
         log.external_application_id = result.external_application_id
         self.session.flush()
+
+    def _merge_tracking_payload(
+        self,
+        job: SeenJob,
+        adapter_payload: dict[str, Any] | None,
+    ) -> dict[str, Any]:
+        tracking = application_tracking_payload(job)
+        if not adapter_payload:
+            return tracking
+        return {**tracking, **adapter_payload}
+
+    def _pipeline_auto_apply_eligible(
+        self,
+        job: SeenJob,
+        source: Source,
+        user_id: int,
+    ) -> bool:
+        if not source.auto_apply_enabled:
+            return False
+        if not has_applier(source.adapter_key):
+            return False
+        return ProfileService(self.session).get_for_apply(user_id).exists
 
     def _load_application_log(
         self,

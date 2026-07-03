@@ -12,6 +12,7 @@ export interface Job {
   summary: string;
   status: JobStatus;
   first_seen_at: string;
+  applied_at: string | null;
 }
 
 export interface JobApplyResult {

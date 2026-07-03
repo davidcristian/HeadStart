@@ -82,6 +82,7 @@ def test_apply_to_job_task_completes_queued_apply(db_session: Session) -> None:
     job = db_session.get(SeenJob, job_id)
     assert job is not None
     assert job.status == "applied"
+    assert job.applied_at is not None
 
 
 def test_apply_to_job_task_marks_failed_on_exception(db_session: Session) -> None:

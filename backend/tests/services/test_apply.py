@@ -110,6 +110,8 @@ def test_enqueue_apply_creates_queued_log(db_session: Session) -> None:
     assert log.status == "queued"
     assert log.dry_run is False
     assert log.seen_job_id == job_id
+    assert log.payload is not None
+    assert log.payload["employer_domain"] == "boards.greenhouse.io"
 
 
 def test_enqueue_apply_rejects_duplicate_pending(db_session: Session) -> None:
@@ -153,11 +155,14 @@ def test_apply_service_live_with_opt_in_records_log(db_session: Session) -> None
     assert result.status == "submitted"
     db_session.refresh(job)
     assert job.status == "applied"
+    assert job.applied_at is not None
     logs = db_session.query(ApplicationLog).all()
     assert len(logs) == 1
     assert logs[0].status == "submitted"
     assert logs[0].dry_run is False
     assert logs[0].external_application_id == "app-1"
+    assert logs[0].payload is not None
+    assert logs[0].payload["employer_domain"] == "boards.greenhouse.io"
 
 
 def test_apply_service_workday_dry_run(db_session: Session) -> None:
