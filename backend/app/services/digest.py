@@ -46,10 +46,18 @@ class DigestService:
         return queued
 
     def flush_due(self, now: datetime | None = None) -> int:
-        """Send batched digests for searches whose interval has elapsed."""
+        """Send batched digests for searches whose interval has elapsed.
+
+        Each search is locked for the duration of its flush (Postgres row lock) and
+        re-checked under the lock, so overlapping beat ticks cannot double-send a
+        digest. SQLite (tests) has no row locking and runs single-threaded.
+        """
         when = now or utcnow()
         flushed = 0
-        for search in self.pending.searches_with_pending():
+        for candidate in self.pending.searches_with_pending():
+            search = self.searches.get_for_update(candidate.id, skip_locked=True)
+            if search is None:
+                continue  # another tick is already flushing this search
             pending = self.pending.list_for_search(search.id)
             if not pending or not self._is_due(search, pending, when):
                 continue
@@ -67,13 +75,9 @@ class DigestService:
         return when >= last_digest + interval
 
     def _flush_search(self, search: Search, pending: list[PendingDigest]) -> None:
-        loaded = self.searches.get(search.id)
-        if loaded is None:
-            return
-        target = loaded.target
+        target = search.target
         if target is None:
             return
-        search = loaded
 
         seen_rows: list[SeenJob] = [row.seen_job for row in pending]
         postings = [_seen_job_to_posting(row) for row in seen_rows]

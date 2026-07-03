@@ -18,9 +18,13 @@ Celery provides the scheduler (beat) and the workers. The worker package is
 
 Beat runs every `SCHEDULER_TICK_SECONDS`. On each tick (and once on startup) it:
 
-1. Selects searches where `enabled = true AND next_run_at <= now` and enqueues
-   `run_search` for each.
-2. Flushes digest queues whose `digest_interval_seconds` has elapsed.
+1. **Atomically claims** due searches (`enabled = true AND next_run_at <= now`) by
+   advancing their `next_run_at` in the same transaction (`FOR UPDATE SKIP LOCKED`
+   on Postgres), then enqueues `run_search` for each claimed id. The claim acts as a
+   lease: a scrape slower than the tick interval, or an overlapping tick, cannot
+   re-enqueue the same search and double-notify.
+2. Flushes digest queues whose `digest_interval_seconds` has elapsed (each search is
+   locked while flushing, so overlapping ticks don't double-send a digest).
 
 Each search carries `interval_seconds`, `last_run_at`, `next_run_at`.
 

@@ -6,10 +6,10 @@ features. Update the Status column (and strike the row) when an item ships; link
 
 Produced by a read-only multi-agent audit — 13 subsystem clusters, every finding
 adversarially verified against the code. **77 confirmed** findings (1 critical, 9 high,
-16 medium, 51 low). 22 are already resolved: the browser-extension cluster (6) via
+16 medium, 51 low). 27 are already resolved: the browser-extension cluster (6) via
 removal (WS8), the WS3 security-hardening trio (2 high + 1 low), the WS11 docs
 cluster (8: 1 med + 7 low), and all 6 WS1 inbox-UID items (1 crit + 1 high + 1 med
-+ 3 low).
++ 3 low), and all 4 WS2 scheduler items (1 high + 3 low).
 
 **Status legend:** ☐ open · 🔜 in progress · ✅ done
 **Type:** 🐞 bug · 🔒 security · 📝 doc · 🧪 test · ♻️ refactor · 🔁 consistency
@@ -20,7 +20,6 @@ cluster (8: 1 med + 7 low), and all 6 WS1 inbox-UID items (1 crit + 1 high + 1 m
 
 | Sev | Item | Where |
 | --- | ---- | ----- |
-| 🟠 HIGH | Scheduler enqueues due searches with no lease → overlapping ticks double-notify | `worker/tasks.py:67` |
 | 🟠 HIGH | Meta apply: work-history parallel arrays desync → wrong employer/title/date pairing | `appliers/adapters/meta_careers_payload.py:58` |
 
 ---
@@ -40,13 +39,13 @@ ordering (uid from `internalDate`; the list `after:` filter bounds the scan), an
 | ⚪ LOW | 🧪 | Yahoo/IMAP oldest-first (#168) drop-old-mail regression — already guarded by the `*_over_limit` tests in `test_yahoo.py`/`test_imap_smtp.py` | `inbox/adapters/yahoo.py:62` | ✅ |
 | ⚪ LOW | 📝 | `inbox.md` said Gmail ids map to "integer uid values" without noting the overflow; now documents `BigInteger` storage | `docs/modules/inbox.md:56` | ✅ |
 
-## WS2 — Scheduler double-enqueue → duplicate notifications
+## WS2 — Scheduler double-enqueue → duplicate notifications ✅ DONE (2026-07-01)
 | Sev | Type | Item | Location | Status |
 | --- | ---- | ---- | -------- | ------ |
-| 🟠 HIGH | 🐞 | `enqueue_due_searches` has no claim/lease; a scrape >`SCHEDULER_TICK_SECONDS` gets re-enqueued → duplicate notify + double `pending_digest`/auto-apply. Fix: atomic `UPDATE … RETURNING id` claim | `worker/tasks.py:67` | ☐ |
-| ⚪ LOW | 🐞 | `flush_due_digests` has no concurrency guard → overlapping ticks can double-send a digest | `services/digest.py:48` | ☐ |
-| ⚪ LOW | 🔁 | Ghost-recovery / interview-handoff alerts skip the `DeliveryLog` audit row every other path writes | `services/email_classification.py:142` | ☐ |
-| ⚪ LOW | 🧪 | No test for `enqueue_due_searches` / beat double-enqueue | `worker/tasks.py:58` | ☐ |
+| 🟠 HIGH | 🐞 | `enqueue_due_searches` had no claim/lease; a scrape >`SCHEDULER_TICK_SECONDS` got re-enqueued → duplicate notify + double `pending_digest`/auto-apply. Now `claim_due` advances `next_run_at` in-txn (`FOR UPDATE SKIP LOCKED` on Postgres) before enqueue | `worker/tasks.py:67` | ✅ |
+| ⚪ LOW | 🐞 | `flush_due_digests` had no concurrency guard → overlapping ticks could double-send a digest; now each search is row-locked and re-checked under the lock | `services/digest.py:48` | ✅ |
+| ⚪ LOW | 🔁 | Ghost-recovery / interview-handoff alerts skipped the `DeliveryLog` audit row every other path writes; `_send_alert` now records one per delivery | `services/application_alerts.py:62` | ✅ |
+| ⚪ LOW | 🧪 | No test for `enqueue_due_searches` / beat double-enqueue; added `claim_due` regression + alert-DeliveryLog tests | `tests/worker/test_enqueue.py` | ✅ |
 
 ## WS3 — Security hardening ✅ DONE (2026-07-01)
 | Sev | Type | Item | Location | Status |

@@ -63,9 +63,13 @@ def enqueue_due_searches() -> int:
     the system was down is picked up on the first tick. Because each run
     reschedules from *now*, a long downtime produces a single catch-up run per
     search, not one per missed interval.
+
+    Claiming atomically advances next_run_at before enqueueing, so a scrape that
+    outlasts the beat interval (or an overlapping tick) never re-enqueues the same
+    search and double-notifies.
     """
     with session_scope() as session:
-        due_ids = [s.id for s in SearchRepository(session).due(utcnow())]
+        due_ids = SearchRepository(session).claim_due(utcnow())
 
     for search_id in due_ids:
         run_search.delay(search_id)

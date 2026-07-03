@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 
 from sqlalchemy.orm import Session
 
+from app.models.delivery_log import DeliveryLog
 from app.models.notification_target import NotificationTarget
 from app.models.search import Search
 from app.models.seen_job import SeenJob
@@ -53,6 +54,25 @@ def test_notify_interview_handoff_sends_high_priority_ntfy(db_session: Session) 
     assert ctx.config["priority"] == "high"
     assert postings[0].title == "Phone screen"
     assert "ACME" in postings[0].summary
+
+
+def test_alert_delivery_is_audited_to_delivery_log(db_session: Session) -> None:
+    """Regression: alert sends must write a DeliveryLog row like the other paths."""
+    user_id, job, target = _seed_job_with_target(db_session)
+    service = ApplicationAlertService(db_session)
+    mock_notifier = MagicMock()
+    mock_notifier.send.return_value = [
+        DeliveryResult(external_id=f"interview-handoff-{job.id}", status="sent")
+    ]
+
+    with patch("app.services.application_alerts.get_notifier", return_value=mock_notifier):
+        service.notify_interview_handoff(user_id, job)
+
+    db_session.flush()  # the classify flow's session_scope flushes/commits in prod
+    logs = db_session.query(DeliveryLog).filter_by(seen_job_id=job.id).all()
+    assert len(logs) == 1
+    assert logs[0].target_id == target.id
+    assert logs[0].status == "sent"
 
 
 def test_notify_ghost_recovery_uses_rejection_copy(db_session: Session) -> None:

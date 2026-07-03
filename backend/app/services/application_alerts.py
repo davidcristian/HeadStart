@@ -7,6 +7,7 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from app.core.logging import get_logger
+from app.models.delivery_log import DeliveryLog
 from app.models.notification_target import NotificationTarget
 from app.models.seen_job import SeenJob
 from app.notifiers import NotifyContext, get_notifier
@@ -80,6 +81,8 @@ class ApplicationAlertService:
                     NotifyContext(target_type=target.type, config=config),
                     [posting],
                 )
+                for res in sent:
+                    self._record_delivery(job, target, res.status, res.error)
                 results.extend(sent)
             except Exception as exc:
                 logger.warning(
@@ -89,6 +92,7 @@ class ApplicationAlertService:
                     user_id,
                     exc,
                 )
+                self._record_delivery(job, target, "failed", str(exc))
                 results.append(
                     DeliveryResult(
                         external_id=job.external_id,
@@ -101,6 +105,14 @@ class ApplicationAlertService:
                 if callable(close):
                     close()
         return results
+
+    def _record_delivery(
+        self, job: SeenJob, target: NotificationTarget, status: str, error: str | None
+    ) -> None:
+        """Audit an alert delivery like the pipeline/digest notification paths do."""
+        self.session.add(
+            DeliveryLog(seen_job_id=job.id, target_id=target.id, status=status, error=error)
+        )
 
     def _resolve_targets(self, user_id: int, job: SeenJob) -> list[NotificationTarget]:
         if job.search is not None and job.search.target_id is not None:
