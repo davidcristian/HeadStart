@@ -59,11 +59,11 @@ def build_candidate(
 
 
 def build_answers(profile: ProfileData | ApplyProfile, questions: dict[str, Any]) -> dict[str, Any]:
-    """Map profile.answers onto question ids present in the questionnaire payload."""
-    answers = {key: value for key, value in profile.answers.items() if value}
-    if answers:
-        return answers
+    """Map profile.answers onto the question ids present in the questionnaire payload.
 
+    Driven by the fetched questions (not a verbatim dump of profile.answers), so only
+    answers SmartApply actually asked for are submitted.
+    """
     mapped: dict[str, Any] = {}
     for section in _question_sections(questions):
         for question in section.get("questions", []):
@@ -73,8 +73,9 @@ def build_answers(profile: ProfileData | ApplyProfile, questions: dict[str, Any]
             if not question_id:
                 continue
             key = str(question_id)
-            if key in profile.answers and profile.answers[key]:
-                mapped[key] = profile.answers[key]
+            value = profile.answers.get(key)
+            if value:
+                mapped[key] = value
     return mapped
 
 

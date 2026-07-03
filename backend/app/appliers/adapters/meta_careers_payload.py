@@ -29,7 +29,15 @@ def build_application_state(
         raise ValueError("profile email is required to apply on Meta Careers")
 
     full_name = profile.full_name.strip()
-    work = list(profile.work_experience)
+    # Meta's form state is positional parallel arrays: workEmployerNames[i],
+    # workPositionNames[i], workStartMonths[i]... all describe the same job. Filter
+    # the work list ONCE (drop fully-empty rows) and build every column from it, so
+    # a row with (say) a blank company can't desync employer/title/date pairing.
+    work = [
+        entry
+        for entry in profile.work_experience
+        if entry.company.strip() or entry.job_title.strip()
+    ]
     education = list(profile.education)
     skills = [skill.strip() for skill in profile.skills if skill.strip()]
 
@@ -55,9 +63,9 @@ def build_application_state(
         "requiresSponsorship": _yes_no_answer(
             profile.answers, "requires_sponsorship", "visa_sponsorship"
         ),
-        "workEmployerNames": [entry.company for entry in work if entry.company.strip()],
-        "workPositionNames": [entry.job_title for entry in work if entry.job_title.strip()],
-        "workLocationNames": [entry.location for entry in work if entry.location.strip()],
+        "workEmployerNames": [entry.company for entry in work],
+        "workPositionNames": [entry.job_title for entry in work],
+        "workLocationNames": [entry.location for entry in work],
         "workEmployerFBIDs": [],
         "workPositionFBIDs": [],
         "workLocationFBIDs": [],

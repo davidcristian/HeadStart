@@ -97,6 +97,11 @@ class GreenhouseApplier(Applier):
         except httpx.HTTPError as exc:
             return ApplyResult(status="failed", error=str(exc), payload=payload)
 
+        if _response_has_error(response):
+            return ApplyResult(
+                status="failed", error=_extract_error_message(response), payload=payload
+            )
+
         app_id = _extract_application_id(response)
         return ApplyResult(status="submitted", payload=payload, external_application_id=app_id)
 
@@ -210,3 +215,27 @@ def _extract_application_id(response: Any) -> str | None:
             if response.get(key) is not None:
                 return str(response[key])
     return None
+
+
+def _response_has_error(response: Any) -> bool:
+    """Greenhouse can return a 2xx whose body carries the failure; siblings check this."""
+    if not isinstance(response, dict):
+        return False
+    return response.get("success") is False or bool(response.get("error") or response.get("errors"))
+
+
+def _extract_error_message(response: dict[str, Any]) -> str:
+    """Best-effort error string from a Greenhouse error body."""
+    error = response.get("error")
+    if isinstance(error, str) and error.strip():
+        return error.strip()
+    errors = response.get("errors")
+    if isinstance(errors, list) and errors:
+        parts = [
+            str(item.get("message") or item) if isinstance(item, dict) else str(item)
+            for item in errors
+        ]
+        return "; ".join(parts)
+    if isinstance(errors, str) and errors.strip():
+        return errors.strip()
+    return "greenhouse apply rejected the submission"

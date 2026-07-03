@@ -221,12 +221,14 @@ def build_application_payload(
             continue
         submissions.append({"path": key, "value": value})
 
+    disallow_unpublished = config.get("allow_unpublished_job_posting") is False
+
     payload: dict[str, Any] = {
         "jobPostingId": job_posting_id,
         "applicationForm": {"fieldSubmissions": submissions},
     }
 
-    if config.get("allow_unpublished_job_posting") is False:
+    if disallow_unpublished:
         payload["allowSubmissionForUnpublishedJobPosting"] = False
 
     meta = resume_meta_for_payload(resume_file)
@@ -235,11 +237,16 @@ def build_application_payload(
 
     result: dict[str, Any] = {"payload": payload}
     if resume_file is not None:
+        multipart_data: dict[str, Any] = {
+            "applicationForm": json.dumps({"fieldSubmissions": submissions}),
+            "jobPostingId": job_posting_id,
+        }
+        # Carry the unpublished-posting guard into the multipart form too, else a
+        # resume submit silently drops it and Ashby reverts to allowing unpublished.
+        if disallow_unpublished:
+            multipart_data["allowSubmissionForUnpublishedJobPosting"] = "false"
         result["multipart"] = {
-            "data": {
-                "applicationForm": json.dumps({"fieldSubmissions": submissions}),
-                "jobPostingId": job_posting_id,
-            },
+            "data": multipart_data,
             "files": {
                 resume_field_key: (
                     resume_file.filename,

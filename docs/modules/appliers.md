@@ -124,6 +124,8 @@ to the JSON body. Plain `resume_text` is used only when no file is uploaded.
 API key (created in the employer's Greenhouse admin under API Credentials). Store
 it in the source config or, preferably, in the linked [site
 credential](credentials.md) as `session.job_board_api_key` so it stays encrypted.
+A 2xx response whose body reports an error (`success: false`, `error`, or
+`errors`) is treated as a failed submit, not a success.
 
 On success, `ApplyService` marks the `seen_job` status `applied`.
 
@@ -193,7 +195,9 @@ Work history is sent as plain text; skills default to an array for
 `_systemfield_email` are always sent. When the profile has an uploaded resume,
 live submit uses `multipart/form-data` with `_systemfield_resume` (override via
 `config.resume_path`); otherwise `resume_text` may be appended to the
-cover-letter field.
+cover-letter field. The `allow_unpublished_job_posting: false` guard is carried
+into the multipart form (as `"false"`) as well as the JSON body, so a resume
+submit refuses unpublished postings just like a text-only submit.
 
 ### Uber Careers
 
@@ -220,6 +224,9 @@ Config / credentials:
 
 **Dry run:** fetches screening questions, builds the `applicationFormRequest`
 preview (resume bytes redacted), and does not require a session token.
+
+Only screening questions the API flags **required** gate live submit; optional
+questions without a mapped answer are skipped rather than blocking the apply.
 
 **Live submit:** requires the candidate's own Uber Careers session token.
 Cover letters are not a first-class field on Uber's form — use screening-question
@@ -413,7 +420,9 @@ Config / credentials:
 
 **Dry run:** fetches job detail and questionnaire metadata, then returns the
 mapped candidate plus the submit body (`domain`, `pids`, `candidate`, `answers`).
-No Microsoft login required.
+No Microsoft login required. Submitted `answers` are driven by the fetched
+questionnaire: only `profile.answers` whose key matches a `questionId` in the
+questions payload are sent, so unrelated answer keys are never leaked to Microsoft.
 
 **Live submit:** requires the candidate's own logged-in Microsoft Careers session
 cookies. Resume files upload via `/api/pcsx/upload_resume` before submit. Complex

@@ -73,6 +73,22 @@ def test_build_answers_uses_profile_answers() -> None:
     assert answers["work_authorization"] == "Yes"
 
 
+def test_build_answers_is_driven_by_the_questionnaire() -> None:
+    """Only answers the questionnaire actually asks for are submitted."""
+    questions = json.loads(load_fixture("microsoft_careers_questions.json"))
+    profile = ProfileData(
+        full_name="Ada Lovelace",
+        email="ada@example.com",
+        answers={
+            "work_authorization": "Yes",  # matches a questionId
+            "relocation": "",  # in the questionnaire but blank -> skipped
+            "unlisted_note": "leak me",  # no matching questionId -> excluded
+        },
+    )
+    answers = build_answers(profile, questions)
+    assert answers == {"work_authorization": "Yes"}
+
+
 def test_build_submit_body_shape() -> None:
     candidate = build_candidate(_profile(), job_title="Software Engineer", company="Microsoft")
     body = build_submit_body(

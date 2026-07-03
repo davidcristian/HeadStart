@@ -128,6 +128,19 @@ def test_missing_required_answers_detects_gaps() -> None:
     assert not missing_required_answers(raw, _profile().answers)
 
 
+def test_optional_questions_do_not_block_apply() -> None:
+    """Regression: a question the API did not flag required must not count as missing."""
+    optional = {
+        "questionId": {"value": "Q999"},
+        "formQuestionId": "screening_optional",
+        "question": "Anything else to add?",
+        "options": [],
+    }
+    assert missing_required_answers([optional], {}) == []
+    required = {**optional, "required": True}
+    assert missing_required_answers([required], {}) == ["Anything else to add?"]
+
+
 def test_build_phone_number_parses_e164() -> None:
     phone = build_phone_number(_profile())
     assert phone == {"countryCode": "1", "number": "5550100"}

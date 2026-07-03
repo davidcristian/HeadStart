@@ -1,5 +1,19 @@
 {
   "default": {
-    "fields": []
+    "fields": [
+      {
+        "title": "Screening",
+        "questions": [
+          {
+            "questionId": "work_authorization",
+            "questionText": "Are you legally authorized to work?"
+          },
+          {
+            "questionId": "relocation",
+            "questionText": "Are you willing to relocate?"
+          }
+        ]
+      }
+    ]
   }
 }

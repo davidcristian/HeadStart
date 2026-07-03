@@ -199,6 +199,30 @@ def test_live_submit_prefers_credential_api_key() -> None:
     assert seen["auth"] == basic_auth_header("cred-key")
 
 
+def test_live_submit_treats_error_body_as_failure() -> None:
+    """Regression: a 2xx whose body carries an error must fail, not report submitted."""
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200, json={"success": False, "errors": [{"message": "Invalid application"}]}
+        )
+
+    applier = GreenhouseApplier(http=make_http_client(handler))
+    result = applier.apply(
+        ApplyContext(
+            job_external_id="5501001",
+            job_title="Senior Engineer",
+            company="ACME",
+            job_url="https://boards.greenhouse.io/acme/jobs/5501001",
+            config={"board_token": "acme", "job_board_api_key": "gh-test-key"},
+            profile=_profile(),
+            dry_run=False,
+        )
+    )
+    assert result.status == "failed"
+    assert "Invalid application" in (result.error or "")
+
+
 def test_missing_api_key_fails_with_helpful_error() -> None:
     applier = get_applier("greenhouse", http=make_http_client(_unexpected_request))
     result = applier.apply(

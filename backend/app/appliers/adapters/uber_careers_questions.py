@@ -53,6 +53,7 @@ def normalize_question(item: dict[str, Any]) -> dict[str, Any]:
         "question": str(item.get("question") or item.get("title") or "").strip(),
         "options": [str(option) for option in options] if isinstance(options, list) else [],
         "application_section": str(item.get("applicationSection") or "").strip(),
+        "required": _is_required(item),
         "raw": item,
     }
 
@@ -81,10 +82,16 @@ def missing_required_answers(
     questions: list[dict[str, Any]],
     answers: dict[str, str],
 ) -> list[str]:
-    """Return question ids that have no mapped profile answer."""
+    """Return ids of REQUIRED questions that have no mapped profile answer.
+
+    Only questions the API flags required gate the apply; optional ones without an
+    answer are skipped so they don't block live submission.
+    """
     missing: list[str] = []
     for item in questions:
         normalized = normalize_question(item)
+        if not normalized["required"]:
+            continue
         question_id = normalized["question_id"]
         form_key = normalized["form_question_id"]
         if not question_id or not form_key:
@@ -105,6 +112,18 @@ def _question_id(item: dict[str, Any]) -> str:
         if value:
             return str(value).strip()
     return ""
+
+
+def _is_required(item: dict[str, Any]) -> bool:
+    """Whether the API marked this question required (default optional if unflagged)."""
+    for key in ("required", "isRequired", "mandatory", "isMandatory"):
+        value = item.get(key)
+        if isinstance(value, bool):
+            if value:
+                return True
+        elif isinstance(value, str) and value.strip().lower() in {"true", "yes", "1", "required"}:
+            return True
+    return False
 
 
 def _form_question_id(item: dict[str, Any], *, question_id: str) -> str:
