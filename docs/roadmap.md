@@ -605,6 +605,7 @@ a job, review or edit the cover letter, and have both attached on apply.
 | Item | Why | Notes |
 | ---- | --- | ----- |
 | Follow-up draft agent | Recruiters ask for availability, salary, work auth — repetitive | Local LLM drafts replies from application profile + job context; never send without explicit auto-reply policy or user pre-approval per template class |
+| Response delay (human-like timing) | Instant replies look automated; real candidates take minutes to hours | Do not send (or surface as ready-to-send) until a configurable minimum delay has elapsed since the inbound message arrived — e.g. `INBOX_REPLY_MIN_DELAY_SECONDS` (default ≥ 15–30 min, never sub-minute). Optional jitter (`INBOX_REPLY_DELAY_JITTER_SECONDS`) so sends are not on a fixed clock. Beat/orchestration enqueues `pending_reply` rows with `send_after`; SMTP send runs only after the window. User can still preview drafts earlier; auto-send respects the delay |
 | Safe-send guardrails | Autonomous email is high-risk | Rate limits, blocklist for legal/HR-sensitive topics, dry-run log of every outbound draft; `inbox.auto_reply_enabled` default off |
 | Thread ↔ application linking | Classification must know which job a thread is about | Match on employer domain, job title fuzzy match, and `Message-ID` / `In-Reply-To` headers against `application_log` metadata |
 
@@ -636,6 +637,9 @@ a job, review or edit the cover letter, and have both attached on apply.
 - Prompt injection: recruiter (or spam) mail may embed unrelated instructions;
   the agent must stay scoped to application workflow actions and refuse
   out-of-scope requests rather than complying.
+- **Response timing:** auto-sent replies must not fire seconds after inbound mail
+  — use the [response delay](#20d--autonomous-follow-up-responses) queue so
+  behavior resembles a human checking email, not a bot on a poll interval.
 - **Shared mailbox reality:** most users receive personal mail, newsletters, and
   other non-job traffic in the same inbox. The orchestration loop applies an
   application-scoped gate before classification so unrelated mail is skipped.
@@ -648,7 +652,8 @@ auto-sorted into general/rejection folders, receive a self-email on ghosted
 applications that is recognized and sorted into a ghost archive folder on
 re-ingestion, get notified when a previously ghosted application receives a
 late recruiter reply (with pipeline stage updated accordingly), see
-auto-drafted follow-up replies (with optional auto-send),
+auto-drafted follow-up replies (with optional auto-send after a human-like
+delay),
 reject out-of-scope email content without acting on it, and get a notifier alert
 when an interview needs scheduling — at which point they take over manually.
 

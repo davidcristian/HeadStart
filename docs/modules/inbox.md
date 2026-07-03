@@ -195,7 +195,11 @@ The applications pipeline exposes stage `ghosted` when `ghosted_at` is set.
 When the summary email returns to the inbox, the existing classifier labels it
 `self_ghost_archive` and routing moves it to `HeadStart/Ghost`.
 
-## Follow-ups (Phase 20c+)
+## Follow-ups (Phase 20d)
 
 Autonomous reply drafts build on classification and routing — see
-[roadmap.md](../roadmap.md).
+[roadmap.md](../roadmap.md) (Phase 20d). Planned behavior includes a
+**response delay** before auto-send: drafts may be generated soon after
+classification, but outbound mail waits until a configurable minimum elapsed time
+(since inbound arrival) so replies do not go out seconds after the recruiter's
+message.
