@@ -7,7 +7,7 @@
  * a fresh load the app exchanges that cookie for a new access token.
  */
 
-const BASE_URL_KEY = "jobnotifier.apiBaseUrl";
+const BASE_URL_KEY = "headstart.apiBaseUrl";
 
 const DEFAULT_BASE_URL =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? "http://localhost:8000";

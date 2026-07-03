@@ -13,9 +13,9 @@ push=false
 [[ "${1:-}" == "--push" ]] && push=true
 
 IMAGE_TAG="${IMAGE_TAG:-$(git -C "${REPO_ROOT}" rev-parse --short HEAD 2>/dev/null || echo latest)}"
-backend_img="jobnotifier/backend:${IMAGE_TAG}"
-backend_worker_img="jobnotifier/backend-worker:${IMAGE_TAG}"
-frontend_img="jobnotifier/frontend:${IMAGE_TAG}"
+backend_img="headstart/backend:${IMAGE_TAG}"
+backend_worker_img="headstart/backend-worker:${IMAGE_TAG}"
+frontend_img="headstart/frontend:${IMAGE_TAG}"
 
 log "Building backend API image: ${backend_img}"
 docker build --target api -t "${backend_img}" "${BACKEND_DIR}"
@@ -35,8 +35,8 @@ if [[ "${push}" == true ]]; then
   aws ecr get-login-password --region "${AWS_REGION}" \
     | docker login --username AWS --password-stdin "${ECR_REGISTRY}"
   for name in backend backend-worker frontend; do
-    local_img="jobnotifier/${name}:${IMAGE_TAG}"
-    remote_img="${ECR_REGISTRY}/jobnotifier-${name}:${IMAGE_TAG}"
+    local_img="headstart/${name}:${IMAGE_TAG}"
+    remote_img="${ECR_REGISTRY}/headstart-${name}:${IMAGE_TAG}"
     docker tag "${local_img}" "${remote_img}"
     log "Pushing ${remote_img}"
     docker push "${remote_img}"

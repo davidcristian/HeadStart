@@ -61,7 +61,7 @@ when HTTPS is enabled. Optional `smtp_*` variables configure transactional email
 
 ## Worker sizing (Playwright)
 
-The worker service uses a separate container image (`jobnotifier-backend-worker`)
+The worker service uses a separate container image (`headstart-backend-worker`)
 with Chromium pre-installed. Default Fargate sizing is **1024 CPU / 2048 MiB**
 (vs **256 / 512** for api, beat, and frontend). Override via stack module vars
 `worker_cpu` and `worker_memory` in `environments/<env>/main.tf`.
@@ -87,8 +87,8 @@ security group and scrape with Prometheus or the CloudWatch agent.
 bootstrap, `terraform apply`, and `make deploy` — see
 [deploying-to-aws.md](../deploying-to-aws.md#quick-start-one-command).
 
-1. Build images (`scripts/build-images.sh`): lean `jobnotifier-backend` (api/beat)
-   and `jobnotifier-backend-worker` (Playwright + Chromium).
+1. Build images (`scripts/build-images.sh`): lean `headstart-backend` (api/beat)
+   and `headstart-backend-worker` (Playwright + Chromium).
 2. Push to ECR.
 3. Run DB migrations as a one-off ECS task.
 4. Update ECS services to the new image tag (rolling deploy).

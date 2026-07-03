@@ -1,4 +1,4 @@
-# JobNotifier - thin wrapper over scripts/. Run `make help` for the list.
+# HeadStart - thin wrapper over scripts/. Run `make help` for the list.
 # Every target delegates to a script in scripts/ so that local dev, CI, and
 # cloud agents all execute the exact same code paths.
 

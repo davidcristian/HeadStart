@@ -21,20 +21,20 @@ log "Deploying tag ${IMAGE_TAG} to environment '${ENVIRONMENT}'"
 # 1) Build + push images.
 "${REPO_ROOT}/scripts/build-images.sh" --push
 
-# 2) Run migrations as a one-off ECS task (task def 'jobnotifier-migrate').
+# 2) Run migrations as a one-off ECS task (task def 'headstart-migrate').
 log "Running database migrations (one-off ECS task)"
 aws ecs run-task \
   --cluster "${ECS_CLUSTER}" \
-  --task-definition jobnotifier-migrate \
+  --task-definition headstart-migrate \
   --launch-type FARGATE \
   --region "${AWS_REGION}" >/dev/null || warn "migrate task submission failed; check logs"
 
 # 3) Force a new deployment of each long-running service.
 for svc in api frontend worker beat; do
-  log "Updating service jobnotifier-${svc}"
+  log "Updating service headstart-${svc}"
   aws ecs update-service \
     --cluster "${ECS_CLUSTER}" \
-    --service "jobnotifier-${svc}" \
+    --service "headstart-${svc}" \
     --force-new-deployment \
     --region "${AWS_REGION}" >/dev/null
 done

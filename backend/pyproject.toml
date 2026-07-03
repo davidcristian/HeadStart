@@ -3,9 +3,9 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "jobnotifier-backend"
+name = "headstart-backend"
 version = "0.1.0"
-description = "JobNotifier backend: API, scheduler, workers, scrapers, notifiers."
+description = "HeadStart backend: API, scheduler, workers, scrapers, notifiers."
 requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.111",

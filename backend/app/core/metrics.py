@@ -14,39 +14,39 @@ DeliveryStatus = Literal["sent", "failed"]
 NotificationMode = Literal["immediate", "digest"]
 
 PIPELINE_RUNS = Counter(
-    "jobnotifier_pipeline_runs_total",
+    "headstart_pipeline_runs_total",
     "Pipeline runs completed",
     ["status"],
 )
 SCRAPE_RUNS = Counter(
-    "jobnotifier_scrape_runs_total",
+    "headstart_scrape_runs_total",
     "Scrape attempts",
     ["adapter", "status"],
 )
 SCRAPE_DURATION_SECONDS = Histogram(
-    "jobnotifier_scrape_duration_seconds",
+    "headstart_scrape_duration_seconds",
     "Time spent in scraper.fetch",
     ["adapter"],
     buckets=(0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0),
 )
 SCRAPE_JOBS_FOUND = Histogram(
-    "jobnotifier_scrape_jobs_found",
+    "headstart_scrape_jobs_found",
     "Job postings returned by a scrape",
     ["adapter"],
     buckets=(0, 1, 5, 10, 25, 50, 100, 250, 500, 1000),
 )
 NOTIFICATION_DELIVERIES = Counter(
-    "jobnotifier_notification_deliveries_total",
+    "headstart_notification_deliveries_total",
     "Notification delivery attempts",
     ["notifier", "status", "mode"],
 )
 DIGEST_FLUSHES = Counter(
-    "jobnotifier_digest_flushes_total",
+    "headstart_digest_flushes_total",
     "Digest batch flushes",
     ["status"],
 )
 SCHEDULER_SEARCHES_ENQUEUED = Counter(
-    "jobnotifier_scheduler_searches_enqueued_total",
+    "headstart_scheduler_searches_enqueued_total",
     "Due searches enqueued by the scheduler",
 )
 

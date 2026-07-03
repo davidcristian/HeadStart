@@ -1,6 +1,6 @@
 # Roadmap
 
-Living plan for JobNotifier — what to build next and why. Update this doc when
+Living plan for HeadStart — what to build next and why. Update this doc when
 priorities shift or a milestone ships.
 
 **Current baseline (2026-06):** Phases 1–17, 18, and 19 shipped (four-tier pricing, per-user AI
@@ -80,7 +80,7 @@ Goal: run comfortably for a small team or as a lightly hosted service.
 | ~~Per-site rate limits~~ | ~~Configurable politeness per adapter; avoid retry storms~~ | **Shipped:** `rate_limit_min_interval_seconds` in source/search config; per-adapter defaults in `app/scrapers/rate_limit.py` |
 | ~~Admin panel~~ | ~~User management and global scrape stats~~ | **Shipped:** `/admin` UI + `GET/PATCH /admin/users`, `GET /admin/stats`; gated on `is_admin` |
 | ~~Hosted deploy polish~~ | ~~Streamline [deploying-to-aws.md](deploying-to-aws.md); consider a one-click template~~ | **Shipped:** `make aws-first-deploy` chains bootstrap → terraform apply → deploy; optional `DOMAIN_NAME` + `ROUTE53_ZONE_ID`; secrets saved to `.aws-first-deploy-secrets.env` |
-| ~~Playwright in production~~ | ~~Container sizing, browser pool, timeout/retry policy for JS-heavy sites~~ | **Shipped:** worker Docker target with Chromium; process-scoped browser pool; navigation timeout + retries; larger worker Fargate task + `jobnotifier-backend-worker` ECR image |
+| ~~Playwright in production~~ | ~~Container sizing, browser pool, timeout/retry policy for JS-heavy sites~~ | **Shipped:** worker Docker target with Chromium; process-scoped browser pool; navigation timeout + retries; larger worker Fargate task + `headstart-backend-worker` ECR image |
 
 **Done when:** an operator can tell whether the system is healthy without SSH or
 log diving.
@@ -102,7 +102,7 @@ Pursue only if core alerting is solid and adapter coverage is good.
 
 ## Phase 6 — Production SaaS
 
-Goal: turn JobNotifier from a self-hosted tool into a hosted product strangers can
+Goal: turn HeadStart from a self-hosted tool into a hosted product strangers can
 sign up for, pay for, and trust. Work the sub-phases in order — each builds on
 the previous.
 
@@ -165,7 +165,7 @@ product, pick a plan, pay, sign up, and use the app under enforceable plan limit
 
 ## Phase 7 — Auto-apply
 
-Goal: let users submit job applications from JobNotifier instead of only opening
+Goal: let users submit job applications from HeadStart instead of only opening
 apply links. Builds on [site credentials](modules/credentials.md) (authenticated
 sessions) and the job lifecycle (`seen_job.status`).
 

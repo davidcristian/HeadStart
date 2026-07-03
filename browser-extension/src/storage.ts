@@ -2,7 +2,7 @@
 
 import type { Session } from "./types";
 
-const STORAGE_KEY = "jobnotifier.session";
+const STORAGE_KEY = "headstart.session";
 
 export async function loadSession(): Promise<Session | null> {
   const stored = await chrome.storage.local.get(STORAGE_KEY);

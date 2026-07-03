@@ -122,7 +122,7 @@ def test_delete_wrong_password_rejected(client: TestClient, auth_headers: dict[s
 
 def test_delete_removes_account_and_clears_cookie(client: TestClient) -> None:
     headers = register_and_login(client, "gone@example.com")
-    assert client.cookies.get("jobnotifier_refresh")
+    assert client.cookies.get("headstart_refresh")
 
     resp = _delete_account(client, headers=headers)
     assert resp.status_code == 204

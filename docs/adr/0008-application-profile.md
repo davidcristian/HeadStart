@@ -6,7 +6,7 @@
 ## Context
 
 [Phase 7 — Auto-apply](../roadmap.md) lets users submit applications from
-JobNotifier instead of only opening apply links. Every apply flow needs the same
+HeadStart instead of only opening apply links. Every apply flow needs the same
 structured candidate data: contact details, links, a resume, a cover-letter
 template, and answers to recurring questions (work authorization, notice period,
 etc.). That data is PII and must be stored safely, but — unlike a session cookie

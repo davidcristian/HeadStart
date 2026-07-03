@@ -46,7 +46,7 @@ def _render_item(job: SeenJob) -> str:
     if seen_at.tzinfo is None:
         seen_at = seen_at.replace(tzinfo=UTC)
     pub_date = format_datetime(seen_at, usegmt=True)
-    guid = link or f"jobnotifier:{job.id}"
+    guid = link or f"headstart:{job.id}"
     return (
         "    <item>\n"
         f"      <title>{escape(title)}</title>\n"

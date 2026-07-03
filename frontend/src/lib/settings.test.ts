@@ -32,7 +32,7 @@ describe("settings", () => {
 
   it("never persists the access token to localStorage", () => {
     setAccessToken("secret-token");
-    expect(localStorage.getItem("jobnotifier.accessToken")).toBeNull();
+    expect(localStorage.getItem("headstart.accessToken")).toBeNull();
     expect(JSON.stringify(localStorage)).not.toContain("secret-token");
   });
 });

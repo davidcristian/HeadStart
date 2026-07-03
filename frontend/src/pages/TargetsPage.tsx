@@ -13,7 +13,7 @@ const TYPE_DEFAULTS: Record<string, Json> = {
   email: { to: "you@example.com" },
   ntfy: {
     server_url: "https://ntfy.sh",
-    topic: "jobnotifier-change-me",
+    topic: "headstart-change-me",
     priority: "default",
   },
   slack: {
@@ -27,7 +27,7 @@ const TYPE_DEFAULTS: Record<string, Json> = {
     chat_id: "123456789",
   },
   webhook: {
-    webhook_url: "https://example.com/hooks/jobnotifier",
+    webhook_url: "https://example.com/hooks/headstart",
     secret: "optional-signing-key",
   },
 };

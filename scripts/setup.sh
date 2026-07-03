@@ -2,7 +2,7 @@
 # Install local toolchains: backend virtualenv + deps, frontend deps, git hooks.
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
-log "Setting up JobNotifier development environment"
+log "Setting up HeadStart development environment"
 
 # ---- preflight: check host toolchain ----
 # These are NOT installed by this script (they are system/host tools). We only

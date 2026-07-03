@@ -11,7 +11,7 @@ from app.worker.schedule import beat_schedule
 configure_logging()
 
 celery_app = Celery(
-    "jobnotifier",
+    "headstart",
     broker=settings.broker_url,
     backend=settings.result_backend,
 )

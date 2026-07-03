@@ -5,7 +5,7 @@
 
 ## Context
 
-JobNotifier started single-user: one shared `API_AUTH_TOKEN` guarded write
+HeadStart started single-user: one shared `API_AUTH_TOKEN` guarded write
 endpoints and all data was global. We want multiple people to use one
 deployment, each with their own sources, searches, notification targets, and
 credentials, without seeing each other's data.

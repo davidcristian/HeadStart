@@ -28,13 +28,13 @@ def test_webhook_posts_expected_json_payload() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         captured.append(json.loads(request.content))
         assert request.headers["content-type"] == "application/json"
-        assert str(request.url) == "https://example.com/hooks/jobnotifier"
+        assert str(request.url) == "https://example.com/hooks/headstart"
         return httpx.Response(200, text="ok")
 
     notifier = WebhookNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
     ctx = NotifyContext(
         target_type="webhook",
-        config={"webhook_url": "https://example.com/hooks/jobnotifier"},
+        config={"webhook_url": "https://example.com/hooks/headstart"},
     )
 
     results = notifier.send(ctx, [_job()])
@@ -64,7 +64,7 @@ def test_webhook_includes_summary_when_present() -> None:
     notifier = WebhookNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
     ctx = NotifyContext(
         target_type="webhook",
-        config={"webhook_url": "https://example.com/hooks/jobnotifier"},
+        config={"webhook_url": "https://example.com/hooks/headstart"},
     )
     job = _job()
     job.summary = "Matches your search: mentions engineer."
@@ -87,7 +87,7 @@ def test_webhook_adds_hmac_signature_when_secret_configured() -> None:
     ctx = NotifyContext(
         target_type="webhook",
         config={
-            "webhook_url": "https://example.com/hooks/jobnotifier",
+            "webhook_url": "https://example.com/hooks/headstart",
             "secret": "signing-key",
         },
     )
@@ -110,7 +110,7 @@ def test_webhook_merges_custom_headers() -> None:
     ctx = NotifyContext(
         target_type="webhook",
         config={
-            "webhook_url": "https://example.com/hooks/jobnotifier",
+            "webhook_url": "https://example.com/hooks/headstart",
             "headers": {"X-Custom": "value"},
         },
     )
@@ -130,7 +130,7 @@ def test_webhook_digest_posts_batched_payload() -> None:
     notifier = WebhookNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
     ctx = NotifyContext(
         target_type="webhook",
-        config={"webhook_url": "https://example.com/hooks/jobnotifier"},
+        config={"webhook_url": "https://example.com/hooks/headstart"},
         digest=True,
         search_name="Backend roles",
     )
@@ -154,7 +154,7 @@ def test_webhook_records_failure_without_raising() -> None:
     notifier = WebhookNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
     ctx = NotifyContext(
         target_type="webhook",
-        config={"webhook_url": "https://example.com/hooks/jobnotifier"},
+        config={"webhook_url": "https://example.com/hooks/headstart"},
     )
 
     results = notifier.send(ctx, [_job(), _job("2")])

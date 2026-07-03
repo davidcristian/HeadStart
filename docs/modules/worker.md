@@ -81,7 +81,7 @@ log reaches a terminal status.
 
 When a scrape uses the `playwright` adapter, the worker reuses a process-scoped
 headless Chromium browser (see [scrapers.md](scrapers.md)). Use the worker Docker
-target / `jobnotifier-backend-worker` image in production.
+target / `headstart-backend-worker` image in production.
 
 Prometheus metrics for scrape latency, pipeline outcomes, and notification
 delivery are recorded here — see [metrics.md](metrics.md).

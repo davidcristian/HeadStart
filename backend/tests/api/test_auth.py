@@ -67,7 +67,7 @@ def test_login_returns_access_token_and_sets_refresh_cookie(client: TestClient) 
     # and must never be exposed in the response body.
     assert body["access_token"]
     assert "refresh_token" not in body
-    assert client.cookies.get("jobnotifier_refresh")
+    assert client.cookies.get("headstart_refresh")
 
     headers = {"Authorization": f"Bearer {body['access_token']}"}
     me = client.get("/api/v1/auth/me", headers=headers)
@@ -117,7 +117,7 @@ def test_logout_clears_refresh_cookie(client: TestClient) -> None:
         "/api/v1/auth/login",
         json={"email": "out@example.com", "password": "password123"},
     )
-    assert client.cookies.get("jobnotifier_refresh")
+    assert client.cookies.get("headstart_refresh")
 
     assert client.post("/api/v1/auth/logout").status_code == 200
     # The cookie is gone, so a subsequent cookie-based refresh is rejected.
@@ -135,7 +135,7 @@ def test_refresh_token_rejected_as_access_token(client: TestClient) -> None:
     )
 
     # A refresh token must not be accepted where an access token is required.
-    refresh_token = client.cookies.get("jobnotifier_refresh")
+    refresh_token = client.cookies.get("headstart_refresh")
     headers = {"Authorization": f"Bearer {refresh_token}"}
     assert client.get("/api/v1/auth/me", headers=headers).status_code == 401
 

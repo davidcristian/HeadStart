@@ -20,29 +20,29 @@ holds its own registry.
 
 | Name | Type | Labels | Meaning |
 | ---- | ---- | ------ | ------- |
-| `jobnotifier_pipeline_runs_total` | Counter | `status` (`success`, `error`, `not_found`) | Completed pipeline runs |
-| `jobnotifier_scrape_runs_total` | Counter | `adapter`, `status` (`success`, `error`) | Scrape attempts |
-| `jobnotifier_scrape_duration_seconds` | Histogram | `adapter` | Time in `scraper.fetch` |
-| `jobnotifier_scrape_jobs_found` | Histogram | `adapter` | Postings returned per scrape |
-| `jobnotifier_notification_deliveries_total` | Counter | `notifier`, `status` (`sent`, `failed`), `mode` (`immediate`, `digest`) | Per-job delivery attempts |
-| `jobnotifier_digest_flushes_total` | Counter | `status` (`success`, `error`) | Digest batch sends |
-| `jobnotifier_scheduler_searches_enqueued_total` | Counter | — | Due searches enqueued per beat tick |
+| `headstart_pipeline_runs_total` | Counter | `status` (`success`, `error`, `not_found`) | Completed pipeline runs |
+| `headstart_scrape_runs_total` | Counter | `adapter`, `status` (`success`, `error`) | Scrape attempts |
+| `headstart_scrape_duration_seconds` | Histogram | `adapter` | Time in `scraper.fetch` |
+| `headstart_scrape_jobs_found` | Histogram | `adapter` | Postings returned per scrape |
+| `headstart_notification_deliveries_total` | Counter | `notifier`, `status` (`sent`, `failed`), `mode` (`immediate`, `digest`) | Per-job delivery attempts |
+| `headstart_digest_flushes_total` | Counter | `status` (`success`, `error`) | Digest batch sends |
+| `headstart_scheduler_searches_enqueued_total` | Counter | — | Due searches enqueued per beat tick |
 
 ### Example PromQL
 
 ```promql
 # Scrape success rate (5m window)
-sum(rate(jobnotifier_scrape_runs_total{status="success"}[5m]))
+sum(rate(headstart_scrape_runs_total{status="success"}[5m]))
 /
-sum(rate(jobnotifier_scrape_runs_total[5m]))
+sum(rate(headstart_scrape_runs_total[5m]))
 
 # Notification delivery failure rate
-sum(rate(jobnotifier_notification_deliveries_total{status="failed"}[5m]))
+sum(rate(headstart_notification_deliveries_total{status="failed"}[5m]))
 /
-sum(rate(jobnotifier_notification_deliveries_total[5m]))
+sum(rate(headstart_notification_deliveries_total[5m]))
 
 # p95 scrape latency per adapter
-histogram_quantile(0.95, sum by (adapter, le) (rate(jobnotifier_scrape_duration_seconds_bucket[5m])))
+histogram_quantile(0.95, sum by (adapter, le) (rate(headstart_scrape_duration_seconds_bucket[5m])))
 ```
 
 ## Configuration

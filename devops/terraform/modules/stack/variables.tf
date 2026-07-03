@@ -44,11 +44,11 @@ variable "credentials_secret_key" {
 
 variable "db_username" {
   type    = string
-  default = "jobnotifier"
+  default = "headstart"
 }
 variable "db_name" {
   type    = string
-  default = "jobnotifier"
+  default = "headstart"
 }
 
 variable "cors_origins" {
@@ -81,7 +81,7 @@ variable "ntfy_default_server_url" {
 }
 variable "ntfy_default_topic" {
   type    = string
-  default = "jobnotifier-change-me"
+  default = "headstart-change-me"
 }
 
 # Optional SMTP for password-reset and email notifications.

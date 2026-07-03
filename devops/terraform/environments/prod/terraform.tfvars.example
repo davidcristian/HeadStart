@@ -22,4 +22,4 @@ route53_zone_id = "Z0123456789ABCDEFGHIJ"
 # smtp_user     = "..."
 # smtp_password = "..."   # prefer TF_VAR_smtp_password in the shell
 
-ntfy_default_topic = "jobnotifier-change-me"
+ntfy_default_topic = "headstart-change-me"

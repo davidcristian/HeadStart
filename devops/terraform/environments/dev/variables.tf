@@ -50,7 +50,7 @@ variable "acm_certificate_arn" {
 
 variable "ntfy_default_topic" {
   type    = string
-  default = "jobnotifier-change-me"
+  default = "headstart-change-me"
 }
 
 variable "smtp_host" {

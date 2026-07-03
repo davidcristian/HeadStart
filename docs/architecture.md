@@ -1,6 +1,6 @@
 # Architecture
 
-JobNotifier polls job sites on a schedule, detects newly-posted jobs that match
+HeadStart polls job sites on a schedule, detects newly-posted jobs that match
 your filters, and pushes them to your devices via ntfy.
 
 ## Components

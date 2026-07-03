@@ -137,5 +137,5 @@ and **enabled in production on the worker only**:
 ```
 
 On AWS, the worker ECS task is sized larger than api/beat (default **1024 CPU /
-2048 MiB**) and pulls the `jobnotifier-backend-worker` image. See
+2048 MiB**) and pulls the `headstart-backend-worker` image. See
 [deployment.md](deployment.md).

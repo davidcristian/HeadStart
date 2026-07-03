@@ -1,6 +1,6 @@
 # Deploying to AWS
 
-Step-by-step guide for a **first-time** deploy of JobNotifier to AWS ECS Fargate.
+Step-by-step guide for a **first-time** deploy of HeadStart to AWS ECS Fargate.
 For architecture and Terraform module layout, see
 [modules/deployment.md](modules/deployment.md).
 
@@ -113,7 +113,7 @@ make terraform-bootstrap PREFIX=YOURNAME
 Or run the underlying script directly: `./scripts/terraform-bootstrap-state.sh YOURNAME us-east-2`.
 
 Edit `devops/terraform/environments/dev/backend.tf` and replace
-`CHANGEME-jobnotifier-tfstate` with your bucket name (`YOURNAME-jobnotifier-tfstate`).
+`CHANGEME-headstart-tfstate` with your bucket name (`YOURNAME-headstart-tfstate`).
 Do the same in `environments/prod/backend.tf` when you add production.
 
 > **Tip:** `make aws-first-deploy` passes the bucket via `terraform init
@@ -149,7 +149,7 @@ Note the outputs:
 terraform output app_url             # primary URL (HTTPS when configured)
 terraform output alb_dns_name        # ALB DNS name (always available)
 terraform output https_enabled       # true when TLS is active
-terraform output ecs_cluster_name    # e.g. jobnotifier-dev
+terraform output ecs_cluster_name    # e.g. headstart-dev
 terraform output ecr_repository_urls
 ```
 
@@ -184,16 +184,16 @@ make deploy
 1. Builds backend images (`scripts/build-images.sh --push`): lean API/beat image
    plus the Playwright-enabled worker image, and the frontend image
 2. Pushes them to ECR (tag = current git short SHA, or `latest` if not in git)
-3. Runs DB migrations as a one-off ECS task (`jobnotifier-migrate`)
-4. Forces a rolling deploy of `jobnotifier-api`, `jobnotifier-frontend`,
-   `jobnotifier-worker`, and `jobnotifier-beat`
+3. Runs DB migrations as a one-off ECS task (`headstart-migrate`)
+4. Forces a rolling deploy of `headstart-api`, `headstart-frontend`,
+   `headstart-worker`, and `headstart-beat`
 
 Verify rollout:
 
 ```bash
 aws ecs describe-services \
   --cluster "$ECS_CLUSTER" \
-  --services jobnotifier-api jobnotifier-frontend jobnotifier-worker jobnotifier-beat \
+  --services headstart-api headstart-frontend headstart-worker headstart-beat \
   --region "$AWS_REGION" \
   --query 'services[*].[serviceName,runningCount,desiredCount,deployments[0].rolloutState]' \
   --output table
@@ -257,7 +257,7 @@ When ready for production:
    same `TF_VAR_*` secrets pattern.
 3. Set `TF_VAR_cors_origins` to your real domain(s) — see
    `prod/terraform.tfvars.example`.
-4. Deploy with `ENVIRONMENT=prod` and `ECS_CLUSTER=jobnotifier-prod`.
+4. Deploy with `ENVIRONMENT=prod` and `ECS_CLUSTER=headstart-prod`.
 
 `prod` uses larger instances, Multi-AZ RDS, and deletion protection on the
 database.
@@ -341,7 +341,7 @@ and the same application secrets
 | ------- | ------------------ |
 | ECS tasks stuck `PENDING` | Images not in ECR yet — run `make deploy` |
 | `make deploy` fails on ECR login | `aws sts get-caller-identity` or region mismatch |
-| Health check fails | Migrations not finished; check CloudWatch log group `/ecs/jobnotifier-dev` |
+| Health check fails | Migrations not finished; check CloudWatch log group `/ecs/headstart-dev` |
 | 401 / login loops in UI | API not reachable; confirm ALB routes `/api/*` to the API target group |
 | No job notifications | Same as local — ntfy topic mismatch; see [getting-started.md](getting-started.md) |
 | `terraform apply` state lock | Another apply in progress, or stale DynamoDB lock row |

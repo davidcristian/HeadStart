@@ -23,9 +23,9 @@ def test_metrics_endpoint_exposes_prometheus_text(metrics_client: TestClient) ->
     assert resp.status_code == 200
     assert "text/plain" in resp.headers["content-type"]
     body = resp.text
-    assert "jobnotifier_pipeline_runs_total" in body
-    assert "jobnotifier_scrape_runs_total" in body
-    assert "jobnotifier_notification_deliveries_total" in body
+    assert "headstart_pipeline_runs_total" in body
+    assert "headstart_scrape_runs_total" in body
+    assert "headstart_notification_deliveries_total" in body
 
 
 def test_metrics_disabled_returns_404(monkeypatch: pytest.MonkeyPatch) -> None:

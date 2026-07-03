@@ -1,10 +1,10 @@
-# Full JobNotifier stack for one environment. Each environment (dev, prod) calls
+# Full HeadStart stack for one environment. Each environment (dev, prod) calls
 # this module with its own provider + remote state.
 
 locals {
-  name = "jobnotifier-${var.environment}"
+  name = "headstart-${var.environment}"
   tags = merge(var.tags, {
-    Project     = "JobNotifier"
+    Project     = "HeadStart"
     Environment = var.environment
     ManagedBy   = "terraform"
   })
@@ -61,7 +61,7 @@ module "security" {
 
 module "ecr" {
   source       = "../ecr"
-  repositories = ["jobnotifier-backend", "jobnotifier-backend-worker", "jobnotifier-frontend"]
+  repositories = ["headstart-backend", "headstart-backend-worker", "headstart-frontend"]
   tags         = local.tags
 }
 
@@ -189,9 +189,9 @@ module "ecs" {
   tasks_security_group_id   = module.security.tasks_sg_id
   execution_role_arn        = module.iam.execution_role_arn
   task_role_arn             = module.iam.task_role_arn
-  backend_image             = module.ecr.repository_urls["jobnotifier-backend"]
-  worker_backend_image      = module.ecr.repository_urls["jobnotifier-backend-worker"]
-  frontend_image            = module.ecr.repository_urls["jobnotifier-frontend"]
+  backend_image             = module.ecr.repository_urls["headstart-backend"]
+  worker_backend_image      = module.ecr.repository_urls["headstart-backend-worker"]
+  frontend_image            = module.ecr.repository_urls["headstart-frontend"]
   image_tag                 = var.image_tag
   cpu                       = var.ecs_cpu
   memory                    = var.ecs_memory

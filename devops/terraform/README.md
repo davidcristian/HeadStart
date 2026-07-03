@@ -1,6 +1,6 @@
 # Terraform (AWS deployment)
 
-Provisions JobNotifier on AWS ECS Fargate.
+Provisions HeadStart on AWS ECS Fargate.
 
 - **First-time deploy walkthrough:** [../../docs/deploying-to-aws.md](../../docs/deploying-to-aws.md)
 - **Architecture / module layout:** [../../docs/modules/deployment.md](../../docs/modules/deployment.md)
@@ -65,5 +65,5 @@ make deploy
   `terraform.tfvars` (gitignored). They are stored in AWS Secrets Manager and
   injected into ECS tasks at runtime.
 - `prod` enables Multi-AZ RDS and deletion protection; `dev` is minimal/cheap.
-- ECS service + task family names are stable (`jobnotifier-api`, etc.) so the
+- ECS service + task family names are stable (`headstart-api`, etc.) so the
   same `deploy.sh` works against any environment's cluster.

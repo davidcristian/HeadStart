@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Shared helpers for JobNotifier scripts. Source this; do not execute directly.
+# Shared helpers for HeadStart scripts. Source this; do not execute directly.
 
 set -euo pipefail
 

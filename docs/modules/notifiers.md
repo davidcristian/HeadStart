@@ -111,7 +111,7 @@ all jobs.
 
 ```json
 {
-  "webhook_url": "https://example.com/hooks/jobnotifier",
+  "webhook_url": "https://example.com/hooks/headstart",
   "secret": "optional-hmac-signing-key",
   "headers": { "X-Custom": "value" }
 }

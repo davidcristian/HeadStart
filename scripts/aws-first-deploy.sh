@@ -27,7 +27,7 @@ SECRETS_FILE="${REPO_ROOT}/.aws-first-deploy-secrets.env"
 
 usage() {
   cat <<'EOF'
-JobNotifier first-time AWS deploy (bootstrap → terraform → deploy).
+HeadStart first-time AWS deploy (bootstrap → terraform → deploy).
 
 Quick start:
   export AWS_REGION=us-east-2
@@ -88,7 +88,7 @@ prompt_prefix() {
   fi
   echo
   echo "Choose a globally unique PREFIX for the Terraform state bucket."
-  echo "Example: my-github-handle  →  bucket my-github-handle-jobnotifier-tfstate"
+  echo "Example: my-github-handle  →  bucket my-github-handle-headstart-tfstate"
   read -r -p "PREFIX: " PREFIX
   validate_prefix "${PREFIX}"
 }
@@ -122,7 +122,7 @@ ensure_tf_secrets() {
     export TF_VAR_credentials_secret_key="$(openssl rand -hex 32)"
     generated=1
   fi
-  if [[ -z "${TF_VAR_ntfy_default_topic:-}" || "${TF_VAR_ntfy_default_topic}" == "jobnotifier-change-me" ]]; then
+  if [[ -z "${TF_VAR_ntfy_default_topic:-}" || "${TF_VAR_ntfy_default_topic}" == "headstart-change-me" ]]; then
     export TF_VAR_ntfy_default_topic="jobs-$(openssl rand -hex 4)"
     generated=1
   fi
@@ -174,7 +174,7 @@ run_terraform() {
   terraform -chdir="${tf_dir}" init \
     -backend-config="bucket=${bucket}" \
     -backend-config="region=${AWS_REGION}" \
-    -backend-config="dynamodb_table=jobnotifier-tflock" \
+    -backend-config="dynamodb_table=headstart-tflock" \
     -reconfigure
 
   confirm_apply
@@ -256,7 +256,7 @@ check_aws_credentials
 prompt_prefix
 validate_prefix "${PREFIX}"
 
-BUCKET="${PREFIX}-jobnotifier-tfstate"
+BUCKET="${PREFIX}-headstart-tfstate"
 TF_DIR="${REPO_ROOT}/devops/terraform/environments/${ENVIRONMENT}"
 
 log "First-time deploy: environment=${ENVIRONMENT} region=${AWS_REGION} bucket=${BUCKET}"

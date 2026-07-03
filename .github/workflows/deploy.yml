@@ -43,7 +43,7 @@ jobs:
       - name: Build, push, migrate, and roll services
         env:
           ECR_REGISTRY: ${{ steps.ecr.outputs.registry }}
-          ECS_CLUSTER: jobnotifier-${{ env.TARGET_ENV }}
+          ECS_CLUSTER: headstart-${{ env.TARGET_ENV }}
           IMAGE_TAG: ${{ github.sha }}
           VITE_API_BASE_URL: /api
         run: ./scripts/deploy.sh

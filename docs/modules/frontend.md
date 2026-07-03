@@ -2,8 +2,7 @@
 
 **Path:** `frontend/`
 
-React + TypeScript (Vite). The product is branded **HeadStart** in the UI; the
-repo and package names still use `jobnotifier` internally. Built to a static bundle
+React + TypeScript (Vite). Built to a static bundle
 and served by nginx in a container (which also reverse-proxies `/api` to the backend
 in production).
 

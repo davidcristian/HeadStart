@@ -53,4 +53,4 @@ def test_build_rss_feed_escapes_xml_special_characters() -> None:
     assert "<title>Dev &amp; Ops</title>" in xml
     assert "<title>Jobs &amp; " in xml
     assert "<description>Test &lt;feed&gt;</description>" in xml
-    assert '<guid isPermaLink="false">jobnotifier:1</guid>' in xml
+    assert '<guid isPermaLink="false">headstart:1</guid>' in xml

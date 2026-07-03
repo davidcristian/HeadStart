@@ -49,7 +49,7 @@ class Settings(BaseSettings):
     # so it is out of reach of XSS). Scope it to the auth endpoints. Defaults are
     # production-safe (Secure + Lax, same-site behind nginx); over plain-HTTP
     # local dev set AUTH_COOKIE_SECURE=false.
-    auth_cookie_name: str = "jobnotifier_refresh"
+    auth_cookie_name: str = "headstart_refresh"
     auth_cookie_path: str = "/api/v1/auth"
     auth_cookie_secure: bool = True
     auth_cookie_samesite: str = "lax"
@@ -68,7 +68,7 @@ class Settings(BaseSettings):
     smtp_port: int = 587
     smtp_user: str = ""
     smtp_password: str = ""
-    smtp_from: str = "noreply@jobnotifier.local"
+    smtp_from: str = "noreply@headstart.local"
     smtp_use_tls: bool = True
 
     # ---- credential encryption ----
@@ -81,9 +81,9 @@ class Settings(BaseSettings):
     profile_resume_max_bytes: int = 2_097_152
 
     # ---- database ----
-    postgres_user: str = "jobnotifier"
-    postgres_password: str = "jobnotifier"
-    postgres_db: str = "jobnotifier"
+    postgres_user: str = "headstart"
+    postgres_password: str = "headstart"
+    postgres_db: str = "headstart"
     postgres_host: str = "localhost"
     postgres_port: int = 5432
     database_url: str | None = None
@@ -143,7 +143,7 @@ class Settings(BaseSettings):
 
     # ---- ntfy defaults (used by seed + default target) ----
     ntfy_default_server_url: str = "https://ntfy.sh"
-    ntfy_default_topic: str = "jobnotifier-change-me"
+    ntfy_default_topic: str = "headstart-change-me"
 
     # ---- free-tier ads (optional third-party slot; house upgrade CTA is always on) ----
     # Set ADS_ENABLED=false to hide all in-app ads, including the built-in upgrade card.

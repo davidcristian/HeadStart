@@ -1,3 +1,3 @@
-"""JobNotifier backend application package."""
+"""HeadStart backend application package."""
 
 __version__ = "0.1.0"

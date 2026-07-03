@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Bootstrap remote Terraform state (S3 + DynamoDB lock table) for JobNotifier.
+# Bootstrap remote Terraform state (S3 + DynamoDB lock table) for HeadStart.
 #
 # Usage:
 #   ./scripts/terraform-bootstrap-state.sh YOURNAME us-east-2
 #
 # Then replace CHANGEME in devops/terraform/environments/*/backend.tf with
-# YOURNAME-jobnotifier-tfstate.
+# YOURNAME-headstart-tfstate.
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 PREFIX="${1:-}"
@@ -15,8 +15,8 @@ if [[ -z "${PREFIX}" ]]; then
   die "Usage: $0 <state-bucket-prefix> [aws-region]"
 fi
 
-BUCKET="${PREFIX}-jobnotifier-tfstate"
-LOCK_TABLE="jobnotifier-tflock"
+BUCKET="${PREFIX}-headstart-tfstate"
+LOCK_TABLE="headstart-tflock"
 
 have aws || die "AWS CLI is required."
 

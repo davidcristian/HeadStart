@@ -6,7 +6,7 @@ channel-specific formatting.
 
 Target config:
     {
-      "webhook_url": "https://example.com/hooks/jobnotifier",  # required
+      "webhook_url": "https://example.com/hooks/headstart",  # required
       "secret": "optional-hmac-signing-key",                   # optional
       "headers": { "X-Custom": "value" }                       # optional
     }

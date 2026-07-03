@@ -1,12 +1,12 @@
 variable "name" {
   type        = string
-  description = "Cluster/log-group name (e.g. jobnotifier-dev)."
+  description = "Cluster/log-group name (e.g. headstart-dev)."
 }
 
 variable "service_prefix" {
   type        = string
   description = "Prefix for ECS service + task family names (kept stable across envs so deploy.sh can target them)."
-  default     = "jobnotifier"
+  default     = "headstart"
 }
 
 variable "region" { type = string }

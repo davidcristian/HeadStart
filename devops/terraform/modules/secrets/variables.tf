@@ -1,6 +1,6 @@
 variable "name" {
   type        = string
-  description = "Secret name prefix (e.g. jobnotifier-dev)."
+  description = "Secret name prefix (e.g. headstart-dev)."
 }
 
 variable "secret_names" {

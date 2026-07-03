@@ -3,10 +3,10 @@
 # them via `terraform init -backend-config=...`.
 terraform {
   backend "s3" {
-    bucket         = "CHANGEME-jobnotifier-tfstate"
+    bucket         = "CHANGEME-headstart-tfstate"
     key            = "dev/terraform.tfstate"
     region         = "us-east-2"
-    dynamodb_table = "jobnotifier-tflock"
+    dynamodb_table = "headstart-tflock"
     encrypt        = true
   }
 }
