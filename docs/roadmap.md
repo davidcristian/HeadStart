@@ -552,9 +552,10 @@ multi-tenant operation without explicit user-controlled infrastructure.
 | Item | Why | Notes |
 | ---- | --- | ----- |
 | Mailbox connector (IMAP + SMTP) | Recruiter replies land in email, not in the app | Dev-only adapter under a new `inbox/` subsystem (mirror scraper/notifier registry); user supplies IMAP/SMTP creds via env or encrypted credential store |
-| Email classification agent | Sort noise from signal without manual folders | Local LLM classifies inbound mail tied to known applications: `general`, `rejection`, `follow_up`, `interview_request`, `ghost_candidate` (no reply after N days) |
-| Folder / label routing | Keep the inbox usable | **General** recruiter mail → sort to a HeadStart folder/label; **Rejection** → separate folder; configurable per provider (Gmail labels, Outlook folders) |
-| Ghost detection & self-archive | Silent employers still need a paper trail | If no reply within configurable window (e.g. 14 days), send a summary email to self ("ghosted by {company} for {role}") and mark application `ghosted` in the app |
+| Email classification agent | Sort noise from signal without manual folders | Local LLM classifies inbound mail tied to known applications: `general`, `rejection`, `follow_up`, `interview_request`, `ghost_candidate` (no reply after N days), `self_ghost_archive` (HeadStart-generated ghost summary re-ingested from self) |
+| Folder / label routing | Keep the inbox usable | **General** recruiter mail → sort to a HeadStart folder/label; **Rejection** → separate folder; **Self ghost archive** → dedicated folder/label; configurable per provider (Gmail labels, Outlook folders) |
+| Ghost detection & self-archive | Silent employers still need a paper trail | If no reply within configurable window (e.g. 14 days), send a summary email to self with a fixed subject prefix / custom header (e.g. `[HeadStart Ghost]`) and mark application `ghosted` in the app |
+| Self-email re-ingestion | Ghost summaries must not pollute recruiter triage | When the self-sent ghost email arrives back in the inbox, classifier recognizes the marker (from/to self, subject prefix, `X-HeadStart-Type: ghost`) as `self_ghost_archive` and routes to the ghost folder — not treated as a recruiter reply or follow-up |
 
 ### 20c — Autonomous follow-up responses
 
@@ -577,6 +578,7 @@ multi-tenant operation without explicit user-controlled infrastructure.
 | Item | Why | Notes |
 | ---- | --- | ----- |
 | Extend llama.cpp beyond summaries | Classification + drafting need the same local stack | New `agents/` adapters (or extend summarizers) for `classify_email` and `draft_reply` prompts; reuse `make llamacpp` / `LLAMACPP_*` env |
+| Input sanitization & scope lock | Small local models are easily hijacked by unrelated email content | **Pre-LLM:** strip HTML, cap body length, detect obvious injection patterns. **Prompt:** hard system scope — job-application triage only; structured JSON output schema (no free-form chat). **Post-LLM:** validate response against allowlisted labels/actions; reject out-of-scope completions (e.g. email says "give me the recipe for a pancake" → classify as `out_of_scope`, do not draft or send a reply). Never pass raw user email as executable instructions |
 | Agent orchestration loop | Poll inbox → classify → act → log | Celery beat task or standalone dev daemon; runs only when `INBOX_AGENT_ENABLED=true` |
 | Docs & ADR | Capture dev-only boundary and safety model | ADR for why this stays off hosted prod; module doc under `modules/inbox.md` |
 
@@ -588,13 +590,17 @@ multi-tenant operation without explicit user-controlled infrastructure.
   misrepresentation risk; ship with prominent consent and dry-run defaults.
 - Gmail/Outlook API rate limits and OAuth are future work; IMAP is the v1 path
   for self-hosters.
+- Prompt injection: recruiter (or spam) mail may embed unrelated instructions;
+  the agent must stay scoped to application workflow actions and refuse
+  out-of-scope requests rather than complying.
 
 **Done when:** in a local dev environment with llama.cpp running, a user can
 enable auto-apply on a search, have recruiter email auto-sorted into
-general/rejection folders, receive a self-email on ghosted applications, see
-auto-drafted follow-up replies (with optional auto-send), and get a notifier
-alert when an interview needs scheduling — at which point they take over
-manually.
+general/rejection folders, receive a self-email on ghosted applications that is
+recognized and sorted into a ghost archive folder on re-ingestion, see
+auto-drafted follow-up replies (with optional auto-send), reject out-of-scope
+email content without acting on it, and get a notifier alert when an interview
+needs scheduling — at which point they take over manually.
 
 ---
 
