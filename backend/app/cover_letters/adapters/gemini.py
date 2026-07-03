@@ -35,8 +35,8 @@ class GeminiCoverLetterGenerator(CoverLetterGenerator):
         base_url = str(self._settings.gemini_base_url).rstrip("/")
         model = str(self._settings.gemini_model)
         model_path = quote(model, safe="")
-        key_param = quote(api_key, safe="")
-        url = f"{base_url}/models/{model_path}:generateContent?key={key_param}"
+        url = f"{base_url}/models/{model_path}:generateContent"
+        headers = {"x-goog-api-key": api_key}
         max_tokens = int(getattr(self._settings, "cover_letter_max_tokens", 900))
         payload = {
             "systemInstruction": {"parts": [{"text": SYSTEM_PROMPT}]},
@@ -46,7 +46,7 @@ class GeminiCoverLetterGenerator(CoverLetterGenerator):
                 "maxOutputTokens": max_tokens,
             },
         }
-        resp = self._client.post(url, json=payload)
+        resp = self._client.post(url, json=payload, headers=headers)
         resp.raise_for_status()
         return extract_gemini_content(resp.json())
 

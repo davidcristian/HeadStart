@@ -6,7 +6,8 @@ features. Update the Status column (and strike the row) when an item ships; link
 
 Produced by a read-only multi-agent audit — 13 subsystem clusters, every finding
 adversarially verified against the code. **77 confirmed** findings (1 critical, 9 high,
-16 medium, 51 low). 61 are already resolved: the browser-extension cluster (6) via
+16 medium, 51 low). 62 are already resolved: the WS10 Gemini key-in-URL security fix
+(1 med), the browser-extension cluster (6) via
 removal (WS8), the WS3 security-hardening trio (2 high + 1 low), the WS11 docs
 cluster (8: 1 med + 7 low), all 6 WS1 inbox-UID items (1 crit + 1 high + 1 med
 + 3 low), all 4 WS2 scheduler items (1 high + 3 low), all 6 WS5 billing items
@@ -137,10 +138,14 @@ payloads are caught.
 ## WS10 — LLM-adapter-family consolidation (refactor, ~1,800 LOC)
 Five families (`summarizers`/`resumes`/`cover_letters`/`email_classifiers`/`reply_drafters`)
 reimplement near-identical provider adapters + registries. **Approved direction:** one
-dedicated consolidation PR. The Gemini security fix should ship regardless.
+dedicated consolidation PR. The Gemini security fix shipped separately first (below).
+The Gemini key-in-URL security fix (item 1) shipped as its own PR — all four leaking
+families now send `x-goog-api-key` as a header (matching `email_classifiers`), with a
+per-family regression test asserting the key never lands in the URL. Items 2–7 (the
+consolidation refactor) remain for the dedicated PR.
 | Sev | Type | Item | Location | Status |
 | --- | ---- | ---- | -------- | ------ |
-| 🟡 MED | 🔒 | Gemini API key in URL query string in 4 of 5 families (loggable); use `x-goog-api-key` header like `email_classifiers` | `*/adapters/gemini.py` | ☐ |
+| 🟡 MED | 🔒 | Gemini API key in URL query string in 4 of 5 families (loggable); now sends `x-goog-api-key` header like `email_classifiers` | `*/adapters/gemini.py` | ✅ |
 | ⚪ LOW | 🔁 | Gemini adapters diverge (key-in-URL vs header; model quoting) | `email_classifiers/adapters/gemini.py:36` | ☐ |
 | ⚪ LOW | ♻️ | `summarizers/` duplicate all response/auth helpers instead of using shared `llm_common` (already drifted) | `summarizers/adapters/openai.py:113` | ☐ |
 | ⚪ LOW | ♻️ | Shared helpers oddly live under `cover_letters/adapters/llm_common.py`, re-exported by peers (layering smell) | `cover_letters/adapters/llm_common.py:1` | ☐ |

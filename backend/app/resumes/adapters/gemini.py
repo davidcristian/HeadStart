@@ -36,7 +36,6 @@ class GeminiResumeCurator(ResumeCurator):
         base_url = str(self._settings.gemini_base_url).rstrip("/")
         model = str(self._settings.gemini_model)
         model_path = quote(model, safe="")
-        key_param = quote(api_key, safe="")
         max_tokens = int(getattr(self._settings, "resume_curation_max_tokens", 1200))
         payload = {
             "systemInstruction": {"parts": [{"text": SYSTEM_PROMPT}]},
@@ -47,8 +46,9 @@ class GeminiResumeCurator(ResumeCurator):
                 "responseMimeType": "application/json",
             },
         }
-        url = f"{base_url}/models/{model_path}:generateContent?key={key_param}"
-        resp = self._client.post(url, json=payload)
+        url = f"{base_url}/models/{model_path}:generateContent"
+        headers = {"x-goog-api-key": api_key}
+        resp = self._client.post(url, json=payload, headers=headers)
         resp.raise_for_status()
         return parse_curated_json(extract_gemini_content(resp.json()), ctx)
 

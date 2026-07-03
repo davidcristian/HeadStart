@@ -31,7 +31,8 @@ def test_gemini_posts_generate_content_and_returns_blurb() -> None:
         assert str(request.url).startswith(
             "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
         )
-        assert "key=gemini-test-key" in str(request.url)
+        assert request.headers["x-goog-api-key"] == "gemini-test-key"
+        assert "key=" not in str(request.url)
         return httpx.Response(
             200,
             json={

@@ -46,11 +46,13 @@ class GeminiSummarizer(Summarizer):
         base_url = str(self._settings.gemini_base_url).rstrip("/")
         model = str(self._settings.gemini_model)
         model_path = quote(model, safe="")
-        key_param = quote(api_key, safe="")
-        url = f"{base_url}/models/{model_path}:generateContent?key={key_param}"
-        return [self._summarize_one(url, ctx, job) for job in jobs]
+        url = f"{base_url}/models/{model_path}:generateContent"
+        headers = {"x-goog-api-key": api_key}
+        return [self._summarize_one(url, headers, ctx, job) for job in jobs]
 
-    def _summarize_one(self, url: str, ctx: SummaryContext, job: JobPosting) -> str:
+    def _summarize_one(
+        self, url: str, headers: dict[str, str], ctx: SummaryContext, job: JobPosting
+    ) -> str:
         payload = {
             "systemInstruction": {"parts": [{"text": _SYSTEM_PROMPT}]},
             "contents": [
@@ -64,7 +66,7 @@ class GeminiSummarizer(Summarizer):
                 "maxOutputTokens": 80,
             },
         }
-        resp = self._client.post(url, json=payload)
+        resp = self._client.post(url, json=payload, headers=headers)
         resp.raise_for_status()
         return _extract_content(resp.json())
 
