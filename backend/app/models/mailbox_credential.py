@@ -4,9 +4,9 @@ One row per user. The secret payload is a JSON `MailboxConfig` encrypted with
 Fernet before storage. Dev-only — used when `INBOX_AGENT_ENABLED=true`.
 """
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
-from sqlalchemy import Boolean, ForeignKey, String, Text
+from sqlalchemy import JSON, Boolean, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, TimestampMixin
@@ -25,5 +25,6 @@ class MailboxCredential(Base, TimestampMixin):
     connector_type: Mapped[str] = mapped_column(String(32), nullable=False, default="imap_smtp")
     secret_ciphertext: Mapped[str] = mapped_column(Text, nullable=False)
     enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    routing_config: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
 
     user: Mapped["User"] = relationship(back_populates="mailbox_credential")

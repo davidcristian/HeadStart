@@ -78,3 +78,11 @@ class ConnectionTestResult(BaseModel):
     smtp_ok: bool
     error: str | None = None
     details: dict[str, Any] = Field(default_factory=dict)
+
+
+class MoveResult(BaseModel):
+    """Outcome of moving one message to another IMAP mailbox folder."""
+
+    status: str  # "moved" | "skipped" | "failed"
+    destination: str | None = None
+    error: str | None = None

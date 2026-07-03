@@ -50,6 +50,9 @@ class EmailClassificationRead(BaseModel):
     subject: str
     from_addr: str
     linked_application: LinkedApplicationRead | None = None
+    routed_to: str | None = None
+    routing_status: str | None = None
+    routing_error: str | None = None
     created_at: datetime
 
 

@@ -10,6 +10,18 @@ class InboxClassificationRepository:
     def __init__(self, session: Session) -> None:
         self.session = session
 
+    def get_by_id_for_user(
+        self, user_id: int, classification_id: int
+    ) -> InboxClassification | None:
+        return self.session.scalar(
+            select(InboxClassification)
+            .where(
+                InboxClassification.user_id == user_id,
+                InboxClassification.id == classification_id,
+            )
+            .options(joinedload(InboxClassification.seen_job))
+        )
+
     def get_by_user_and_uid(self, user_id: int, message_uid: int) -> InboxClassification | None:
         return self.session.scalar(
             select(InboxClassification)

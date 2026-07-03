@@ -11,6 +11,7 @@ from app.inbox.types import (
     ConnectionTestResult,
     FetchResult,
     MailboxContext,
+    MoveResult,
     OutboundMessage,
     SendResult,
 )
@@ -38,6 +39,17 @@ class MailboxConnector(ABC):
     @abstractmethod
     def test_connection(self, ctx: MailboxContext) -> ConnectionTestResult:
         """Verify IMAP and SMTP login without fetching mail."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def move_message(
+        self,
+        ctx: MailboxContext,
+        *,
+        uid: int,
+        destination: str,
+    ) -> MoveResult:
+        """Move one message from the configured mailbox into `destination`."""
         raise NotImplementedError
 
 

@@ -21,6 +21,7 @@ from app.inbox.types import (
     FetchResult,
     MailboxConfig,
     MailboxContext,
+    MoveResult,
     OutboundMessage,
     SendResult,
 )
@@ -124,6 +125,64 @@ class ImapSmtpMailbox(MailboxConnector):
             error=error,
             details={"imap_mailbox": config.imap_mailbox},
         )
+
+    def move_message(
+        self,
+        ctx: MailboxContext,
+        *,
+        uid: int,
+        destination: str,
+    ) -> MoveResult:
+        """Copy the message to `destination` and remove it from the source mailbox."""
+        config = ctx.config
+        source = config.imap_mailbox
+        if destination == source:
+            return MoveResult(status="skipped", destination=destination)
+        client = self._imap_connect(config)
+        try:
+            self._ensure_mailbox(client, destination)
+            client.select(source, readonly=False)
+            moved = self._uid_move(client, uid, destination)
+            if moved:
+                return MoveResult(status="moved", destination=destination)
+            status, _ = client.uid("COPY", str(uid), destination)
+            if status != "OK":
+                return MoveResult(
+                    status="failed",
+                    destination=destination,
+                    error="IMAP COPY failed",
+                )
+            status, _ = client.uid("STORE", str(uid), "+FLAGS", "(\\Deleted)")
+            if status != "OK":
+                return MoveResult(
+                    status="failed",
+                    destination=destination,
+                    error="IMAP STORE \\Deleted failed",
+                )
+            client.expunge()
+            return MoveResult(status="moved", destination=destination)
+        except imaplib.IMAP4.error as exc:
+            logger.warning("imap move failed uid=%s dest=%s: %s", uid, destination, exc)
+            return MoveResult(status="failed", destination=destination, error=str(exc))
+        finally:
+            self._imap_logout(client)
+
+    @staticmethod
+    def _ensure_mailbox(client: imaplib.IMAP4 | imaplib.IMAP4_SSL, mailbox: str) -> None:
+        with contextlib.suppress(imaplib.IMAP4.error):
+            client.create(mailbox)
+
+    @staticmethod
+    def _uid_move(client: imaplib.IMAP4 | imaplib.IMAP4_SSL, uid: int, destination: str) -> bool:
+        """Use UID MOVE when the server advertises support (RFC 6851)."""
+        caps = client.capabilities or ()
+        normalized = {
+            (cap.decode() if isinstance(cap, bytes) else str(cap)).upper() for cap in caps
+        }
+        if "MOVE" not in normalized:
+            return False
+        status, _ = client.uid("MOVE", str(uid), destination)
+        return status == "OK"
 
     @staticmethod
     def _imap_connect(config: MailboxConfig) -> imaplib.IMAP4 | imaplib.IMAP4_SSL:

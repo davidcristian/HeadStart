@@ -34,6 +34,7 @@ from app.schemas.inbox_classification import (
 from app.services.applications import latest_live_attempt
 from app.services.inbox import InboxService
 from app.services.inbox_linking import link_message_to_job, linked_application_context
+from app.services.inbox_routing import InboxRoutingService
 from app.services.plan_limits import PlanLimitsService
 
 logger = get_logger(__name__)
@@ -53,6 +54,7 @@ class EmailClassificationService:
         self.session = session
         self.users = UserRepository(session)
         self.inbox = InboxService(session)
+        self.routing = InboxRoutingService(session)
         self.pipeline = ApplicationPipelineRepository(session)
         self.classifications = InboxClassificationRepository(session)
         self._factory = classifier_factory or (
@@ -115,6 +117,7 @@ class EmailClassificationService:
         self.classifications.add(row)
         if linked_job is not None:
             row.seen_job = linked_job
+        self.routing.route_after_classify(user_id, row)
         return self._to_read(row)
 
     def list_for_user(self, user_id: int, *, limit: int = 50) -> list[EmailClassificationRead]:
@@ -203,5 +206,8 @@ class EmailClassificationService:
             subject=row.subject,
             from_addr=row.from_addr,
             linked_application=linked,
+            routed_to=row.routed_to,
+            routing_status=row.routing_status,
+            routing_error=row.routing_error,
             created_at=row.created_at,
         )

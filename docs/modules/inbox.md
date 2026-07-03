@@ -70,6 +70,9 @@ All routes require auth and `INBOX_AGENT_ENABLED=true`.
 | GET    | `/messages`       | Fetch inbound messages (`since_uid`, `limit`)|
 | POST   | `/classify`       | Classify one message (body or mailbox `uid`) |
 | GET    | `/classifications`| List recent persisted classifications        |
+| GET    | `/routing`        | Read label→folder routing settings           |
+| PUT    | `/routing`        | Update label→folder routing settings         |
+| POST   | `/route`          | Move a classified message to its folder      |
 
 `GET /meta` includes `mailboxes` (registered connector keys) and
 `inbox_agent_enabled`.
@@ -97,10 +100,26 @@ Labels: `general`, `rejection`, `follow_up`, `interview_request`,
 - **Persistence:** `inbox_classification` table (one row per user + mailbox UID);
   `EmailClassificationService` orchestrates classify + link + store.
 
-Folder routing, ghost detection, and the beat orchestration loop remain separate
-roadmap items.
+## Folder / label routing (Phase 20c)
+
+After classification, routable labels can be moved into configured IMAP folders
+(Gmail labels and Outlook folders are exposed as IMAP mailboxes).
+
+- **Config:** `routing_config` JSON on `mailbox_credential` (`enabled`,
+  `auto_route_on_classify`, `label_folders`). Defaults:
+  `HeadStart/General`, `HeadStart/Rejections`, `HeadStart/Ghost`.
+- **`out_of_scope`** is never routed (stays in the source mailbox).
+- **Connector:** `MailboxConnector.move_message` on `imap_smtp` (UID MOVE when
+  supported, otherwise COPY + `\\Deleted` + EXPUNGE). Creates the destination
+  mailbox when missing.
+- **API:** `GET/PUT /inbox/routing`, `POST /inbox/route` (`classification_id` or
+  `message_uid`). Classify auto-routes when routing is enabled.
+- **Audit:** `routed_to`, `routing_status` (`moved` / `skipped` / `failed`), and
+  `routing_error` on `inbox_classification`.
+
+Ghost detection and the beat orchestration loop remain separate roadmap items.
 
 ## Follow-ups (Phase 20c+)
 
-Folder / label routing, ghost detection, autonomous reply drafts, and the Celery
-beat orchestration loop build on classification — see [roadmap.md](../roadmap.md).
+Ghost detection, autonomous reply drafts, and the Celery beat orchestration loop
+build on classification and routing — see [roadmap.md](../roadmap.md).

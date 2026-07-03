@@ -35,6 +35,9 @@ class InboxClassification(Base):
     subject: Mapped[str] = mapped_column(String(998), nullable=False, default="")
     from_addr: Mapped[str] = mapped_column(String(320), nullable=False, default="")
     payload: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    routed_to: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    routing_status: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    routing_error: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, nullable=False
     )

@@ -11,6 +11,12 @@ from app.schemas.inbox_classification import (
     EmailClassificationRead,
     EmailClassifyRequest,
 )
+from app.schemas.inbox_routing import (
+    InboxRouteRequest,
+    InboxRouteResponse,
+    InboxRoutingConfigRead,
+    InboxRoutingConfigUpdate,
+)
 from app.schemas.mailbox import (
     MailboxCredentialRead,
     MailboxCredentialUpsert,
@@ -19,6 +25,7 @@ from app.schemas.mailbox import (
 )
 from app.services.email_classification import EmailClassificationService
 from app.services.inbox import InboxService
+from app.services.inbox_routing import InboxRoutingService
 
 router = APIRouter()
 
@@ -88,3 +95,31 @@ def list_inbox_classifications(
     """List recent persisted email classifications for the current user."""
     params = EmailClassificationListParams(limit=limit)
     return EmailClassificationService(db).list_for_user(user.id, limit=params.limit)
+
+
+@router.get("/routing", response_model=InboxRoutingConfigRead)
+def get_inbox_routing_config(
+    db: Session = Depends(get_db), user: User = Depends(get_verified_user)
+) -> InboxRoutingConfigRead:
+    """Read label→folder routing settings for the mailbox."""
+    return InboxRoutingService(db).get_config(user.id)
+
+
+@router.put("/routing", response_model=InboxRoutingConfigRead)
+def update_inbox_routing_config(
+    data: InboxRoutingConfigUpdate,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_verified_user),
+) -> InboxRoutingConfigRead:
+    """Update label→folder routing settings."""
+    return InboxRoutingService(db).update_config(user.id, data)
+
+
+@router.post("/route", response_model=InboxRouteResponse)
+def route_inbox_message(
+    data: InboxRouteRequest,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_verified_user),
+) -> InboxRouteResponse:
+    """Move a classified message into its configured IMAP folder."""
+    return InboxRoutingService(db).route_by_request(user.id, data)

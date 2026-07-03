@@ -96,3 +96,41 @@ def test_test_connection_checks_imap_and_smtp() -> None:
     assert result.smtp_ok is True
     assert result.error is None
     mock_smtp.noop.assert_called_once()
+
+
+def test_move_message_uses_uid_move_when_supported() -> None:
+    mock_client = MagicMock()
+    mock_client.capabilities = (b"IMAP4REV1", b"MOVE")
+    mock_client.uid.return_value = ("OK", None)
+
+    with patch("app.inbox.adapters.imap_smtp.imaplib.IMAP4_SSL", return_value=mock_client):
+        result = ImapSmtpMailbox().move_message(CTX, uid=9, destination="HeadStart/General")
+
+    assert result.status == "moved"
+    assert result.destination == "HeadStart/General"
+    mock_client.create.assert_called_once_with("HeadStart/General")
+    mock_client.select.assert_called_with(CONFIG.imap_mailbox, readonly=False)
+    mock_client.uid.assert_called_with("MOVE", "9", "HeadStart/General")
+
+
+def test_move_message_falls_back_to_copy_delete() -> None:
+    mock_client = MagicMock()
+    mock_client.capabilities = (b"IMAP4REV1",)
+    mock_client.uid.side_effect = [
+        ("OK", None),
+        ("OK", None),
+    ]
+
+    with patch("app.inbox.adapters.imap_smtp.imaplib.IMAP4_SSL", return_value=mock_client):
+        result = ImapSmtpMailbox().move_message(CTX, uid=3, destination="HeadStart/Rejections")
+
+    assert result.status == "moved"
+    assert mock_client.uid.call_args_list[0].args[:2] == ("COPY", "3")
+    mock_client.expunge.assert_called_once()
+
+
+def test_move_message_skips_when_destination_is_source() -> None:
+    with patch("app.inbox.adapters.imap_smtp.imaplib.IMAP4_SSL") as mock_ssl:
+        result = ImapSmtpMailbox().move_message(CTX, uid=1, destination=CONFIG.imap_mailbox)
+    assert result.status == "skipped"
+    mock_ssl.assert_not_called()
