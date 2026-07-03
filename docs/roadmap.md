@@ -3,9 +3,9 @@
 Living plan for JobNotifier — what to build next and why. Update this doc when
 priorities shift or a milestone ships.
 
-**Current baseline (2026-06):** Phases 1–16 shipped (four-tier pricing, per-user AI
-summary preferences, 68-employer portal catalog, SmartRecruiters adapter). Next up: Phase 17
-(portal catalog batch 2). See [architecture.md](architecture.md) for the system
+**Current baseline (2026-06):** Phases 1–17 shipped (four-tier pricing, per-user AI
+summary preferences, 80-employer portal catalog, SmartRecruiters adapter). Next up: Phase 18
+(custom career-site adapters). See [architecture.md](architecture.md) for the system
 design.
 
 ---
@@ -440,14 +440,25 @@ merge.
 
 | Employer | Category | `company_id` (verify) | Why |
 | -------- | -------- | --------------------- | --- |
-| Atlassian | `big_tech` | `Atlassian` | Jira/Confluence/Trello; very high job-search volume |
-| Square | `unicorn` | `Square` | Payments / fintech; complements Block (Greenhouse) |
-| Bosch | `big_tech` | `Bosch` | Enterprise IoT / automotive software |
-| LinkedIn | `big_tech` | `LinkedIn` | Only if SmartRecruiters feed is more stable than the existing `linkedin` scraper for careers-only use |
-| McDonald's | `unicorn` | `McDonaldsCorporation` | Large global employer; useful for non-tech seekers |
+| ~~Atlassian~~ | ~~`big_tech`~~ | ~~`Atlassian2`~~ | ~~Jira/Confluence/Trello; very high job-search volume~~ |
+| ~~Bosch~~ | ~~`big_tech`~~ | ~~`BoschGroup`~~ | ~~Enterprise IoT / automotive software~~ |
+| ~~ServiceNow~~ | ~~`big_tech`~~ | ~~`ServiceNow`~~ | ~~Enterprise workflow platform~~ |
+| ~~Western Digital~~ | ~~`big_tech`~~ | ~~`WesternDigital`~~ | ~~Storage / semiconductors~~ |
+| ~~Samsung~~ | ~~`big_tech`~~ | ~~`Samsung1`~~ | ~~Global consumer electronics & semiconductors~~ |
+| ~~ASML~~ | ~~`big_tech`~~ | ~~`ASML1`~~ | ~~Semiconductor lithography~~ |
+| ~~Ericsson~~ | ~~`big_tech`~~ | ~~`Ericsson16`~~ | ~~Telecom infrastructure~~ |
+| ~~Infosys~~ | ~~`big_tech`~~ | ~~`Infosys2`~~ | ~~Global IT services~~ |
+| ~~DocuSign~~ | ~~`big_tech`~~ | ~~`DocuSign`~~ | ~~E-signature / agreement cloud~~ |
+| ~~MicroStrategy~~ | ~~`big_tech`~~ | ~~`MicroStrategy1`~~ | ~~Business intelligence platform~~ |
+| ~~Endava~~ | ~~`unicorn`~~ | ~~`Endava`~~ | ~~IT consulting / digital transformation~~ |
+| ~~McDonald's~~ | ~~`unicorn`~~ | ~~`McDonaldsCorporation`~~ | ~~Large global employer~~ |
 
-Skip employers already in the catalog on another adapter (e.g. Visa on Workday,
-Lyft on Greenhouse).
+Skipped (roadmap candidates without a working public Postings API at verification time):
+**Square** (`Square`, `Square1` — 0 postings), **LinkedIn** (`LinkedIn` — 0 postings;
+existing `linkedin` scraper remains for search aggregation).
+
+**Shipped:** 12 SmartRecruiters presets in `catalog_presets.py`; `sr_preset` accepts
+optional `portal_id` slug; duplicate detection matches `company_id`; catalog count **80**.
 
 **Done when:** catalog count is ≥ 80; duplicate-detection tests pass; Pro portal
 search returns results for at least three new presets.

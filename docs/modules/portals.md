@@ -16,13 +16,14 @@ helpers). Each `PortalPreset` carries:
 | `id` | Stable slug used in API and `default_config.portal_id` |
 | `company_name` | Display name in the UI |
 | `category` | `big_tech`, `unicorn`, or `ai` |
-| `adapter_key` | Scraper key (`greenhouse`, `lever`, `ashby`, `workday`, `apple_careers`, `google_careers`, `microsoft_careers`) |
+| `adapter_key` | Scraper key (`greenhouse`, `lever`, `ashby`, `workday`, `smartrecruiters`, `apple_careers`, `google_careers`, `microsoft_careers`) |
 | `base_url` | Careers board URL passed to the scraper |
 | `default_config` | Adapter-specific config merged into new sources (always includes `portal_id`) |
 
-As of the current catalog: **68 employers** — 29 big tech, 28 unicorn, 11 AI —
-across Greenhouse (39), Ashby (11), Workday (9), Lever (4), Apple Careers (1),
-Google Careers (1), Meta Careers (1), Microsoft Careers (1), and Amazon Jobs (1).
+As of the current catalog: **80 employers** — 39 big tech, 30 unicorn, 11 AI —
+across Greenhouse (39), Ashby (11), Workday (9), SmartRecruiters (12), Lever (4),
+Apple Careers (1), Google Careers (1), Meta Careers (1), Microsoft Careers (1), and
+Amazon Jobs (1).
 Meta uses the `meta_careers` scraper (Relay GraphQL search on metacareers.com).
 Apple uses the `apple_careers` scraper (hydration JSON embedded in search HTML).
 
@@ -34,7 +35,7 @@ Apple uses the `apple_careers` scraper (hydration JSON embedded in search HTML).
 
 Duplicate detection matches `portal_id` in `default_config`, normalized
 `base_url`, or adapter-specific identity fields (e.g. `board_token` for
-Greenhouse, `tenant`+`site` for Workday).
+Greenhouse, `company_id` for SmartRecruiters, `tenant`+`site` for Workday).
 
 ## API (prefix `/api/v1/portals`)
 

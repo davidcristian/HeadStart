@@ -20,7 +20,7 @@ def test_list_portal_presets_filters_query() -> None:
 def test_curated_portal_catalog_size() -> None:
     from app.portals.catalog import CURATED_PORTALS
 
-    assert len(CURATED_PORTALS) == 68
+    assert len(CURATED_PORTALS) == 80
 
 
 def test_curated_portal_apple_preset() -> None:
@@ -109,3 +109,34 @@ def test_config_keys_match_greenhouse() -> None:
 
 def test_normalize_url_strips_trailing_slash() -> None:
     assert _normalize_url("https://example.com/") == _normalize_url("https://example.com")
+
+
+def test_curated_portal_atlassian_smartrecruiters_preset() -> None:
+    from app.portals.catalog import CURATED_PORTALS
+
+    preset = next(p for p in CURATED_PORTALS if p.id == "atlassian")
+    assert preset.adapter_key == "smartrecruiters"
+    assert preset.default_config["company_id"] == "Atlassian2"
+    assert preset.default_config["portal_id"] == "atlassian"
+    assert preset.base_url == "https://careers.smartrecruiters.com/Atlassian2"
+
+
+def test_curated_portal_catalog_unique_portal_ids() -> None:
+    from app.portals.catalog import CURATED_PORTALS
+
+    portal_ids = [p.default_config["portal_id"] for p in CURATED_PORTALS]
+    assert len(portal_ids) == len(set(portal_ids))
+
+
+def test_config_keys_match_smartrecruiters() -> None:
+    from app.portals.catalog import CURATED_PORTALS
+
+    preset = next(p for p in CURATED_PORTALS if p.id == "bosch")
+    source = Source(
+        user_id=1,
+        name="Bosch",
+        adapter_key="smartrecruiters",
+        base_url="https://careers.smartrecruiters.com/BoschGroup",
+        default_config={"company_id": "BoschGroup"},
+    )
+    assert _config_keys_match(preset, source) is True
