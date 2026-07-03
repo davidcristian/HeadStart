@@ -59,6 +59,11 @@ const mockApi = vi.hoisted(() => ({
     status: data.status,
   })),
   applyToJob: vi.fn(async () => sampleApplyJobResult),
+  generateCoverLetter: vi.fn(async () => ({
+    cover_letter: "Dear ACME team,\n\nI am excited about the Software Engineer role.",
+    provider: "heuristic",
+    fallback: false,
+  })),
   getFeedUrl: vi.fn(async () => sampleFeedUrl),
   rotateFeedUrl: vi.fn(async () => sampleRotatedFeedUrl),
   listTargets: vi.fn(async (): Promise<NotificationTarget[]> => []),

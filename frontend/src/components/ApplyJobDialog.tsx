@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { pollApplicationLog } from "../api/pollApplicationLog";
 import { Banner, Button, Field } from "./ui";
-import { useApplyToJob } from "../hooks/mutations";
+import { useApplyToJob, useGenerateCoverLetter } from "../hooks/mutations";
 import { useFocusTrap } from "../hooks/useFocusTrap";
 import type { Job, JobApplyResult } from "../types";
 
@@ -29,10 +29,16 @@ export function ApplyJobDialog({
   const dialogRef = useRef<HTMLDivElement>(null);
   const qc = useQueryClient();
   const { mutateAsync, reset, isPending } = useApplyToJob();
+  const {
+    mutateAsync: generateCoverLetterAsync,
+    reset: resetGenerateCoverLetter,
+    isPending: isGeneratingCoverLetter,
+  } = useGenerateCoverLetter();
   const [coverLetter, setCoverLetter] = useState(initialCoverLetter);
   const [step, setStep] = useState<Step>("edit");
   const [preview, setPreview] = useState<JobApplyResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [generateMessage, setGenerateMessage] = useState<string | null>(null);
   const [busyAction, setBusyAction] = useState<"preview" | "submit" | null>(null);
 
   useFocusTrap(open, dialogRef, onClose);
@@ -43,11 +49,33 @@ export function ApplyJobDialog({
     setStep("edit");
     setPreview(null);
     setError(null);
+    setGenerateMessage(null);
     setBusyAction(null);
     reset();
-  }, [open, job.id, initialCoverLetter, reset]);
+    resetGenerateCoverLetter();
+  }, [open, job.id, initialCoverLetter, reset, resetGenerateCoverLetter]);
 
   if (!open) return null;
+
+  async function runGenerateCoverLetter() {
+    setError(null);
+    setGenerateMessage(null);
+    try {
+      const result = await generateCoverLetterAsync(job.id);
+      setCoverLetter(result.cover_letter);
+      if (result.fallback) {
+        setGenerateMessage(
+          "AI generation was unavailable; a draft was created from your profile instead.",
+        );
+      } else if (result.provider !== "heuristic") {
+        setGenerateMessage(`Draft generated with ${result.provider}.`);
+      } else {
+        setGenerateMessage("Draft generated from your profile.");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not generate a cover letter.");
+    }
+  }
 
   async function runApply(dryRun: boolean) {
     setError(null);
@@ -135,8 +163,8 @@ export function ApplyJobDialog({
         ) : (
           <div className="apply-dialog-body">
             <p className="muted">
-              Review the cover letter below. Preview shows the payload that will be sent; submit
-              sends the application through the configured job board.
+              Review the cover letter below. Generate drafts a tailored letter from your profile;
+              preview shows the payload that will be sent.
             </p>
             <Field
               label="Cover letter"
@@ -146,9 +174,20 @@ export function ApplyJobDialog({
                 rows={8}
                 value={coverLetter}
                 onChange={(event) => setCoverLetter(event.target.value)}
-                disabled={isPending}
+                disabled={isPending || isGeneratingCoverLetter}
               />
             </Field>
+            <div className="row-actions apply-dialog-actions">
+              <Button
+                variant="ghost"
+                onClick={() => void runGenerateCoverLetter()}
+                disabled={!profileReady || isPending || isGeneratingCoverLetter}
+              >
+                {isGeneratingCoverLetter ? "Generating..." : "Generate cover letter"}
+              </Button>
+            </div>
+
+            {generateMessage && <Banner kind="info">{generateMessage}</Banner>}
 
             {step === "preview" && preview?.payload && (
               <details className="apply-preview" open>
@@ -163,14 +202,18 @@ export function ApplyJobDialog({
               <Button
                 variant="ghost"
                 onClick={() => void runApply(true)}
-                disabled={!profileReady || isPending}
+                disabled={!profileReady || isPending || isGeneratingCoverLetter}
               >
                 {busyAction === "preview" ? "Previewing..." : "Preview"}
               </Button>
               <Button
                 onClick={() => void runApply(false)}
                 disabled={
-                  !profileReady || !autoApplyEnabled || isPending || busyAction === "submit"
+                  !profileReady ||
+                  !autoApplyEnabled ||
+                  isPending ||
+                  isGeneratingCoverLetter ||
+                  busyAction === "submit"
                 }
               >
                 {busyAction === "submit" ? "Submitting..." : "Submit application"}

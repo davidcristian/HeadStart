@@ -9,6 +9,16 @@ and notifier registries. Orchestration lives in `ApplyService`
 `POST /api/v1/jobs/{id}/apply` (preview via `dry_run: true`). Live submissions
 are queued to Celery and polled via `GET /api/v1/application-logs/{id}`.
 
+## Cover letter generation
+
+Before submit, the Jobs apply dialog can draft a tailored cover letter via
+`POST /api/v1/jobs/{id}/generate-cover-letter`. Generators live in
+`backend/app/cover_letters/` (registry pattern matching summarizers). The offline
+`heuristic` provider is available on every plan; Pro users use the effective
+`SUMMARY_PROVIDER` (`openai`, `gemini`, `anthropic`, or `llamacpp` for local dev).
+LLM failures fall back to heuristic. Env: `COVER_LETTERS_ENABLED`,
+`COVER_LETTER_MAX_CHARS`, `COVER_LETTER_MAX_TOKENS` (see `.env.example`).
+
 ## Contract
 
 ```python

@@ -120,6 +120,11 @@ class Settings(BaseSettings):
     # Hard cap on a blurb's length before it is stored/sent.
     summary_max_chars: int = 280
 
+    # ---- AI cover letters (apply dialog; reuses SUMMARY_PROVIDER for Pro users) ----
+    cover_letters_enabled: bool = True
+    cover_letter_max_chars: int = 4000
+    cover_letter_max_tokens: int = 900
+
     # ---- OpenAI (used only when summary_provider = "openai") ----
     openai_api_key: str = ""
     openai_model: str = "gpt-4o-mini"

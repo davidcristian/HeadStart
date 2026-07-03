@@ -6,8 +6,16 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_db, get_verified_user
 from app.appliers import ApplyResult
 from app.models.user import User
-from app.schemas.job import JobApplyRequest, JobApplyResult, JobRead, JobStatus, JobUpdate
+from app.schemas.job import (
+    JobApplyRequest,
+    JobApplyResult,
+    JobCoverLetterResult,
+    JobRead,
+    JobStatus,
+    JobUpdate,
+)
 from app.services.apply import ApplyService
+from app.services.cover_letters import CoverLetterService
 from app.services.jobs import JobService
 from app.worker.tasks import apply_to_job_task
 
@@ -52,6 +60,17 @@ def update_job(
     user: User = Depends(get_verified_user),
 ) -> JobRead:
     return JobRead.model_validate(JobService(db).update(job_id, user.id, data))
+
+
+@router.post("/{job_id}/generate-cover-letter", response_model=JobCoverLetterResult)
+def generate_cover_letter(
+    job_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_verified_user),
+) -> JobCoverLetterResult:
+    """Draft a tailored cover letter for one job using the user's profile."""
+    result = CoverLetterService(db).generate(user.id, job_id)
+    return JobCoverLetterResult.model_validate(result)
 
 
 @router.post("/{job_id}/apply", response_model=JobApplyResult)

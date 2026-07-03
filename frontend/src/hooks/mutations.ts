@@ -208,6 +208,12 @@ export function useApplyToJob() {
   });
 }
 
+export function useGenerateCoverLetter() {
+  return useMutation({
+    mutationFn: (jobId: number) => api.generateCoverLetter(jobId),
+  });
+}
+
 export function useRotateFeedUrl() {
   const qc = useQueryClient();
   return useMutation({

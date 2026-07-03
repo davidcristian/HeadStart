@@ -10,7 +10,7 @@ export type {
 } from "./source";
 export type { DeliveryFailure, Search, SearchCreate, SearchRunResult, FeedUrl } from "./search";
 export type { NotificationTarget, TargetCreate } from "./target";
-export type { JobStatus, Job, JobApplyResult, ApplicationLog } from "./job";
+export type { JobStatus, Job, JobApplyResult, JobCoverLetterResult, ApplicationLog } from "./job";
 export type {
   PlanId,
   PlanLimits,

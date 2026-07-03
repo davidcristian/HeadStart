@@ -48,6 +48,7 @@ never touch the DB directly (services use repositories). See
 | GET    | `/jobs`               | Feed of seen jobs (filter by `search_id`, `status`) |
 | PATCH  | `/jobs/{id}`          | Update triage status (`seen` / `applied` / `archived`) |
 | POST   | `/jobs/{id}/apply`    | Submit or preview an auto-apply (`dry_run`, optional `cover_letter`). Live submit returns `queued` + `application_log_id`; poll `GET /application-logs/{id}`. |
+| POST   | `/jobs/{id}/generate-cover-letter` | Draft a tailored cover letter from the job + application profile (`provider`, `fallback`). Pro users use the effective `SUMMARY_PROVIDER`; others get the offline heuristic generator. |
 | GET    | `/application-logs` | List recent auto-apply attempts (`limit`, default 100) |
 | GET    | `/application-logs/{id}` | Poll one queued/live apply log until terminal status |
 | GET    | `/feed/url`           | Signed RSS feed URL for the current user             |

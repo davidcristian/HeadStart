@@ -9,6 +9,7 @@ import type {
   Health,
   Job,
   JobApplyResult,
+  JobCoverLetterResult,
   ApplicationLog,
   FeedUrl,
   Meta,
@@ -202,6 +203,11 @@ export const api = {
     request<Job>(`/api/v1/jobs/${id}`, { method: "PATCH", body: data }),
   applyToJob: (id: number, data: { dry_run?: boolean; cover_letter?: string | null }) =>
     request<JobApplyResult>(`/api/v1/jobs/${id}/apply`, { method: "POST", body: data }),
+  generateCoverLetter: (id: number) =>
+    request<JobCoverLetterResult>(`/api/v1/jobs/${id}/generate-cover-letter`, {
+      method: "POST",
+      body: {},
+    }),
 
   listApplicationLogs: (limit = 100) =>
     request<ApplicationLog[]>(`/api/v1/application-logs?limit=${limit}`),

@@ -24,6 +24,12 @@ export interface JobApplyResult {
   application_log_id: number | null;
 }
 
+export interface JobCoverLetterResult {
+  cover_letter: string;
+  provider: string;
+  fallback: boolean;
+}
+
 export interface ApplicationLog {
   id: number;
   seen_job_id: number;

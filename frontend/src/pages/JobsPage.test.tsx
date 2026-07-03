@@ -127,4 +127,21 @@ describe("JobsPage", () => {
     );
     expect(screen.getByText("Application preview")).toBeInTheDocument();
   });
+
+  it("generates a cover letter from the apply dialog", async () => {
+    mockApi.listSources.mockResolvedValue([sampleSource]);
+    mockApi.listSearches.mockResolvedValue([sampleSearch]);
+    mockApi.listJobs.mockResolvedValue([sampleJob]);
+    mockApi.getProfile.mockResolvedValue(sampleProfile);
+    renderJobsPage();
+
+    await waitFor(() => expect(screen.getByRole("button", { name: "Apply" })).toBeInTheDocument());
+    fireEvent.click(screen.getByRole("button", { name: "Apply" }));
+    fireEvent.click(screen.getByRole("button", { name: "Generate cover letter" }));
+
+    await waitFor(() => expect(mockApi.generateCoverLetter).toHaveBeenCalledWith(sampleJob.id));
+    expect(
+      screen.getByDisplayValue(/I am excited about the Software Engineer role/),
+    ).toBeInTheDocument();
+  });
 });

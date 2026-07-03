@@ -48,3 +48,12 @@ class JobApplyResult(BaseModel):
         default=None,
         description="Queued live apply log id; poll GET /application-logs/{id} for status",
     )
+
+
+class JobCoverLetterResult(BaseModel):
+    cover_letter: str
+    provider: str = Field(description="Generator key used (e.g. heuristic, openai)")
+    fallback: bool = Field(
+        default=False,
+        description="True when an LLM provider failed and heuristic was used instead",
+    )
