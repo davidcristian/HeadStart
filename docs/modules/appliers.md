@@ -60,6 +60,7 @@ source's `adapter_key` when that source supports auto-apply. Import the
 | `meta_careers` | metacareers.com Relay GraphQL (session cookies) | `POST /api/graphql/` (`xcp_create_application_v2`); see below |
 | `indeed` | Viewjob parse + downstream ATS delegation | Fetches `/viewjob?jk=…`, delegates to Greenhouse/Lever/Ashby/Workday/Google when the listing embeds an employer apply URL; see below |
 | `linkedin` | Guest job page + Voyager GraphQL + downstream ATS delegation | Fetches `/jobs-guest/jobs/api/jobPosting/{id}`, enriches offsite listings via Voyager when session cookies are present, delegates to Greenhouse/Lever/Ashby/Workday/Google/Microsoft/Amazon/Meta when the employer apply URL is recognized; see below |
+| `snowflake_careers` | Delegates to Ashby | Snowflake's Phenom careers site uses Ashby for applications; delegates to the `ashby` adapter with `board=snowflake` |
 
 ### Greenhouse
 

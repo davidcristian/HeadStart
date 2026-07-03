@@ -240,6 +240,29 @@ def test_detect_uber_careers_job_detail_returns_none() -> None:
     assert detect_source_from_url("https://www.uber.com/us/en/careers/list/154672") is None
 
 
+def test_detect_snowflake_careers_search_url() -> None:
+    result = detect_source_from_url("https://careers.snowflake.com/us/en/search-results")
+    assert result is not None
+    assert result.adapter_key == "snowflake_careers"
+    assert result.default_config["portal_id"] == "snowflake"
+    assert result.default_config["board"] == "snowflake"
+    assert result.base_url == "https://careers.snowflake.com/us/en/search-results"
+
+
+def test_detect_snowflake_careers_search_query() -> None:
+    result = detect_source_from_url("https://careers.snowflake.com/us/en/search-results?q=engineer")
+    assert result is not None
+    assert result.default_config["q"] == "engineer"
+    assert result.suggested_name == "Snowflake / engineer"
+
+
+def test_detect_snowflake_careers_job_detail_returns_none() -> None:
+    assert (
+        detect_source_from_url("https://careers.snowflake.com/us/en/job/senior-engineer/12345")
+        is None
+    )
+
+
 def test_detect_meta_careers_root_url() -> None:
     result = detect_source_from_url("https://www.metacareers.com/jobs")
     assert result is not None

@@ -1,0 +1,53 @@
+{
+  "apiVersion": "1",
+  "jobs": [
+    {
+      "id": "00898e37-87aa-47e6-9df7-aefabac4ab01",
+      "title": "Senior Solution Engineer",
+      "department": "Solution Engineering",
+      "team": "Solution Engineering",
+      "employmentType": "FullTime",
+      "location": "US-NC-Remote",
+      "secondaryLocations": [
+        {
+          "location": "US-VA Metro-Remote",
+          "address": {
+            "postalAddress": {
+              "addressRegion": "Virginia",
+              "addressCountry": "United States",
+              "addressLocality": "Remote"
+            }
+          }
+        }
+      ],
+      "publishedAt": "2026-05-18T12:14:13.386+00:00",
+      "isListed": true,
+      "isRemote": true,
+      "workplaceType": "Remote",
+      "jobUrl": "https://jobs.ashbyhq.com/snowflake/00898e37-87aa-47e6-9df7-aefabac4ab01",
+      "applyUrl": "https://jobs.ashbyhq.com/snowflake/00898e37-87aa-47e6-9df7-aefabac4ab01/application"
+    },
+    {
+      "id": "15390ce2-d71d-44c7-bf55-e9d7cfcf11a5",
+      "title": "Account Executive, Commercial",
+      "department": "Sales",
+      "team": "Commercial Sales",
+      "employmentType": "FullTime",
+      "location": "US-CA-San Francisco",
+      "secondaryLocations": [],
+      "publishedAt": "2026-04-02T09:30:00.000+00:00",
+      "isListed": true,
+      "isRemote": false,
+      "workplaceType": "OnSite",
+      "jobUrl": "https://jobs.ashbyhq.com/snowflake/15390ce2-d71d-44c7-bf55-e9d7cfcf11a5",
+      "applyUrl": "https://jobs.ashbyhq.com/snowflake/15390ce2-d71d-44c7-bf55-e9d7cfcf11a5/application"
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000099",
+      "title": "Hidden Role",
+      "location": "Remote",
+      "isListed": false,
+      "jobUrl": "https://jobs.ashbyhq.com/snowflake/hidden"
+    }
+  ]
+}

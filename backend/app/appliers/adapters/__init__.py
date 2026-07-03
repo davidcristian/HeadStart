@@ -15,6 +15,7 @@ from app.appliers.adapters import (
     linkedin,
     meta_careers,
     microsoft_careers,
+    snowflake_careers,
     workday,
 )
 
@@ -29,5 +30,6 @@ __all__ = [
     "linkedin",
     "meta_careers",
     "microsoft_careers",
+    "snowflake_careers",
     "workday",
 ]

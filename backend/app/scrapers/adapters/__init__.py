@@ -19,6 +19,7 @@ from app.scrapers.adapters import (
     playwright_html,
     shopify_careers,
     smartrecruiters,
+    snowflake_careers,
     uber_careers,
     workday,
 )
@@ -38,6 +39,7 @@ __all__ = [
     "playwright_html",
     "shopify_careers",
     "smartrecruiters",
+    "snowflake_careers",
     "uber_careers",
     "workday",
 ]

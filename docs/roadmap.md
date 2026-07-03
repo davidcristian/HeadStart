@@ -3,10 +3,9 @@
 Living plan for JobNotifier — what to build next and why. Update this doc when
 priorities shift or a milestone ships.
 
-**Current baseline (2026-06):** Phases 1–17 and 19 shipped (four-tier pricing, per-user AI
-summary preferences, 97-employer portal catalog, SmartRecruiters adapter). Phase 18
-(custom career-site adapters) is in progress — Shopify and Uber shipped; Snowflake remains.
-See [architecture.md](architecture.md) for the system design.
+**Current baseline (2026-06):** Phases 1–17, 18, and 19 shipped (four-tier pricing, per-user AI
+summary preferences, 98-employer portal catalog, SmartRecruiters adapter, custom career-site
+adapters for Shopify, Uber, and Snowflake). See [architecture.md](architecture.md) for the system design.
 
 ---
 
@@ -475,7 +474,7 @@ Phase 11 batch-1 expansion (Uber, Snowflake, Shopify).
 | ------- | -------- | --------------- | ---- |
 | ~~`shopify_careers`~~ | ~~Shopify~~ | ~~Investigate: may be Greenhouse (`shopify`) or a custom `shopify.com/careers` endpoint~~ | **Shipped:** Ashby-backed careers site with disabled public Postings API; `@register_scraper("shopify_careers")` parses embedded React Router flight stream on `shopify.com/careers`; catalog preset added (96 employers) |
 | ~~`uber_careers`~~ | ~~Uber~~ | ~~Reverse-engineer `uber.com/careers` search JSON or embedded hydration payload~~ | **Shipped:** `@register_scraper("uber_careers")` calls public `POST /api/loadSearchJobsResults`; offset pagination; `format_location()` handles multi-city `allLocations`; catalog preset added (97 employers) |
-| `snowflake_careers` | Snowflake | Public careers search API or embedded JSON on `careers.snowflake.com` | Medium — enterprise site |
+| ~~`snowflake_careers`~~ | ~~Snowflake~~ | ~~Public careers search API or embedded JSON on `careers.snowflake.com`~~ | **Shipped:** Phenom careers site with Ashby backend; `@register_scraper("snowflake_careers")` calls public Ashby Postings API (`board=snowflake`); `@register_applier("snowflake_careers")` delegates to Ashby; catalog preset added (98 employers) |
 
 After each scraper ships, add the matching `*_careers_preset()` to
 `catalog_presets.py` and an apply adapter if the apply flow is automatable (see

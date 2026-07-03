@@ -12,6 +12,7 @@ from app.scrapers.url_detect_meta import detect_meta_careers
 from app.scrapers.url_detect_microsoft import detect_microsoft_careers
 from app.scrapers.url_detect_shopify import detect_shopify_careers
 from app.scrapers.url_detect_smartrecruiters import detect_smartrecruiters
+from app.scrapers.url_detect_snowflake import detect_snowflake_careers
 from app.scrapers.url_detect_types import SourceDetection
 from app.scrapers.url_detect_uber import detect_uber_careers
 
@@ -40,6 +41,7 @@ def detect_source_from_url(url: str, *, page_title: str | None = None) -> Source
         detect_meta_careers,
         detect_shopify_careers,
         detect_uber_careers,
+        detect_snowflake_careers,
         _detect_indeed,
     ):
         result = detector(parsed, host, page_title)

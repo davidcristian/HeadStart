@@ -13,6 +13,7 @@ from app.portals.catalog_helpers import (
     meta_careers_preset,
     microsoft_careers_preset,
     shopify_careers_preset,
+    snowflake_careers_preset,
     uber_careers_preset,
     workday_preset,
 )
@@ -26,6 +27,7 @@ CURATED_PORTALS: tuple[PortalPreset, ...] = (
     meta_careers_preset(),
     microsoft_careers_preset(),
     shopify_careers_preset(category="unicorn"),
+    snowflake_careers_preset(),
     uber_careers_preset(),
     # Big tech (Workday-backed career sites with public CXS APIs)
     workday_preset(

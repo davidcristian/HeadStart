@@ -208,6 +208,27 @@ def uber_careers_preset(
     )
 
 
+def snowflake_careers_preset(
+    *,
+    portal_id: str = "snowflake",
+    company: str = "Snowflake",
+    category: PortalCategory = "big_tech",
+) -> PortalPreset:
+    base = "https://careers.snowflake.com/us/en/search-results"
+    return PortalPreset(
+        id=portal_id,
+        company_name=company,
+        category=category,
+        adapter_key="snowflake_careers",
+        base_url=base,
+        default_config={
+            "company": company,
+            "portal_id": portal_id,
+            "board": "snowflake",
+        },
+    )
+
+
 def microsoft_careers_preset(
     *,
     portal_id: str = "microsoft",

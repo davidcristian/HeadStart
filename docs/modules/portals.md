@@ -17,11 +17,11 @@ helpers). Each `PortalPreset` carries:
 | `id` | Stable slug used in API and `default_config.portal_id` |
 | `company_name` | Display name in the UI |
 | `category` | `big_tech`, `unicorn`, or `ai` |
-| `adapter_key` | Scraper key (`greenhouse`, `lever`, `ashby`, `workday`, `smartrecruiters`, `apple_careers`, `google_careers`, `microsoft_careers`, `shopify_careers`, `uber_careers`) |
+| `adapter_key` | Scraper key (`greenhouse`, `lever`, `ashby`, `workday`, `smartrecruiters`, `apple_careers`, `google_careers`, `microsoft_careers`, `shopify_careers`, `snowflake_careers`, `uber_careers`) |
 | `base_url` | Careers board URL passed to the scraper |
 | `default_config` | Adapter-specific config merged into new sources (always includes `portal_id`) |
 
-As of the current catalog: **97 employers** — 43 big tech, 43 unicorn, 11 AI —
+As of the current catalog: **98 employers** — 44 big tech, 43 unicorn, 11 AI —
 across Greenhouse (53), Ashby (11), Workday (10), SmartRecruiters (12), Lever (4),
 Apple Careers (1), Google Careers (1), Meta Careers (1), Microsoft Careers (1),
 Shopify Careers (1), Uber Careers (1), and Amazon Jobs (1).

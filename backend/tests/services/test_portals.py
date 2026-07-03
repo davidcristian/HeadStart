@@ -20,7 +20,7 @@ def test_list_portal_presets_filters_query() -> None:
 def test_curated_portal_catalog_size() -> None:
     from app.portals.catalog import CURATED_PORTALS
 
-    assert len(CURATED_PORTALS) == 97
+    assert len(CURATED_PORTALS) == 98
 
 
 def test_curated_portal_apple_preset() -> None:
@@ -156,6 +156,16 @@ def test_curated_portal_shopify_preset() -> None:
     assert preset.adapter_key == "shopify_careers"
     assert preset.default_config["portal_id"] == "shopify"
     assert preset.base_url == "https://www.shopify.com/careers"
+
+
+def test_curated_portal_snowflake_preset() -> None:
+    from app.portals.catalog import CURATED_PORTALS
+
+    preset = next(p for p in CURATED_PORTALS if p.id == "snowflake")
+    assert preset.adapter_key == "snowflake_careers"
+    assert preset.default_config["portal_id"] == "snowflake"
+    assert preset.default_config["board"] == "snowflake"
+    assert preset.base_url == "https://careers.snowflake.com/us/en/search-results"
 
 
 def test_curated_portal_catalog_unique_portal_ids() -> None:
