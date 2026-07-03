@@ -83,6 +83,21 @@ class HttpClient:
         resp.raise_for_status()
         return resp.json()
 
+    def put_raw(
+        self,
+        url: str,
+        *,
+        content: bytes | str = b"",
+        headers: dict[str, str] | None = None,
+        **kwargs: Any,
+    ) -> httpx.Response:
+        """PUT raw bytes and return the full HTTP response (for signed upload URLs)."""
+        self._wait_rate_limit()
+        assert_safe_outbound_url(url)
+        resp = self._client.put(url, content=content, headers=headers, **kwargs)
+        resp.raise_for_status()
+        return resp
+
     def post_multipart(
         self, url: str, *, data: dict[str, Any], files: dict[str, Any], **kwargs: Any
     ) -> Any:

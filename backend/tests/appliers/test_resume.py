@@ -49,5 +49,20 @@ def test_resume_meta_for_payload_omits_bytes() -> None:
     assert "data" not in meta
 
 
+def test_indeed_resume_file_fields_base64_encodes_bytes() -> None:
+    from app.appliers.resume import indeed_resume_file_fields
+
+    resume = ResumeFile(
+        filename="resume.pdf",
+        content_type="application/pdf",
+        size_bytes=4,
+        data=b"%PDF",
+    )
+    fields = indeed_resume_file_fields(resume)
+    assert fields["fileName"] == "resume.pdf"
+    assert fields["contentType"] == "application/pdf"
+    assert base64.b64decode(fields["data"]) == b"%PDF"
+
+
 def test_workday_content_type_uses_octet_stream_fallback() -> None:
     assert workday_content_type("")["id"] == "Content_Type_ID=application/octet-stream"

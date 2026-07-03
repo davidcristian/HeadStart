@@ -19,6 +19,16 @@ def resume_meta_for_payload(resume_file: ResumeFile | None) -> dict[str, Any] | 
     ).model_dump()
 
 
+def indeed_resume_file_fields(resume_file: ResumeFile) -> dict[str, str]:
+    """Indeed Apply resume.file object for live smartapply submit."""
+    content_type = resume_file.content_type.strip() or "application/octet-stream"
+    return {
+        "fileName": resume_file.filename,
+        "contentType": content_type,
+        "data": base64.b64encode(resume_file.data).decode("ascii"),
+    }
+
+
 def greenhouse_resume_fields(resume_file: ResumeFile | None) -> dict[str, str]:
     """Greenhouse JSON fields for a direct resume upload."""
     if resume_file is None:

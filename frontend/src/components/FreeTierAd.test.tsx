@@ -42,10 +42,7 @@ describe("FreeTierAd", () => {
 
     expect(screen.getByTestId("free-tier-ad")).toBeInTheDocument();
     expect(screen.getByText(/go ad-free with starter/i)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /view plans/i })).toHaveAttribute(
-      "href",
-      "/pricing",
-    );
+    expect(screen.getByRole("link", { name: /view plans/i })).toHaveAttribute("href", "/pricing");
   });
 
   it("renders nothing for paid plans", () => {

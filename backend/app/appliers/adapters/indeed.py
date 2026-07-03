@@ -29,6 +29,7 @@ from app.appliers.adapters.indeed_easy_apply import (
 from app.appliers.adapters.indeed_route import resolve_apply_route
 from app.appliers.base import Applier, get_applier, register_applier
 from app.appliers.types import ApplyContext, ApplyResult
+from app.schemas.profile import ResumeFile
 
 
 @register_applier("indeed")
@@ -117,7 +118,7 @@ class IndeedApplier(Applier):
                 payload=payload,
             )
 
-        body = build_submit_body(payload)
+        body = build_submit_body(payload, resume_file=_resolve_resume_file(ctx))
         headers = _credential_headers(ctx.credentials)
         try:
             response = self.http.post_json(
@@ -181,3 +182,11 @@ def _extract_application_id(response: Any) -> str | None:
             if value is not None:
                 return str(value)
     return None
+
+
+def _resolve_resume_file(ctx: ApplyContext) -> ResumeFile | None:
+    """Return the stored resume file attached to the apply context, if any."""
+    if ctx.resume_file is not None:
+        return ctx.resume_file
+    profile_resume = getattr(ctx.profile, "resume_file", None)
+    return profile_resume if isinstance(profile_resume, ResumeFile) else None

@@ -29,8 +29,14 @@ from app.appliers.adapters.linkedin_easy_apply import (
     SUBMIT_URL,
     build_easy_apply_payload,
     build_submit_body,
-    extract_form_root,
 )
+from app.appliers.adapters.linkedin_easy_apply_form import (
+    build_file_upload_responses,
+    extract_form_root,
+    form_has_file_upload_elements,
+    required_file_upload_titles,
+)
+from app.appliers.adapters.linkedin_resume_upload import upload_easy_apply_resume
 from app.appliers.adapters.linkedin_route import LinkedInApplyRoute, resolve_apply_route
 from app.appliers.adapters.linkedin_voyager import fetch_application_form, fetch_company_apply_url
 from app.appliers.base import Applier, get_applier, register_applier
@@ -153,7 +159,52 @@ class LinkedInApplier(Applier):
                 payload=payload,
             )
 
-        body = build_submit_body(payload)
+        resume_file = ctx.resume_file
+        if resume_file is None and hasattr(ctx.profile, "resume_file"):
+            resume_file = ctx.profile.resume_file
+
+        required_uploads = required_file_upload_titles(form_root)
+        if required_uploads and resume_file is None:
+            return ApplyResult(
+                status="failed",
+                error=(
+                    "linkedin Easy Apply requires a resume file upload for: "
+                    f"{', '.join(required_uploads)}"
+                ),
+                payload=payload,
+            )
+
+        file_upload_responses: list[dict[str, Any]] = []
+        if resume_file is not None and form_has_file_upload_elements(form_root):
+            try:
+                asset_urn = upload_easy_apply_resume(
+                    self.http,
+                    resume_file,
+                    ctx.credentials,
+                )
+            except (ValueError, httpx.HTTPError) as exc:
+                return ApplyResult(
+                    status="failed",
+                    error=f"linkedin resume upload failed: {exc}",
+                    payload=payload,
+                )
+            file_upload_responses = build_file_upload_responses(
+                form_root,
+                asset_urn=asset_urn,
+                filename=resume_file.filename,
+            )
+            if not file_upload_responses:
+                return ApplyResult(
+                    status="failed",
+                    error=(
+                        "linkedin Easy Apply resume upload succeeded but the form has no "
+                        "file-upload field to attach it to"
+                    ),
+                    payload=payload,
+                )
+            payload["fileUploadResponses"] = file_upload_responses
+
+        body = build_submit_body(payload, file_upload_responses=file_upload_responses)
         headers = voyager_request_headers(ctx.credentials)
         cookies = voyager_request_cookies(ctx.credentials)
         try:

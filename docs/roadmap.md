@@ -192,8 +192,8 @@ complete across all scrapers:
 | ~~SmartRecruiters apply adapter~~ | ~~12 catalog employers scrape via SR but cannot auto-apply~~ | **Shipped:** `@register_applier("smartrecruiters")` uses the Application API (`GET/POST api.smartrecruiters.com/postings/<uuid>/…`); posting UUID resolved from public Postings detail API; screening answers via `profile.answers` (`sr_<question_id>`); live submit requires `session.smart_token` or `session.access_token` |
 | ~~Shopify apply adapter~~ | ~~Phase 18 custom scraper is scrape-only~~ | **Shipped:** `@register_applier("shopify_careers")` delegates to Ashby with `board=shopify` |
 | Uber apply adapter | Phase 18 custom scraper is scrape-only | Proprietary apply flow; no apply adapter yet |
-| LinkedIn Easy Apply resume PDF | Many Easy Apply jobs require an attachment | Live submit sends `fileUploadResponses: []`; `resume_text` only |
-| Indeed-hosted resume file | Same class of gap as LinkedIn | Live smartapply submit forwards `resumeText` only, not the stored file |
+| ~~LinkedIn Easy Apply resume PDF~~ | Many Easy Apply jobs require an attachment | **Shipped:** live submit uploads stored resume via Voyager media metadata + Ambry and maps the asset URN into `fileUploadResponses` when the form has a document-upload field |
+| ~~Indeed-hosted resume file~~ | Same class of gap as LinkedIn | **Shipped:** live smartapply submit includes `applicant.resume.file` (Base64) when the profile has a stored resume file |
 | Structured profile beyond Workday | UI stores experience/education/skills/languages | Only the Workday adapter consumes those fields today |
 | Pipeline auto-apply queue | Users still click Apply per job | Tracked in [Phase 20b](#20b--apply-orchestration-extend-phase-7) |
 

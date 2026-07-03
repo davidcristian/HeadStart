@@ -6,7 +6,7 @@ from typing import Any
 
 from app.appliers.adapters.greenhouse import split_name
 from app.appliers.adapters.indeed_detail import IndeedJobDetail
-from app.appliers.resume import resume_meta_for_payload
+from app.appliers.resume import indeed_resume_file_fields, resume_meta_for_payload
 from app.schemas.profile import ApplyProfile, ProfileData, ResumeFile
 
 SMARTAPPLY_SUBMIT_URL = "https://smartapply.indeed.com/beta/indeedapply/v2/applications"
@@ -89,15 +89,24 @@ def build_easy_apply_payload(
     return payload
 
 
-def build_submit_body(payload: dict[str, Any]) -> dict[str, Any]:
+def build_submit_body(
+    payload: dict[str, Any],
+    *,
+    resume_file: ResumeFile | None = None,
+) -> dict[str, Any]:
     """Body sent to smartapply on live submit (strips preview-only keys)."""
+    applicant = dict(payload["applicant"])
+    if resume_file is not None:
+        applicant["resume"] = {"file": indeed_resume_file_fields(resume_file)}
     body = {
         "jobKey": payload["jobKey"],
-        "applicant": payload["applicant"],
+        "applicant": applicant,
     }
-    for optional in ("indeedApplyableJobId", "coverLetter", "resumeText", "answers"):
+    for optional in ("indeedApplyableJobId", "coverLetter", "answers"):
         if optional in payload:
             body[optional] = payload[optional]
+    if resume_file is None and "resumeText" in payload:
+        body["resumeText"] = payload["resumeText"]
     return body
 
 

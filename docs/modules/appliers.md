@@ -470,7 +470,10 @@ keys, Workday cookies, etc.) — the preview payload includes `indeed_route` and
 **Live submit (Indeed-hosted):** when the listing has no external ATS URL but
 does expose an Easy Apply button, posts to
 `smartapply.indeed.com/beta/indeedapply/v2/applications` with the user's Indeed
-session cookies. Multi-step employer questionnaires are best-effort; map answers
+session cookies. When the application profile has an uploaded resume file, live
+submit includes `applicant.resume.file` (`fileName`, `contentType`, Base64
+`data`) per the Indeed Apply payload shape; plain `resumeText` is used only when
+no file is stored. Multi-step employer questionnaires are best-effort; map answers
 in `profile.answers`. Cloudflare may block unauthenticated viewjob fetches —
 reuse [site credentials](credentials.md) session cookies from scraping.
 
@@ -506,10 +509,13 @@ keys, Workday cookies, etc.) — the preview payload includes `linkedin_route` a
 **Live submit (LinkedIn-hosted Easy Apply):** when the listing exposes an Easy
 Apply button, loads the application form via Voyager GraphQL and posts to
 `/voyager/api/voyagerJobsDashOnsiteApplyApplication?action=submitApplication`
-with the user's LinkedIn session cookies. Multi-step employer questionnaires are
-best-effort; map answers in `profile.answers` using the form element URN or a
-normalized field label key. Resume file upload via LinkedIn's Ambry endpoint is
-not automated in v1 — plain `resume_text` is included in the preview payload.
+with the user's LinkedIn session cookies. When the application profile has an
+uploaded resume file and the form includes a document-upload field, live submit
+registers the file via `voyagerMediaUploadMetadata`, uploads it to LinkedIn's
+Ambry endpoint, and includes the asset URN in `fileUploadResponses`. Plain
+`resume_text` remains a preview/fallback when no file is stored. Multi-step
+employer questionnaires are best-effort; map answers in `profile.answers` using
+the form element URN or a normalized field label key.
 
 **Unsupported:** external apply URLs that are not a recognized ATS when Voyager
 enrichment cannot resolve them (add session cookies or `external_apply_url`).
@@ -529,9 +535,7 @@ Google Careers live submit needs the candidate's own Google account session and
 CSRF token; resume upload and employer questionnaires are best-effort. Microsoft
 Careers live submit needs the candidate's own logged-in session on
 `apply.careers.microsoft.com`; country-specific screening questions are
-best-effort. Indeed-hosted Easy Apply does not attach the stored resume file on
-live submit (`resumeText` only). LinkedIn Easy Apply does not upload resume PDFs
-(`fileUploadResponses` is empty). Scrapers without any apply adapter (e.g.
+best-effort. Scrapers without any apply adapter (e.g.
 `smartrecruiters`, `uber_careers`) cannot use the Jobs page
 Apply action. Branching questionnaires only
 submit answers you explicitly map in `profile.answers`. See

@@ -8,6 +8,11 @@ from typing import Any
 
 from app.appliers.adapters.greenhouse import split_name
 from app.appliers.adapters.linkedin_detail import LinkedInJobDetail
+from app.appliers.adapters.linkedin_easy_apply_form import (
+    element_title,
+    is_file_upload_element,
+    iter_form_elements,
+)
 from app.appliers.resume import resume_meta_for_payload
 from app.schemas.profile import ApplyProfile, ProfileData, ResumeFile
 
@@ -84,7 +89,11 @@ def build_easy_apply_payload(
     return payload
 
 
-def build_submit_body(payload: dict[str, Any]) -> dict[str, Any]:
+def build_submit_body(
+    payload: dict[str, Any],
+    *,
+    file_upload_responses: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
     """Body sent to Voyager on live Easy Apply submit."""
     responses = payload.get("responses")
     if not isinstance(responses, list) or not responses:
@@ -93,12 +102,13 @@ def build_submit_body(payload: dict[str, Any]) -> dict[str, Any]:
             "preview with dry_run and add profile.answers for unmapped fields"
         )
     reference = payload.get("referenceId") or f"INITIAL_PAGE_LOAD::::{uuid.uuid4()}"
+    uploads = list(file_upload_responses or payload.get("fileUploadResponses") or [])
     return {
         "followCompany": False,
         "referenceId": reference,
         "responses": responses,
         "trackingCode": payload.get("trackingId") or "TRK_INITIAL_PAGE_LOAD",
-        "fileUploadResponses": [],
+        "fileUploadResponses": uploads,
     }
 
 
@@ -112,11 +122,13 @@ def build_form_responses(
     responses: list[dict[str, Any]] = []
     missing: list[str] = []
     first_name, last_name = split_name(profile.full_name)
-    for element in _iter_form_elements(form_payload):
+    for element in iter_form_elements(form_payload):
         urn = str(element.get("entityUrn") or element.get("urn") or "").strip()
         if not urn:
             continue
-        title = _element_title(element)
+        if is_file_upload_element(element):
+            continue
+        title = element_title(element)
         label_key = _FIELD_LABEL_RE.sub("_", title.lower()).strip("_")
         required = bool(element.get("required"))
         value = _value_for_label(
@@ -139,53 +151,6 @@ def build_form_responses(
             }
         )
     return responses, missing
-
-
-def extract_form_root(form_payload: dict[str, Any]) -> dict[str, Any] | None:
-    """Return the first Easy Apply form object from a Voyager GraphQL payload."""
-    data = form_payload.get("data")
-    if not isinstance(data, dict):
-        return None
-    container = data.get("jobsDashOnsiteApplyApplicationByJobPosting")
-    if not isinstance(container, dict):
-        return None
-    elements = container.get("elements")
-    if not isinstance(elements, list) or not elements:
-        return None
-    first = elements[0]
-    if not isinstance(first, dict):
-        return None
-    forms = first.get("jobApplicationForms")
-    if not isinstance(forms, list) or not forms:
-        return None
-    form = forms[0]
-    return form if isinstance(form, dict) else None
-
-
-def _iter_form_elements(form_root: dict[str, Any]) -> list[dict[str, Any]]:
-    elements: list[dict[str, Any]] = []
-    for grouping in form_root.get("questionGroupings") or []:
-        if not isinstance(grouping, dict):
-            continue
-        section = grouping.get("formSection")
-        if not isinstance(section, dict):
-            continue
-        for group in section.get("formElementGroups") or []:
-            if not isinstance(group, dict):
-                continue
-            for element in group.get("formElements") or []:
-                if isinstance(element, dict):
-                    elements.append(element)
-    return elements
-
-
-def _element_title(element: dict[str, Any]) -> str:
-    title = element.get("title")
-    if isinstance(title, dict):
-        text = title.get("text")
-        if isinstance(text, str):
-            return text.strip()
-    return ""
 
 
 def _value_for_label(
