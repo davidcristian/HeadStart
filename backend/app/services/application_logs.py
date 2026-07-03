@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy.orm import Session
 
 from app.repositories.application_logs import ApplicationLogRepository
+from app.schemas.application_artifact import ApplicationArtifactMeta
 from app.schemas.application_log import ApplicationLogRead
 
 if TYPE_CHECKING:
@@ -33,6 +34,7 @@ class ApplicationLogService:
         return self._to_read(log)
 
     def _to_read(self, log: ApplicationLog) -> ApplicationLogRead:
+        artifact = log.tailored_resume_artifact
         return ApplicationLogRead(
             id=log.id,
             seen_job_id=log.seen_job_id,
@@ -44,5 +46,8 @@ class ApplicationLogService:
             error=log.error,
             payload=log.payload,
             external_application_id=log.external_application_id,
+            tailored_resume_artifact=(
+                ApplicationArtifactMeta.model_validate(artifact) if artifact is not None else None
+            ),
             created_at=log.created_at,
         )

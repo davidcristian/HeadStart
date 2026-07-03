@@ -47,7 +47,7 @@ import type {
   PromoType,
 } from "../types";
 import type { PaidPlanId } from "../lib/pricing";
-import { request, requestForm } from "./client";
+import { request, requestBlob, requestForm } from "./client";
 
 function buildJobQuery(searchId?: number, status?: string): string {
   const params = new URLSearchParams();
@@ -207,7 +207,12 @@ export const api = {
     request<Job>(`/api/v1/jobs/${id}`, { method: "PATCH", body: data }),
   applyToJob: (
     id: number,
-    data: { dry_run?: boolean; cover_letter?: string | null; tailored_resume_b64?: string | null },
+    data: {
+      dry_run?: boolean;
+      cover_letter?: string | null;
+      tailored_resume_b64?: string | null;
+      tailored_resume_artifact_id?: number | null;
+    },
   ) => request<JobApplyResult>(`/api/v1/jobs/${id}/apply`, { method: "POST", body: data }),
   generateCoverLetter: (id: number) =>
     request<JobCoverLetterResult>(`/api/v1/jobs/${id}/generate-cover-letter`, {
@@ -223,6 +228,8 @@ export const api = {
   listApplicationLogs: (limit = 100) =>
     request<ApplicationLog[]>(`/api/v1/application-logs?limit=${limit}`),
   getApplicationLog: (id: number) => request<ApplicationLog>(`/api/v1/application-logs/${id}`),
+  downloadApplicationArtifact: (id: number) =>
+    requestBlob(`/api/v1/application-artifacts/${id}/download`),
 
   listApplications: (stage?: ApplicationPipelineStage) => {
     const query = stage ? `?stage=${encodeURIComponent(stage)}` : "";

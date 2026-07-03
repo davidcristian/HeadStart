@@ -130,3 +130,40 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   }
   return parse<T>(resp);
 }
+
+/** Authenticated binary download (e.g. stored PDF artifacts). */
+export async function requestBlob(path: string): Promise<Blob> {
+  async function doFetch(token: string): Promise<Response> {
+    const headers: Record<string, string> = {};
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    return fetch(`${getApiBaseUrl()}${path}`, {
+      method: "GET",
+      headers,
+      credentials: "include",
+    });
+  }
+
+  let resp = await doFetch(getAccessToken());
+  if (resp.status === 401) {
+    const refreshed = await refreshSession();
+    if (refreshed) {
+      resp = await doFetch(getAccessToken());
+    }
+    if (resp.status === 401) {
+      clearAccessToken();
+      onUnauthorized?.();
+    }
+  }
+  if (!resp.ok) {
+    const text = await resp.text();
+    let detail = resp.statusText;
+    try {
+      const data = text ? JSON.parse(text) : undefined;
+      detail = (data && (data.detail as string)) || detail;
+    } catch {
+      detail = text || detail;
+    }
+    throw new ApiError(resp.status, detail);
+  }
+  return resp.blob();
+}

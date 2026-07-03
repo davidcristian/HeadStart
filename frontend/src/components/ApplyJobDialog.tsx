@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { pollApplicationLog } from "../api/pollApplicationLog";
+import { previewApplicationArtifact } from "../lib/applicationArtifacts";
 import { Banner, Button, Field } from "./ui";
 import { useApplyToJob, useGenerateCoverLetter, useGenerateResume } from "../hooks/mutations";
 import { useFocusTrap } from "../hooks/useFocusTrap";
@@ -41,6 +42,7 @@ export function ApplyJobDialog({
   } = useGenerateResume();
   const [coverLetter, setCoverLetter] = useState(initialCoverLetter);
   const [tailoredResumeB64, setTailoredResumeB64] = useState<string | null>(null);
+  const [tailoredResumeArtifactId, setTailoredResumeArtifactId] = useState<number | null>(null);
   const [tailoredResumeLabel, setTailoredResumeLabel] = useState<string | null>(null);
   const [step, setStep] = useState<Step>("edit");
   const [preview, setPreview] = useState<JobApplyResult | null>(null);
@@ -55,6 +57,7 @@ export function ApplyJobDialog({
     if (!open) return;
     setCoverLetter(initialCoverLetter);
     setTailoredResumeB64(null);
+    setTailoredResumeArtifactId(null);
     setTailoredResumeLabel(null);
     setStep("edit");
     setPreview(null);
@@ -95,6 +98,7 @@ export function ApplyJobDialog({
     try {
       const result = await generateResumeAsync(job.id);
       setTailoredResumeB64(result.pdf_b64);
+      setTailoredResumeArtifactId(result.artifact_id);
       setTailoredResumeLabel(`${result.filename} (${result.size_bytes.toLocaleString()} bytes)`);
       if (result.fallback) {
         setResumeMessage(
@@ -118,7 +122,8 @@ export function ApplyJobDialog({
         id: job.id,
         dry_run: dryRun,
         cover_letter: coverLetter.trim() || null,
-        tailored_resume_b64: tailoredResumeB64,
+        tailored_resume_b64: tailoredResumeArtifactId ? null : tailoredResumeB64,
+        tailored_resume_artifact_id: tailoredResumeArtifactId,
       });
       if (dryRun) {
         setPreview(result);
@@ -231,7 +236,17 @@ export function ApplyJobDialog({
             </div>
 
             {tailoredResumeLabel && (
-              <p className="muted">Tailored resume ready: {tailoredResumeLabel}</p>
+              <div className="row-actions apply-tailored-resume-meta">
+                <p className="muted">Tailored resume ready: {tailoredResumeLabel}</p>
+                {tailoredResumeArtifactId !== null && (
+                  <Button
+                    variant="ghost"
+                    onClick={() => void previewApplicationArtifact(tailoredResumeArtifactId)}
+                  >
+                    Preview PDF
+                  </Button>
+                )}
+              </div>
             )}
 
             {generateMessage && <Banner kind="info">{generateMessage}</Banner>}

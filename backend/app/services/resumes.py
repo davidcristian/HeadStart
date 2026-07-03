@@ -21,6 +21,7 @@ from app.resumes.template import default_template_tex, render_resume_template
 from app.resumes.template_bundle import render_template_bundle
 from app.resumes.types import CuratedResumeFields
 from app.schemas.profile import ProfileData
+from app.services.application_artifacts import ApplicationArtifactService
 from app.services.jobs import JobService
 from app.services.plan_limits import PlanLimitsService
 from app.services.profiles import ProfileService
@@ -93,11 +94,17 @@ class ResumeService:
 
         filename = _tailored_filename(job.company, job.title)
         digest = hashlib.sha256(pdf_bytes).hexdigest()
+        artifact = ApplicationArtifactService(self.session).store_tailored_resume_pdf(
+            user_id,
+            data=pdf_bytes,
+            filename=filename,
+        )
         return {
             "filename": filename,
             "size_bytes": len(pdf_bytes),
             "content_sha256": digest,
             "pdf_b64": base64.b64encode(pdf_bytes).decode("ascii"),
+            "artifact_id": artifact.id,
             "provider": provider,
             "fallback": fallback,
         }

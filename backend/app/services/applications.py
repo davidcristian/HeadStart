@@ -11,6 +11,7 @@ from app.models.seen_job import SeenJob
 from app.repositories.applications import ApplicationPipelineRepository
 from app.repositories.inbox_classifications import InboxClassificationRepository
 from app.repositories.inbox_reply_drafts import InboxReplyDraftRepository
+from app.schemas.application_artifact import ApplicationArtifactMeta
 from app.schemas.application_pipeline import (
     ApplicationAttemptSummary,
     ApplicationPipelineRead,
@@ -137,4 +138,14 @@ class ApplicationPipelineService:
     def _attempt_summary(self, log: ApplicationLog | None) -> ApplicationAttemptSummary | None:
         if log is None:
             return None
-        return ApplicationAttemptSummary.model_validate(log)
+        artifact = log.tailored_resume_artifact
+        return ApplicationAttemptSummary(
+            id=log.id,
+            status=log.status,
+            error=log.error,
+            external_application_id=log.external_application_id,
+            tailored_resume_artifact=(
+                ApplicationArtifactMeta.model_validate(artifact) if artifact is not None else None
+            ),
+            created_at=log.created_at,
+        )

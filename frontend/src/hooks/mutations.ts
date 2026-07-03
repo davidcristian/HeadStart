@@ -3,7 +3,6 @@
  */
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import type { QueryClient } from "@tanstack/react-query";
 import { api } from "../api";
 import type {
   CredentialCreate,
@@ -15,11 +14,15 @@ import type {
   SourceCreate,
   TargetCreate,
 } from "../types";
+import { invalidate } from "./mutationUtils";
 import { queryKeys } from "./queries";
 
-function invalidate(qc: QueryClient, key: readonly unknown[]) {
-  return qc.invalidateQueries({ queryKey: key });
-}
+export {
+  useApplyToJob,
+  useGenerateCoverLetter,
+  useGenerateResume,
+  useUpdateJob,
+} from "./jobMutations";
 
 export function useCreateSource() {
   const qc = useQueryClient();
@@ -191,50 +194,6 @@ export function useDeleteResumeTemplate() {
   return useMutation({
     mutationFn: () => api.deleteResumeTemplate(),
     onSuccess: () => invalidate(qc, queryKeys.profile),
-  });
-}
-
-export function useUpdateJob() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, status }: { id: number; status: "seen" | "applied" | "archived" }) =>
-      api.updateJob(id, { status }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["jobs"] }),
-  });
-}
-
-export function useApplyToJob() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({
-      id,
-      dry_run = false,
-      cover_letter,
-      tailored_resume_b64,
-    }: {
-      id: number;
-      dry_run?: boolean;
-      cover_letter?: string | null;
-      tailored_resume_b64?: string | null;
-    }) => api.applyToJob(id, { dry_run, cover_letter, tailored_resume_b64 }),
-    onSuccess: (result) => {
-      invalidate(qc, queryKeys.applicationLogs);
-      if (result.status === "submitted") {
-        qc.invalidateQueries({ queryKey: ["jobs"] });
-      }
-    },
-  });
-}
-
-export function useGenerateCoverLetter() {
-  return useMutation({
-    mutationFn: (jobId: number) => api.generateCoverLetter(jobId),
-  });
-}
-
-export function useGenerateResume() {
-  return useMutation({
-    mutationFn: (jobId: number) => api.generateResume(jobId),
   });
 }
 

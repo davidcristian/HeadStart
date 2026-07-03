@@ -18,10 +18,11 @@ from app.models.seen_job import SeenJob
 from app.models.source import Source
 from app.repositories.application_logs import ApplicationLogRepository
 from app.repositories.sources import SourceRepository
+from app.schemas.profile import ResumeFile
 from app.services.apply_tracking import application_tracking_payload
 from app.services.credentials import CredentialService
 from app.services.profiles import ProfileService
-from app.services.tailored_resume import decode_tailored_resume
+from app.services.tailored_resume import resolve_tailored_resume_for_apply
 
 logger = get_logger(__name__)
 
@@ -95,12 +96,18 @@ class ApplyService:
         dry_run: bool = False,
         cover_letter: str | None = None,
         tailored_resume_b64: str | None = None,
+        tailored_resume_artifact_id: int | None = None,
         application_log_id: int | None = None,
     ) -> ApplyResult:
         """Submit or preview an application for one seen job."""
         job, source = self._validate_apply_request(user_id, job_id, dry_run=dry_run)
         apply_profile = ProfileService(self.session).get_for_apply(user_id)
-        tailored_resume = decode_tailored_resume(tailored_resume_b64)
+        tailored_resume, artifact_id = resolve_tailored_resume_for_apply(
+            self.session,
+            user_id,
+            tailored_resume_b64=tailored_resume_b64,
+            tailored_resume_artifact_id=tailored_resume_artifact_id,
+        )
         resume_file = tailored_resume or apply_profile.resume_file
 
         config = {**source.default_config, **job.search.config}
@@ -129,9 +136,21 @@ class ApplyService:
         result = get_applier(source.adapter_key).apply(ctx)
 
         if existing_log is not None:
-            self._update_log(existing_log, job, result, tailored_resume=tailored_resume)
+            self._update_log(
+                existing_log,
+                job,
+                result,
+                tailored_resume=tailored_resume,
+                artifact_id=artifact_id,
+            )
         else:
-            self._record_attempt(job, result, dry_run=dry_run, tailored_resume=tailored_resume)
+            self._record_attempt(
+                job,
+                result,
+                dry_run=dry_run,
+                tailored_resume=tailored_resume,
+                artifact_id=artifact_id,
+            )
 
         if result.status == "submitted":
             job.status = "applied"
@@ -183,7 +202,8 @@ class ApplyService:
         result: ApplyResult,
         *,
         dry_run: bool,
-        tailored_resume: object | None = None,
+        tailored_resume: ResumeFile | None = None,
+        artifact_id: int | None = None,
     ) -> None:
         """Persist an audit row for every apply attempt."""
         self.application_logs.add(
@@ -194,6 +214,7 @@ class ApplyService:
                 error=result.error,
                 payload=self._merge_tracking_payload(job, result.payload, tailored_resume),
                 external_application_id=result.external_application_id,
+                tailored_resume_artifact_id=artifact_id,
             )
         )
 
@@ -203,31 +224,30 @@ class ApplyService:
         job: SeenJob,
         result: ApplyResult,
         *,
-        tailored_resume: object | None = None,
+        tailored_resume: ResumeFile | None = None,
+        artifact_id: int | None = None,
     ) -> None:
         """Update an existing queued log with the final apply outcome."""
         log.status = result.status
         log.error = result.error
         log.payload = self._merge_tracking_payload(job, result.payload, tailored_resume)
         log.external_application_id = result.external_application_id
+        log.tailored_resume_artifact_id = artifact_id
         self.session.flush()
 
     def _merge_tracking_payload(
         self,
         job: SeenJob,
         adapter_payload: dict[str, Any] | None,
-        tailored_resume: object | None = None,
+        tailored_resume: ResumeFile | None = None,
     ) -> dict[str, Any]:
         tracking = application_tracking_payload(job)
         if tailored_resume is not None:
-            from app.schemas.profile import ResumeFile
-
-            if isinstance(tailored_resume, ResumeFile):
-                tracking["tailored_resume"] = {
-                    "filename": tailored_resume.filename,
-                    "size_bytes": tailored_resume.size_bytes,
-                    "content_type": tailored_resume.content_type,
-                }
+            tracking["tailored_resume"] = {
+                "filename": tailored_resume.filename,
+                "size_bytes": tailored_resume.size_bytes,
+                "content_type": tailored_resume.content_type,
+            }
         if not adapter_payload:
             return tracking
         return {**tracking, **adapter_payload}

@@ -40,6 +40,10 @@ class JobApplyRequest(BaseModel):
         default=None,
         description="Optional base64-encoded tailored resume PDF for this application",
     )
+    tailored_resume_artifact_id: int | None = Field(
+        default=None,
+        description="Optional stored tailored resume artifact id from generate-resume",
+    )
 
 
 class JobApplyResult(BaseModel):
@@ -68,6 +72,7 @@ class JobResumeResult(BaseModel):
     size_bytes: int = Field(ge=0)
     content_sha256: str
     pdf_b64: str
+    artifact_id: int = Field(description="Persisted artifact id for download and apply reuse")
     provider: str = Field(description="Curator key used (e.g. heuristic, openai)")
     fallback: bool = Field(
         default=False,

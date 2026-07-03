@@ -5,9 +5,12 @@ from __future__ import annotations
 import base64
 import binascii
 
+from sqlalchemy.orm import Session
+
 from app.core.config import settings
 from app.core.exceptions import ValidationError
 from app.schemas.profile import ResumeFile
+from app.services.application_artifacts import ApplicationArtifactService
 
 
 def decode_tailored_resume(data_b64: str | None) -> ResumeFile | None:
@@ -34,3 +37,29 @@ def decode_tailored_resume(data_b64: str | None) -> ResumeFile | None:
         size_bytes=len(raw),
         data=raw,
     )
+
+
+def resolve_tailored_resume_for_apply(
+    session: Session,
+    user_id: int,
+    *,
+    tailored_resume_b64: str | None,
+    tailored_resume_artifact_id: int | None,
+) -> tuple[ResumeFile | None, int | None]:
+    """Load or persist a tailored resume for one apply attempt."""
+    artifacts = ApplicationArtifactService(session)
+    if tailored_resume_artifact_id is not None:
+        resume = artifacts.load_tailored_resume_pdf(user_id, tailored_resume_artifact_id)
+        return resume, tailored_resume_artifact_id
+
+    tailored_resume = decode_tailored_resume(tailored_resume_b64)
+    if tailored_resume is None:
+        return None, None
+
+    artifact = artifacts.store_tailored_resume_pdf(
+        user_id,
+        data=tailored_resume.data,
+        filename=tailored_resume.filename,
+        content_type=tailored_resume.content_type,
+    )
+    return tailored_resume, artifact.id

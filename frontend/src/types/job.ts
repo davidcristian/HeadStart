@@ -1,3 +1,5 @@
+import type { ApplicationArtifactMeta } from "./application";
+
 export type JobStatus = "new" | "seen" | "applied" | "archived" | "closed";
 
 export interface Job {
@@ -35,6 +37,7 @@ export interface JobResumeResult {
   size_bytes: number;
   content_sha256: string;
   pdf_b64: string;
+  artifact_id: number;
   provider: string;
   fallback: boolean;
 }
@@ -50,5 +53,6 @@ export interface ApplicationLog {
   error: string | null;
   payload: Record<string, unknown> | null;
   external_application_id: string | null;
+  tailored_resume_artifact: ApplicationArtifactMeta | null;
   created_at: string;
 }

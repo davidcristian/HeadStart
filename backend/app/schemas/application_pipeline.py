@@ -5,6 +5,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.schemas.application_artifact import ApplicationArtifactMeta
 from app.schemas.inbox_reply_draft import ReplyDraftSummary
 from app.schemas.job import JobStatus
 
@@ -29,6 +30,7 @@ class ApplicationAttemptSummary(BaseModel):
     status: str
     error: str | None = None
     external_application_id: str | None = None
+    tailored_resume_artifact: ApplicationArtifactMeta | None = None
     created_at: datetime
 
 

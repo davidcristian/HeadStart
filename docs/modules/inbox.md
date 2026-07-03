@@ -57,6 +57,10 @@ write-only — `MailboxCredentialRead` exposes host/user metadata only.
 vars are set, users without a saved credential share the env mailbox (single-user
 local dev only).
 
+**Planned:** `@register_mailbox("gmail")` — OAuth 2.0 + Gmail API read/send for
+the majority of users on Gmail (see [roadmap.md → Phase 20c](../roadmap.md#20c--inbox-integration--email-triage)).
+IMAP remains the v1 connector for any provider.
+
 ## API (prefix `/api/v1/inbox`)
 
 All routes require auth and `INBOX_AGENT_ENABLED=true`.

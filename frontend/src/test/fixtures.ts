@@ -157,6 +157,7 @@ export const sampleApplicationPipelineItem: ApplicationPipelineItem = {
     status: "submitted",
     error: null,
     external_application_id: "gh-123",
+    tailored_resume_artifact: null,
     created_at: "2026-06-28T13:00:00Z",
   },
   attempts: [
@@ -165,6 +166,7 @@ export const sampleApplicationPipelineItem: ApplicationPipelineItem = {
       status: "submitted",
       error: null,
       external_application_id: "gh-123",
+      tailored_resume_artifact: null,
       created_at: "2026-06-28T13:00:00Z",
     },
   ],

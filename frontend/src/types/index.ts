@@ -20,6 +20,7 @@ export type {
 } from "./job";
 export type {
   ApplicationPipelineStage,
+  ApplicationArtifactMeta,
   ApplicationAttemptSummary,
   ApplicationPipelineItem,
   ReplyDraftSummary,

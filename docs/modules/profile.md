@@ -79,10 +79,13 @@ every `.tex` file in a bundle. Bundle archives must include `main.tex` or
 `resume.tex` (or a single `.tex` file); allowed member types are `.tex`, `.sty`,
 `.cls`, `.bib`, and common image formats. When no template is uploaded, a
 built-in default template is used. `POST /jobs/{id}/generate-resume` curates
-placeholders (Pro users: `resume_curation` AI purpose), renders LaTeX, and
-compiles a tailored PDF (requires `tectonic` or `pdflatex` locally). Pass the
-generated PDF on apply via `tailored_resume_b64` on `POST /jobs/{id}/apply` to
-attach it instead of the static resume file.
+placeholders (Pro users: `resume_curation` AI purpose), renders LaTeX, compiles a
+tailored PDF (requires `tectonic` or `pdflatex` locally), and persists it in
+`application_artifact` (per-user SHA-256 dedup, Fernet-encrypted). The response
+includes `artifact_id` for preview/download via
+`GET /application-artifacts/{id}/download`. On apply, pass `tailored_resume_artifact_id`
+(or `tailored_resume_b64`) on `POST /jobs/{id}/apply` to attach the tailored PDF
+instead of the static resume file.
 
 `answers` is a free-form map of recurring application questions to the user's
 canned response.

@@ -5,6 +5,8 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.schemas.application_artifact import ApplicationArtifactMeta
+
 
 class ApplicationLogRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -19,6 +21,7 @@ class ApplicationLogRead(BaseModel):
     error: str | None = None
     payload: dict[str, Any] | None = None
     external_application_id: str | None = None
+    tailored_resume_artifact: ApplicationArtifactMeta | None = None
     created_at: datetime
 
 

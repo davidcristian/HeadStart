@@ -104,11 +104,17 @@ def test_apply_live_queues_and_returns_log_id(client: TestClient) -> None:
     assert body["application_log_id"] is not None
     assert body["job"] is None
     mock_delay.assert_called_once()
-    log_id, _user_id, queued_job_id, cover_letter, tailored_resume_b64 = mock_delay.call_args[0]
+    delay_args = mock_delay.call_args[0]
+    log_id = delay_args[0]
+    queued_job_id = delay_args[2]
+    cover_letter = delay_args[3]
+    tailored_resume_b64 = delay_args[4]
+    tailored_resume_artifact_id = delay_args[5]
     assert log_id == body["application_log_id"]
     assert queued_job_id == job_id
     assert cover_letter == "Hello"
     assert tailored_resume_b64 is None
+    assert tailored_resume_artifact_id is None
 
     log_resp = client.get(
         f"/api/v1/application-logs/{body['application_log_id']}",

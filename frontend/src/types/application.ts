@@ -10,11 +10,22 @@ export type ApplicationPipelineStage =
   | "closed"
   | "archived";
 
+export interface ApplicationArtifactMeta {
+  id: number;
+  artifact_type: string;
+  filename: string;
+  content_type: string;
+  size_bytes: number;
+  content_sha256: string;
+  created_at: string;
+}
+
 export interface ApplicationAttemptSummary {
   id: number;
   status: string;
   error: string | null;
   external_application_id: string | null;
+  tailored_resume_artifact: ApplicationArtifactMeta | null;
   created_at: string;
 }
 

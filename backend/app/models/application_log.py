@@ -9,6 +9,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import Base, utcnow
 
 if TYPE_CHECKING:
+    from app.models.application_artifact import ApplicationArtifact
     from app.models.seen_job import SeenJob
 
 
@@ -25,8 +26,14 @@ class ApplicationLog(Base):
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
     payload: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
     external_application_id: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    tailored_resume_artifact_id: Mapped[int | None] = mapped_column(
+        ForeignKey("application_artifact.id", ondelete="SET NULL"),
+        index=True,
+        nullable=True,
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, nullable=False
     )
 
     seen_job: Mapped["SeenJob"] = relationship(back_populates="application_logs")
+    tailored_resume_artifact: Mapped["ApplicationArtifact | None"] = relationship()

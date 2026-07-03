@@ -5,6 +5,7 @@ import { ApplicationStageBadge } from "./ApplicationStageBadge";
 import { Button } from "./ui";
 import { useMediaQuery } from "../hooks/useMediaQuery";
 import { useDraftInboxReply } from "../hooks/mutations";
+import { downloadApplicationArtifact } from "../lib/applicationArtifacts";
 import type { ApplicationPipelineItem } from "../types";
 
 const ATTEMPT_LABELS: Record<string, string> = {
@@ -180,6 +181,19 @@ function AttemptTimeline({ attempts }: { attempts: ApplicationPipelineItem["atte
           </span>
           {attempt.external_application_id && (
             <span className="muted">ID: {attempt.external_application_id}</span>
+          )}
+          {attempt.tailored_resume_artifact && (
+            <Button
+              variant="ghost"
+              onClick={() =>
+                void downloadApplicationArtifact(
+                  attempt.tailored_resume_artifact!.id,
+                  attempt.tailored_resume_artifact!.filename,
+                )
+              }
+            >
+              Download resume ({attempt.tailored_resume_artifact.filename})
+            </Button>
           )}
           {attempt.error && <span className="application-timeline-error">{attempt.error}</span>}
         </li>

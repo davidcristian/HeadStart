@@ -28,7 +28,10 @@ class ApplicationLogRepository:
             .join(SeenJob, ApplicationLog.seen_job_id == SeenJob.id)
             .join(Search, SeenJob.search_id == Search.id)
             .where(ApplicationLog.id == log_id, Search.user_id == user_id)
-            .options(joinedload(ApplicationLog.seen_job))
+            .options(
+                joinedload(ApplicationLog.seen_job),
+                joinedload(ApplicationLog.tailored_resume_artifact),
+            )
         )
         return self.session.scalar(stmt)
 
@@ -53,7 +56,10 @@ class ApplicationLogRepository:
             .join(SeenJob, ApplicationLog.seen_job_id == SeenJob.id)
             .join(Search, SeenJob.search_id == Search.id)
             .where(Search.user_id == user_id)
-            .options(joinedload(ApplicationLog.seen_job))
+            .options(
+                joinedload(ApplicationLog.seen_job),
+                joinedload(ApplicationLog.tailored_resume_artifact),
+            )
             .order_by(ApplicationLog.created_at.desc())
             .limit(limit)
         )

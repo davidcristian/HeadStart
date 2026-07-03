@@ -75,6 +75,7 @@ describe("ProfilePage", () => {
         error: null,
         payload: { email: "ada@example.com" },
         external_application_id: null,
+        tailored_resume_artifact: null,
         created_at: "2026-06-28T12:00:00Z",
       },
     ]);

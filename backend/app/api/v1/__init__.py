@@ -4,6 +4,7 @@ from fastapi import APIRouter
 
 from app.api.v1 import (
     admin,
+    application_artifacts,
     application_logs,
     applications,
     auth,
@@ -32,6 +33,11 @@ api_router.include_router(searches.router, prefix="/searches", tags=["searches"]
 api_router.include_router(jobs.router, prefix="/jobs", tags=["jobs"])
 api_router.include_router(
     application_logs.router, prefix="/application-logs", tags=["application-logs"]
+)
+api_router.include_router(
+    application_artifacts.router,
+    prefix="/application-artifacts",
+    tags=["application-artifacts"],
 )
 api_router.include_router(applications.router, prefix="/applications", tags=["applications"])
 api_router.include_router(feed.router, prefix="/feed", tags=["feed"])

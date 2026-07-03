@@ -224,6 +224,7 @@ const mockApi = vi.hoisted(() => ({
     error: null,
     payload: null,
     external_application_id: "app-1",
+    tailored_resume_artifact: null,
     created_at: "2026-06-28T12:00:00Z",
   })),
   listAdminUsers: vi.fn(async (): Promise<AdminUser[]> => []),

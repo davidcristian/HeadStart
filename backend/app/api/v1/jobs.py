@@ -102,11 +102,19 @@ def apply_to_job(
             dry_run=True,
             cover_letter=data.cover_letter,
             tailored_resume_b64=data.tailored_resume_b64,
+            tailored_resume_artifact_id=data.tailored_resume_artifact_id,
         )
         return _apply_result_from_service(db, user.id, job_id, result)
 
     log_id = service.enqueue_apply(user.id, job_id)
     # Commit before enqueue so the worker can see the queued log row immediately.
     db.commit()
-    apply_to_job_task.delay(log_id, user.id, job_id, data.cover_letter, data.tailored_resume_b64)
+    apply_to_job_task.delay(
+        log_id,
+        user.id,
+        job_id,
+        data.cover_letter,
+        data.tailored_resume_b64,
+        data.tailored_resume_artifact_id,
+    )
     return JobApplyResult(status="queued", application_log_id=log_id)

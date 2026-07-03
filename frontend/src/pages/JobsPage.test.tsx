@@ -124,6 +124,7 @@ describe("JobsPage", () => {
         dry_run: true,
         cover_letter: "Dear ACME team, ...",
         tailored_resume_b64: null,
+        tailored_resume_artifact_id: null,
       }),
     );
     expect(screen.getByText("Application preview")).toBeInTheDocument();

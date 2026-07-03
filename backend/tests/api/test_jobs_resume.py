@@ -76,3 +76,4 @@ def test_generate_resume_heuristic(client: TestClient) -> None:
     assert body["size_bytes"] == len(FAKE_PDF)
     assert body["filename"].startswith("resume-")
     assert body["pdf_b64"]
+    assert body["artifact_id"] > 0

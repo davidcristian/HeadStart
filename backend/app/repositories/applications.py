@@ -30,7 +30,9 @@ class ApplicationPipelineRepository:
                 ),
             )
             .options(
-                joinedload(SeenJob.application_logs),
+                joinedload(SeenJob.application_logs).joinedload(
+                    ApplicationLog.tailored_resume_artifact
+                ),
                 joinedload(SeenJob.search),
             )
             .order_by(SeenJob.applied_at.desc().nullslast(), SeenJob.first_seen_at.desc())
