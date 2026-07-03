@@ -7,6 +7,7 @@ import json
 from app.core.config import settings
 from app.core.crypto import decrypt, encrypt
 from app.inbox.types import (
+    FastmailMailboxConfig,
     GmailMailboxConfig,
     MailboxConfig,
     OutlookMailboxConfig,
@@ -18,7 +19,13 @@ from app.schemas.mailbox import MailboxCredentialRead
 
 def decode_mailbox_config(
     credential: MailboxCredential,
-) -> MailboxConfig | GmailMailboxConfig | OutlookMailboxConfig | YahooMailboxConfig:
+) -> (
+    MailboxConfig
+    | GmailMailboxConfig
+    | OutlookMailboxConfig
+    | YahooMailboxConfig
+    | FastmailMailboxConfig
+):
     """Decrypt and validate the stored connector config."""
     raw = json.loads(decrypt(credential.secret_ciphertext))
     if credential.connector_type == "gmail":
@@ -27,11 +34,19 @@ def decode_mailbox_config(
         return OutlookMailboxConfig.model_validate(raw)
     if credential.connector_type == "yahoo":
         return YahooMailboxConfig.model_validate(raw)
+    if credential.connector_type == "fastmail":
+        return FastmailMailboxConfig.model_validate(raw)
     return MailboxConfig.model_validate(raw)
 
 
 def encode_mailbox_config(
-    config: MailboxConfig | GmailMailboxConfig | OutlookMailboxConfig | YahooMailboxConfig,
+    config: (
+        MailboxConfig
+        | GmailMailboxConfig
+        | OutlookMailboxConfig
+        | YahooMailboxConfig
+        | FastmailMailboxConfig
+    ),
 ) -> str:
     """Encrypt a connector config for persistence."""
     return encrypt(json.dumps(config.model_dump()))
@@ -40,7 +55,13 @@ def encode_mailbox_config(
 def mailbox_credential_to_read(credential: MailboxCredential) -> MailboxCredentialRead:
     """Map a credential row to the public read DTO."""
     config = decode_mailbox_config(credential)
-    if isinstance(config, (GmailMailboxConfig, OutlookMailboxConfig, YahooMailboxConfig)):
+    oauth_configs = (
+        GmailMailboxConfig,
+        OutlookMailboxConfig,
+        YahooMailboxConfig,
+        FastmailMailboxConfig,
+    )
+    if isinstance(config, oauth_configs):
         return MailboxCredentialRead(
             id=credential.id,
             connector_type=credential.connector_type,
@@ -84,6 +105,12 @@ def mailbox_config_for_export(credential: MailboxCredential) -> dict[str, object
             "email_address": config.email_address,
             "access_token": "[redacted]",
             "refresh_token": "[redacted]",
+        }
+    if isinstance(config, FastmailMailboxConfig):
+        return {
+            "connector_type": "fastmail",
+            "email_address": config.email_address,
+            "api_token": "[redacted]",
         }
     return {
         "connector_type": "imap_smtp",

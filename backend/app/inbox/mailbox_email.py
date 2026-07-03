@@ -2,6 +2,7 @@
 
 from app.inbox.ghost_message import mailbox_self_address
 from app.inbox.types import (
+    FastmailMailboxConfig,
     GmailMailboxConfig,
     MailboxConfig,
     MailboxContext,
@@ -12,10 +13,13 @@ from app.inbox.types import (
 
 def mailbox_email_from_context(ctx: MailboxContext) -> str:
     """Return the address used for self-ghost detection and outbound From headers."""
-    if ctx.connector_type in {"gmail", "outlook", "yahoo"}:
+    if ctx.connector_type in {"gmail", "outlook", "yahoo", "fastmail"}:
         config = ctx.config
-        if not isinstance(config, (GmailMailboxConfig, OutlookMailboxConfig, YahooMailboxConfig)):
-            raise TypeError(f"{ctx.connector_type} connector requires OAuth mailbox config")
+        if not isinstance(
+            config,
+            (GmailMailboxConfig, OutlookMailboxConfig, YahooMailboxConfig, FastmailMailboxConfig),
+        ):
+            raise TypeError(f"{ctx.connector_type} connector requires OAuth/API mailbox config")
         return config.email_address
     if not isinstance(ctx.config, MailboxConfig):
         raise TypeError("imap_smtp connector requires MailboxConfig")
@@ -32,6 +36,6 @@ def mailbox_email_from_read(
     email_address: str | None,
 ) -> str:
     """Return the mailbox email from a credential read DTO."""
-    if connector_type in {"gmail", "outlook", "yahoo"}:
+    if connector_type in {"gmail", "outlook", "yahoo", "fastmail"}:
         return email_address or ""
     return imap_user or ""

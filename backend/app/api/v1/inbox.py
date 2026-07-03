@@ -191,7 +191,8 @@ def test_mailbox_connection(
     user: User = Depends(get_verified_user),
 ) -> MailboxTestResponse:
     config = data.config if data else None
-    return InboxService(db).test_connection(user.id, config=config)
+    connector_type = data.connector_type if data else "imap_smtp"
+    return InboxService(db).test_connection(user.id, connector_type=connector_type, config=config)
 
 
 @router.get("/messages", response_model=FetchResult)

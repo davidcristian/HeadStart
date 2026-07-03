@@ -91,6 +91,7 @@ def test_meta_includes_inbox_capabilities(client: TestClient, auth_headers: dict
     assert "gmail" in body["mailboxes"]
     assert "outlook" in body["mailboxes"]
     assert "yahoo" in body["mailboxes"]
+    assert "fastmail" in body["mailboxes"]
     assert body["inbox_agent_enabled"] is False
 
 
@@ -118,7 +119,28 @@ def test_yahoo_authorize_requires_oauth_config(client: TestClient, monkeypatch) 
     assert resp.status_code == 400
 
 
-def test_upsert_rejects_non_imap_connector_type(client: TestClient, monkeypatch) -> None:
+def test_upsert_fastmail_credentials(client: TestClient, monkeypatch) -> None:
+    monkeypatch.setattr(settings, "inbox_agent_enabled", True)
+    headers = register_and_login(client, "fastmail-crud@example.com")
+    resp = client.put(
+        "/api/v1/inbox/credentials",
+        headers=headers,
+        json={
+            "connector_type": "fastmail",
+            "config": {
+                "email_address": "user@fastmail.test",
+                "api_token": "fmu1-test-token",
+            },
+        },
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["connector_type"] == "fastmail"
+    assert body["email_address"] == "user@fastmail.test"
+    assert "api_token" not in body
+
+
+def test_upsert_rejects_non_manual_connector_type(client: TestClient, monkeypatch) -> None:
     monkeypatch.setattr(settings, "inbox_agent_enabled", True)
     headers = register_and_login(client, "gmail-upsert@example.com")
     resp = client.put(

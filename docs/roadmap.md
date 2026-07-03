@@ -698,16 +698,15 @@ sends through the adapter (fixture tests in CI; optional live smoke outside CI).
 
 | Item | Why | Notes |
 | ---- | --- | ----- |
-| Fastmail JMAP connector | Popular with technical users; JMAP is cleaner than IMAP for automation | `@register_mailbox("fastmail")` using JMAP session + email APIs; API token auth (Fastmail does not use OAuth for third-party apps the same way as Google/Microsoft) |
-| JMAP routing | Folder moves must work with `InboxRoutingService` | Map classification labels to Fastmail mailboxes; tests with fixtures |
+| ~~Fastmail JMAP connector~~ | ~~Popular with technical users; JMAP is cleaner than IMAP for automation~~ | **Shipped:** `@register_mailbox("fastmail")` using JMAP session + email APIs; API token auth via `PUT /inbox/credentials` |
+| ~~JMAP routing~~ | ~~Folder moves must work with `InboxRoutingService`~~ | **Shipped:** `Email/set` mailbox moves; destination mailboxes created on demand; fixture tests in CI |
 
 **Done when:** Fastmail users can store an API token, poll inbound mail, and route
-messages without configuring raw IMAP hosts.
+messages without configuring raw IMAP hosts. **Shipped.**
 
 **Phase 21 overall done when:** Outlook and at least one additional consumer
 provider (Yahoo or Fastmail) ship as registry adapters; IMAP remains documented
-as the escape hatch for other providers. **Yahoo shipped (21b);** Fastmail (21c)
-remains open.
+as the escape hatch for other providers. **Shipped (21a Outlook, 21b Yahoo, 21c Fastmail).**
 
 ---
 

@@ -77,6 +77,7 @@ export type {
   SummaryPreferencesUpdate,
 } from "./summaryPreferences";
 export type {
+  FastmailConfig,
   MailboxConfig,
   MailboxCredential,
   MailboxTestResult,

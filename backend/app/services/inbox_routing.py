@@ -80,7 +80,7 @@ class InboxRoutingService:
             ctx,
             uid=row.message_uid,
             destination=destination,
-            provider_message_id=_graph_message_id_from_classification(row),
+            provider_message_id=_provider_message_id_from_classification(row),
         )
         self._apply_move_result(row, result)
         self.session.flush()
@@ -135,8 +135,11 @@ class InboxRoutingService:
         )
 
 
-def _graph_message_id_from_classification(row: InboxClassification) -> str | None:
+def _provider_message_id_from_classification(row: InboxClassification) -> str | None:
     if not row.payload or not isinstance(row.payload, dict):
         return None
-    graph_id = row.payload.get("graph_message_id")
-    return graph_id if isinstance(graph_id, str) and graph_id else None
+    for key in ("graph_message_id", "jmap_email_id"):
+        value = row.payload.get(key)
+        if isinstance(value, str) and value:
+            return value
+    return None

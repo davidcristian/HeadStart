@@ -136,6 +136,27 @@ publish a Gmail/Graph-style REST API — mail access is over standard protocols.
 Token refresh runs automatically before fetch/send when the access token is near
 expiry (`app/inbox/yahoo_oauth.py`).
 
+## fastmail adapter
+
+**Key:** `fastmail`. Uses a Fastmail API token and the JMAP mail/submission APIs
+(`httpx`).
+
+- **Connect:** Settings → Inbox → enter Fastmail email + API token; stored on
+  `mailbox_credential` (`connector_type=fastmail`) via `PUT /inbox/credentials`.
+- **Fetch:** JMAP `Email/query` (inbox role) + `Email/get` for headers and body.
+- **Send:** JMAP `Email/set` (draft) + `EmailSubmission/set`.
+- **Move / route:** JMAP `Email/set` updates `mailboxIds`; destination mailboxes
+  are created with `Mailbox/set` when missing (same folder names as IMAP routing).
+
+**User setup:**
+
+1. In Fastmail → Settings → Privacy & Security → **API tokens**, create a token
+   with **Mail** and **Submission** scopes.
+2. In HeadStart Settings → Inbox, enter your Fastmail address and paste the token.
+
+No operator env vars are required — auth is per-user. `imap_smtp` remains the
+generic fallback for providers that expose IMAP.
+
 ## Credential storage
 
 Per-user encrypted row in `mailbox_credential` (one per account). Passwords are
@@ -149,8 +170,6 @@ write-only — `MailboxCredentialRead` exposes host/user metadata only.
 vars are set, users without a saved credential share the env mailbox (single-user
 local dev only).
 
-**Planned (Phase 21):** Fastmail JMAP — see
-[roadmap.md § Phase 21](../roadmap.md#phase-21--inbox-mailbox-providers-dev-only).
 `imap_smtp` remains the generic connector for any provider that exposes IMAP.
 
 ## API (prefix `/api/v1/inbox`)
@@ -160,7 +179,7 @@ All routes require auth and `INBOX_AGENT_ENABLED=true`.
 | Method | Path              | Purpose                                      |
 | ------ | ----------------- | -------------------------------------------- |
 | GET    | `/credentials`    | Read saved mailbox metadata                  |
-| PUT    | `/credentials`    | Upsert encrypted IMAP/SMTP settings          |
+| PUT    | `/credentials`    | Upsert encrypted IMAP/SMTP or Fastmail token settings |
 | DELETE | `/credentials`    | Remove saved credentials                     |
 | GET    | `/gmail/authorize`| Start Gmail OAuth (returns consent URL)      |
 | GET    | `/gmail/callback` | OAuth redirect (stores Gmail tokens)         |

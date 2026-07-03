@@ -33,6 +33,13 @@ class YahooMailboxConfig(BaseModel):
     token_expiry: str | None = None
 
 
+class FastmailMailboxConfig(BaseModel):
+    """API token auth for the Fastmail JMAP connector."""
+
+    email_address: str = Field(min_length=3, max_length=320)
+    api_token: str = Field(min_length=1, max_length=4096)
+
+
 class MailboxConfig(BaseModel):
     """IMAP + SMTP connection settings for the imap_smtp connector."""
 
@@ -54,7 +61,13 @@ class MailboxContext(BaseModel):
     """Everything a mailbox connector needs for one user session."""
 
     connector_type: str
-    config: MailboxConfig | GmailMailboxConfig | OutlookMailboxConfig | YahooMailboxConfig
+    config: (
+        MailboxConfig
+        | GmailMailboxConfig
+        | OutlookMailboxConfig
+        | YahooMailboxConfig
+        | FastmailMailboxConfig
+    )
     user_id: int | None = None
 
 

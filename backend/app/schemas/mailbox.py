@@ -7,13 +7,13 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.inbox.types import MailboxConfig
+from app.inbox.types import FastmailMailboxConfig, MailboxConfig
 
 
 class MailboxCredentialUpsert(BaseModel):
     connector_type: str = Field(default="imap_smtp", max_length=32)
     enabled: bool = True
-    config: MailboxConfig
+    config: MailboxConfig | FastmailMailboxConfig
 
 
 class MailboxCredentialRead(BaseModel):
@@ -33,7 +33,8 @@ class MailboxCredentialRead(BaseModel):
 class MailboxTestRequest(BaseModel):
     """Optional inline config; when omitted the saved credential or env fallback is used."""
 
-    config: MailboxConfig | None = None
+    connector_type: str = Field(default="imap_smtp", max_length=32)
+    config: MailboxConfig | FastmailMailboxConfig | None = None
 
 
 class MailboxTestResponse(BaseModel):

@@ -18,6 +18,7 @@ from app.email_classifiers import (
     get_email_classifier,
 )
 from app.email_classifiers.sanitize import prepare_message
+from app.inbox.fastmail_jmap_parse import JMAP_EMAIL_ID_HEADER
 from app.inbox.types import InboxMessage
 from app.models.inbox_classification import InboxClassification
 from app.models.seen_job import SeenJob
@@ -59,6 +60,9 @@ def _classification_payload(
     graph_id = message.raw_headers.get(GRAPH_MESSAGE_ID_HEADER)
     if isinstance(graph_id, str) and graph_id:
         payload["graph_message_id"] = graph_id
+    jmap_id = message.raw_headers.get(JMAP_EMAIL_ID_HEADER)
+    if isinstance(jmap_id, str) and jmap_id:
+        payload["jmap_email_id"] = jmap_id
     return payload
 
 

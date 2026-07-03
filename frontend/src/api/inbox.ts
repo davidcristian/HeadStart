@@ -1,6 +1,7 @@
 /** Inbox / mailbox API endpoints (dev-only automation). */
 
 import type {
+  FastmailConfig,
   GmailAuthorizeResult,
   MailboxConfig,
   MailboxCredential,
@@ -23,15 +24,15 @@ export const inboxApi = {
   upsertMailboxCredentials: (data: {
     connector_type?: string;
     enabled?: boolean;
-    config: MailboxConfig;
+    config: MailboxConfig | FastmailConfig;
   }) => request<MailboxCredential>("/api/v1/inbox/credentials", { method: "PUT", body: data }),
 
   deleteMailboxCredentials: () => request<void>("/api/v1/inbox/credentials", { method: "DELETE" }),
 
-  testMailbox: (config?: MailboxConfig) =>
+  testMailbox: (data?: { connector_type?: string; config?: MailboxConfig | FastmailConfig }) =>
     request<MailboxTestResult>("/api/v1/inbox/test", {
       method: "POST",
-      body: config ? { config } : {},
+      body: data ?? {},
     }),
 
   gmailAuthorize: () => request<GmailAuthorizeResult>("/api/v1/inbox/gmail/authorize"),

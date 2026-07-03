@@ -16,6 +16,7 @@ from app.inbox.credentials import (
 )
 from app.inbox.mailbox_email import mailbox_email_from_read
 from app.inbox.types import (
+    FastmailMailboxConfig,
     FetchResult,
     GmailMailboxConfig,
     MailboxConfig,
@@ -75,9 +76,9 @@ class InboxService:
 
     def upsert(self, user_id: int, data: MailboxCredentialUpsert) -> MailboxCredentialRead:
         self.require_enabled()
-        if data.connector_type != "imap_smtp":
+        if data.connector_type not in {"imap_smtp", "fastmail"}:
             raise ValidationError(
-                "Manual credential upsert supports imap_smtp only. "
+                "Manual credential upsert supports imap_smtp and fastmail only. "
                 "Connect Gmail via GET /inbox/gmail/authorize, Outlook via "
                 "GET /inbox/outlook/authorize, or Yahoo via GET /inbox/yahoo/authorize."
             )
@@ -159,11 +160,17 @@ class InboxService:
         )
 
     def test_connection(
-        self, user_id: int, config: MailboxConfig | None = None
+        self,
+        user_id: int,
+        *,
+        connector_type: str = "imap_smtp",
+        config: MailboxConfig | FastmailMailboxConfig | None = None,
     ) -> MailboxTestResponse:
         self.require_enabled()
         ctx = (
-            self._context_from_config(user_id, config) if config else self.resolve_context(user_id)
+            self._context_from_config(user_id, connector_type, config)
+            if config is not None
+            else self.resolve_context(user_id)
         )
         if ctx is None:
             raise ValidationError("No mailbox credentials configured")
@@ -249,5 +256,9 @@ class InboxService:
             raise ValidationError(f"Unknown mailbox connector '{connector_type}'")
 
     @staticmethod
-    def _context_from_config(user_id: int, config: MailboxConfig) -> MailboxContext:
-        return MailboxContext(connector_type="imap_smtp", config=config, user_id=user_id)
+    def _context_from_config(
+        user_id: int,
+        connector_type: str,
+        config: MailboxConfig | FastmailMailboxConfig,
+    ) -> MailboxContext:
+        return MailboxContext(connector_type=connector_type, config=config, user_id=user_id)

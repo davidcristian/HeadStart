@@ -13,6 +13,11 @@ export interface MailboxConfig {
   smtp_from?: string;
 }
 
+export interface FastmailConfig {
+  email_address: string;
+  api_token: string;
+}
+
 export interface MailboxCredential {
   id: number;
   connector_type: string;

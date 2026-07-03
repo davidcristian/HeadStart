@@ -1,9 +1,11 @@
 /** Dev-only inbox mailbox settings (IMAP/SMTP, Gmail OAuth, Outlook OAuth, or Yahoo OAuth). */
 
 import { useEffect, useState } from "react";
-import { Banner, Button, Card, Field } from "../ui";
+import { Banner, Button, Card } from "../ui";
+import { SettingsInboxFastmailForm } from "./SettingsInboxFastmailForm";
+import { SettingsInboxImapForm } from "./SettingsInboxImapForm";
 import { api } from "../../api";
-import type { MailboxConfig, MailboxCredential } from "../../types";
+import type { FastmailConfig, MailboxConfig, MailboxCredential } from "../../types";
 
 const EMPTY_IMAP_CONFIG: MailboxConfig = {
   imap_host: "imap.gmail.com",
@@ -12,6 +14,11 @@ const EMPTY_IMAP_CONFIG: MailboxConfig = {
   smtp_host: "smtp.gmail.com",
   smtp_password: "",
   smtp_from: "",
+};
+
+const EMPTY_FASTMAIL_CONFIG: FastmailConfig = {
+  email_address: "",
+  api_token: "",
 };
 
 type SettingsInboxCardProps = {
@@ -24,6 +31,7 @@ export function SettingsInboxCard({ mailboxNotice }: SettingsInboxCardProps) {
   const [error, setError] = useState<string>();
   const [notice, setNotice] = useState<string>();
   const [imapConfig, setImapConfig] = useState<MailboxConfig>(EMPTY_IMAP_CONFIG);
+  const [fastmailConfig, setFastmailConfig] = useState<FastmailConfig>(EMPTY_FASTMAIL_CONFIG);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -42,6 +50,12 @@ export function SettingsInboxCard({ mailboxNotice }: SettingsInboxCardProps) {
               smtp_host: row.smtp_host ?? current.smtp_host,
               imap_user: row.imap_user ?? current.imap_user,
               smtp_from: row.imap_user ?? current.smtp_from,
+            }));
+          }
+          if (row.connector_type === "fastmail" && row.email_address) {
+            setFastmailConfig((current) => ({
+              ...current,
+              email_address: row.email_address ?? current.email_address,
             }));
           }
         }
@@ -114,6 +128,26 @@ export function SettingsInboxCard({ mailboxNotice }: SettingsInboxCardProps) {
     }
   }
 
+  async function saveFastmail() {
+    setError(undefined);
+    setNotice(undefined);
+    setBusy(true);
+    try {
+      const saved = await api.upsertMailboxCredentials({
+        connector_type: "fastmail",
+        enabled: true,
+        config: fastmailConfig,
+      });
+      setCredential(saved);
+      setFastmailConfig((current) => ({ ...current, api_token: "" }));
+      setNotice("Fastmail credentials saved.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not save Fastmail credentials.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function saveImap() {
     setError(undefined);
     setNotice(undefined);
@@ -143,7 +177,7 @@ export function SettingsInboxCard({ mailboxNotice }: SettingsInboxCardProps) {
     setBusy(true);
     try {
       const result = await api.testMailbox(
-        credential?.connector_type === "imap_smtp" ? undefined : imapConfig,
+        credential ? undefined : { connector_type: "imap_smtp", config: imapConfig },
       );
       if (result.imap_ok && result.smtp_ok) {
         setNotice("Mailbox connection succeeded.");
@@ -200,6 +234,12 @@ export function SettingsInboxCard({ mailboxNotice }: SettingsInboxCardProps) {
         </p>
       ) : null}
 
+      {credential?.connector_type === "fastmail" ? (
+        <p>
+          Connected Fastmail: <strong>{credential.email_address}</strong>
+        </p>
+      ) : null}
+
       <p>
         <Button type="button" onClick={() => void connectGmail()} disabled={busy}>
           Connect Gmail
@@ -212,54 +252,22 @@ export function SettingsInboxCard({ mailboxNotice }: SettingsInboxCardProps) {
         </Button>
       </p>
 
-      <p>Or configure IMAP + SMTP manually:</p>
-      <Field label="IMAP host">
-        <input
-          value={imapConfig.imap_host}
-          onChange={(e) => setImapConfig({ ...imapConfig, imap_host: e.target.value })}
-        />
-      </Field>
-      <Field label="IMAP user">
-        <input
-          value={imapConfig.imap_user}
-          onChange={(e) => setImapConfig({ ...imapConfig, imap_user: e.target.value })}
-        />
-      </Field>
-      <Field label="IMAP password" hint="Write-only; not shown after save.">
-        <input
-          type="password"
-          autoComplete="off"
-          value={imapConfig.imap_password}
-          onChange={(e) => setImapConfig({ ...imapConfig, imap_password: e.target.value })}
-        />
-      </Field>
-      <Field label="SMTP host">
-        <input
-          value={imapConfig.smtp_host}
-          onChange={(e) => setImapConfig({ ...imapConfig, smtp_host: e.target.value })}
-        />
-      </Field>
-      <Field label="SMTP password">
-        <input
-          type="password"
-          autoComplete="off"
-          value={imapConfig.smtp_password}
-          onChange={(e) => setImapConfig({ ...imapConfig, smtp_password: e.target.value })}
-        />
-      </Field>
-      <p>
-        <Button type="button" onClick={() => void saveImap()} disabled={busy}>
-          Save IMAP credentials
-        </Button>{" "}
-        <Button type="button" variant="ghost" onClick={() => void testConnection()} disabled={busy}>
-          Test connection
-        </Button>{" "}
-        {credential ? (
-          <Button type="button" variant="danger" onClick={() => void disconnect()} disabled={busy}>
-            Disconnect
-          </Button>
-        ) : null}
-      </p>
+      <SettingsInboxFastmailForm
+        fastmailConfig={fastmailConfig}
+        busy={busy}
+        onChange={setFastmailConfig}
+        onSave={() => void saveFastmail()}
+      />
+
+      <SettingsInboxImapForm
+        imapConfig={imapConfig}
+        busy={busy}
+        hasCredential={Boolean(credential)}
+        onChange={setImapConfig}
+        onSave={() => void saveImap()}
+        onTest={() => void testConnection()}
+        onDisconnect={() => void disconnect()}
+      />
     </Card>
   );
 }

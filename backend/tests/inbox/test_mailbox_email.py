@@ -3,13 +3,7 @@
 import pytest
 
 from app.inbox.mailbox_email import mailbox_email_from_context, mailbox_email_from_read
-from app.inbox.types import (
-    GmailMailboxConfig,
-    MailboxConfig,
-    MailboxContext,
-    OutlookMailboxConfig,
-    YahooMailboxConfig,
-)
+from app.inbox.types import GmailMailboxConfig, MailboxConfig, MailboxContext
 
 
 def test_mailbox_email_from_context_uses_oauth_address() -> None:
@@ -67,5 +61,5 @@ def test_mailbox_email_from_context_rejects_wrong_config_type() -> None:
             smtp_host="smtp.example.com",
         ),
     )
-    with pytest.raises(TypeError, match="yahoo connector requires OAuth"):
+    with pytest.raises(TypeError, match="yahoo connector requires"):
         mailbox_email_from_context(ctx)

@@ -11,6 +11,7 @@ from app.inbox.credentials import (
     mailbox_credential_to_read,
 )
 from app.inbox.types import (
+    FastmailMailboxConfig,
     GmailMailboxConfig,
     MailboxConfig,
     OutlookMailboxConfig,
@@ -22,7 +23,13 @@ from app.models.mailbox_credential import MailboxCredential
 def _credential(
     *,
     connector_type: str,
-    config: MailboxConfig | GmailMailboxConfig | OutlookMailboxConfig | YahooMailboxConfig,
+    config: (
+        MailboxConfig
+        | GmailMailboxConfig
+        | OutlookMailboxConfig
+        | YahooMailboxConfig
+        | FastmailMailboxConfig
+    ),
 ) -> MailboxCredential:
     return MailboxCredential(
         id=1,
@@ -53,19 +60,44 @@ def test_encode_decode_imap_smtp_round_trip() -> None:
 
 def test_encode_decode_oauth_connectors_round_trip() -> None:
     cases = (
-        ("gmail", GmailMailboxConfig(email_address="u@gmail.com", access_token="a", refresh_token="r")),
+        (
+            "gmail",
+            GmailMailboxConfig(
+                email_address="u@gmail.com",
+                access_token="a",
+                refresh_token="r",
+            ),
+        ),
         (
             "outlook",
-            OutlookMailboxConfig(email_address="u@outlook.com", access_token="a", refresh_token="r"),
+            OutlookMailboxConfig(
+                email_address="u@outlook.com",
+                access_token="a",
+                refresh_token="r",
+            ),
         ),
-        ("yahoo", YahooMailboxConfig(email_address="u@yahoo.com", access_token="a", refresh_token="r")),
+        (
+            "yahoo",
+            YahooMailboxConfig(
+                email_address="u@yahoo.com",
+                access_token="a",
+                refresh_token="r",
+            ),
+        ),
+        (
+            "fastmail",
+            FastmailMailboxConfig(email_address="u@fastmail.com", api_token="token"),
+        ),
     )
     for connector_type, config in cases:
         credential = _credential(connector_type=connector_type, config=config)
         decoded = decode_mailbox_config(credential)
         assert decoded.email_address == config.email_address
-        assert decoded.access_token == "a"
-        assert decoded.refresh_token == "r"
+        if isinstance(config, FastmailMailboxConfig):
+            assert decoded.api_token == "token"
+        else:
+            assert decoded.access_token == "a"
+            assert decoded.refresh_token == "r"
 
 
 def test_mailbox_credential_to_read_maps_oauth_email() -> None:
