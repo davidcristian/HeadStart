@@ -22,3 +22,8 @@ class MailboxCredentialRepository:
 
     def delete(self, credential: MailboxCredential) -> None:
         self.session.delete(credential)
+
+    def list_enabled(self) -> list[MailboxCredential]:
+        """Return enabled mailbox credentials for inbox orchestration."""
+        stmt = select(MailboxCredential).where(MailboxCredential.enabled.is_(True))
+        return list(self.session.scalars(stmt))

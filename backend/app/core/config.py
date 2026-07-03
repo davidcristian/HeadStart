@@ -191,6 +191,10 @@ class Settings(BaseSettings):
     inbox_ghost_window_days: int = 14
     # How often beat checks for stale applications (seconds).
     inbox_ghost_check_interval_seconds: int = 3600
+    # How often beat polls mailboxes for new_string classification (seconds).
+    inbox_poll_interval_seconds: int = 300
+    # Max messages to fetch and classify per user per poll tick.
+    inbox_poll_batch_size: int = 50
 
     # ---- Stripe billing (optional; leave empty to disable paid checkout) ----
     stripe_secret_key: str = ""

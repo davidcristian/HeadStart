@@ -25,4 +25,8 @@ def beat_schedule() -> dict[str, dict[str, object]]:
             "task": "app.worker.tasks.detect_ghosted_applications",
             "schedule": float(settings.inbox_ghost_check_interval_seconds),
         }
+        schedule["process-inbox-messages"] = {
+            "task": "app.worker.tasks.process_inbox_messages",
+            "schedule": float(settings.inbox_poll_interval_seconds),
+        }
     return schedule

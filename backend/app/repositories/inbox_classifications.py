@@ -1,6 +1,6 @@
 """Inbox classification persistence."""
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session, joinedload
 
 from app.models.inbox_classification import InboxClassification
@@ -46,3 +46,12 @@ class InboxClassificationRepository:
         self.session.add(row)
         self.session.flush()
         return row
+
+    def max_message_uid_for_user(self, user_id: int) -> int | None:
+        """Highest classified mailbox UID for poll-cursor bootstrap."""
+        value = self.session.scalar(
+            select(func.max(InboxClassification.message_uid)).where(
+                InboxClassification.user_id == user_id
+            )
+        )
+        return int(value) if value is not None else None

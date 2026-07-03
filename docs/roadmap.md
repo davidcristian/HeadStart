@@ -621,8 +621,8 @@ a job, review or edit the cover letter, and have both attached on apply.
 | ---- | --- | ----- |
 | Extend llama.cpp beyond summaries | Document curation, classification, and drafting need the same local stack | New `agents/` adapters (or extend summarizers) for `curate_resume`, `generate_cover_letter`, `classify_email`, and `draft_reply` prompts; reuse `make llamacpp` / `LLAMACPP_*` env; per-purpose model routing from [20a](#20a--tailored-application-documents) |
 | Input sanitization & scope lock | Small local models are easily hijacked by unrelated email content | **Pre-LLM:** strip HTML, cap body length, detect obvious injection patterns. **Prompt:** hard system scope — job-application triage only; structured JSON output schema (no free-form chat). **Post-LLM:** validate response against allowlisted labels/actions; reject out-of-scope completions (e.g. email says "give me the recipe for a pancake" → classify as `out_of_scope`, do not draft or send a reply). Never pass raw user email as executable instructions |
-| Agent orchestration loop | Poll inbox → classify → act → log | Celery beat task or standalone dev daemon; runs only when `INBOX_AGENT_ENABLED=true` |
-| Docs & ADR | Capture dev-only boundary and safety model | **Partial:** [modules/inbox.md](modules/inbox.md) + [adr/0011-inbox-dev-only.md](adr/0011-inbox-dev-only.md). Agent orchestration loop doc lands with beat task |
+| ~~Agent orchestration loop~~ | ~~Poll inbox → classify → act → log~~ | **Shipped:** beat task `process_inbox_messages` when `INBOX_AGENT_ENABLED=true`; `InboxOrchestrationService` fetches since `inbox_poll_state.last_polled_uid`, classifies in UID order, routes via existing classification path; cursor advances only on success; `INBOX_POLL_INTERVAL_SECONDS` (default 300) + `INBOX_POLL_BATCH_SIZE` (default 50) |
+| Docs & ADR | Capture dev-only boundary and safety model | **Partial:** [modules/inbox.md](modules/inbox.md) + [adr/0011-inbox-dev-only.md](adr/0011-inbox-dev-only.md). Orchestration loop documented in [modules/inbox.md](modules/inbox.md) and [modules/worker.md](modules/worker.md) |
 
 **Caveats:**
 

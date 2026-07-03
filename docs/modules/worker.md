@@ -10,9 +10,9 @@ Celery provides the scheduler (beat) and the workers. The worker package is
 - `celery_app.py` — the Celery application + config (broker/result backend from
   settings).
 - `schedule.py` — beat ticks: enqueue due searches, flush digest queues, and
-  (when inbox agent is enabled) ghost detection.
+  (when inbox agent is enabled) inbox polling and ghost detection.
 - `tasks.py` — `run_search(search_id)`, `flush_due_digests()`, `apply_to_job`,
-  and `detect_ghosted_applications`.
+  `process_inbox_messages`, and `detect_ghosted_applications`.
 
 ## Due-based scheduling with catch-up
 
@@ -108,6 +108,22 @@ When `INBOX_AGENT_ENABLED=true`, beat also schedules
 (default 3600). The task calls `GhostDetectionService.process_due` to email
 self-summaries for applications past `INBOX_GHOST_WINDOW_DAYS` without a
 recruiter reply and set `seen_job.ghosted_at`. See [inbox.md](inbox.md).
+
+## Inbox orchestration (dev inbox)
+
+When `INBOX_AGENT_ENABLED=true`, beat also schedules `process_inbox_messages`
+every `INBOX_POLL_INTERVAL_SECONDS` (default 300). The task calls
+`InboxOrchestrationService.process_due` to:
+
+1. Fetch new mail since the stored UID cursor (`inbox_poll_state.last_polled_uid`,
+   bootstrapped from the highest classified UID when unset).
+2. Classify each message via `EmailClassificationService` (link application,
+   ghost recovery, interview handoff, folder routing).
+3. Advance the cursor only through successfully classified messages; failures
+   retry on the next tick.
+
+Poll batch size is capped by `INBOX_POLL_BATCH_SIZE` (default 50). See
+[inbox.md](inbox.md).
 
 ## Testing
 

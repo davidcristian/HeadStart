@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from app.models.application_profile import ApplicationProfile
     from app.models.email_verification_token import EmailVerificationToken
     from app.models.inbox_classification import InboxClassification
+    from app.models.inbox_poll_state import InboxPollState
     from app.models.mailbox_credential import MailboxCredential
     from app.models.notification_target import NotificationTarget
     from app.models.password_reset_token import PasswordResetToken
@@ -79,4 +80,7 @@ class User(Base, TimestampMixin):
     )
     inbox_classifications: Mapped[list["InboxClassification"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
+    )
+    inbox_poll_state: Mapped["InboxPollState | None"] = relationship(
+        back_populates="user", uselist=False, cascade="all, delete-orphan"
     )

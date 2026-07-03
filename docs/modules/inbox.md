@@ -117,7 +117,22 @@ After classification, routable labels can be moved into configured IMAP folders
 - **Audit:** `routed_to`, `routing_status` (`moved` / `skipped` / `failed`), and
   `routing_error` on `inbox_classification`.
 
-Ghost detection and the beat orchestration loop remain separate roadmap items.
+## Beat orchestration loop (Phase 20f)
+
+When `INBOX_AGENT_ENABLED=true`, beat runs `process_inbox_messages` every
+`INBOX_POLL_INTERVAL_SECONDS` (default 300). `InboxOrchestrationService`:
+
+1. Resolves pollable users (enabled `mailbox_credential` rows, plus env-fallback
+   users when `INBOX_USE_ENV_CREDENTIALS=true`).
+2. Fetches inbound mail since `inbox_poll_state.last_polled_uid` (bootstraps from
+   the highest persisted classification UID when unset).
+3. Classifies each message in UID order via `EmailClassificationService` (ghost
+   recovery, interview handoff, and folder routing run as on manual classify).
+4. Advances the poll cursor only through successfully classified messages;
+   classify failures stop the batch so the message retries on the next tick.
+
+Batch size per user per tick: `INBOX_POLL_BATCH_SIZE` (default 50). See
+[worker.md](worker.md).
 
 ## Ghost recovery (Phase 20c)
 
@@ -175,5 +190,5 @@ When the summary email returns to the inbox, the existing classifier labels it
 
 ## Follow-ups (Phase 20c+)
 
-Ghost detection, autonomous reply drafts, and the Celery beat orchestration loop
-build on classification and routing — see [roadmap.md](../roadmap.md).
+Autonomous reply drafts build on classification and routing — see
+[roadmap.md](../roadmap.md).

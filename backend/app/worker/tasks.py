@@ -15,6 +15,7 @@ from app.repositories.searches import SearchRepository
 from app.services.apply import ApplyService
 from app.services.digest import DigestService
 from app.services.ghost_detection import GhostDetectionService
+from app.services.inbox_orchestration import InboxOrchestrationService
 from app.services.pipeline import PipelineService
 from app.worker.celery_app import celery_app
 
@@ -145,6 +146,21 @@ def detect_ghosted_applications() -> dict[str, int]:
     return {
         "checked": result.checked,
         "ghosted": result.ghosted,
+        "skipped": result.skipped,
+        "failed": result.failed,
+    }
+
+
+@celery_app.task(name="app.worker.tasks.process_inbox_messages")
+def process_inbox_messages() -> dict[str, int]:
+    """Beat tick: poll mailboxes, classify new messages, and route when configured."""
+    with session_scope() as session:
+        result = InboxOrchestrationService(session).process_due()
+
+    return {
+        "users": result.users,
+        "fetched": result.fetched,
+        "classified": result.classified,
         "skipped": result.skipped,
         "failed": result.failed,
     }
