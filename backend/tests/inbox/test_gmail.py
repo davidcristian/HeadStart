@@ -44,6 +44,28 @@ def test_fetch_messages_parses_inbox() -> None:
 
 
 @respx.mock
+def test_fetch_messages_returns_oldest_unpolled_when_api_lists_newest_first() -> None:
+    """Regression: Gmail lists newest-first; poll must not skip older pending mail."""
+    older_id = "0000000000000001"
+    newer_id = "ffffffffffffffff"
+    older_uid = gmail_id_to_uid(older_id)
+    raw = base64.urlsafe_b64encode(_raw_email_bytes()).decode("ascii")
+    respx.get("https://gmail.googleapis.com/gmail/v1/users/me/messages").mock(
+        return_value=Response(
+            200,
+            json={"messages": [{"id": newer_id}, {"id": older_id}]},
+        )
+    )
+    respx.get(f"https://gmail.googleapis.com/gmail/v1/users/me/messages/{older_id}").mock(
+        return_value=Response(200, json={"raw": raw})
+    )
+    result = GmailMailbox().fetch_messages(CTX, since_uid=older_uid - 1, limit=1)
+    assert len(result.messages) == 1
+    assert result.messages[0].uid == older_uid
+    assert result.max_uid == older_uid
+
+
+@respx.mock
 def test_send_message_posts_raw_payload() -> None:
     route = respx.post("https://gmail.googleapis.com/gmail/v1/users/me/messages/send").mock(
         return_value=Response(200, json={"id": "sent"})

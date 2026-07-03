@@ -45,30 +45,16 @@ class GmailMailbox(MailboxConnector):
     ) -> FetchResult:
         config = self._config(ctx)
         headers = self._auth_headers(config)
-        list_limit = max(limit * 3, limit)
-        response = httpx.get(
-            f"{GMAIL_API_BASE}/users/me/messages",
-            headers=headers,
-            params={"labelIds": INBOX_LABEL_ID, "maxResults": list_limit},
-            timeout=30.0,
-        )
-        response.raise_for_status()
-        entries = response.json().get("messages") or []
-        gmail_ids = [entry["id"] for entry in entries if isinstance(entry.get("id"), str)]
+        candidates = self._list_unpolled_candidates(headers, since_uid=since_uid, limit=limit)
         messages = []
         max_uid = since_uid
-        for gmail_id in gmail_ids:
-            uid = gmail_id_to_uid(gmail_id)
-            if since_uid is not None and uid <= since_uid:
-                continue
+        for uid, gmail_id in candidates:
             raw = self._fetch_raw_message(headers, gmail_id)
             if raw is None:
                 continue
             message = parse_rfc822(uid, raw)
             messages.append(message)
             max_uid = max(max_uid or 0, uid)
-            if len(messages) >= limit:
-                break
         messages.sort(key=lambda row: row.uid)
         return FetchResult(messages=messages, max_uid=max_uid)
 
@@ -169,6 +155,52 @@ class GmailMailbox(MailboxConnector):
     @staticmethod
     def _auth_headers(config: GmailMailboxConfig) -> dict[str, str]:
         return {"Authorization": f"Bearer {config.access_token}"}
+
+    def _list_unpolled_candidates(
+        self,
+        headers: dict[str, str],
+        *,
+        since_uid: int | None,
+        limit: int,
+    ) -> list[tuple[int, str]]:
+        """Collect the oldest unpolled Gmail messages up to `limit`."""
+        page_size = max(limit * 3, 100)
+        max_pages = 20
+        candidates: list[tuple[int, str]] = []
+        page_token: str | None = None
+        for _ in range(max_pages):
+            params: dict[str, str | int] = {
+                "labelIds": INBOX_LABEL_ID,
+                "maxResults": page_size,
+            }
+            if page_token is not None:
+                params["pageToken"] = page_token
+            response = httpx.get(
+                f"{GMAIL_API_BASE}/users/me/messages",
+                headers=headers,
+                params=params,
+                timeout=30.0,
+            )
+            response.raise_for_status()
+            payload = response.json()
+            entries = payload.get("messages") or []
+            for entry in entries:
+                if not isinstance(entry, dict):
+                    continue
+                gmail_id = entry.get("id")
+                if not isinstance(gmail_id, str) or not gmail_id:
+                    continue
+                uid = gmail_id_to_uid(gmail_id)
+                if since_uid is not None and uid <= since_uid:
+                    continue
+                candidates.append((uid, gmail_id))
+            page_token = payload.get("nextPageToken")
+            if not isinstance(page_token, str) or not page_token:
+                break
+            if len(candidates) >= limit:
+                break
+        candidates.sort(key=lambda row: row[0])
+        return candidates[:limit]
 
     @staticmethod
     def _fetch_raw_message(headers: dict[str, str], gmail_id: str) -> bytes | None:

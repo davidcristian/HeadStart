@@ -59,7 +59,7 @@ class ImapSmtpMailbox(MailboxConnector):
             if since_uid is not None:
                 uids = [uid for uid in uids if uid > since_uid]
             if limit > 0:
-                uids = uids[-limit:]
+                uids = uids[:limit]
             messages = []
             max_uid = since_uid
             for uid in uids:

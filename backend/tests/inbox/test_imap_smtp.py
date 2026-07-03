@@ -63,6 +63,23 @@ def test_fetch_messages_honors_since_uid() -> None:
     assert result.max_uid == 6
 
 
+def test_fetch_messages_returns_oldest_unprocessed_when_over_limit() -> None:
+    """Regression: must not skip older UIDs when more than `limit` messages are pending."""
+    raw = _sample_raw_email()
+    mock_client = MagicMock()
+    mock_client.uid.side_effect = [
+        ("OK", [b"101 102 103 104 105"]),
+        ("OK", [(b"101 (RFC822)", raw)]),
+        ("OK", [(b"102 (RFC822)", raw)]),
+    ]
+
+    with patch("app.inbox.adapters.imap_smtp.imaplib.IMAP4_SSL", return_value=mock_client):
+        result = ImapSmtpMailbox().fetch_messages(CTX, since_uid=100, limit=2)
+
+    assert [message.uid for message in result.messages] == [101, 102]
+    assert result.max_uid == 102
+
+
 def test_send_message_uses_smtp() -> None:
     mock_smtp = MagicMock()
     with patch("app.inbox.adapters.imap_smtp.smtplib.SMTP", return_value=mock_smtp):

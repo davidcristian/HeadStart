@@ -42,6 +42,23 @@ def test_fetch_messages_parses_uid_results() -> None:
     mock_client.select.assert_called_with("Inbox", readonly=True)
 
 
+def test_fetch_messages_returns_oldest_unprocessed_when_over_limit() -> None:
+    """Regression: must not skip older UIDs when more than `limit` messages are pending."""
+    raw = _sample_raw_email()
+    mock_client = MagicMock()
+    mock_client.uid.side_effect = [
+        ("OK", [b"201 202 203"]),
+        ("OK", [(b"201 (RFC822)", raw)]),
+        ("OK", [(b"202 (RFC822)", raw)]),
+    ]
+
+    with patch("app.inbox.adapters.yahoo.imaplib.IMAP4_SSL", return_value=mock_client):
+        result = YahooMailbox().fetch_messages(CTX, since_uid=200, limit=2)
+
+    assert [message.uid for message in result.messages] == [201, 202]
+    assert result.max_uid == 202
+
+
 def test_send_message_uses_smtp() -> None:
     mock_smtp = MagicMock()
     with patch("app.inbox.adapters.yahoo.smtplib.SMTP", return_value=mock_smtp):
