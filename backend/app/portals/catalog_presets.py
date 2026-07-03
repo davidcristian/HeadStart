@@ -14,8 +14,8 @@ from app.portals.catalog_helpers import (
     microsoft_careers_preset,
     workday_preset,
 )
-from app.portals.catalog_presets_batch3 import BATCH3_PORTALS
 from app.portals.catalog_presets_smartrecruiters import SMARTRECRUITERS_PORTALS
+from app.portals.presets import PORTALS
 
 CURATED_PORTALS: tuple[PortalPreset, ...] = (
     # Big tech (proprietary / dedicated career sites)
@@ -273,6 +273,6 @@ CURATED_PORTALS: tuple[PortalPreset, ...] = (
         base_url="https://boards.greenhouse.io/scaleai",
         default_config={"board_token": "scaleai", "company": "Scale AI", "portal_id": "scaleai"},
     ),
-    *BATCH3_PORTALS,
+    *PORTALS,
     *SMARTRECRUITERS_PORTALS,
 )

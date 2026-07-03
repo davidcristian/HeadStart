@@ -8,8 +8,9 @@ maps to an existing scraper adapter with verified public API access.
 
 ## Catalog
 
-Presets live in `catalog_presets.py` (core data), `catalog_presets_batch3.py` (Phase 19
-expansion), and `catalog_helpers.py` (factory helpers). Each `PortalPreset` carries:
+Presets live in `catalog_presets.py` (core catalog), `presets/` (one module per
+employer portal, e.g. `presets/hubspot.py`), and `catalog_helpers.py` (factory
+helpers). Each `PortalPreset` carries:
 
 | Field | Purpose |
 | ----- | ------- |

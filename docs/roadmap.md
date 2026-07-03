@@ -514,7 +514,7 @@ Skipped (roadmap candidates without a working public API at verification time):
 **ServiceNow** (already in catalog via SmartRecruiters), **Rivian**, **Canva**,
 **Rippling** (Ashby 403), **CrowdStrike**, **HashiCorp**, **Splunk**, **Shopify**.
 
-**Shipped:** 15 presets added in `catalog_presets.py`; catalog count **95**.
+**Shipped:** 15 presets in `presets/` (one module per employer); catalog count **95**.
 
 **Done when:** catalog count is ≥ 95; `/pricing` feature matrix still accurate;
 no duplicate `portal_id` rows.
