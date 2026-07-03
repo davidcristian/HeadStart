@@ -45,6 +45,7 @@ logger = get_logger(__name__)
 LLM_PROVIDERS = frozenset({"openai", "gemini", "anthropic", "llamacpp"})
 ClassifierFactory = Callable[[str, Any], EmailClassifier]
 GRAPH_MESSAGE_ID_HEADER = "x-ms-graph-id"
+GMAIL_MESSAGE_ID_HEADER = "x-gmail-id"
 
 
 def _classification_payload(
@@ -63,6 +64,9 @@ def _classification_payload(
     jmap_id = message.raw_headers.get(JMAP_EMAIL_ID_HEADER)
     if isinstance(jmap_id, str) and jmap_id:
         payload["jmap_email_id"] = jmap_id
+    gmail_id = message.raw_headers.get(GMAIL_MESSAGE_ID_HEADER)
+    if isinstance(gmail_id, str) and gmail_id:
+        payload["gmail_message_id"] = gmail_id
     return payload
 
 

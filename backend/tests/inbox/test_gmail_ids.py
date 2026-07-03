@@ -1,21 +1,24 @@
-"""Tests for Gmail message id uid mapping."""
+"""Tests for Gmail message-uid encoding (time-ordered + overflow bounds)."""
 
-from app.inbox.gmail_ids import gmail_id_to_uid, uid_to_gmail_id
+from datetime import UTC, datetime
 
-
-def test_gmail_id_round_trip() -> None:
-    gmail_id = "18c5f2a3b4d6e7f8"
-    uid = gmail_id_to_uid(gmail_id)
-    assert uid_to_gmail_id(uid) == gmail_id
+from app.inbox.gmail_ids import gmail_message_uid, uid_to_min_received_at
 
 
-def test_gmail_id_normalizes_case() -> None:
-    assert gmail_id_to_uid("AbCd") == gmail_id_to_uid("abcd")
+def test_uid_is_time_ordered_not_id_ordered() -> None:
+    # Later received time -> larger uid, even when the raw id sorts the other way.
+    earlier = gmail_message_uid("ffffffffffffffff", datetime(2026, 1, 1, tzinfo=UTC))
+    later = gmail_message_uid("0000000000000001", datetime(2026, 6, 1, tzinfo=UTC))
+    assert later > earlier
 
 
-def test_gmail_uid_fits_signed_bigint() -> None:
-    """Real Gmail ids parse to ~61-bit ints: they overflow a 32-bit Integer
-    column but fit the widened BigInteger columns."""
-    uid = gmail_id_to_uid("18c5f2a3b4d6e7f8")
-    assert uid > 2**31
+def test_uid_stays_below_signed_bigint_for_far_future() -> None:
+    uid = gmail_message_uid("18c5f2a3b4d6e7f8", datetime(2100, 1, 1, tzinfo=UTC))
     assert uid < 2**63
+
+
+def test_uid_to_min_received_at_is_a_lower_bound() -> None:
+    received = datetime(2026, 6, 30, 12, 0, 30, tzinfo=UTC)
+    decoded = uid_to_min_received_at(gmail_message_uid("gmail-id", received))
+    assert decoded <= received
+    assert (received - decoded).total_seconds() < 1

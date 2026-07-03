@@ -138,7 +138,7 @@ class InboxRoutingService:
 def _provider_message_id_from_classification(row: InboxClassification) -> str | None:
     if not row.payload or not isinstance(row.payload, dict):
         return None
-    for key in ("graph_message_id", "jmap_email_id"):
+    for key in ("graph_message_id", "jmap_email_id", "gmail_message_id"):
         value = row.payload.get(key)
         if isinstance(value, str) and value:
             return value

@@ -52,10 +52,12 @@ SMTP host/port/TLS, credentials, optional `smtp_from`).
 - **Connect:** `GET /inbox/gmail/authorize` (auth required) returns a Google consent
   URL; `GET /inbox/gmail/callback` exchanges the code and stores encrypted tokens on
   `mailbox_credential` (`connector_type=gmail`).
-- **Fetch:** `users.messages.list` (INBOX) + `users.messages.get` (`format=raw`);
-  Gmail API message ids parse from hex into ~61-bit `uid` poll cursors. All inbox
-  `uid` columns are `BigInteger` — a 32-bit `Integer` overflows for both Gmail's
-  ~61-bit ids and the time-ordered Outlook/Fastmail uids.
+- **Fetch:** `users.messages.list` (INBOX, `after:` narrows the scan past the
+  cursor) + `users.messages.get`. The `uid` poll cursor is derived from each
+  message's `internalDate` (time-ordered), since Gmail ids are not chronological
+  and sorting by id could permanently skip later-arriving mail. The raw Gmail id
+  rides on the message headers so routing needn't reverse it out of the uid. All
+  inbox `uid` columns are `BigInteger`.
 - **Send:** `users.messages.send` with a base64url-encoded MIME payload.
 - **Move / route:** `users.labels.create` (when missing) + `users.messages.modify`
   (add label, remove INBOX).
