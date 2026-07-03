@@ -1,0 +1,10 @@
+From: recruiter@acme.example
+To: candidate@example.com
+Subject: Re: Software Engineer application
+Date: Mon, 30 Jun 2025 10:00:00 +0000
+Message-ID: <msg-001@acme.example>
+In-Reply-To: <apply-001@headstart.local>
+References: <apply-001@headstart.local>
+Content-Type: text/plain; charset="utf-8"
+
+Thanks for applying. Can you share your availability next week?

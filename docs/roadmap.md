@@ -592,7 +592,7 @@ a job, review or edit the cover letter, and have both attached on apply.
 
 | Item | Why | Notes |
 | ---- | --- | ----- |
-| Mailbox connector (IMAP + SMTP) | Recruiter replies land in email, not in the app | Dev-only adapter under a new `inbox/` subsystem (mirror scraper/notifier registry); user supplies IMAP/SMTP creds via env or encrypted credential store |
+| Mailbox connector (IMAP + SMTP) | Recruiter replies land in email, not in the app | **Shipped:** dev-only `inbox/` subsystem with `@register_mailbox("imap_smtp")`; encrypted per-user `mailbox_credential`; `INBOX_AGENT_ENABLED` gate; `GET/PUT/DELETE /inbox/credentials`, `POST /inbox/test`, `GET /inbox/messages`; optional `INBOX_USE_ENV_CREDENTIALS` + `INBOX_*` env fallback. See [modules/inbox.md](modules/inbox.md) |
 | Email classification agent | Sort noise from signal without manual folders | Local LLM classifies inbound mail tied to known applications: `general`, `rejection`, `follow_up`, `interview_request`, `ghost_candidate` (no reply after N days), `self_ghost_archive` (HeadStart-generated ghost summary re-ingested from self) |
 | Folder / label routing | Keep the inbox usable | **General** recruiter mail → sort to a HeadStart folder/label; **Rejection** → separate folder; **Self ghost archive** → dedicated folder/label; configurable per provider (Gmail labels, Outlook folders) |
 | Ghost detection & self-archive | Silent employers still need a paper trail | If no reply within configurable window (e.g. 14 days), send a summary email to self with a fixed subject prefix / custom header (e.g. `[HeadStart Ghost]`) and mark application `ghosted` in the app |
@@ -622,7 +622,7 @@ a job, review or edit the cover letter, and have both attached on apply.
 | Extend llama.cpp beyond summaries | Document curation, classification, and drafting need the same local stack | New `agents/` adapters (or extend summarizers) for `curate_resume`, `generate_cover_letter`, `classify_email`, and `draft_reply` prompts; reuse `make llamacpp` / `LLAMACPP_*` env; per-purpose model routing from [20a](#20a--tailored-application-documents) |
 | Input sanitization & scope lock | Small local models are easily hijacked by unrelated email content | **Pre-LLM:** strip HTML, cap body length, detect obvious injection patterns. **Prompt:** hard system scope — job-application triage only; structured JSON output schema (no free-form chat). **Post-LLM:** validate response against allowlisted labels/actions; reject out-of-scope completions (e.g. email says "give me the recipe for a pancake" → classify as `out_of_scope`, do not draft or send a reply). Never pass raw user email as executable instructions |
 | Agent orchestration loop | Poll inbox → classify → act → log | Celery beat task or standalone dev daemon; runs only when `INBOX_AGENT_ENABLED=true` |
-| Docs & ADR | Capture dev-only boundary and safety model | ADR for why this stays off hosted prod; module doc under `modules/inbox.md` |
+| Docs & ADR | Capture dev-only boundary and safety model | **Partial:** [modules/inbox.md](modules/inbox.md) + [adr/0011-inbox-dev-only.md](adr/0011-inbox-dev-only.md). Agent orchestration loop doc lands with beat task |
 
 **Caveats:**
 

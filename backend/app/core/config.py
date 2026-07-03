@@ -166,6 +166,24 @@ class Settings(BaseSettings):
     # optional cookies. Leave empty to show only the built-in upgrade promotion.
     ads_external_slot_url: str = ""
 
+    # ---- inbox agent (dev-only; Phase 20c mailbox connector) ----
+    # Disabled by default — do not enable on hosted multi-tenant prod.
+    inbox_agent_enabled: bool = False
+    # When true, fall back to INBOX_* env vars for every user without saved creds.
+    inbox_use_env_credentials: bool = False
+    inbox_imap_host: str = ""
+    inbox_imap_port: int = 993
+    inbox_imap_use_ssl: bool = True
+    inbox_imap_user: str = ""
+    inbox_imap_password: str = ""
+    inbox_imap_mailbox: str = "INBOX"
+    inbox_smtp_host: str = ""
+    inbox_smtp_port: int = 587
+    inbox_smtp_use_tls: bool = True
+    inbox_smtp_user: str = ""
+    inbox_smtp_password: str = ""
+    inbox_smtp_from: str = ""
+
     # ---- Stripe billing (optional; leave empty to disable paid checkout) ----
     stripe_secret_key: str = ""
     stripe_webhook_secret: str = ""

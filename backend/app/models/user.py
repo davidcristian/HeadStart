@@ -11,6 +11,7 @@ from app.models.base import Base, TimestampMixin
 if TYPE_CHECKING:
     from app.models.application_profile import ApplicationProfile
     from app.models.email_verification_token import EmailVerificationToken
+    from app.models.mailbox_credential import MailboxCredential
     from app.models.notification_target import NotificationTarget
     from app.models.password_reset_token import PasswordResetToken
     from app.models.search import Search
@@ -70,5 +71,8 @@ class User(Base, TimestampMixin):
         back_populates="user", cascade="all, delete-orphan"
     )
     application_profile: Mapped["ApplicationProfile | None"] = relationship(
+        back_populates="user", uselist=False, cascade="all, delete-orphan"
+    )
+    mailbox_credential: Mapped["MailboxCredential | None"] = relationship(
         back_populates="user", uselist=False, cascade="all, delete-orphan"
     )

@@ -23,6 +23,8 @@ class MetaRead(BaseModel):
     scrapers: list[str]
     notifiers: list[str]
     appliers: list[str]
+    mailboxes: list[str]
+    inbox_agent_enabled: bool
     plan: AccountPlanRead
     ads: AdsConfigRead
 

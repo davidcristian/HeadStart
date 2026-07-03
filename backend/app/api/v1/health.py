@@ -7,6 +7,7 @@ from app import __version__
 from app.api.deps import get_db, get_verified_user
 from app.appliers import available_appliers
 from app.core.config import settings
+from app.inbox import available_mailboxes
 from app.models.user import User
 from app.schemas.meta import AdsConfigRead, HealthRead, MetaRead
 from app.schemas.plan import AccountPlanRead
@@ -36,6 +37,8 @@ def meta(user: User = Depends(get_verified_user), db: Session = Depends(get_db))
         scrapers=plan.allowed_scrapers,
         notifiers=plan.allowed_notifiers,
         appliers=available_appliers(),
+        mailboxes=available_mailboxes(),
+        inbox_agent_enabled=settings.inbox_agent_enabled,
         plan=plan,
         ads=AdsConfigRead(external_slot_url=ads_slot),
     )
