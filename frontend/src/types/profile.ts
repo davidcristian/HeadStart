@@ -59,10 +59,16 @@ export interface ResumeFileMeta {
   size_bytes: number;
 }
 
+export interface ResumeTemplateMeta {
+  filename: string;
+  size_bytes: number;
+}
+
 export interface Profile extends ProfileData {
   exists: boolean;
   updated_at: string | null;
   resume_file: ResumeFileMeta | null;
+  resume_template: ResumeTemplateMeta | null;
 }
 
 export interface UserDataExport {

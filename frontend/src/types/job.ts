@@ -30,6 +30,15 @@ export interface JobCoverLetterResult {
   fallback: boolean;
 }
 
+export interface JobResumeResult {
+  filename: string;
+  size_bytes: number;
+  content_sha256: string;
+  pdf_b64: string;
+  provider: string;
+  fallback: boolean;
+}
+
 export interface ApplicationLog {
   id: number;
   seen_job_id: number;

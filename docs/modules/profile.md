@@ -67,6 +67,17 @@ Workday, Google Careers, Microsoft Careers, Amazon Jobs, Apple Careers, and Meta
 Careers. LinkedIn-hosted and Indeed-hosted Easy Apply use `resume_text` only today
 (see [appliers.md](appliers.md)).
 
+Optional **LaTeX resume template** (`.tex`, up to `PROFILE_RESUME_TEMPLATE_MAX_BYTES`,
+default 512 KB) is stored encrypted alongside the profile. Upload via
+`PUT /profile/resume-template`; metadata is returned on `GET /profile` as
+`resume_template`. Placeholders use `[[full_name]]`, `[[skills]]`, `[[experience]]`,
+`[[education]]`, `[[summary]]`, `[[job_title]]`, `[[company]]`, and related contact
+fields. When no template is uploaded, a built-in default template is used.
+`POST /jobs/{id}/generate-resume` curates placeholders (Pro users: `resume_curation`
+AI purpose), renders LaTeX, and compiles a tailored PDF (requires `tectonic` or
+`pdflatex` locally). Pass the generated PDF on apply via `tailored_resume_b64` on
+`POST /jobs/{id}/apply` to attach it instead of the static resume file.
+
 `answers` is a free-form map of recurring application questions to the user's
 canned response.
 
@@ -99,6 +110,7 @@ users (every route is scoped to `get_current_user`).
   from a deliberately-cleared profile.
 - `updated_at` — when the profile was last saved.
 - `resume_file` — metadata for an uploaded resume attachment, or `null`.
+- `resume_template` — metadata for an uploaded LaTeX template, or `null`.
 
 ## Endpoints (prefix `/api/v1/profile`)
 
@@ -108,6 +120,8 @@ users (every route is scoped to `get_current_user`).
 | PUT    | ``   | Create or **fully replace** the profile text fields |
 | PUT    | `/resume` | Upload or replace resume file (multipart `file`) |
 | DELETE | `/resume` | Remove the resume file only                     |
+| PUT    | `/resume-template` | Upload or replace LaTeX resume template (`.tex`) |
+| DELETE | `/resume-template` | Remove the LaTeX template only           |
 | DELETE | ``   | Clear the profile (idempotent)                     |
 
 `PUT` on the root path is a whole-profile replacement for text fields (not a partial

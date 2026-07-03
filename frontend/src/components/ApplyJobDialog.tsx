@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { pollApplicationLog } from "../api/pollApplicationLog";
 import { Banner, Button, Field } from "./ui";
-import { useApplyToJob, useGenerateCoverLetter } from "../hooks/mutations";
+import { useApplyToJob, useGenerateCoverLetter, useGenerateResume } from "../hooks/mutations";
 import { useFocusTrap } from "../hooks/useFocusTrap";
 import type { Job, JobApplyResult } from "../types";
 
@@ -34,11 +34,19 @@ export function ApplyJobDialog({
     reset: resetGenerateCoverLetter,
     isPending: isGeneratingCoverLetter,
   } = useGenerateCoverLetter();
+  const {
+    mutateAsync: generateResumeAsync,
+    reset: resetGenerateResume,
+    isPending: isGeneratingResume,
+  } = useGenerateResume();
   const [coverLetter, setCoverLetter] = useState(initialCoverLetter);
+  const [tailoredResumeB64, setTailoredResumeB64] = useState<string | null>(null);
+  const [tailoredResumeLabel, setTailoredResumeLabel] = useState<string | null>(null);
   const [step, setStep] = useState<Step>("edit");
   const [preview, setPreview] = useState<JobApplyResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [generateMessage, setGenerateMessage] = useState<string | null>(null);
+  const [resumeMessage, setResumeMessage] = useState<string | null>(null);
   const [busyAction, setBusyAction] = useState<"preview" | "submit" | null>(null);
 
   useFocusTrap(open, dialogRef, onClose);
@@ -46,14 +54,18 @@ export function ApplyJobDialog({
   useEffect(() => {
     if (!open) return;
     setCoverLetter(initialCoverLetter);
+    setTailoredResumeB64(null);
+    setTailoredResumeLabel(null);
     setStep("edit");
     setPreview(null);
     setError(null);
     setGenerateMessage(null);
+    setResumeMessage(null);
     setBusyAction(null);
     reset();
     resetGenerateCoverLetter();
-  }, [open, job.id, initialCoverLetter, reset, resetGenerateCoverLetter]);
+    resetGenerateResume();
+  }, [open, job.id, initialCoverLetter, reset, resetGenerateCoverLetter, resetGenerateResume]);
 
   if (!open) return null;
 
@@ -77,6 +89,27 @@ export function ApplyJobDialog({
     }
   }
 
+  async function runGenerateResume() {
+    setError(null);
+    setResumeMessage(null);
+    try {
+      const result = await generateResumeAsync(job.id);
+      setTailoredResumeB64(result.pdf_b64);
+      setTailoredResumeLabel(`${result.filename} (${result.size_bytes.toLocaleString()} bytes)`);
+      if (result.fallback) {
+        setResumeMessage(
+          "AI curation was unavailable; a resume was built from your profile instead.",
+        );
+      } else if (result.provider !== "heuristic") {
+        setResumeMessage(`Tailored resume generated with ${result.provider}.`);
+      } else {
+        setResumeMessage("Tailored resume generated from your profile.");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not generate a tailored resume.");
+    }
+  }
+
   async function runApply(dryRun: boolean) {
     setError(null);
     setBusyAction(dryRun ? "preview" : "submit");
@@ -85,6 +118,7 @@ export function ApplyJobDialog({
         id: job.id,
         dry_run: dryRun,
         cover_letter: coverLetter.trim() || null,
+        tailored_resume_b64: tailoredResumeB64,
       });
       if (dryRun) {
         setPreview(result);
@@ -112,6 +146,8 @@ export function ApplyJobDialog({
       setBusyAction(null);
     }
   }
+
+  const generationBusy = isGeneratingCoverLetter || isGeneratingResume;
 
   return (
     <div className="apply-dialog-backdrop" onClick={onClose}>
@@ -163,8 +199,8 @@ export function ApplyJobDialog({
         ) : (
           <div className="apply-dialog-body">
             <p className="muted">
-              Review the cover letter below. Generate drafts a tailored letter from your profile;
-              preview shows the payload that will be sent.
+              Review the cover letter below. Generate drafts a tailored letter and resume from your
+              profile; preview shows the payload that will be sent.
             </p>
             <Field
               label="Cover letter"
@@ -174,20 +210,32 @@ export function ApplyJobDialog({
                 rows={8}
                 value={coverLetter}
                 onChange={(event) => setCoverLetter(event.target.value)}
-                disabled={isPending || isGeneratingCoverLetter}
+                disabled={isPending || generationBusy}
               />
             </Field>
             <div className="row-actions apply-dialog-actions">
               <Button
                 variant="ghost"
                 onClick={() => void runGenerateCoverLetter()}
-                disabled={!profileReady || isPending || isGeneratingCoverLetter}
+                disabled={!profileReady || isPending || generationBusy}
               >
                 {isGeneratingCoverLetter ? "Generating..." : "Generate cover letter"}
               </Button>
+              <Button
+                variant="ghost"
+                onClick={() => void runGenerateResume()}
+                disabled={!profileReady || isPending || generationBusy}
+              >
+                {isGeneratingResume ? "Generating..." : "Generate tailored resume"}
+              </Button>
             </div>
 
+            {tailoredResumeLabel && (
+              <p className="muted">Tailored resume ready: {tailoredResumeLabel}</p>
+            )}
+
             {generateMessage && <Banner kind="info">{generateMessage}</Banner>}
+            {resumeMessage && <Banner kind="info">{resumeMessage}</Banner>}
 
             {step === "preview" && preview?.payload && (
               <details className="apply-preview" open>
@@ -202,7 +250,7 @@ export function ApplyJobDialog({
               <Button
                 variant="ghost"
                 onClick={() => void runApply(true)}
-                disabled={!profileReady || isPending || isGeneratingCoverLetter}
+                disabled={!profileReady || isPending || generationBusy}
               >
                 {busyAction === "preview" ? "Previewing..." : "Preview"}
               </Button>
@@ -212,7 +260,7 @@ export function ApplyJobDialog({
                   !profileReady ||
                   !autoApplyEnabled ||
                   isPending ||
-                  isGeneratingCoverLetter ||
+                  generationBusy ||
                   busyAction === "submit"
                 }
               >

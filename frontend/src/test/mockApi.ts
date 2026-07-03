@@ -65,6 +65,14 @@ const mockApi = vi.hoisted(() => ({
     provider: "heuristic",
     fallback: false,
   })),
+  generateResume: vi.fn(async () => ({
+    filename: "resume-ACME-Software-Engineer.pdf",
+    size_bytes: 128,
+    content_sha256: "abc123",
+    pdf_b64: "JVBERi0xLjQK",
+    provider: "heuristic",
+    fallback: false,
+  })),
   getFeedUrl: vi.fn(async () => sampleFeedUrl),
   rotateFeedUrl: vi.fn(async () => sampleRotatedFeedUrl),
   listTargets: vi.fn(async (): Promise<NotificationTarget[]> => []),
@@ -97,6 +105,7 @@ const mockApi = vi.hoisted(() => ({
     exists: true,
     updated_at: "2026-06-28T12:00:00Z",
     resume_file: null,
+    resume_template: null,
   })),
   uploadResume: vi.fn(async (): Promise<Profile> => ({
     ...emptyProfile,
@@ -107,7 +116,18 @@ const mockApi = vi.hoisted(() => ({
       content_type: "application/pdf",
       size_bytes: 1024,
     },
+    resume_template: null,
   })),
+  uploadResumeTemplate: vi.fn(async (): Promise<Profile> => ({
+    ...emptyProfile,
+    exists: true,
+    updated_at: "2026-06-28T12:00:00Z",
+    resume_template: {
+      filename: "resume.tex",
+      size_bytes: 512,
+    },
+  })),
+  deleteResumeTemplate: vi.fn(async (): Promise<Profile> => emptyProfile),
   deleteResume: vi.fn(async (): Promise<Profile> => emptyProfile),
   deleteProfile: vi.fn(async () => undefined),
   getSummaryPreferences: vi.fn(async () => ({

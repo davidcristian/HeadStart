@@ -14,8 +14,10 @@ import { useApplicationLogs, useProfile } from "../hooks/queries";
 import {
   useDeleteProfile,
   useDeleteResume,
+  useDeleteResumeTemplate,
   useSaveProfile,
   useUploadResume,
+  useUploadResumeTemplate,
 } from "../hooks/mutations";
 import type { EducationEntry, Json, LanguageEntry, WorkExperienceEntry } from "../types";
 
@@ -32,6 +34,8 @@ export function ProfilePage() {
   const deleteProfile = useDeleteProfile();
   const uploadResume = useUploadResume();
   const deleteResume = useDeleteResume();
+  const uploadResumeTemplate = useUploadResumeTemplate();
+  const deleteResumeTemplate = useDeleteResumeTemplate();
   const [form, setForm] = useState<ProfileFormState>({ ...EMPTY_PROFILE_FORM });
   const [answers, setAnswers] = useState<Json>({});
   const [workExperience, setWorkExperience] = useState<WorkExperienceEntry[]>([]);
@@ -128,6 +132,27 @@ export function ProfilePage() {
     }
   }
 
+  async function onResumeTemplateSelected(file: File | null) {
+    if (!file) return;
+    setError(undefined);
+    try {
+      await uploadResumeTemplate.mutateAsync(file);
+      setSaved(true);
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  }
+
+  async function removeResumeTemplate() {
+    setError(undefined);
+    try {
+      await deleteResumeTemplate.mutateAsync();
+      setSaved(true);
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  }
+
   return (
     <>
       <h1>Application profile</h1>
@@ -147,6 +172,8 @@ export function ProfilePage() {
           answersValid={answersValid}
           uploadPending={uploadResume.isPending}
           deleteResumePending={deleteResume.isPending}
+          uploadTemplatePending={uploadResumeTemplate.isPending}
+          deleteTemplatePending={deleteResumeTemplate.isPending}
           onFieldChange={setField}
           onAnswersChange={(v, ok) => {
             setAnswers(v);
@@ -155,6 +182,8 @@ export function ProfilePage() {
           }}
           onResumeSelected={(file) => void onResumeSelected(file)}
           onRemoveResume={() => void removeResume()}
+          onResumeTemplateSelected={(file) => void onResumeTemplateSelected(file)}
+          onRemoveResumeTemplate={() => void removeResumeTemplate()}
           onSave={() => void save()}
           onClear={() => void clear()}
         />

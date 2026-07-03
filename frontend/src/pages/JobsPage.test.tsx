@@ -123,6 +123,7 @@ describe("JobsPage", () => {
       expect(mockApi.applyToJob).toHaveBeenCalledWith(sampleJob.id, {
         dry_run: true,
         cover_letter: "Dear ACME team, ...",
+        tailored_resume_b64: null,
       }),
     );
     expect(screen.getByText("Application preview")).toBeInTheDocument();

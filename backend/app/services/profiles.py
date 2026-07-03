@@ -18,10 +18,12 @@ from app.models.application_profile import ApplicationProfile
 from app.repositories.profiles import ProfileRepository
 from app.schemas.profile import (
     ALLOWED_RESUME_CONTENT_TYPES,
+    ALLOWED_RESUME_TEMPLATE_CONTENT_TYPES,
     ApplyProfile,
     ProfileData,
     ProfileRead,
     ResumeFileStored,
+    ResumeTemplateStored,
 )
 
 
@@ -35,13 +37,15 @@ class ProfileService:
         profile = self.repo.get(user_id)
         if profile is None:
             return ProfileRead()
-        data, stored_resume = self._decode(profile)
+        data, stored_resume, stored_template = self._decode(profile)
         resume_meta = stored_resume.to_meta() if stored_resume is not None else None
+        template_meta = stored_template.to_meta() if stored_template is not None else None
         return ProfileRead(
             **data.model_dump(),
             exists=True,
             updated_at=profile.updated_at,
             resume_file=resume_meta,
+            resume_template=template_meta,
         )
 
     def get_for_apply(self, user_id: int) -> ApplyProfile:
@@ -49,26 +53,40 @@ class ProfileService:
         profile = self.repo.get(user_id)
         if profile is None:
             return ApplyProfile()
-        data, stored_resume = self._decode(profile)
+        data, stored_resume, _stored_template = self._decode(profile)
         resume_file = stored_resume.to_resume_file() if stored_resume is not None else None
         return ApplyProfile(**data.model_dump(), exists=True, resume_file=resume_file)
+
+    def get_resume_template_tex(self, user_id: int) -> str | None:
+        """Return the user's uploaded LaTeX template source, if any."""
+        profile = self.repo.get(user_id)
+        if profile is None:
+            return None
+        _data, _stored_resume, stored_template = self._decode(profile)
+        if stored_template is None:
+            return None
+        return stored_template.decode_tex()
 
     def save(self, user_id: int, data: ProfileData) -> ProfileRead:
         """Create or fully replace the user's profile text fields (resume preserved)."""
         profile = self.repo.get(user_id)
-        _, stored_resume = self._decode(profile) if profile is not None else (ProfileData(), None)
-        ciphertext = self._encode(data, stored_resume)
+        _, stored_resume, stored_template = (
+            self._decode(profile) if profile is not None else (ProfileData(), None, None)
+        )
+        ciphertext = self._encode(data, stored_resume, stored_template)
         if profile is None:
             profile = self.repo.add(ApplicationProfile(user_id=user_id, data_ciphertext=ciphertext))
         else:
             profile.data_ciphertext = ciphertext
             self.session.flush()
         resume_meta = stored_resume.to_meta() if stored_resume is not None else None
+        template_meta = stored_template.to_meta() if stored_template is not None else None
         return ProfileRead(
             **data.model_dump(),
             exists=True,
             updated_at=profile.updated_at,
             resume_file=resume_meta,
+            resume_template=template_meta,
         )
 
     def save_resume(
@@ -87,8 +105,44 @@ class ProfileService:
             data=data,
         )
         profile = self.repo.get(user_id)
-        base = self._decode(profile)[0] if profile is not None else ProfileData()
-        ciphertext = self._encode(base, stored_resume)
+        base, _stored_resume, stored_template = (
+            self._decode(profile) if profile is not None else (ProfileData(), None, None)
+        )
+        ciphertext = self._encode(base, stored_resume, stored_template)
+        if profile is None:
+            profile = self.repo.add(ApplicationProfile(user_id=user_id, data_ciphertext=ciphertext))
+        else:
+            profile.data_ciphertext = ciphertext
+            self.session.flush()
+        template_meta = stored_template.to_meta() if stored_template is not None else None
+        return ProfileRead(
+            **base.model_dump(),
+            exists=True,
+            updated_at=profile.updated_at,
+            resume_file=stored_resume.to_meta(),
+            resume_template=template_meta,
+        )
+
+    def save_resume_template(
+        self,
+        user_id: int,
+        *,
+        filename: str,
+        content_type: str,
+        data: bytes,
+    ) -> ProfileRead:
+        """Store or replace the user's LaTeX resume template."""
+        self._validate_resume_template_upload(
+            filename=filename,
+            content_type=content_type,
+            data=data,
+        )
+        stored_template = ResumeTemplateStored.from_bytes(filename=filename, data=data)
+        profile = self.repo.get(user_id)
+        base, stored_resume, _stored_template = (
+            self._decode(profile) if profile is not None else (ProfileData(), None, None)
+        )
+        ciphertext = self._encode(base, stored_resume, stored_template)
         if profile is None:
             profile = self.repo.add(ApplicationProfile(user_id=user_id, data_ciphertext=ciphertext))
         else:
@@ -98,7 +152,25 @@ class ProfileService:
             **base.model_dump(),
             exists=True,
             updated_at=profile.updated_at,
-            resume_file=stored_resume.to_meta(),
+            resume_file=stored_resume.to_meta() if stored_resume is not None else None,
+            resume_template=stored_template.to_meta(),
+        )
+
+    def delete_resume_template(self, user_id: int) -> ProfileRead:
+        """Remove the stored LaTeX template while keeping other profile fields."""
+        profile = self.repo.get(user_id)
+        if profile is None:
+            return ProfileRead()
+        data, stored_resume, _stored_template = self._decode(profile)
+        ciphertext = self._encode(data, stored_resume, None)
+        profile.data_ciphertext = ciphertext
+        self.session.flush()
+        return ProfileRead(
+            **data.model_dump(),
+            exists=True,
+            updated_at=profile.updated_at,
+            resume_file=stored_resume.to_meta() if stored_resume is not None else None,
+            resume_template=None,
         )
 
     def delete_resume(self, user_id: int) -> ProfileRead:
@@ -106,8 +178,8 @@ class ProfileService:
         profile = self.repo.get(user_id)
         if profile is None:
             return ProfileRead()
-        data, _stored_resume = self._decode(profile)
-        ciphertext = self._encode(data, None)
+        data, stored_resume, stored_template = self._decode(profile)
+        ciphertext = self._encode(data, None, stored_template)
         profile.data_ciphertext = ciphertext
         self.session.flush()
         return ProfileRead(
@@ -115,6 +187,7 @@ class ProfileService:
             exists=True,
             updated_at=profile.updated_at,
             resume_file=None,
+            resume_template=stored_template.to_meta() if stored_template is not None else None,
         )
 
     def delete(self, user_id: int) -> None:
@@ -140,23 +213,56 @@ class ProfileService:
             raise ValidationError(f"Resume file exceeds the {max_bytes // 1_048_576} MB limit")
 
     @staticmethod
-    def _encode(data: ProfileData, resume: ResumeFileStored | None) -> str:
+    def _validate_resume_template_upload(*, filename: str, content_type: str, data: bytes) -> None:
+        name = filename.strip()
+        if not name:
+            raise ValidationError("Resume template filename is required")
+        if not name.lower().endswith(".tex"):
+            raise ValidationError("Resume template must be a .tex file")
+        if content_type not in ALLOWED_RESUME_TEMPLATE_CONTENT_TYPES:
+            raise ValidationError(
+                "Resume template must be LaTeX source (application/x-tex or text/plain)"
+            )
+        max_bytes = settings.profile_resume_template_max_bytes
+        if len(data) == 0:
+            raise ValidationError("Resume template file is empty")
+        if len(data) > max_bytes:
+            raise ValidationError(f"Resume template exceeds the {max_bytes // 1024} KB limit")
+        try:
+            data.decode("utf-8")
+        except UnicodeDecodeError as exc:
+            raise ValidationError("Resume template must be valid UTF-8 text") from exc
+
+    @staticmethod
+    def _encode(
+        data: ProfileData,
+        resume: ResumeFileStored | None,
+        template: ResumeTemplateStored | None,
+    ) -> str:
         import json
 
         payload = data.model_dump()
         if resume is not None:
             payload["resume_file"] = resume.model_dump()
+        if template is not None:
+            payload["resume_template"] = template.model_dump()
         return encrypt(json.dumps(payload))
 
     @staticmethod
-    def _decode(profile: ApplicationProfile) -> tuple[ProfileData, ResumeFileStored | None]:
+    def _decode(
+        profile: ApplicationProfile,
+    ) -> tuple[ProfileData, ResumeFileStored | None, ResumeTemplateStored | None]:
         raw = decrypt(profile.data_ciphertext)
         import json
 
         parsed = json.loads(raw)
         resume_raw = parsed.pop("resume_file", None)
+        template_raw = parsed.pop("resume_template", None)
         data = ProfileData.model_validate(parsed)
         stored_resume = (
             ResumeFileStored.model_validate(resume_raw) if resume_raw is not None else None
         )
-        return data, stored_resume
+        stored_template = (
+            ResumeTemplateStored.model_validate(template_raw) if template_raw is not None else None
+        )
+        return data, stored_resume, stored_template

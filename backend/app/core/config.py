@@ -79,6 +79,8 @@ class Settings(BaseSettings):
 
     # Max resume file size for application-profile uploads (bytes).
     profile_resume_max_bytes: int = 2_097_152
+    # Max LaTeX resume template size (bytes).
+    profile_resume_template_max_bytes: int = 524_288
 
     # ---- database ----
     postgres_user: str = "headstart"
@@ -124,6 +126,11 @@ class Settings(BaseSettings):
     cover_letters_enabled: bool = True
     cover_letter_max_chars: int = 4000
     cover_letter_max_tokens: int = 900
+
+    # ---- AI resume curation (LaTeX template → tailored PDF) ----
+    resume_curation_enabled: bool = True
+    resume_curation_max_tokens: int = 1200
+    resume_compile_timeout_seconds: float = 60.0
 
     # ---- OpenAI (used only when summary_provider = "openai") ----
     openai_api_key: str = ""

@@ -28,10 +28,14 @@ interface ProfileDetailsFormProps {
   answersValid: boolean;
   uploadPending: boolean;
   deleteResumePending: boolean;
+  uploadTemplatePending: boolean;
+  deleteTemplatePending: boolean;
   onFieldChange: <K extends keyof ProfileFormState>(key: K, value: string) => void;
   onAnswersChange: (value: Json, valid: boolean) => void;
   onResumeSelected: (file: File | null) => void;
   onRemoveResume: () => void;
+  onResumeTemplateSelected: (file: File | null) => void;
+  onRemoveResumeTemplate: () => void;
   onSave: () => void;
   onClear: () => void;
 }
@@ -52,10 +56,14 @@ export function ProfileDetailsForm({
   answersValid,
   uploadPending,
   deleteResumePending,
+  uploadTemplatePending,
+  deleteTemplatePending,
   onFieldChange,
   onAnswersChange,
   onResumeSelected,
   onRemoveResume,
+  onResumeTemplateSelected,
+  onRemoveResumeTemplate,
   onSave,
   onClear,
 }: ProfileDetailsFormProps) {
@@ -140,6 +148,34 @@ export function ProfileDetailsForm({
             accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             onChange={(e) => onResumeSelected(e.target.files?.[0] ?? null)}
             disabled={uploadPending}
+          />
+        )}
+      </Field>
+
+      <Field
+        label="LaTeX resume template"
+        hint="Optional .tex file with [[full_name]], [[skills]], [[experience]], and other placeholders. A built-in template is used when none is uploaded."
+      >
+        {existing?.resume_template ? (
+          <div className="row-actions">
+            <span>
+              {existing.resume_template.filename} (
+              {formatFileSize(existing.resume_template.size_bytes)})
+            </span>
+            <Button
+              variant="danger"
+              onClick={onRemoveResumeTemplate}
+              disabled={deleteTemplatePending}
+            >
+              Remove template
+            </Button>
+          </div>
+        ) : (
+          <input
+            type="file"
+            accept=".tex,application/x-tex,text/plain"
+            onChange={(e) => onResumeTemplateSelected(e.target.files?.[0] ?? null)}
+            disabled={uploadTemplatePending}
           />
         )}
       </Field>

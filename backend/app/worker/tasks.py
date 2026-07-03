@@ -80,6 +80,7 @@ def apply_to_job_task(
     user_id: int,
     job_id: int,
     cover_letter: str | None,
+    tailored_resume_b64: str | None = None,
 ) -> dict[str, object]:
     """Run one queued live auto-apply in the worker."""
     try:
@@ -89,6 +90,7 @@ def apply_to_job_task(
                 job_id,
                 dry_run=False,
                 cover_letter=cover_letter,
+                tailored_resume_b64=tailored_resume_b64,
                 application_log_id=application_log_id,
             )
     except Exception as exc:

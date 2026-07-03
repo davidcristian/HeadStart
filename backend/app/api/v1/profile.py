@@ -74,6 +74,32 @@ def delete_resume(
     return ProfileService(db).delete_resume(user.id)
 
 
+@router.put("/resume-template", response_model=ProfileRead)
+async def upload_resume_template(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    user: User = Depends(get_verified_user),
+) -> ProfileRead:
+    """Upload or replace the user's LaTeX resume template."""
+    content = await _read_bounded_upload(file, settings.profile_resume_template_max_bytes)
+    content_type = file.content_type or "application/octet-stream"
+    filename = file.filename or "resume.tex"
+    return ProfileService(db).save_resume_template(
+        user.id,
+        filename=filename,
+        content_type=content_type,
+        data=content,
+    )
+
+
+@router.delete("/resume-template", response_model=ProfileRead)
+def delete_resume_template(
+    db: Session = Depends(get_db), user: User = Depends(get_verified_user)
+) -> ProfileRead:
+    """Remove the stored LaTeX template without clearing other profile fields."""
+    return ProfileService(db).delete_resume_template(user.id)
+
+
 @router.delete("", status_code=status.HTTP_204_NO_CONTENT)
 def delete_profile(db: Session = Depends(get_db), user: User = Depends(get_verified_user)) -> None:
     ProfileService(db).delete(user.id)

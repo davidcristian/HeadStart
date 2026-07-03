@@ -36,6 +36,10 @@ class JobApplyRequest(BaseModel):
         default=None,
         description="Optional cover letter override for this application",
     )
+    tailored_resume_b64: str | None = Field(
+        default=None,
+        description="Optional base64-encoded tailored resume PDF for this application",
+    )
 
 
 class JobApplyResult(BaseModel):
@@ -53,6 +57,18 @@ class JobApplyResult(BaseModel):
 class JobCoverLetterResult(BaseModel):
     cover_letter: str
     provider: str = Field(description="Generator key used (e.g. heuristic, openai)")
+    fallback: bool = Field(
+        default=False,
+        description="True when an LLM provider failed and heuristic was used instead",
+    )
+
+
+class JobResumeResult(BaseModel):
+    filename: str
+    size_bytes: int = Field(ge=0)
+    content_sha256: str
+    pdf_b64: str
+    provider: str = Field(description="Curator key used (e.g. heuristic, openai)")
     fallback: bool = Field(
         default=False,
         description="True when an LLM provider failed and heuristic was used instead",

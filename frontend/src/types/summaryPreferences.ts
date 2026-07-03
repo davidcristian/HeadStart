@@ -3,11 +3,7 @@
 export type SummaryProviderId = "heuristic" | "openai" | "gemini" | "anthropic";
 
 export type AiPurposeId =
-  | "summary"
-  | "cover_letter"
-  | "resume_curation"
-  | "email_classify"
-  | "email_draft";
+  "summary" | "cover_letter" | "resume_curation" | "email_classify" | "email_draft";
 
 export type SummaryProviderOption = {
   id: SummaryProviderId;

@@ -11,12 +11,14 @@ from app.schemas.job import (
     JobApplyResult,
     JobCoverLetterResult,
     JobRead,
+    JobResumeResult,
     JobStatus,
     JobUpdate,
 )
 from app.services.apply import ApplyService
 from app.services.cover_letters import CoverLetterService
 from app.services.jobs import JobService
+from app.services.resumes import ResumeService
 from app.worker.tasks import apply_to_job_task
 
 router = APIRouter()
@@ -73,6 +75,17 @@ def generate_cover_letter(
     return JobCoverLetterResult.model_validate(result)
 
 
+@router.post("/{job_id}/generate-resume", response_model=JobResumeResult)
+def generate_resume(
+    job_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_verified_user),
+) -> JobResumeResult:
+    """Generate a tailored resume PDF for one job from the user's LaTeX template."""
+    result = ResumeService(db).generate(user.id, job_id)
+    return JobResumeResult.model_validate(result)
+
+
 @router.post("/{job_id}/apply", response_model=JobApplyResult)
 def apply_to_job(
     job_id: int,
@@ -88,11 +101,12 @@ def apply_to_job(
             job_id,
             dry_run=True,
             cover_letter=data.cover_letter,
+            tailored_resume_b64=data.tailored_resume_b64,
         )
         return _apply_result_from_service(db, user.id, job_id, result)
 
     log_id = service.enqueue_apply(user.id, job_id)
     # Commit before enqueue so the worker can see the queued log row immediately.
     db.commit()
-    apply_to_job_task.delay(log_id, user.id, job_id, data.cover_letter)
+    apply_to_job_task.delay(log_id, user.id, job_id, data.cover_letter, data.tailored_resume_b64)
     return JobApplyResult(status="queued", application_log_id=log_id)

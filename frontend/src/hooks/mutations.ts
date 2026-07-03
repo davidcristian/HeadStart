@@ -178,6 +178,22 @@ export function useDeleteResume() {
   });
 }
 
+export function useUploadResumeTemplate() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (file: File) => api.uploadResumeTemplate(file),
+    onSuccess: () => invalidate(qc, queryKeys.profile),
+  });
+}
+
+export function useDeleteResumeTemplate() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => api.deleteResumeTemplate(),
+    onSuccess: () => invalidate(qc, queryKeys.profile),
+  });
+}
+
 export function useUpdateJob() {
   const qc = useQueryClient();
   return useMutation({
@@ -194,11 +210,13 @@ export function useApplyToJob() {
       id,
       dry_run = false,
       cover_letter,
+      tailored_resume_b64,
     }: {
       id: number;
       dry_run?: boolean;
       cover_letter?: string | null;
-    }) => api.applyToJob(id, { dry_run, cover_letter }),
+      tailored_resume_b64?: string | null;
+    }) => api.applyToJob(id, { dry_run, cover_letter, tailored_resume_b64 }),
     onSuccess: (result) => {
       invalidate(qc, queryKeys.applicationLogs);
       if (result.status === "submitted") {
@@ -211,6 +229,12 @@ export function useApplyToJob() {
 export function useGenerateCoverLetter() {
   return useMutation({
     mutationFn: (jobId: number) => api.generateCoverLetter(jobId),
+  });
+}
+
+export function useGenerateResume() {
+  return useMutation({
+    mutationFn: (jobId: number) => api.generateResume(jobId),
   });
 }
 

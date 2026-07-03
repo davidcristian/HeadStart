@@ -47,8 +47,9 @@ never touch the DB directly (services use repositories). See
 | POST   | `/searches/{id}/run`  | Run the search pipeline immediately (returns found/new/notified counts) |
 | GET    | `/jobs`               | Feed of seen jobs (filter by `search_id`, `status`) |
 | PATCH  | `/jobs/{id}`          | Update triage status (`seen` / `applied` / `archived`) |
-| POST   | `/jobs/{id}/apply`    | Submit or preview an auto-apply (`dry_run`, optional `cover_letter`). Live submit returns `queued` + `application_log_id`; poll `GET /application-logs/{id}`. |
+| POST   | `/jobs/{id}/apply`    | Submit or preview an auto-apply (`dry_run`, optional `cover_letter`, optional `tailored_resume_b64`). Live submit returns `queued` + `application_log_id`; poll `GET /application-logs/{id}`. |
 | POST   | `/jobs/{id}/generate-cover-letter` | Draft a tailored cover letter from the job + application profile (`provider`, `fallback`). Pro users use the effective `SUMMARY_PROVIDER`; others get the offline heuristic generator. |
+| POST   | `/jobs/{id}/generate-resume` | Generate a tailored resume PDF from the LaTeX template + profile (`pdf_b64`, `provider`, `fallback`). Requires `tectonic` or `pdflatex` locally to compile. |
 | GET    | `/application-logs` | List recent auto-apply attempts (`limit`, default 100) |
 | GET    | `/application-logs/{id}` | Poll one queued/live apply log until terminal status |
 | GET    | `/applications` | Application pipeline rows (`stage` filter optional): job + derived `pipeline_stage`, `latest_attempt`, chronological `attempts` |

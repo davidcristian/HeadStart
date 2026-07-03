@@ -21,6 +21,15 @@ ALLOWED_RESUME_CONTENT_TYPES = frozenset(
     }
 )
 
+ALLOWED_RESUME_TEMPLATE_CONTENT_TYPES = frozenset(
+    {
+        "application/x-tex",
+        "application/x-latex",
+        "text/plain",
+        "text/x-tex",
+    }
+)
+
 
 class ProfileLinks(BaseModel):
     linkedin: str = Field(default="", max_length=500)
@@ -105,6 +114,35 @@ class ResumeFile(ResumeFileMeta):
     data: bytes
 
 
+class ResumeTemplateMeta(BaseModel):
+    """LaTeX resume template metadata returned to the profile owner."""
+
+    filename: str
+    size_bytes: int = Field(ge=0)
+
+
+class ResumeTemplateStored(BaseModel):
+    """LaTeX resume template as stored inside the encrypted profile JSON blob."""
+
+    filename: str
+    data_b64: str
+
+    def to_meta(self) -> ResumeTemplateMeta:
+        raw = base64.b64decode(self.data_b64)
+        return ResumeTemplateMeta(filename=self.filename, size_bytes=len(raw))
+
+    @classmethod
+    def from_bytes(cls, *, filename: str, data: bytes) -> ResumeTemplateStored:
+        return cls(
+            filename=filename,
+            data_b64=base64.b64encode(data).decode("ascii"),
+        )
+
+    def decode_tex(self) -> str:
+        """Decode stored template bytes as UTF-8 LaTeX source."""
+        return base64.b64decode(self.data_b64).decode("utf-8")
+
+
 class ResumeFileStored(BaseModel):
     """Resume attachment as stored inside the encrypted profile JSON blob."""
 
@@ -154,3 +192,4 @@ class ProfileRead(ProfileData):
     exists: bool = False
     updated_at: datetime | None = None
     resume_file: ResumeFileMeta | None = None
+    resume_template: ResumeTemplateMeta | None = None

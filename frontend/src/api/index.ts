@@ -10,6 +10,7 @@ import type {
   Job,
   JobApplyResult,
   JobCoverLetterResult,
+  JobResumeResult,
   ApplicationLog,
   ApplicationPipelineItem,
   ApplicationPipelineStage,
@@ -203,10 +204,17 @@ export const api = {
     request<Job[]>(`/api/v1/jobs${buildJobQuery(searchId, status)}`),
   updateJob: (id: number, data: { status: "seen" | "applied" | "archived" }) =>
     request<Job>(`/api/v1/jobs/${id}`, { method: "PATCH", body: data }),
-  applyToJob: (id: number, data: { dry_run?: boolean; cover_letter?: string | null }) =>
-    request<JobApplyResult>(`/api/v1/jobs/${id}/apply`, { method: "POST", body: data }),
+  applyToJob: (
+    id: number,
+    data: { dry_run?: boolean; cover_letter?: string | null; tailored_resume_b64?: string | null },
+  ) => request<JobApplyResult>(`/api/v1/jobs/${id}/apply`, { method: "POST", body: data }),
   generateCoverLetter: (id: number) =>
     request<JobCoverLetterResult>(`/api/v1/jobs/${id}/generate-cover-letter`, {
+      method: "POST",
+      body: {},
+    }),
+  generateResume: (id: number) =>
+    request<JobResumeResult>(`/api/v1/jobs/${id}/generate-resume`, {
       method: "POST",
       body: {},
     }),
@@ -256,6 +264,13 @@ export const api = {
     return requestForm<Profile>("/api/v1/profile/resume", { method: "PUT", body });
   },
   deleteResume: () => request<Profile>("/api/v1/profile/resume", { method: "DELETE" }),
+  uploadResumeTemplate: (file: File) => {
+    const body = new FormData();
+    body.append("file", file);
+    return requestForm<Profile>("/api/v1/profile/resume-template", { method: "PUT", body });
+  },
+  deleteResumeTemplate: () =>
+    request<Profile>("/api/v1/profile/resume-template", { method: "DELETE" }),
   deleteProfile: () => request<void>("/api/v1/profile", { method: "DELETE" }),
 
   // AI summary preferences (Pro)

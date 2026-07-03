@@ -130,3 +130,27 @@ def test_resume_upload_persists_encrypted_and_survives_profile_save(db_session: 
 
     svc.delete_resume(user_id)
     assert svc.get(user_id).resume_file is None
+
+
+def test_resume_template_upload_and_delete(db_session: Session) -> None:
+    user_id = _user(db_session)
+    svc = ProfileService(db_session)
+    tex = rb"\documentclass{article}\begin{document}Hi\end{document}"
+    svc.save_resume_template(
+        user_id,
+        filename="resume.tex",
+        content_type="application/x-tex",
+        data=tex,
+    )
+
+    row = db_session.query(ApplicationProfile).filter_by(user_id=user_id).one()
+    assert b"documentclass" not in row.data_ciphertext.encode()
+
+    read = svc.get(user_id)
+    assert read.resume_template is not None
+    assert read.resume_template.filename == "resume.tex"
+    assert svc.get_resume_template_tex(user_id) == tex.decode("utf-8")
+
+    svc.delete_resume_template(user_id)
+    assert svc.get(user_id).resume_template is None
+    assert svc.get_resume_template_tex(user_id) is None

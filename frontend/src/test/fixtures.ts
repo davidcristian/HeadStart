@@ -101,6 +101,7 @@ export const emptyProfile: Profile = {
   exists: false,
   updated_at: null,
   resume_file: null,
+  resume_template: null,
 };
 
 export const sampleProfile: Profile = {
@@ -119,6 +120,7 @@ export const sampleProfile: Profile = {
   exists: true,
   updated_at: "2026-06-28T12:00:00Z",
   resume_file: null,
+  resume_template: null,
 };
 
 export const sampleJob: Job = {
