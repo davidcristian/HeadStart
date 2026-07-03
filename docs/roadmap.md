@@ -611,8 +611,8 @@ a job, review or edit the cover letter, and have both attached on apply.
 
 | Item | Why | Notes |
 | ---- | --- | ----- |
-| Interview detection | User should only take over at the right moment | Classifier flags `interview_request` (scheduling link, Calendly, "let's set up a call"); mark application `interview_pending` |
-| Handoff notification | User checks their own calendar | Push via existing notifiers (email, Slack, ntfy, etc.): "Interview to schedule at {company} — take over from here" with thread link and job card; same channel for **late reply after ghost** alerts from [20c ghost recovery](#20c--inbox-integration--email-triage) ("{company} replied after you marked this ghosted") |
+| ~~Interview detection~~ | ~~User should only take over at the right moment~~ | **Shipped:** `InterviewHandoffService` sets `interview_pending_at` when a linked, non-ghosted application classifies as `interview_request`; ghost recovery still owns the ghosted path |
+| ~~Handoff notification~~ | ~~User checks their own calendar~~ | **Shipped:** `ApplicationAlertService.notify_interview_handoff` pushes high-priority alerts via the search target (or all user targets); copy: "Interview to schedule at {company} — take over from here". Ghost-recovery late-reply alerts unchanged |
 | UI: application pipeline view | User sees status at a glance | **Shipped:** `/app/applications` lists jobs with live apply activity; derived stages (`queued`, `awaiting_reply`, `apply_failed`, `closed`, `archived`); expandable attempt timeline; `GET /applications?stage=…`. Interview/rejection/ghost stages land with Phase 20c inbox integration. |
 
 ### 20f — Local agent runtime

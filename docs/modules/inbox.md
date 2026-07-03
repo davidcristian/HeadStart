@@ -137,6 +137,24 @@ set) and the label is recruiter signal (`general`, `rejection`, `follow_up`,
 `EmailClassificationService.classify` invokes `GhostRecoveryService` after linking
 a job and before folder routing.
 
+## Interview handoff (Phase 20e)
+
+When inbound mail classifies as `interview_request` for a linked, active
+application (`status=applied` or a live submitted attempt) that is **not**
+ghosted and not already `interview_pending`:
+
+1. Set `seen_job.interview_pending_at`.
+2. Record `interview_handoff` metadata on `inbox_classification.payload`.
+3. Send a high-priority alert via the search's notification target (or all user
+   targets when the search has none). ntfy uses `priority: high`. Alert copy:
+   "Interview to schedule at {company} — take over from here".
+
+Ghosted applications still route through `GhostRecoveryService` first; interview
+handoff skips when `ghosted_at` is set or `interview_pending_at` is already set.
+
+`EmailClassificationService.classify` invokes `InterviewHandoffService` after
+ghost recovery and before folder routing.
+
 ## Ghost detection (Phase 20c)
 
 When `INBOX_AGENT_ENABLED=true`, beat runs `detect_ghosted_applications` every

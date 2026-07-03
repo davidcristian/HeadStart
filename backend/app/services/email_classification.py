@@ -34,6 +34,7 @@ from app.schemas.inbox_classification import (
 from app.services.applications import latest_live_attempt
 from app.services.ghost_recovery import GhostRecoveryService
 from app.services.inbox import InboxService
+from app.services.interview_handoff import InterviewHandoffService
 from app.services.inbox_linking import link_message_to_job, linked_application_context
 from app.services.inbox_routing import InboxRoutingService
 from app.services.plan_limits import PlanLimitsService
@@ -58,6 +59,7 @@ class EmailClassificationService:
         self.routing = InboxRoutingService(session)
         self.pipeline = ApplicationPipelineRepository(session)
         self.ghost_recovery = GhostRecoveryService(session)
+        self.interview_handoff = InterviewHandoffService(session)
         self.classifications = InboxClassificationRepository(session)
         self._factory = classifier_factory or (
             lambda key, runtime: get_email_classifier(key, settings=runtime)
@@ -120,6 +122,7 @@ class EmailClassificationService:
         if linked_job is not None:
             row.seen_job = linked_job
             self.ghost_recovery.maybe_recover_from_classification(user_id, linked_job, row)
+            self.interview_handoff.maybe_handoff_from_classification(user_id, linked_job, row)
         self.routing.route_after_classify(user_id, row)
         return self._to_read(row)
 

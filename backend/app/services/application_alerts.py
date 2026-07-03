@@ -33,11 +33,44 @@ class ApplicationAlertService:
         email_subject: str | None = None,
     ) -> list[DeliveryResult]:
         """Push a high-priority alert when a ghosted application gets recruiter mail."""
+        headline, summary = _ghost_recovery_copy(job, label=label)
+        posting = self._alert_posting(
+            job,
+            external_id_prefix="ghost-recovery",
+            title=email_subject or headline,
+            summary=summary,
+        )
+        return self._send_alert(user_id, job, posting, log_context="ghost recovery")
+
+    def notify_interview_handoff(
+        self,
+        user_id: int,
+        job: SeenJob,
+        *,
+        email_subject: str | None = None,
+    ) -> list[DeliveryResult]:
+        """Push a high-priority alert when a recruiter requests an interview."""
+        headline, summary = _interview_handoff_copy(job)
+        posting = self._alert_posting(
+            job,
+            external_id_prefix="interview-handoff",
+            title=email_subject or headline,
+            summary=summary,
+        )
+        return self._send_alert(user_id, job, posting, log_context="interview handoff")
+
+    def _send_alert(
+        self,
+        user_id: int,
+        job: SeenJob,
+        posting: JobPosting,
+        *,
+        log_context: str,
+    ) -> list[DeliveryResult]:
         targets = self._resolve_targets(user_id, job)
         if not targets:
             return []
 
-        posting = self._alert_posting(job, label=label, email_subject=email_subject)
         results: list[DeliveryResult] = []
         for target in targets:
             notifier = get_notifier(target.type)
@@ -50,7 +83,8 @@ class ApplicationAlertService:
                 results.extend(sent)
             except Exception as exc:
                 logger.warning(
-                    "ghost recovery alert failed target=%s user=%s: %s",
+                    "%s alert failed target=%s user=%s: %s",
+                    log_context,
                     target.id,
                     user_id,
                     exc,
@@ -85,19 +119,28 @@ class ApplicationAlertService:
     def _alert_posting(
         job: SeenJob,
         *,
-        label: str,
-        email_subject: str | None,
+        external_id_prefix: str,
+        title: str,
+        summary: str,
     ) -> JobPosting:
-        headline, summary = _ghost_recovery_copy(job, label=label)
-        title = email_subject or headline
         return JobPosting(
-            external_id=f"ghost-recovery-{job.id}",
+            external_id=f"{external_id_prefix}-{job.id}",
             title=title,
             company=job.company,
             location=job.location,
             url=job.url,
             summary=summary,
         )
+
+
+def _interview_handoff_copy(job: SeenJob) -> tuple[str, str]:
+    company = job.company or "Employer"
+    headline = f"Interview to schedule at {company} — take over from here"
+    summary = (
+        f"{company} wants to schedule an interview for {job.title}. "
+        "Check your inbox and calendar to pick a time."
+    )
+    return headline, summary
 
 
 def _ghost_recovery_copy(job: SeenJob, *, label: str) -> tuple[str, str]:
