@@ -595,6 +595,7 @@ a job, review or edit the cover letter, and have both attached on apply.
 | Email classification agent | Sort noise from signal without manual folders | Local LLM classifies inbound mail tied to known applications: `general`, `rejection`, `follow_up`, `interview_request`, `ghost_candidate` (no reply after N days), `self_ghost_archive` (HeadStart-generated ghost summary re-ingested from self) |
 | Folder / label routing | Keep the inbox usable | **General** recruiter mail → sort to a HeadStart folder/label; **Rejection** → separate folder; **Self ghost archive** → dedicated folder/label; configurable per provider (Gmail labels, Outlook folders) |
 | Ghost detection & self-archive | Silent employers still need a paper trail | If no reply within configurable window (e.g. 14 days), send a summary email to self with a fixed subject prefix / custom header (e.g. `[HeadStart Ghost]`) and mark application `ghosted` in the app |
+| Ghost recovery / late reply detection | Employers sometimes respond weeks after the ghost window | When inbound mail for a `ghosted` application classifies as recruiter signal (`follow_up`, `interview_request`, `general`, `rejection`), clear the ghost state, transition pipeline stage (e.g. `interview_pending`, `rejected`, or `awaiting_reply`), log `ghost_recovered_at`, and emit a high-priority notifier (see [20e](#20e--interview-handoff--user-notification)); do not treat as `self_ghost_archive` |
 | Self-email re-ingestion | Ghost summaries must not pollute recruiter triage | When the self-sent ghost email arrives back in the inbox, classifier recognizes the marker (from/to self, subject prefix, `X-HeadStart-Type: ghost`) as `self_ghost_archive` and routes to the ghost folder — not treated as a recruiter reply or follow-up |
 
 ### 20d — Autonomous follow-up responses
@@ -610,7 +611,7 @@ a job, review or edit the cover letter, and have both attached on apply.
 | Item | Why | Notes |
 | ---- | --- | ----- |
 | Interview detection | User should only take over at the right moment | Classifier flags `interview_request` (scheduling link, Calendly, "let's set up a call"); mark application `interview_pending` |
-| Handoff notification | User checks their own calendar | Push via existing notifiers (email, Slack, ntfy, etc.): "Interview to schedule at {company} — take over from here" with thread link and job card |
+| Handoff notification | User checks their own calendar | Push via existing notifiers (email, Slack, ntfy, etc.): "Interview to schedule at {company} — take over from here" with thread link and job card; same channel for **late reply after ghost** alerts from [20c ghost recovery](#20c--inbox-integration--email-triage) ("{company} replied after you marked this ghosted") |
 | UI: application pipeline view | User sees status at a glance | **Shipped:** `/app/applications` lists jobs with live apply activity; derived stages (`queued`, `awaiting_reply`, `apply_failed`, `closed`, `archived`); expandable attempt timeline; `GET /applications?stage=…`. Interview/rejection/ghost stages land with Phase 20c inbox integration. |
 
 ### 20f — Local agent runtime
@@ -640,7 +641,9 @@ models, generate tailored resume PDFs and cover letters per job, enable
 auto-apply on a search (with generated documents attached), have recruiter email
 auto-sorted into general/rejection folders, receive a self-email on ghosted
 applications that is recognized and sorted into a ghost archive folder on
-re-ingestion, see auto-drafted follow-up replies (with optional auto-send),
+re-ingestion, get notified when a previously ghosted application receives a
+late recruiter reply (with pipeline stage updated accordingly), see
+auto-drafted follow-up replies (with optional auto-send),
 reject out-of-scope email content without acting on it, and get a notifier alert
 when an interview needs scheduling — at which point they take over manually.
 
