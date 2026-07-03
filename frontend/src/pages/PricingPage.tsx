@@ -29,7 +29,6 @@ export function PricingPage() {
 
   async function startCheckout(plan: PaidPlanId) {
     setCheckoutError(undefined);
-    if (!user) return;
     setCheckingOut(true);
     try {
       const { url } = await api.createCheckout(plan, billingPeriod, appliedPromo?.code);

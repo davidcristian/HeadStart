@@ -33,7 +33,11 @@ export function usePortalsPage() {
   // category), but keep the user's manual selection across plain refetches that
   // return the same set of portals.
   const catalogKey = useMemo(
-    () => catalogItems.map((portal) => portal.id).sort().join("\n"),
+    () =>
+      catalogItems
+        .map((portal) => portal.id)
+        .sort()
+        .join("\n"),
     [catalogItems],
   );
   const initializedKeyRef = useRef<string | null>(null);
@@ -54,11 +58,10 @@ export function usePortalsPage() {
   }
 
   function searchPayload() {
-    const portal_ids = [...selectedIds];
     return {
       keywords: keywords.trim(),
+      portal_ids: [...selectedIds],
       ...(category ? { category } : {}),
-      ...(portal_ids.length > 0 ? { portal_ids } : {}),
       ...(location.trim() ? { location: location.trim() } : {}),
       ...(workplace ? { workplace } : {}),
     };

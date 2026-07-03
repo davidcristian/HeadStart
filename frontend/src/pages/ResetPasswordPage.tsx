@@ -18,7 +18,8 @@ export function ResetPasswordPage() {
   async function submit(e: FormEvent) {
     e.preventDefault();
     setError(undefined);
-    if (!token) {
+    const currentToken = searchParams.get("token") ?? "";
+    if (!currentToken) {
       setError("Reset link is missing or invalid. Request a new one.");
       return;
     }
@@ -28,7 +29,7 @@ export function ResetPasswordPage() {
     }
     setBusy(true);
     try {
-      const resp = await api.resetPassword(token, password);
+      const resp = await api.resetPassword(currentToken, password);
       setMessage(resp.message);
     } catch (err) {
       setError((err as Error).message);

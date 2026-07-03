@@ -161,7 +161,7 @@ export async function requestBlob(path: string): Promise<Blob> {
       const data = text ? JSON.parse(text) : undefined;
       detail = (data && (data.detail as string)) || detail;
     } catch {
-      detail = text || detail;
+      detail = text;
     }
     throw new ApiError(resp.status, detail);
   }

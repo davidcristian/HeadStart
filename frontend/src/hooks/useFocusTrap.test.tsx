@@ -24,6 +24,46 @@ function Harness() {
   );
 }
 
+function InactiveDialog({ onClose }: { onClose: () => void }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useFocusTrap(false, ref, onClose);
+  return (
+    <div ref={ref} role="dialog">
+      <button>first</button>
+      <button>last</button>
+    </div>
+  );
+}
+
+function NullRefDialog({ onClose }: { onClose: () => void }) {
+  const ref = useRef<HTMLDivElement>(null);
+  // Intentionally never attach the ref, so containerRef.current stays null.
+  useFocusTrap(true, ref, onClose);
+  return (
+    <div role="dialog">
+      <button>outside</button>
+    </div>
+  );
+}
+
+function EmptyDialog({ onClose }: { onClose: () => void }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useFocusTrap(true, ref, onClose);
+  return <div ref={ref} role="dialog" />;
+}
+
+function ThreeButtonDialog({ onClose }: { onClose: () => void }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useFocusTrap(true, ref, onClose);
+  return (
+    <div ref={ref} role="dialog">
+      <button>first</button>
+      <button>middle</button>
+      <button>last</button>
+    </div>
+  );
+}
+
 describe("useFocusTrap", () => {
   it("moves focus to the first focusable element when activated", () => {
     render(<Dialog onClose={() => {}} />);
@@ -62,5 +102,92 @@ describe("useFocusTrap", () => {
 
     fireEvent.keyDown(document, { key: "Escape" });
     expect(trigger).toHaveFocus();
+  });
+
+  it("does nothing when inactive", () => {
+    const outside = document.createElement("button");
+    outside.textContent = "outside";
+    document.body.appendChild(outside);
+    outside.focus();
+
+    const onClose = vi.fn();
+    render(<InactiveDialog onClose={onClose} />);
+
+    // No focus moved into the dialog, and Escape is ignored.
+    expect(outside).toHaveFocus();
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(onClose).not.toHaveBeenCalled();
+
+    document.body.removeChild(outside);
+  });
+
+  it("does nothing when the container ref is not attached", () => {
+    const onClose = vi.fn();
+    render(<NullRefDialog onClose={onClose} />);
+
+    // The keydown listener is never registered, so Escape is ignored.
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it("ignores keys other than Tab and Escape", () => {
+    const onClose = vi.fn();
+    render(<Dialog onClose={onClose} />);
+    const first = screen.getByText("first");
+
+    fireEvent.keyDown(document, { key: "a" });
+    expect(onClose).not.toHaveBeenCalled();
+    expect(first).toHaveFocus();
+  });
+
+  it("does nothing on Tab when there are no focusable elements", () => {
+    const onClose = vi.fn();
+    render(<EmptyDialog onClose={onClose} />);
+    expect(() => fireEvent.keyDown(document, { key: "Tab" })).not.toThrow();
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it("wraps to the last element on Shift+Tab when focus is outside the container", () => {
+    render(<Dialog onClose={() => {}} />);
+    const outside = document.createElement("button");
+    document.body.appendChild(outside);
+    outside.focus();
+
+    fireEvent.keyDown(document, { key: "Tab", shiftKey: true });
+    expect(screen.getByText("last")).toHaveFocus();
+
+    document.body.removeChild(outside);
+  });
+
+  it("wraps to the first element on Tab when focus is outside the container", () => {
+    render(<Dialog onClose={() => {}} />);
+    const outside = document.createElement("button");
+    document.body.appendChild(outside);
+    outside.focus();
+
+    fireEvent.keyDown(document, { key: "Tab" });
+    expect(screen.getByText("first")).toHaveFocus();
+
+    document.body.removeChild(outside);
+  });
+
+  it("does not intercept Tab in the middle of the focusable list", () => {
+    render(<ThreeButtonDialog onClose={() => {}} />);
+    const middle = screen.getByText("middle");
+    middle.focus();
+
+    // Tab from the middle element: neither first nor last, still inside the
+    // container -> the hook lets the browser handle it and focus stays put.
+    fireEvent.keyDown(document, { key: "Tab" });
+    expect(middle).toHaveFocus();
+  });
+
+  it("does not intercept Shift+Tab in the middle of the focusable list", () => {
+    render(<ThreeButtonDialog onClose={() => {}} />);
+    const middle = screen.getByText("middle");
+    middle.focus();
+
+    fireEvent.keyDown(document, { key: "Tab", shiftKey: true });
+    expect(middle).toHaveFocus();
   });
 });

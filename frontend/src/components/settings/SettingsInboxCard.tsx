@@ -53,9 +53,10 @@ export function SettingsInboxCard({ mailboxNotice }: SettingsInboxCardProps) {
             }));
           }
           if (row.connector_type === "fastmail" && row.email_address) {
+            const emailAddress = row.email_address;
             setFastmailConfig((current) => ({
               ...current,
-              email_address: row.email_address ?? current.email_address,
+              email_address: emailAddress,
             }));
           }
         }

@@ -119,11 +119,6 @@ function ReplyDraftSection({ item }: { item: ApplicationPipelineItem }) {
     return null;
   }
 
-  const handleDraft = () => {
-    if (!classificationId) return;
-    draftReply.mutate({ classification_id: classificationId });
-  };
-
   return (
     <div className="application-reply-draft">
       {draft ? (
@@ -146,7 +141,11 @@ function ReplyDraftSection({ item }: { item: ApplicationPipelineItem }) {
           )}
         </details>
       ) : (
-        <Button variant="ghost" disabled={draftReply.isPending} onClick={handleDraft}>
+        <Button
+          variant="ghost"
+          disabled={draftReply.isPending}
+          onClick={() => draftReply.mutate({ classification_id: classificationId! })}
+        >
           {draftReply.isPending ? "Drafting…" : "Draft reply"}
         </Button>
       )}

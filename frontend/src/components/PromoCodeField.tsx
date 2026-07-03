@@ -18,12 +18,6 @@ export function PromoCodeField({ onApplied, disabled }: Props) {
 
   async function applyCode() {
     const trimmed = code.trim();
-    if (!trimmed) {
-      setApplied(null);
-      onApplied(null);
-      setError(undefined);
-      return;
-    }
     setBusy(true);
     setError(undefined);
     try {

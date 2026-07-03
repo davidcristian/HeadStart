@@ -58,20 +58,20 @@ export function JobsPage() {
   const rotateFeed = useRotateFeedUrl();
 
   const { refetch } = jobs;
-  const refreshJobs = useCallback(() => {
-    void refetch();
+  const refreshJobs = useCallback(async () => {
+    await refetch();
   }, [refetch]);
 
   const { pulling, refreshing } = usePullToRefresh(refreshJobs);
+
+  const filteredFeedUrl = feed.data ? buildFeedUrl(feed.data.url, searchId, status) : "";
 
   async function setJobStatus(jobId: number, next: "seen" | "applied" | "archived") {
     await updateJob.mutateAsync({ id: jobId, status: next });
   }
 
   async function copyFeedUrl() {
-    if (!feed.data) return;
-    const url = buildFeedUrl(feed.data.url, searchId, status);
-    await navigator.clipboard.writeText(url);
+    await navigator.clipboard.writeText(filteredFeedUrl);
     setFeedMessage("RSS feed URL copied to clipboard.");
   }
 
@@ -79,8 +79,6 @@ export function JobsPage() {
     await rotateFeed.mutateAsync();
     setFeedMessage("RSS feed link regenerated. Update any feed readers using the old URL.");
   }
-
-  const filteredFeedUrl = feed.data ? buildFeedUrl(feed.data.url, searchId, status) : "";
 
   const appliers = useMemo(() => meta.data?.appliers ?? [], [meta.data?.appliers]);
   const jobCanApply = useCallback(

@@ -49,10 +49,6 @@ export function SearchesPage() {
 
   async function create() {
     setError(undefined);
-    if (sourceId === "") {
-      setError("Pick a source first (create one on the Sources page).");
-      return;
-    }
     try {
       await createSearch.mutateAsync({
         name,

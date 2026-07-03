@@ -12,8 +12,7 @@ export default defineConfig({
       manifest: {
         name: "HeadStart",
         short_name: "HeadStart",
-        description:
-          "Watch the job boards you care about and get alerted before the crowd.",
+        description: "Watch the job boards you care about and get alerted before the crowd.",
         theme_color: "#0a0e14",
         background_color: "#0a0e14",
         display: "standalone",
@@ -59,5 +58,19 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     setupFiles: ["./src/test/setup.ts"],
+    coverage: {
+      provider: "v8",
+      include: ["src/**"],
+      // Only genuinely-uncoverable files are excluded: pure type declarations
+      // and the spec files themselves. Everything else needs a real test.
+      exclude: ["src/types/**", "**/*.d.ts", "**/*.test.{ts,tsx}", "src/test/setup.ts"],
+      reporter: ["text", "text-summary"],
+      thresholds: {
+        lines: 100,
+        statements: 100,
+        branches: 100,
+        functions: 100,
+      },
+    },
   },
 });

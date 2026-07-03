@@ -32,15 +32,15 @@ export function SearchHealthBadge({ search }: { search: Search }) {
 }
 
 export function SearchHealthDetails({ search }: { search: Search }) {
-  const hasScrapeError = Boolean(search.last_error);
+  const scrapeError = search.last_error || undefined;
   const hasDeliveryFailures = search.recent_delivery_failures.length > 0;
-  if (!hasScrapeError && !hasDeliveryFailures) return null;
+  if (!scrapeError && !hasDeliveryFailures) return null;
 
   return (
     <div className="health-details">
-      {hasScrapeError && (
-        <p className="health-line health-line-error" title={search.last_error ?? undefined}>
-          <strong>Scrape:</strong> {search.last_error}
+      {scrapeError && (
+        <p className="health-line health-line-error" title={scrapeError}>
+          <strong>Scrape:</strong> {scrapeError}
         </p>
       )}
       {hasDeliveryFailures && (

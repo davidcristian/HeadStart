@@ -54,9 +54,7 @@ function renderGuard(guard: ReactElement): ReturnType<typeof render> {
 
 describe("EmailVerificationGuard", () => {
   it("redirects unverified accounts to /verify-email", () => {
-    mockUseAuth.mockReturnValue(
-      authState({ user: { ...baseUser, email_verified_at: null } }),
-    );
+    mockUseAuth.mockReturnValue(authState({ user: { ...baseUser, email_verified_at: null } }));
     renderGuard(<EmailVerificationGuard />);
     expect(screen.getByText("verify screen")).toBeInTheDocument();
     expect(screen.queryByText("protected content")).not.toBeInTheDocument();

@@ -64,7 +64,8 @@ export function SettingsSummaryCard() {
   }
 
   async function save() {
-    if (!preferences?.enabled) return;
+    // The "Save AI settings" button only renders inside the `preferences.enabled`
+    // branch, so `preferences` is always present and enabled here.
     setSaveError(undefined);
     setSaved(false);
     setSaving(true);
@@ -74,10 +75,10 @@ export function SettingsSummaryCard() {
         { provider?: SummaryProviderId | null; model?: string | null }
       > = {};
 
-      for (const purpose of preferences.purposes) {
+      for (const purpose of preferences!.purposes) {
         if (!purpose.overridable) continue;
         const draft = purposeDrafts[purpose.id];
-        const saved = preferences.purpose_preferences[purpose.id];
+        const saved = preferences!.purpose_preferences[purpose.id];
         const patch: { provider?: SummaryProviderId | null; model?: string | null } = {};
 
         const nextProvider =

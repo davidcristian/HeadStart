@@ -64,4 +64,31 @@ describe("ApplicationsPage", () => {
     expect(timeline).toHaveTextContent("Submitted");
     expect(timeline).toHaveTextContent("ID: gh-123");
   });
+
+  it("shows a loading indicator while applications are pending", async () => {
+    let resolve: (items: (typeof sampleApplicationPipelineItem)[]) => void = () => {};
+    mockApi.listApplications.mockReturnValue(
+      new Promise((res) => {
+        resolve = res;
+      }),
+    );
+    renderApplicationsPage();
+
+    expect(screen.getByText("Loading...")).toBeInTheDocument();
+    resolve([]);
+    await waitFor(() =>
+      expect(screen.getByText(/No applications in the pipeline yet/i)).toBeInTheDocument(),
+    );
+  });
+
+  it("shows an error message when applications fail to load", async () => {
+    mockApi.listApplications.mockRejectedValue(new Error("boom"));
+    renderApplicationsPage();
+
+    await waitFor(() =>
+      expect(
+        screen.getByText(/Could not load applications. Try again shortly./i),
+      ).toBeInTheDocument(),
+    );
+  });
 });
