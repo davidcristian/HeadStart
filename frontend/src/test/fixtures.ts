@@ -148,6 +148,7 @@ export const sampleApplicationPipelineItem: ApplicationPipelineItem = {
   job_status: "applied",
   pipeline_stage: "awaiting_reply",
   applied_at: "2026-06-28T13:00:00Z",
+  ghosted_at: null,
   latest_attempt: {
     id: 1,
     status: "submitted",

@@ -14,6 +14,7 @@ from app.models.base import utcnow
 from app.repositories.searches import SearchRepository
 from app.services.apply import ApplyService
 from app.services.digest import DigestService
+from app.services.ghost_detection import GhostDetectionService
 from app.services.pipeline import PipelineService
 from app.worker.celery_app import celery_app
 
@@ -133,3 +134,17 @@ def flush_due_digests() -> int:
     if flushed:
         logger.info("flushed %d digest search(es)", flushed)
     return flushed
+
+
+@celery_app.task(name="app.worker.tasks.detect_ghosted_applications")
+def detect_ghosted_applications() -> dict[str, int]:
+    """Beat tick: email self-summaries for applications past the ghost silence window."""
+    with session_scope() as session:
+        result = GhostDetectionService(session).process_due(now=utcnow())
+
+    return {
+        "checked": result.checked,
+        "ghosted": result.ghosted,
+        "skipped": result.skipped,
+        "failed": result.failed,
+    }

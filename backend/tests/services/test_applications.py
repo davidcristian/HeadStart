@@ -47,6 +47,38 @@ def test_derive_pipeline_stage_awaiting_reply_after_submit(db_session: Session) 
     assert derive_pipeline_stage(job, log) == "awaiting_reply"
 
 
+def test_derive_pipeline_stage_ghosted(db_session: Session) -> None:
+    _, job = _seed_job(db_session)
+    job.status = "applied"
+    job.applied_at = datetime(2026, 6, 28, 12, 0, tzinfo=UTC)
+    job.ghosted_at = datetime(2026, 6, 30, 12, 0, tzinfo=UTC)
+    db_session.flush()
+
+    assert derive_pipeline_stage(job, None) == "ghosted"
+
+
+def test_pipeline_service_filters_ghosted_stage(db_session: Session) -> None:
+    user_id, job = _seed_job(db_session)
+    job.status = "applied"
+    job.applied_at = datetime(2026, 6, 28, 12, 0, tzinfo=UTC)
+    job.ghosted_at = datetime(2026, 6, 30, 12, 0, tzinfo=UTC)
+    db_session.add(
+        ApplicationLog(
+            seen_job_id=job.id,
+            status="submitted",
+            dry_run=False,
+        )
+    )
+    db_session.flush()
+
+    ghosted = ApplicationPipelineService(db_session).list_for_user(user_id, stage="ghosted")
+    awaiting = ApplicationPipelineService(db_session).list_for_user(user_id, stage="awaiting_reply")
+    assert len(ghosted) == 1
+    assert ghosted[0].pipeline_stage == "ghosted"
+    assert ghosted[0].ghosted_at is not None
+    assert awaiting == []
+
+
 def test_derive_pipeline_stage_apply_failed(db_session: Session) -> None:
     _, job = _seed_job(db_session)
     log = ApplicationLog(

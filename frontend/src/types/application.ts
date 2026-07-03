@@ -1,7 +1,12 @@
 import type { JobStatus } from "./job";
 
 export type ApplicationPipelineStage =
-  "queued" | "apply_failed" | "awaiting_reply" | "closed" | "archived";
+  | "queued"
+  | "apply_failed"
+  | "awaiting_reply"
+  | "ghosted"
+  | "closed"
+  | "archived";
 
 export interface ApplicationAttemptSummary {
   id: number;
@@ -21,6 +26,7 @@ export interface ApplicationPipelineItem {
   job_status: JobStatus;
   pipeline_stage: ApplicationPipelineStage;
   applied_at: string | null;
+  ghosted_at: string | null;
   latest_attempt: ApplicationAttemptSummary | null;
   attempts: ApplicationAttemptSummary[];
 }

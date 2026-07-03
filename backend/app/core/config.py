@@ -187,6 +187,10 @@ class Settings(BaseSettings):
     inbox_smtp_user: str = ""
     inbox_smtp_password: str = ""
     inbox_smtp_from: str = ""
+    # Days without recruiter reply before a self-sent ghost summary is emailed.
+    inbox_ghost_window_days: int = 14
+    # How often beat checks for stale applications (seconds).
+    inbox_ghost_check_interval_seconds: int = 3600
 
     # ---- Stripe billing (optional; leave empty to disable paid checkout) ----
     stripe_secret_key: str = ""

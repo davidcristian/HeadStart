@@ -9,8 +9,10 @@ Celery provides the scheduler (beat) and the workers. The worker package is
 
 - `celery_app.py` — the Celery application + config (broker/result backend from
   settings).
-- `schedule.py` — beat ticks: enqueue due searches and flush digest queues.
-- `tasks.py` — `run_search(search_id)`, `flush_due_digests()`, and `apply_to_job` (queued live auto-apply).
+- `schedule.py` — beat ticks: enqueue due searches, flush digest queues, and
+  (when inbox agent is enabled) ghost detection.
+- `tasks.py` — `run_search(search_id)`, `flush_due_digests()`, `apply_to_job`,
+  and `detect_ghosted_applications`.
 
 ## Due-based scheduling with catch-up
 
@@ -98,6 +100,14 @@ target / `headstart-backend-worker` image in production.
 
 Prometheus metrics for scrape latency, pipeline outcomes, and notification
 delivery are recorded here — see [metrics.md](metrics.md).
+
+## Ghost detection (dev inbox)
+
+When `INBOX_AGENT_ENABLED=true`, beat also schedules
+`detect_ghosted_applications` every `INBOX_GHOST_CHECK_INTERVAL_SECONDS`
+(default 3600). The task calls `GhostDetectionService.process_due` to email
+self-summaries for applications past `INBOX_GHOST_WINDOW_DAYS` without a
+recruiter reply and set `seen_job.ghosted_at`. See [inbox.md](inbox.md).
 
 ## Testing
 

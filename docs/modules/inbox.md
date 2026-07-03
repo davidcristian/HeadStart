@@ -119,6 +119,24 @@ After classification, routable labels can be moved into configured IMAP folders
 
 Ghost detection and the beat orchestration loop remain separate roadmap items.
 
+## Ghost detection (Phase 20c)
+
+When `INBOX_AGENT_ENABLED=true`, beat runs `detect_ghosted_applications` every
+`INBOX_GHOST_CHECK_INTERVAL_SECONDS` (default 3600). `GhostDetectionService`
+finds `seen_job` rows with `status=applied`, no `ghosted_at`, and
+`applied_at` older than `INBOX_GHOST_WINDOW_DAYS` (default 14). For each stale
+application where the user has mailbox credentials:
+
+1. Send a self-addressed summary email (`build_ghost_summary_message` in
+   `app/inbox/ghost_message.py`) with `[HeadStart Ghost]` subject prefix and
+   `X-HeadStart-Type: ghost`.
+2. Set `seen_job.ghosted_at` on successful SMTP send (failed sends are retried
+   on the next tick).
+
+The applications pipeline exposes stage `ghosted` when `ghosted_at` is set.
+When the summary email returns to the inbox, the existing classifier labels it
+`self_ghost_archive` and routing moves it to `HeadStart/Ghost`.
+
 ## Follow-ups (Phase 20c+)
 
 Ghost detection, autonomous reply drafts, and the Celery beat orchestration loop

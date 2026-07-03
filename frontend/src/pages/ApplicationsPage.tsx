@@ -10,6 +10,7 @@ const STAGE_FILTERS: Array<{ value: "" | ApplicationPipelineStage; label: string
   { value: "", label: "All stages" },
   { value: "queued", label: "Submitting" },
   { value: "awaiting_reply", label: "Awaiting reply" },
+  { value: "ghosted", label: "Ghosted" },
   { value: "apply_failed", label: "Apply failed" },
   { value: "closed", label: "Listing closed" },
   { value: "archived", label: "Archived" },
@@ -24,8 +25,8 @@ export function ApplicationsPage() {
       <header className="page-header">
         <h1>Applications</h1>
         <p className="muted page-lead">
-          Track jobs you applied to through HeadStart. Interview and inbox stages arrive with Phase
-          20 inbox automation.
+          Track jobs you applied to through HeadStart. Ghosted applications had no recruiter reply
+          within the configured silence window.
         </p>
       </header>
 

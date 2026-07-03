@@ -6,6 +6,7 @@ const LABELS: Record<ApplicationPipelineStage, string> = {
   queued: "Submitting",
   apply_failed: "Apply failed",
   awaiting_reply: "Awaiting reply",
+  ghosted: "Ghosted",
   closed: "Listing closed",
   archived: "Archived",
 };

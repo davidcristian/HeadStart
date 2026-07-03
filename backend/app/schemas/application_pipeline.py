@@ -11,6 +11,7 @@ ApplicationPipelineStage = Literal[
     "queued",
     "apply_failed",
     "awaiting_reply",
+    "ghosted",
     "closed",
     "archived",
 ]
@@ -40,6 +41,7 @@ class ApplicationPipelineRead(BaseModel):
     job_status: JobStatus
     pipeline_stage: ApplicationPipelineStage
     applied_at: datetime | None = None
+    ghosted_at: datetime | None = None
     latest_attempt: ApplicationAttemptSummary | None = None
     attempts: list[ApplicationAttemptSummary] = Field(
         default_factory=list,
