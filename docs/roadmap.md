@@ -3,9 +3,10 @@
 Living plan for HeadStart — what to build next and why. Update this doc when
 priorities shift or a milestone ships.
 
-**Current baseline (2026-06):** Phases 1–20 shipped (four-tier pricing, per-user AI
+**Current baseline (2026-07):** Phases 1–21 shipped (four-tier pricing, per-user AI
 summary preferences, curated employer portal catalog, SmartRecruiters adapter, custom career-site
-adapters for Shopify, Uber, and Snowflake, and the dev-only local application agent). See
+adapters for Shopify, Uber, and Snowflake, the dev-only local application agent, and inbox OAuth
+providers for Gmail, Outlook, Yahoo, and Fastmail). See
 [architecture.md](architecture.md) for the system design.
 
 ---
@@ -490,7 +491,7 @@ Phase 11 batch-1 expansion (Uber, Snowflake, Shopify).
 | ------- | -------- | --------------- | ---- |
 | ~~`shopify_careers`~~ | ~~Shopify~~ | ~~Investigate: may be Greenhouse (`shopify`) or a custom `shopify.com/careers` endpoint~~ | **Shipped:** Ashby-backed careers site with disabled public Postings API; `@register_scraper("shopify_careers")` parses embedded React Router flight stream on `shopify.com/careers`; catalog preset added (96 employers) |
 | ~~`uber_careers`~~ | ~~Uber~~ | ~~Reverse-engineer `uber.com/careers` search JSON or embedded hydration payload~~ | **Shipped:** `@register_scraper("uber_careers")` calls public `POST /api/loadSearchJobsResults`; offset pagination; `format_location()` handles multi-city `allLocations`; catalog preset added (97 employers) |
-| ~~`snowflake_careers`~~ | ~~Snowflake~~ | ~~Public careers search API or embedded JSON on `careers.snowflake.com`~~ | **Shipped:** Phenom careers site with Ashby backend; `@register_scraper("snowflake_careers")` calls public Ashby Postings API (`board=snowflake`); `@register_applier("snowflake_careers")` delegates to Ashby; catalog preset added (98 employers) |
+| ~~`snowflake_careers`~~ | ~~Snowflake~~ | ~~Public careers search API or embedded JSON on `careers.snowflake.com`~~ | **Shipped:** Phenom careers site with Ashby backend; `@register_scraper("snowflake_careers")` calls public Ashby Postings API (`board=snowflake`); `@register_applier("snowflake_careers")` delegates to Ashby; catalog preset added |
 | ~~`shopify_careers` apply~~ | ~~Shopify uses Ashby for applications~~ | **Shipped:** `@register_applier("shopify_careers")` delegates to Ashby with `board=shopify` |
 | ~~`uber_careers` apply~~ | ~~Uber has a proprietary apply flow~~ | **Shipped:** `@register_applier("uber_careers")`; GraphQL submit + screening questions API; session token required for live submit |
 
@@ -500,7 +501,7 @@ Phase 7 pattern for Google/Microsoft/Meta).
 
 **Done when:** all three employers appear in the curated catalog with working
 scrape. Apply: Snowflake, Shopify, and Uber support dry-run + live submit (Uber
-requires a logged-in careers session token); see [Phase 7 polish](#phase-7-polish--remaining-gaps).
+requires a logged-in careers session token); see [Phase 7 polish](#phase-7-polish--shipped-follow-ups).
 
 ---
 
@@ -707,6 +708,39 @@ messages without configuring raw IMAP hosts. **Shipped.**
 **Phase 21 overall done when:** Outlook and at least one additional consumer
 provider (Yahoo or Fastmail) ship as registry adapters; IMAP remains documented
 as the escape hatch for other providers. **Shipped (21a Outlook, 21b Yahoo, 21c Fastmail).**
+
+---
+
+## Phase 22 — Portal catalog batch 4 (existing adapters)
+
+Goal: grow the curated catalog from **98 → ~110** employers with zero new scraper
+work — only presets on adapters already shipped. Re-verify roadmap candidates
+that failed API checks in earlier batches.
+
+| Employer | Adapter | Category | Status |
+| -------- | ------- | -------- | ------ |
+| ~~Canva~~ | ~~SmartRecruiters (`Canva`)~~ | ~~`big_tech`~~ | **Shipped** — skipped in Phase 19; public Postings API verified |
+| ~~Roku~~ | ~~Greenhouse (`roku`)~~ | ~~`unicorn`~~ | **Shipped** |
+| ~~Braze~~ | ~~Greenhouse (`braze`)~~ | ~~`unicorn`~~ | **Shipped** |
+| ~~Adyen~~ | ~~Greenhouse (`adyen`)~~ | ~~`big_tech`~~ | **Shipped** |
+| ~~Wiz~~ | ~~Greenhouse (`wizinc`)~~ | ~~`unicorn`~~ | **Shipped** — `portal_id` `wiz`, board token `wizinc` |
+| ~~Fivetran~~ | ~~Greenhouse (`fivetran`)~~ | ~~`unicorn`~~ | **Shipped** |
+| ~~Rubrik~~ | ~~Greenhouse (`rubrik`)~~ | ~~`big_tech`~~ | **Shipped** |
+| ~~Nuro~~ | ~~Greenhouse (`nuro`)~~ | ~~`unicorn`~~ | **Shipped** |
+| ~~N26~~ | ~~Greenhouse (`n26`)~~ | ~~`unicorn`~~ | **Shipped** |
+| ~~Carta~~ | ~~Greenhouse (`carta`)~~ | ~~`unicorn`~~ | **Shipped** |
+| ~~Confluent~~ | ~~Ashby (`confluent`)~~ | ~~`big_tech`~~ | **Shipped** |
+| ~~Airtable~~ | ~~Greenhouse (`airtable`)~~ | ~~`unicorn`~~ | **Shipped** |
+| ~~Marqeta~~ | ~~Greenhouse (`marqeta`)~~ | ~~`unicorn`~~ | **Shipped** |
+
+Skipped (roadmap candidates still without a working public API at verification time):
+**Rippling** (Ashby 403), **CrowdStrike**, **HashiCorp**, **Splunk**, **Rivian**,
+**Palo Alto Networks**, **Grammarly**, **Zillow**, **SentinelOne**, **Snyk**.
+
+**Shipped:** 13 presets in `presets/`; catalog count **111**.
+
+**Done when:** catalog count is ≥ 110; duplicate-detection tests pass; Pro portal
+search returns results for at least three new presets.
 
 ---
 

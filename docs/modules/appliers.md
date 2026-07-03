@@ -85,7 +85,7 @@ work, but the Jobs page **Apply** action is unavailable:
 | `playwright` / `generic_html` | Custom HTML sources; no generic apply path |
 
 `GET /portals` sets `supports_auto_apply: false` for these keys. See
-[roadmap.md → Phase 7 polish](../roadmap.md#phase-7-polish--remaining-gaps).
+[roadmap.md → Phase 7 polish](../roadmap.md#phase-7-polish--shipped-follow-ups).
 
 ### Greenhouse
 

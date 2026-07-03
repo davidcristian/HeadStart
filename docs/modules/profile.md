@@ -141,8 +141,6 @@ All routes require auth and are scoped to the current user.
 ## Scope
 
 This module owns encrypted storage, the profile API, and the Application profile
-UI. Apply adapters and orchestration are documented in [appliers.md](appliers.md);
-remaining gaps (e.g. LinkedIn resume PDF) are listed under
-[roadmap.md → Phase 7 polish](../roadmap.md#phase-7-polish--remaining-gaps). See
-[adr/0008-application-profile.md](../adr/0008-application-profile.md) for the
+UI. Apply adapters and orchestration are documented in [appliers.md](appliers.md).
+See [adr/0008-application-profile.md](../adr/0008-application-profile.md) for the
 decision record.
