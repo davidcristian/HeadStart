@@ -107,6 +107,7 @@ def test_playwright_extracts_items() -> None:
         wait_until="networkidle",
         timeout=30_000,
     )
+    page.route.assert_called_once()
     page.close.assert_called_once()
 
 

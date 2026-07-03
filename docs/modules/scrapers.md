@@ -77,7 +77,8 @@ no retry storms.
 
 Outbound HTTP from scrapers is restricted to public `http`/`https` destinations.
 Private, loopback, link-local, and cloud-metadata addresses are rejected in the
-shared `HttpClient` (including redirect targets). See `app.core.outbound_url`.
+shared `HttpClient` (including redirect targets) and on every Playwright request
+(including redirects). See `app.core.outbound_url`.
 
 ## Rate limiting
 
@@ -107,7 +108,8 @@ config value → adapter default → no limit.
 | `generic_html` | 2.0                  |
 | `playwright`   | 5.0                  |
 
-Limits are enforced in the shared `HttpClient` (for multi-request scrapers) and
+Limits are enforced in the shared `HttpClient` (for multi-request scrapers), via
+a per-page Playwright route guard (all navigations and subresource fetches), and
 at the start of a `playwright` fetch. Limits are per scrape run, not global
 across workers.
 

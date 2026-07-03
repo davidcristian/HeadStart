@@ -19,6 +19,7 @@ from urllib.parse import urljoin
 from app.core.config import settings
 from app.scrapers.base import Scraper, register_scraper
 from app.scrapers.playwright_browser import get_browser
+from app.scrapers.playwright_outbound import install_playwright_outbound_guard
 from app.scrapers.types import JobPosting, ScrapeContext
 
 
@@ -74,8 +75,10 @@ class PlaywrightScraper(Scraper):
         postings: list[JobPosting] = []
         browser = get_browser()
         page = browser.new_page()
+        assert_outbound = install_playwright_outbound_guard(page)
         try:
             page.goto(ctx.query_url, wait_until=wait_until, timeout=timeout_ms)
+            assert_outbound()
             for handle in page.query_selector_all(item_sel):
                 posting = self._parse(handle, cfg, base_url)
                 if posting is not None:
