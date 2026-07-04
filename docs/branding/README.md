@@ -23,6 +23,11 @@ career ladder and taking off. The production SVG lives at
 `frontend/public/icon.svg` and is the single source of truth for the
 favicon/PWA PNGs and the in-app `Brand` component.
 
+The SVG carries an internal `prefers-color-scheme` media query: in light mode
+the tile flips to a mint surface with deeper emerald→lime steps, so the
+in-app mark (and the README logo on GitHub) adapts with the OS theme.
+Rasterized PNG icons keep the dark default, which reads on any surface.
+
 ## Palette
 
 The app accent follows the mark while surfaces stay neutral (see
