@@ -9,6 +9,8 @@ endpoints.
 
 from __future__ import annotations
 
+import json
+
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -236,8 +238,6 @@ class ProfileService:
         resume: ResumeFileStored | None,
         template: ResumeTemplateStored | None,
     ) -> str:
-        import json
-
         payload = data.model_dump()
         if resume is not None:
             payload["resume_file"] = resume.model_dump()
@@ -250,8 +250,6 @@ class ProfileService:
         profile: ApplicationProfile,
     ) -> tuple[ProfileData, ResumeFileStored | None, ResumeTemplateStored | None]:
         raw = decrypt(profile.data_ciphertext)
-        import json
-
         parsed = json.loads(raw)
         resume_raw = parsed.pop("resume_file", None)
         template_raw = parsed.pop("resume_template", None)

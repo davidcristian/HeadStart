@@ -6,6 +6,8 @@ Produced by a read-only multi-agent audit at commit `09957ec` — **every medium
 
 **Delta follow-up (2026-07-03).** A scoped re-audit of the fixes shipped since the baseline marked **APL-01** and **APL-02** ✅ done and **APL-03** 🔜 in progress (Microsoft closed; Apple residual [APL-28](findings/appliers.md#apl-28)), and re-confirmed **APL-04** still ☐ open. It also added **7 findings** (1 medium, 6 low) under **WS42**; the counts below include them (**281 tracked** total).
 
+**Progress (2026-07-09).** **WS26 fixed:** AIA-01 (the high-severity LaTeX-escape bug that broke every default-template and AI-curated resume) plus its WS26 companions AIA-12/AIA-16/AIA-17. Renderer now treats `experience` as controlled LaTeX and escapes only free-text/PII scalars; the heuristic path escapes its own free text; PDF-name derivation, the `import json` placement, and `_validate_pdf` settings injection are corrected. Full gate green (ruff/black/mypy, 3109 backend tests, 100% coverage). This closes 1 of the 12 highs (11 open) and 3 lows.
+
 **Status legend:** ☐ open · 🔜 in progress · ✅ done
 **Type:** 🐞 bug · 🔒 security · 📝 doc · 🧪 test · ♻️ refactor · 🔁 consistency · ⚡ perf
 **Severity:** 🔴 CRIT · 🟠 HIGH · 🟡 MED · ⚪ LOW
@@ -19,7 +21,7 @@ Produced by a read-only multi-agent audit at commit `09957ec` — **every medium
 
 | Sev | Type | Item | Location | Status |
 | --- | ---- | ---- | -------- | ------ |
-| 🟠 HIGH | 🐞 | [AIA-01](findings/ai-adapters.md#aia-01) render_resume_template escapes structured LaTeX markup, breaking every default-template and AI-curated resume | `backend/app/resumes/template.py:31` | ☐ |
+| 🟠 HIGH | 🐞 | [AIA-01](findings/ai-adapters.md#aia-01) render_resume_template escapes structured LaTeX markup, breaking every default-template and AI-curated resume | `backend/app/resumes/template.py:31` | ✅ |
 | 🟠 HIGH | 🐞 | [APL-01](findings/appliers.md#apl-01) Apple applyJob reports submitted on {"success": false} 200 body despite modeling it | `backend/app/appliers/adapters/apple_careers_live.py:121` | ✅ |
 | 🟠 HIGH | 🐞 | [APL-02](findings/appliers.md#apl-02) Indeed live Easy Apply submit never sends the session cookies it gates on | `backend/app/appliers/adapters/indeed.py:124` | ✅ |
 | 🟠 HIGH | 🐞 | [APL-03](findings/appliers.md#apl-03) Microsoft/Apple SmartApply submits report success on 200 error body (no post-2xx check) | `backend/app/appliers/adapters/microsoft_careers.py:143` | 🔜 |
@@ -211,15 +213,15 @@ _6 item(s): 6 low._
 | ⚪ LOW | 📝 | [DOC-12](findings/docs-drift.md#doc-12) No ToS/legal-risk disclosure for LinkedIn Voyager & Indeed smartapply automation | `docs/modules/appliers.md:607` | ☐ |
 | ⚪ LOW | 🔒 | [XCT-19](findings/cross-cutting.md#xct-19) LinkedIn/Indeed credentialed scrape + auto-apply is under-disclosed ToS/CFAA risk | `backend/app/appliers/adapters/linkedin_common.py:9` | ☐ |
 
-## WS26 — Resume template rendering LaTeX-escape bug
-_4 item(s): 1 high, 3 low._
+## WS26 — Resume template rendering LaTeX-escape bug ✅
+_4 item(s): 1 high, 3 low. **Fixed** 2026-07-09 (gate green)._
 
 | Sev | Type | Item | Location | Status |
 | --- | ---- | ---- | -------- | ------ |
-| 🟠 HIGH | 🐞 | [AIA-01](findings/ai-adapters.md#aia-01) render_resume_template escapes structured LaTeX markup, breaking every default-template and AI-curated resume | `backend/app/resumes/template.py:31` | ☐ |
-| ⚪ LOW | 🐞 | [AIA-12](findings/ai-adapters.md#aia-12) PDF name via replace('.tex','.pdf') replaces every occurrence, mis-deriving output | `backend/app/resumes/compile.py:109` | ☐ |
-| ⚪ LOW | 🔁 | [AIA-16](findings/ai-adapters.md#aia-16) profiles._encode/_decode use function-local `import json`, breaking module convention | `backend/app/services/profiles.py:239` | ☐ |
-| ⚪ LOW | 🔁 | [AIA-17](findings/ai-adapters.md#aia-17) _validate_pdf reads module `default_settings`, not injected `self._settings`, for the size cap | `backend/app/services/resumes.py:163` | ☐ |
+| 🟠 HIGH | 🐞 | [AIA-01](findings/ai-adapters.md#aia-01) render_resume_template escapes structured LaTeX markup, breaking every default-template and AI-curated resume | `backend/app/resumes/template.py:31` | ✅ |
+| ⚪ LOW | 🐞 | [AIA-12](findings/ai-adapters.md#aia-12) PDF name via replace('.tex','.pdf') replaces every occurrence, mis-deriving output | `backend/app/resumes/compile.py:109` | ✅ |
+| ⚪ LOW | 🔁 | [AIA-16](findings/ai-adapters.md#aia-16) profiles._encode/_decode use function-local `import json`, breaking module convention | `backend/app/services/profiles.py:239` | ✅ |
+| ⚪ LOW | 🔁 | [AIA-17](findings/ai-adapters.md#aia-17) _validate_pdf reads module `default_settings`, not injected `self._settings`, for the size cap | `backend/app/services/resumes.py:163` | ✅ |
 
 ## WS27 — LaTeX compile sandboxing & template-bundle input scan
 _6 item(s): 3 medium, 3 low._

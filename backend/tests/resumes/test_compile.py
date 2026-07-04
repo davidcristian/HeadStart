@@ -178,6 +178,25 @@ def test_run_compiler_workspace_nonzero_exit_without_output_uses_code(monkeypatc
         )
 
 
+def test_run_compiler_workspace_derives_pdf_name_from_final_suffix_only(monkeypatch) -> None:
+    # entrypoint.replace(".tex", ".pdf") would mis-derive "report.tex.tex" as
+    # "report.pdf.pdf"; only the trailing suffix must swap (audit AIA-12).
+    def fake_run(cmd_args, **kwargs):
+        out_dir = Path(cmd_args[2])
+        (out_dir / "report.tex.pdf").write_bytes(b"%PDF-suffix")
+        return _FakeProc(returncode=0)
+
+    monkeypatch.setattr("app.resumes.compile.subprocess.run", fake_run)
+    pdf = _run_compiler_workspace(
+        "/usr/bin/tectonic",
+        "tectonic",
+        {"report.tex.tex": b"content"},
+        "report.tex.tex",
+        timeout=5.0,
+    )
+    assert pdf == b"%PDF-suffix"
+
+
 def test_run_compiler_workspace_returns_none_when_pdf_missing(monkeypatch) -> None:
     def fake_run(cmd_args, **kwargs):
         return _FakeProc(returncode=0)  # succeeds but writes no PDF

@@ -75,7 +75,10 @@ metadata is returned on `GET /profile` as `resume_template` (`format`: `single` 
 `bundle`, plus `entrypoint` and `file_count` for bundles). Placeholders use
 `[[full_name]]`, `[[skills]]`, `[[experience]]`, `[[education]]`, `[[summary]]`,
 `[[job_title]]`, `[[company]]`, and related contact fields. Substitution runs on
-every `.tex` file in a bundle. Bundle archives must include `main.tex` or
+every `.tex` file in a bundle. `[[experience]]` is substituted verbatim because it
+carries curated `\item`/`\textbf` list markup (the default template wraps it in an
+`itemize`); every other placeholder is a free-text/PII scalar and is LaTeX-escaped
+before substitution. Bundle archives must include `main.tex` or
 `resume.tex` (or a single `.tex` file); allowed member types are `.tex`, `.sty`,
 `.cls`, `.bib`, and common image formats. When no template is uploaded, a
 built-in default template is used. `POST /jobs/{id}/generate-resume` curates

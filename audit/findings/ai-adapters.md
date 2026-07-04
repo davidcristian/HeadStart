@@ -9,7 +9,9 @@ This area covers the AI-facing subsystems: the summarizer/cover-letter/reply-dra
 <a id="aia-01"></a>
 ### AIA-01 — render_resume_template escapes structured LaTeX markup, breaking every default-template and AI-curated resume
 
-🟠 **HIGH** · 🐞 bug · Status: ☐ open · Confidence: high (5/5 verifiers) · Effort: M · WS26
+🟠 **HIGH** · 🐞 bug · Status: ✅ done (WS26) · Confidence: high (5/5 verifiers) · Effort: M · WS26
+
+**Fix.** `render_resume_template` now partitions placeholders: the `experience` field (controlled `\item`/`\textbf` markup) is substituted verbatim via `_RAW_LATEX_KEYS`, while every free-text / PII scalar is still escaped. `fields.py` escapes the free-text parts of each heuristic experience item (header, description, resume-text fallback) so user special characters cannot break the compile now that the field bypasses renderer escaping. The `escape_latex` helper was made public for reuse across the package. Regression tests assert `\item` survives rendering of both a direct field and the full default template with heuristic fields. Bundle rendering delegates to the same renderer, so user-uploaded templates are fixed identically.
 
 **Locations:** `backend/app/resumes/template.py:31` and `:34` (`render_resume_template`); plus `backend/app/resumes/fields.py:64`/`:78` (heuristic `\item \textbf{...}` emission), `backend/app/resumes/prompts.py:10`/`:14`/`:15`/`:84` (SYSTEM_PROMPT requesting the same markup), `backend/app/resumes/default_template.tex:16`/`:17` (`[[experience]]` wrapped in `\begin{itemize}...\end{itemize}`).
 
@@ -28,7 +30,7 @@ This entry merges four records reporting the same defect: **AIA-01** (uid 75, li
 <a id="aia-02"></a>
 ### AIA-02 — (merged into AIA-01)
 
-🟠 **HIGH** · 🐞 bug · Status: ☐ open · Confidence: high (5/5 verifiers) · Effort: M · WS26
+🟠 **HIGH** · 🐞 bug · Status: ✅ done (WS26) · Confidence: high (5/5 verifiers) · Effort: M · WS26
 
 See [AIA-01](#aia-01) — this record (uid 134, `backend/app/resumes/template.py:31`) is the same LaTeX-escape defect and is documented in full above.
 
@@ -150,7 +152,9 @@ See [AIA-03](#aia-03) — this record (uid 240, `backend/app/resumes/compile.py:
 <a id="aia-12"></a>
 ### AIA-12 — PDF name via replace('.tex','.pdf') replaces every occurrence, mis-deriving output
 
-⚪ **LOW** · 🐞 bug · Status: ☐ open · Confidence: high (5/5 verifiers) · Effort: XS · WS26
+⚪ **LOW** · 🐞 bug · Status: ✅ done (WS26) · Confidence: high (5/5 verifiers) · Effort: XS · WS26
+
+**Fix.** Both sites now derive the name via `_pdf_output_name()` = `Path(entrypoint).with_suffix('.pdf').name`, which swaps only the final suffix and returns the basename (also repairing nested entrypoints, which the previous join mis-located). Regression test drives a `report.tex.tex` entrypoint.
 
 **Locations:** `backend/app/resumes/compile.py:109` (`_run_compiler_workspace`) and `:50`.
 
@@ -201,7 +205,9 @@ See [AIA-03](#aia-03) — this record (uid 240, `backend/app/resumes/compile.py:
 <a id="aia-16"></a>
 ### AIA-16 — profiles._encode/_decode use function-local `import json`, breaking module convention
 
-⚪ **LOW** · 🔁 consistency · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: XS · WS26
+⚪ **LOW** · 🔁 consistency · Status: ✅ done (WS26) · Confidence: high (3/3 verifiers) · Effort: XS · WS26
+
+**Fix.** `import json` hoisted to module scope; both function-local imports removed.
 
 **Locations:** `backend/app/services/profiles.py:239` (`ProfileService._encode`) and `:253` (`_decode`).
 
@@ -218,7 +224,9 @@ See [AIA-03](#aia-03) — this record (uid 240, `backend/app/resumes/compile.py:
 <a id="aia-17"></a>
 ### AIA-17 — _validate_pdf reads module `default_settings`, not injected `self._settings`, for the size cap
 
-⚪ **LOW** · 🔁 consistency · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: XS · WS26
+⚪ **LOW** · 🔁 consistency · Status: ✅ done (WS26) · Confidence: high (3/3 verifiers) · Effort: XS · WS26
+
+**Fix.** `_validate_pdf` is now an instance method reading `self._settings.profile_resume_max_bytes`, matching the rest of the service; a test asserts an injected `profile_resume_max_bytes` is honored.
 
 **Locations:** `backend/app/services/resumes.py:163` (`ResumeService._validate_pdf`).
 

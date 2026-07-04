@@ -158,9 +158,8 @@ class ResumeService:
         timeout = float(getattr(self._settings, "resume_compile_timeout_seconds", 60.0))
         return compile_latex_workspace(files, entrypoint=entrypoint, timeout=timeout)
 
-    @staticmethod
-    def _validate_pdf(data: bytes) -> None:
-        max_bytes = int(getattr(default_settings, "profile_resume_max_bytes", 2_097_152))
+    def _validate_pdf(self, data: bytes) -> None:
+        max_bytes = int(getattr(self._settings, "profile_resume_max_bytes", 2_097_152))
         if len(data) == 0:
             raise ValidationError("Compiled resume PDF is empty")
         if len(data) > max_bytes:

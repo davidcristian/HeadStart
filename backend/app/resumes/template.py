@@ -23,6 +23,13 @@ _PLACEHOLDER_KEYS = (
     "skills",
 )
 
+# Fields whose curated value is controlled LaTeX markup (\item / \textbf rows the
+# default template wraps in an itemize) rather than free text. Escaping them would
+# neutralize the very structure the template depends on — the heuristic and LLM
+# paths both emit this markup and are responsible for escaping their own free-text
+# parts. Every other placeholder is a free-text / PII scalar and is escaped here.
+_RAW_LATEX_KEYS = frozenset({"experience"})
+
 
 def render_resume_template(tex: str, fields: CuratedResumeFields) -> str:
     """Substitute [[key]] placeholders in a LaTeX resume template."""
@@ -31,11 +38,13 @@ def render_resume_template(tex: str, fields: CuratedResumeFields) -> str:
     for key in _PLACEHOLDER_KEYS:
         token = f"[[{key}]]"
         value = str(values.get(key, "") or "")
-        result = result.replace(token, _escape_latex(value))
+        if key not in _RAW_LATEX_KEYS:
+            value = escape_latex(value)
+        result = result.replace(token, value)
     return result
 
 
-def _escape_latex(value: str) -> str:
+def escape_latex(value: str) -> str:
     """Escape characters that break LaTeX when substituted into text mode."""
     replacements = {
         "\\": r"\textbackslash{}",

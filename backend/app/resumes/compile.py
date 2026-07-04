@@ -54,7 +54,7 @@ def compile_latex_workspace(
             pdf = _run_compiler_workspace(exe, cmd, files, entrypoint, timeout=timeout)
             if pdf is not None:
                 return pdf
-            last_error = f"{cmd} did not produce {entrypoint.replace('.tex', '.pdf')}"
+            last_error = f"{cmd} did not produce {_pdf_output_name(entrypoint)}"
         except subprocess.TimeoutExpired:
             last_error = f"{cmd} timed out after {timeout:.0f}s"
         except OSError as exc:
@@ -70,6 +70,11 @@ def compile_latex_workspace(
 
 def _default_commands() -> tuple[str, ...]:
     return ("tectonic", "pdflatex")
+
+
+def _pdf_output_name(entrypoint: str) -> str:
+    """Compiler PDF output name for a .tex entrypoint (only the final suffix swaps)."""
+    return Path(entrypoint).with_suffix(".pdf").name
 
 
 def _compiler_env() -> dict[str, str]:
@@ -128,7 +133,7 @@ def _run_compiler_workspace(
         if proc.returncode != 0:
             stderr = (proc.stderr or proc.stdout or "").strip()
             raise ValidationError(stderr or f"{cmd} failed with exit code {proc.returncode}")
-        pdf_name = entrypoint.replace(".tex", ".pdf")
+        pdf_name = _pdf_output_name(entrypoint)
         pdf_path = tex_path.parent / pdf_name
         if not pdf_path.is_file():
             return None

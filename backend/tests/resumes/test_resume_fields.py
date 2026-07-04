@@ -61,6 +61,26 @@ def test_experience_item_uses_company_only_and_period_and_description() -> None:
     assert " — " in fields.experience
 
 
+def test_experience_item_escapes_latex_special_chars_in_free_text() -> None:
+    # \item / \textbf scaffolding stays raw, but user free text is escaped so it
+    # cannot break the compile once the renderer stops escaping this field (AIA-01).
+    fields = _fields(
+        ProfileData(
+            work_experience=[
+                WorkExperienceEntry(company="AT&T", description="Cut costs 50% via C#")
+            ]
+        )
+    )
+    assert r"\item \textbf{AT\&T}" in fields.experience
+    assert r"50\%" in fields.experience
+    assert r"C\#" in fields.experience
+
+
+def test_experience_fallback_escapes_resume_text() -> None:
+    fields = _fields(ProfileData(resume_text="Saved 20% & shipped"))
+    assert fields.experience == r"\item Saved 20\% \& shipped"
+
+
 def test_experience_item_without_period_or_description() -> None:
     fields = _fields(ProfileData(work_experience=[WorkExperienceEntry(job_title="Engineer")]))
     assert r"\item \textbf{Engineer}" in fields.experience

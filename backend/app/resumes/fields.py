@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from app.resumes.template import escape_latex
 from app.resumes.types import CuratedResumeFields, ResumeCurationContext
 from app.schemas.profile import EducationEntry, ProfileData, WorkExperienceEntry
 
@@ -60,7 +61,7 @@ def _experience(profile: ProfileData) -> str:
     if items:
         return "\n".join(items)
     if profile.resume_text.strip():
-        return r"\item " + profile.resume_text.strip().split("\n", 1)[0][:300]
+        return r"\item " + escape_latex(profile.resume_text.strip().split("\n", 1)[0][:300])
     return r"\item Relevant professional experience available upon request."
 
 
@@ -69,20 +70,21 @@ def _experience_item(entry: WorkExperienceEntry) -> str:
     company = entry.company.strip()
     if not title and not company:
         return ""
-    header = (
-        title
-        if title and not company
-        else company if company and not title else f"{title}, {company}"
-    )
+    if title and not company:
+        header = title
+    elif company and not title:
+        header = company
+    else:
+        header = f"{title}, {company}"
     period = _period(entry)
-    line = rf"\item \textbf{{{header}}}"
+    line = rf"\item \textbf{{{escape_latex(header)}}}"
     if period:
         line += f" ({period})"
     description = " ".join(
         part.strip().lstrip("-•*") for part in entry.description.splitlines() if part.strip()
     )
     if description:
-        line += f" — {description[:500]}"
+        line += f" — {escape_latex(description[:500])}"
     return line
 
 

@@ -214,24 +214,22 @@ def test_default_bundle_compile() -> None:
 
 def test_validate_pdf_rejects_empty() -> None:
     with pytest.raises(ValidationError, match="empty"):
-        ResumeService._validate_pdf(b"")
+        _service()._validate_pdf(b"")
 
 
-def test_validate_pdf_rejects_oversized(monkeypatch) -> None:
-    from app.core import config
-
-    monkeypatch.setattr(config.settings, "profile_resume_max_bytes", 4)
+def test_validate_pdf_rejects_oversized_honors_injected_settings() -> None:
+    service = _service(settings=SimpleNamespace(profile_resume_max_bytes=4))
     with pytest.raises(ValidationError, match="upload size limit"):
-        ResumeService._validate_pdf(FAKE_PDF)
+        service._validate_pdf(FAKE_PDF)
 
 
 def test_validate_pdf_rejects_non_pdf() -> None:
     with pytest.raises(ValidationError, match="valid PDF"):
-        ResumeService._validate_pdf(b"not a pdf at all")
+        _service()._validate_pdf(b"not a pdf at all")
 
 
 def test_validate_pdf_accepts_valid() -> None:
-    ResumeService._validate_pdf(FAKE_PDF)
+    _service()._validate_pdf(FAKE_PDF)
 
 
 def test_tailored_filename_variants() -> None:
