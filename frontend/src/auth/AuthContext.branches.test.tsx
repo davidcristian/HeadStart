@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, render, renderHook, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -38,8 +39,15 @@ const { refreshSession, setUnauthorizedHandler } = vi.hoisted(() => ({
 }));
 vi.mock("../api/client", () => ({ refreshSession, setUnauthorizedHandler }));
 
+let queryClient: QueryClient;
+let clearSpy: ReturnType<typeof vi.spyOn>;
+
 function wrapper({ children }: { children: ReactNode }) {
-  return <AuthProvider>{children}</AuthProvider>;
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>{children}</AuthProvider>
+    </QueryClientProvider>
+  );
 }
 
 describe("AuthContext (branches)", () => {
@@ -53,6 +61,10 @@ describe("AuthContext (branches)", () => {
     apiLogout.mockClear();
     apiMe.mockClear();
     apiMe.mockResolvedValue(user);
+    queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    clearSpy = vi.spyOn(queryClient, "clear");
   });
 
   it("loads the current user when a valid refresh cookie is present", async () => {
@@ -86,6 +98,7 @@ describe("AuthContext (branches)", () => {
     expect(apiLogin).toHaveBeenCalledWith("x@example.test", "password123");
     expect(result.current.user?.email).toBe("x@example.test");
     expect(getAccessToken()).toBe("access-token");
+    expect(clearSpy).toHaveBeenCalled();
   });
 
   it("refreshUser re-fetches the current user", async () => {
@@ -108,13 +121,15 @@ describe("AuthContext (branches)", () => {
     await act(async () => {
       await result.current.login("x@example.test", "password123");
     });
+    clearSpy.mockClear();
 
     act(() => result.current.logout());
     await waitFor(() => expect(result.current.user).toBeNull());
     expect(apiLogout).toHaveBeenCalled();
+    expect(clearSpy).toHaveBeenCalled();
   });
 
-  it("registers an unauthorized handler that clears the user on a hard 401", async () => {
+  it("registers an unauthorized handler that clears the user and cache on a hard 401", async () => {
     const { result } = renderHook(() => useAuth(), { wrapper });
     await waitFor(() => expect(result.current.loading).toBe(false));
 
@@ -122,6 +137,7 @@ describe("AuthContext (branches)", () => {
       await result.current.login("x@example.test", "password123");
     });
     expect(result.current.user?.email).toBe("x@example.test");
+    clearSpy.mockClear();
 
     const handler = setUnauthorizedHandler.mock.calls
       .map((c) => c[0])
@@ -130,6 +146,7 @@ describe("AuthContext (branches)", () => {
 
     act(() => handler!());
     await waitFor(() => expect(result.current.user).toBeNull());
+    expect(clearSpy).toHaveBeenCalled();
   });
 
   it("removes the unauthorized handler on unmount", async () => {
@@ -158,9 +175,11 @@ describe("AuthContext (branches)", () => {
       return <div>{loading ? "loading" : (current?.email ?? "anon")}</div>;
     }
     render(
-      <AuthProvider>
-        <Consumer />
-      </AuthProvider>,
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <Consumer />
+        </AuthProvider>
+      </QueryClientProvider>,
     );
     expect(await screen.findByText("x@example.test")).toBeInTheDocument();
   });

@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -32,14 +33,25 @@ vi.mock("../api/client", () => ({
   setUnauthorizedHandler: vi.fn(),
 }));
 
+let queryClient: QueryClient;
+let clearSpy: ReturnType<typeof vi.spyOn>;
+
 function wrapper({ children }: { children: ReactNode }) {
-  return <AuthProvider>{children}</AuthProvider>;
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>{children}</AuthProvider>
+    </QueryClientProvider>
+  );
 }
 
 describe("AuthContext", () => {
   beforeEach(() => {
     clearAccessToken();
     refreshSession.mockResolvedValue(false);
+    queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    clearSpy = vi.spyOn(queryClient, "clear");
   });
 
   it("starts unauthenticated when the refresh cookie is absent", async () => {
@@ -58,18 +70,21 @@ describe("AuthContext", () => {
 
     expect(getAccessToken()).toBe("access-token");
     expect(result.current.user?.email).toBe("x@example.test");
+    expect(clearSpy).toHaveBeenCalled();
   });
 
-  it("logout clears the session", async () => {
+  it("logout clears the session and the React Query cache", async () => {
     const { result } = renderHook(() => useAuth(), { wrapper });
     await waitFor(() => expect(result.current.loading).toBe(false));
     await act(async () => {
       await result.current.login("x@example.test", "password123");
     });
+    clearSpy.mockClear();
 
     act(() => result.current.logout());
 
     expect(result.current.user).toBeNull();
     expect(getAccessToken()).toBe("");
+    expect(clearSpy).toHaveBeenCalled();
   });
 });

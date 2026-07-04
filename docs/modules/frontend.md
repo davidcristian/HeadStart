@@ -100,6 +100,11 @@ Server state is managed by **TanStack Query** (`@tanstack/react-query`). The
   hand-mutating local state. Components call `mutation.mutateAsync(...)`.
 - The hooks still call `src/api/` under the hood — React Query only adds
   caching, background revalidation, and dedupe on top of the typed client.
+- **Session isolation:** `AuthProvider` calls `queryClient.clear()` on
+  successful `login`, on `logout`, and when the API client's unauthorized
+  handler fires (hard 401 after refresh failure). Query keys are not
+  user-scoped, so clearing prevents a shared-browser logout→login from
+  briefly serving the previous account's cached PII.
 
 ## Conventions
 

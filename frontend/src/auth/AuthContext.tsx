@@ -6,6 +6,7 @@
  * unrecoverable 401s reported by the API client.
  */
 
+import { useQueryClient } from "@tanstack/react-query";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { api } from "../api";
@@ -25,6 +26,7 @@ interface AuthState {
 const AuthContext = createContext<AuthState | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const queryClient = useQueryClient();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -32,7 +34,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     void api.logout().catch(() => undefined);
     clearAccessToken();
     setUser(null);
-  }, []);
+    // Drop cached queries so the next session cannot read the previous user's PII.
+    queryClient.clear();
+  }, [queryClient]);
 
   // Resolve the session on first load by exchanging the refresh cookie for an
   // access token, then loading the current user.
@@ -58,15 +62,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // The API client calls this when a refresh fails.
   useEffect(() => {
-    setUnauthorizedHandler(() => setUser(null));
+    setUnauthorizedHandler(() => {
+      setUser(null);
+      queryClient.clear();
+    });
     return () => setUnauthorizedHandler(null);
-  }, []);
+  }, [queryClient]);
 
-  const login = useCallback(async (email: string, password: string) => {
-    const tokens = await api.login(email, password);
-    setAccessToken(tokens.access_token);
-    setUser(await api.me());
-  }, []);
+  const login = useCallback(
+    async (email: string, password: string) => {
+      const tokens = await api.login(email, password);
+      setAccessToken(tokens.access_token);
+      // Clear before loading the new user so a shared-browser re-login cannot
+      // briefly serve the previous account's cached sources/jobs/profile.
+      queryClient.clear();
+      setUser(await api.me());
+    },
+    [queryClient],
+  );
 
   const register = useCallback(
     async (email: string, password: string) => {

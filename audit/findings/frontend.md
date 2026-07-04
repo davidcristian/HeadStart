@@ -19,9 +19,11 @@ management, form labels) plus assorted correctness/consistency nits.
 
 <a id="fro-01"></a>
 ### FRO-01 — Logout/login never clear React Query cache; previous user's PII survives into next session
-🟡 **MEDIUM** · 🔒 security · Status: ☐ open · Confidence: high (5/5 verifiers) · Effort: S · WS16
+🟡 **MEDIUM** · 🔒 security · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/21)) · Confidence: high (5/5 verifiers) · Effort: S · WS16
 
 _Merged with FRO-02 — both records describe the same defect: the module-level `queryClient` is never cleared on an SPA session switch._
+
+**Update.** Fixed in [PR](https://github.com/davidcristian/HeadStart/pull/21): `AuthProvider` calls `queryClient.clear()` on successful `login`, on `logout`, and when the API client's unauthorized handler fires (hard 401 after refresh failure), so a shared-browser session switch cannot serve the previous account's cached PII.
 
 **Locations:** `frontend/src/auth/AuthContext.tsx:31` (`logout`); plus `frontend/src/auth/AuthContext.tsx:65` (`login`), `frontend/src/main.tsx:13` / `frontend/src/main.tsx:22` (module-level `queryClient`), `frontend/src/pages/LoginPage.tsx:30`, `frontend/src/components/Layout.tsx:81`.
 
