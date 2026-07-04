@@ -131,7 +131,9 @@ headless Chromium browser (see [scrapers.md](scrapers.md)). Use the worker Docke
 target / `headstart-backend-worker` image in production.
 
 Prometheus metrics for scrape latency, pipeline outcomes, and notification
-delivery are recorded here — see [metrics.md](metrics.md).
+delivery are recorded here — see [metrics.md](metrics.md). Prefork children all
+attempt `METRICS_PORT`; only the first binder serves `/metrics`, and siblings
+skip on `EADDRINUSE` so concurrency does not crash-loop (XCT-13).
 
 ## Ghost detection (dev inbox)
 

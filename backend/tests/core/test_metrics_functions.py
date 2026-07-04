@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import errno
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
@@ -63,3 +64,27 @@ def test_start_metrics_server_starts_when_enabled(metrics_enabled: None) -> None
     ):
         metrics.start_metrics_server(9001)
     mock_start.assert_called_once_with(9001)
+
+
+def test_start_metrics_server_skips_when_port_in_use(metrics_enabled: None) -> None:
+    """Prefork siblings must not crash when METRICS_PORT is already bound (XCT-13)."""
+    mock_start = MagicMock(side_effect=OSError(errno.EADDRINUSE, "Address already in use"))
+    with patch.dict(
+        "sys.modules",
+        {"prometheus_client": SimpleNamespace(start_http_server=mock_start)},
+    ):
+        metrics.start_metrics_server(9090)
+    mock_start.assert_called_once_with(9090)
+
+
+def test_start_metrics_server_reraises_other_oserror(metrics_enabled: None) -> None:
+    mock_start = MagicMock(side_effect=OSError(errno.EACCES, "Permission denied"))
+    with (
+        patch.dict(
+            "sys.modules",
+            {"prometheus_client": SimpleNamespace(start_http_server=mock_start)},
+        ),
+        pytest.raises(OSError) as exc_info,
+    ):
+        metrics.start_metrics_server(9090)
+    assert exc_info.value.errno == errno.EACCES

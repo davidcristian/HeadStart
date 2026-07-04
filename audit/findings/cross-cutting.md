@@ -142,7 +142,7 @@ Note on merges: the `portal_search` schema-drift defect surfaced from three angl
 
 <a id="xct-13"></a>
 ### XCT-13 — Every prefork worker child binds the same metrics port -> EADDRINUSE crash loop
-🟡 **MEDIUM** · 🐞 bug · Status: ☐ open · Confidence: high (3/5 verifiers) · Effort: S · WS15
+🟡 **MEDIUM** · 🐞 bug · Status: ✅ done · Confidence: high (3/5 verifiers) · Effort: S · WS15
 
 **Locations:** `backend/app/worker/celery_app.py:33` (`_start_worker_metrics_server`); plus `backend/app/core/metrics.py:96`, `backend/docker-entrypoint.sh:12`.
 

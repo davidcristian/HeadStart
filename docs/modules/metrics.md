@@ -16,6 +16,14 @@ healthy?" without reading worker logs.
 Scrape **both** targets in production — they run in separate processes and each
 holds its own registry.
 
+### Prefork worker port binding (XCT-13)
+
+Celery's default prefork pool runs `worker_process_init` in every child. Each
+child calls `start_metrics_server(METRICS_PORT)`. The first child to bind wins;
+later children catch `EADDRINUSE`, log a warning, and continue so the pool does
+not crash-loop. Prometheus therefore scrapes **one** child's in-process registry
+per worker OS process (not an aggregate across concurrency slots).
+
 ## Metrics
 
 | Name | Type | Labels | Meaning |

@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+import errno
+import logging
 from typing import Literal
 
 from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
 
 from app.core.config import get_settings
+
+logger = logging.getLogger(__name__)
 
 PipelineStatus = Literal["success", "error", "not_found"]
 ScrapeStatus = Literal["success", "error"]
@@ -94,9 +98,23 @@ def render_metrics() -> tuple[bytes, str]:
 
 
 def start_metrics_server(port: int) -> None:
-    """Expose /metrics on a background HTTP server (worker processes)."""
+    """Expose /metrics on a background HTTP server (worker processes).
+
+    Prefork Celery children all call this on the same ``METRICS_PORT``. The
+    first binder wins; later children hit ``EADDRINUSE`` and must skip so the
+    pool does not crash-loop (XCT-13). Only that child's registry is scraped.
+    """
     if not get_settings().metrics_enabled:
         return
     from prometheus_client import start_http_server
 
-    start_http_server(port)
+    try:
+        start_http_server(port)
+    except OSError as exc:
+        if exc.errno == errno.EADDRINUSE:
+            logger.warning(
+                "metrics port %s already bound; skipping in this worker child",
+                port,
+            )
+            return
+        raise
