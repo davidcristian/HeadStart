@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="night" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0d1d1a"/>
+      <stop offset="1" stop-color="#061010"/>
+    </linearGradient>
+    <linearGradient id="climb" x1="120" y1="400" x2="400" y2="120" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#34d399"/>
+      <stop offset="1" stop-color="#d9f99d"/>
+    </linearGradient>
+    <filter id="peak" x="-120%" y="-120%" width="340%" height="340%">
+      <feGaussianBlur stdDeviation="30"/>
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#night)"/>
+  <circle cx="378" cy="140" r="58" fill="#a3e635" opacity="0.28" filter="url(#peak)"/>
+  <g stroke="url(#climb)" stroke-width="44" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M 126 392 H 212 V 306 H 298 V 220"/>
+    <path d="M 298 220 L 352 166"/>
+    <path d="M 322 155 L 378 140 L 363 196"/>
+  </g>
+</svg>

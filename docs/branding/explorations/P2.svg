@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="bgp2" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#161226"/><stop offset="1" stop-color="#0a0913"/>
+    </linearGradient>
+    <linearGradient id="lad" x1="200" y1="400" x2="330" y2="110" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7c6cf0"/><stop offset="1" stop-color="#22d3ee"/>
+    </linearGradient>
+    <filter id="blurp2" x="-120%" y="-120%" width="340%" height="340%">
+      <feGaussianBlur stdDeviation="30"/>
+    </filter></defs>
+  <rect width="512" height="512" rx="112" fill="url(#bgp2)"/>
+  <circle cx="300" cy="130" r="60" fill="#22d3ee" opacity="0.28" filter="url(#blurp2)"/>
+  <g stroke="url(#lad)" stroke-width="40" stroke-linecap="round" fill="none" transform="rotate(9 256 256)">
+    <path d="M184 118 V 394"/>
+    <path d="M328 118 V 394"/>
+    <path d="M184 180 H 328"/>
+    <path d="M184 256 H 328"/>
+    <path d="M184 332 H 328"/>
+  </g>
+</svg>

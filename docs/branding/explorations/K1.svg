@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="bg1" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2a2058"/><stop offset="1" stop-color="#0d0a22"/>
+    </linearGradient>
+    <linearGradient id="tail" x1="120" y1="400" x2="356" y2="152" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#f59e0b" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="#f59e0b" stop-opacity="0.5"/>
+      <stop offset="1" stop-color="#fde68a"/>
+    </linearGradient>
+    <radialGradient id="head" cx="0.35" cy="0.35" r="1">
+      <stop stop-color="#ffffff"/><stop offset="1" stop-color="#fbbf24"/>
+    </radialGradient>
+    <filter id="blur1" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="36"/>
+    </filter></defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg1)"/>
+  <circle cx="352" cy="160" r="76" fill="#fbbf24" opacity="0.32" filter="url(#blur1)"/>
+  <path d="M 122 398 C 206 348, 276 274, 324 192" stroke="url(#tail)" stroke-width="48" stroke-linecap="round"/>
+  <path d="M 196 404 C 254 368, 300 326, 332 272" stroke="url(#tail)" stroke-width="20" stroke-linecap="round" opacity="0.45"/>
+  <circle cx="352" cy="160" r="48" fill="url(#head)"/>
+</svg>

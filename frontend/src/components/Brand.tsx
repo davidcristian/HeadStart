@@ -5,9 +5,7 @@ import { Link } from "react-router-dom";
 export function Brand({ className, to = "/" }: { className?: string; to?: string }) {
   return (
     <Link to={to} className={className ? `brand ${className}` : "brand"}>
-      <span className="brand-mark" aria-hidden="true">
-        HS
-      </span>
+      <img className="brand-mark" src="/icon.svg" alt="" aria-hidden="true" />
       <span className="brand-name">HeadStart</span>
     </Link>
   );

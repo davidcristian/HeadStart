@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="bgp3" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1d1033"/><stop offset="1" stop-color="#0c0618"/>
+    </linearGradient>
+    <linearGradient id="birdg" x1="130" y1="380" x2="400" y2="140" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#f59e0b"/><stop offset="1" stop-color="#fff7ed"/>
+    </linearGradient>
+    <filter id="blurp3" x="-120%" y="-120%" width="340%" height="340%">
+      <feGaussianBlur stdDeviation="26"/>
+    </filter></defs>
+  <rect width="512" height="512" rx="112" fill="url(#bgp3)"/>
+  <circle cx="404" cy="112" r="52" fill="#fbbf24" opacity="0.5" filter="url(#blurp3)"/>
+  <circle cx="404" cy="112" r="34" fill="#fcd34d"/>
+  <path fill="url(#birdg)" d="M 112 372
+    C 190 360, 258 324, 298 264
+    C 314 238, 338 220, 368 214
+    L 418 204 L 374 178
+    C 340 160, 302 168, 278 196
+    C 262 132, 214 96, 152 88
+    C 184 136, 192 184, 178 230
+    C 150 270, 124 326, 112 372 Z"/>
+</svg>

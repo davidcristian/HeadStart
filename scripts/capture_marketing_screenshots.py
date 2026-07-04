@@ -88,6 +88,9 @@ def seed_marketing_demo() -> None:
         if search is None:
             raise RuntimeError("Example search missing — run `just seed` first.")
 
+        if user.onboarding_completed_at is None:
+            user.onboarding_completed_at = utcnow()
+
         search.enabled = True
         search.last_run_at = utcnow()
         search.last_error = ""
@@ -119,6 +122,15 @@ def _login(page) -> None:
     page.wait_for_url("**/app/**", timeout=15_000)
 
 
+def _dismiss_cookie_banner(page) -> None:
+    """The consent banner would otherwise overlay every capture."""
+    try:
+        page.get_by_role("button", name="Essential only").click(timeout=3_000)
+        page.wait_for_timeout(300)
+    except Exception:
+        pass
+
+
 def _capture(page, path: str, outfile: Path) -> None:
     page.goto(f"{FRONTEND_URL}{path}", wait_until="networkidle")
     page.wait_for_timeout(600)
@@ -139,13 +151,13 @@ def _capture_notification_card(page, outfile: Path) -> None:
           min-height: 100vh;
           display: grid;
           place-items: center;
-          background: #0a0e14;
+          background: #09090b;
           font-family: "Inter", system-ui, sans-serif;
         }
         .card {
           width: 320px;
-          background: rgba(18, 24, 32, 0.95);
-          border: 1px solid rgba(34, 197, 94, 0.35);
+          background: rgba(19, 19, 22, 0.95);
+          border: 1px solid rgba(52, 211, 153, 0.35);
           border-radius: 16px;
           padding: 18px;
           box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
@@ -156,24 +168,24 @@ def _capture_notification_card(page, outfile: Path) -> None:
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.06em;
-          color: #22c55e;
+          color: #34d399;
           margin-bottom: 8px;
         }
         strong { display: block; font-size: 18px; margin-bottom: 6px; }
-        .meta { display: block; font-size: 13px; color: #8b9cb3; margin-bottom: 10px; }
+        .meta { display: block; font-size: 13px; color: #a1a1aa; margin-bottom: 10px; }
         .pill {
           display: inline-block;
           padding: 4px 10px;
           border-radius: 999px;
-          background: rgba(34, 197, 94, 0.15);
-          color: #4ade80;
+          background: rgba(52, 211, 153, 0.15);
+          color: #6ee7b7;
           font-size: 12px;
           font-weight: 600;
         }
         .summary {
           margin-top: 12px;
           padding-top: 12px;
-          border-top: 1px solid #243041;
+          border-top: 1px solid #2a2a31;
           font-size: 13px;
           color: #b8c5d6;
           line-height: 1.5;
@@ -211,8 +223,9 @@ def main() -> int:
     print("==> Capturing screenshots (Playwright)")
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch()
-        page = browser.new_page(viewport={"width": 1280, "height": 800})
+        page = browser.new_page(viewport={"width": 1280, "height": 800}, color_scheme="dark")
         _login(page)
+        _dismiss_cookie_banner(page)
         for filename, path in shots.items():
             outfile = OUTPUT_DIR / filename
             print(f"    {filename}")
