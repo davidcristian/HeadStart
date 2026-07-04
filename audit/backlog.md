@@ -6,14 +6,14 @@ Produced by a read-only multi-agent audit at commit `09957ec` — **every medium
 
 **Delta follow-up (2026-07-03).** A scoped re-audit of the fixes shipped since the baseline marked **APL-01** and **APL-02** ✅ done and **APL-03** 🔜 in progress (Microsoft closed; Apple residual [APL-28](findings/appliers.md#apl-28)), and re-confirmed **APL-04** still ☐ open. It also added **7 findings** (1 medium, 6 low) under **WS42**; the counts below include them (**281 tracked** total).
 
-**Progress (2026-07-09).** **WS26 fixed:** AIA-01 (the high-severity LaTeX-escape bug that broke every default-template and AI-curated resume) plus its WS26 companions AIA-12/AIA-16/AIA-17. Renderer now treats `experience` as controlled LaTeX and escapes only free-text/PII scalars; the heuristic path escapes its own free text; PDF-name derivation, the `import json` placement, and `_validate_pdf` settings injection are corrected. Full gate green (ruff/black/mypy, 3109 backend tests, 100% coverage). This closes 1 of the 12 highs (11 open) and 3 lows.
+**Progress (2026-07-09).** **WS26 fixed:** AIA-01 (the high-severity LaTeX-escape bug that broke every default-template and AI-curated resume) plus its WS26 companions AIA-12/AIA-16/AIA-17. Renderer now treats `experience` as controlled LaTeX and escapes only free-text/PII scalars; the heuristic path escapes its own free text; PDF-name derivation, the `import json` placement, and `_validate_pdf` settings injection are corrected. Full gate green (ruff/black/mypy, 3109 backend tests, 100% coverage). This closes 1 of the 12 highs (11 open) and 3 lows. Shipping WS26 also surfaced a pre-commit/CI formatter-pin drift that reformat-looped on clean files; fixed and recorded as **OPS-69** (WS37, new — brings the tally to 282 tracked).
 
 **Status legend:** ☐ open · 🔜 in progress · ✅ done
 **Type:** 🐞 bug · 🔒 security · 📝 doc · 🧪 test · ♻️ refactor · 🔁 consistency · ⚡ perf
 **Severity:** 🔴 CRIT · 🟠 HIGH · 🟡 MED · ⚪ LOW
 
-**By severity:** 🔴 0 · 🟠 12 · 🟡 73 · ⚪ 196
-**By type:** 🐞 93 · 🔒 94 · 📝 31 · 🧪 10 · ♻️ 8 · 🔁 30 · ⚡ 15
+**By severity:** 🔴 0 · 🟠 12 · 🟡 73 · ⚪ 197
+**By type:** 🐞 93 · 🔒 94 · 📝 31 · 🧪 10 · ♻️ 8 · 🔁 31 · ⚡ 15
 
 ---
 
@@ -372,7 +372,7 @@ _10 item(s): 1 high, 4 medium, 5 low._
 | ⚪ LOW | 🔒 | [OPS-64](findings/devops.md#ops-64) ECS roll does not pin the just-pushed image digest (build→deploy provenance gap) | `scripts/deploy.sh:33` | ☐ |
 
 ## WS37 — CI/pre-commit quality gate & dependency scanning
-_11 item(s): 2 medium, 9 low._
+_12 item(s): 2 medium, 10 low._
 _deploy.yml/terraform.yml are dormant — deploy.yml is manual-only (`workflow_dispatch`) and guarded on `vars.AWS_ROLE_ARN`, and terraform.yml's `plan` step is guarded on the same variable — so nothing AWS-touching runs until that variable/secrets are configured. The open WS37 items: the deploy OIDC ref-scoping and terraform-plan-on-PR secrets hardening (OPS-23/OPS-24), dependency scanning, SHA-pinning, and pre-commit/ci parity for LOC/shell/prettier._
 
 | Sev | Type | Item | Location | Status |
@@ -388,6 +388,7 @@ _deploy.yml/terraform.yml are dormant — deploy.yml is manual-only (`workflow_d
 | ⚪ LOW | 🔒 | [OPS-62](findings/devops.md#ops-62) aws-deploy-env.sh emits terraform/aws outputs into eval'd exports without safe quoting | `scripts/aws-deploy-env.sh:23` | ☐ |
 | ⚪ LOW | 🐞 | [OPS-63](findings/devops.md#ops-63) check_loc.sh strips REPO_ROOT via unquoted glob pattern in ${file#...} | `scripts/check_loc.sh:20` | ☐ |
 | ⚪ LOW | 🧪 | [OPS-65](findings/devops.md#ops-65) Shell validation is bash -n syntax-only (no shellcheck) | `scripts/validate-shell-scripts.sh:6` | ☐ |
+| ⚪ LOW | 🔁 | [OPS-69](findings/devops.md#ops-69) pre-commit formatter pins (ruff 0.5.7 / black 24.8.0) drifted from CI/venv (0.15.20 / 26.5.1) and ran ruff-format on top of black, reformat-looping on clean files | `.pre-commit-config.yaml:18` | ✅ |
 
 ## WS38 — Infrastructure hardening (Terraform & Docker)
 _18 item(s): 4 medium, 14 low._

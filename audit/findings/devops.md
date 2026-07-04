@@ -709,3 +709,19 @@ This area covers the deployment and infrastructure surface of the repo: the AWS 
 **Suggested fix.** Tighten to the known test roots (`backend/tests/`, `frontend/src/**/*.test.*`, `frontend/src/test/`) rather than any `*/tests/*`.
 
 **Verification.** Confirmed (delta audit, 2026-07-03). Convention-reliance / defense-in-depth note, no active defect.
+
+---
+
+<a id="ops-69"></a>
+### OPS-69 — pre-commit formatter pins drifted from CI, causing reformat loops
+⚪ **LOW** · 🔁 consistency · Status: ✅ done (WS37) · Confidence: high (observed 2026-07-09, shipping WS26) · Effort: S · WS37
+
+**Locations:** `.pre-commit-config.yaml:18` (`ruff-pre-commit rev: v0.5.7`) and `:27` (`psf/black rev: 24.8.0`).
+
+**Evidence.** The pinned hook versions had fallen far below what `pip install -e backend[dev]` resolves for the venv/CI (`ruff 0.15.20`, `black 26.5.1`, from the `ruff>=0.5.7` / `black>=24.8` floors). The config also ran a `ruff-format` hook that the CI gate (`scripts/lint.sh`: `ruff check app tests` + `black --check app tests`) does not — and at these versions ruff-format disagrees with black on 7 `app/` files (e.g. nested `a if b else c if d else e` ternaries: ruff-format 0.5.7 splits, black 24.8.0 collapses). The two formatters never converge, so `pre-commit run` reformat-loops on files CI considers clean, blocking the commit.
+
+**Failure scenario.** Any commit touching a file where ruff-format and black disagree fails pre-commit forever (each hook reverts the other), forcing a `--no-verify` bypass or an unrelated rewrite to break the tie (hit on `backend/app/resumes/fields.py` while shipping WS26).
+
+**Fix.** Bumped the pins to the CI/venv versions (ruff `v0.15.20`, black `26.5.1`), dropped the `ruff-format` hook (black is the sole formatter CI enforces), and scoped `ruff`/`black` to `^backend/(app|tests)/` so pre-commit mirrors the CI gate (which does not lint `alembic/`). Residual: the pyproject dev deps still float (`>=`), so the pins can re-drift on a future release — re-pin both together, or pin exact versions / add a lockfile (see [XCT-14](cross-cutting.md#xct-14)).
+
+**Verification.** `pre-commit validate-config` OK; the `ruff`/`black` hooks pass on `app` files with no reformatting and skip `alembic/`; `ruff check app tests` + `black --check app tests` are green under the venv versions.

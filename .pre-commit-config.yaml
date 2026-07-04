@@ -15,20 +15,24 @@ repos:
       - id: mixed-line-ending
         args: [--fix=lf]
 
+  # Mirror the CI backend gate exactly (see scripts/lint.sh): `ruff check app
+  # tests` + `black --check app tests`. CI does NOT run `ruff format` — black is
+  # the sole formatter, and ruff-format disagrees with black on some constructs,
+  # so running both here reformat-loops. CI also does not lint alembic/, so the
+  # scope is app|tests. Pins track the versions `pip install -e backend[dev]`
+  # resolves today; bump them together with the pyproject floors to avoid drift.
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.5.7
+    rev: v0.15.20
     hooks:
       - id: ruff
         args: [--fix]
-        files: ^backend/
-      - id: ruff-format
-        files: ^backend/
+        files: ^backend/(app|tests)/
 
   - repo: https://github.com/psf/black
-    rev: 24.8.0
+    rev: 26.5.1
     hooks:
       - id: black
-        files: ^backend/
+        files: ^backend/(app|tests)/
 
   - repo: local
     hooks:
