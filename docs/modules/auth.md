@@ -152,6 +152,10 @@ requires the current password, clears the refresh cookie, and removes the user
 row. Owned data cascades via FK/`ON DELETE CASCADE`. The last admin account
 cannot be deleted while other users remain (promote another admin first).
 
+When Stripe is configured and the account has billing IDs, deletion first
+cancels any `stripe_subscription_id` and deletes the `stripe_customer_id`
+(best-effort: Stripe errors are logged and do not block local erasure).
+
 Successful export and deletion requests are recorded in `data_request_log`
 (user email snapshot, request type, client IP, user agent). Export rows keep
 `user_id`; deletion rows store only the email because the account is removed

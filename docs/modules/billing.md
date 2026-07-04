@@ -141,6 +141,14 @@ subscription metadata `plan` is a fallback. An active subscription whose price a
 metadata are both unrecognized defaults to the **lowest paid tier** (`starter`)
 and logs a warning — it never silently grants Pro.
 
+## Account deletion
+
+`DELETE /auth/me` calls `release_stripe_billing` (`billing_account_cleanup.py`)
+before removing the local user row: cancel the Stripe subscription (if any),
+then delete the Stripe customer. Failures are logged and swallowed so GDPR
+erasure still completes when Stripe is down or the objects are already gone.
+See [auth.md](auth.md).
+
 ## User fields
 
 On `user`:

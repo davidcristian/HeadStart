@@ -22,6 +22,7 @@ from app.schemas.job import JobRead
 from app.schemas.search import SearchRead
 from app.schemas.source import SourceRead
 from app.schemas.target import TargetRead
+from app.services.billing_account_cleanup import release_stripe_billing
 from app.services.credentials import CredentialService
 from app.services.profiles import ProfileService
 
@@ -90,6 +91,8 @@ def delete_user_account(
         ip_address=ip_address,
         user_agent=user_agent,
     )
+    # Cancel Stripe billing before the local row (and Stripe IDs) disappear.
+    release_stripe_billing(user)
     repo.delete(user)
 
 

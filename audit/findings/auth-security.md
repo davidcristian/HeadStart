@@ -22,7 +22,7 @@ This area covers authentication and session management (login, registration, pas
 
 <a id="aut-02"></a>
 ### AUT-02 — Account deletion never cancels Stripe subscription or deletes Stripe customer
-🟠 **HIGH** · 🐞 bug · Status: ☐ open · Confidence: high (5/5 verifiers) · Effort: M · WS18
+🟠 **HIGH** · 🐞 bug · Status: ✅ done · Confidence: high (5/5 verifiers) · Effort: M · WS18
 
 **Locations:** `backend/app/services/auth_account.py:70` (`delete_user_account`).
 
