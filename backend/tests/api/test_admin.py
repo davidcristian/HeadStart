@@ -210,7 +210,13 @@ def test_update_user_persists_flags(db_session: Session) -> None:
     from app.schemas.admin import AdminUserUpdate
 
     admin = User(email="admin@example.com", password_hash="x", is_admin=True, is_active=True)
-    member = User(email="member@example.com", password_hash="x", is_admin=False, is_active=True)
+    member = User(
+        email="member@example.com",
+        password_hash="x",
+        is_admin=False,
+        is_active=True,
+        token_version=0,
+    )
     db_session.add_all([admin, member])
     db_session.flush()
 
@@ -222,6 +228,102 @@ def test_update_user_persists_flags(db_session: Session) -> None:
     assert updated.is_active is False
     assert updated.is_admin is True
     assert updated.plan == "pro"
+    db_session.refresh(member)
+    assert member.token_version == 1
+
+
+def test_deactivate_bumps_token_version(db_session: Session) -> None:
+    """Admin deactivation must invalidate outstanding JWTs even after reactivation (XCT-08)."""
+    from fastapi import HTTPException
+
+    from app.api.deps import get_current_user
+    from app.core.security import create_access_token
+    from app.schemas.admin import AdminUserUpdate
+
+    admin = User(email="admin@example.com", password_hash="x", is_admin=True, is_active=True)
+    member = User(
+        email="member@example.com",
+        password_hash="x",
+        is_admin=False,
+        is_active=True,
+        token_version=3,
+    )
+    db_session.add_all([admin, member])
+    db_session.flush()
+    pre_deactivation_token = create_access_token(member.id, version=member.token_version)
+
+    AdminService(db_session).update_user(
+        member.id,
+        actor_id=admin.id,
+        data=AdminUserUpdate(is_active=False),
+    )
+    db_session.refresh(member)
+    assert member.is_active is False
+    assert member.token_version == 4
+
+    AdminService(db_session).update_user(
+        member.id,
+        actor_id=admin.id,
+        data=AdminUserUpdate(is_active=True),
+    )
+    db_session.refresh(member)
+    assert member.is_active is True
+    assert member.token_version == 4
+
+    with pytest.raises(HTTPException) as exc_info:
+        get_current_user(
+            authorization=f"Bearer {pre_deactivation_token}",
+            db=db_session,
+        )
+    assert exc_info.value.status_code == 401
+
+
+def test_deactivate_noop_when_already_inactive(db_session: Session) -> None:
+    """Re-sending is_active=False must not bump token_version again."""
+    from app.schemas.admin import AdminUserUpdate
+
+    admin = User(email="admin@example.com", password_hash="x", is_admin=True, is_active=True)
+    member = User(
+        email="member@example.com",
+        password_hash="x",
+        is_admin=False,
+        is_active=False,
+        token_version=2,
+    )
+    db_session.add_all([admin, member])
+    db_session.flush()
+
+    AdminService(db_session).update_user(
+        member.id,
+        actor_id=admin.id,
+        data=AdminUserUpdate(is_active=False),
+    )
+    db_session.refresh(member)
+    assert member.token_version == 2
+
+
+def test_plan_only_update_does_not_bump_token_version(db_session: Session) -> None:
+    from app.schemas.admin import AdminUserUpdate
+
+    admin = User(email="admin@example.com", password_hash="x", is_admin=True, is_active=True)
+    member = User(
+        email="member@example.com",
+        password_hash="x",
+        is_admin=False,
+        is_active=True,
+        token_version=1,
+    )
+    db_session.add_all([admin, member])
+    db_session.flush()
+
+    AdminService(db_session).update_user(
+        member.id,
+        actor_id=admin.id,
+        data=AdminUserUpdate(plan="pro"),
+    )
+    db_session.refresh(member)
+    assert member.token_version == 1
+    assert member.plan == "pro"
 
 
 def test_list_data_requests_returns_recent(db_session: Session, default_test_user: User) -> None:

@@ -38,12 +38,18 @@ class AdminService:
         if data.plan is not None and data.plan not in VALID_PLANS:
             raise ValidationError(f"Unknown plan '{data.plan}'.")
 
+        # Deactivation must permanently invalidate outstanding JWTs so a later
+        # reactivation cannot resurrect pre-lockout access/refresh tokens (XCT-08).
+        revoke_sessions = data.is_active is False and user.is_active
+
         updated = self.users.update_flags(
             user,
             is_active=data.is_active,
             is_admin=data.is_admin,
             plan=data.plan,
         )
+        if revoke_sessions:
+            updated = self.users.bump_token_version(updated)
         return AdminUserRead.model_validate(updated)
 
     def get_stats(self) -> AdminStatsRead:

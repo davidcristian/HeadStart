@@ -35,8 +35,9 @@ data isolation.
   outstanding access **and** refresh token at once. Password reset bumps it (see
   below); `/logout` bumps it when a valid refresh token is presented; `/refresh`
   bumps it before issuing a new refresh cookie (rotation — a previously issued
-  refresh JWT cannot be replayed). Account deactivation needs no bump because the
-  `is_active` check already blocks those tokens. RSS feed URLs use a separate
+  refresh JWT cannot be replayed). Admin deactivation (`PATCH /admin/users/{id}`
+  with `is_active=false`) also bumps `token_version`, so a later reactivation
+  cannot resurrect JWTs minted before the lock-out. RSS feed URLs use a separate
   `feed_token_version` claim; password reset bumps that too so leaked feed links
   stop working after credential recovery.
   Because pre-existing tokens carry no `ver`, they are treated as stale and
@@ -209,6 +210,8 @@ the UI. The page lists all accounts (activate/deactivate, grant/revoke admin,
 change subscription `plan`) and shows global scrape health: search counts, delivery success/failure totals,
 and recent scrape errors across all users. Admins cannot deactivate themselves,
 remove their own admin flag, or demote the last remaining admin account.
+Deactivating an account bumps `token_version` so outstanding sessions stay
+revoked even if the account is later reactivated.
 
 ## Configuration
 

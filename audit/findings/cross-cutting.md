@@ -84,17 +84,17 @@ Note on merges: the `portal_search` schema-drift defect surfaced from three angl
 
 <a id="xct-08"></a>
 ### XCT-08 — Admin deactivate then reactivate resurrects pre-deactivation tokens (no version bump)
-🟡 **MEDIUM** · 🔒 security · Status: ☐ open · Confidence: high (5/5 verifiers) · Effort: S · WS17
+🟡 **MEDIUM** · 🔒 security · Status: ✅ done · Confidence: high (5/5 verifiers) · Effort: S · WS17
 
-**Locations:** `backend/app/services/admin.py:41` (`AdminService.update_user`); plus `backend/app/repositories/users.py:71`, `backend/app/services/auth.py:148`.
+**Locations:** `backend/app/services/admin.py` (`AdminService.update_user`); plus `backend/app/repositories/users.py` (`bump_token_version`), `backend/app/api/deps.py`.
 
-**Evidence.** `update_flags` flips `is_active` but never calls `bump_token_version`. `get_current_user`/refresh only reject a stale `ver`; `is_active` alone gates access. Tokens carry a `ver` that is unchanged across a deactivate + reactivate cycle.
+**Evidence.** `update_flags` flipped `is_active` but never called `bump_token_version`. `get_current_user`/refresh only reject a stale `ver`; `is_active` alone gates access. Tokens carry a `ver` that was unchanged across a deactivate + reactivate cycle.
 
 **Failure scenario.** An admin deactivates a compromised/abusive account to lock it out, then later reactivates it; any access/refresh JWT minted before deactivation that is still within its lifetime works again — the lock-out was not durable.
 
-**Suggested fix.** Bump `token_version` whenever `is_active` transitions to `False` (or on every admin flag change), so any pre-deactivation token is permanently invalidated regardless of later reactivation.
+**Fix.** `AdminService.update_user` bumps `token_version` when `is_active` transitions to `False`, so pre-deactivation JWTs stay invalid after reactivation. Idempotent when the account is already inactive; plan-only updates do not bump. See [PR](https://github.com/davidcristian/HeadStart/pull/24).
 
-**Verification.** Confirmed 5/5 adversarial verifiers. `update_flags` never bumps `token_version`; `deps.py` gates on `is_active` and `ver == token_version`, so deactivate-then-reactivate leaves `ver` unchanged and pre-deactivation JWTs within their window validate again. The exploit requires reactivation inside the token lifetime, so medium.
+**Verification.** Confirmed 5/5 adversarial verifiers. `update_flags` never bumped `token_version`; `deps.py` gates on `is_active` and `ver == token_version`, so deactivate-then-reactivate left `ver` unchanged and pre-deactivation JWTs within their window validated again. The exploit requires reactivation inside the token lifetime, so medium.
 
 <a id="xct-09"></a>
 ### XCT-09 — Data export omits most user-owned tables (applications, artifacts, inbox, delivery, resume bytes, promos)
