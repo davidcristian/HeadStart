@@ -35,12 +35,12 @@ class UserRepository:
         return int(self.session.scalar(select(func.count()).select_from(User)) or 0)
 
     def claim_bootstrap_admin(self, user_id: int) -> bool:
-        """Atomically assign bootstrap admin to the first successful registrant."""
+        """Atomically assign bootstrap admin once; deletion must not re-open the slot."""
         result = self.session.execute(
             update(RegistrationLock)
             .where(RegistrationLock.id == 1)
-            .where(RegistrationLock.bootstrap_user_id.is_(None))
-            .values(bootstrap_user_id=user_id)
+            .where(RegistrationLock.bootstrap_claimed.is_(False))
+            .values(bootstrap_user_id=user_id, bootstrap_claimed=True)
         )
         return bool(getattr(result, "rowcount", 0))
 

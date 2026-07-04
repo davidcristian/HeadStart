@@ -1,6 +1,6 @@
 """Singleton row used to serialize account registration."""
 
-from sqlalchemy import ForeignKey
+from sqlalchemy import Boolean, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import Base
@@ -14,3 +14,5 @@ class RegistrationLock(Base):
         ForeignKey("user.id", ondelete="SET NULL"),
         nullable=True,
     )
+    # Permanent latch: once True, never cleared by user deletion (DAT-01).
+    bootstrap_claimed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)

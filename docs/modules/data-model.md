@@ -29,7 +29,9 @@ All API queries filter by the authenticated user — see [auth.md](auth.md).
 
 ### user
 
-An account. The first one created becomes admin.
+An account. The first one created becomes admin. Bootstrap promotion is
+latched via `registration_lock.bootstrap_claimed` so deleting that first
+admin cannot re-open self-service admin creation (see [auth.md](auth.md)).
 
 | Column        | Type     | Notes                              |
 | ------------- | -------- | ---------------------------------- |
@@ -46,6 +48,16 @@ An account. The first one created becomes admin.
 | onboarding_completed_at | datetime? | Set when the first-run wizard is finished or skipped |
 | email_verified_at | datetime? | Set when the user confirms their email address |
 | created_at    | datetime |                                    |
+
+### registration_lock
+
+Singleton row (`id=1`) that serializes first-account bootstrap admin promotion.
+
+| Column            | Type   | Notes |
+| ----------------- | ------ | ----- |
+| id                | int PK | Always `1` |
+| bootstrap_user_id | int? FK → user | Set on claim; `ON DELETE SET NULL` (informational only) |
+| bootstrap_claimed | bool   | Permanent latch; once `True`, never cleared by user deletion |
 
 ### email_verification_token
 

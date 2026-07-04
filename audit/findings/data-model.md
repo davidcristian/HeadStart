@@ -8,7 +8,14 @@ This area covers the persistence layer: SQLAlchemy ORM models (`backend/app/mode
 
 <a id="dat-01"></a>
 ### DAT-01 — Deleting bootstrap admin resets registration lock, auto-promoting next registrant to admin
-🟠 **HIGH** · 🔒 security · Status: ☐ open · Confidence: high (5/5 verifiers) · Effort: S · WS19
+🟠 **HIGH** · 🔒 security · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/8)) · Confidence: high (5/5 verifiers) · Effort: S · WS19
+
+**Update (2026-07-09).** Fixed in [PR](https://github.com/davidcristian/HeadStart/pull/8): `claim_bootstrap_admin` now gates on
+`registration_lock.bootstrap_claimed` (permanent latch) instead of a nullable
+`bootstrap_user_id`. Deleting the bootstrap user may still `SET NULL` the FK,
+but the latch stays set so a later registrant is never auto-promoted.
+Migration `0037_reg_lock_claimed` backfills `True` when an admin already exists
+or the lock already points at a user.
 
 **Locations:** `backend/app/repositories/users.py:37` (`UserRepository.claim_bootstrap_admin`); plus `backend/app/models/registration_lock.py:14`, `backend/alembic/versions/20260628_0008_registration_lock.py:34`, `backend/app/services/auth.py:68`.
 

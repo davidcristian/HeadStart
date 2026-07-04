@@ -218,6 +218,31 @@ def test_bootstrap_admin_claim_is_exclusive(db_session: Session) -> None:
     assert repo.claim_bootstrap_admin(second.id) is False
 
 
+def test_bootstrap_claim_survives_bootstrap_user_deletion(db_session: Session) -> None:
+    """Deleting the bootstrap admin must not re-open self-service admin promotion (DAT-01)."""
+    from app.models.registration_lock import RegistrationLock
+    from app.schemas.auth import DeleteAccountRequest
+
+    service = AuthService(db_session)
+    bootstrap = service.register(
+        RegisterRequest(email="bootstrap@example.com", password="password123")
+    )
+    peer = service.register(RegisterRequest(email="peer@example.com", password="password123"))
+    peer.is_admin = True
+    db_session.flush()
+
+    service.delete_account(bootstrap.id, DeleteAccountRequest(password="password123"))
+
+    lock = db_session.get(RegistrationLock, 1)
+    assert lock is not None
+    assert lock.bootstrap_user_id is None
+    assert lock.bootstrap_claimed is True
+
+    late = service.register(RegisterRequest(email="late@example.com", password="password123"))
+    assert late.is_admin is False
+    assert UserRepository(db_session).claim_bootstrap_admin(late.id) is False
+
+
 def test_register_grants_admin_only_to_bootstrap_claimant(db_session: Session) -> None:
     """Registration promotes at most one account to admin."""
     service = AuthService(db_session)

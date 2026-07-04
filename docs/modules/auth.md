@@ -14,8 +14,11 @@ data isolation.
   `email_verified_at` (null until the user confirms their address). See
   [data-model.md](data-model.md).
 - The **first** registered user becomes admin (`AuthService.register`). A
-  `registration_lock.bootstrap_user_id` column is claimed atomically so
-  concurrent bootstrap registrations cannot create multiple admins.
+  `registration_lock` singleton row is claimed atomically
+  (`bootstrap_claimed=True` plus `bootstrap_user_id`) so concurrent bootstrap
+  registrations cannot create multiple admins. `bootstrap_claimed` is a
+  permanent latch: deleting the bootstrap user may `SET NULL` the FK, but the
+  latch stays set so a later registrant is never auto-promoted again.
 - Every owned entity (`source`, `search`, `notification_target`,
   `site_credential`) carries a `user_id` FK. `seen_job` / `delivery_log` are
   scoped transitively through their parent `search`.
