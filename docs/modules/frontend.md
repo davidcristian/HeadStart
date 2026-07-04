@@ -112,7 +112,7 @@ Server state is managed by **TanStack Query** (`@tanstack/react-query`). The
 
 ## Tests
 
-- Vitest + React Testing Library + jsdom (`npm run test` / `make test --frontend`).
+- Vitest + React Testing Library + jsdom (`npm run test` / `just test --frontend`).
 - Page smoke tests live next to each page under `src/pages/*.test.tsx`; they mock
   `src/api/` via `src/test/mockApi.ts` and shared fixtures in `src/test/fixtures.ts`.
   Pages are rendered with `renderWithClient` (`src/test/renderWithClient.tsx`),
@@ -148,7 +148,7 @@ the mobile bottom nav. Paid plans and admin accounts see nothing.
 The landing page hero and tabbed product demo use static PNGs in
 `frontend/public/marketing/`. Regenerate them after meaningful UI changes:
 
-1. Start the stack (`make dev`) and ensure the DB is seeded (`make seed`).
+1. Start the stack (`just dev`) and ensure the DB is seeded (`just seed`).
 2. Install Playwright Chromium once: `pip install playwright && playwright install chromium` (in the backend venv).
 3. Run `./scripts/capture_marketing_screenshots.py` (seeds demo jobs for the
    screenshot user, logs in via the UI, writes `searches.png`, `jobs.png`, and

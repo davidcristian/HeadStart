@@ -1,15 +1,26 @@
 #!/usr/bin/env bash
 # Type-check backend (mypy) and frontend (tsc --noEmit).
+# Pass --backend or --frontend to scope (CI uses this); default is all.
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
-log "Backend types (mypy)"
-venv_tool mypy app
+scope="${1:-all}"
 
-if [[ -d "${FRONTEND_DIR}/node_modules" ]]; then
+run_backend() {
+  log "Backend types (mypy)"
+  venv_tool mypy app
+}
+
+run_frontend() {
+  require_frontend_deps
   log "Frontend types (tsc)"
   ( cd "${FRONTEND_DIR}" && npm run typecheck --silent )
-else
-  warn "frontend/node_modules missing; skipping tsc."
-fi
+}
+
+case "${scope}" in
+  --backend)  run_backend ;;
+  --frontend) run_frontend ;;
+  all)        run_backend; run_frontend ;;
+  *)          die "Unknown scope '${scope}'. Use --backend|--frontend|all" ;;
+esac
 
 ok "Type-check complete."

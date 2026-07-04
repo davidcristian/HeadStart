@@ -57,7 +57,7 @@ ERROR: Set LLAMACPP_MODEL_PATH to a .gguf model file before starting.
 
 Example:
   export LLAMACPP_MODEL_PATH=/path/to/model.gguf
-  make llamacpp
+  just llamacpp
 
 Then in another terminal (or your .env):
   SUMMARY_PROVIDER=llamacpp

@@ -18,7 +18,7 @@ complements [deploying-to-aws.md](deploying-to-aws.md) (infrastructure) and
 - [ ] **`FRONTEND_BASE_URL` matches the public URL** — Terraform sets this
   automatically from `app_url` on ECS tasks. Password-reset links and Stripe
   return URLs depend on it. After changing the domain, run `terraform apply`
-  and roll ECS (`make deploy`).
+  and roll ECS (`just deploy`).
 
 ---
 
@@ -39,7 +39,7 @@ Required for password reset and the **email** notification channel.
 
 - [ ] **SMTP relay configured** — set `smtp_host` (+ `smtp_user` /
   `TF_VAR_smtp_password`) in Terraform or via `TF_VAR_*` during
-  `make aws-first-deploy`. Password is stored in Secrets Manager.
+  `just aws-first-deploy`. Password is stored in Secrets Manager.
 - [ ] **`SMTP_FROM` uses your domain** — defaults to `noreply@<domain_name>`
   when a custom domain is set. Verify SPF/DKIM (or your provider's domain
   verification) so messages are not spam-foldered.
@@ -125,7 +125,7 @@ Before advertising auto-apply:
 - [ ] **Metrics** — scrape API `/metrics` and worker `:9090/metrics` if you run
   Prometheus ([modules/metrics.md](modules/metrics.md)).
 - [ ] **Runbook** — operators know how to tail CloudWatch logs and run
-  `make deploy` for rollouts ([runbook.md](runbook.md)).
+  `just deploy` for rollouts ([runbook.md](runbook.md)).
 
 ---
 
@@ -140,10 +140,10 @@ smtp_user         = "AKIA..."
 # smtp_from       = "noreply@jobs.example.com"  # optional; defaults from domain
 ```
 
-Or with `make aws-first-deploy`:
+Or with `just aws-first-deploy`:
 
 ```bash
-make aws-first-deploy PREFIX=yourname \
+just aws-first-deploy PREFIX=yourname \
   DOMAIN_NAME=jobs.example.com \
   ROUTE53_ZONE_ID=Z0123456789ABCDEFGHIJ \
   TF_VAR_smtp_host=email-smtp.us-east-2.amazonaws.com \
@@ -152,5 +152,5 @@ make aws-first-deploy PREFIX=yourname \
   YES=1
 ```
 
-After apply: `eval "$(make aws-deploy-env)" && make deploy`, then work through
+After apply: `eval "$(just aws-deploy-env)" && just deploy`, then work through
 the checklist above.

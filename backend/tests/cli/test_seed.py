@@ -1,4 +1,4 @@
-"""Tests for the `make seed` example-data script."""
+"""Tests for the `just seed` example-data script."""
 
 from __future__ import annotations
 

@@ -3,7 +3,7 @@
 #
 # Usage:
 #   eval "$(./scripts/aws-deploy-env.sh beta)"
-#   make deploy
+#   just deploy
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 ENVIRONMENT="${1:-beta}"

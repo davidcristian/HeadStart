@@ -7,7 +7,7 @@ notifications before you've set your own ntfy topic and reviewed it.
 
 Log in to the UI with SEED_USER_EMAIL / SEED_USER_PASSWORD afterwards.
 
-Run with: `make seed`
+Run with: `just seed`
 """
 
 from __future__ import annotations

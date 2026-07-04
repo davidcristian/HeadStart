@@ -10,7 +10,7 @@ case "${cmd}" in
     log "Building and starting the full stack"
     compose up -d --build "$@"
     ok "Up. UI: http://localhost:8080  API: http://localhost:8000/docs"
-    warn "If this is a fresh database, run 'make migrate'."
+    warn "If this is a fresh database, run 'just migrate'."
     ;;
   down)
     log "Stopping the stack"
@@ -27,7 +27,7 @@ case "${cmd}" in
     compose ps "$@"
     ;;
   local)
-    # Fast iteration without docker: requires `make setup` and running
+    # Fast iteration without docker: requires `just setup` and running
     # Postgres/Redis (e.g. `docker compose up -d db redis`).
     log "Starting API (uvicorn) + frontend (vite) locally"
     ( cd "${BACKEND_DIR}" && "$(py_bin)" -m uvicorn app.main:app --reload --port 8000 ) &

@@ -1,4 +1,4 @@
-# Pre-commit hooks. Install with `make setup` (runs `pre-commit install`).
+# Pre-commit hooks. Install with `just setup` (runs `pre-commit install`).
 # These mirror the CI quality gate so drift is caught before it lands.
 default_language_version:
   python: python3.12

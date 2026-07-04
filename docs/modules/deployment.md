@@ -79,12 +79,12 @@ security group and scrape with Prometheus or the CloudWatch agent.
 
 ## Deploy flow
 
-`make deploy` (→ `scripts/deploy.sh`). Load deploy env vars with
-`eval "$(make aws-deploy-env)"` (reads Terraform outputs for `ECR_REGISTRY`,
+`just deploy` (→ `scripts/deploy.sh`). Load deploy env vars with
+`eval "$(just aws-deploy-env)"` (reads Terraform outputs for `ECR_REGISTRY`,
 `ECS_CLUSTER`, `APP_URL`, etc.).
 
-**First-time deploy:** `make aws-first-deploy PREFIX=yourname` chains state
-bootstrap, `terraform apply`, and `make deploy` — see
+**First-time deploy:** `just aws-first-deploy PREFIX=yourname` chains state
+bootstrap, `terraform apply`, and `just deploy` — see
 [deploying-to-aws.md](../deploying-to-aws.md#quick-start-one-command).
 
 1. Build images (`scripts/build-images.sh`): lean `headstart-backend` (api/beat)
@@ -97,17 +97,17 @@ All workflows live in `.github/workflows/`. The CI quality gate (`ci.yml`) runs
 on push/PR. `deploy.yml` (manual `workflow_dispatch`) and `terraform.yml`'s
 credentialed `plan` step are guarded on `vars.AWS_ROLE_ARN`, so they stay dormant
 until AWS is configured; once set, `terraform plan` runs on PRs and `deploy` runs
-`terraform apply` + `make deploy` on demand.
+`terraform apply` + `just deploy` on demand.
 
 ## First-time setup
 
 See **[deploying-to-aws.md](../deploying-to-aws.md)** for the full walkthrough
-(prerequisites, state bootstrap, `terraform apply`, `make deploy`, verification).
+(prerequisites, state bootstrap, `terraform apply`, `just deploy`, verification).
 
 Summary:
 
 1. Bootstrap S3 state + DynamoDB lock (`environments/<env>/backend.tf`).
 2. `terraform init && terraform apply` in `environments/beta` (or `prod`).
-3. `make deploy` with `ECR_REGISTRY` and `ECS_CLUSTER` set.
+3. `just deploy` with `ECR_REGISTRY` and `ECS_CLUSTER` set.
 4. Optional: activate the deploy/terraform workflows by setting the `AWS_ROLE_ARN`
    repo variable and the AWS/GitHub secrets (the workflow files are already in place).

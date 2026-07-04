@@ -10,12 +10,9 @@ run_backend() {
 }
 
 run_frontend() {
-  if [[ -d "${FRONTEND_DIR}/node_modules" ]]; then
-    log "Frontend tests (vitest)"
-    ( cd "${FRONTEND_DIR}" && npm run test --silent )
-  else
-    warn "frontend/node_modules missing; skipping. Run 'make setup'."
-  fi
+  require_frontend_deps
+  log "Frontend tests (vitest)"
+  ( cd "${FRONTEND_DIR}" && npm run test --silent )
 }
 
 run_scripts() {

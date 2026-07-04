@@ -18,7 +18,7 @@ full first-time path from the **repository root**:
 
 ```bash
 export AWS_REGION=us-east-2
-make aws-first-deploy PREFIX=your-unique-name
+just aws-first-deploy PREFIX=your-unique-name
 ```
 
 This single command:
@@ -36,7 +36,7 @@ Add `SKIP_DEPLOY=1` to provision infrastructure only (no Docker image push).
 Optional HTTPS during first deploy (Route53 hosted zone required):
 
 ```bash
-make aws-first-deploy PREFIX=yourname \
+just aws-first-deploy PREFIX=yourname \
   DOMAIN_NAME=jobs.example.com \
   ROUTE53_ZONE_ID=Z0123456789ABCDEFGHIJ \
   YES=1
@@ -86,7 +86,7 @@ On the machine that will run Terraform and build images:
 | AWS CLI v2 | [AWS install guide](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) |
 | Terraform | [HashiCorp install guide](https://developer.hashicorp.com/terraform/install) |
 | Docker | engine + `docker compose` plugin |
-| `make`, `git`, `openssl` | usually preinstalled |
+| `just`, `git`, `openssl` | `sudo apt install -y just`; git/openssl usually preinstalled |
 
 Configure AWS credentials so this works:
 
@@ -107,7 +107,7 @@ Replace `YOURNAME` with a globally unique prefix:
 
 ```bash
 export AWS_REGION=us-east-2
-make terraform-bootstrap PREFIX=YOURNAME
+just terraform-bootstrap PREFIX=YOURNAME
 ```
 
 Or run the underlying script directly: `./scripts/terraform-bootstrap-state.sh YOURNAME us-east-2`.
@@ -116,7 +116,7 @@ Edit `devops/terraform/environments/beta/backend.tf` and replace
 `CHANGEME-headstart-tfstate` with your bucket name (`YOURNAME-headstart-tfstate`).
 Do the same in `environments/prod/backend.tf` when you add production.
 
-> **Tip:** `make aws-first-deploy` passes the bucket via `terraform init
+> **Tip:** `just aws-first-deploy` passes the bucket via `terraform init
 > -backend-config`, so you can skip editing `backend.tf` on a first deploy.
 
 ---
@@ -162,12 +162,12 @@ ECS services will not become healthy until images exist in ECR (next step).
 From the **repository root**, with Docker running:
 
 ```bash
-eval "$(make aws-deploy-env)"
-make deploy
+eval "$(just aws-deploy-env)"
+just deploy
 ```
 
-`make aws-deploy-env` reads Terraform outputs and prints `AWS_REGION`, `ECR_REGISTRY`,
-`ECS_CLUSTER`, and `ENVIRONMENT`. For production use `eval "$(make aws-deploy-env ENVIRONMENT=prod)"`.
+`just aws-deploy-env` reads Terraform outputs and prints `AWS_REGION`, `ECR_REGISTRY`,
+`ECS_CLUSTER`, and `ENVIRONMENT`. For production use `eval "$(just aws-deploy-env ENVIRONMENT=prod)"`.
 
 Or set the variables manually:
 
@@ -176,10 +176,10 @@ export AWS_REGION=us-east-2
 export ENVIRONMENT=beta
 export ECR_REGISTRY="$(aws sts get-caller-identity --query Account --output text).dkr.ecr.${AWS_REGION}.amazonaws.com"
 export ECS_CLUSTER="$(cd devops/terraform/environments/beta && terraform output -raw ecs_cluster_name)"
-make deploy
+just deploy
 ```
 
-`make deploy` runs `scripts/deploy.sh`, which:
+`just deploy` runs `scripts/deploy.sh`, which:
 
 1. Builds backend images (`scripts/build-images.sh --push`): lean API/beat image
    plus the Playwright-enabled worker image, and the frontend image
@@ -202,7 +202,7 @@ aws ecs describe-services \
 Health check:
 
 ```bash
-eval "$(make aws-deploy-env)"
+eval "$(just aws-deploy-env)"
 curl "$APP_URL/api/v1/health"
 ```
 
@@ -223,7 +223,7 @@ Open the app URL in a browser (`terraform output app_url`):
 
 Without a custom domain, use `http://<alb-dns>/` as above.
 
-There is no `make seed` on AWS. Continue with
+There is no `just seed` on AWS. Continue with
 [getting-started.md](getting-started.md) from **step 2** (create your account).
 The first registered user becomes admin.
 
@@ -238,8 +238,8 @@ limits).
 After infrastructure exists, ship code changes with:
 
 ```bash
-eval "$(make aws-deploy-env)"          # or ENVIRONMENT=prod
-make deploy
+eval "$(just aws-deploy-env)"          # or ENVIRONMENT=prod
+just deploy
 ```
 
 Or set `AWS_REGION`, `ECR_REGISTRY`, `ECS_CLUSTER`, and optional `ENVIRONMENT` manually.
@@ -299,7 +299,7 @@ smtp_user     = "AKIA..."
 ```
 
 Or export `TF_VAR_smtp_host`, `TF_VAR_smtp_user`, and `TF_VAR_smtp_password`
-before `terraform apply` / `make aws-first-deploy`.
+before `terraform apply` / `just aws-first-deploy`.
 
 Verify SPF/DKIM with your provider. Full go-live steps:
 [launch-checklist.md](launch-checklist.md).
@@ -345,8 +345,8 @@ need to move.
 
 | Symptom | Likely cause / fix |
 | ------- | ------------------ |
-| ECS tasks stuck `PENDING` | Images not in ECR yet — run `make deploy` |
-| `make deploy` fails on ECR login | `aws sts get-caller-identity` or region mismatch |
+| ECS tasks stuck `PENDING` | Images not in ECR yet — run `just deploy` |
+| `just deploy` fails on ECR login | `aws sts get-caller-identity` or region mismatch |
 | Health check fails | Migrations not finished; check CloudWatch log group `/ecs/headstart-beta` |
 | 401 / login loops in UI | API not reachable; confirm ALB routes `/api/*` to the API target group |
 | No job notifications | Same as local — ntfy topic mismatch; see [getting-started.md](getting-started.md) |

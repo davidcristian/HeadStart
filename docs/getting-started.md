@@ -18,9 +18,9 @@ Prerequisites: Docker + Docker Compose.
 
 ```bash
 cp .env.example .env     # edit NTFY_DEFAULT_TOPIC to something unguessable
-make up                  # build + start api, worker, beat, db, redis, frontend
-make migrate             # create the database tables
-make seed                # optional: a demo account + example source/search
+just up                  # build + start api, worker, beat, db, redis, frontend
+just migrate             # create the database tables
+just seed                # optional: a demo account + example source/search
 ```
 
 Open the UI at <http://localhost:8080> and the API docs at
@@ -35,7 +35,7 @@ credentials. Nothing is shared.
 2. Click **Create one** and register with an email + password (min 8 chars).
 3. The **first** account created on a fresh install becomes the **admin**.
 
-> Ran `make seed`? A demo account already exists
+> Ran `just seed`? A demo account already exists
 > (`SEED_USER_EMAIL` / `SEED_USER_PASSWORD` from `.env`). You can log in with it,
 > but create your own and change the password.
 

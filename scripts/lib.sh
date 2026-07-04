@@ -32,8 +32,15 @@ py_bin() {
   elif have python3; then
     echo "python3"
   else
-    die "No python interpreter found. Run 'make setup' first."
+    die "No python interpreter found. Run 'just setup' first."
   fi
+}
+
+# Frontend deps must exist before any frontend gate runs — a skipped gate
+# reads as green, so missing node_modules is a hard failure, not a warning.
+require_frontend_deps() {
+  [[ -d "${FRONTEND_DIR}/node_modules" ]] \
+    || die "frontend/node_modules missing — run 'just setup' first."
 }
 
 # Run a python module in the backend dir using the chosen interpreter.
@@ -49,7 +56,7 @@ venv_tool() {
   elif have "${tool}"; then
     ( cd "${BACKEND_DIR}" && "${tool}" "$@" )
   else
-    die "'${tool}' not found. Run 'make setup' first."
+    die "'${tool}' not found. Run 'just setup' first."
   fi
 }
 

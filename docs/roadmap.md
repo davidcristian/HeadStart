@@ -81,7 +81,7 @@ Goal: run comfortably for a small team or as a lightly hosted service.
 | ~~Metrics~~ | ~~Scrape latency, success rate, notification delivery rate (Prometheus / CloudWatch)~~ | **Shipped:** Prometheus counters/histograms on API `GET /metrics` and worker `:9090/metrics`; see [modules/metrics.md](modules/metrics.md) |
 | ~~Per-site rate limits~~ | ~~Configurable politeness per adapter; avoid retry storms~~ | **Shipped:** `rate_limit_min_interval_seconds` in source/search config; per-adapter defaults in `app/scrapers/rate_limit.py` |
 | ~~Admin panel~~ | ~~User management and global scrape stats~~ | **Shipped:** `/admin` UI + `GET/PATCH /admin/users`, `GET /admin/stats`; gated on `is_admin` |
-| ~~Hosted deploy polish~~ | ~~Streamline [deploying-to-aws.md](deploying-to-aws.md); consider a one-click template~~ | **Shipped:** `make aws-first-deploy` chains bootstrap → terraform apply → deploy; optional `DOMAIN_NAME` + `ROUTE53_ZONE_ID`; secrets saved to `.aws-first-deploy-secrets.env` |
+| ~~Hosted deploy polish~~ | ~~Streamline [deploying-to-aws.md](deploying-to-aws.md); consider a one-click template~~ | **Shipped:** `just aws-first-deploy` chains bootstrap → terraform apply → deploy; optional `DOMAIN_NAME` + `ROUTE53_ZONE_ID`; secrets saved to `.aws-first-deploy-secrets.env` |
 | ~~Playwright in production~~ | ~~Container sizing, browser pool, timeout/retry policy for JS-heavy sites~~ | **Shipped:** worker Docker target with Chromium; process-scoped browser pool; navigation timeout + retries; larger worker Fargate task + `headstart-backend-worker` ECR image |
 
 **Done when:** an operator can tell whether the system is healthy without SSH or
@@ -268,10 +268,10 @@ hosted API.
 
 | Item | Why | Notes |
 | ---- | --- | ----- |
-| ~~llama.cpp local summarizer~~ | ~~Faster iteration and zero API spend when developing locally~~ | **Shipped:** `@register_summarizer("llamacpp")` calls a local `llama-server` OpenAI-compatible endpoint (default `http://localhost:8080/v1`); optional API key; `make llamacpp` helper (`LLAMACPP_MODEL_PATH` required). Deployed config unchanged — use `openai` or `heuristic` in prod. |
+| ~~llama.cpp local summarizer~~ | ~~Faster iteration and zero API spend when developing locally~~ | **Shipped:** `@register_summarizer("llamacpp")` calls a local `llama-server` OpenAI-compatible endpoint (default `http://localhost:8080/v1`); optional API key; `just llamacpp` helper (`LLAMACPP_MODEL_PATH` required). Deployed config unchanged — use `openai` or `heuristic` in prod. |
 
 **Done when:** a developer can run summaries against a local llama.cpp server with
-a one-line env change (or `make` target), see blurbs in notifications and the Jobs
+a one-line env change (or `just` recipe), see blurbs in notifications and the Jobs
 feed, and production deploys are unchanged.
 
 ---
@@ -356,7 +356,7 @@ Stripe or pricing-page work yet.
 | ~~Schema/types sweep~~ | ~~Compile-time safety~~ | **Shipped:** `PlanId` in `schemas/plan.py`, `schemas/auth.py`, promo comments, tests |
 | ~~Docs (partial)~~ | ~~Keep map accurate~~ | **Shipped:** Team deprecation in `billing.md` plan table |
 
-**Done when:** `make check` passes; `team` is gone from valid plans; existing Team
+**Done when:** `just check` passes; `team` is gone from valid plans; existing Team
 users are `pro`; limits for all four tiers exist in `plans.py`.
 
 ### 14b — Tiered feature gates
@@ -622,7 +622,7 @@ a job, review or edit the cover letter, and have both attached on apply.
 
 | Item | Why | Notes |
 | ---- | --- | ----- |
-| ~~Extend llama.cpp beyond summaries~~ | ~~Document curation, classification, and drafting need the same local stack~~ | **Shipped:** `llamacpp` adapters in `resumes/`, `cover_letters/`, `email_classifiers/`, and `reply_drafters/`; per-purpose model routing via `resolve_ai_settings`; reuse `make llamacpp` / `LLAMACPP_*` env |
+| ~~Extend llama.cpp beyond summaries~~ | ~~Document curation, classification, and drafting need the same local stack~~ | **Shipped:** `llamacpp` adapters in `resumes/`, `cover_letters/`, `email_classifiers/`, and `reply_drafters/`; per-purpose model routing via `resolve_ai_settings`; reuse `just llamacpp` / `LLAMACPP_*` env |
 | ~~Input sanitization & scope lock~~ | ~~Small local models are easily hijacked by unrelated email content~~ | **Shipped:** `email_classifiers/sanitize.py` pre-LLM; hard-scoped prompts; `out_of_scope` label; post-classification routing skips non-job mail |
 | ~~Agent orchestration loop~~ | ~~Poll inbox → classify → act → log~~ | **Shipped:** beat task `process_inbox_messages` when `INBOX_AGENT_ENABLED=true`; `InboxOrchestrationService` fetches since `inbox_poll_state.last_polled_uid`, applies application-scoped gate, classifies in UID order, routes via existing classification path; cursor advances on classified and ignored mail; `INBOX_POLL_INTERVAL_SECONDS` (default 300) + `INBOX_POLL_BATCH_SIZE` (default 50) |
 | ~~Docs & ADR~~ | ~~Capture dev-only boundary and safety model~~ | **Shipped:** [adr/0011-inbox-dev-only.md](adr/0011-inbox-dev-only.md) updated with shipped Phase 20 scope; operator setup in [runbook.md → Local application agent](runbook.md#local-application-agent-phase-20-dev-only); subsystem detail in [modules/inbox.md](modules/inbox.md) and [modules/worker.md](modules/worker.md) |

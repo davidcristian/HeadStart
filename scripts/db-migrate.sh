@@ -18,7 +18,7 @@ case "${action}" in
     ;;
   revision)
     msg="${1:-}"
-    [[ -n "${msg}" ]] || die 'Provide a message: make makemigration m="add x"'
+    [[ -n "${msg}" ]] || die 'Provide a message: just makemigration "add x"'
     venv_tool alembic revision --autogenerate -m "${msg}"
     ok "Migration generated under backend/alembic/versions/ (review it!)."
     ;;

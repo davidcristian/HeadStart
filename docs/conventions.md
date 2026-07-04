@@ -48,7 +48,7 @@ table in [AGENTS.md](../AGENTS.md) §1.
 - **Conventional Commits**: `feat:`, `fix:`, `docs:`, `refactor:`, `test:`,
   `chore:`, `ci:`, `build:`.
 - Branches: `feat/...`, `fix/...`, `docs/...`, `chore/...`.
-- One logical concern per PR. `make check` must pass before opening a PR.
+- One logical concern per PR. `just check` must pass before opening a PR.
 
 ## Testing
 
@@ -61,7 +61,7 @@ table in [AGENTS.md](../AGENTS.md) §1.
 ## File size
 
 - Soft cap of **~300 lines per source file** (see [AGENTS.md](../AGENTS.md) §3).
-  `make lint` runs `scripts/check_loc.sh` and fails when any `.py`/`.ts`/`.tsx`
+  `just lint` runs `scripts/check_loc.sh` and fails when any `.py`/`.ts`/`.tsx`
   file exceeds 300 lines (excluding `alembic/versions/`).
 
 ## Configuration

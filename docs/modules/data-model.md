@@ -235,4 +235,4 @@ Audit of auto-apply attempts (preview and live).
 
 ## Migrations
 
-Change a model, then `make makemigration m="..."`, review, `make migrate`.
+Change a model, then `just makemigration "..."`, review, `just migrate`.

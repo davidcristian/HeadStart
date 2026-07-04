@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Capture marketing screenshots from a running local dev stack.
 
-Requires `make dev` (or equivalent) on :5173 with API on :8000, plus Playwright
+Requires `just dev` (or equivalent) on :5173 with API on :8000, plus Playwright
 with Chromium (`pip install playwright && playwright install chromium`).
 
 Seeds rich demo rows for the seed user, logs in through the UI, and writes
@@ -78,7 +78,7 @@ def seed_marketing_demo() -> None:
     with session_scope() as session:
         user = session.scalar(select(User).where(User.email == email))
         if user is None:
-            raise RuntimeError(f"Seed user {email} not found — run `make seed` first.")
+            raise RuntimeError(f"Seed user {email} not found — run `just seed` first.")
 
         search = session.scalar(
             select(Search)
@@ -86,7 +86,7 @@ def seed_marketing_demo() -> None:
             .where(Search.name == "Example - all jobs")
         )
         if search is None:
-            raise RuntimeError("Example search missing — run `make seed` first.")
+            raise RuntimeError("Example search missing — run `just seed` first.")
 
         search.enabled = True
         search.last_run_at = utcnow()

@@ -3,7 +3,7 @@
 # build/push images and roll ECS services.
 #
 # Usage:
-#   make aws-first-deploy PREFIX=yourname
+#   PREFIX=yourname just aws-first-deploy
 #   ./scripts/aws-first-deploy.sh --help
 #
 # Env (all optional unless noted):
@@ -31,7 +31,7 @@ HeadStart first-time AWS deploy (bootstrap → terraform → deploy).
 
 Quick start:
   export AWS_REGION=us-east-2
-  make aws-first-deploy PREFIX=your-unique-name
+  PREFIX=your-unique-name just aws-first-deploy
 
 Flags:
   --help              Show this help
@@ -84,7 +84,7 @@ prompt_prefix() {
     return
   fi
   if [[ ! -t 0 ]]; then
-    die "PREFIX is required in non-interactive mode. Example: make aws-first-deploy PREFIX=yourname"
+    die "PREFIX is required in non-interactive mode. Example: PREFIX=yourname just aws-first-deploy"
   fi
   echo
   echo "Choose a globally unique PREFIX for the Terraform state bucket."
@@ -215,8 +215,8 @@ print_summary() {
   echo "See docs/getting-started.md from step 2."
   echo
   echo "Ongoing deploys from the repo root:"
-  echo "  eval \"\$(make aws-deploy-env ENVIRONMENT=${ENVIRONMENT})\""
-  echo "  make deploy"
+  echo "  eval \"\$(just aws-deploy-env ${ENVIRONMENT})\""
+  echo "  just deploy"
   if [[ -f "${SECRETS_FILE}" ]]; then
     echo
     warn "Secrets saved in ${SECRETS_FILE} — back them up and never commit that file."
