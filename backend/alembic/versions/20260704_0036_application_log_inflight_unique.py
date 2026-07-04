@@ -1,6 +1,6 @@
 """partial unique index on in-flight application_log rows
 
-Revision ID: 0036_application_log_inflight_unique
+Revision ID: 0036_application_log_inflight
 Revises: 0035_user_token_version
 Create Date: 2026-07-04
 
@@ -18,7 +18,7 @@ import sqlalchemy as sa
 
 from alembic import op
 
-revision: str = "0036_application_log_inflight_unique"
+revision: str = "0036_application_log_inflight"
 down_revision: str | None = "0035_user_token_version"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
@@ -29,14 +29,14 @@ _WHERE = "status IN ('queued', 'processing') AND dry_run = 0"
 
 def upgrade() -> None:
     op.execute(
-        f"""
+        """
         DELETE FROM application_log
-        WHERE dry_run = 0
+        WHERE dry_run = FALSE
           AND status IN ('queued', 'processing')
           AND id NOT IN (
               SELECT MIN(id)
               FROM application_log
-              WHERE dry_run = 0
+              WHERE dry_run = FALSE
                 AND status IN ('queued', 'processing')
               GROUP BY seen_job_id
           )
@@ -47,9 +47,7 @@ def upgrade() -> None:
         "application_log",
         ["seen_job_id"],
         unique=True,
-        postgresql_where=sa.text(
-            "status IN ('queued', 'processing') AND dry_run IS FALSE"
-        ),
+        postgresql_where=sa.text("status IN ('queued', 'processing') AND dry_run IS FALSE"),
         sqlite_where=sa.text(_WHERE),
     )
 
