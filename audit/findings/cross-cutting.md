@@ -24,7 +24,7 @@ Note on merges: the `portal_search` schema-drift defect surfaced from three angl
 
 <a id="xct-02"></a>
 ### XCT-02 — enqueue_apply read-then-write with no unique constraint double-submits live applications
-🟠 **HIGH** · 🐞 bug · Status: ☐ open · Confidence: high (5/5 verifiers) · Effort: M · WS14
+🟠 **HIGH** · 🐞 bug · Status: ✅ done · Confidence: high (5/5 verifiers) · Effort: M · WS14
 
 **Locations:** `backend/app/services/apply.py:49` (`ApplyService.enqueue_apply`); plus `backend/app/services/apply.py:72`, `backend/app/repositories/application_logs.py:38`, `backend/app/models/application_log.py:16`, `backend/app/api/v1/jobs.py:109`.
 
@@ -35,6 +35,8 @@ Note on merges: the `portal_search` schema-drift defect surfaced from three angl
 **Suggested fix.** Add a DB partial-unique on `(seen_job_id)` where `status in (queued, processing)` with `IntegrityError` handling, or `SELECT ... FOR UPDATE` the `seen_job` before the pending check.
 
 **Verification.** Confirmed 5/5 adversarial verifiers. `enqueue_apply` reads unlocked `get_pending_for_job` then inserts a queued log; `application_log` has no unique constraint on `seen_job_id` and `jobs.py:109` has no idempotency guard, so two concurrent `POST /apply` dispatch two live employer submissions.
+
+**Resolution.** Fixed in `334164a` (migration `0036_application_log_inflight`): partial unique index `uq_application_log_inflight_job` plus `try_add_pending` SAVEPOINT/`IntegrityError` handling. Tracker/docs aligned in the XCT-02 backlog-drain PR (same root defect as **SVC-01**).
 
 <a id="xct-03"></a>
 ### XCT-03 — process_pending_replies has no row lock; redelivery double-sends recruiter SMTP reply

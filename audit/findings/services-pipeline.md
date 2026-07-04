@@ -8,9 +8,9 @@ This area covers the backend business-logic layer (`backend/app/services/`): the
 
 <a id="svc-01"></a>
 ### SVC-01 — Live-apply double-submit guard is non-atomic, no unique constraint or lock
-🟡 **MEDIUM** · 🐞 bug · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: M · WS14
+🟡 **MEDIUM** · 🐞 bug · Status: ✅ done · Confidence: high (3/3 verifiers) · Effort: M · WS14
 
-> Merged with **SVC-03** ("Double-submit guard is a non-atomic check with no DB constraint or lock"), which reports the identical check-then-insert defect on the same lines from the perspective of the manual-vs-pipeline race.
+> Merged with **SVC-03** ("Double-submit guard is a non-atomic check with no DB constraint or lock"), which reports the identical check-then-insert defect on the same lines from the perspective of the manual-vs-pipeline race. Same root defect as **XCT-02**.
 
 **Locations:** `backend/app/services/apply.py:49` (`ApplyService.enqueue_apply`); also `backend/app/services/apply.py:72` (`enqueue_auto_apply_from_pipeline`), `backend/app/repositories/application_logs.py:38` (`get_pending_for_job`), `backend/app/models/application_log.py:16`.
 
@@ -21,6 +21,8 @@ This area covers the backend business-logic layer (`backend/app/services/`): the
 **Suggested fix.** Add a partial unique index on `seen_job_id` scoped to pending, non-dry-run rows, or `SELECT ... FOR UPDATE` the job/existing-log row before the check-and-insert so the guard is atomic.
 
 **Verification.** Confirmed 3/3 adversarial verifiers (SVC-01) and 3/3 on the merged SVC-03. `get_pending_for_job` is a plain SELECT with no lock and `application_log` has no unique constraint (unlike `pending_digest`'s uq in migration 0005), so two concurrent enqueues both see `None` and insert queued rows, yielding a duplicate live ATS submit.
+
+**Resolution.** Closed with **XCT-02**: `uq_application_log_inflight_job` + `try_add_pending` (shipped in `334164a`; tracker/docs in XCT-02 drain PR).
 
 <a id="svc-02"></a>
 ### SVC-02 — Auto-apply has no per-plan or volume cap once a source opts in

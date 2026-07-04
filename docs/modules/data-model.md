@@ -245,6 +245,14 @@ Audit of auto-apply attempts (preview and live).
 | external_application_id  | str?        | Board-assigned ID on success             |
 | created_at               | datetime    |                                          |
 
+**In-flight uniqueness (XCT-02 / SVC-01):** partial unique index
+`uq_application_log_inflight_job` on `seen_job_id` where
+`status IN ('queued', 'processing') AND dry_run IS FALSE`. Live enqueue
+(`ApplicationLogRepository.try_add_pending`) inserts under a SAVEPOINT and
+treats `IntegrityError` as “already in progress”, so concurrent
+`POST /jobs/{id}/apply` or pipeline auto-apply cannot queue two Celery live
+submits for the same job.
+
 ## Migrations
 
 Change a model, then `just makemigration "..."`, review, `just migrate`.
