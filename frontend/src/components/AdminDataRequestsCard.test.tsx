@@ -30,6 +30,9 @@ describe("AdminDataRequestsCard", () => {
     renderWithClient(<AdminDataRequestsCard />);
 
     expect(screen.getByRole("heading", { name: "GDPR data requests" })).toBeInTheDocument();
+    expect(
+      screen.getByText(/one-way account pseudonym/i),
+    ).toBeInTheDocument();
     expect(screen.queryByRole("table")).not.toBeInTheDocument();
     expect(
       screen.queryByText("No export or deletion requests recorded yet."),
@@ -49,14 +52,19 @@ describe("AdminDataRequestsCard", () => {
   it("renders export and deletion rows with a placeholder for missing IPs", async () => {
     mockApi.listAdminDataRequests.mockResolvedValue([
       row({ id: 1, request_type: "export", ip_address: "10.0.0.1" }),
-      row({ id: 2, request_type: "delete", ip_address: null, user_email: "gone@example.com" }),
+      row({
+        id: 2,
+        request_type: "delete",
+        ip_address: null,
+        user_email: "erased:abc123",
+      }),
     ]);
     renderWithClient(<AdminDataRequestsCard />);
 
     await waitFor(() => expect(screen.getByText("Data export")).toBeInTheDocument());
     expect(screen.getByText("Account deletion")).toBeInTheDocument();
     expect(screen.getByText("10.0.0.1")).toBeInTheDocument();
-    expect(screen.getByText("gone@example.com")).toBeInTheDocument();
+    expect(screen.getByText("erased:abc123")).toBeInTheDocument();
     expect(screen.getByText("—")).toBeInTheDocument();
   });
 });

@@ -160,10 +160,12 @@ When Stripe is configured and the account has billing IDs, deletion first
 cancels any `stripe_subscription_id` and deletes the `stripe_customer_id`
 (best-effort: Stripe errors are logged and do not block local erasure).
 
-Successful export and deletion requests are recorded in `data_request_log`
-(user email snapshot, request type, client IP, user agent). Export rows keep
-`user_id`; deletion rows store only the email because the account is removed
-immediately afterward. Admins list recent rows via `GET /admin/data-requests`.
+Successful export and deletion requests are recorded in `data_request_log`.
+Export rows keep the live email (and optional client IP / user agent) while the
+account exists. On deletion, prior export rows for that user are redacted and
+the deletion row stores only an HMAC email pseudonym (`erased:<hex>`) with no
+IP or user agent — recoverable PII does not survive erasure (DAT-02). Admins
+list recent rows via `GET /admin/data-requests`.
 
 Public subprocessors and DPA overview: `/subprocessors` (linked from the privacy
 policy and site footer).

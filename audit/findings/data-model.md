@@ -31,9 +31,11 @@ or the lock already points at a user.
 
 <a id="dat-02"></a>
 ### DAT-02 — DataRequestLog retains user_email & IP indefinitely after account erasure
-🟡 **MEDIUM** · 🔒 security · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: M · WS18
+🟡 **MEDIUM** · 🔒 security · Status: ✅ done · Confidence: high (3/3 verifiers) · Effort: M · WS18
 
 > Merged with DAT-10 (`data_request_log.py:22`, low/medium confidence, uid 250), which reports the same defect from the erasure-path angle. Combined here as one finding.
+
+**Update (2026-07-10).** Fixed: account deletion redacts prior export audit rows for the user and writes the deletion row with an HMAC email pseudonym (`erased:<hex>`) and no IP/UA. Migration `0038_redact_data_req` redacts historical delete/orphaned rows. Privacy policy Retention section documents the post-erasure audit basis.
 
 **Locations:** `backend/app/models/data_request_log.py:22` (`DataRequestLog.user_email`); plus `backend/app/services/auth_account.py:112` and the delete-row write at `auth_account.py:127`.
 
@@ -151,7 +153,7 @@ or the lock already points at a user.
 
 <a id="dat-10"></a>
 ### DAT-10 — DataRequestLog retains user_email & IP indefinitely after account erasure (erasure-path view)
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: medium (3/3 verifiers) · Effort: S · WS18
+⚪ **LOW** · 🔒 security · Status: ✅ done · Confidence: medium (3/3 verifiers) · Effort: S · WS18
 
 > This is the same underlying defect as DAT-02 (medium), reported from the account-erasure path. Retained here for traceability; see [DAT-02](#dat-02) for the primary write-up and merged treatment.
 

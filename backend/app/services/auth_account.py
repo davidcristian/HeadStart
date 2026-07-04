@@ -5,7 +5,7 @@ from __future__ import annotations
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import ValidationError
-from app.core.security import verify_password
+from app.core.security import pseudonymize_email_for_audit, verify_password
 from app.models.base import utcnow
 from app.models.data_request_log import DataRequestLog
 from app.models.site_credential import SiteCredential
@@ -121,9 +121,24 @@ def _record_data_request(
     user_agent: str | None,
 ) -> None:
     """Persist an audit row for a completed GDPR export or deletion."""
-    DataRequestLogRepository(session).add(
+    repo = DataRequestLogRepository(session)
+    if request_type == "delete":
+        # Deletion must not leave recoverable email/IP/UA after the account is gone.
+        pseudonym = pseudonymize_email_for_audit(user.email)
+        repo.redact_for_erasure(user.id, email_pseudonym=pseudonym)
+        repo.add(
+            DataRequestLog(
+                user_id=None,
+                user_email=pseudonym,
+                request_type="delete",
+                ip_address=None,
+                user_agent=None,
+            )
+        )
+        return
+    repo.add(
         DataRequestLog(
-            user_id=user.id if request_type == "export" else None,
+            user_id=user.id,
             user_email=user.email,
             request_type=request_type,
             ip_address=ip_address,

@@ -5,6 +5,7 @@ dependency that turns a request into a `User` lives in `app.api.deps`.
 """
 
 import hashlib
+import hmac
 import secrets
 from datetime import timedelta
 from typing import Any, Literal
@@ -78,6 +79,16 @@ def decode_feed_token(token: str) -> dict[str, Any]:
 def hash_password_reset_token(token: str) -> str:
     """One-way hash of a reset token for storage (not bcrypt — token is already random)."""
     return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
+def pseudonymize_email_for_audit(email: str) -> str:
+    """One-way account reference for GDPR audit rows that outlive the user."""
+    digest = hmac.new(
+        settings.jwt_secret.encode("utf-8"),
+        email.strip().lower().encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+    return f"erased:{digest}"
 
 
 def _create_token(subject: str, token_type: TokenType, expires: timedelta, version: int) -> str:

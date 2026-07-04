@@ -125,6 +125,13 @@ export function PrivacyPolicyPage() {
           the app, associated rows are removed from our database. You can export all of your data or
           permanently delete your account from <strong>Settings → Your account</strong> in the app.
         </p>
+        <p>
+          After account deletion we keep a minimal audit record that a deletion occurred (timestamp
+          and a one-way pseudonym of the former email address). That record does not retain your
+          plaintext email, IP address, or user agent. Export audit rows for an active account may
+          include email and request metadata until you delete the account, at which point they are
+          redacted the same way.
+        </p>
       </section>
 
       <section>

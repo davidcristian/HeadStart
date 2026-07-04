@@ -75,7 +75,7 @@ never touch the DB directly (services use repositories). See
 | GET    | `/admin/users`        | List all users (admin only)              |
 | PATCH  | `/admin/users/{id}`   | Toggle `is_active` / `is_admin` / `plan` (admin) |
 | GET    | `/admin/stats`        | Global scrape/delivery aggregates (admin)|
-| GET    | `/admin/data-requests` | Recent GDPR export/deletion audit rows (admin) |
+| GET    | `/admin/data-requests` | Recent GDPR export/deletion audit rows (admin; deletion rows are email-pseudonymized) |
 | GET    | `/admin/promo-codes`  | List promo codes (admin)                 |
 | POST   | `/admin/promo-codes`  | Create a promo code (admin)              |
 | PATCH  | `/admin/promo-codes/{id}` | Update a promo code (admin)          |

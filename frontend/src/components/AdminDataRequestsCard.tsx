@@ -14,8 +14,9 @@ export function AdminDataRequestsCard() {
   return (
     <Card title="GDPR data requests">
       <p className="muted">
-        Audit trail of successful account data exports and deletions. Failed password attempts are
-        not logged.
+        Audit trail of successful account data exports and deletions. Deletion rows show a
+        one-way account pseudonym (not the plaintext email). Failed password attempts are not
+        logged.
       </p>
       {requests.data && requests.data.length === 0 ? (
         <EmptyState>No export or deletion requests recorded yet.</EmptyState>
@@ -25,7 +26,7 @@ export function AdminDataRequestsCard() {
             <thead>
               <tr>
                 <th>When</th>
-                <th>Email</th>
+                <th>Account</th>
                 <th>Request</th>
                 <th>IP</th>
               </tr>

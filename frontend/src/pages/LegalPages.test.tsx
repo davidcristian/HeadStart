@@ -21,6 +21,9 @@ describe("Legal pages", () => {
 
     expect(screen.getByRole("heading", { name: "Privacy Policy" })).toBeInTheDocument();
     expect(screen.getByText(/Effective June 29, 2026/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/one-way pseudonym of the former email address/i),
+    ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Terms" })).toHaveAttribute("href", "/terms");
     expect(screen.getByRole("link", { name: "Privacy" })).toHaveAttribute("href", "/privacy");
     expect(screen.getAllByRole("link", { name: "Subprocessors" })[0]).toHaveAttribute(

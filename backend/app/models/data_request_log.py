@@ -1,4 +1,9 @@
-"""DataRequestLog: audit trail for GDPR export and account-deletion requests."""
+"""DataRequestLog: audit trail for GDPR export and account-deletion requests.
+
+Export rows keep the live email (and optional IP/UA) while the account exists.
+Deletion redacts prior rows for that user and stores only an HMAC email
+pseudonym with no IP/UA, so recoverable PII does not survive erasure.
+"""
 
 from datetime import datetime
 from typing import TYPE_CHECKING

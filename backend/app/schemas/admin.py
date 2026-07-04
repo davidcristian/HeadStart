@@ -50,7 +50,8 @@ class DataRequestLogRead(BaseModel):
 
     id: int
     user_id: int | None
-    user_email: EmailStr
+    # Plain email for live export rows; `erased:<hmac>` after account erasure.
+    user_email: str
     request_type: str
     ip_address: str | None
     user_agent: str | None

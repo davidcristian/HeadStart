@@ -16,6 +16,7 @@ from app.core.security import (
     generate_password_reset_token,
     hash_password,
     hash_password_reset_token,
+    pseudonymize_email_for_audit,
     verify_password,
 )
 from app.models.base import utcnow
@@ -47,6 +48,15 @@ def test_password_reset_token_hash_is_deterministic_sha256() -> None:
     assert digest == hash_password_reset_token(token)
     assert len(digest) == 64  # sha256 hex
     assert generate_password_reset_token() != generate_password_reset_token()
+
+
+def test_pseudonymize_email_for_audit_is_stable_and_opaque() -> None:
+    first = pseudonymize_email_for_audit("User@Example.com")
+    second = pseudonymize_email_for_audit(" user@example.com ")
+    assert first == second
+    assert first.startswith("erased:")
+    assert "example.com" not in first
+    assert first != pseudonymize_email_for_audit("other@example.com")
 
 
 def test_access_token_roundtrip_carries_type_and_version() -> None:
