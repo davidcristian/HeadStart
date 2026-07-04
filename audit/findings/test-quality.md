@@ -115,3 +115,19 @@ This area examines whether the repository's 100%-coverage gate reflects real beh
 **Suggested fix.** Test the actual `'queued'` path and its post-poll invalidation instead of a synthetic `'submitted'` return; remove or rewrite the branch it covers.
 
 **Verification.** Confirmed 5/5 adversarial verifiers. `jobs.py:120` always returns `status='queued'` for a live apply; the hook's `result.status==='submitted'` branch (`jobMutations.ts:46`) is unreachable from the endpoint, so the test fabricates an impossible status.
+
+---
+
+<a id="tst-08"></a>
+### TST-08 — `src/test/**` gate exclusion + deletion of `mockApiSamples.test.ts` left the mock builders unasserted
+⚪ **LOW** · 🧪 test · Status: ☐ open · Confidence: high (delta audit) · Effort: S · WS42
+
+**Locations:** `frontend/src/test/mockApiSamples.ts` (builder functions).
+
+**Evidence.** `mockApiSamples.ts` has real logic — builder functions (`newSourceRecord`, `updatedSourceRecord`, …) that merge caller overrides via `...(data as object)`. Commit `702808e` deleted `mockApiSamples.test.ts` (60 lines of `toMatchObject` assertions) and excluded all of `src/test/**` from coverage, so the builders still execute (page tests drive them) but their behavior is asserted nowhere.
+
+**Failure scenario.** Someone breaks a builder's override-merge or a default id; no test asserts the output and it's excluded from coverage, so `make check` stays green while the fixtures many page tests rely on are silently corrupted.
+
+**Suggested fix.** Keep a small builder-contract test, or don't exclude the builder module from coverage.
+
+**Verification.** Confirmed (delta audit, 2026-07-03). Test-infrastructure, so a reasonable trade-off — flagged as a genuine reduction in meaningful assertions beyond what the docs describe.

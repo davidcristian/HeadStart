@@ -5,7 +5,6 @@ import { NavLink, Outlet } from "react-router-dom";
 import { FreeTierAd } from "./FreeTierAd";
 import { useHealth } from "../hooks/queries";
 import { useFocusTrap } from "../hooks/useFocusTrap";
-import { api } from "../api";
 import { useAuth } from "../auth/AuthContext";
 import { Brand } from "./Brand";
 import { Button } from "./ui";

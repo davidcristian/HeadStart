@@ -8,7 +8,9 @@ This area covers `backend/app/appliers/` — the pluggable adapters that autonom
 
 <a id="apl-01"></a>
 ### APL-01 — Apple applyJob reports submitted on {"success": false} 200 body despite modeling it
-🟠 **HIGH** · 🐞 bug · Status: ☐ open · Confidence: high (5/5 verifiers) · Effort: S · WS23
+🟠 **HIGH** · 🐞 bug · Status: ✅ done (2026-07-03, fixed `a294e81`) · Confidence: high (5/5 verifiers) · Effort: S · WS23
+
+**Update (2026-07-03).** Fixed: `apply()` now calls `apply_error_message(response)` after `submit_apply_job` and returns `status=failed` on a `{"success": false}` body (regression-tested by `test_live_submit_fails_on_success_false_body`). A narrower residual — a 200 body with bare `errors` and no `success` key — is tracked as [APL-28](#apl-28).
 
 **Locations:** `backend/app/appliers/adapters/apple_careers_live.py:121` (`submit_apply_job`); plus `backend/app/appliers/adapters/apple_careers.py:165`, `backend/app/appliers/adapters/apple_careers_common.py:147`.
 
@@ -22,7 +24,9 @@ This area covers `backend/app/appliers/` — the pluggable adapters that autonom
 
 <a id="apl-02"></a>
 ### APL-02 — Indeed live Easy Apply submit never sends the session cookies it gates on
-🟠 **HIGH** · 🐞 bug · Status: ☐ open · Confidence: high (5/5 verifiers) · Effort: S · WS23
+🟠 **HIGH** · 🐞 bug · Status: ✅ done (2026-07-03, fixed `b306290`) · Confidence: high (5/5 verifiers) · Effort: S · WS23
+
+**Update (2026-07-03).** Fixed: `_credential_headers` now serializes `credentials["cookies"]` into a `Cookie` header that reaches the smartapply submit (a test asserts the cookies on the wire). The manual string-join serialization (vs httpx `cookies=`) is a hardening residual tracked as [APL-29](#apl-29).
 
 **Locations:** `backend/app/appliers/adapters/indeed.py:124` (`IndeedApplier._apply_hosted`).
 
@@ -36,7 +40,9 @@ This area covers `backend/app/appliers/` — the pluggable adapters that autonom
 
 <a id="apl-03"></a>
 ### APL-03 — Microsoft/Apple SmartApply submits report success on 200 error body (no post-2xx check)
-🟠 **HIGH** · 🐞 bug · Status: ☐ open · Confidence: high (5/5 verifiers) · Effort: S · WS23
+🟠 **HIGH** · 🐞 bug · Status: 🔜 in progress (2026-07-03, `a294e81`) · Confidence: high (5/5 verifiers) · Effort: S · WS23
+
+**Update (2026-07-03).** Partially fixed: Microsoft `apply()` now checks `api_error_message()` after candidate/resume/submit — the Microsoft path is fully closed (a claim that top-level string `error` bodies slip through was refuted; the real envelope models `error` as a dict, which is caught). Apple's `apply_error_message` is stricter and still misses bare-`errors` bodies, so the Apple half remains open as [APL-28](#apl-28).
 
 Merged with APL-07 (same defect, one location list): Microsoft SmartApply and Apple `applyJob` both ignore a `success:false`/`errors` body after a 2xx.
 
@@ -53,6 +59,8 @@ Merged with APL-07 (same defect, one location list): Microsoft SmartApply and Ap
 <a id="apl-04"></a>
 ### APL-04 — Required questionnaire answer silently dropped when value present but unresolvable
 🟠 **HIGH** · 🐞 bug · Status: ☐ open · Confidence: high (5/5 verifiers) · Effort: S · WS24
+
+**Update (2026-07-03).** Re-verified still open — the fix wave never touched `workday_questionnaire_answers.py`. Reproduced: `build_questionnaire_answers({required numeric q}, {"q-num": "0"}) → ([], [])` (should flag `q-num` as missing).
 
 Merged with APL-10 (same defect at the same guard, `build_questionnaire_answers` line 48): a present-but-unconvertible required answer — unmatched choice label, numeric `'0'`/non-int — is dropped without being flagged.
 
@@ -303,3 +311,39 @@ Merged with APL-25 (same defect at `_resolve_choice_ids` line 126; APL-25's `ver
 **Suggested fix.** Default `dry_run` to `True` and require callers to pass `dry_run=False` explicitly for live submits, matching the opt-in-for-LIVE intent.
 
 **Verification.** Confirmed 3/3 adversarial verifiers. `dry_run` defaults to `False` on the auto-apply context; all current callers (`apply.py:134`, linkedin/indeed/shopify/snowflake) pass it explicitly so there is no live impact today, but the unsafe default is a legitimate safe-default finding.
+
+---
+
+<a id="apl-28"></a>
+### APL-28 — Apple apply_error_message only rejects strict `success is False`; bare-`errors` 200 bodies still report submitted
+🟡 **MEDIUM** · 🐞 bug · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: S · WS42
+
+Residual of the APL-01/APL-03 fix (commit `a294e81`): the Apple and Microsoft error-body checks added in the same commit are asymmetric.
+
+**Locations:** `backend/app/appliers/adapters/apple_careers_common.py:158` (`apply_error_message`).
+
+**Evidence.** `apply_error_message` guards `if not isinstance(response, dict) or response.get("success") is not False: return None`, so it fires only on the canonical `{"success": false}` envelope. The sibling `api_error_message` (`microsoft_careers_common.py:166-178`), added in the same fix, has a fallthrough that inspects a bare `errors` list / `error` dict even when `success` is absent; Apple has no such fallthrough. `put_json` only `raise_for_status`es on non-2xx, so a 200 error body flows straight in.
+
+**Failure scenario.** Apple `applyJob` returns `200 {"errors": [{"message": "missing required answer"}]}` (or `{"error": "…"}`) with no top-level `success`. `apply_error_message` returns `None`, `extract_application_id` returns `None`, and `AppleCareersApplier.apply` (`apple_careers.py:181-185`) returns `status="submitted"` with a null application id — the exact false-success class APL-01/APL-03 set out to close, left un-swept on the Apple path (`services/apply.py` treats `submitted` as terminal, so nothing downstream blocks it).
+
+**Suggested fix.** Give `apply_error_message` the same fallthrough as `api_error_message`: when the body carries a non-empty `errors` list or an `error` value, return a message regardless of `success`. Add a regression test for `{"errors": [{"message": …}]}` without a `success` key.
+
+**Verification.** Confirmed 3/3 adversarial verifiers (delta audit, 2026-07-03), median medium. Reproduced directly: `apply_error_message({"errors":[{"message":"…"}]})` → `None` while the Microsoft sibling returns the message. Kept medium not high — the canonical `success:false` rejection IS now caught and tested, so exploitability hinges on Apple emitting an error body without `success:false` (plausible for the undocumented endpoint, but unproven by a captured fixture).
+
+---
+
+<a id="apl-29"></a>
+### APL-29 — Indeed Cookie header built by manual join of unvalidated credential values (self header-injection)
+⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: high (delta audit) · Effort: S · WS42
+
+Residual of the APL-02 fix: the cookies are now correctly sent, but via a raw header join rather than the safer `cookies=` path.
+
+**Locations:** `backend/app/appliers/adapters/indeed.py:175` (`_credential_headers`).
+
+**Evidence.** The APL-02 fix serializes cookies as `"; ".join(f"{key}={value}" for key, value in cookies.items())` into a raw `Cookie` header, instead of httpx's `cookies=` parameter that the sibling LinkedIn submit uses (`linkedin.py:211`). Cookie values come from `CredentialCreate.cookies`, typed `dict[str, str]` with no content validation (`schemas/credential.py:20`), and httpx passes a value containing CRLF through untouched (verified empirically).
+
+**Failure scenario.** A user stores an Indeed cookie whose value contains CRLF or a semicolon; the live smartapply POST carries `Cookie: PPID=<value-with-\r\n>`, splicing an extra request header or forging additional cookie morsels into the user's own outbound request. Bounded to self-injection (own credential, fixed URL, multi-user isolation intact) — defense-in-depth, not a cross-tenant exploit.
+
+**Suggested fix.** Pass `cookies=credentials["cookies"]` to `post_json` and let httpx build/validate the morsels, mirroring LinkedIn.
+
+**Verification.** Confirmed (delta audit, 2026-07-03). Does not reopen APL-02 — the cookies are correctly sent to the submit request now (a test asserts them on the wire); this is the serialization-hardening residual.

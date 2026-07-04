@@ -239,3 +239,35 @@ Merged: DOC-04 (uid 126) is a near-subset covering only the LinkedIn half and is
 **Suggested fix.** Either narrow the `auth.md` wording to the actually-exported entities, or extend `export_user_data` to include application logs/artifacts (inbox is dev-only — note the exclusion).
 
 **Verification.** Confirmed 3/3 adversarial verifiers. export_user_data (auth_account.py:45-59) bundles only account/sources/searches/targets/credentials/profile/jobs; excludes application_log/artifact/inbox while auth.md:138 claims "everything they own". Doc overstatement, low fair.
+
+---
+
+<a id="doc-24"></a>
+### DOC-24 — AGENTS.md §6 understates the frontend coverage exclusions (self-declared DoD violation)
+⚪ **LOW** · 📝 doc · Status: ☐ open · Confidence: high (delta audit) · Effort: S · WS42
+
+**Locations:** `AGENTS.md` §6 (Quality bars — frontend).
+
+**Evidence.** §6 states "Only `src/types/**` and `*.d.ts` are excluded", but `frontend/vite.config.ts` now excludes five patterns: `src/types/**`, `**/*.d.ts`, `**/*.test.{ts,tsx}`, `src/main.tsx`, `src/test/**`. Commit `702808e` added `src/main.tsx` + `src/test/**` and updated AGENTS.md §3 but left §6 stale — which §0/§5 ("stale docs are a bug") call a Definition-of-Done violation.
+
+**Failure scenario.** A reader trusts §6 and assumes new `main.tsx` logic or a new `src/test/**` helper is gate-enforced; it is not. No product code lost coverage today (`main.tsx` is branchless bootstrap; `src/test/**` has no product importer), so impact is false assurance only.
+
+**Suggested fix.** Update §6 to list the five actual exclusions (the config comment at `vite.config.ts:64-66` is already accurate).
+
+**Verification.** Confirmed 3/3 verifiers (delta audit, 2026-07-03); all voted low severity — genuine doc drift, no gate-integrity loss.
+
+---
+
+<a id="doc-25"></a>
+### DOC-25 — README lists `ntfy` in the `make up` service set, but `make up` never starts it
+⚪ **LOW** · 📝 doc · Status: ☐ open · Confidence: high (delta audit) · Effort: S · WS42
+
+**Locations:** `README.md:93` (quick-start `make up` comment).
+
+**Evidence.** The README restyle changed the comment to `# api, worker, beat, db, redis, frontend, ntfy`, but `ntfy` is declared `profiles: ["offline"]` in `docker-compose.yml:112`, and `make up` → `scripts/dev.sh up` runs `compose up -d --build` with no `--profile offline`. Compose skips profile-gated services, so `make up` starts everything except `ntfy`.
+
+**Failure scenario.** A new user runs `make up`, expects a self-hosted ntfy server per the README, and finds none at `:8090`. Onboarding confusion; no security impact.
+
+**Suggested fix.** Drop `, ntfy` from the line, or annotate it as requiring `--profile offline`.
+
+**Verification.** Confirmed (delta audit, 2026-07-03). The compose header itself documents ntfy as opt-in via `--profile offline`.

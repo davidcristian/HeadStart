@@ -1,26 +1,28 @@
 # Audit Backlog — Full Codebase Audit 2026-07-02
 
-Living tracker for the **second** full-codebase audit (branch `docs/audit-2026-07`, commit `f2f22ef`). Same tracker format as the 2026-07-01 audit in [../docs/audit-backlog.md](../docs/audit-backlog.md); workstream numbering **continues at WS14**. Update the Status column (and strike the row) when an item ships; link the PR. Full context for every item lives in the linked [findings/](findings/) doc.
+Living tracker for the **second** full-codebase audit (branch `docs/audit-2026-07`, commit `2630231`). Same tracker format as the 2026-07-01 audit in [../docs/audit-backlog.md](../docs/audit-backlog.md); workstream numbering **continues at WS14**. Update the Status column (and strike the row) when an item ships; link the PR. Full context for every item lives in the linked [findings/](findings/) doc.
 
-Produced by a read-only multi-agent audit at commit `09957ec` — **every medium-and-up finding adversarially verified** by 3–5 independent refuters (majority vote). **274 tracked findings** (0 critical · 12 high · 72 medium · 190 low), consolidated from 355 verified records (near-duplicates and systemic classes merged in the findings docs). This audit deliberately targeted ground the first audit did not cover — IaC/CI-CD security, accessibility, dependency CVEs, licensing, GDPR completeness, performance, observability — and swept the full *class* of every instance-fix the first audit made.
+Produced by a read-only multi-agent audit at commit `09957ec` — **every medium-and-up finding adversarially verified** by 3–5 independent refuters (majority vote). **269 tracked findings** from the original pass (0 critical · 12 high · 71 medium · 186 low), consolidated from 350 verified records (near-duplicates and systemic classes merged in the findings docs). This audit deliberately targeted ground the first audit did not cover — IaC/CI-CD security, accessibility, dependency CVEs, licensing, GDPR completeness, performance, observability — and swept the full *class* of every instance-fix the first audit made.
+
+**Delta follow-up (2026-07-03).** A scoped re-audit of the fixes shipped since the baseline marked **APL-01** and **APL-02** ✅ done and **APL-03** 🔜 in progress (Microsoft closed; Apple residual [APL-28](findings/appliers.md#apl-28)), and re-confirmed **APL-04** still ☐ open. It also added **7 findings** (1 medium, 6 low) under **WS42**; the counts below include them (**281 tracked** total).
 
 **Status legend:** ☐ open · 🔜 in progress · ✅ done
 **Type:** 🐞 bug · 🔒 security · 📝 doc · 🧪 test · ♻️ refactor · 🔁 consistency · ⚡ perf
 **Severity:** 🔴 CRIT · 🟠 HIGH · 🟡 MED · ⚪ LOW
 
-**By severity:** 🔴 0 · 🟠 12 · 🟡 72 · ⚪ 190
-**By type:** 🐞 92 · 🔒 92 · 📝 29 · 🧪 9 · ♻️ 8 · 🔁 29 · ⚡ 15
+**By severity:** 🔴 0 · 🟠 12 · 🟡 73 · ⚪ 196
+**By type:** 🐞 93 · 🔒 94 · 📝 31 · 🧪 10 · ♻️ 8 · 🔁 30 · ⚡ 15
 
 ---
 
-## At a glance — highest priority (open)
+## At a glance — highest priority
 
 | Sev | Type | Item | Location | Status |
 | --- | ---- | ---- | -------- | ------ |
 | 🟠 HIGH | 🐞 | [AIA-01](findings/ai-adapters.md#aia-01) render_resume_template escapes structured LaTeX markup, breaking every default-template and AI-curated resume | `backend/app/resumes/template.py:31` | ☐ |
-| 🟠 HIGH | 🐞 | [APL-01](findings/appliers.md#apl-01) Apple applyJob reports submitted on {"success": false} 200 body despite modeling it | `backend/app/appliers/adapters/apple_careers_live.py:121` | ☐ |
-| 🟠 HIGH | 🐞 | [APL-02](findings/appliers.md#apl-02) Indeed live Easy Apply submit never sends the session cookies it gates on | `backend/app/appliers/adapters/indeed.py:124` | ☐ |
-| 🟠 HIGH | 🐞 | [APL-03](findings/appliers.md#apl-03) Microsoft/Apple SmartApply submits report success on 200 error body (no post-2xx check) | `backend/app/appliers/adapters/microsoft_careers.py:143` | ☐ |
+| 🟠 HIGH | 🐞 | [APL-01](findings/appliers.md#apl-01) Apple applyJob reports submitted on {"success": false} 200 body despite modeling it | `backend/app/appliers/adapters/apple_careers_live.py:121` | ✅ |
+| 🟠 HIGH | 🐞 | [APL-02](findings/appliers.md#apl-02) Indeed live Easy Apply submit never sends the session cookies it gates on | `backend/app/appliers/adapters/indeed.py:124` | ✅ |
+| 🟠 HIGH | 🐞 | [APL-03](findings/appliers.md#apl-03) Microsoft/Apple SmartApply submits report success on 200 error body (no post-2xx check) | `backend/app/appliers/adapters/microsoft_careers.py:143` | 🔜 |
 | 🟠 HIGH | 🐞 | [APL-04](findings/appliers.md#apl-04) Required questionnaire answer silently dropped when value present but unresolvable | `backend/app/appliers/adapters/workday_questionnaire_answers.py:48` | ☐ |
 | 🟠 HIGH | 🔒 | [AUT-01](findings/auth-security.md#aut-01) Reset & verify tokens logged in plaintext when SMTP unset (no prod guard) | `backend/app/core/email.py:88` | ☐ |
 | 🟠 HIGH | 🐞 | [AUT-02](findings/auth-security.md#aut-02) Account deletion never cancels Stripe subscription or deletes Stripe customer | `backend/app/services/auth_account.py:70` | ☐ |
@@ -171,9 +173,9 @@ _9 item(s): 3 high, 2 medium, 4 low._
 
 | Sev | Type | Item | Location | Status |
 | --- | ---- | ---- | -------- | ------ |
-| 🟠 HIGH | 🐞 | [APL-01](findings/appliers.md#apl-01) Apple applyJob reports submitted on {"success": false} 200 body despite modeling it | `backend/app/appliers/adapters/apple_careers_live.py:121` | ☐ |
-| 🟠 HIGH | 🐞 | [APL-02](findings/appliers.md#apl-02) Indeed live Easy Apply submit never sends the session cookies it gates on | `backend/app/appliers/adapters/indeed.py:124` | ☐ |
-| 🟠 HIGH | 🐞 | [APL-03](findings/appliers.md#apl-03) Microsoft/Apple SmartApply submits report success on 200 error body (no post-2xx check) | `backend/app/appliers/adapters/microsoft_careers.py:143` | ☐ |
+| 🟠 HIGH | 🐞 | [APL-01](findings/appliers.md#apl-01) Apple applyJob reports submitted on {"success": false} 200 body despite modeling it | `backend/app/appliers/adapters/apple_careers_live.py:121` | ✅ |
+| 🟠 HIGH | 🐞 | [APL-02](findings/appliers.md#apl-02) Indeed live Easy Apply submit never sends the session cookies it gates on | `backend/app/appliers/adapters/indeed.py:124` | ✅ |
+| 🟠 HIGH | 🐞 | [APL-03](findings/appliers.md#apl-03) Microsoft/Apple SmartApply submits report success on 200 error body (no post-2xx check) | `backend/app/appliers/adapters/microsoft_careers.py:143` | 🔜 |
 | 🟡 MED | 🐞 | [APL-05](findings/appliers.md#apl-05) Meta resume (multipart) submit skips the GraphQL errors check the JSON path enforces | `backend/app/appliers/adapters/meta_careers_graphql.py:92` | ☐ |
 | 🟡 MED | 🐞 | [APL-11](findings/appliers.md#apl-11) Workday name POST and terms PUT skip the post-2xx errorCode check sibling steps enforce | `backend/app/appliers/adapters/workday_submit.py:84` | ☐ |
 | ⚪ LOW | 🔁 | [APL-16](findings/appliers.md#apl-16) Indeed & LinkedIn-hosted live submit skip the post-2xx error-body check siblings enforce | `backend/app/appliers/adapters/indeed.py:132` | ☐ |
@@ -468,3 +470,16 @@ _30 item(s): 1 medium, 29 low._
 | ⚪ LOW | 🔁 | [NTF-12](findings/notifiers-worker.md#ntf-12) User-facing notification and email copy is hardcoded English with no localization hook | `backend/app/notifiers/digest_format.py:17` | ☐ |
 | ⚪ LOW | 🧪 | [TST-07](findings/test-quality.md#tst-07) Test asserts 'submitted' apply-result behavior the API never produces (coverage-theater) | `frontend/src/hooks/jobMutations.test.tsx:79` | ☐ |
 | ⚪ LOW | 🐞 | [XCT-27](findings/cross-cutting.md#xct-27) useApplyToJob 'submitted' jobs-cache invalidation branch is unreachable (dead code) | `frontend/src/hooks/jobMutations.ts:46` | ☐ |
+
+## WS42 — Delta follow-ups (2026-07-03)
+_7 item(s): 1 medium, 6 low. Recorded by a scoped re-audit of the post-baseline fix wave; full context in [findings/](findings/)._
+
+| Sev | Type | Item | Location | Status |
+| --- | ---- | ---- | -------- | ------ |
+| 🟡 MED | 🐞 | [APL-28](findings/appliers.md#apl-28) Apple apply_error_message only rejects strict success:false; bare-errors 200 bodies still report submitted | `backend/app/appliers/adapters/apple_careers_common.py:158` | ☐ |
+| ⚪ LOW | 🔒 | [APL-29](findings/appliers.md#apl-29) Indeed Cookie header built by manual join of unvalidated credential values (self header-injection) | `backend/app/appliers/adapters/indeed.py:175` | ☐ |
+| ⚪ LOW | 🔁 | [OPS-67](findings/devops.md#ops-67) loc-cap exempts */tests/* but frontend src/test/ stays capped, disagreeing with the coverage-gate exclusion | `scripts/check_loc.sh:20` | ☐ |
+| ⚪ LOW | 🔒 | [OPS-68](findings/devops.md#ops-68) loc-cap exemption keys on the tests/ path segment, not on being a test | `scripts/check_loc.sh:20` | ☐ |
+| ⚪ LOW | 📝 | [DOC-24](findings/docs-drift.md#doc-24) AGENTS.md §6 understates the frontend coverage exclusions (self-declared DoD violation) | `AGENTS.md` | ☐ |
+| ⚪ LOW | 📝 | [DOC-25](findings/docs-drift.md#doc-25) README lists ntfy in the make up service set, but make up never starts it | `README.md:93` | ☐ |
+| ⚪ LOW | 🧪 | [TST-08](findings/test-quality.md#tst-08) src/test/** gate exclusion + deletion of mockApiSamples.test.ts left the mock builders unasserted | `frontend/src/test/mockApiSamples.ts` | ☐ |

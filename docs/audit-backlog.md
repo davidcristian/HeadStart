@@ -65,9 +65,9 @@ ordering (uid from `internalDate`; the list `after:` filter bounds the scan), an
 | 🟠 HIGH | 🔒 | `host.endswith(_TEST_TLD_SUFFIXES)` early-returns for `.localhost` (resolves to loopback) → SSRF bypass on user source URLs. Dropped `.localhost`; the remaining `.test/.example/.invalid` escape hatch is now gated to local/test so prod resolves + IP-checks them | `core/outbound_url.py:42` | ✅ |
 | ⚪ LOW | 🔒 | `/metrics` bearer token compared with `!=` (not constant-time) → use `hmac.compare_digest` | `main.py:50` | ✅ |
 
-## WS4 — Apply-adapter correctness
-Shipping as two scoped PRs: **correctness bugs + tests (items 1–7) ✅ DONE (2026-07-01)**;
-the three dedup refactors (items 8–10) follow in a separate PR.
+## WS4 — Apply-adapter correctness ✅ DONE (2026-07-01)
+Two scoped PRs: correctness bugs + tests (items 1–7) → PR #177; the three dedup
+refactors (items 8–10) → PR #178.
 | Sev | Type | Item | Location | Status |
 | --- | ---- | ---- | -------- | ------ |
 | 🟠 HIGH | 🐞 | Meta `build_application_state` filtered name/title/location per-column but iterated all rows for dates → arrays desynced, wrong pairing. Now every `work*` column is built from one filtered list | `appliers/adapters/meta_careers_payload.py` | ✅ |
@@ -77,9 +77,9 @@ the three dedup refactors (items 8–10) follow in a separate PR.
 | ⚪ LOW | 🐞 | Uber treated every additional question as required → blocked live apply on optional questions; now only API-`required` questions gate submit | `appliers/adapters/uber_careers_questions.py:80` | ✅ |
 | ⚪ LOW | 🔁 | Greenhouse live submit lacked the post-2xx error-body check its siblings have; now fails on `success:false`/`error`/`errors` | `appliers/adapters/greenhouse.py:95` | ✅ |
 | ⚪ LOW | 🧪 | Added test for Ashby multipart carrying the guard | `tests/appliers/test_ashby.py` | ✅ |
-| ⚪ LOW | ♻️ | `render_cover_letter`/`split_name` copy-pasted across 5/3 appliers; extract a shared helper | `appliers/adapters/workday_payload.py:20`, `ashby.py:135` | ☐ |
-| ⚪ LOW | ♻️ | Workday re-implements `structured_profile.applicable_*` verbatim (Uber imports them) | `appliers/adapters/workday_experience.py:45` | ☐ |
-| ⚪ LOW | ♻️ | SmartRecruiters `consent` fallback branch is dead code | `appliers/adapters/smartrecruiters_payload.py:110` | ☐ |
+| ⚪ LOW | ♻️ | `render_cover_letter` (5 copies) + the common `split_name` (greenhouse/workday) now live in `app/appliers/text.py`; all adapters import it. SmartRecruiters keeps its distinct `(name, name)` `split_name` variant | `appliers/text.py` | ✅ |
+| ⚪ LOW | ♻️ | Workday now imports `applicable_work_experience`/`applicable_education` from `structured_profile` instead of re-implementing them | `appliers/adapters/workday_experience.py:45` | ✅ |
+| ⚪ LOW | ♻️ | SmartRecruiters `consent` fallback branch removed — `consent_decisions` already returns non-None whenever `gdpr_consent` is truthy, so the `elif` was unreachable | `appliers/adapters/smartrecruiters_payload.py:110` | ✅ |
 
 ## WS5 — Billing correctness ✅ DONE (2026-07-01)
 | Sev | Type | Item | Location | Status |

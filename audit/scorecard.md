@@ -1,6 +1,6 @@
 # Best-Practice Conformance Scorecard
 
-Each dimension graded A (market-leading) → F (critical gaps) against professional best practice, grounded in the verified findings. Commit `f2f22ef`.
+Each dimension graded A (market-leading) → F (critical gaps) against professional best practice, grounded in the verified findings. Commit `2630231`.
 
 | Dimension | Grade |
 | --- | :---: |

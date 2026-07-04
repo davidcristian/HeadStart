@@ -1,6 +1,6 @@
 # Audit Methodology & Appendix
 
-How this audit was produced, so its findings can be trusted and reproduced. Audited commit: `f2f22ef` (branch `docs/audit-2026-07`, off `master`).
+How this audit was produced, so its findings can be trusted and reproduced. Audited commit: `2630231` (branch `docs/audit-2026-07`, off `master`).
 
 ## Process — 4 phases, ~357 autonomous agents
 

@@ -17,6 +17,7 @@ from typing import Any
 from urllib.parse import urljoin
 
 from app.core.config import settings
+from app.core.outbound_url import assert_safe_outbound_url
 from app.scrapers.base import Scraper, register_scraper
 from app.scrapers.playwright_browser import get_browser
 from app.scrapers.playwright_outbound import install_playwright_outbound_guard
@@ -37,6 +38,7 @@ class PlaywrightScraper(Scraper):
             raise ValueError("playwright scraper requires config.item (a CSS selector)")
         if not ctx.query_url:
             raise ValueError("playwright scraper requires a query_url")
+        assert_safe_outbound_url(ctx.query_url)
 
         timeout_ms = int(
             cfg.get("navigation_timeout_ms", settings.playwright_navigation_timeout_ms)

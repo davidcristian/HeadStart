@@ -228,7 +228,7 @@ This area covers the deployment and infrastructure surface of the repo: the AWS 
 
 **Suggested fix.** Pin every third-party action to a full commit SHA (with a version comment) and add Dependabot to bump the SHAs.
 
-**Verification.** Confirmed 3/3 adversarial verifiers. All `uses:` are floating tags (a real supply-chain gap), but the entire `.github/` directory is absent so none of these workflows execute at f2f22ef; it is a latent hardening issue, not live exposure.
+**Verification.** Confirmed 3/3 adversarial verifiers. All `uses:` are floating tags (a real supply-chain gap), but the entire `.github/` directory is absent so none of these workflows execute at 2630231; it is a latent hardening issue, not live exposure.
 
 ---
 
@@ -677,3 +677,35 @@ This area covers the deployment and infrastructure surface of the repo: the AWS 
 **Suggested fix.** Add `shellcheck` to the loop (and a pre-commit hook) with an agreed severity threshold, so SC2086-class bugs are caught in `make check` rather than production.
 
 **Verification.** Confirmed 3/3 adversarial verifiers. `validate-shell-scripts.sh` runs only `bash -n` plus one `--help`; grep confirms `shellcheck` is never invoked despite scripts carrying `# shellcheck` directives — a real defense-in-depth gap, low.
+
+---
+
+<a id="ops-67"></a>
+### OPS-67 — loc-cap exempts `*/tests/*` but frontend test-infra (`src/test/`) stays capped, disagreeing with the coverage-gate exclusion
+⚪ **LOW** · 🔁 consistency · Status: ☐ open · Confidence: high (delta audit) · Effort: S · WS42
+
+**Locations:** `scripts/check_loc.sh:20`.
+
+**Evidence.** Commit `702808e` added loc-cap exemptions `*/tests/*` (plural) and `*.test.ts | *.test.tsx`, and in the same commit excluded `frontend/src/test/**` from the coverage gate as "test infrastructure". But the frontend test-infra dir is `src/test/` (singular) and its files (`mockApiSamples.ts`, `mockApi.ts`, `renderWithClient.tsx`) don't end in `.test.ts(x)`, so the loc-cap still treats them as capped source — the LOC cap and the coverage exclusion now disagree about what counts as test infrastructure.
+
+**Failure scenario.** `mockApiSamples.ts` is 268 lines; adding ~40 more mock samples pushes it past 300 and `make lint` fails, forcing an artificial split of a pure fixture file — the coverage-theater/arbitrary-split behavior the commit set out to eliminate.
+
+**Suggested fix.** Add `*/src/test/*` to the loc-cap exemption `case` so the two mechanisms agree.
+
+**Verification.** Confirmed (delta audit, 2026-07-03). `case ./frontend/src/test/utils.ts in */tests/*` does not match; no failure today (largest is 268 lines) but the mechanisms are inconsistent.
+
+---
+
+<a id="ops-68"></a>
+### OPS-68 — loc-cap exemption keys on the `tests/` path segment, not on being a test
+⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: medium (delta audit) · Effort: S · WS42
+
+**Locations:** `scripts/check_loc.sh:20`.
+
+**Evidence.** `*/tests/*` exempts by directory name alone. No production file is affected today (the only `tests/` dir is `backend/tests`; the production tree has zero files >300 lines). Correctness relies on the invariant that a directory named exactly `tests/` only holds tests.
+
+**Failure scenario.** A future change nesting a large generated/production module under any path with a `tests/` segment (e.g. `backend/app/foo/tests/generated_client.py`) is silently exempted from the 300-line cap, since the exemption is purely path-based.
+
+**Suggested fix.** Tighten to the known test roots (`backend/tests/`, `frontend/src/**/*.test.*`, `frontend/src/test/`) rather than any `*/tests/*`.
+
+**Verification.** Confirmed (delta audit, 2026-07-03). Convention-reliance / defense-in-depth note, no active defect.
