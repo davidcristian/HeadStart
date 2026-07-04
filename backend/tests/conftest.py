@@ -83,6 +83,9 @@ def default_test_user(db_session: Session) -> User:
 @pytest.fixture
 def db_session() -> Iterator[Session]:
     """A fresh in-memory database per test."""
+    from app.core.rate_limit import reset_rate_limiter
+
+    reset_rate_limiter()
     engine = create_engine("sqlite+pysqlite:///:memory:", future=True)
     Base.metadata.create_all(engine)
     factory = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False, future=True)
@@ -108,11 +111,14 @@ def client() -> Iterator[TestClient]:
     """A FastAPI TestClient wired to a shared in-memory SQLite database."""
     from app.api.deps import get_db
     from app.core.config import settings
+    from app.core.rate_limit import reset_rate_limiter
     from app.main import app
 
     # The TestClient talks plain HTTP, so allow the refresh cookie to flow
     # without the Secure flag (it defaults to Secure for real deployments).
     settings.auth_cookie_secure = False
+    # Auth rate limits are process-global; clear so prior tests cannot 429 us.
+    reset_rate_limiter()
 
     engine = create_engine(
         "sqlite+pysqlite:///:memory:",

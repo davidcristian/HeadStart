@@ -38,7 +38,9 @@ This area covers authentication and session management (login, registration, pas
 
 <a id="aut-03"></a>
 ### AUT-03 — No rate limiting on auth endpoints (login / register / forgot-password / reset / verify / resend)
-🟡 **MEDIUM** · 🔒 security · Status: ☐ open · Confidence: high (3/5 verifiers) · Effort: M · WS19
+🟡 **MEDIUM** · 🔒 security · Status: ✅ done · Confidence: high (3/5 verifiers) · Effort: M · WS19
+
+**Update (2026-07-10).** Fixed in [PR](https://github.com/davidcristian/HeadStart/pull/30): process-local sliding-window rate limits on login (IP + email), register (IP), forgot-password (IP + email + outbound mail), reset/verify (IP), resend-verification (user), refresh (IP), and verification-email issuance (email). Exceeding a bucket returns HTTP 429.
 
 **Merge note.** This consolidates three near-identical confirmed records — AUT-03 (uid 11), AUT-04 (uid 239) and AUT-09 (uid 15) — all reporting the same systemic absence of throttling across the auth surface.
 

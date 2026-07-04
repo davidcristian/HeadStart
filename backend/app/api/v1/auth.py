@@ -6,6 +6,14 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_current_user, get_db, get_verified_user
 from app.core.config import settings
 from app.core.exceptions import ValidationError
+from app.core.rate_limit import (
+    limit_forgot_password,
+    limit_login,
+    limit_refresh,
+    limit_register,
+    limit_resend_verification,
+    limit_token_guess,
+)
 from app.core.request_meta import request_meta
 from app.models.user import User
 from app.schemas.auth import (
@@ -56,20 +64,26 @@ def _issue(response: Response, tokens: TokenResponse) -> AccessTokenResponse:
 
 
 @router.post("/register", response_model=UserRead, status_code=status.HTTP_201_CREATED)
-def register(data: RegisterRequest, db: Session = Depends(get_db)) -> UserRead:
+def register(data: RegisterRequest, request: Request, db: Session = Depends(get_db)) -> UserRead:
     """Create an account. The first registered user becomes the admin."""
+    limit_register(request)
     return UserRead.model_validate(AuthService(db).register(data))
 
 
 @router.post("/login", response_model=AccessTokenResponse)
 def login(
-    data: LoginRequest, response: Response, db: Session = Depends(get_db)
+    data: LoginRequest,
+    request: Request,
+    response: Response,
+    db: Session = Depends(get_db),
 ) -> AccessTokenResponse:
+    limit_login(request, data.email)
     return _issue(response, AuthService(db).login(data))
 
 
 @router.post("/refresh", response_model=AccessTokenResponse)
 def refresh(
+    request: Request,
     response: Response,
     data: RefreshRequest | None = None,
     refresh_cookie: str | None = Cookie(default=None, alias=settings.auth_cookie_name),
@@ -77,6 +91,7 @@ def refresh(
 ) -> AccessTokenResponse:
     """Exchange a refresh token (httpOnly cookie, or body for API clients) for a
     fresh access token, rotating the refresh cookie."""
+    limit_refresh(request)
     token = refresh_cookie or (data.refresh_token if data else None)
     if not token:
         raise ValidationError("Missing refresh token.")
@@ -96,22 +111,31 @@ def logout(
 
 
 @router.post("/forgot-password", response_model=MessageResponse)
-def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get_db)) -> MessageResponse:
+def forgot_password(
+    data: ForgotPasswordRequest, request: Request, db: Session = Depends(get_db)
+) -> MessageResponse:
     """Request a password-reset email. Response is identical whether the email exists."""
+    limit_forgot_password(request, data.email)
     message = AuthService(db).request_password_reset(data)
     return MessageResponse(message=message)
 
 
 @router.post("/reset-password", response_model=MessageResponse)
-def reset_password(data: ResetPasswordRequest, db: Session = Depends(get_db)) -> MessageResponse:
+def reset_password(
+    data: ResetPasswordRequest, request: Request, db: Session = Depends(get_db)
+) -> MessageResponse:
     """Set a new password using a token from the reset email."""
+    limit_token_guess(request, kind="reset")
     AuthService(db).reset_password(data)
     return MessageResponse(message="Password updated. You can sign in with your new password.")
 
 
 @router.post("/verify-email", response_model=UserRead)
-def verify_email(data: VerifyEmailRequest, db: Session = Depends(get_db)) -> UserRead:
+def verify_email(
+    data: VerifyEmailRequest, request: Request, db: Session = Depends(get_db)
+) -> UserRead:
     """Confirm an email address using a token from the verification email."""
+    limit_token_guess(request, kind="verify")
     return UserRead.model_validate(AuthService(db).verify_email(data))
 
 
@@ -120,6 +144,7 @@ def resend_verification(
     user: User = Depends(get_current_user), db: Session = Depends(get_db)
 ) -> MessageResponse:
     """Send another verification email to the signed-in user."""
+    limit_resend_verification(user.id)
     message = AuthService(db).resend_verification_email(user.id)
     return MessageResponse(message=message)
 

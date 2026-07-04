@@ -9,6 +9,11 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.email import send_password_reset_email, send_verification_email
 from app.core.exceptions import ConflictError, NotFoundError, ValidationError
+from app.core.rate_limit import (
+    FORGOT_EMAIL,
+    enforce_rate_limit,
+    limit_verification_email_issue,
+)
 from app.core.security import (
     TokenError,
     create_access_token,
@@ -126,7 +131,11 @@ class AuthService:
 
     def request_password_reset(self, data: ForgotPasswordRequest) -> str:
         """Issue a reset token and email it. Always returns the same message."""
-        user = self.repo.get_by_email(data.email.lower())
+        email = data.email.lower()
+        # Cap outbound reset mail per address even when the account is missing,
+        # so the route cannot be used to email-bomb a known inbox.
+        enforce_rate_limit(f"auth:forgot:email_issue:{email}", FORGOT_EMAIL)
+        user = self.repo.get_by_email(email)
         if user is None or not user.is_active:
             return _PASSWORD_RESET_SENT_MESSAGE
 
@@ -225,6 +234,7 @@ class AuthService:
         )
 
     def _issue_verification_email(self, user: User) -> None:
+        limit_verification_email_issue(user.email)
         raw_token = generate_password_reset_token()
         expires_at = utcnow() + timedelta(minutes=settings.email_verification_expire_minutes)
         self.verification_tokens.delete_for_user(user.id)

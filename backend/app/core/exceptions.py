@@ -35,3 +35,7 @@ class PlanLimitError(DomainError):
         self.code = code
         self.plan = plan
         self.limit = limit
+
+
+class RateLimitError(DomainError):
+    """Too many requests in the configured window (auth abuse prevention)."""

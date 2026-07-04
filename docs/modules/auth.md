@@ -85,6 +85,25 @@ returns `NotFoundError` (404), never another user's data.
 \* `/refresh` is unauthenticated but requires a valid refresh token, normally
 read from the httpOnly cookie (falls back to a `refresh_token` body field).
 
+## Rate limiting (AUT-03)
+
+Unauthenticated and email-issuing auth routes are throttled in-process with a
+sliding window (`app.core.rate_limit`). Exceeding a bucket returns **429**
+`{"detail": "Too many requests. Try again later."}`.
+
+| Route / action | Keys | Default ceiling |
+| -------------- | ---- | --------------- |
+| `POST /login` | client IP + email | 20 / 15 min (IP), 10 / 15 min (email) |
+| `POST /register` | client IP | 10 / hour |
+| `POST /forgot-password` | client IP + email | 10 / hour (IP), 5 / hour (email) |
+| `POST /reset-password`, `POST /verify-email` | client IP | 20 / 15 min |
+| `POST /resend-verification` | user id | 5 / hour |
+| `POST /refresh` | client IP | 60 / 15 min |
+| Outbound reset / verify email | email address | 5 / hour |
+
+Counters are process-local (each API task enforces its own ceiling). Tests call
+`reset_rate_limiter()` so suites do not leak 429s across cases.
+
 ## Frontend
 
 - `frontend/src/lib/settings.ts` keeps the **access token in memory only** (a

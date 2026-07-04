@@ -107,6 +107,11 @@ decisions in [adr/0004-multi-user-accounts.md](../adr/0004-multi-user-accounts.m
 `/admin/*` routes additionally require `is_admin` and return 403 for non-admins.
 They expose cross-user data (user list, global stats) intentionally.
 
+Auth abuse endpoints (`/auth/login`, `/register`, `/forgot-password`,
+`/reset-password`, `/verify-email`, `/resend-verification`, `/refresh`) return
+**429** when their per-IP / per-email / per-user sliding windows are exceeded —
+see [auth.md](auth.md#rate-limiting-aut-03).
+
 ## Adding an endpoint
 
 See [../recipes.md](../recipes.md) → "add an API endpoint".
