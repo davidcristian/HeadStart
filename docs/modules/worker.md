@@ -125,9 +125,10 @@ delivery are recorded here — see [metrics.md](metrics.md).
 
 When `INBOX_AGENT_ENABLED=true`, beat also schedules
 `detect_ghosted_applications` every `INBOX_GHOST_CHECK_INTERVAL_SECONDS`
-(default 3600). The task calls `GhostDetectionService.process_due` to email
-self-summaries for applications past `INBOX_GHOST_WINDOW_DAYS` without a
-recruiter reply and set `seen_job.ghosted_at`. Failures on one job are
+(default 3600). The task **claims** due rows (`ghosted_at` lease under
+`FOR UPDATE SKIP LOCKED`, committed before SMTP) then emails self-summaries
+for applications past `INBOX_GHOST_WINDOW_DAYS` without a recruiter reply
+(XCT-11). Failed sends release the lease for retry. Failures on one job are
 isolated so the rest of the batch continues (SVC-06). See [inbox.md](inbox.md).
 
 ## Inbox orchestration (dev inbox)

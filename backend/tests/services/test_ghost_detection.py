@@ -10,6 +10,7 @@ from app.inbox.types import SendResult
 from app.models.application_log import ApplicationLog
 from app.models.seen_job import SeenJob
 from app.models.user import User
+from app.repositories.ghost_detection import GhostDetectionRepository
 from app.schemas.mailbox import MailboxConfig, MailboxCredentialUpsert
 from app.services.ghost_detection import GhostDetectionService
 from app.services.inbox import InboxService
@@ -109,6 +110,52 @@ def test_process_due_ghosts_stale_application(
     assert message.subject.startswith("[HeadStart Ghost]")
 
 
+def test_claim_due_ids_leases_then_second_claim_empty(db_session: Session, monkeypatch) -> None:
+    """Claim stamps ghosted_at so overlapping ticks cannot re-select the row (XCT-11)."""
+    monkeypatch.setattr(settings, "inbox_agent_enabled", True)
+    monkeypatch.setattr(settings, "inbox_ghost_window_days", 1)
+    user_id = _user(db_session)
+    InboxService(db_session).upsert(
+        user_id,
+        MailboxCredentialUpsert(config=_mailbox_config()),
+    )
+    applied_at = datetime(2026, 6, 1, 12, 0, tzinfo=UTC)
+    job = _applied_job(db_session, user_id=user_id, applied_at=applied_at)
+    now = datetime(2026, 6, 30, 12, 0, tzinfo=UTC)
+    service = GhostDetectionService(db_session)
+
+    first = service.claim_due_ids(now=now)
+    assert first == [job.id]
+    assert job.ghosted_at == now
+
+    second = service.claim_due_ids(now=now)
+    assert second == []
+
+
+def test_process_claimed_releases_lease_on_send_failure(db_session: Session, monkeypatch) -> None:
+    monkeypatch.setattr(settings, "inbox_agent_enabled", True)
+    monkeypatch.setattr(settings, "inbox_ghost_window_days", 1)
+    user_id = _user(db_session)
+    InboxService(db_session).upsert(
+        user_id,
+        MailboxCredentialUpsert(config=_mailbox_config()),
+    )
+    applied_at = datetime(2026, 6, 1, 12, 0, tzinfo=UTC)
+    job = _applied_job(db_session, user_id=user_id, applied_at=applied_at)
+    now = datetime(2026, 6, 30, 12, 0, tzinfo=UTC)
+    service = GhostDetectionService(db_session)
+    job_ids = service.claim_due_ids(now=now)
+    assert job.ghosted_at == now
+
+    send_mock = MagicMock(return_value=SendResult(status="failed", error="smtp down"))
+    monkeypatch.setattr(InboxService, "send_message", send_mock)
+
+    result = service.process_claimed(job_ids)
+    assert result.failed == 1
+    assert result.ghosted == 0
+    assert job.ghosted_at is None
+
+
 def test_process_due_skips_recent_application(db_session: Session, monkeypatch) -> None:
     monkeypatch.setattr(settings, "inbox_agent_enabled", True)
     monkeypatch.setattr(settings, "inbox_ghost_window_days", 14)
@@ -163,8 +210,9 @@ def test_process_due_skips_without_mailbox(db_session: Session, monkeypatch) -> 
     now = datetime(2026, 6, 30, 12, 0, tzinfo=UTC)
     result = GhostDetectionService(db_session).process_due(now=now)
 
-    assert result.checked == 1
-    assert result.skipped == 1
+    # Released at claim time — never handed to process_claimed.
+    assert result.checked == 0
+    assert result.ghosted == 0
     assert job.ghosted_at is None
 
 
@@ -179,7 +227,6 @@ def test_process_due_skips_when_mailbox_email_empty(db_session: Session, monkeyp
     applied_at = datetime(2026, 6, 1, 12, 0, tzinfo=UTC)
     job = _applied_job(db_session, user_id=user_id, applied_at=applied_at)
 
-    # Context resolves, but the derived mailbox address is blank -> skip.
     monkeypatch.setattr(
         "app.services.ghost_detection.mailbox_email_from_context",
         lambda ctx: "",
@@ -190,8 +237,8 @@ def test_process_due_skips_when_mailbox_email_empty(db_session: Session, monkeyp
     now = datetime(2026, 6, 30, 12, 0, tzinfo=UTC)
     result = GhostDetectionService(db_session).process_due(now=now)
 
-    assert result.checked == 1
-    assert result.skipped == 1
+    assert result.checked == 0
+    assert result.ghosted == 0
     assert job.ghosted_at is None
     send_mock.assert_not_called()
 
@@ -235,8 +282,9 @@ def test_process_due_skips_failed_apply(db_session: Session, monkeypatch) -> Non
     now = datetime(2026, 6, 30, 12, 0, tzinfo=UTC)
     result = GhostDetectionService(db_session).process_due(now=now)
 
-    assert result.skipped == 1
+    assert result.checked == 0
     assert result.ghosted == 0
+    assert job.ghosted_at is None
     send_mock.assert_not_called()
 
 
@@ -339,3 +387,149 @@ def test_process_due_commits_before_later_job_failure(db_session: Session, monke
     assert refreshed_first is not None and refreshed_first.ghosted_at is not None
     assert refreshed_first.ghosted_at.replace(tzinfo=UTC) == now
     assert refreshed_second is not None and refreshed_second.ghosted_at is None
+
+
+def test_process_claimed_skips_missing_lease(db_session: Session, monkeypatch) -> None:
+    monkeypatch.setattr(settings, "inbox_agent_enabled", True)
+    result = GhostDetectionService(db_session).process_claimed([999_999])
+    assert result.checked == 1
+    assert result.skipped == 1
+    assert result.ghosted == 0
+
+
+def test_process_claimed_releases_when_mailbox_gone(db_session: Session, monkeypatch) -> None:
+    """If credentials disappear between claim and send, release the lease."""
+    monkeypatch.setattr(settings, "inbox_agent_enabled", True)
+    monkeypatch.setattr(settings, "inbox_ghost_window_days", 1)
+    user_id = _user(db_session)
+    InboxService(db_session).upsert(
+        user_id,
+        MailboxCredentialUpsert(config=_mailbox_config()),
+    )
+    applied_at = datetime(2026, 6, 1, 12, 0, tzinfo=UTC)
+    job = _applied_job(db_session, user_id=user_id, applied_at=applied_at)
+    now = datetime(2026, 6, 30, 12, 0, tzinfo=UTC)
+    service = GhostDetectionService(db_session)
+    job_ids = service.claim_due_ids(now=now)
+    assert job.ghosted_at == now
+
+    monkeypatch.setattr(InboxService, "resolve_context", lambda self, uid: None)
+    send_mock = MagicMock(return_value=SendResult(status="sent"))
+    monkeypatch.setattr(InboxService, "send_message", send_mock)
+
+    result = service.process_claimed(job_ids)
+    assert result.skipped == 1
+    assert result.ghosted == 0
+    assert job.ghosted_at is None
+    send_mock.assert_not_called()
+
+
+def test_process_claimed_releases_when_mailbox_email_empty(
+    db_session: Session, monkeypatch
+) -> None:
+    monkeypatch.setattr(settings, "inbox_agent_enabled", True)
+    monkeypatch.setattr(settings, "inbox_ghost_window_days", 1)
+    user_id = _user(db_session)
+    InboxService(db_session).upsert(
+        user_id,
+        MailboxCredentialUpsert(config=_mailbox_config()),
+    )
+    applied_at = datetime(2026, 6, 1, 12, 0, tzinfo=UTC)
+    job = _applied_job(db_session, user_id=user_id, applied_at=applied_at)
+    now = datetime(2026, 6, 30, 12, 0, tzinfo=UTC)
+    service = GhostDetectionService(db_session)
+    job_ids = service.claim_due_ids(now=now)
+
+    monkeypatch.setattr(
+        "app.services.ghost_detection.mailbox_email_from_context",
+        lambda ctx: "",
+    )
+    send_mock = MagicMock(return_value=SendResult(status="sent"))
+    monkeypatch.setattr(InboxService, "send_message", send_mock)
+
+    result = service.process_claimed(job_ids)
+    assert result.skipped == 1
+    assert job.ghosted_at is None
+    send_mock.assert_not_called()
+
+
+def test_process_claimed_exception_when_lease_already_gone(
+    db_session: Session, monkeypatch
+) -> None:
+    """Exception path must tolerate get_claimed returning None after rollback."""
+    monkeypatch.setattr(settings, "inbox_agent_enabled", True)
+
+    def _boom(self: GhostDetectionService, job_id: int) -> str:
+        raise RuntimeError("send blew up")
+
+    monkeypatch.setattr(GhostDetectionService, "_send_claimed", _boom)
+    monkeypatch.setattr(GhostDetectionRepository, "get_claimed", lambda self, job_id: None)
+
+    result = GhostDetectionService(db_session).process_claimed([42])
+    assert result.checked == 1
+    assert result.failed == 1
+    assert result.ghosted == 0
+
+
+def test_claim_stale_applications_takes_row_lock_branch_on_non_sqlite(
+    db_session: Session,
+) -> None:
+    """Force the FOR UPDATE SKIP LOCKED branch (SQLite silently drops the clause)."""
+    user_id = _user(db_session)
+    applied_at = datetime(2026, 6, 1, 12, 0, tzinfo=UTC)
+    job = _applied_job(db_session, user_id=user_id, applied_at=applied_at)
+    now = datetime(2026, 6, 30, 12, 0, tzinfo=UTC)
+    repo = GhostDetectionRepository(db_session)
+    repo._is_sqlite = lambda: False  # type: ignore[method-assign]
+
+    claimed = repo.claim_stale_applications(cutoff=now, now=now)
+    assert [row.id for _, row in claimed] == [job.id]
+    assert job.ghosted_at == now
+
+
+def test_claim_stale_applications_compiles_skip_locked_for_postgres() -> None:
+    """Postgres claim SQL must include SKIP LOCKED so overlapping ticks cannot double-send."""
+    from sqlalchemy import select
+    from sqlalchemy.dialects import postgresql
+
+    from app.models.search import Search
+
+    now = datetime(2026, 6, 30, 12, 0, tzinfo=UTC)
+    stmt = (
+        select(Search.user_id, SeenJob)
+        .join(Search, SeenJob.search_id == Search.id)
+        .where(
+            SeenJob.status == "applied",
+            SeenJob.applied_at.is_not(None),
+            SeenJob.applied_at <= now,
+            SeenJob.ghosted_at.is_(None),
+        )
+        .order_by(SeenJob.applied_at.asc())
+        .limit(100)
+        .with_for_update(skip_locked=True, of=SeenJob)
+    )
+    compiled = str(
+        stmt.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
+    )
+    assert "FOR UPDATE" in compiled.upper()
+    assert "SKIP LOCKED" in compiled.upper()
+
+
+def test_get_claimed_and_release(db_session: Session) -> None:
+    user_id = _user(db_session)
+    applied_at = datetime(2026, 6, 1, 12, 0, tzinfo=UTC)
+    job = _applied_job(db_session, user_id=user_id, applied_at=applied_at)
+    now = datetime(2026, 6, 30, 12, 0, tzinfo=UTC)
+    repo = GhostDetectionRepository(db_session)
+
+    claimed = repo.claim_stale_applications(cutoff=now, now=now)
+    assert len(claimed) == 1
+    loaded = repo.get_claimed(job.id)
+    assert loaded is not None
+    assert loaded[0] == user_id
+    assert loaded[1].id == job.id
+    assert repo.get_claimed(999) is None
+
+    repo.release_claim(job)
+    assert job.ghosted_at is None
+    assert repo.get_claimed(job.id) is None

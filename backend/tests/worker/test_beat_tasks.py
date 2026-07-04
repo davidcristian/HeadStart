@@ -63,9 +63,22 @@ def test_flush_due_digests_zero(worker_scope: Session) -> None:
 
 def test_detect_ghosted_applications(worker_scope: Session) -> None:
     result = MagicMock(checked=4, ghosted=1, skipped=2, failed=0)
-    with patch.object(tasks.GhostDetectionService, "process_due", return_value=result):
+    with (
+        patch.object(tasks.GhostDetectionService, "claim_due_ids", return_value=[10, 11]),
+        patch.object(tasks.GhostDetectionService, "process_claimed", return_value=result),
+    ):
         payload = tasks.detect_ghosted_applications()
     assert payload == {"checked": 4, "ghosted": 1, "skipped": 2, "failed": 0}
+
+
+def test_detect_ghosted_applications_empty_claim(worker_scope: Session) -> None:
+    with (
+        patch.object(tasks.GhostDetectionService, "claim_due_ids", return_value=[]),
+        patch.object(tasks.GhostDetectionService, "process_claimed") as process_claimed,
+    ):
+        payload = tasks.detect_ghosted_applications()
+    assert payload == {"checked": 0, "ghosted": 0, "skipped": 0, "failed": 0}
+    process_claimed.assert_not_called()
 
 
 def test_process_inbox_messages(worker_scope: Session) -> None:

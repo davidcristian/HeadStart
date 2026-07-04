@@ -321,17 +321,19 @@ finds `seen_job` rows with `status=applied`, no `ghosted_at`, and
 `applied_at` older than `INBOX_GHOST_WINDOW_DAYS` (default 14). For each stale
 application where the user has mailbox credentials:
 
-1. Send a self-addressed summary email (`build_ghost_summary_message` in
+1. **Claim** eligible rows under `FOR UPDATE SKIP LOCKED`, stamp
+   `seen_job.ghosted_at`, and commit the lease before SMTP so overlapping ticks
+   / `acks_late` redelivery cannot double-send (XCT-11).
+2. Send a self-addressed summary email (`build_ghost_summary_message` in
    `app/inbox/ghost_message.py`) with `[HeadStart Ghost]` subject prefix and
    `X-HeadStart-Type: ghost`.
-2. Set `seen_job.ghosted_at` on successful SMTP send (failed sends are retried
-   on the next tick).
+3. On send failure (or an unexpected raise), **release** `ghosted_at` so the
+   next tick can retry; successful sends keep the lease stamp.
 
-Per-item isolation (SVC-06): each job is processed in its own try/except. A
-raise from one application (token refresh, SMTP, validation) is logged and
-counted as `failed` so the rest of the batch still runs; each successful ghost
-commits immediately so a later failure cannot roll back earlier `ghosted_at`
-marks.
+Per-item isolation (SVC-06): each leased job is processed in its own try/except.
+A raise from one application (token refresh, SMTP, validation) is logged and
+counted as `failed` so the rest of the batch still runs; each outcome commits
+immediately so a later failure cannot roll back earlier bookkeeping.
 
 The applications pipeline exposes stage `ghosted` when `ghosted_at` is set.
 When the summary email returns to the inbox, the existing classifier labels it

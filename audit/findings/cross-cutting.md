@@ -114,17 +114,17 @@ Note on merges: the `portal_search` schema-drift defect surfaced from three angl
 
 <a id="xct-11"></a>
 ### XCT-11 — detect_ghosted_applications unlocked, sets ghosted_at after send; overlap double-emails
-🟡 **MEDIUM** · 🐞 bug · Status: ☐ open · Confidence: medium (3/5 verifiers) · Effort: M · WS14
+🟡 **MEDIUM** · 🐞 bug · Status: ✅ done · Confidence: medium (3/5 verifiers) · Effort: M · WS14
 
-**Locations:** `backend/app/services/ghost_detection.py:76` (`GhostDetectionService._process_job`); plus `backend/app/repositories/ghost_detection.py:18`, `backend/app/worker/tasks.py:147`.
+**Locations:** `backend/app/services/ghost_detection.py` (`GhostDetectionService.claim_due_ids` / `process_claimed`); plus `backend/app/repositories/ghost_detection.py`, `backend/app/worker/tasks.py`.
 
-**Evidence.** `list_stale_applications` selects rows with `ghosted_at IS NULL`; `_process_job` calls `inbox.send_message()` and only then sets `job.ghosted_at`. There is no `FOR UPDATE` and no re-check under a lock. A redelivered (`acks_late`) detect task overlapping the next tick both see `ghosted_at` NULL and both send. Same family of defect as XCT-01/03/12.
+**Evidence.** `list_stale_applications` selected rows with `ghosted_at IS NULL`; `_process_job` called `inbox.send_message()` and only then set `job.ghosted_at`. There was no `FOR UPDATE` and no re-check under a lock. A redelivered (`acks_late`) detect task overlapping the next tick both saw `ghosted_at` NULL and both sent. Same family of defect as XCT-01/03/12.
 
 **Failure scenario.** Two overlapping ghost-detection passes for the same stale application both send the self-summary before either commits `ghosted_at` → the user gets the ghost summary twice.
 
-**Suggested fix.** Lock each candidate with `SELECT ... FOR UPDATE SKIP LOCKED` and re-check `ghosted_at IS NULL` before sending; commit the mark atomically with the send.
+**Fix.** Claim candidates with `SELECT ... FOR UPDATE SKIP LOCKED`, stamp `ghosted_at`, and commit the lease before SMTP (`claim_due_ids` then `process_claimed` across two `session_scope` transactions). Failed sends / unexpected raises release `ghosted_at` so the next tick can retry. See [PR](https://github.com/davidcristian/HeadStart/pull/16).
 
-**Verification.** Confirmed 3/3 adversarial verifiers. `list_stale_applications` filters `ghosted_at IS NULL` with no `FOR UPDATE`/`SKIP LOCKED` or claim step; send happens before `ghosted_at` is set+flushed (not committed), so an overlapping pass in a separate transaction still sees NULL and re-sends. Recoverable duplicate email requiring concurrency preconditions.
+**Verification.** Confirmed 3/3 adversarial verifiers. `list_stale_applications` filtered `ghosted_at IS NULL` with no `FOR UPDATE`/`SKIP LOCKED` or claim step; send happened before `ghosted_at` was set+flushed (not committed), so an overlapping pass in a separate transaction still saw NULL and re-sent. Recoverable duplicate email requiring concurrency preconditions.
 
 <a id="xct-12"></a>
 ### XCT-12 — run_search notifies before commit; acks-late redelivery re-notifies same jobs

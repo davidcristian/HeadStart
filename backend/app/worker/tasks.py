@@ -146,9 +146,21 @@ def flush_due_digests() -> int:
 
 @celery_app.task(name="app.worker.tasks.detect_ghosted_applications")
 def detect_ghosted_applications() -> dict[str, int]:
-    """Beat tick: email self-summaries for applications past the ghost silence window."""
+    """Beat tick: lease then email self-summaries for stale applications.
+
+    Claim stamps ``ghosted_at`` and commits before SMTP so overlapping ticks /
+    ``acks_late`` redelivery cannot re-select the same row (XCT-11). Failed
+    sends release the lease for retry on the next tick.
+    """
+    now = utcnow()
     with session_scope() as session:
-        result = GhostDetectionService(session).process_due(now=utcnow())
+        job_ids = GhostDetectionService(session).claim_due_ids(now=now)
+
+    if not job_ids:
+        return {"checked": 0, "ghosted": 0, "skipped": 0, "failed": 0}
+
+    with session_scope() as session:
+        result = GhostDetectionService(session).process_claimed(job_ids)
 
     return {
         "checked": result.checked,
