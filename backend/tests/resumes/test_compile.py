@@ -113,9 +113,12 @@ def test_compile_latex_workspace_reports_oserror(monkeypatch) -> None:
 
 
 def test_run_compiler_workspace_tectonic_success(monkeypatch, tmp_path) -> None:
+    captured_env: dict[str, str] = {}
+
     def fake_run(cmd_args, **kwargs):
         # tectonic invocation: [exe, "--outdir", dir, texpath]
         assert cmd_args[1] == "--outdir"
+        captured_env.update(kwargs.get("env", {}))
         out_dir = Path(cmd_args[2])
         (out_dir / "main.pdf").write_bytes(b"%PDF-tectonic")
         return _FakeProc(returncode=0)
@@ -129,6 +132,9 @@ def test_run_compiler_workspace_tectonic_success(monkeypatch, tmp_path) -> None:
         timeout=5.0,
     )
     assert pdf == b"%PDF-tectonic"
+    assert captured_env["openin_any"] == "p"
+    assert captured_env["openout_any"] == "p"
+    assert captured_env["shell_escape"] == "f"
 
 
 def test_run_compiler_workspace_pdflatex_success(monkeypatch) -> None:

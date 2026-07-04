@@ -103,6 +103,30 @@ def test_refresh_uses_cookie_and_issues_new_access_token(client: TestClient) -> 
     assert resp.json()["access_token"]
 
 
+def test_refresh_rotates_cookie_and_invalidates_prior_refresh(client: TestClient) -> None:
+    """Each refresh must issue a new refresh token and revoke the previous one."""
+    client.post(
+        "/api/v1/auth/register",
+        json={"email": "rotate-api@example.com", "password": "password123"},
+    )
+    client.post(
+        "/api/v1/auth/login",
+        json={"email": "rotate-api@example.com", "password": "password123"},
+    )
+    original_refresh = client.cookies.get("headstart_refresh")
+    assert original_refresh
+
+    first = client.post("/api/v1/auth/refresh")
+    assert first.status_code == 200
+    rotated_refresh = client.cookies.get("headstart_refresh")
+    assert rotated_refresh
+    assert rotated_refresh != original_refresh
+
+    client.cookies.set("headstart_refresh", original_refresh)
+    stale = client.post("/api/v1/auth/refresh")
+    assert stale.status_code == 400
+
+
 def test_refresh_without_token_rejected(client: TestClient) -> None:
     resp = client.post("/api/v1/auth/refresh")
     assert resp.status_code == 400

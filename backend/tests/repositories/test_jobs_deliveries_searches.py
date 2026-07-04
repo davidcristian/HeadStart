@@ -124,6 +124,27 @@ def test_claim_due_takes_row_lock_branch_on_non_sqlite(db_session: Session) -> N
     assert repo.claim_due(now) == [search.id]
 
 
+def test_claim_due_compiles_skip_locked_for_postgres() -> None:
+    """Postgres claim SQL must include SKIP LOCKED so overlapping ticks cannot double-enqueue."""
+    from sqlalchemy import select
+    from sqlalchemy.dialects import postgresql
+
+    from app.models.search import Search
+
+    now = utcnow()
+    stmt = (
+        select(Search)
+        .where(Search.enabled.is_(True))
+        .where(Search.next_run_at <= now)
+        .order_by(Search.next_run_at)
+        .with_for_update(skip_locked=True)
+    )
+    compiled = str(
+        stmt.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
+    )
+    assert "FOR UPDATE SKIP LOCKED" in compiled.upper()
+
+
 def test_get_for_update_takes_lock_branch_on_non_sqlite(db_session: Session) -> None:
     search = _search(db_session)
     repo = SearchRepository(db_session)
@@ -132,3 +153,17 @@ def test_get_for_update_takes_lock_branch_on_non_sqlite(db_session: Session) -> 
     row = repo.get_for_update(search.id, skip_locked=True)
     assert row is not None
     assert row.id == search.id
+
+
+def test_get_for_update_compiles_skip_locked_for_postgres() -> None:
+    """Digest flush and other exclusive paths must compile row locks for Postgres."""
+    from sqlalchemy import select
+    from sqlalchemy.dialects import postgresql
+
+    from app.models.search import Search
+
+    stmt = select(Search).where(Search.id == 1).with_for_update(skip_locked=True)
+    compiled = str(
+        stmt.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
+    )
+    assert "FOR UPDATE SKIP LOCKED" in compiled.upper()
