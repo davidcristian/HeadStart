@@ -1,8 +1,10 @@
-"""The per-search pipeline: scrape -> filter -> dedupe -> notify -> record -> reschedule.
+"""The per-search pipeline: scrape -> filter -> dedupe -> record -> notify -> reschedule.
 
 This is plain business logic with no Celery/HTTP framework coupling, so it can be
 unit-tested directly and driven by the worker. Scraper/notifier resolution is
-injected to make testing trivial (no network).
+injected to make testing trivial (no network). Immediate notify commits
+``seen_job`` rows before the notifier side effect so ``acks_late`` redelivery
+cannot re-alert the same jobs after a mid-send crash.
 """
 
 import time
@@ -13,12 +15,11 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from app.core.logging import get_logger
-from app.core.metrics import record_notification, record_pipeline_run, record_scrape
+from app.core.metrics import record_pipeline_run, record_scrape
 from app.models.base import utcnow
-from app.models.delivery_log import DeliveryLog
 from app.models.seen_job import SeenJob
 from app.models.user import User
-from app.notifiers import NotifyContext, get_notifier
+from app.notifiers import get_notifier
 from app.notifiers.base import Notifier
 from app.repositories.jobs import SeenJobRepository
 from app.repositories.searches import SearchRepository
@@ -29,10 +30,14 @@ from app.scrapers.rate_limit import RateLimiter, resolve_min_interval
 from app.scrapers.types import JobPosting
 from app.scrapers.url import normalize_job_url
 from app.services.apply import ApplyService, QueuedAutoApply
-from app.services.compensation import format_compensation_display
 from app.services.credentials import CredentialService
 from app.services.digest import DigestService
 from app.services.pipeline_auto_apply import queue_auto_applies_for_new_jobs
+from app.services.pipeline_delivery import (
+    notify_immediate,
+    persist_new_seen_jobs,
+    queue_digest_for_postings,
+)
 from app.services.plan_limits import PlanLimitsService
 from app.services.posting_filters import apply_posting_filters
 from app.services.scheduling import next_run_from
@@ -124,6 +129,9 @@ class PipelineService:
                 elif search.notification_mode == "digest":
                     result.queued = self._queue_digest(search_id, to_notify, seen_rows)
                 else:
+                    # Durable before side-effect notify so acks_late redelivery
+                    # cannot re-notify the same jobs after a mid-send crash (XCT-12).
+                    self.session.commit()
                     sent, failed = self._notify(search, to_notify, seen_rows)
                     result.notified, result.failed = sent, failed
             result.pending_auto_applies = queue_auto_applies_for_new_jobs(
@@ -225,22 +233,7 @@ class PipelineService:
         return to_notify, skipped
 
     def _persist_new(self, search_id: int, postings: list[JobPosting]) -> dict[str, SeenJob]:
-        rows: dict[str, SeenJob] = {}
-        for posting in postings:
-            row = SeenJob(
-                search_id=search_id,
-                external_id=posting.external_id,
-                hash=posting.content_hash(),
-                title=posting.title,
-                company=posting.company,
-                location=posting.location,
-                salary=format_compensation_display(posting),
-                url=posting.url,
-                summary=posting.summary,
-            )
-            self.seen_jobs.add(row)
-            rows[posting.external_id] = row
-        return rows
+        return persist_new_seen_jobs(self.seen_jobs, search_id, postings)
 
     def _queue_digest(
         self,
@@ -248,12 +241,7 @@ class PipelineService:
         postings: list[JobPosting],
         seen_rows: dict[str, SeenJob],
     ) -> int:
-        seen_job_ids = [
-            seen_rows[posting.external_id].id
-            for posting in postings
-            if posting.external_id in seen_rows
-        ]
-        return self.digest.queue(search_id, seen_job_ids)
+        return queue_digest_for_postings(self.digest, search_id, postings, seen_rows)
 
     def _notify(
         self,
@@ -261,33 +249,13 @@ class PipelineService:
         postings: list[JobPosting],
         seen_rows: dict[str, SeenJob],
     ) -> tuple[int, int]:
-        target = search.target  # type: ignore[attr-defined]
-        if target is None:
-            logger.info("search %s has no target; skipping notification", search.id)  # type: ignore[attr-defined]
-            return 0, 0
-        notifier = self._notifier_factory(target.type)
-        results = notifier.send(
-            NotifyContext(target_type=target.type, config=target.config), postings
+        return notify_immediate(
+            self.session,
+            search=search,
+            postings=postings,
+            seen_rows=seen_rows,
+            notifier_factory=self._notifier_factory,
         )
-        sent = failed = 0
-        for res in results:
-            row = seen_rows.get(res.external_id)
-            if row is None:
-                continue
-            self.session.add(
-                DeliveryLog(
-                    seen_job_id=row.id,
-                    target_id=target.id,
-                    status=res.status,
-                    error=res.error,
-                )
-            )
-            if res.status == "sent":
-                sent += 1
-            else:
-                failed += 1
-            record_notification(target.type, res.status, "immediate")  # type: ignore[arg-type]
-        return sent, failed
 
     def _reschedule(self, search_id: int, *, last_error: str | None = None) -> None:
         search = self.searches.get(search_id)

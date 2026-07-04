@@ -25,7 +25,7 @@ logger = get_logger(__name__)
 
 @celery_app.task(name="app.worker.tasks.run_search", bind=True, max_retries=0)
 def run_search(self: object, search_id: int) -> dict[str, object]:
-    """Run one search's pipeline (scrape -> dedupe -> notify -> record)."""
+    """Run one search's pipeline (scrape -> dedupe -> record -> notify)."""
     pending_applies: list = []
     with session_scope() as session:
         result = PipelineService(session).run(search_id)

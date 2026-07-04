@@ -290,6 +290,72 @@ def test_notify_counts_failed_deliveries(db_session: Session) -> None:
     assert db_session.query(DeliveryLog).count() == 2
 
 
+def test_run_commits_seen_jobs_before_notify(db_session: Session) -> None:
+    """seen_job rows must be durable before notifier.send (XCT-12)."""
+    from app.models.seen_job import SeenJob
+
+    search = make_search(db_session)
+    scraper = FakeScraper([posting("1")])
+    order: list[str] = []
+    original_commit = db_session.commit
+
+    def tracking_commit() -> None:
+        order.append("commit")
+        original_commit()
+
+    class OrderedNotifier:
+        def send(self, ctx: NotifyContext, jobs: list[JobPosting]) -> list[DeliveryResult]:
+            order.append("send")
+            return [DeliveryResult(external_id=j.external_id, status="sent") for j in jobs]
+
+    db_session.commit = tracking_commit  # type: ignore[method-assign]
+    try:
+        result = PipelineService(
+            db_session,
+            scraper_factory=lambda key, http=None, rate_limiter=None: scraper,  # type: ignore[arg-type,return-value]
+            notifier_factory=lambda key: OrderedNotifier(),  # type: ignore[arg-type,return-value]
+        ).run(search.id)
+    finally:
+        db_session.commit = original_commit  # type: ignore[method-assign]
+
+    assert result.notified == 1
+    assert "commit" in order and "send" in order
+    assert order.index("commit") < order.index("send")
+    assert db_session.query(SeenJob).count() == 1
+
+
+def test_run_seen_jobs_survive_post_notify_rollback(db_session: Session) -> None:
+    """A crash after send must not roll back already-committed seen_jobs (XCT-12)."""
+    from app.models.seen_job import SeenJob
+
+    search = make_search(db_session)
+    scraper = FakeScraper([posting("durable")])
+
+    class RollbackAfterSendNotifier:
+        def send(self, ctx: NotifyContext, jobs: list[JobPosting]) -> list[DeliveryResult]:
+            # Worker death after SMTP would discard the open transaction; seen_jobs
+            # committed before send must remain so redelivery dedupes.
+            db_session.rollback()
+            return [DeliveryResult(external_id=j.external_id, status="sent") for j in jobs]
+
+    svc = PipelineService(
+        db_session,
+        scraper_factory=lambda key, http=None, rate_limiter=None: scraper,  # type: ignore[arg-type,return-value]
+        notifier_factory=lambda key: RollbackAfterSendNotifier(),  # type: ignore[arg-type,return-value]
+    )
+    result = svc.run(search.id)
+    assert result.notified == 1
+    db_session.expire_all()
+    assert db_session.query(SeenJob).filter_by(external_id="durable").count() == 1
+
+    # Redelivery: same posting is deduped; notifier must not fire again.
+    notifier = RecordingNotifier()
+    second = pipeline(db_session, scraper, notifier).run(search.id)
+    assert second.new == 0
+    assert second.notified == 0
+    assert len(notifier.batches) == 0
+
+
 def test_reschedule_handles_deleted_search(db_session: Session) -> None:
     svc = pipeline(db_session, FakeScraper([]), RecordingNotifier())
     # A missing search means _reschedule finds nothing to update.

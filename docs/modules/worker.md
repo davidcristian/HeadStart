@@ -50,11 +50,12 @@ flowchart TD
   filter --> dedupe[dedupe vs seen_job]
   dedupe --> cross{"URL seen in another\nsearch for user?"}
   cross -->|yes| record_only[record seen_job only]
-  cross -->|no| notify["notify new jobs\n(or queue for digest)"]
-  record_only --> reschedule
-  notify --> record["write seen_job + delivery_log\n(or pending_digest)"]
-  record --> reschedule["last_run_at=now; next_run_at=now+interval"]
-  record --> autoapply{"source.auto_apply_enabled\n+ profile + applier?"}
+  cross -->|no| persist["persist + commit seen_job"]
+  record_only --> persist
+  persist --> notify["notify new jobs\n(or queue for digest)"]
+  notify --> delivery["write delivery_log\n(or pending_digest)"]
+  delivery --> reschedule["last_run_at=now; next_run_at=now+interval"]
+  delivery --> autoapply{"source.auto_apply_enabled\n+ profile + applier?"}
   autoapply -->|yes| enqueue_apply["queue apply_to_job per new match"]
 ```
 
@@ -75,10 +76,13 @@ flowchart TD
 8. Re-check the owner's plan for the target notifier (`allows_notifier`). If the
    type is not allowed (e.g. `webhook` after leaving Pro), skip delivery and do
    not queue digest rows.
-9. Send remaining new postings via `get_notifier(target.type).send(ctx, new_jobs)`,
-   or queue them in `pending_digest` when `notification_mode` is `digest`.
-10. Persist `seen_job` rows and `delivery_log` entries (immediate mode only);
-   update schedule fields.
+9. Persist new `seen_job` rows. For immediate mode, **commit** them before
+   calling the notifier so an `acks_late` redelivery after a mid-send crash
+   dedupes instead of re-notifying the same jobs (XCT-12). Digest mode queues
+   `pending_digest` rows in the open transaction (no external side effect yet).
+10. Send remaining new postings via `get_notifier(target.type).send(ctx, new_jobs)`,
+    or queue them in `pending_digest` when `notification_mode` is `digest`; write
+    `delivery_log` entries (immediate mode); update schedule fields.
 11. When `source.auto_apply_enabled`, the user has an application profile, and the
    adapter supports apply: queue a live `apply_to_job` Celery task for each new
    match (including jobs skipped for notification by cross-search dedup), until

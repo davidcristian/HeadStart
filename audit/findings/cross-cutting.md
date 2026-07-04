@@ -128,17 +128,17 @@ Note on merges: the `portal_search` schema-drift defect surfaced from three angl
 
 <a id="xct-12"></a>
 ### XCT-12 — run_search notifies before commit; acks-late redelivery re-notifies same jobs
-🟡 **MEDIUM** · 🐞 bug · Status: ☐ open · Confidence: high (3/5 verifiers) · Effort: L · WS14
+🟡 **MEDIUM** · 🐞 bug · Status: ✅ done · Confidence: high (3/5 verifiers) · Effort: L · WS14
 
-**Locations:** `backend/app/services/pipeline.py:118` (`PipelineService._notify`); plus `backend/app/worker/tasks.py:30`, `backend/app/core/db.py:25`, `backend/app/worker/celery_app.py:25`, `backend/app/models/seen_job.py:19`.
+**Locations:** `backend/app/services/pipeline.py` (`PipelineService.run`); plus `backend/app/services/pipeline_delivery.py`, `backend/app/worker/tasks.py`, `backend/app/core/db.py`.
 
-**Evidence.** `_notify` calls `notifier.send()` (a side effect) inside `run()`; dedup relies on `SeenJob` rows persisted in the same `session_scope` that commits only after the task returns. With `acks_late` + `max_retries=0`, a crash between send and commit rolls back the `SeenJob` inserts, so on redelivery `_dedupe` finds nothing and `_notify` fires again. There is no unique constraint on `DeliveryLog` to guard against this.
+**Evidence.** `_notify` called `notifier.send()` (a side effect) inside `run()`; dedup relied on `SeenJob` rows persisted in the same `session_scope` that committed only after the task returned. With `acks_late` + `max_retries=0`, a crash between send and commit rolled back the `SeenJob` inserts, so on redelivery `_dedupe` found nothing and `_notify` fired again. There was no unique constraint on `DeliveryLog` to guard against this.
 
 **Failure scenario.** Worker killed (OOM/deploy) after emails/webhooks are sent but before commit; the redelivered `run_search` re-scrapes and re-notifies the same new jobs → duplicate job alerts.
 
-**Suggested fix.** Persist and commit `seen_jobs` before dispatching notifications, or make delivery idempotent via a per-`(seen_job, target)` unique `DeliveryLog` checked before send.
+**Fix.** Persist new `seen_job` rows and `session.commit()` before immediate `notifier.send`, so a mid-send crash leaves durable dedup state for redelivery. Digest mode still queues in the open transaction (no external side effect yet). Delivery helpers live in `pipeline_delivery.py`. See [PR](https://github.com/davidcristian/HeadStart/pull/17).
 
-**Verification.** Confirmed 3/3 adversarial verifiers. `run()` runs inside a `session_scope` that commits only at task end; `_notify` sends before commit; `acks_late` (`celery_app.py:25`) redelivers on worker death (`max_retries=0` only affects retries), and the `SeenJob` rollback lets `_dedupe` miss and re-notify. No unique constraint on `DeliveryLog` to guard.
+**Verification.** Confirmed 3/3 adversarial verifiers. `run()` ran inside a `session_scope` that committed only at task end; `_notify` sent before commit; `acks_late` redelivered on worker death, and the `SeenJob` rollback let `_dedupe` miss and re-notify.
 
 <a id="xct-13"></a>
 ### XCT-13 — Every prefork worker child binds the same metrics port -> EADDRINUSE crash loop
