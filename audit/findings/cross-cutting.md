@@ -156,7 +156,12 @@ Note on merges: the `portal_search` schema-drift defect surfaced from three angl
 
 <a id="xct-14"></a>
 ### XCT-14 — Backend deps all floating >= floors, no lockfile: non-reproducible builds
-🟡 **MEDIUM** · 🔒 security · Status: ☐ open · Confidence: high (3/5 verifiers) · Effort: M · WS15
+🟡 **MEDIUM** · 🔒 security · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/20)) · Confidence: high (3/5 verifiers) · Effort: M · WS15
+
+**Update (2026-07-10).** Fixed in [PR](https://github.com/davidcristian/HeadStart/pull/20): committed hashed pip-tools lockfiles
+(`backend/requirements.txt`, `requirements-dev.txt`, `requirements-playwright.txt`);
+Docker, CI, and `just setup` install with `--require-hashes` then `--no-deps` for
+the local package. Regenerate via `just lock-backend` ([ADR-0012](../../docs/adr/0012-backend-dependency-lockfiles.md)).
 
 **Locations:** `backend/pyproject.toml:10` (`[project].dependencies`).
 

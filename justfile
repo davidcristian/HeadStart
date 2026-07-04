@@ -12,6 +12,10 @@ default:
 setup:
     ./scripts/setup.sh
 
+# Regenerate hashed backend lockfiles from pyproject.toml (XCT-14)
+lock-backend:
+    ./scripts/lock-backend.sh
+
 # Build and start the full stack (docker compose)
 up:
     ./scripts/dev.sh up

@@ -5,6 +5,16 @@
 The same container images run locally (Docker Compose) and on AWS (ECS Fargate).
 Local development never depends on anything in `devops/`.
 
+## Backend dependency lockfiles
+
+Runtime (and optional `dev` / `playwright`) dependencies are pinned with hashes
+in `backend/requirements.txt`, `requirements-dev.txt`, and
+`requirements-playwright.txt` (pip-tools; see
+[ADR-0012](../adr/0012-backend-dependency-lockfiles.md)). The Dockerfile and CI
+install with `pip install --require-hashes -r …`, then install the local package
+with `--no-deps`. Regenerate via `just lock-backend` after editing
+`backend/pyproject.toml` dependency floors.
+
 ## AWS topology
 
 ```mermaid

@@ -12,11 +12,14 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR /app
 
-# Install dependencies first (better layer caching). psycopg[binary] and
-# selectolax ship wheels, so no compiler/system libs are required.
-COPY pyproject.toml ./
+# Install locked runtime deps first (hashed; better layer caching). psycopg[binary]
+# and selectolax ship wheels, so no compiler/system libs are required.
+COPY pyproject.toml requirements.txt ./
+RUN pip install --upgrade pip \
+    && pip install --require-hashes -r requirements.txt
+
 COPY app ./app
-RUN pip install --upgrade pip && pip install .
+RUN pip install --no-deps .
 
 # Migrations + entrypoint.
 COPY alembic ./alembic
@@ -29,8 +32,10 @@ RUN chmod +x /usr/local/bin/entrypoint.sh \
 FROM base AS worker
 
 # Playwright + Chromium for JS-heavy scrapes. Needs root for system deps.
+# requirements-playwright.txt is a full hashed lock (runtime + playwright).
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
-RUN pip install ".[playwright]" \
+COPY requirements-playwright.txt ./
+RUN pip install --require-hashes -r requirements-playwright.txt \
     && playwright install --with-deps chromium \
     && chown -R appuser:appuser /ms-playwright
 

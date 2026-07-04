@@ -29,9 +29,8 @@ fi
 if have python3; then
   log "Creating backend virtualenv"
   python3 -m venv "${VENV_DIR}"
-  "${VENV_DIR}/bin/python" -m pip install --upgrade pip >/dev/null
-  log "Installing backend dependencies (editable, with dev extras)"
-  "${VENV_DIR}/bin/pip" install -e "${BACKEND_DIR}[dev]"
+  log "Installing backend dependencies from hashed lockfile (dev)"
+  "${REPO_ROOT}/scripts/install-backend.sh" --dev
   ok "Backend ready."
 else
   warn "python3 not found; skipping backend setup."

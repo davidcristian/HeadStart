@@ -19,12 +19,13 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-          cache-dependency-path: backend/pyproject.toml
+          cache-dependency-path: |
+            backend/requirements.txt
+            backend/requirements-dev.txt
+            backend/pyproject.toml
       - uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4
       - name: Install
-        run: |
-          python -m pip install --upgrade pip
-          pip install -e "backend[dev]"
+        run: ./scripts/install-backend.sh --dev
       # CI runs the same scripts as local dev, through the same just recipes,
       # so the gates cannot drift apart (the LOC gate rides with lint).
       - name: Lint (ruff + black + LOC gate)
@@ -45,12 +46,12 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-          cache-dependency-path: backend/pyproject.toml
+          cache-dependency-path: |
+            backend/requirements.txt
+            backend/pyproject.toml
       - uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4
       - name: Install
-        run: |
-          python -m pip install --upgrade pip
-          pip install -e backend
+        run: ./scripts/install-backend.sh
       # Backend tests run on SQLite, so dialect-specific migration SQL is only
       # ever exercised here, against the production dialect (Postgres).
       - name: Apply all migrations to a fresh Postgres
