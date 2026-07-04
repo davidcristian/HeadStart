@@ -1,6 +1,7 @@
 """Tests for the Apple Careers shared apply helpers."""
 
 from app.appliers.adapters.apple_careers_common import (
+    apply_error_message,
     csrf_token_url,
     extract_application_id,
     has_session_cookies,
@@ -100,6 +101,17 @@ def test_request_headers_with_empty_cookies_skips_cookie_header() -> None:
 def test_unwrap_response_data_only_and_passthrough() -> None:
     assert unwrap_response({"data": {"a": 1}}) == {"a": 1}
     assert unwrap_response(["not", "a", "dict"]) == ["not", "a", "dict"]
+
+
+def test_apply_error_message_variants() -> None:
+    assert apply_error_message({"success": True}) is None
+    assert apply_error_message({"success": False, "errors": [{"message": "bad"}]}) == "bad"
+    assert apply_error_message({"success": False, "errors": [{"error": "worse"}]}) == "worse"
+    assert apply_error_message({"success": False, "errors": [{}]}) == "apple_careers apply request failed"
+    assert apply_error_message({"success": False, "errors": ["x"]}) == "apple_careers apply request failed"
+    assert apply_error_message({"success": False, "message": "closed req"}) == "closed req"
+    assert apply_error_message({"success": False, "error": "plain error"}) == "plain error"
+    assert apply_error_message({"success": False}) == "apple_careers apply request failed"
 
 
 def test_extract_application_id_non_dict_and_roles_lookup() -> None:

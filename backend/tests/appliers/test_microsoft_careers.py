@@ -228,6 +228,129 @@ def test_live_submit_requires_session_cookies() -> None:
     assert "session cookies" in result.error
 
 
+def test_live_submit_fails_on_error_body() -> None:
+    job_fixture = load_fixture("microsoft_careers_job_detail.json")
+    questions_fixture = load_fixture("microsoft_careers_questions.json")
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if "/api/apply/v2/jobs/" in request.url.path:
+            return httpx.Response(200, text=job_fixture, headers=_JSON_HEADERS)
+        if "/api/apply/v2/questions" in request.url.path:
+            return httpx.Response(
+                200, text=questions_fixture, headers={"content-type": "application/json"}
+            )
+        if request.url.path.endswith("/api/apply/v2/candidate"):
+            return httpx.Response(200, json={"enc_id": 123})
+        if request.url.path.endswith("/api/application/v2/submit"):
+            return httpx.Response(
+                200,
+                json={"success": False, "errors": [{"message": "duplicate application"}]},
+                headers=_JSON_HEADERS,
+            )
+        raise AssertionError(f"unexpected request: {request.method} {request.url}")
+
+    applier = MicrosoftCareersApplier(http=make_http_client(handler))
+    result = applier.apply(
+        ApplyContext(
+            job_external_id=JOB_ID,
+            job_title="Software Engineer",
+            company="Microsoft",
+            job_url=JOB_URL,
+            config={"domain": "microsoft.com"},
+            profile=_profile(),
+            credentials=_credentials(),
+            dry_run=False,
+        )
+    )
+
+    assert result.status == "failed"
+    assert result.error == "duplicate application"
+
+
+def test_live_submit_fails_when_candidate_post_errors() -> None:
+    job_fixture = load_fixture("microsoft_careers_job_detail.json")
+    questions_fixture = load_fixture("microsoft_careers_questions.json")
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if "/api/apply/v2/jobs/" in request.url.path:
+            return httpx.Response(200, text=job_fixture, headers=_JSON_HEADERS)
+        if "/api/apply/v2/questions" in request.url.path:
+            return httpx.Response(
+                200, text=questions_fixture, headers={"content-type": "application/json"}
+            )
+        if request.url.path.endswith("/api/apply/v2/candidate"):
+            return httpx.Response(
+                200,
+                json={"success": False, "errors": [{"message": "invalid email"}]},
+                headers=_JSON_HEADERS,
+            )
+        raise AssertionError(f"unexpected request: {request.method} {request.url}")
+
+    applier = MicrosoftCareersApplier(http=make_http_client(handler))
+    result = applier.apply(
+        ApplyContext(
+            job_external_id=JOB_ID,
+            job_title="Software Engineer",
+            company="Microsoft",
+            job_url=JOB_URL,
+            config={"domain": "microsoft.com"},
+            profile=_profile(),
+            credentials=_credentials(),
+            dry_run=False,
+        )
+    )
+
+    assert result.status == "failed"
+    assert result.error == "invalid email"
+
+
+def test_live_submit_fails_when_resume_upload_errors() -> None:
+    job_fixture = load_fixture("microsoft_careers_job_detail.json")
+    questions_fixture = load_fixture("microsoft_careers_questions.json")
+    resume = ResumeFile(
+        filename="resume.pdf",
+        content_type="application/pdf",
+        size_bytes=4,
+        data=b"%PDF",
+    )
+    profile = ApplyProfile(**_profile().model_dump(), exists=True, resume_file=resume)
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if "/api/apply/v2/jobs/" in request.url.path:
+            return httpx.Response(200, text=job_fixture, headers=_JSON_HEADERS)
+        if "/api/apply/v2/questions" in request.url.path:
+            return httpx.Response(
+                200, text=questions_fixture, headers={"content-type": "application/json"}
+            )
+        if request.url.path.endswith("/api/apply/v2/candidate"):
+            return httpx.Response(200, json={"enc_id": 123})
+        if request.url.path.endswith("/api/pcsx/upload_resume"):
+            return httpx.Response(
+                200,
+                json={"errors": [{"message": "resume too large"}]},
+                headers=_JSON_HEADERS,
+            )
+        raise AssertionError(f"unexpected request: {request.method} {request.url}")
+
+    applier = MicrosoftCareersApplier(http=make_http_client(handler))
+    result = applier.apply(
+        ApplyContext(
+            job_external_id=JOB_ID,
+            job_title="Software Engineer",
+            company="Microsoft",
+            job_url=JOB_URL,
+            config={"domain": "microsoft.com"},
+            profile=profile,
+            resume_file=resume,
+            credentials=_credentials(),
+            dry_run=False,
+        )
+    )
+
+    assert result.status == "failed"
+    assert result.error == "resume too large"
+
+
 def test_build_application_payload_includes_resume_metadata_on_dry_run() -> None:
     resume = ResumeFile(
         filename="resume.pdf",

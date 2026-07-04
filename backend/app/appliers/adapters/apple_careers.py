@@ -26,6 +26,7 @@ from typing import Any
 import httpx
 
 from app.appliers.adapters.apple_careers_common import (
+    apply_error_message,
     extract_application_id,
     has_session_cookies,
     resolve_csrf_token,
@@ -172,6 +173,10 @@ class AppleCareersApplier(Applier):
             )
         except (httpx.HTTPError, ValueError) as exc:
             return ApplyResult(status="failed", error=str(exc), payload=payload)
+
+        error = apply_error_message(response)
+        if error is not None:
+            return ApplyResult(status="failed", error=error, payload=payload)
 
         return ApplyResult(
             status="submitted",

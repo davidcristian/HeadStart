@@ -23,6 +23,7 @@ from typing import Any
 import httpx
 
 from app.appliers.adapters.microsoft_careers_common import (
+    api_error_message,
     apply_page_url,
     candidate_url,
     extract_application_id,
@@ -128,12 +129,20 @@ class MicrosoftCareersApplier(Applier):
         )
 
         try:
-            self._save_candidate(
+            candidate_response = self._save_candidate(
                 http, domain, position_id, candidate, headers=headers, locale=locale
             )
+            error = api_error_message(candidate_response)
+            if error is not None:
+                return ApplyResult(status="failed", error=error, payload=payload)
             if ctx.resume_file is not None:
                 resume_body = build_resume_upload_body(domain=domain, resume_file=ctx.resume_file)
-                http.post_json(upload_resume_url(), json=resume_body, headers=headers)
+                resume_response = http.post_json(
+                    upload_resume_url(), json=resume_body, headers=headers
+                )
+                error = api_error_message(resume_response)
+                if error is not None:
+                    return ApplyResult(status="failed", error=error, payload=payload)
             submit_body = build_submit_body(
                 domain=domain,
                 position_id=position_id,
@@ -147,6 +156,10 @@ class MicrosoftCareersApplier(Applier):
             )
         except httpx.HTTPError as exc:
             return ApplyResult(status="failed", error=str(exc), payload=payload)
+
+        error = api_error_message(response)
+        if error is not None:
+            return ApplyResult(status="failed", error=error, payload=payload)
 
         app_id = extract_application_id(response)
         return ApplyResult(
@@ -174,7 +187,7 @@ class MicrosoftCareersApplier(Applier):
         *,
         headers: dict[str, str],
         locale: str,
-    ) -> None:
+    ) -> Any:
         """Persist candidate contact fields on the SmartApply session."""
         url = candidate_url(domain, position_id, locale=locale)
-        http.post_json(url, json=candidate, headers=headers)
+        return http.post_json(url, json=candidate, headers=headers)

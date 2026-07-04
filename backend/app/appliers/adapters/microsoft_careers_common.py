@@ -146,6 +146,38 @@ def _cookie_header(cookies: dict[str, str]) -> str:
     return "; ".join(f"{key}={value}" for key, value in cookies.items())
 
 
+def api_error_message(response: Any) -> str | None:
+    """Human-readable message when a SmartApply JSON body reports errors."""
+    if not isinstance(response, dict):
+        return None
+    if response.get("success") is False:
+        errors = response.get("errors")
+        if isinstance(errors, list) and errors:
+            first = errors[0]
+            if isinstance(first, dict):
+                message = first.get("message") or first.get("error")
+                if message:
+                    return str(message)
+        for key in ("message", "error"):
+            value = response.get(key)
+            if value and str(value).strip():
+                return str(value)
+        return "microsoft_careers apply request failed"
+    errors = response.get("errors")
+    if isinstance(errors, list) and errors:
+        first = errors[0]
+        if isinstance(first, dict):
+            message = first.get("message") or first.get("error")
+            if message:
+                return str(message)
+    error = response.get("error")
+    if isinstance(error, dict):
+        message = error.get("message")
+        if message and str(message).strip():
+            return str(message)
+    return None
+
+
 def extract_application_id(response: Any) -> str | None:
     """Best-effort application id from a submit response payload."""
     if not isinstance(response, dict):

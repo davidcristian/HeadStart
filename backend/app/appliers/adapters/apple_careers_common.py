@@ -153,6 +153,24 @@ def unwrap_response(response: Any) -> Any:
     return response
 
 
+def apply_error_message(response: Any) -> str | None:
+    """Human-readable message when an applyJob JSON body reports failure."""
+    if not isinstance(response, dict) or response.get("success") is not False:
+        return None
+    errors = response.get("errors")
+    if isinstance(errors, list) and errors:
+        first = errors[0]
+        if isinstance(first, dict):
+            message = first.get("message") or first.get("error")
+            if message:
+                return str(message)
+    for key in ("message", "error"):
+        value = response.get(key)
+        if value and str(value).strip():
+            return str(value)
+    return "apple_careers apply request failed"
+
+
 def extract_application_id(response: Any) -> str | None:
     """Best-effort application id from an applyJob response payload."""
     data = unwrap_response(response)

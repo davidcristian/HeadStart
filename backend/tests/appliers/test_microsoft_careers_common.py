@@ -3,6 +3,7 @@
 import httpx
 
 from app.appliers.adapters.microsoft_careers_common import (
+    api_error_message,
     build_http_client,
     extract_application_id,
     has_session_cookies,
@@ -122,6 +123,20 @@ def test_extract_application_id_variants() -> None:
     assert extract_application_id({"data": {}}) is None
     assert extract_application_id({"application_id": "top-1"}) == "top-1"
     assert extract_application_id({}) is None
+
+
+def test_api_error_message_variants() -> None:
+    assert api_error_message("not a dict") is None
+    assert api_error_message({"status": 200, "error": {"message": ""}, "data": {}}) is None
+    assert api_error_message({"success": False, "errors": [{"message": "bad"}]}) == "bad"
+    assert api_error_message({"success": False, "errors": [{}]}) == "microsoft_careers apply request failed"
+    assert api_error_message({"success": False, "errors": ["string"]}) == "microsoft_careers apply request failed"
+    assert api_error_message({"success": False, "message": "closed req"}) == "closed req"
+    assert api_error_message({"errors": [{"error": "worse"}]}) == "worse"
+    assert api_error_message({"errors": [{}]}) is None
+    assert api_error_message({"errors": ["string"]}) is None
+    assert api_error_message({"error": {"message": "validation failed"}}) == "validation failed"
+    assert api_error_message({"success": False}) == "microsoft_careers apply request failed"
 
 
 def _unexpected(request: httpx.Request) -> httpx.Response:
