@@ -120,7 +120,8 @@ When `INBOX_AGENT_ENABLED=true`, beat also schedules
 `detect_ghosted_applications` every `INBOX_GHOST_CHECK_INTERVAL_SECONDS`
 (default 3600). The task calls `GhostDetectionService.process_due` to email
 self-summaries for applications past `INBOX_GHOST_WINDOW_DAYS` without a
-recruiter reply and set `seen_job.ghosted_at`. See [inbox.md](inbox.md).
+recruiter reply and set `seen_job.ghosted_at`. Failures on one job are
+isolated so the rest of the batch continues (SVC-06). See [inbox.md](inbox.md).
 
 ## Inbox orchestration (dev inbox)
 

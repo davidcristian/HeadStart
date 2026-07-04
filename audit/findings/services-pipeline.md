@@ -76,7 +76,9 @@ This area covers the backend business-logic layer (`backend/app/services/`): the
 
 <a id="svc-06"></a>
 ### SVC-06 — Ghost-detection loop lacks per-item exception isolation vs orchestration
-🟡 **MEDIUM** · 🐞 bug · Status: ☐ open · Confidence: medium (3/3 verifiers) · Effort: S · WS14
+🟡 **MEDIUM** · 🐞 bug · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/14)) · Confidence: medium (3/3 verifiers) · Effort: S · WS14
+
+**Update (2026-07-10).** Fixed in [PR](https://github.com/davidcristian/HeadStart/pull/14): `process_due` wraps each `_process_job` in `try/except` (log + `failed+=1` + continue) and commits after each successful ghost so a later raise cannot roll back earlier `ghosted_at` via `session_scope`.
 
 **Locations:** `backend/app/services/ghost_detection.py:51` (`GhostDetectionService.process_due`); also `backend/app/services/ghost_detection.py:89`.
 

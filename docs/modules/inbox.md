@@ -327,6 +327,12 @@ application where the user has mailbox credentials:
 2. Set `seen_job.ghosted_at` on successful SMTP send (failed sends are retried
    on the next tick).
 
+Per-item isolation (SVC-06): each job is processed in its own try/except. A
+raise from one application (token refresh, SMTP, validation) is logged and
+counted as `failed` so the rest of the batch still runs; each successful ghost
+commits immediately so a later failure cannot roll back earlier `ghosted_at`
+marks.
+
 The applications pipeline exposes stage `ghosted` when `ghosted_at` is set.
 When the summary email returns to the inbox, the existing classifier labels it
 `self_ghost_archive` and routing moves it to `HeadStart/Ghost`.

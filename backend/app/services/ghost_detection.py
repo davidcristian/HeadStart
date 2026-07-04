@@ -37,7 +37,13 @@ class GhostDetectionService:
         self.inbox = InboxService(session)
 
     def process_due(self, *, now: datetime | None = None) -> GhostDetectionResult:
-        """Find stale applications and ghost them when inbox automation is enabled."""
+        """Find stale applications and ghost them when inbox automation is enabled.
+
+        Per-item isolation (SVC-06): a raise from one job (token refresh, SMTP,
+        validation) is logged and counted as failed so other stale applications
+        still process; each successful ghost commits immediately so a later
+        failure cannot roll back already-set ``ghosted_at`` via ``session_scope``.
+        """
         if not settings.inbox_agent_enabled:
             return GhostDetectionResult(checked=0, ghosted=0, skipped=0, failed=0)
 
@@ -50,13 +56,23 @@ class GhostDetectionService:
 
         for user_id, job in self.repo.list_stale_applications(cutoff=cutoff):
             checked += 1
-            outcome = self._process_job(user_id, job, now=current)
-            if outcome == "ghosted":
-                ghosted += 1
-            elif outcome == "failed":
+            try:
+                outcome = self._process_job(user_id, job, now=current)
+                if outcome == "ghosted":
+                    self.session.commit()
+                    ghosted += 1
+                elif outcome == "failed":
+                    failed += 1
+                else:
+                    skipped += 1
+            except Exception:
+                self.session.rollback()
+                logger.exception(
+                    "ghost detection failed for job %s user %s; continuing",
+                    job.id,
+                    user_id,
+                )
                 failed += 1
-            else:
-                skipped += 1
 
         if ghosted or failed:
             logger.info(
