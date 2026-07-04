@@ -44,8 +44,8 @@ describe("plan helper branches", () => {
     const capped = {
       ...sampleAccountPlan,
       unlimited: false,
-      limits: { max_searches: 1, max_sources: 5, max_targets: 2 },
-      usage: { searches: 1, sources: 0, targets: 2 },
+      limits: { max_searches: 1, max_sources: 5, max_targets: 2, max_auto_applies_per_day: 5 },
+      usage: { searches: 1, sources: 0, targets: 2, auto_applies_last_day: 0 },
     };
     expect(canAddResource(capped, "searches")).toBe(false);
     expect(canAddResource(capped, "sources")).toBe(true);

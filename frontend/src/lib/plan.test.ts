@@ -35,8 +35,8 @@ describe("plan helpers", () => {
     const atCap = {
       ...sampleAccountPlan,
       unlimited: false,
-      limits: { max_searches: 3, max_sources: 3, max_targets: 1 },
-      usage: { searches: 3, sources: 3, targets: 1 },
+      limits: { max_searches: 3, max_sources: 3, max_targets: 1, max_auto_applies_per_day: 3 },
+      usage: { searches: 3, sources: 3, targets: 1, auto_applies_last_day: 0 },
     };
     expect(canAddResource(atCap, "sources")).toBe(false);
     expect(canAddResource(sampleAccountPlan, "sources")).toBe(true);

@@ -634,8 +634,12 @@ the worker. At most one in-flight live apply (`queued` or `processing`) per job
 is allowed — enforced by a partial unique index so concurrent enqueue requests
 cannot double-submit. Successful live applies set `seen_job.applied_at`. When
 `source.auto_apply_enabled` is on, the scrape pipeline queues applies for new
-matches automatically (same Celery path as the Jobs page **Apply** button). The
-Application profile page shows the same audit trail.
+matches automatically (same Celery path as the Jobs page **Apply** button), up
+to the plan's rolling 24-hour live-apply volume cap (`max_auto_applies_per_day`
+in `app/core/plans.py` — Free 3 / Starter 5 / Plus 10 / Pro 20). Further
+pipeline matches are skipped silently until the window has capacity; manual
+**Apply** from the Jobs page is unchanged. Dry-run previews do not count toward
+the cap. The Application profile page shows the same audit trail.
 
 ## Adding one
 

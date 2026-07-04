@@ -11,12 +11,14 @@ class PlanLimitsRead(BaseModel):
     max_searches: int
     max_sources: int
     max_targets: int
+    max_auto_applies_per_day: int
 
 
 class PlanUsageRead(BaseModel):
     searches: int
     sources: int
     targets: int
+    auto_applies_last_day: int
 
 
 class PlanFeaturesRead(BaseModel):

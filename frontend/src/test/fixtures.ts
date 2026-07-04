@@ -16,8 +16,13 @@ export const sampleAccountPlan: AccountPlan = {
   effective_plan: "pro",
   unlimited: true,
   show_ads: false,
-  limits: { max_searches: 50, max_sources: 50, max_targets: 20 },
-  usage: { searches: 0, sources: 0, targets: 0 },
+  limits: {
+    max_searches: 50,
+    max_sources: 50,
+    max_targets: 20,
+    max_auto_applies_per_day: 50,
+  },
+  usage: { searches: 0, sources: 0, targets: 0, auto_applies_last_day: 0 },
   features: {
     digest_mode: true,
     ai_summaries: true,

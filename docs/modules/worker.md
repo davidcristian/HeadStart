@@ -72,8 +72,9 @@ flowchart TD
    update schedule fields.
 9. When `source.auto_apply_enabled`, the user has an application profile, and the
    adapter supports apply: queue a live `apply_to_job` Celery task for each new
-   match (including jobs skipped for notification by cross-search dedup). Uses the
-   profile cover-letter template (no per-job override). Respects existing
+   match (including jobs skipped for notification by cross-search dedup), until
+   the plan's rolling 24h live-apply volume cap is reached. Uses the profile
+   cover-letter template (no per-job override). Respects existing
    `application_log` in-flight rows.
 
 A separate beat task `flush_due_digests` sends batched notifications for digest
@@ -89,11 +90,14 @@ Live submissions from `POST /jobs/{id}/apply` (non–dry-run) are validated in t
 API, written to `application_log` with status `queued`, and enqueued as
 `apply_to_job`. The same queue path runs from the pipeline when
 `source.auto_apply_enabled` is on and a new match appears during `run_search`
-(see step 9 above). A Celery worker runs `ApplyService.apply_to_job` with the queued
-log id, updates the audit row to `processing` then `submitted` or `failed`, sets
-`seen_job.applied_at` and marks the job `applied` on success. Preview (`dry_run: true`) still runs
-synchronously in the API. Clients poll `GET /application-logs/{id}` until the
-log reaches a terminal status.
+(see step 9 above). Pipeline auto-apply also respects the user's plan
+`max_auto_applies_per_day` rolling window (live `application_log` rows only;
+manual Apply is uncapped by this limit). A Celery worker runs
+`ApplyService.apply_to_job` with the queued log id, updates the audit row to
+`processing` then `submitted` or `failed`, sets `seen_job.applied_at` and marks
+the job `applied` on success. Preview (`dry_run: true`) still runs synchronously
+in the API. Clients poll `GET /application-logs/{id}` until the log reaches a
+terminal status.
 
 Every `application_log` row includes baseline tracking metadata in `payload`
 (`employer_domain`, `posting` title/company/url) for downstream inbox triage

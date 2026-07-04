@@ -19,8 +19,8 @@ const freePlan: AccountPlan = {
   plan: "free",
   effective_plan: "free",
   unlimited: false,
-  limits: { max_searches: 3, max_sources: 3, max_targets: 1 },
-  usage: { searches: 1, sources: 3, targets: 0 },
+  limits: { max_searches: 3, max_sources: 3, max_targets: 1, max_auto_applies_per_day: 3 },
+  usage: { searches: 1, sources: 3, targets: 0, auto_applies_last_day: 0 },
 };
 
 describe("PlanUsageHint", () => {

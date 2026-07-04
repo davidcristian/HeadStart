@@ -43,6 +43,8 @@ class PlanLimits:
     max_searches: int
     max_sources: int
     max_targets: int
+    # Rolling 24h ceiling on live (non–dry-run) applies from the scrape pipeline.
+    max_auto_applies_per_day: int
 
 
 @dataclass(frozen=True, slots=True)
@@ -55,10 +57,10 @@ class PlanFeatures:
 
 
 _PLAN_LIMITS: dict[PlanId, PlanLimits] = {
-    "free": PlanLimits(max_searches=3, max_sources=3, max_targets=1),
-    "starter": PlanLimits(max_searches=5, max_sources=5, max_targets=2),
-    "plus": PlanLimits(max_searches=10, max_sources=10, max_targets=3),
-    "pro": PlanLimits(max_searches=20, max_sources=20, max_targets=5),
+    "free": PlanLimits(max_searches=3, max_sources=3, max_targets=1, max_auto_applies_per_day=3),
+    "starter": PlanLimits(max_searches=5, max_sources=5, max_targets=2, max_auto_applies_per_day=5),
+    "plus": PlanLimits(max_searches=10, max_sources=10, max_targets=3, max_auto_applies_per_day=10),
+    "pro": PlanLimits(max_searches=20, max_sources=20, max_targets=5, max_auto_applies_per_day=20),
 }
 
 _PLAN_FEATURES: dict[PlanId, PlanFeatures] = {

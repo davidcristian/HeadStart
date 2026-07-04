@@ -26,7 +26,9 @@ This area covers the backend business-logic layer (`backend/app/services/`): the
 
 <a id="svc-02"></a>
 ### SVC-02 — Auto-apply has no per-plan or volume cap once a source opts in
-🟡 **MEDIUM** · 🐞 bug · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: M · WS14
+🟡 **MEDIUM** · 🐞 bug · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/12)) · Confidence: high (3/3 verifiers) · Effort: M · WS14
+
+**Update (2026-07-10).** Fixed in [PR](https://github.com/davidcristian/HeadStart/pull/12): `PlanLimits.max_auto_applies_per_day` (Free 3 / Starter 5 / Plus 10 / Pro 20) is enforced in `_pipeline_auto_apply_eligible` via `PlanLimitsService.allows_pipeline_auto_apply`, counting live (non–dry-run) `application_log` rows in a rolling 24h window. Cap exceeded → silent skip (matches other pipeline eligibility skips). Manual Jobs-page Apply is unchanged. Merged SVC-08 closed by the same guard.
 
 > Merged with **SVC-08** ("Auto-apply has no per-run/daily/plan volume cap"), which reports the same missing guardrail from the `queue_auto_applies_for_new_jobs` fan-out side.
 

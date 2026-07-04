@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 from typing import cast
 
 from sqlalchemy.orm import Session
@@ -19,8 +20,10 @@ from app.core.plans import (
     required_plan_phrase,
     scraper_allowed,
 )
+from app.models.base import utcnow
 from app.models.user import User
 from app.notifiers import available_notifiers
+from app.repositories.application_logs import ApplicationLogRepository
 from app.repositories.searches import SearchRepository
 from app.repositories.sources import SourceRepository
 from app.repositories.targets import TargetRepository
@@ -35,6 +38,7 @@ class PlanLimitsService:
         self.sources = SourceRepository(session)
         self.searches = SearchRepository(session)
         self.targets = TargetRepository(session)
+        self.application_logs = ApplicationLogRepository(session)
 
     def resolve_plan(self, user: User) -> PlanId:
         """Effective plan for limits (admins map to Pro caps for display)."""
@@ -46,10 +50,12 @@ class PlanLimitsService:
 
     def usage(self, user_id: int) -> dict[str, int]:
         """Current owned resource counts."""
+        since = utcnow() - timedelta(days=1)
         return {
             "searches": len(self.searches.list_all(user_id)),
             "sources": len(self.sources.list_all(user_id)),
             "targets": len(self.targets.list_all(user_id)),
+            "auto_applies_last_day": self.application_logs.count_live_since(user_id, since=since),
         }
 
     def show_ads_for(self, user: User) -> bool:
@@ -73,6 +79,7 @@ class PlanLimitsService:
                 "max_searches": limits.max_searches,
                 "max_sources": limits.max_sources,
                 "max_targets": limits.max_targets,
+                "max_auto_applies_per_day": limits.max_auto_applies_per_day,
             },
             "usage": usage,
             "features": {
@@ -106,6 +113,20 @@ class PlanLimitsService:
         if user.is_admin:
             return True
         return plan_features_for(self.resolve_plan(user)).ai_summaries
+
+    def allows_pipeline_auto_apply(self, user_id: int) -> bool:
+        """Whether another live pipeline auto-apply may be queued under the daily cap."""
+        user = self.users.get(user_id)
+        if user is None:
+            return False
+        if user.is_admin:
+            return True
+        plan = self.resolve_plan(user)
+        maximum = plan_limits_for(plan).max_auto_applies_per_day
+        if maximum <= 0:
+            return True
+        since = utcnow() - timedelta(days=1)
+        return self.application_logs.count_live_since(user_id, since=since) < maximum
 
     def require_can_add_source(self, user_id: int, adapter_key: str) -> None:
         """Raise when the user cannot create another source or use this adapter."""

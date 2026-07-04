@@ -47,8 +47,11 @@ export function formatResourceUsage(current: number, max: number, label: string)
   return `${current} / ${max} ${label} used`;
 }
 
+/** Creatable resources enforced via plan caps (rolling auto-apply usage is separate). */
+export type PlanResource = "searches" | "sources" | "targets";
+
 /** Whether the user can add another resource of this kind. */
-export function canAddResource(plan: AccountPlan, resource: keyof AccountPlan["usage"]): boolean {
+export function canAddResource(plan: AccountPlan, resource: PlanResource): boolean {
   if (plan.unlimited) return true;
   const key =
     resource === "searches"

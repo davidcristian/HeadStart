@@ -22,6 +22,7 @@ def test_free_plan_limits_match_pricing() -> None:
     assert limits.max_searches == 3
     assert limits.max_sources == 3
     assert limits.max_targets == 1
+    assert limits.max_auto_applies_per_day == 3
 
 
 def test_starter_and_plus_limits_match_matrix() -> None:
@@ -29,11 +30,13 @@ def test_starter_and_plus_limits_match_matrix() -> None:
     assert starter.max_searches == 5
     assert starter.max_sources == 5
     assert starter.max_targets == 2
+    assert starter.max_auto_applies_per_day == 5
 
     plus = plan_limits_for("plus")
     assert plus.max_searches == 10
     assert plus.max_sources == 10
     assert plus.max_targets == 3
+    assert plus.max_auto_applies_per_day == 10
 
 
 def test_pro_plan_limits_match_matrix() -> None:
@@ -41,6 +44,7 @@ def test_pro_plan_limits_match_matrix() -> None:
     assert limits.max_searches == 20
     assert limits.max_sources == 20
     assert limits.max_targets == 5
+    assert limits.max_auto_applies_per_day == 20
 
 
 def test_free_plan_feature_gates() -> None:
@@ -189,3 +193,50 @@ def test_require_user_missing_raises(db_session) -> None:
     with pytest.raises(PlanLimitError) as exc:
         service.require_can_add_search(999999)
     assert exc.value.code == "user_not_found"
+
+
+def test_allows_pipeline_auto_apply_unknown_user(db_session) -> None:
+    assert PlanLimitsService(db_session).allows_pipeline_auto_apply(999999) is False
+
+
+def test_allows_pipeline_auto_apply_admin_unlimited(db_session) -> None:
+    from app.models.user import User
+
+    admin = User(email="admin-apply@example.com", password_hash="x", plan="free", is_admin=True)
+    db_session.add(admin)
+    db_session.flush()
+    assert PlanLimitsService(db_session).allows_pipeline_auto_apply(admin.id) is True
+
+
+def test_allows_pipeline_auto_apply_zero_cap_is_unlimited(db_session, monkeypatch) -> None:
+    from app.core import plans as plans_mod
+    from app.models.user import User
+    from app.services import plan_limits as plan_limits_mod
+
+    user = User(email="zero-cap@example.com", password_hash="x", plan="free")
+    db_session.add(user)
+    db_session.flush()
+
+    monkeypatch.setattr(
+        plan_limits_mod,
+        "plan_limits_for",
+        lambda _plan: plans_mod.PlanLimits(
+            max_searches=3,
+            max_sources=3,
+            max_targets=1,
+            max_auto_applies_per_day=0,
+        ),
+    )
+    assert PlanLimitsService(db_session).allows_pipeline_auto_apply(user.id) is True
+
+
+def test_snapshot_includes_auto_apply_volume(db_session) -> None:
+    from app.models.user import User
+
+    user = User(email="snap-apply@example.com", password_hash="x", plan="starter")
+    db_session.add(user)
+    db_session.flush()
+
+    snapshot = PlanLimitsService(db_session).snapshot(user)
+    assert snapshot["limits"]["max_auto_applies_per_day"] == 5
+    assert snapshot["usage"]["auto_applies_last_day"] == 0

@@ -27,14 +27,14 @@ highlighted best value:
 | Plus | `plus` | Mid tier — missing HeadStart differentiators |
 | Pro | `pro` | Obvious best value |
 
-**Numeric caps (searches / sources / targets):**
+**Numeric caps (searches / sources / targets / pipeline auto-applies per rolling 24h):**
 
 | Tier | Caps |
 | ---- | ---- |
-| Free | 3 / 3 / 1 |
-| Starter | 5 / 5 / 2 |
-| Plus | 10 / 10 / 3 |
-| Pro | 20 / 20 / 5 |
+| Free | 3 / 3 / 1 / 3 |
+| Starter | 5 / 5 / 2 / 5 |
+| Plus | 10 / 10 / 3 / 10 |
+| Pro | 20 / 20 / 5 / 20 |
 
 **Feature matrix** (enforcement lands in Phase 14b):
 

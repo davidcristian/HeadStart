@@ -43,8 +43,8 @@ function planAt(usage: number, max: number): AccountPlan {
     effective_plan: "free",
     unlimited: false,
     show_ads: true,
-    limits: { max_searches: 5, max_sources: max, max_targets: 5 },
-    usage: { searches: 0, sources: usage, targets: 0 },
+    limits: { max_searches: 5, max_sources: max, max_targets: 5, max_auto_applies_per_day: 5 },
+    usage: { searches: 0, sources: usage, targets: 0, auto_applies_last_day: 0 },
     features: {
       digest_mode: false,
       ai_summaries: false,

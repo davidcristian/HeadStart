@@ -21,6 +21,7 @@ from app.repositories.sources import SourceRepository
 from app.schemas.profile import ResumeFile
 from app.services.apply_tracking import application_tracking_payload
 from app.services.credentials import CredentialService
+from app.services.plan_limits import PlanLimitsService
 from app.services.profiles import ProfileService
 from app.services.tailored_resume import resolve_tailored_resume_for_apply
 
@@ -258,7 +259,16 @@ class ApplyService:
             return False
         if not has_applier(source.adapter_key):
             return False
-        return ProfileService(self.session).get_for_apply(user_id).exists
+        if not ProfileService(self.session).get_for_apply(user_id).exists:
+            return False
+        if not PlanLimitsService(self.session).allows_pipeline_auto_apply(user_id):
+            logger.info(
+                "pipeline auto-apply skipped (daily volume cap) job=%s user=%s",
+                job.id,
+                user_id,
+            )
+            return False
+        return True
 
     def _load_application_log(
         self,

@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from sqlalchemy import select
+from datetime import datetime
+
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload
 
@@ -34,6 +36,21 @@ class ApplicationLogRepository:
         except IntegrityError:
             return None
         return log
+
+    def count_live_since(self, user_id: int, *, since: datetime) -> int:
+        """Count non–dry-run apply attempts for the user created at or after ``since``."""
+        stmt = (
+            select(func.count())
+            .select_from(ApplicationLog)
+            .join(SeenJob, ApplicationLog.seen_job_id == SeenJob.id)
+            .join(Search, SeenJob.search_id == Search.id)
+            .where(
+                Search.user_id == user_id,
+                ApplicationLog.dry_run.is_(False),
+                ApplicationLog.created_at >= since,
+            )
+        )
+        return int(self.session.scalar(stmt) or 0)
 
     def get_for_user(self, log_id: int, user_id: int) -> ApplicationLog | None:
         """Return one application log when it belongs to the user's jobs."""

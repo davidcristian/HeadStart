@@ -326,8 +326,8 @@ describe("SearchesPage", () => {
         plan: "free",
         effective_plan: "free",
         unlimited: false,
-        limits: { max_searches: 3, max_sources: 3, max_targets: 1 },
-        usage: { searches: 1, sources: 1, targets: 0 },
+        limits: { max_searches: 3, max_sources: 3, max_targets: 1, max_auto_applies_per_day: 3 },
+        usage: { searches: 1, sources: 1, targets: 0, auto_applies_last_day: 0 },
         features: { ...sampleAccountPlan.features, digest_mode: false },
       },
     });
@@ -352,8 +352,8 @@ describe("SearchesPage", () => {
         plan: "free",
         effective_plan: "free",
         unlimited: false,
-        limits: { max_searches: 3, max_sources: 3, max_targets: 1 },
-        usage: { searches: 3, sources: 1, targets: 0 },
+        limits: { max_searches: 3, max_sources: 3, max_targets: 1, max_auto_applies_per_day: 3 },
+        usage: { searches: 3, sources: 1, targets: 0, auto_applies_last_day: 0 },
       },
     });
     mockApi.listSources.mockResolvedValue([sampleSource]);

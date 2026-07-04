@@ -2,17 +2,15 @@
 
 import { Link } from "react-router-dom";
 import type { AccountPlan } from "../types";
-import { atCapMessage, formatResourceUsage, planLabel } from "../lib/plan";
+import { atCapMessage, formatResourceUsage, planLabel, type PlanResource } from "../lib/plan";
 
-type Resource = keyof AccountPlan["usage"];
-
-const RESOURCE_LABELS: Record<Resource, string> = {
+const RESOURCE_LABELS: Record<PlanResource, string> = {
   searches: "searches",
   sources: "sources",
   targets: "notification channels",
 };
 
-const LIMIT_KEYS: Record<Resource, keyof AccountPlan["limits"]> = {
+const LIMIT_KEYS: Record<PlanResource, keyof AccountPlan["limits"]> = {
   searches: "max_searches",
   sources: "max_sources",
   targets: "max_targets",
@@ -20,7 +18,7 @@ const LIMIT_KEYS: Record<Resource, keyof AccountPlan["limits"]> = {
 
 type Props = {
   plan: AccountPlan;
-  resource: Resource;
+  resource: PlanResource;
 };
 
 export function PlanUsageHint({ plan, resource }: Props) {

@@ -4,12 +4,14 @@ export interface PlanLimits {
   max_searches: number;
   max_sources: number;
   max_targets: number;
+  max_auto_applies_per_day: number;
 }
 
 export interface PlanUsage {
   searches: number;
   sources: number;
   targets: number;
+  auto_applies_last_day: number;
 }
 
 export interface PlanFeatures {

@@ -108,7 +108,7 @@ best-effort). There is **no** apply adapter for generic HTML/Playwright sources.
 | **Indeed** | Fetches the viewjob page and delegates to Greenhouse/Lever/Ashby/Workday/Google/Microsoft/Amazon/Meta when the listing embeds a recognized employer apply URL (most Easy Apply jobs). Indeed-hosted Easy Apply (no external ATS) needs logged-in Indeed session cookies and is best-effort for multi-step questionnaires; resume PDF upload is **not** automated on Indeed-hosted live submit (`resumeText` fallback only). Unsupported external URLs (custom career sites, Breezy, etc.) fail with a clear error. |
 | **LinkedIn** | Fetches the guest job-posting page and delegates to Greenhouse/Lever/Ashby/Workday/Google/Microsoft/Amazon/Meta when Voyager returns a recognized employer apply URL (offsite listings). LinkedIn-hosted Easy Apply needs logged-in `li_at` + `JSESSIONID` cookies; multi-step questionnaires are best-effort — map `profile.answers` when required. Resume PDF upload to LinkedIn is not automated in v1. |
 | **Custom questions** | Only fields mapped in the application profile (`answers`, config paths) are sent. Unmapped required questions can cause rejection. |
-| **Coverage** | Treat auto-apply as a **best-effort preview + submit helper**, not unattended bulk applying. Always use **dry run / preview** first. |
+| **Coverage** | Treat auto-apply as a **best-effort preview + submit helper**, not unattended bulk applying. Pipeline auto-apply is capped per plan (`max_auto_applies_per_day`). Always use **dry run / preview** first. |
 
 Before advertising auto-apply:
 

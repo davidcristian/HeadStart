@@ -255,8 +255,8 @@ describe("SourcesPage", () => {
       plan: {
         ...sampleMeta.plan,
         unlimited: false,
-        limits: { max_searches: 50, max_sources: 1, max_targets: 20 },
-        usage: { searches: 0, sources: 1, targets: 0 },
+        limits: { max_searches: 50, max_sources: 1, max_targets: 20, max_auto_applies_per_day: 50 },
+        usage: { searches: 0, sources: 1, targets: 0, auto_applies_last_day: 0 },
       },
     });
     renderWithClient(

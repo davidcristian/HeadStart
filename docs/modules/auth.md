@@ -179,6 +179,7 @@ pricing page) and enforced in `PlanLimitsService` — **services raise
 | Searches | 3 | 5 | 10 | 20 |
 | Sources | 3 | 5 | 10 | 20 |
 | Notification targets | 1 | 2 | 3 | 5 |
+| Pipeline auto-applies / rolling 24h | 3 | 5 | 10 | 20 |
 | Digest mode | no | yes | yes | yes |
 | Premium scrapers (`indeed`, `linkedin`, `playwright`) | no | no | yes | yes |
 | Site credentials | no | no | yes | yes |

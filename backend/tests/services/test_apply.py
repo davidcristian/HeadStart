@@ -36,8 +36,12 @@ def _foreign_source_id(session: Session) -> int:
     return foreign.id
 
 
-def _seed_greenhouse_job(session: Session) -> tuple[int, int, SeenJob]:
-    search = _make_search(session)
+def _seed_greenhouse_job(
+    session: Session,
+    *,
+    user: User | None = None,
+) -> tuple[int, int, SeenJob]:
+    search = _make_search(session, user=user)
     source = session.get(Source, search.source_id)
     assert source is not None
     source.adapter_key = "greenhouse"
@@ -361,6 +365,87 @@ def test_enqueue_auto_apply_ineligible_when_no_profile(db_session: Session) -> N
     db_session.flush()
     # No profile saved -> _pipeline_auto_apply_eligible returns False on profile check.
     assert ApplyService(db_session).enqueue_auto_apply_from_pipeline(user_id, job_id) is None
+
+
+def test_enqueue_auto_apply_skips_when_daily_volume_cap_reached(db_session: Session) -> None:
+    """SVC-02: pipeline auto-apply stops once the plan's rolling 24h live-apply cap is hit."""
+    # Pipeline helpers default to is_admin=True (unlimited); use a free-tier owner.
+    owner = User(
+        email="volume-cap@example.com",
+        password_hash="hash",
+        plan="free",
+        is_admin=False,
+        is_active=True,
+    )
+    db_session.add(owner)
+    db_session.flush()
+    user_id, job_id, job = _seed_greenhouse_job(db_session, user=owner)
+    _enable_and_profile(db_session, job, user_id)
+
+    for index in range(3):
+        prior = SeenJob(
+            search_id=job.search_id,
+            external_id=f"prior-{index}",
+            hash=f"prior-{index}",
+            title="Prior",
+            company="ACME",
+            url=f"https://boards.greenhouse.io/acme/jobs/prior-{index}",
+            status="new",
+        )
+        db_session.add(prior)
+        db_session.flush()
+        db_session.add(
+            ApplicationLog(
+                seen_job_id=prior.id,
+                status="submitted",
+                dry_run=False,
+                payload={},
+            )
+        )
+    db_session.flush()
+
+    assert ApplyService(db_session).enqueue_auto_apply_from_pipeline(user_id, job_id) is None
+    remaining = db_session.query(ApplicationLog).filter(ApplicationLog.seen_job_id == job_id)
+    assert remaining.count() == 0
+
+
+def test_enqueue_auto_apply_ignores_dry_run_logs_for_volume_cap(db_session: Session) -> None:
+    owner = User(
+        email="volume-dry@example.com",
+        password_hash="hash",
+        plan="free",
+        is_admin=False,
+        is_active=True,
+    )
+    db_session.add(owner)
+    db_session.flush()
+    user_id, job_id, job = _seed_greenhouse_job(db_session, user=owner)
+    _enable_and_profile(db_session, job, user_id)
+
+    for index in range(3):
+        prior = SeenJob(
+            search_id=job.search_id,
+            external_id=f"dry-{index}",
+            hash=f"dry-{index}",
+            title="Preview",
+            company="ACME",
+            url=f"https://boards.greenhouse.io/acme/jobs/dry-{index}",
+            status="new",
+        )
+        db_session.add(prior)
+        db_session.flush()
+        db_session.add(
+            ApplicationLog(
+                seen_job_id=prior.id,
+                status="dry_run",
+                dry_run=True,
+                payload={},
+            )
+        )
+    db_session.flush()
+
+    queued = ApplyService(db_session).enqueue_auto_apply_from_pipeline(user_id, job_id)
+    assert queued is not None
 
 
 def test_apply_with_existing_queued_log_updates_it(db_session: Session) -> None:
