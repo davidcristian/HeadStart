@@ -12,6 +12,7 @@ from app.inbox.gmail_oauth import (
     gmail_oauth_configured,
     require_gmail_oauth_configured,
 )
+from app.inbox.mailbox_oauth_state import verify_mailbox_oauth_nonce
 from app.inbox.outlook_oauth import (
     build_outlook_authorization_url,
     create_outlook_oauth_state,
@@ -38,11 +39,14 @@ from app.schemas.mailbox import (
 from app.services.inbox_oauth import persist_oauth_mailbox
 
 
-def gmail_authorize_url(user_id: int) -> GmailAuthorizeResponse:
-    """Return a Google OAuth consent URL for the current user."""
+def gmail_authorize_url(user_id: int) -> tuple[GmailAuthorizeResponse, str]:
+    """Return a Google OAuth consent URL and the browser-bound nonce."""
     require_gmail_oauth_configured()
-    state = create_gmail_oauth_state(user_id)
-    return GmailAuthorizeResponse(authorization_url=build_gmail_authorization_url(state=state))
+    issued = create_gmail_oauth_state(user_id)
+    return (
+        GmailAuthorizeResponse(authorization_url=build_gmail_authorization_url(state=issued.state)),
+        issued.nonce,
+    )
 
 
 def complete_gmail_oauth(
@@ -51,9 +55,11 @@ def complete_gmail_oauth(
     *,
     code: str,
     state: str,
+    oauth_nonce: str | None,
 ) -> GmailOAuthCallbackResult:
     """Exchange an OAuth callback for encrypted Gmail credentials."""
-    user_id = decode_gmail_oauth_state(state)
+    user_id, expected_nonce = decode_gmail_oauth_state(state)
+    verify_mailbox_oauth_nonce(oauth_nonce, expected_nonce)
     config = exchange_gmail_code(code)
     return persist_oauth_mailbox(
         session,
@@ -64,11 +70,16 @@ def complete_gmail_oauth(
     )
 
 
-def outlook_authorize_url(user_id: int) -> OutlookAuthorizeResponse:
-    """Return a Microsoft OAuth consent URL for the current user."""
+def outlook_authorize_url(user_id: int) -> tuple[OutlookAuthorizeResponse, str]:
+    """Return a Microsoft OAuth consent URL and the browser-bound nonce."""
     require_outlook_oauth_configured()
-    state = create_outlook_oauth_state(user_id)
-    return OutlookAuthorizeResponse(authorization_url=build_outlook_authorization_url(state=state))
+    issued = create_outlook_oauth_state(user_id)
+    return (
+        OutlookAuthorizeResponse(
+            authorization_url=build_outlook_authorization_url(state=issued.state)
+        ),
+        issued.nonce,
+    )
 
 
 def complete_outlook_oauth(
@@ -77,9 +88,11 @@ def complete_outlook_oauth(
     *,
     code: str,
     state: str,
+    oauth_nonce: str | None,
 ) -> GmailOAuthCallbackResult:
     """Exchange an OAuth callback for encrypted Outlook credentials."""
-    user_id = decode_outlook_oauth_state(state)
+    user_id, expected_nonce = decode_outlook_oauth_state(state)
+    verify_mailbox_oauth_nonce(oauth_nonce, expected_nonce)
     config = exchange_outlook_code(code)
     return persist_oauth_mailbox(
         session,
@@ -90,11 +103,14 @@ def complete_outlook_oauth(
     )
 
 
-def yahoo_authorize_url(user_id: int) -> YahooAuthorizeResponse:
-    """Return a Yahoo OAuth consent URL for the current user."""
+def yahoo_authorize_url(user_id: int) -> tuple[YahooAuthorizeResponse, str]:
+    """Return a Yahoo OAuth consent URL and the browser-bound nonce."""
     require_yahoo_oauth_configured()
-    state = create_yahoo_oauth_state(user_id)
-    return YahooAuthorizeResponse(authorization_url=build_yahoo_authorization_url(state=state))
+    issued = create_yahoo_oauth_state(user_id)
+    return (
+        YahooAuthorizeResponse(authorization_url=build_yahoo_authorization_url(state=issued.state)),
+        issued.nonce,
+    )
 
 
 def complete_yahoo_oauth(
@@ -103,9 +119,11 @@ def complete_yahoo_oauth(
     *,
     code: str,
     state: str,
+    oauth_nonce: str | None,
 ) -> GmailOAuthCallbackResult:
     """Exchange an OAuth callback for encrypted Yahoo credentials."""
-    user_id = decode_yahoo_oauth_state(state)
+    user_id, expected_nonce = decode_yahoo_oauth_state(state)
+    verify_mailbox_oauth_nonce(oauth_nonce, expected_nonce)
     config = exchange_yahoo_code(code)
     return persist_oauth_mailbox(
         session,

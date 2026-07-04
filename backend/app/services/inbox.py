@@ -108,16 +108,22 @@ class InboxService:
         self.repo.delete(credential)
         self.session.flush()
 
-    def gmail_authorize_url(self, user_id: int) -> GmailAuthorizeResponse:
-        """Return a Google OAuth consent URL for the current user."""
+    def gmail_authorize_url(self, user_id: int) -> tuple[GmailAuthorizeResponse, str]:
+        """Return a Google OAuth consent URL and the browser-bound nonce."""
         self.require_enabled()
         return inbox_mailbox_oauth.gmail_authorize_url(user_id)
 
-    def complete_gmail_oauth(self, *, code: str, state: str) -> GmailOAuthCallbackResult:
+    def complete_gmail_oauth(
+        self, *, code: str, state: str, oauth_nonce: str | None
+    ) -> GmailOAuthCallbackResult:
         """Exchange an OAuth callback for encrypted Gmail credentials."""
         self.require_enabled()
         return inbox_mailbox_oauth.complete_gmail_oauth(
-            self.session, self.repo, code=code, state=state
+            self.session,
+            self.repo,
+            code=code,
+            state=state,
+            oauth_nonce=oauth_nonce,
         )
 
     @staticmethod
@@ -135,28 +141,40 @@ class InboxService:
         """Whether the deployment exposes Yahoo OAuth connect."""
         return inbox_mailbox_oauth.yahoo_oauth_available()
 
-    def outlook_authorize_url(self, user_id: int) -> OutlookAuthorizeResponse:
-        """Return a Microsoft OAuth consent URL for the current user."""
+    def outlook_authorize_url(self, user_id: int) -> tuple[OutlookAuthorizeResponse, str]:
+        """Return a Microsoft OAuth consent URL and the browser-bound nonce."""
         self.require_enabled()
         return inbox_mailbox_oauth.outlook_authorize_url(user_id)
 
-    def complete_outlook_oauth(self, *, code: str, state: str) -> GmailOAuthCallbackResult:
+    def complete_outlook_oauth(
+        self, *, code: str, state: str, oauth_nonce: str | None
+    ) -> GmailOAuthCallbackResult:
         """Exchange an OAuth callback for encrypted Outlook credentials."""
         self.require_enabled()
         return inbox_mailbox_oauth.complete_outlook_oauth(
-            self.session, self.repo, code=code, state=state
+            self.session,
+            self.repo,
+            code=code,
+            state=state,
+            oauth_nonce=oauth_nonce,
         )
 
-    def yahoo_authorize_url(self, user_id: int) -> YahooAuthorizeResponse:
-        """Return a Yahoo OAuth consent URL for the current user."""
+    def yahoo_authorize_url(self, user_id: int) -> tuple[YahooAuthorizeResponse, str]:
+        """Return a Yahoo OAuth consent URL and the browser-bound nonce."""
         self.require_enabled()
         return inbox_mailbox_oauth.yahoo_authorize_url(user_id)
 
-    def complete_yahoo_oauth(self, *, code: str, state: str) -> GmailOAuthCallbackResult:
+    def complete_yahoo_oauth(
+        self, *, code: str, state: str, oauth_nonce: str | None
+    ) -> GmailOAuthCallbackResult:
         """Exchange an OAuth callback for encrypted Yahoo credentials."""
         self.require_enabled()
         return inbox_mailbox_oauth.complete_yahoo_oauth(
-            self.session, self.repo, code=code, state=state
+            self.session,
+            self.repo,
+            code=code,
+            state=state,
+            oauth_nonce=oauth_nonce,
         )
 
     def test_connection(

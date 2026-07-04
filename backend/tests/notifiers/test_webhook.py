@@ -28,13 +28,14 @@ def test_webhook_posts_expected_json_payload() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         captured.append(json.loads(request.content))
         assert request.headers["content-type"] == "application/json"
-        assert str(request.url) == "https://example.com/hooks/headstart"
+        assert str(request.url) == "https://hooks.fixture.test/headstart"
+        assert request.headers["host"] == "hooks.fixture.test"
         return httpx.Response(200, text="ok")
 
     notifier = WebhookNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
     ctx = NotifyContext(
         target_type="webhook",
-        config={"webhook_url": "https://example.com/hooks/headstart"},
+        config={"webhook_url": "https://hooks.fixture.test/headstart"},
     )
 
     results = notifier.send(ctx, [_job()])
@@ -64,7 +65,7 @@ def test_webhook_includes_summary_when_present() -> None:
     notifier = WebhookNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
     ctx = NotifyContext(
         target_type="webhook",
-        config={"webhook_url": "https://example.com/hooks/headstart"},
+        config={"webhook_url": "https://hooks.fixture.test/headstart"},
     )
     job = _job()
     job.summary = "Matches your search: mentions engineer."
@@ -87,7 +88,7 @@ def test_webhook_adds_hmac_signature_when_secret_configured() -> None:
     ctx = NotifyContext(
         target_type="webhook",
         config={
-            "webhook_url": "https://example.com/hooks/headstart",
+            "webhook_url": "https://hooks.fixture.test/headstart",
             "secret": "signing-key",
         },
     )
@@ -110,7 +111,7 @@ def test_webhook_merges_custom_headers() -> None:
     ctx = NotifyContext(
         target_type="webhook",
         config={
-            "webhook_url": "https://example.com/hooks/headstart",
+            "webhook_url": "https://hooks.fixture.test/headstart",
             "headers": {"X-Custom": "value"},
         },
     )
@@ -130,7 +131,7 @@ def test_webhook_digest_posts_batched_payload() -> None:
     notifier = WebhookNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
     ctx = NotifyContext(
         target_type="webhook",
-        config={"webhook_url": "https://example.com/hooks/headstart"},
+        config={"webhook_url": "https://hooks.fixture.test/headstart"},
         digest=True,
         search_name="Backend roles",
     )
@@ -154,7 +155,7 @@ def test_webhook_records_failure_without_raising() -> None:
     notifier = WebhookNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
     ctx = NotifyContext(
         target_type="webhook",
-        config={"webhook_url": "https://example.com/hooks/headstart"},
+        config={"webhook_url": "https://hooks.fixture.test/headstart"},
     )
 
     results = notifier.send(ctx, [_job(), _job("2")])
@@ -186,7 +187,7 @@ def test_webhook_digest_empty_jobs_returns_empty() -> None:
     notifier = WebhookNotifier(client=httpx.Client())
     ctx = NotifyContext(
         target_type="webhook",
-        config={"webhook_url": "https://example.com/hooks/headstart"},
+        config={"webhook_url": "https://hooks.fixture.test/headstart"},
         digest=True,
     )
     assert notifier.send(ctx, []) == []
@@ -199,7 +200,7 @@ def test_webhook_digest_records_failure_without_raising() -> None:
     notifier = WebhookNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
     ctx = NotifyContext(
         target_type="webhook",
-        config={"webhook_url": "https://example.com/hooks/headstart"},
+        config={"webhook_url": "https://hooks.fixture.test/headstart"},
         digest=True,
     )
     results = notifier.send(ctx, [_job("1"), _job("2")])
@@ -218,7 +219,7 @@ def test_webhook_skips_blank_custom_header_keys_and_values() -> None:
     ctx = NotifyContext(
         target_type="webhook",
         config={
-            "webhook_url": "https://example.com/hooks/headstart",
+            "webhook_url": "https://hooks.fixture.test/headstart",
             "headers": {"X-Keep": "yes", "": "no-key", "X-None": None},
         },
     )
@@ -238,7 +239,7 @@ def test_webhook_ignores_non_dict_headers_config() -> None:
     notifier = WebhookNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
     ctx = NotifyContext(
         target_type="webhook",
-        config={"webhook_url": "https://example.com/hooks/headstart", "headers": "nope"},
+        config={"webhook_url": "https://hooks.fixture.test/headstart", "headers": "nope"},
     )
     notifier.send(ctx, [_job()])
     assert captured_headers[0]["content-type"] == "application/json"

@@ -84,8 +84,13 @@ def refresh(
 
 
 @router.post("/logout", response_model=MessageResponse)
-def logout(response: Response) -> MessageResponse:
-    """Clear the refresh cookie. Safe to call without an active session."""
+def logout(
+    response: Response,
+    refresh_cookie: str | None = Cookie(default=None, alias=settings.auth_cookie_name),
+    db: Session = Depends(get_db),
+) -> MessageResponse:
+    """Clear the refresh cookie and revoke the server-side refresh session."""
+    AuthService(db).logout(refresh_cookie)
     _clear_refresh_cookie(response)
     return MessageResponse(message="Logged out.")
 

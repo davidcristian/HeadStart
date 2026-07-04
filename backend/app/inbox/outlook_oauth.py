@@ -3,14 +3,17 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Any
 from urllib.parse import urlencode
 
 import httpx
-import jwt
 
 from app.core.config import settings
 from app.core.exceptions import ValidationError
+from app.inbox.mailbox_oauth_state import (
+    IssuedMailboxOAuthState,
+    issue_mailbox_oauth_state,
+    parse_mailbox_oauth_state,
+)
 from app.inbox.types import OutlookMailboxConfig
 from app.models.base import utcnow
 
@@ -50,32 +53,21 @@ def require_outlook_oauth_configured() -> None:
         )
 
 
-def create_outlook_oauth_state(user_id: int) -> str:
+def create_outlook_oauth_state(user_id: int) -> IssuedMailboxOAuthState:
     """Issue a short-lived signed state token tying the callback to one user."""
-    now = utcnow()
-    payload = {
-        "sub": str(user_id),
-        "type": OUTLOOK_OAUTH_STATE_TYPE,
-        "iat": now,
-        "exp": now + timedelta(minutes=15),
-    }
-    return jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
+    return issue_mailbox_oauth_state(user_id=user_id, state_type=OUTLOOK_OAUTH_STATE_TYPE)
 
 
-def decode_outlook_oauth_state(state: str) -> int:
-    """Validate OAuth state and return the owning user id."""
+def decode_outlook_oauth_state(state: str) -> tuple[int, str]:
+    """Validate OAuth state and return the owning user id and bound nonce."""
     try:
-        payload: dict[str, Any] = jwt.decode(
-            state, settings.jwt_secret, algorithms=[settings.jwt_algorithm]
+        return parse_mailbox_oauth_state(
+            state=state,
+            state_type=OUTLOOK_OAUTH_STATE_TYPE,
+            error_message="Invalid or expired Outlook OAuth state.",
         )
-    except jwt.PyJWTError as exc:
-        raise OutlookOAuthError("Invalid or expired Outlook OAuth state.") from exc
-    if payload.get("type") != OUTLOOK_OAUTH_STATE_TYPE:
-        raise OutlookOAuthError("Invalid Outlook OAuth state.")
-    sub = payload.get("sub")
-    if not isinstance(sub, str) or not sub.isdigit():
-        raise OutlookOAuthError("Invalid Outlook OAuth state.")
-    return int(sub)
+    except ValidationError as exc:
+        raise OutlookOAuthError(str(exc)) from exc
 
 
 def build_outlook_authorization_url(*, state: str) -> str:

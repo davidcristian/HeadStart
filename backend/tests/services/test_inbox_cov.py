@@ -118,46 +118,46 @@ def test_oauth_authorize_and_callback_wrappers(db_session: Session, monkeypatch)
     monkeypatch.setattr(
         inbox_module.inbox_mailbox_oauth,
         "gmail_authorize_url",
-        lambda uid: GmailAuthorizeResponse(authorization_url="https://g/auth"),
+        lambda uid: (GmailAuthorizeResponse(authorization_url="https://g/auth"), "nonce-g"),
     )
     monkeypatch.setattr(
         inbox_module.inbox_mailbox_oauth,
         "outlook_authorize_url",
-        lambda uid: OutlookAuthorizeResponse(authorization_url="https://o/auth"),
+        lambda uid: (OutlookAuthorizeResponse(authorization_url="https://o/auth"), "nonce-o"),
     )
     monkeypatch.setattr(
         inbox_module.inbox_mailbox_oauth,
         "yahoo_authorize_url",
-        lambda uid: YahooAuthorizeResponse(authorization_url="https://y/auth"),
+        lambda uid: (YahooAuthorizeResponse(authorization_url="https://y/auth"), "nonce-y"),
     )
-    assert svc.gmail_authorize_url(user_id).authorization_url == "https://g/auth"
-    assert svc.outlook_authorize_url(user_id).authorization_url == "https://o/auth"
-    assert svc.yahoo_authorize_url(user_id).authorization_url == "https://y/auth"
+    assert svc.gmail_authorize_url(user_id)[0].authorization_url == "https://g/auth"
+    assert svc.outlook_authorize_url(user_id)[0].authorization_url == "https://o/auth"
+    assert svc.yahoo_authorize_url(user_id)[0].authorization_url == "https://y/auth"
 
     monkeypatch.setattr(
         inbox_module.inbox_mailbox_oauth,
         "complete_gmail_oauth",
-        lambda session, repo, *, code, state: GmailOAuthCallbackResult(
+        lambda session, repo, *, code, state, oauth_nonce: GmailOAuthCallbackResult(
             connector_type="gmail", email_address="g@x"
         ),
     )
     monkeypatch.setattr(
         inbox_module.inbox_mailbox_oauth,
         "complete_outlook_oauth",
-        lambda session, repo, *, code, state: GmailOAuthCallbackResult(
+        lambda session, repo, *, code, state, oauth_nonce: GmailOAuthCallbackResult(
             connector_type="outlook", email_address="o@x"
         ),
     )
     monkeypatch.setattr(
         inbox_module.inbox_mailbox_oauth,
         "complete_yahoo_oauth",
-        lambda session, repo, *, code, state: GmailOAuthCallbackResult(
+        lambda session, repo, *, code, state, oauth_nonce: GmailOAuthCallbackResult(
             connector_type="yahoo", email_address="y@x"
         ),
     )
-    assert svc.complete_gmail_oauth(code="c", state="s").email_address == "g@x"
-    assert svc.complete_outlook_oauth(code="c", state="s").email_address == "o@x"
-    assert svc.complete_yahoo_oauth(code="c", state="s").email_address == "y@x"
+    assert svc.complete_gmail_oauth(code="c", state="s", oauth_nonce="n").email_address == "g@x"
+    assert svc.complete_outlook_oauth(code="c", state="s", oauth_nonce="n").email_address == "o@x"
+    assert svc.complete_yahoo_oauth(code="c", state="s", oauth_nonce="n").email_address == "y@x"
 
 
 def test_oauth_available_static_methods(monkeypatch) -> None:

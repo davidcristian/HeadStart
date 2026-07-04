@@ -11,6 +11,7 @@ from app.inbox.ghost_message import is_self_ghost_archive_message
 from app.inbox.routing import merge_routing_config
 from app.inbox.types import InboxMessage
 from app.models.application_log import ApplicationLog
+from app.models.inbox_classification import InboxClassification
 from app.models.seen_job import SeenJob
 from app.repositories.applications import ApplicationPipelineRepository
 from app.repositories.mailbox_credentials import MailboxCredentialRepository
@@ -151,3 +152,24 @@ def sender_matches_employer_domain(from_addr: str, employer_domains: frozenset[s
         if sender_domain == domain or sender_domain.endswith(f".{domain}"):
             return True
     return False
+
+
+def auto_reply_recipient_allowed(
+    session: Session,
+    *,
+    from_addr: str,
+    classification: InboxClassification,
+) -> bool:
+    """Return True when the reply recipient matches the linked application's employer."""
+    if classification.seen_job_id is None:
+        return False
+    job = session.get(SeenJob, classification.seen_job_id)
+    if job is None:
+        return False
+    log = latest_live_attempt(job.application_logs)
+    domain = employer_domain_from_payload(log)
+    if not domain:
+        domain = email_domain_from_job_url(job)
+    if not domain:
+        return False
+    return sender_matches_employer_domain(from_addr, frozenset({domain}))

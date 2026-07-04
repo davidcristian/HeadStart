@@ -191,6 +191,13 @@ All routes require auth and `INBOX_AGENT_ENABLED=true`.
 | GET    | `/outlook/callback` | OAuth redirect (stores Outlook tokens)     |
 | GET    | `/yahoo/authorize`| Start Yahoo OAuth (returns consent URL)      |
 | GET    | `/yahoo/callback` | OAuth redirect (stores Yahoo tokens)         |
+
+**OAuth CSRF protection:** each `/authorize` response sets an httpOnly
+`mailbox_oauth_nonce` cookie alongside the signed JWT `state` (which embeds the
+same nonce). The unauthenticated `/callback` handler rejects the exchange unless
+the cookie matches `state`, so a victim cannot complete an OAuth flow started by
+an attacker and link the victim's mailbox to the attacker's account.
+
 | POST   | `/test`           | Test IMAP + SMTP (optional inline config)    |
 | GET    | `/messages`       | Fetch inbound messages (`since_uid`, `limit`)|
 | POST   | `/classify`       | Classify one message (body or mailbox `uid`) |
@@ -357,7 +364,9 @@ Supported classification labels: `follow_up`, `general`.
 
 **Safe-send guardrails:** built-in legal/HR topic blocklist on inbound + draft
 text; per-user hourly/daily caps (`INBOX_REPLY_MAX_PER_HOUR`,
-`INBOX_REPLY_MAX_PER_DAY`); audit log at `GET /inbox/reply-send-logs` for queue,
+`INBOX_REPLY_MAX_PER_DAY`); recipient domain must match the linked application's
+`employer_domain` (or the job posting URL host) before auto-send;
+audit log at `GET /inbox/reply-send-logs` for queue,
 send, and blocked decisions. Blocked sends set `inbox_pending_reply.status=blocked`
 and leave the draft in `draft` for manual review.
 

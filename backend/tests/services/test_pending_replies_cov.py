@@ -50,7 +50,7 @@ def test_enqueue_returns_existing_pending_row(db_session: Session, monkeypatch) 
     search = _make_search(db_session)
     user_id = search.user_id
     _seed_mailbox(db_session, user_id, auto_reply=True)
-    draft = _seed_draft(db_session, user_id)
+    draft = _seed_draft(db_session, user_id, search=search)
     service = PendingReplyService(db_session)
     first = service.enqueue_for_draft(user_id, draft)
     assert first is not None
@@ -64,7 +64,7 @@ def test_enqueue_cancels_and_requeues_when_prior_terminal(db_session: Session, m
     search = _make_search(db_session)
     user_id = search.user_id
     _seed_mailbox(db_session, user_id, auto_reply=True)
-    draft = _seed_draft(db_session, user_id)
+    draft = _seed_draft(db_session, user_id, search=search)
     service = PendingReplyService(db_session)
     first = service.enqueue_for_draft(user_id, draft)
     assert first is not None
@@ -85,7 +85,7 @@ def test_enqueue_blocked_before_queue_records_and_returns_none(
     search = _make_search(db_session)
     user_id = search.user_id
     _seed_mailbox(db_session, user_id, auto_reply=True)
-    draft = _seed_draft(db_session, user_id)
+    draft = _seed_draft(db_session, user_id, search=search)
     service = PendingReplyService(db_session)
 
     blocked = SafeSendDecision(allowed=False, outcome="blocked_topic", reason="blocked", payload={})
@@ -104,7 +104,7 @@ def test_send_one_skips_when_auto_reply_disabled_at_send(db_session: Session, mo
     search = _make_search(db_session)
     user_id = search.user_id
     _seed_mailbox(db_session, user_id, auto_reply=True)
-    draft = _seed_draft(db_session, user_id)
+    draft = _seed_draft(db_session, user_id, search=search)
     service = PendingReplyService(db_session)
     now = datetime(2026, 6, 30, 12, 0, tzinfo=UTC)
     row = service.enqueue_for_draft(user_id, draft, anchor=now - timedelta(hours=1))
@@ -175,7 +175,7 @@ def test_send_one_fails_on_send_exception(db_session: Session, monkeypatch) -> N
     search = _make_search(db_session)
     user_id = search.user_id
     _seed_mailbox(db_session, user_id, auto_reply=True)
-    draft = _seed_draft(db_session, user_id)
+    draft = _seed_draft(db_session, user_id, search=search)
     service = PendingReplyService(db_session)
     now = datetime(2026, 6, 30, 12, 0, tzinfo=UTC)
     row = service.enqueue_for_draft(user_id, draft, anchor=now - timedelta(hours=1))
@@ -196,7 +196,7 @@ def test_send_one_fails_when_send_result_not_sent(db_session: Session, monkeypat
     search = _make_search(db_session)
     user_id = search.user_id
     _seed_mailbox(db_session, user_id, auto_reply=True)
-    draft = _seed_draft(db_session, user_id)
+    draft = _seed_draft(db_session, user_id, search=search)
     service = PendingReplyService(db_session)
     now = datetime(2026, 6, 30, 12, 0, tzinfo=UTC)
     row = service.enqueue_for_draft(user_id, draft, anchor=now - timedelta(hours=1))
@@ -223,7 +223,7 @@ def test_process_due_counts_blocked_outcome(db_session: Session, monkeypatch) ->
     search = _make_search(db_session)
     user_id = search.user_id
     _seed_mailbox(db_session, user_id, auto_reply=True)
-    draft = _seed_draft(db_session, user_id)
+    draft = _seed_draft(db_session, user_id, search=search)
     service = PendingReplyService(db_session)
     now = datetime(2026, 6, 30, 12, 0, tzinfo=UTC)
     row = service.enqueue_for_draft(user_id, draft, anchor=now - timedelta(hours=1))

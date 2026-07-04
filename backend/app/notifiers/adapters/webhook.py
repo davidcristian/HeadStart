@@ -22,6 +22,7 @@ from typing import Any
 import httpx
 
 from app.core.logging import get_logger
+from app.core.outbound_http import pinned_request
 from app.core.outbound_url import UnsafeOutboundUrlError, assert_safe_outbound_url
 from app.notifiers.base import Notifier, register_notifier
 from app.notifiers.types import DeliveryResult, NotifyContext
@@ -92,7 +93,7 @@ class WebhookNotifier(Notifier):
     def _post(self, webhook_url: str, ctx: NotifyContext, payload: dict[str, Any]) -> None:
         body = json.dumps(payload, separators=(",", ":"), sort_keys=True).encode("utf-8")
         headers = _request_headers(ctx, body)
-        resp = self._client.post(webhook_url, content=body, headers=headers)
+        resp = pinned_request(self._client, "POST", webhook_url, content=body, headers=headers)
         resp.raise_for_status()
 
     def close(self) -> None:

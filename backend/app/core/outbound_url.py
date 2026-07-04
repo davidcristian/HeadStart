@@ -8,7 +8,8 @@ from __future__ import annotations
 
 import ipaddress
 import socket
-from urllib.parse import urlparse
+from dataclasses import dataclass
+from urllib.parse import urlunparse, urlparse
 
 from app.core.config import get_settings
 
@@ -32,8 +33,21 @@ class UnsafeOutboundUrlError(ValueError):
     """Raised when a URL targets a disallowed host or network."""
 
 
+@dataclass(frozen=True)
+class PinnedOutboundRequest:
+    """A URL rewritten to a resolved IP plus the original Host header value."""
+
+    request_url: str
+    host_header: str
+
+
 def assert_safe_outbound_url(url: str) -> None:
     """Reject URLs that resolve to non-public destinations."""
+    pin_outbound_request(url)
+
+
+def pin_outbound_request(url: str) -> PinnedOutboundRequest:
+    """Resolve once, validate IPs, and return an IP-literal URL for the connect."""
     parsed = urlparse(url)
     if parsed.scheme not in {"http", "https"}:
         raise UnsafeOutboundUrlError("Only http and https URLs are allowed.")
@@ -49,7 +63,7 @@ def assert_safe_outbound_url(url: str) -> None:
         raise UnsafeOutboundUrlError(f"Hostname '{hostname}' is not allowed.")
 
     if _reserved_test_tld_bypass_allowed() and host.endswith(_TEST_TLD_SUFFIXES):
-        return
+        return PinnedOutboundRequest(request_url=url, host_header=host)
 
     port = parsed.port or (443 if parsed.scheme == "https" else 80)
     try:
@@ -65,10 +79,20 @@ def assert_safe_outbound_url(url: str) -> None:
     if not addrinfos:
         raise UnsafeOutboundUrlError(f"Unable to resolve hostname '{hostname}'.")
 
+    chosen_ip: ipaddress.IPv4Address | ipaddress.IPv6Address | None = None
     for info in addrinfos:
         ip = ipaddress.ip_address(info[4][0])
         if _is_blocked_ip(ip):
             raise UnsafeOutboundUrlError(f"Hostname '{hostname}' resolves to a disallowed address.")
+        if chosen_ip is None:
+            chosen_ip = ip
+
+    assert chosen_ip is not None
+    ip_literal = f"[{chosen_ip}]" if chosen_ip.version == 6 else str(chosen_ip)
+    default_port = 443 if parsed.scheme == "https" else 80
+    netloc = f"{ip_literal}:{port}" if port != default_port else ip_literal
+    pinned_url = urlunparse(parsed._replace(netloc=netloc))
+    return PinnedOutboundRequest(request_url=pinned_url, host_header=host)
 
 
 def _reserved_test_tld_bypass_allowed() -> bool:

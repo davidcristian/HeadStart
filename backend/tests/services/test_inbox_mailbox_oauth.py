@@ -44,16 +44,25 @@ def test_authorize_url_builds_consent_link(
 ) -> None:
     require = MagicMock()
     monkeypatch.setattr(inbox_mailbox_oauth, require_fn, require)
-    monkeypatch.setattr(inbox_mailbox_oauth, state_fn, lambda user_id: f"state-{user_id}")
+    monkeypatch.setattr(
+        inbox_mailbox_oauth,
+        state_fn,
+        lambda user_id: type(
+            "Issued",
+            (),
+            {"state": f"state-{user_id}", "nonce": f"nonce-{user_id}"},
+        )(),
+    )
     monkeypatch.setattr(
         inbox_mailbox_oauth,
         build_fn,
         lambda *, state: f"https://{connector}.example/auth?state={state}",
     )
 
-    response = getattr(inbox_mailbox_oauth, authorize_fn)(11)
+    response, nonce = getattr(inbox_mailbox_oauth, authorize_fn)(11)
 
     require.assert_called_once_with()
+    assert nonce == "nonce-11"
     assert response.authorization_url == f"https://{connector}.example/auth?state=state-11"
 
 
@@ -90,7 +99,7 @@ def test_complete_oauth_persists_via_helper(
     monkeypatch, connector, config_cls, decode_fn, exchange_fn, complete_fn
 ) -> None:
     config = config_cls(email_address=f"user@{connector}.test", access_token="a", refresh_token="r")
-    monkeypatch.setattr(inbox_mailbox_oauth, decode_fn, lambda state: 42)
+    monkeypatch.setattr(inbox_mailbox_oauth, decode_fn, lambda state: (42, "nonce-42"))
     monkeypatch.setattr(inbox_mailbox_oauth, exchange_fn, lambda code: config)
     persist = MagicMock(return_value="callback-result")
     monkeypatch.setattr(inbox_mailbox_oauth, "persist_oauth_mailbox", persist)
@@ -98,7 +107,11 @@ def test_complete_oauth_persists_via_helper(
     session = MagicMock()
     repo = MagicMock()
     result = getattr(inbox_mailbox_oauth, complete_fn)(
-        session, repo, code="the-code", state="the-state"
+        session,
+        repo,
+        code="the-code",
+        state="the-state",
+        oauth_nonce="nonce-42",
     )
 
     assert result == "callback-result"

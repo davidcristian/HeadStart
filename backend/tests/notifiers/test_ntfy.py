@@ -23,11 +23,15 @@ def test_ntfy_posts_expected_payload() -> None:
         import json
 
         captured.append(json.loads(request.content))
-        assert str(request.url) == "https://ntfy.sh"
+        assert str(request.url) == "https://ntfy.fixture.test"
+        assert request.headers["host"] == "ntfy.fixture.test"
         return httpx.Response(200, json={"id": "abc"})
 
     notifier = NtfyNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
-    ctx = NotifyContext(target_type="ntfy", config={"topic": "secret", "priority": "high"})
+    ctx = NotifyContext(
+        target_type="ntfy",
+        config={"topic": "secret", "priority": "high", "server_url": "https://ntfy.fixture.test"},
+    )
 
     results = notifier.send(ctx, [_job()])
 

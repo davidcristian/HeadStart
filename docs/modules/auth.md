@@ -30,15 +30,20 @@ data isolation.
   (access) and `/refresh` reject any token whose `ver` no longer matches the
   user's current version, so bumping `token_version` invalidates every
   outstanding access **and** refresh token at once. Password reset bumps it (see
-  below); account deactivation needs no bump because the `is_active` check
-  already blocks those tokens. This mirrors `feed_token_version` for RSS URLs.
+  below); `/logout` bumps it when a valid refresh token is presented; `/refresh`
+  bumps it before issuing a new refresh cookie (rotation — a previously issued
+  refresh JWT cannot be replayed). Account deactivation needs no bump because the
+  `is_active` check already blocks those tokens. RSS feed URLs use a separate
+  `feed_token_version` claim; password reset bumps that too so leaked feed links
+  stop working after credential recovery.
   Because pre-existing tokens carry no `ver`, they are treated as stale and
   forced to re-authenticate the first time this ships.
 - **Token delivery:** `/login` and `/refresh` return the **access token in the
   response body** and set the **refresh token as an httpOnly cookie**
   (`AUTH_COOKIE_*`). The refresh token is never exposed to JavaScript, so XSS
   cannot exfiltrate the long-lived credential. `/refresh` reads the cookie (and
-  rotates it); `/logout` clears it. Non-browser clients may still pass
+  rotates it by bumping `token_version`); `/logout` clears the cookie and bumps
+  `token_version` when the refresh JWT is still valid. Non-browser clients may
   `refresh_token` in the `/refresh` body. See
   [adr/0007-httponly-refresh-cookie.md](../adr/0007-httponly-refresh-cookie.md).
 - `decode_token(token, expected_type=...)` validates signature, expiry, and the
@@ -63,7 +68,7 @@ returns `NotFoundError` (404), never another user's data.
 | POST   | `/register` | none   | Create an account (first = admin)      |
 | POST   | `/login`    | none   | Email+password → access token (body) + refresh cookie |
 | POST   | `/refresh`  | none*  | Refresh cookie → new access token (rotates cookie) |
-| POST   | `/logout`   | none   | Clear the refresh cookie               |
+| POST   | `/logout`   | none   | Clear the refresh cookie and revoke the session |
 | POST   | `/forgot-password` | none | Request a password-reset email   |
 | POST   | `/reset-password`  | none | Set a new password from reset link |
 | POST   | `/verify-email`    | none | Confirm email from verification link |
@@ -112,9 +117,10 @@ read from the httpOnly cookie (falls back to a `refresh_token` body field).
 3. The email link opens `/reset-password?token=...` → `POST /auth/reset-password`
    with the token and new password.
 4. Valid tokens are deleted after use; expired tokens are rejected.
-5. The reset **bumps `token_version`**, so any access/refresh token issued before
-   the reset (e.g. one captured from a compromised session) immediately stops
-   validating — the user must sign in again everywhere.
+5. The reset **bumps `token_version` and `feed_token_version`**, so any
+   access/refresh token or RSS feed URL issued before the reset (e.g. one
+   captured from a compromised session) immediately stops validating — the user
+   must sign in again everywhere and re-issue feed links.
 
 **Email delivery:** configure SMTP via `SMTP_*` env vars. When `SMTP_HOST` is
 empty (typical local dev), the API logs the reset URL at INFO instead of sending

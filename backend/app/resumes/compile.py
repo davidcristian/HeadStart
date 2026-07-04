@@ -2,12 +2,19 @@
 
 from __future__ import annotations
 
+import os
 import shutil
 import subprocess
 import tempfile
 from pathlib import Path
 
 from app.core.exceptions import ValidationError
+
+_COMPILER_ENV = {
+    "openin_any": "p",
+    "openout_any": "p",
+    "shell_escape": "f",
+}
 
 
 def compile_latex_to_pdf(
@@ -65,6 +72,17 @@ def _default_commands() -> tuple[str, ...]:
     return ("tectonic", "pdflatex")
 
 
+def _compiler_env() -> dict[str, str]:
+    """Return a minimal environment for LaTeX subprocesses."""
+    env = {
+        key: value
+        for key, value in os.environ.items()
+        if key in {"PATH", "HOME", "TMPDIR", "TEMP", "TMP", "LANG", "LC_ALL"}
+    }
+    env.update(_COMPILER_ENV)
+    return env
+
+
 def _run_compiler_workspace(
     exe: str,
     cmd: str,
@@ -80,6 +98,7 @@ def _run_compiler_workspace(
             out_path.parent.mkdir(parents=True, exist_ok=True)
             out_path.write_bytes(data)
         tex_path = tmp_path / entrypoint
+        env = _compiler_env()
         if cmd == "tectonic":
             proc = subprocess.run(
                 [exe, "--outdir", str(tex_path.parent), str(tex_path)],
@@ -87,12 +106,14 @@ def _run_compiler_workspace(
                 timeout=timeout,
                 text=True,
                 check=False,
+                env=env,
             )
         else:
             proc = subprocess.run(
                 [
                     exe,
                     "-interaction=nonstopmode",
+                    "-no-shell-escape",
                     "-output-directory",
                     str(tex_path.parent),
                     str(tex_path.name),
@@ -102,6 +123,7 @@ def _run_compiler_workspace(
                 text=True,
                 check=False,
                 cwd=tex_path.parent,
+                env=env,
             )
         if proc.returncode != 0:
             stderr = (proc.stderr or proc.stdout or "").strip()

@@ -29,8 +29,8 @@ def test_yahoo_oauth_configured_requires_all_vars(monkeypatch) -> None:
 
 
 def test_yahoo_oauth_state_round_trip() -> None:
-    state = create_yahoo_oauth_state(42)
-    assert decode_yahoo_oauth_state(state) == 42
+    issued = create_yahoo_oauth_state(42)
+    assert decode_yahoo_oauth_state(issued.state) == (42, issued.nonce)
 
 
 def test_build_authorization_url_contains_client_id(monkeypatch) -> None:

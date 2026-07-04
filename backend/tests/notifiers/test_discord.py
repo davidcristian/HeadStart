@@ -23,13 +23,14 @@ def test_discord_posts_expected_payload() -> None:
 
     def handler(request: httpx.Request) -> httpx.Response:
         captured.append(json.loads(request.content))
-        assert str(request.url) == "https://discord.com/api/webhooks/123/secret"
+        assert str(request.url) == "https://discord.fixture.test/api/webhooks/123/secret"
+        assert request.headers["host"] == "discord.fixture.test"
         return httpx.Response(204)
 
     notifier = DiscordNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
     ctx = NotifyContext(
         target_type="discord",
-        config={"webhook_url": "https://discord.com/api/webhooks/123/secret"},
+        config={"webhook_url": "https://discord.fixture.test/api/webhooks/123/secret"},
     )
 
     results = notifier.send(ctx, [_job()])
@@ -51,7 +52,7 @@ def test_discord_records_failure_without_raising() -> None:
     notifier = DiscordNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
     ctx = NotifyContext(
         target_type="discord",
-        config={"webhook_url": "https://discord.com/api/webhooks/123/secret"},
+        config={"webhook_url": "https://discord.fixture.test/api/webhooks/123/secret"},
     )
 
     results = notifier.send(ctx, [_job(), _job("2")])
@@ -91,7 +92,7 @@ def test_discord_single_includes_summary_in_description() -> None:
     notifier = DiscordNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
     ctx = NotifyContext(
         target_type="discord",
-        config={"webhook_url": "https://discord.com/api/webhooks/123/secret"},
+        config={"webhook_url": "https://discord.fixture.test/api/webhooks/123/secret"},
     )
     job = _job()
     job.summary = "strong python match"
@@ -109,7 +110,7 @@ def test_discord_payload_minimal_job_has_no_description_or_url() -> None:
     notifier = DiscordNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
     ctx = NotifyContext(
         target_type="discord",
-        config={"webhook_url": "https://discord.com/api/webhooks/123/secret"},
+        config={"webhook_url": "https://discord.fixture.test/api/webhooks/123/secret"},
     )
     # Title only: no company/summary/location/url means no description or url keys.
     notifier.send(ctx, [JobPosting(external_id="1", title="")])
@@ -129,7 +130,7 @@ def test_discord_digest_sends_single_message() -> None:
     notifier = DiscordNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
     ctx = NotifyContext(
         target_type="discord",
-        config={"webhook_url": "https://discord.com/api/webhooks/123/secret"},
+        config={"webhook_url": "https://discord.fixture.test/api/webhooks/123/secret"},
         digest=True,
         search_name="Backend",
     )
@@ -153,7 +154,7 @@ def test_discord_digest_empty_jobs_returns_empty() -> None:
     notifier = DiscordNotifier(client=httpx.Client())
     ctx = NotifyContext(
         target_type="discord",
-        config={"webhook_url": "https://discord.com/api/webhooks/123/secret"},
+        config={"webhook_url": "https://discord.fixture.test/api/webhooks/123/secret"},
         digest=True,
     )
     assert notifier.send(ctx, []) == []
@@ -166,7 +167,7 @@ def test_discord_digest_records_failure() -> None:
     notifier = DiscordNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
     ctx = NotifyContext(
         target_type="discord",
-        config={"webhook_url": "https://discord.com/api/webhooks/123/secret"},
+        config={"webhook_url": "https://discord.fixture.test/api/webhooks/123/secret"},
         digest=True,
     )
     results = notifier.send(ctx, [_job(), _job("2")])

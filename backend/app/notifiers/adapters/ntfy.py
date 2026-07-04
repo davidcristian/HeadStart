@@ -18,6 +18,7 @@ from typing import Any
 import httpx
 
 from app.core.logging import get_logger
+from app.core.outbound_http import pinned_request
 from app.core.outbound_url import UnsafeOutboundUrlError, assert_safe_outbound_url
 from app.notifiers.base import Notifier, register_notifier
 from app.notifiers.digest_format import digest_plain_body, digest_title
@@ -79,7 +80,7 @@ class NtfyNotifier(Notifier):
             "tags": ["briefcase"],
         }
         try:
-            resp = self._client.post(server_url, json=payload, headers=headers)
+            resp = pinned_request(self._client, "POST", server_url, json=payload, headers=headers)
             resp.raise_for_status()
             return [DeliveryResult(external_id=job.external_id, status="sent") for job in jobs]
         except httpx.HTTPError as exc:
@@ -107,7 +108,7 @@ class NtfyNotifier(Notifier):
         if job.url:
             payload["click"] = job.url
         try:
-            resp = self._client.post(server_url, json=payload, headers=headers)
+            resp = pinned_request(self._client, "POST", server_url, json=payload, headers=headers)
             resp.raise_for_status()
             return DeliveryResult(external_id=job.external_id, status="sent")
         except httpx.HTTPError as exc:

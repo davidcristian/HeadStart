@@ -23,13 +23,14 @@ def test_slack_posts_expected_payload() -> None:
 
     def handler(request: httpx.Request) -> httpx.Response:
         captured.append(json.loads(request.content))
-        assert str(request.url) == "https://hooks.slack.com/services/T00/B00/secret"
+        assert str(request.url) == "https://slack.fixture.test/services/T00/B00/secret"
+        assert request.headers["host"] == "slack.fixture.test"
         return httpx.Response(200, text="ok")
 
     notifier = SlackNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
     ctx = NotifyContext(
         target_type="slack",
-        config={"webhook_url": "https://hooks.slack.com/services/T00/B00/secret"},
+        config={"webhook_url": "https://slack.fixture.test/services/T00/B00/secret"},
     )
 
     results = notifier.send(ctx, [_job()])
@@ -50,7 +51,7 @@ def test_slack_records_failure_without_raising() -> None:
     notifier = SlackNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
     ctx = NotifyContext(
         target_type="slack",
-        config={"webhook_url": "https://hooks.slack.com/services/T00/B00/secret"},
+        config={"webhook_url": "https://slack.fixture.test/services/T00/B00/secret"},
     )
 
     results = notifier.send(ctx, [_job(), _job("2")])
@@ -90,7 +91,7 @@ def test_slack_digest_includes_summary() -> None:
     notifier = SlackNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
     ctx = NotifyContext(
         target_type="slack",
-        config={"webhook_url": "https://hooks.slack.com/services/T00/B00/secret"},
+        config={"webhook_url": "https://slack.fixture.test/services/T00/B00/secret"},
         digest=True,
         search_name="Backend roles",
     )
@@ -115,7 +116,7 @@ def test_slack_text_omits_absent_fields() -> None:
     notifier = SlackNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
     ctx = NotifyContext(
         target_type="slack",
-        config={"webhook_url": "https://hooks.slack.com/services/T00/B00/secret"},
+        config={"webhook_url": "https://slack.fixture.test/services/T00/B00/secret"},
     )
     # Title only: no company/summary/location/url.
     notifier.send(ctx, [JobPosting(external_id="1", title="")])
@@ -133,7 +134,7 @@ def test_slack_single_includes_summary() -> None:
     notifier = SlackNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
     ctx = NotifyContext(
         target_type="slack",
-        config={"webhook_url": "https://hooks.slack.com/services/T00/B00/secret"},
+        config={"webhook_url": "https://slack.fixture.test/services/T00/B00/secret"},
     )
     job = _job()
     job.summary = "strong python match"
@@ -145,7 +146,7 @@ def test_slack_digest_empty_jobs_returns_empty() -> None:
     notifier = SlackNotifier(client=httpx.Client())
     ctx = NotifyContext(
         target_type="slack",
-        config={"webhook_url": "https://hooks.slack.com/services/T00/B00/secret"},
+        config={"webhook_url": "https://slack.fixture.test/services/T00/B00/secret"},
         digest=True,
     )
     assert notifier.send(ctx, []) == []
@@ -161,7 +162,7 @@ def test_slack_digest_block_without_summary_or_url() -> None:
     notifier = SlackNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
     ctx = NotifyContext(
         target_type="slack",
-        config={"webhook_url": "https://hooks.slack.com/services/T00/B00/secret"},
+        config={"webhook_url": "https://slack.fixture.test/services/T00/B00/secret"},
         digest=True,
         search_name="Backend",
     )
@@ -179,7 +180,7 @@ def test_slack_digest_records_failure() -> None:
     notifier = SlackNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
     ctx = NotifyContext(
         target_type="slack",
-        config={"webhook_url": "https://hooks.slack.com/services/T00/B00/secret"},
+        config={"webhook_url": "https://slack.fixture.test/services/T00/B00/secret"},
         digest=True,
     )
     results = notifier.send(ctx, [_job(), _job("2")])

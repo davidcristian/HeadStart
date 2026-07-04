@@ -22,7 +22,7 @@ def test_enqueue_blocks_sensitive_topic_and_writes_audit_log(
     search = _make_search(db_session)
     user_id = search.user_id
     _seed_mailbox(db_session, user_id, auto_reply=True)
-    draft = _seed_draft(db_session, user_id)
+    draft = _seed_draft(db_session, user_id, search=search)
     draft.body_text = "Happy to discuss the discrimination complaint with HR."
     service = PendingReplyService(db_session)
 
@@ -43,7 +43,7 @@ def test_process_due_blocks_hourly_rate_limit(db_session: Session, monkeypatch) 
     search = _make_search(db_session)
     user_id = search.user_id
     _seed_mailbox(db_session, user_id, auto_reply=True)
-    draft = _seed_draft(db_session, user_id)
+    draft = _seed_draft(db_session, user_id, search=search)
     service = PendingReplyService(db_session)
     now = datetime(2026, 6, 30, 12, 0, tzinfo=UTC)
 
@@ -87,7 +87,7 @@ def test_process_due_records_sent_audit_log(db_session: Session, monkeypatch) ->
     search = _make_search(db_session)
     user_id = search.user_id
     _seed_mailbox(db_session, user_id, auto_reply=True)
-    draft = _seed_draft(db_session, user_id)
+    draft = _seed_draft(db_session, user_id, search=search)
     service = PendingReplyService(db_session)
     now = datetime(2026, 6, 30, 12, 0, tzinfo=UTC)
     row = service.enqueue_for_draft(user_id, draft, anchor=now - timedelta(hours=1))
@@ -107,7 +107,7 @@ def test_evaluate_before_send_blocks_on_topic(db_session: Session, monkeypatch) 
     search = _make_search(db_session)
     user_id = search.user_id
     _seed_mailbox(db_session, user_id, auto_reply=True)
-    draft = _seed_draft(db_session, user_id)
+    draft = _seed_draft(db_session, user_id, search=search)
     draft.body_text = "Let's discuss the discrimination complaint you raised."
     db_session.flush()
     service = ReplySafeSendService(db_session)
@@ -126,7 +126,7 @@ def test_evaluate_before_send_blocks_on_daily_limit(db_session: Session, monkeyp
     search = _make_search(db_session)
     user_id = search.user_id
     _seed_mailbox(db_session, user_id, auto_reply=True)
-    draft = _seed_draft(db_session, user_id)
+    draft = _seed_draft(db_session, user_id, search=search)
     service = ReplySafeSendService(db_session)
     now = datetime(2026, 6, 30, 12, 0, tzinfo=UTC)
 
@@ -157,7 +157,7 @@ def test_evaluate_before_send_allows_under_both_caps(db_session: Session, monkey
     search = _make_search(db_session)
     user_id = search.user_id
     _seed_mailbox(db_session, user_id, auto_reply=True)
-    draft = _seed_draft(db_session, user_id)
+    draft = _seed_draft(db_session, user_id, search=search)
     service = ReplySafeSendService(db_session)
     now = datetime(2026, 6, 30, 12, 0, tzinfo=UTC)
 

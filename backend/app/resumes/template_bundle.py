@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from typing import Final
 
 from app.core.exceptions import ValidationError
+from app.resumes.latex_safety import reject_dangerous_latex_content
 from app.resumes.template import render_resume_template
 from app.resumes.types import CuratedResumeFields
 
@@ -98,6 +99,12 @@ def _read_bundle(archive: zipfile.ZipFile) -> ResumeTemplateBundle:
         data = archive.read(info)
         if len(data) != info.file_size:
             raise ValidationError(f"Resume template bundle could not read file: {rel_path}")
+        if rel_path.lower().endswith(".tex"):
+            try:
+                tex = data.decode("utf-8")
+            except UnicodeDecodeError as exc:
+                raise ValidationError(f"LaTeX file {rel_path} must be valid UTF-8 text") from exc
+            reject_dangerous_latex_content(tex, label=rel_path)
         files[rel_path] = data
 
     entrypoint = _resolve_entrypoint(files)

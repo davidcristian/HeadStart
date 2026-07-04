@@ -28,7 +28,7 @@ def test_complete_outlook_oauth_stores_encrypted_tokens(db_session: Session, mon
     monkeypatch.setattr(settings, "outlook_oauth_client_secret", "secret")
     monkeypatch.setattr(settings, "outlook_oauth_redirect_uri", "http://localhost/callback")
     user_id = _user(db_session)
-    state = create_outlook_oauth_state(user_id)
+    issued = create_outlook_oauth_state(user_id)
     respx.post("https://login.microsoftonline.com/common/oauth2/v2.0/token").mock(
         return_value=Response(
             200,
@@ -43,7 +43,9 @@ def test_complete_outlook_oauth_stores_encrypted_tokens(db_session: Session, mon
         return_value=Response(200, json={"mail": "user@outlook.test"})
     )
     svc = InboxService(db_session)
-    result = svc.complete_outlook_oauth(code="auth-code", state=state)
+    result = svc.complete_outlook_oauth(
+        code="auth-code", state=issued.state, oauth_nonce=issued.nonce
+    )
     assert result.connector_type == "outlook"
     assert result.email_address == "user@outlook.test"
     read = svc.get_read(user_id)

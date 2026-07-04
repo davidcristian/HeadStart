@@ -92,7 +92,23 @@ class AuthService:
             raise ValidationError("Account is no longer active.")
         if payload.get("ver") != user.token_version:
             raise ValidationError("Session is no longer valid. Please sign in again.")
+        self.repo.bump_token_version(user)
         return self._issue_tokens(user)
+
+    def logout(self, refresh_token: str | None) -> None:
+        """Invalidate the refresh session when a valid refresh token is presented."""
+        if not refresh_token:
+            return
+        try:
+            payload = decode_token(refresh_token, expected_type="refresh")
+        except TokenError:
+            return
+        user = self.repo.get(int(payload["sub"]))
+        if user is None or not user.is_active:
+            return
+        if payload.get("ver") != user.token_version:
+            return
+        self.repo.bump_token_version(user)
 
     def me(self, user_id: int) -> User:
         user = self.repo.get(user_id)
@@ -146,6 +162,7 @@ class AuthService:
         # credential: bump the token version so outstanding access/refresh
         # tokens (which carry the old `ver`) stop validating.
         self.repo.bump_token_version(user)
+        self.repo.bump_feed_token_version(user)
         self.reset_tokens.delete_for_user(user.id)
 
     def verify_email(self, data: VerifyEmailRequest) -> User:

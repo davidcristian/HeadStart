@@ -14,6 +14,7 @@ from typing import Any
 import httpx
 
 from app.core.logging import get_logger
+from app.core.outbound_http import pinned_request
 from app.core.outbound_url import UnsafeOutboundUrlError, assert_safe_outbound_url
 from app.notifiers.base import Notifier, register_notifier
 from app.notifiers.digest_format import digest_blocks, digest_title
@@ -57,7 +58,7 @@ class SlackNotifier(Notifier):
             return []
         payload = self._digest_payload(ctx, jobs)
         try:
-            resp = self._client.post(webhook_url, json=payload)
+            resp = pinned_request(self._client, "POST", webhook_url, json=payload)
             resp.raise_for_status()
             return [DeliveryResult(external_id=job.external_id, status="sent") for job in jobs]
         except httpx.HTTPError as exc:
@@ -70,7 +71,7 @@ class SlackNotifier(Notifier):
     def _send_one(self, webhook_url: str, job: JobPosting) -> DeliveryResult:
         payload = self._payload(job)
         try:
-            resp = self._client.post(webhook_url, json=payload)
+            resp = pinned_request(self._client, "POST", webhook_url, json=payload)
             resp.raise_for_status()
             return DeliveryResult(external_id=job.external_id, status="sent")
         except httpx.HTTPError as exc:

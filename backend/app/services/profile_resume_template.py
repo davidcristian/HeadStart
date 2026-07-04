@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from app.core.config import settings
 from app.core.exceptions import ValidationError
+from app.resumes.latex_safety import reject_dangerous_latex_content
 from app.resumes.template_bundle import parse_template_bundle
 from app.schemas.profile import (
     ALLOWED_RESUME_TEMPLATE_BUNDLE_CONTENT_TYPES,
@@ -39,9 +40,10 @@ def validate_resume_template_upload(*, filename: str, content_type: str, data: b
     if len(data) > max_bytes:
         raise ValidationError(f"Resume template exceeds the {max_bytes // 1024} KB limit")
     try:
-        data.decode("utf-8")
+        tex = data.decode("utf-8")
     except UnicodeDecodeError as exc:
         raise ValidationError("Resume template must be valid UTF-8 text") from exc
+    reject_dangerous_latex_content(tex, label=name)
 
 
 def build_resume_template_stored(

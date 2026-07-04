@@ -11,7 +11,7 @@ import pytest
 
 from app.core import outbound_url
 from app.core.outbound_url import UnsafeOutboundUrlError
-from app.scrapers.http import HttpClient, _validate_outbound_request
+from app.scrapers.http import HttpClient, _prepare_outbound_request
 from app.scrapers.rate_limit import RateLimiter
 from tests.conftest import make_http_client
 
@@ -45,7 +45,7 @@ def test_redirect_to_internal_address_is_revalidated(monkeypatch: pytest.MonkeyP
     client = httpx.Client(
         transport=httpx.MockTransport(handler),
         follow_redirects=True,
-        event_hooks={"request": [_validate_outbound_request]},
+        event_hooks={"request": [_prepare_outbound_request]},
     )
     with HttpClient(client=client) as http, pytest.raises(UnsafeOutboundUrlError):
         http.get_text("http://board.test/jobs")

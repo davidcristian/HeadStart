@@ -28,7 +28,7 @@ def test_complete_yahoo_oauth_stores_encrypted_tokens(db_session: Session, monke
     monkeypatch.setattr(settings, "yahoo_oauth_client_secret", "secret")
     monkeypatch.setattr(settings, "yahoo_oauth_redirect_uri", "http://localhost/callback")
     user_id = _user(db_session)
-    state = create_yahoo_oauth_state(user_id)
+    issued = create_yahoo_oauth_state(user_id)
     respx.post("https://api.login.yahoo.com/oauth2/get_token").mock(
         return_value=Response(
             200,
@@ -43,7 +43,9 @@ def test_complete_yahoo_oauth_stores_encrypted_tokens(db_session: Session, monke
         return_value=Response(200, json={"email": "user@yahoo.test"})
     )
     svc = InboxService(db_session)
-    result = svc.complete_yahoo_oauth(code="auth-code", state=state)
+    result = svc.complete_yahoo_oauth(
+        code="auth-code", state=issued.state, oauth_nonce=issued.nonce
+    )
     assert result.connector_type == "yahoo"
     assert result.email_address == "user@yahoo.test"
     read = svc.get_read(user_id)

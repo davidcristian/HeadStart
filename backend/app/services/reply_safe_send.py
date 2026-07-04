@@ -12,16 +12,19 @@ from app.core.config import settings
 from app.inbox.safe_send import TopicBlockResult, check_topic_blocklist
 from app.models.base import utcnow
 from app.models.inbox_classification import InboxClassification
+from app.models.inbox_classification import InboxClassification
 from app.models.inbox_pending_reply import InboxPendingReply
 from app.models.inbox_reply_draft import InboxReplyDraft
 from app.models.inbox_reply_send_log import InboxReplySendLog
 from app.repositories.inbox_reply_send_logs import InboxReplySendLogRepository
 from app.services.inbox import InboxService
+from app.services.inbox_gate import auto_reply_recipient_allowed
 
 SENT_OUTCOME = "sent"
 BLOCKED_TOPIC_OUTCOME = "blocked_topic"
 BLOCKED_RATE_HOUR_OUTCOME = "blocked_rate_limit_hour"
 BLOCKED_RATE_DAY_OUTCOME = "blocked_rate_limit_day"
+BLOCKED_RECIPIENT_OUTCOME = "blocked_recipient"
 BODY_EXCERPT_MAX_CHARS = 500
 
 
@@ -75,6 +78,21 @@ class ReplySafeSendService:
                 outcome=BLOCKED_TOPIC_OUTCOME,
                 reason=topic.reason,
                 payload={"matched_topics": list(topic.matched_topics)},
+            )
+
+        if classification is not None and not auto_reply_recipient_allowed(
+            self.session,
+            from_addr=classification.from_addr,
+            classification=classification,
+        ):
+            return SafeSendDecision(
+                allowed=False,
+                outcome=BLOCKED_RECIPIENT_OUTCOME,
+                reason=(
+                    "Auto-reply blocked: recipient does not match the linked "
+                    "application employer domain."
+                ),
+                payload={},
             )
 
         hourly_cap = int(settings.inbox_reply_max_per_hour)

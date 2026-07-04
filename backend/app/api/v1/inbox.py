@@ -1,10 +1,15 @@
 """Dev-only mailbox credential, connectivity, and classification endpoints."""
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Cookie, Depends, Query, Response, status
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db, get_verified_user
+from app.api.v1.inbox_oauth_cookies import (
+    MAILBOX_OAUTH_COOKIE_NAME,
+    clear_mailbox_oauth_nonce_cookie,
+    set_mailbox_oauth_nonce_cookie,
+)
 from app.core.config import settings
 from app.core.exceptions import ValidationError
 from app.inbox.types import FetchResult
@@ -66,10 +71,14 @@ def delete_mailbox_credentials(
 
 @router.get("/gmail/authorize", response_model=GmailAuthorizeResponse)
 def gmail_authorize(
-    db: Session = Depends(get_db), user: User = Depends(get_verified_user)
+    response: Response,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_verified_user),
 ) -> GmailAuthorizeResponse:
     """Return a Google OAuth URL to connect Gmail for inbox automation."""
-    return InboxService(db).gmail_authorize_url(user.id)
+    authorize, nonce = InboxService(db).gmail_authorize_url(user.id)
+    set_mailbox_oauth_nonce_cookie(response, nonce)
+    return authorize
 
 
 @router.get("/gmail/callback")
@@ -77,39 +86,38 @@ def gmail_oauth_callback(
     code: str | None = Query(default=None),
     state: str | None = Query(default=None),
     error: str | None = Query(default=None),
+    oauth_nonce: str | None = Cookie(default=None, alias=MAILBOX_OAUTH_COOKIE_NAME),
     db: Session = Depends(get_db),
 ) -> RedirectResponse:
     """OAuth redirect target — stores encrypted Gmail tokens and returns to Settings."""
     settings_url = f"{settings.frontend_base_url.rstrip('/')}/app/settings"
+    redirect = RedirectResponse(url=settings_url, status_code=status.HTTP_302_FOUND)
+    clear_mailbox_oauth_nonce_cookie(redirect)
     if error:
-        return RedirectResponse(
-            url=f"{settings_url}?mailbox=gmail_error&reason={error}",
-            status_code=status.HTTP_302_FOUND,
-        )
+        redirect.headers["location"] = f"{settings_url}?mailbox=gmail_error&reason={error}"
+        return redirect
     if not code or not state:
-        return RedirectResponse(
-            url=f"{settings_url}?mailbox=gmail_error&reason=missing_code",
-            status_code=status.HTTP_302_FOUND,
-        )
+        redirect.headers["location"] = f"{settings_url}?mailbox=gmail_error&reason=missing_code"
+        return redirect
     try:
-        InboxService(db).complete_gmail_oauth(code=code, state=state)
+        InboxService(db).complete_gmail_oauth(code=code, state=state, oauth_nonce=oauth_nonce)
     except ValidationError:
-        return RedirectResponse(
-            url=f"{settings_url}?mailbox=gmail_error",
-            status_code=status.HTTP_302_FOUND,
-        )
-    return RedirectResponse(
-        url=f"{settings_url}?mailbox=gmail_connected",
-        status_code=status.HTTP_302_FOUND,
-    )
+        redirect.headers["location"] = f"{settings_url}?mailbox=gmail_error"
+        return redirect
+    redirect.headers["location"] = f"{settings_url}?mailbox=gmail_connected"
+    return redirect
 
 
 @router.get("/outlook/authorize", response_model=OutlookAuthorizeResponse)
 def outlook_authorize(
-    db: Session = Depends(get_db), user: User = Depends(get_verified_user)
+    response: Response,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_verified_user),
 ) -> OutlookAuthorizeResponse:
     """Return a Microsoft OAuth URL to connect Outlook for inbox automation."""
-    return InboxService(db).outlook_authorize_url(user.id)
+    authorize, nonce = InboxService(db).outlook_authorize_url(user.id)
+    set_mailbox_oauth_nonce_cookie(response, nonce)
+    return authorize
 
 
 @router.get("/outlook/callback")
@@ -117,39 +125,38 @@ def outlook_oauth_callback(
     code: str | None = Query(default=None),
     state: str | None = Query(default=None),
     error: str | None = Query(default=None),
+    oauth_nonce: str | None = Cookie(default=None, alias=MAILBOX_OAUTH_COOKIE_NAME),
     db: Session = Depends(get_db),
 ) -> RedirectResponse:
     """OAuth redirect target — stores encrypted Outlook tokens and returns to Settings."""
     settings_url = f"{settings.frontend_base_url.rstrip('/')}/app/settings"
+    redirect = RedirectResponse(url=settings_url, status_code=status.HTTP_302_FOUND)
+    clear_mailbox_oauth_nonce_cookie(redirect)
     if error:
-        return RedirectResponse(
-            url=f"{settings_url}?mailbox=outlook_error&reason={error}",
-            status_code=status.HTTP_302_FOUND,
-        )
+        redirect.headers["location"] = f"{settings_url}?mailbox=outlook_error&reason={error}"
+        return redirect
     if not code or not state:
-        return RedirectResponse(
-            url=f"{settings_url}?mailbox=outlook_error&reason=missing_code",
-            status_code=status.HTTP_302_FOUND,
-        )
+        redirect.headers["location"] = f"{settings_url}?mailbox=outlook_error&reason=missing_code"
+        return redirect
     try:
-        InboxService(db).complete_outlook_oauth(code=code, state=state)
+        InboxService(db).complete_outlook_oauth(code=code, state=state, oauth_nonce=oauth_nonce)
     except ValidationError:
-        return RedirectResponse(
-            url=f"{settings_url}?mailbox=outlook_error",
-            status_code=status.HTTP_302_FOUND,
-        )
-    return RedirectResponse(
-        url=f"{settings_url}?mailbox=outlook_connected",
-        status_code=status.HTTP_302_FOUND,
-    )
+        redirect.headers["location"] = f"{settings_url}?mailbox=outlook_error"
+        return redirect
+    redirect.headers["location"] = f"{settings_url}?mailbox=outlook_connected"
+    return redirect
 
 
 @router.get("/yahoo/authorize", response_model=YahooAuthorizeResponse)
 def yahoo_authorize(
-    db: Session = Depends(get_db), user: User = Depends(get_verified_user)
+    response: Response,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_verified_user),
 ) -> YahooAuthorizeResponse:
     """Return a Yahoo OAuth URL to connect Yahoo Mail for inbox automation."""
-    return InboxService(db).yahoo_authorize_url(user.id)
+    authorize, nonce = InboxService(db).yahoo_authorize_url(user.id)
+    set_mailbox_oauth_nonce_cookie(response, nonce)
+    return authorize
 
 
 @router.get("/yahoo/callback")
@@ -157,31 +164,26 @@ def yahoo_oauth_callback(
     code: str | None = Query(default=None),
     state: str | None = Query(default=None),
     error: str | None = Query(default=None),
+    oauth_nonce: str | None = Cookie(default=None, alias=MAILBOX_OAUTH_COOKIE_NAME),
     db: Session = Depends(get_db),
 ) -> RedirectResponse:
     """OAuth redirect target — stores encrypted Yahoo tokens and returns to Settings."""
     settings_url = f"{settings.frontend_base_url.rstrip('/')}/app/settings"
+    redirect = RedirectResponse(url=settings_url, status_code=status.HTTP_302_FOUND)
+    clear_mailbox_oauth_nonce_cookie(redirect)
     if error:
-        return RedirectResponse(
-            url=f"{settings_url}?mailbox=yahoo_error&reason={error}",
-            status_code=status.HTTP_302_FOUND,
-        )
+        redirect.headers["location"] = f"{settings_url}?mailbox=yahoo_error&reason={error}"
+        return redirect
     if not code or not state:
-        return RedirectResponse(
-            url=f"{settings_url}?mailbox=yahoo_error&reason=missing_code",
-            status_code=status.HTTP_302_FOUND,
-        )
+        redirect.headers["location"] = f"{settings_url}?mailbox=yahoo_error&reason=missing_code"
+        return redirect
     try:
-        InboxService(db).complete_yahoo_oauth(code=code, state=state)
+        InboxService(db).complete_yahoo_oauth(code=code, state=state, oauth_nonce=oauth_nonce)
     except ValidationError:
-        return RedirectResponse(
-            url=f"{settings_url}?mailbox=yahoo_error",
-            status_code=status.HTTP_302_FOUND,
-        )
-    return RedirectResponse(
-        url=f"{settings_url}?mailbox=yahoo_connected",
-        status_code=status.HTTP_302_FOUND,
-    )
+        redirect.headers["location"] = f"{settings_url}?mailbox=yahoo_error"
+        return redirect
+    redirect.headers["location"] = f"{settings_url}?mailbox=yahoo_connected"
+    return redirect
 
 
 @router.post("/test", response_model=MailboxTestResponse)
