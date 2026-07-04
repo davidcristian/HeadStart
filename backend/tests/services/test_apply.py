@@ -13,6 +13,7 @@ from app.models.user import User
 from app.repositories.application_logs import ApplicationLogRepository
 from app.schemas.profile import ProfileData
 from app.services.apply import ApplyService
+from app.services.apply_queue import claim_queued_apply, fail_queued_apply
 from app.services.apply_tracking import application_tracking_payload
 from app.services.profiles import ProfileService
 from tests.worker.test_pipeline import _make_search
@@ -531,12 +532,58 @@ def test_fail_queued_apply_marks_failed(db_session: Session) -> None:
     _enable_and_profile(db_session, job, user_id)
     log_id = ApplyService(db_session).enqueue_apply(user_id, job_id)
 
-    ApplyService(db_session).fail_queued_apply(log_id, "worker crashed")
+    fail_queued_apply(db_session, log_id, "worker crashed")
 
     log = db_session.get(ApplicationLog, log_id)
     assert log is not None
     assert log.status == "failed"
     assert log.error == "worker crashed"
+
+
+def test_claim_queued_apply_leases_then_second_claim_empty(db_session: Session) -> None:
+    user_id, job_id, job = _seed_greenhouse_job(db_session)
+    _enable_and_profile(db_session, job, user_id)
+    log_id = ApplyService(db_session).enqueue_apply(user_id, job_id)
+
+    claimed = claim_queued_apply(db_session, log_id, user_id, job_id)
+    assert claimed is not None
+    assert claimed.status == "processing"
+    assert claim_queued_apply(db_session, log_id, user_id, job_id) is None
+
+
+def test_claim_queued_apply_unknown_log_raises(db_session: Session) -> None:
+    user_id, job_id, job = _seed_greenhouse_job(db_session)
+    _enable_and_profile(db_session, job, user_id)
+
+    try:
+        claim_queued_apply(db_session, 999999, user_id, job_id)
+        raise AssertionError("expected NotFoundError")
+    except NotFoundError:
+        pass
+
+
+def test_apply_with_processing_log_updates_it(db_session: Session) -> None:
+    """Worker re-entry after a durable claim still completes the submit."""
+    user_id, job_id, job = _seed_greenhouse_job(db_session)
+    _enable_and_profile(db_session, job, user_id)
+    log_id = ApplyService(db_session).enqueue_apply(user_id, job_id)
+    assert claim_queued_apply(db_session, log_id, user_id, job_id) is not None
+
+    with patch("app.services.apply.get_applier") as mock_get_applier:
+        mock_get_applier.return_value.apply.return_value = ApplyResult(
+            status="submitted",
+            payload={"email": "ada@example.com"},
+            external_application_id="app-claimed",
+        )
+        result = ApplyService(db_session).apply_to_job(
+            user_id, job_id, dry_run=False, application_log_id=log_id
+        )
+
+    assert result.status == "submitted"
+    log = db_session.get(ApplicationLog, log_id)
+    assert log is not None
+    assert log.status == "submitted"
+    assert log.external_application_id == "app-claimed"
 
 
 def test_fail_queued_apply_ignores_missing_or_terminal(db_session: Session) -> None:
@@ -549,9 +596,9 @@ def test_fail_queued_apply_ignores_missing_or_terminal(db_session: Session) -> N
     db_session.flush()
 
     # Unknown id -> no-op.
-    ApplyService(db_session).fail_queued_apply(999999, "x")
+    fail_queued_apply(db_session, 999999, "x")
     # Terminal status -> no-op.
-    ApplyService(db_session).fail_queued_apply(log_id, "x")
+    fail_queued_apply(db_session, log_id, "x")
 
     db_session.refresh(log)
     assert log.status == "submitted"

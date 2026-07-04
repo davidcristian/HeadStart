@@ -11,6 +11,12 @@ def test_celery_app_configured() -> None:
     assert celery_module.celery_app.main == "headstart"
     # Importing the module registers the task functions on the app.
     assert "app.worker.tasks.run_search" in celery_module.celery_app.tasks
+    conf = celery_module.celery_app.conf
+    assert conf.task_acks_late is True
+    assert conf.task_reject_on_worker_lost is True
+    assert conf.task_soft_time_limit == celery_module._TASK_SOFT_TIME_LIMIT_SECONDS
+    assert conf.task_time_limit == celery_module._TASK_TIME_LIMIT_SECONDS
+    assert conf.result_expires == celery_module._RESULT_EXPIRES_SECONDS
 
 
 def test_worker_process_init_starts_metrics_server() -> None:

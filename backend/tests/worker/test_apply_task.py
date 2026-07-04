@@ -85,7 +85,34 @@ def test_apply_to_job_task_completes_queued_apply(db_session: Session) -> None:
     assert job.applied_at is not None
 
 
-def test_apply_to_job_task_marks_failed_on_exception(db_session: Session) -> None:
+def test_apply_to_job_task_skips_when_not_queued(db_session: Session) -> None:
+    """Redelivery after a durable processing claim must not call the applier."""
+    user_id, job_id, log_id = _seed_greenhouse_job(db_session)
+    log = db_session.get(ApplicationLog, log_id)
+    assert log is not None
+    log.status = "processing"
+    db_session.commit()
+
+    @contextmanager
+    def test_scope():
+        yield db_session
+        db_session.commit()
+
+    with (
+        patch("app.worker.tasks.session_scope", test_scope),
+        patch("app.services.apply.get_applier") as mock_get_applier,
+    ):
+        result = apply_to_job_task(log_id, user_id, job_id, None)
+
+    assert result["status"] == "skipped"
+    assert result["error"] == "not_queued"
+    mock_get_applier.assert_not_called()
+    db_session.refresh(log)
+    assert log.status == "processing"
+
+
+def test_apply_to_job_task_leaves_processing_on_exception(db_session: Session) -> None:
+    """Uncertain post-claim failures must not reopen the in-flight unique index."""
     user_id, job_id, log_id = _seed_greenhouse_job(db_session)
     factory = _session_factory_for(db_session)
 
@@ -100,5 +127,4 @@ def test_apply_to_job_task_marks_failed_on_exception(db_session: Session) -> Non
     db_session.expire_all()
     log = db_session.get(ApplicationLog, log_id)
     assert log is not None
-    assert log.status == "failed"
-    assert log.error == "boom"
+    assert log.status == "processing"

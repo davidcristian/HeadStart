@@ -13,6 +13,7 @@ from app.core.metrics import record_scheduler_enqueued
 from app.models.base import utcnow
 from app.repositories.searches import SearchRepository
 from app.services.apply import ApplyService
+from app.services.apply_queue import claim_queued_apply
 from app.services.digest import DigestService
 from app.services.ghost_detection import GhostDetectionService
 from app.services.inbox_orchestration import InboxOrchestrationService
@@ -90,7 +91,26 @@ def apply_to_job_task(
     tailored_resume_b64: str | None = None,
     tailored_resume_artifact_id: int | None = None,
 ) -> dict[str, object]:
-    """Run one queued live auto-apply in the worker."""
+    """Run one queued live auto-apply in the worker.
+
+    Claims ``queued`` → ``processing`` and commits before the employer POST so
+    ``acks_late`` redelivery cannot double-submit (NTF-03).
+    """
+    with session_scope() as session:
+        claimed = claim_queued_apply(session, application_log_id, user_id, job_id)
+    if claimed is None:
+        logger.info(
+            "apply_to_job skipped (not queued) log=%s job=%s user=%s",
+            application_log_id,
+            job_id,
+            user_id,
+        )
+        return {
+            "application_log_id": application_log_id,
+            "status": "skipped",
+            "error": "not_queued",
+        }
+
     try:
         with session_scope() as session:
             result = ApplyService(session).apply_to_job(
@@ -103,12 +123,12 @@ def apply_to_job_task(
                 application_log_id=application_log_id,
             )
     except Exception as exc:
-        # Persist failure in a separate transaction: session_scope rolls back on
-        # exception, so marking failed inside the same scope would be lost.
-        with session_scope() as session:
-            ApplyService(session).fail_queued_apply(application_log_id, str(exc))
+        # After a durable ``processing`` claim, do not flip to ``failed``: the
+        # employer POST may have succeeded before this exception (commit failure
+        # or mid-response crash). Leaving ``processing`` blocks re-apply via the
+        # in-flight unique index (NTF-03 path 2).
         logger.exception(
-            "apply_to_job failed log=%s job=%s user=%s",
+            "apply_to_job failed log=%s job=%s user=%s (left processing)",
             application_log_id,
             job_id,
             user_id,

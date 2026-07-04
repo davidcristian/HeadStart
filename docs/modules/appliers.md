@@ -632,7 +632,9 @@ fields) for inbox triage. List recent rows via `GET /api/v1/application-logs`; f
 queued row via `GET /api/v1/application-logs/{id}` while a live submit runs in
 the worker. At most one in-flight live apply (`queued` or `processing`) per job
 is allowed — enforced by a partial unique index so concurrent enqueue requests
-cannot double-submit. Successful live applies set `seen_job.applied_at`. When
+cannot double-submit. The worker commits the `queued` → `processing` lease
+before the employer POST so `acks_late` redelivery cannot double-submit
+(NTF-03). Successful live applies set `seen_job.applied_at`. When
 `source.auto_apply_enabled` is on, the scrape pipeline queues applies for new
 matches automatically (same Celery path as the Jobs page **Apply** button), up
 to the plan's rolling 24-hour live-apply volume cap (`max_auto_applies_per_day`

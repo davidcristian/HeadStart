@@ -8,7 +8,7 @@ This area covers the notification adapters (Slack, Discord, Telegram, ntfy, webh
 
 <a id="ntf-03"></a>
 ### NTF-03 — acks_late set but no task time limit / reject-on-worker-lost; non-idempotent live apply can double-submit
-🟡 **MEDIUM** · 🐞 bug · Status: ☐ open · Confidence: high (5/5 verifiers) · Effort: M · WS15
+🟡 **MEDIUM** · 🐞 bug · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/18)) · Confidence: high (5/5 verifiers) · Effort: M · WS15
 
 > Merged from NTF-03 (uid 144), NTF-04 (uid 149) and NTF-05 (uid 264): three records describing the same defect cluster — `acks_late` redelivery plus a non-idempotent live submit that shares the outer transaction — from the worker-config, broker-behavior, and commit-failure angles respectively.
 
@@ -130,7 +130,7 @@ This area covers the notification adapters (Slack, Discord, Telegram, ntfy, webh
 
 <a id="ntf-13"></a>
 ### NTF-13 — No task_time_limit; a hung Playwright scrape holds a worker slot indefinitely
-⚪ **LOW** · 🐞 bug · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: S · WS15
+⚪ **LOW** · 🐞 bug · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/18)) · Confidence: high (3/3 verifiers) · Effort: S · WS15
 
 > Related to NTF-03 (which also flags the missing time limit as part of the auto-apply cluster); this record isolates the scrape-side worker-starvation impact of the same missing config.
 
@@ -146,7 +146,7 @@ This area covers the notification adapters (Slack, Discord, Telegram, ntfy, webh
 
 <a id="ntf-14"></a>
 ### NTF-14 — Result backend enabled with no result_expires; unread task results accumulate in Redis
-⚪ **LOW** · ⚡ perf · Status: ☐ open · Confidence: high (2/3 verifiers) · Effort: XS · WS15
+⚪ **LOW** · ⚡ perf · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/18)) · Confidence: high (2/3 verifiers) · Effort: XS · WS15
 
 **Locations:** `backend/app/worker/celery_app.py:16` (`backend=settings.result_backend`); plus `backend/app/core/config.py:274`, `backend/app/worker/tasks.py:53`, `:129`.
 

@@ -107,12 +107,20 @@ API, written to `application_log` with status `queued`, and enqueued as
 `source.auto_apply_enabled` is on and a new match appears during `run_search`
 (see step 11 above). Pipeline auto-apply also respects the user's plan
 `max_auto_applies_per_day` rolling window (live `application_log` rows only;
-manual Apply is uncapped by this limit). A Celery worker runs
-`ApplyService.apply_to_job` with the queued log id, updates the audit row to
-`processing` then `submitted` or `failed`, sets `seen_job.applied_at` and marks
-the job `applied` on success. Preview (`dry_run: true`) still runs synchronously
-in the API. Clients poll `GET /application-logs/{id}` until the log reaches a
-terminal status.
+manual Apply is uncapped by this limit). A Celery worker **claims** the row
+(`queued` → `processing`, committed) before calling
+`ApplyService.apply_to_job`, then updates the audit row to `submitted` or
+`failed` and sets `seen_job.applied_at` / `applied` on success. The durable
+claim means an `acks_late` redelivery after a mid-submit crash skips instead of
+double-posting to the employer (NTF-03). If the outcome transaction fails after
+the claim, the row stays `processing` so the in-flight unique index still blocks
+a user re-apply. Preview (`dry_run: true`) still runs synchronously in the API.
+Clients poll `GET /application-logs/{id}` until the log reaches a terminal
+status.
+
+Celery is configured with `task_acks_late`, `task_reject_on_worker_lost`, soft/
+hard `task_time_limit` (10m / 11m), and `result_expires` (1h) so hung tasks are
+killed and unread result payloads do not accumulate in Redis.
 
 Every `application_log` row includes baseline tracking metadata in `payload`
 (`employer_domain`, `posting` title/company/url) for downstream inbox triage

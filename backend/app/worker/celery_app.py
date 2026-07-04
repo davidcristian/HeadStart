@@ -16,6 +16,13 @@ celery_app = Celery(
     backend=settings.result_backend,
 )
 
+# Soft/hard limits bound hung scrapes and live applies (NTF-03 / NTF-13).
+# reject_on_worker_lost + acks_late: do not ack a task whose worker died mid-run.
+# result_expires: fire-and-forget task payloads must not accumulate in Redis (NTF-14).
+_TASK_SOFT_TIME_LIMIT_SECONDS = 600
+_TASK_TIME_LIMIT_SECONDS = 660
+_RESULT_EXPIRES_SECONDS = 3600
+
 celery_app.conf.update(
     task_serializer="json",
     result_serializer="json",
@@ -23,6 +30,10 @@ celery_app.conf.update(
     timezone="UTC",
     enable_utc=True,
     task_acks_late=True,
+    task_reject_on_worker_lost=True,
+    task_soft_time_limit=_TASK_SOFT_TIME_LIMIT_SECONDS,
+    task_time_limit=_TASK_TIME_LIMIT_SECONDS,
+    result_expires=_RESULT_EXPIRES_SECONDS,
     task_track_started=True,
     worker_max_tasks_per_child=200,
     broker_connection_retry_on_startup=True,

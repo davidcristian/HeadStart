@@ -104,8 +104,11 @@ class ApplyService:
             existing_log = self._load_application_log(application_log_id, user_id, job.id)
             if existing_log.status not in ("queued", "processing"):
                 raise ValidationError("This application is no longer queued")
-            existing_log.status = "processing"
-            self.session.flush()
+            # Prefer claim_queued_apply (committed before the external POST). If the
+            # row is still queued (sync/tests), flip here inside this transaction.
+            if existing_log.status == "queued":
+                existing_log.status = "processing"
+                self.session.flush()
 
         ctx = ApplyContext(
             job_external_id=job.external_id,
@@ -155,15 +158,6 @@ class ApplyService:
                 payload=application_tracking_payload(job),
             )
         )
-
-    def fail_queued_apply(self, application_log_id: int, error: str) -> None:
-        """Mark a queued apply as failed when the worker cannot complete it."""
-        log = self.session.get(ApplicationLog, application_log_id)
-        if log is None or log.status not in ("queued", "processing"):
-            return
-        log.status = "failed"
-        log.error = error
-        self.session.flush()
 
     def _validate_apply_request(
         self,
