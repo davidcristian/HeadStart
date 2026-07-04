@@ -46,17 +46,9 @@ class ApplyService:
     def enqueue_apply(self, user_id: int, job_id: int) -> int:
         """Validate a live apply and return a queued application_log id."""
         job, _source = self._validate_apply_request(user_id, job_id, dry_run=False)
-        if self.application_logs.get_pending_for_job(job.id) is not None:
+        log = self._queue_live_apply(job)
+        if log is None:
             raise ValidationError("An application is already in progress for this job")
-
-        log = self.application_logs.add(
-            ApplicationLog(
-                seen_job_id=job.id,
-                status="queued",
-                dry_run=False,
-                payload=application_tracking_payload(job),
-            )
-        )
         return log.id
 
     def enqueue_auto_apply_from_pipeline(
@@ -69,17 +61,10 @@ class ApplyService:
         source = self.sources.get(job.search.source_id, user_id)
         if source is None or not self._pipeline_auto_apply_eligible(job, source, user_id):
             return None
-        if self.application_logs.get_pending_for_job(job.id) is not None:
+        log = self._queue_live_apply(job)
+        if log is None:
             return None
 
-        log = self.application_logs.add(
-            ApplicationLog(
-                seen_job_id=job.id,
-                status="queued",
-                dry_run=False,
-                payload=application_tracking_payload(job),
-            )
-        )
         logger.info(
             "pipeline auto-apply queued log=%s job=%s user=%s",
             log.id,
@@ -158,6 +143,17 @@ class ApplyService:
             self.session.flush()
 
         return result
+
+    def _queue_live_apply(self, job: SeenJob) -> ApplicationLog | None:
+        """Queue one live apply log, or None when another is already in-flight."""
+        return self.application_logs.try_add_pending(
+            ApplicationLog(
+                seen_job_id=job.id,
+                status="queued",
+                dry_run=False,
+                payload=application_tracking_payload(job),
+            )
+        )
 
     def fail_queued_apply(self, application_log_id: int, error: str) -> None:
         """Mark a queued apply as failed when the worker cannot complete it."""

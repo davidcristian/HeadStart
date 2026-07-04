@@ -10,8 +10,10 @@ from app.models.application_log import ApplicationLog
 from app.models.seen_job import SeenJob
 from app.models.source import Source
 from app.models.user import User
+from app.repositories.application_logs import ApplicationLogRepository
 from app.schemas.profile import ProfileData
 from app.services.apply import ApplyService
+from app.services.apply_tracking import application_tracking_payload
 from app.services.profiles import ProfileService
 from tests.worker.test_pipeline import _make_search
 
@@ -150,6 +152,38 @@ def test_enqueue_apply_rejects_duplicate_pending(db_session: Session) -> None:
         raise AssertionError("expected ValidationError")
     except ValidationError as exc:
         assert "in progress" in str(exc).lower()
+
+
+def test_try_add_pending_rejects_concurrent_inflight_row(db_session: Session) -> None:
+    """Regression: DB partial unique index blocks a second in-flight live apply."""
+    user_id, job_id, job = _seed_greenhouse_job(db_session)
+    source = db_session.get(Source, job.search.source_id)
+    assert source is not None
+    source.auto_apply_enabled = True
+    db_session.flush()
+    ProfileService(db_session).save(
+        user_id,
+        ProfileData(full_name="Ada Lovelace", email="ada@example.com", resume_text="CV"),
+    )
+    repo = ApplicationLogRepository(db_session)
+    first = repo.try_add_pending(
+        ApplicationLog(
+            seen_job_id=job_id,
+            status="queued",
+            dry_run=False,
+            payload=application_tracking_payload(job),
+        )
+    )
+    assert first is not None
+    second = repo.try_add_pending(
+        ApplicationLog(
+            seen_job_id=job_id,
+            status="queued",
+            dry_run=False,
+            payload=application_tracking_payload(job),
+        )
+    )
+    assert second is None
 
 
 def test_apply_service_live_with_opt_in_records_log(db_session: Session) -> None:

@@ -628,7 +628,9 @@ Every apply attempt (preview or live, success or failure) is recorded in
 `application_log` with baseline tracking metadata (`employer_domain`, `posting`
 fields) for inbox triage. List recent rows via `GET /api/v1/application-logs`; fetch one
 queued row via `GET /api/v1/application-logs/{id}` while a live submit runs in
-the worker. Successful live applies set `seen_job.applied_at`. When
+the worker. At most one in-flight live apply (`queued` or `processing`) per job
+is allowed — enforced by a partial unique index so concurrent enqueue requests
+cannot double-submit. Successful live applies set `seen_job.applied_at`. When
 `source.auto_apply_enabled` is on, the scrape pipeline queues applies for new
 matches automatically (same Celery path as the Jobs page **Apply** button). The
 Application profile page shows the same audit trail.

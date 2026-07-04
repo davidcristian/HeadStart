@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload
 
 from app.models.application_log import ApplicationLog
@@ -19,6 +20,21 @@ class ApplicationLogRepository:
     def add(self, log: ApplicationLog) -> ApplicationLog:
         self.session.add(log)
         self.session.flush()
+        return log
+
+    def try_add_pending(self, log: ApplicationLog) -> ApplicationLog | None:
+        """Insert a queued apply log, returning None when one is already in-flight.
+
+        Uses a partial unique index on (seen_job_id) for queued/processing live
+        applies so concurrent enqueue paths cannot double-submit. Contained in a
+        SAVEPOINT so a duplicate rolls back only this insert.
+        """
+        try:
+            with self.session.begin_nested():
+                self.session.add(log)
+                self.session.flush()
+        except IntegrityError:
+            return None
         return log
 
     def get_for_user(self, log_id: int, user_id: int) -> ApplicationLog | None:
