@@ -241,7 +241,7 @@ Audit of auto-apply attempts (preview and live).
 | status                   | str         | `queued` / `processing` / `submitted` / `dry_run` / `failed` |
 | dry_run                  | bool        | True when the attempt was a preview only |
 | error                    | text?       | Present when failed                      |
-| payload                  | JSON?       | Adapter body plus `employer_domain` + `posting` metadata for triage |
+| payload                  | JSON?       | Adapter body plus `employer_domain` + `posting` metadata for triage, and a `user_consent` stamp (`basis`, `mechanism`, `live_submission`, `recorded_at`) for each attempt |
 | external_application_id  | str?        | Board-assigned ID on success             |
 | created_at               | datetime    |                                          |
 

@@ -39,6 +39,11 @@ export function PrivacyPolicyPage() {
             status labels (seen, applied, archived), delivery logs, and scrape run metadata.
           </li>
           <li>
+            <strong>Auto-apply audit data:</strong> when you enable auto-apply, we record each
+            preview or live submission attempt (including an opt-in consent stamp) in an application
+            log tied to your account.
+          </li>
+          <li>
             <strong>Inbox data (optional):</strong> when you connect a mailbox, message metadata and
             content needed to classify recruiter email and draft replies.
           </li>
@@ -56,12 +61,28 @@ export function PrivacyPolicyPage() {
           <li>Run scheduled scrapes and match results against your filters.</li>
           <li>Deliver notifications through the channels you configure.</li>
           <li>
+            Submit job applications on your behalf when you enable auto-apply for a source (using
+            your application profile and any site credentials you linked).
+          </li>
+          <li>
             Power the jobs feed, RSS export, and optional AI features you enable (match summaries,
             cover letters, resume curation, email classification, and reply drafting).
           </li>
           <li>Maintain your account, enforce access controls, and improve reliability.</li>
         </ul>
         <p>We do not sell your personal data. We do not use your data for advertising profiles.</p>
+      </section>
+
+      <section>
+        <h2>Lawful basis</h2>
+        <p>
+          We process account, configuration, and operational data to provide the service you request
+          (performance of a contract). Optional features that send your personal data to third
+          parties — including auto-apply to career sites and AI-backed features — run only after you
+          opt in. For those features the lawful basis is your consent, which you can withdraw by
+          turning the feature off (for example disabling auto-apply on a source) or deleting your
+          account.
+        </p>
       </section>
 
       <section>
@@ -75,7 +96,12 @@ export function PrivacyPolicyPage() {
         <p>Depending on how you configure HeadStart, data may also be sent to:</p>
         <ul>
           <li>
-            <strong>Job boards and career sites</strong> you ask us to monitor (for scraping only).
+            <strong>Job boards and career sites</strong> you ask us to monitor (for scraping). When
+            you enable auto-apply on a source, we also transmit application-profile data — such as
+            your name, email, phone, links, resume file or text, work history, education, skills,
+            and custom answers — to that employer&apos;s career site or applicant-tracking system so
+            we can submit an application on your behalf. Each live or preview attempt stores an
+            auditable consent record on the application log.
           </li>
           <li>
             <strong>Notification providers</strong> you choose (for example ntfy, email via SMTP,

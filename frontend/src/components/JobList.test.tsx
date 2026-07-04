@@ -79,12 +79,7 @@ describe("JobList (desktop table)", () => {
 
   it("renders a plain title when the job url is a javascript: scheme", () => {
     setMatchMedia(false);
-    render(
-      <JobList
-        jobs={[makeJob({ url: "javascript:alert(1)" })]}
-        onStatusChange={vi.fn()}
-      />,
-    );
+    render(<JobList jobs={[makeJob({ url: "javascript:alert(1)" })]} onStatusChange={vi.fn()} />);
 
     expect(screen.queryByRole("link", { name: "Software Engineer" })).not.toBeInTheDocument();
     expect(screen.getByText("Software Engineer")).toBeInTheDocument();

@@ -30,9 +30,7 @@ describe("AdminDataRequestsCard", () => {
     renderWithClient(<AdminDataRequestsCard />);
 
     expect(screen.getByRole("heading", { name: "GDPR data requests" })).toBeInTheDocument();
-    expect(
-      screen.getByText(/one-way account pseudonym/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/one-way account pseudonym/i)).toBeInTheDocument();
     expect(screen.queryByRole("table")).not.toBeInTheDocument();
     expect(
       screen.queryByText("No export or deletion requests recorded yet."),

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
@@ -19,7 +18,10 @@ from app.models.source import Source
 from app.repositories.application_logs import ApplicationLogRepository
 from app.repositories.sources import SourceRepository
 from app.schemas.profile import ResumeFile
-from app.services.apply_tracking import application_tracking_payload
+from app.services.apply_tracking import (
+    application_tracking_payload,
+    merge_application_log_payload,
+)
 from app.services.credentials import CredentialService
 from app.services.plan_limits import PlanLimitsService
 from app.services.profiles import ProfileService
@@ -129,6 +131,7 @@ class ApplyService:
                 existing_log,
                 job,
                 result,
+                dry_run=dry_run,
                 tailored_resume=tailored_resume,
                 artifact_id=artifact_id,
             )
@@ -155,7 +158,7 @@ class ApplyService:
                 seen_job_id=job.id,
                 status="queued",
                 dry_run=False,
-                payload=application_tracking_payload(job),
+                payload=application_tracking_payload(job, live_submission=True),
             )
         )
 
@@ -203,7 +206,9 @@ class ApplyService:
                 status=result.status,
                 dry_run=dry_run,
                 error=result.error,
-                payload=self._merge_tracking_payload(job, result.payload, tailored_resume),
+                payload=merge_application_log_payload(
+                    job, result.payload, dry_run=dry_run, tailored_resume=tailored_resume
+                ),
                 external_application_id=result.external_application_id,
                 tailored_resume_artifact_id=artifact_id,
             )
@@ -215,33 +220,24 @@ class ApplyService:
         job: SeenJob,
         result: ApplyResult,
         *,
+        dry_run: bool,
         tailored_resume: ResumeFile | None = None,
         artifact_id: int | None = None,
     ) -> None:
         """Update an existing queued log with the final apply outcome."""
+        prior = log.payload if isinstance(log.payload, dict) else None
         log.status = result.status
         log.error = result.error
-        log.payload = self._merge_tracking_payload(job, result.payload, tailored_resume)
+        log.payload = merge_application_log_payload(
+            job,
+            result.payload,
+            dry_run=dry_run,
+            tailored_resume=tailored_resume,
+            prior_payload=prior,
+        )
         log.external_application_id = result.external_application_id
         log.tailored_resume_artifact_id = artifact_id
         self.session.flush()
-
-    def _merge_tracking_payload(
-        self,
-        job: SeenJob,
-        adapter_payload: dict[str, Any] | None,
-        tailored_resume: ResumeFile | None = None,
-    ) -> dict[str, Any]:
-        tracking = application_tracking_payload(job)
-        if tailored_resume is not None:
-            tracking["tailored_resume"] = {
-                "filename": tailored_resume.filename,
-                "size_bytes": tailored_resume.size_bytes,
-                "content_type": tailored_resume.content_type,
-            }
-        if not adapter_payload:
-            return tracking
-        return {**tracking, **adapter_payload}
 
     def _pipeline_auto_apply_eligible(
         self,

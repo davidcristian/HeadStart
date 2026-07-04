@@ -69,7 +69,9 @@ _Merged with FRO-02 — both records describe the same defect: the module-level 
 
 <a id="fro-05"></a>
 ### FRO-05 — No lawful-basis/consent record for auto-apply sending PII to job boards
-🟡 **MEDIUM** · 📝 doc · Status: ☐ open · Confidence: medium (3/5 verifiers) · Effort: M · WS18
+🟡 **MEDIUM** · 📝 doc · Status: ✅ done · [PR](https://github.com/davidcristian/HeadStart/pull/27)
+
+**Update (2026-07-10).** Privacy policy now discloses auto-apply PII flows and lawful basis (consent). `ApplyService` stamps `user_consent` on every `application_log` payload (`basis`, `mechanism`, `live_submission`, `recorded_at`); queue-time consent is preserved when a queued log is finalized.
 
 **Locations:** `frontend/src/pages/PrivacyPolicyPage.tsx:60` (`PrivacyPolicyPage`).
 

@@ -92,6 +92,8 @@ def test_apply_service_dry_run_returns_payload(db_session: Session) -> None:
     assert logs[0].status == "dry_run"
     assert logs[0].dry_run is True
     assert logs[0].payload is not None
+    assert logs[0].payload["user_consent"]["mechanism"] == "dry_run_preview"
+    assert logs[0].payload["user_consent"]["live_submission"] is False
 
 
 def test_apply_service_live_without_opt_in_fails(db_session: Session) -> None:
@@ -138,6 +140,9 @@ def test_enqueue_apply_creates_queued_log(db_session: Session) -> None:
     assert log.seen_job_id == job_id
     assert log.payload is not None
     assert log.payload["employer_domain"] == "boards.greenhouse.io"
+    assert log.payload["user_consent"]["basis"] == "consent"
+    assert log.payload["user_consent"]["mechanism"] == "source.auto_apply_enabled"
+    assert log.payload["user_consent"]["live_submission"] is True
 
 
 def test_enqueue_apply_rejects_duplicate_pending(db_session: Session) -> None:
@@ -221,6 +226,8 @@ def test_apply_service_live_with_opt_in_records_log(db_session: Session) -> None
     assert logs[0].external_application_id == "app-1"
     assert logs[0].payload is not None
     assert logs[0].payload["employer_domain"] == "boards.greenhouse.io"
+    assert logs[0].payload["user_consent"]["mechanism"] == "source.auto_apply_enabled"
+    assert logs[0].payload["user_consent"]["live_submission"] is True
 
 
 def test_apply_service_workday_dry_run(db_session: Session) -> None:
@@ -453,6 +460,10 @@ def test_apply_with_existing_queued_log_updates_it(db_session: Session) -> None:
     user_id, job_id, job = _seed_greenhouse_job(db_session)
     _enable_and_profile(db_session, job, user_id)
     log_id = ApplyService(db_session).enqueue_apply(user_id, job_id)
+    queued = db_session.get(ApplicationLog, log_id)
+    assert queued is not None
+    assert queued.payload is not None
+    original_consent = dict(queued.payload["user_consent"])
 
     with patch("app.services.apply.get_applier") as mock_get_applier:
         mock_get_applier.return_value.apply.return_value = ApplyResult(
@@ -469,8 +480,39 @@ def test_apply_with_existing_queued_log_updates_it(db_session: Session) -> None:
     assert log is not None
     assert log.status == "submitted"
     assert log.external_application_id == "app-9"
+    assert log.payload is not None
+    assert log.payload["user_consent"] == original_consent
     # No extra audit row is created; the queued log is updated in place.
     assert db_session.query(ApplicationLog).count() == 1
+
+
+def test_apply_with_existing_log_stamps_consent_when_missing(db_session: Session) -> None:
+    user_id, job_id, job = _seed_greenhouse_job(db_session)
+    _enable_and_profile(db_session, job, user_id)
+    log = ApplicationLog(
+        seen_job_id=job_id,
+        status="queued",
+        dry_run=False,
+        payload=None,
+    )
+    db_session.add(log)
+    db_session.flush()
+
+    with patch("app.services.apply.get_applier") as mock_get_applier:
+        mock_get_applier.return_value.apply.return_value = ApplyResult(
+            status="submitted",
+            payload={"email": "ada@example.com"},
+            external_application_id="app-10",
+        )
+        result = ApplyService(db_session).apply_to_job(
+            user_id, job_id, dry_run=False, application_log_id=log.id
+        )
+
+    assert result.status == "submitted"
+    db_session.refresh(log)
+    assert log.payload is not None
+    assert log.payload["user_consent"]["mechanism"] == "source.auto_apply_enabled"
+    assert log.payload["user_consent"]["live_submission"] is True
 
 
 def test_apply_with_existing_log_rejects_non_queued(db_session: Session) -> None:

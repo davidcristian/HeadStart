@@ -611,24 +611,17 @@ from scraping.
 Live submission requires explicit opt-in per source (`source.auto_apply_enabled`,
 default `false`). Toggle from the Sources page (only for adapters with a
 registered applier). `ApplyService` rejects non–dry-run applies when opt-in is
-off; preview (`dry_run`) still works.
-
-**v1 limitations:** Workday degree/field and skill lookup is best-effort and needs
-authenticated session cookies; unmatched labels still fall back to descriptors.
-Google Careers live submit needs the candidate's own Google account session and
-CSRF token; resume upload and employer questionnaires are best-effort. Microsoft
-Careers live submit needs the candidate's own logged-in session on
-`apply.careers.microsoft.com`; country-specific screening questions are
-best-effort. Branching questionnaires only
-submit answers you explicitly map in `profile.answers`. Uber Careers live submit
-needs a logged-in careers session token; employer questionnaires map via
-`profile.answers`. See
-[launch-checklist.md](../launch-checklist.md#7-auto-apply-optional--know-the-limits)
-before advertising auto-apply on a public instance.
+off; preview (`dry_run`) still works. Enabling auto-apply is the user's consent
+to transmit application-profile PII to that employer's career site; the privacy
+policy discloses the data categories and lawful basis (consent for opt-in
+third-party sends).
 
 Every apply attempt (preview or live, success or failure) is recorded in
 `application_log` with baseline tracking metadata (`employer_domain`, `posting`
-fields) for inbox triage. List recent rows via `GET /api/v1/application-logs`; fetch one
+fields) for inbox triage, plus a `user_consent` stamp (`basis`, `mechanism`,
+`live_submission`, `recorded_at`) so each submission has an auditable HeadStart
+opt-in artifact. Queue-time consent is preserved when a queued log is updated
+with the final outcome. List recent rows via `GET /api/v1/application-logs`; fetch one
 queued row via `GET /api/v1/application-logs/{id}` while a live submit runs in
 the worker. At most one in-flight live apply (`queued` or `processing`) per job
 is allowed — enforced by a partial unique index so concurrent enqueue requests
@@ -642,6 +635,19 @@ in `app/core/plans.py` — Free 3 / Starter 5 / Plus 10 / Pro 20). Further
 pipeline matches are skipped silently until the window has capacity; manual
 **Apply** from the Jobs page is unchanged. Dry-run previews do not count toward
 the cap. The Application profile page shows the same audit trail.
+
+**v1 limitations:** Workday degree/field and skill lookup is best-effort and needs
+authenticated session cookies; unmatched labels still fall back to descriptors.
+Google Careers live submit needs the candidate's own Google account session and
+CSRF token; resume upload and employer questionnaires are best-effort. Microsoft
+Careers live submit needs the candidate's own logged-in session on
+`apply.careers.microsoft.com`; country-specific screening questions are
+best-effort. Branching questionnaires only
+submit answers you explicitly map in `profile.answers`. Uber Careers live submit
+needs a logged-in careers session token; employer questionnaires map via
+`profile.answers`. See
+[launch-checklist.md](../launch-checklist.md#7-auto-apply-optional--know-the-limits)
+before advertising auto-apply on a public instance.
 
 ## Adding one
 
