@@ -54,7 +54,7 @@ fi
 ok "Remote state bootstrap complete."
 echo
 echo "Next steps:"
-echo "  1. Set bucket name in devops/terraform/environments/dev/backend.tf:"
+echo "  1. Set bucket name in devops/terraform/environments/beta/backend.tf:"
 echo "       bucket = \"${BUCKET}\""
 echo "  2. Repeat for environments/prod/backend.tf when you add production."
-echo "  3. cd devops/terraform/environments/dev && terraform init && terraform apply"
+echo "  3. cd devops/terraform/environments/beta && terraform init && terraform apply"

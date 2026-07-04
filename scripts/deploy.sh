@@ -3,14 +3,14 @@
 # Intended to be run by CI (with an assumed AWS role) or locally with creds.
 #
 # Env:
-#   ENVIRONMENT    target env dir under devops/terraform/environments (default: dev)
+#   ENVIRONMENT    target env dir under devops/terraform/environments (default: beta)
 #   AWS_REGION     required
 #   ECR_REGISTRY   required
 #   ECS_CLUSTER    required (ECS cluster name; usually a Terraform output)
 #   IMAGE_TAG      optional (default: git short sha)
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
-ENVIRONMENT="${ENVIRONMENT:-dev}"
+ENVIRONMENT="${ENVIRONMENT:-beta}"
 : "${AWS_REGION:?AWS_REGION is required}"
 : "${ECR_REGISTRY:?ECR_REGISTRY is required}"
 : "${ECS_CLUSTER:?ECS_CLUSTER is required}"

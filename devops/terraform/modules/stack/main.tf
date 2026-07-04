@@ -1,4 +1,4 @@
-# Full HeadStart stack for one environment. Each environment (dev, prod) calls
+# Full HeadStart stack for one environment. Each environment (beta, prod) calls
 # this module with its own provider + remote state.
 
 locals {

@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        env: [dev, prod]
+        env: [beta, prod]
     defaults:
       run:
         working-directory: devops/terraform/environments/${{ matrix.env }}

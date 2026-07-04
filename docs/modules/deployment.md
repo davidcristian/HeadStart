@@ -35,7 +35,7 @@ devops/terraform/
 │   ├── iam/       # task execution + task roles
 │   └── secrets/   # Secrets Manager / SSM params
 └── environments/
-    ├── dev/
+    ├── beta/
     └── prod/
 ```
 
@@ -107,7 +107,7 @@ See **[deploying-to-aws.md](../deploying-to-aws.md)** for the full walkthrough
 Summary:
 
 1. Bootstrap S3 state + DynamoDB lock (`environments/<env>/backend.tf`).
-2. `terraform init && terraform apply` in `environments/dev` (or `prod`).
+2. `terraform init && terraform apply` in `environments/beta` (or `prod`).
 3. `make deploy` with `ECR_REGISTRY` and `ECS_CLUSTER` set.
 4. Optional: activate the deploy/terraform workflows by setting the `AWS_ROLE_ARN`
    repo variable and the AWS/GitHub secrets (the workflow files are already in place).

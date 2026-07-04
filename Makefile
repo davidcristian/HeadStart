@@ -74,12 +74,12 @@ deploy: ## Deploy to AWS (build, push, update ECS)
 terraform-bootstrap: ## Create S3 + DynamoDB for Terraform remote state (PREFIX=yourname)
 	./scripts/terraform-bootstrap-state.sh "$(PREFIX)" "$(AWS_REGION)"
 
-aws-deploy-env: ## Print exports for deploy (ENVIRONMENT=dev): eval "$$(make aws-deploy-env)"
-	./scripts/aws-deploy-env.sh "$(or $(ENVIRONMENT),dev)"
+aws-deploy-env: ## Print exports for deploy (ENVIRONMENT=beta): eval "$$(make aws-deploy-env)"
+	./scripts/aws-deploy-env.sh "$(or $(ENVIRONMENT),beta)"
 
 aws-first-deploy: ## First-time AWS deploy (PREFIX=yourname): bootstrap + terraform + deploy
 	PREFIX="$(PREFIX)" AWS_REGION="$(or $(AWS_REGION),us-east-2)" \
-	ENVIRONMENT="$(or $(ENVIRONMENT),dev)" YES="$(YES)" \
+	ENVIRONMENT="$(or $(ENVIRONMENT),beta)" YES="$(YES)" \
 	SKIP_BOOTSTRAP="$(SKIP_BOOTSTRAP)" SKIP_DEPLOY="$(SKIP_DEPLOY)" \
 	DOMAIN_NAME="$(DOMAIN_NAME)" ROUTE53_ZONE_ID="$(ROUTE53_ZONE_ID)" \
 	./scripts/aws-first-deploy.sh $(if $(filter 1,$(YES)),--yes,)

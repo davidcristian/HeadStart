@@ -1,6 +1,6 @@
 variable "name" {
   type        = string
-  description = "Secret name prefix (e.g. headstart-dev)."
+  description = "Secret name prefix (e.g. headstart-beta)."
 }
 
 variable "secret_names" {

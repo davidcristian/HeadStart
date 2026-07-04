@@ -9,7 +9,7 @@
 # Env (all optional unless noted):
 #   PREFIX              Globally unique state-bucket prefix (required non-interactive)
 #   AWS_REGION          Default: us-east-2
-#   ENVIRONMENT         Terraform env dir: dev (default) or prod
+#   ENVIRONMENT         Terraform env dir: beta (default) or prod
 #   YES                 Set to 1 to skip confirmation prompts
 #   SKIP_BOOTSTRAP      Set to 1 when the S3 bucket + lock table already exist
 #   SKIP_DEPLOY         Set to 1 to stop after terraform apply (no image push)
@@ -18,7 +18,7 @@
 #   TF_VAR_*            Pre-set secrets skip auto-generation
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
-ENVIRONMENT="${ENVIRONMENT:-dev}"
+ENVIRONMENT="${ENVIRONMENT:-beta}"
 AWS_REGION="${AWS_REGION:-us-east-2}"
 YES="${YES:-0}"
 SKIP_BOOTSTRAP="${SKIP_BOOTSTRAP:-0}"
@@ -102,7 +102,7 @@ confirm_apply() {
   fi
   echo
   warn "This creates billable AWS resources (VPC, ALB, ECS Fargate, RDS, ElastiCache, ECR)."
-  warn "The dev stack is not free-tier-only. See docs/deploying-to-aws.md for cost notes."
+  warn "The beta stack is not free-tier-only. See docs/deploying-to-aws.md for cost notes."
   read -r -p "Continue with terraform apply? [y/N] " reply
   [[ "${reply}" =~ ^[Yy]$ ]] || die "Aborted."
 }

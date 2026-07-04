@@ -2,11 +2,11 @@
 # Print shell exports for AWS deploy from Terraform outputs.
 #
 # Usage:
-#   eval "$(./scripts/aws-deploy-env.sh dev)"
+#   eval "$(./scripts/aws-deploy-env.sh beta)"
 #   make deploy
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
-ENVIRONMENT="${1:-dev}"
+ENVIRONMENT="${1:-beta}"
 TF_DIR="${REPO_ROOT}/devops/terraform/environments/${ENVIRONMENT}"
 
 [[ -d "${TF_DIR}" ]] || die "Unknown environment '${ENVIRONMENT}' (missing ${TF_DIR})"

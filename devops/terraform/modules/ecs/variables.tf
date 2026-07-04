@@ -1,6 +1,6 @@
 variable "name" {
   type        = string
-  description = "Cluster/log-group name (e.g. headstart-dev)."
+  description = "Cluster/log-group name (e.g. headstart-beta)."
 }
 
 variable "service_prefix" {

@@ -2,7 +2,7 @@ name: Deploy
 
 # Builds + pushes images to ECR, runs DB migrations, and rolls the ECS services.
 # Manual-only: this workflow never runs on push. Trigger it from the Actions tab
-# ("Run workflow", choose dev/prod; GitHub Environment protection can require an
+# ("Run workflow", choose beta/prod; GitHub Environment protection can require an
 # approval). The deploy job is additionally guarded on the `AWS_ROLE_ARN` repo
 # variable, so it no-ops until the AWS OIDC role is configured.
 
@@ -12,8 +12,8 @@ on:
       environment:
         description: Target environment
         type: choice
-        options: [dev, prod]
-        default: dev
+        options: [beta, prod]
+        default: beta
 
 permissions:
   id-token: write # for AWS OIDC
@@ -21,13 +21,13 @@ permissions:
 
 jobs:
   deploy:
-    name: Deploy ${{ github.event.inputs.environment || 'dev' }}
+    name: Deploy ${{ github.event.inputs.environment || 'beta' }}
     # Skips cleanly (no failure) until the AWS OIDC role variable is configured.
     if: ${{ vars.AWS_ROLE_ARN != '' }}
     runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment || 'dev' }}
+    environment: ${{ github.event.inputs.environment || 'beta' }}
     env:
-      TARGET_ENV: ${{ github.event.inputs.environment || 'dev' }}
+      TARGET_ENV: ${{ github.event.inputs.environment || 'beta' }}
       AWS_REGION: ${{ vars.AWS_REGION || 'us-east-2' }}
     steps:
       - uses: actions/checkout@v4

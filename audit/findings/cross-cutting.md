@@ -316,7 +316,7 @@ Note on merges: the `portal_search` schema-drift defect surfaced from three angl
 ### XCT-26 — NTFY_DEFAULT_TOPIC defaults to guessable value and propagates to prod
 ⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: high (3/5 verifiers) · Effort: XS · WS31
 
-**Locations:** `devops/terraform/environments/prod/variables.tf:55` (`ntfy_default_topic`); plus `backend/app/core/config.py:167`, `.env.example:194`, `devops/terraform/environments/dev/terraform.tfvars.example:29`.
+**Locations:** `devops/terraform/environments/prod/variables.tf:55` (`ntfy_default_topic`); plus `backend/app/core/config.py:167`, `.env.example:194`, `devops/terraform/environments/beta/terraform.tfvars.example:29`.
 
 **Evidence.** The prod var default is `'headstart-change-me'` (`prod/variables.tf:55-58`), the stack pipes it to `NTFY_DEFAULT_TOPIC` (`stack/main.tf:163`), and the committed dev tfvars example hardcodes the same value. ntfy.sh topics are public/unauthenticated by name.
 

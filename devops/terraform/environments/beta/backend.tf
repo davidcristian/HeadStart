@@ -4,7 +4,7 @@
 terraform {
   backend "s3" {
     bucket         = "CHANGEME-headstart-tfstate"
-    key            = "dev/terraform.tfstate"
+    key            = "beta/terraform.tfstate"
     region         = "us-east-2"
     dynamodb_table = "headstart-tflock"
     encrypt        = true

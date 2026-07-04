@@ -65,10 +65,10 @@ Terraform (`devops/terraform/`) provisions:
 - Secrets Manager entries for `POSTGRES_PASSWORD`, `JWT_SECRET`,
   `CREDENTIALS_SECRET_KEY`
 
-Default region is **`us-east-2`**. Use the **`dev`** environment first (cheaper);
+Default region is **`us-east-2`**. Use the **`beta`** environment first (cheaper);
 **`prod`** adds Multi-AZ RDS and deletion protection.
 
-> **Cost:** even `dev` runs an ALB, four Fargate tasks, RDS, and Redis — expect
+> **Cost:** even `beta` runs an ALB, four Fargate tasks, RDS, and Redis — expect
 > ongoing monthly charges, not a free-tier-only stack.
 
 > **HTTPS:** without a custom domain the ALB serves **HTTP on port 80** at
@@ -112,7 +112,7 @@ make terraform-bootstrap PREFIX=YOURNAME
 
 Or run the underlying script directly: `./scripts/terraform-bootstrap-state.sh YOURNAME us-east-2`.
 
-Edit `devops/terraform/environments/dev/backend.tf` and replace
+Edit `devops/terraform/environments/beta/backend.tf` and replace
 `CHANGEME-headstart-tfstate` with your bucket name (`YOURNAME-headstart-tfstate`).
 Do the same in `environments/prod/backend.tf` when you add production.
 
@@ -124,7 +124,7 @@ Do the same in `environments/prod/backend.tf` when you add production.
 ## 2. Provision infrastructure
 
 ```bash
-cd devops/terraform/environments/dev
+cd devops/terraform/environments/beta
 
 # Save these somewhere safe — you cannot recover them from Terraform output.
 export TF_VAR_db_password="$(openssl rand -base64 24)"
@@ -149,7 +149,7 @@ Note the outputs:
 terraform output app_url             # primary URL (HTTPS when configured)
 terraform output alb_dns_name        # ALB DNS name (always available)
 terraform output https_enabled       # true when TLS is active
-terraform output ecs_cluster_name    # e.g. headstart-dev
+terraform output ecs_cluster_name    # e.g. headstart-beta
 terraform output ecr_repository_urls
 ```
 
@@ -173,9 +173,9 @@ Or set the variables manually:
 
 ```bash
 export AWS_REGION=us-east-2
-export ENVIRONMENT=dev
+export ENVIRONMENT=beta
 export ECR_REGISTRY="$(aws sts get-caller-identity --query Account --output text).dkr.ecr.${AWS_REGION}.amazonaws.com"
-export ECS_CLUSTER="$(cd devops/terraform/environments/dev && terraform output -raw ecs_cluster_name)"
+export ECS_CLUSTER="$(cd devops/terraform/environments/beta && terraform output -raw ecs_cluster_name)"
 make deploy
 ```
 
@@ -209,7 +209,7 @@ curl "$APP_URL/api/v1/health"
 Or with the raw ALB DNS name:
 
 ```bash
-curl "http://$(cd devops/terraform/environments/dev && terraform output -raw alb_dns_name)/api/v1/health"
+curl "http://$(cd devops/terraform/environments/beta && terraform output -raw alb_dns_name)/api/v1/health"
 ```
 
 ---
@@ -347,7 +347,7 @@ need to move.
 | ------- | ------------------ |
 | ECS tasks stuck `PENDING` | Images not in ECR yet — run `make deploy` |
 | `make deploy` fails on ECR login | `aws sts get-caller-identity` or region mismatch |
-| Health check fails | Migrations not finished; check CloudWatch log group `/ecs/headstart-dev` |
+| Health check fails | Migrations not finished; check CloudWatch log group `/ecs/headstart-beta` |
 | 401 / login loops in UI | API not reachable; confirm ALB routes `/api/*` to the API target group |
 | No job notifications | Same as local — ntfy topic mismatch; see [getting-started.md](getting-started.md) |
 | `terraform apply` state lock | Another apply in progress, or stale DynamoDB lock row |

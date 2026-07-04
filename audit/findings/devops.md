@@ -168,7 +168,7 @@ This area covers the deployment and infrastructure surface of the repo: the AWS 
 ### OPS-16 — ntfy_default_topic defaults to static public topic "headstart-change-me"
 🟡 **MEDIUM** · 🔒 security · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: S · WS31
 
-**Locations:** `devops/terraform/modules/stack/variables.tf:82` (`ntfy_default_topic`); plus `devops/terraform/environments/prod/variables.tf:55`, `devops/terraform/environments/prod/terraform.tfvars.example:25`, `devops/terraform/environments/dev/terraform.tfvars.example:27`, `devops/terraform/modules/stack/main.tf:163`, `backend/app/core/config.py:167`.
+**Locations:** `devops/terraform/modules/stack/variables.tf:82` (`ntfy_default_topic`); plus `devops/terraform/environments/prod/variables.tf:55`, `devops/terraform/environments/prod/terraform.tfvars.example:25`, `devops/terraform/environments/beta/terraform.tfvars.example:27`, `devops/terraform/modules/stack/main.tf:163`, `backend/app/core/config.py:167`.
 
 **Note:** Merged with OPS-32 (the low-rated prod-tfvars-specific instance of the same public-topic default).
 
@@ -332,7 +332,7 @@ This area covers the deployment and infrastructure surface of the repo: the AWS 
 ### OPS-29 — State backend bucket is unresolved CHANGEME placeholder committed for both envs
 ⚪ **LOW** · 🔁 consistency · Status: ☐ open · Confidence: medium (2/3 verifiers) · Effort: XS · WS36
 
-**Locations:** `devops/terraform/environments/prod/backend.tf:6` (`backend s3`); plus `devops/terraform/environments/dev/backend.tf:6`.
+**Locations:** `devops/terraform/environments/prod/backend.tf:6` (`backend s3`); plus `devops/terraform/environments/beta/backend.tf:6`.
 
 **Evidence.** `bucket = "CHANGEME-headstart-tfstate"` is hardcoded in both env `backend.tf` files; a comment says to edit the placeholders or pass `-backend-config`. Dev and prod share one lock table (keyed by state key), which is acceptable.
 
@@ -348,7 +348,7 @@ This area covers the deployment and infrastructure surface of the repo: the AWS 
 ### OPS-30 — dev and prod share identical VPC CIDR 10.20.0.0/16 (never overridden)
 ⚪ **LOW** · 🐞 bug · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: S · WS36
 
-**Locations:** `devops/terraform/environments/prod/main.tf:1` (`module.stack (prod)`); plus `devops/terraform/environments/dev/main.tf:1`, `devops/terraform/modules/stack/variables.tf:8`, `devops/terraform/modules/stack/variables.tf:15`.
+**Locations:** `devops/terraform/environments/prod/main.tf:1` (`module.stack (prod)`); plus `devops/terraform/environments/beta/main.tf:1`, `devops/terraform/modules/stack/variables.tf:8`, `devops/terraform/modules/stack/variables.tf:15`.
 
 **Evidence.** Neither env passes `vpc_cidr`/`public_subnet_cidrs`/`private_subnet_cidrs`, so both inherit the stack defaults `10.20.0.0/16` and the same `/24`s (`stack/variables.tf:8-22`). Dev and prod networks are address clones.
 
@@ -364,7 +364,7 @@ This area covers the deployment and infrastructure surface of the repo: the AWS 
 ### OPS-31 — Prod provider lacks allowed_account_ids guard against wrong-account apply
 ⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: XS · WS36
 
-**Locations:** `devops/terraform/environments/prod/providers.tf:1` (`provider aws`); plus `devops/terraform/environments/dev/providers.tf:1`.
+**Locations:** `devops/terraform/environments/prod/providers.tf:1` (`provider aws`); plus `devops/terraform/environments/beta/providers.tf:1`.
 
 **Evidence.** `provider "aws" { region = var.region }` is the entire block — identical to dev. There is no `allowed_account_ids`, `assume_role`, or `profile` pin, so ambient AWS credentials alone decide the target account for a prod apply.
 
@@ -380,7 +380,7 @@ This area covers the deployment and infrastructure surface of the repo: the AWS 
 ### OPS-33 — prod tfvars.example primes inline plaintext secrets in terraform.tfvars
 ⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: medium (3/3 verifiers) · Effort: XS · WS36
 
-**Locations:** `devops/terraform/environments/prod/terraform.tfvars.example:9` (`db_password/jwt_secret/credentials_secret_key`); plus `devops/terraform/environments/dev/terraform.tfvars.example:12`.
+**Locations:** `devops/terraform/environments/prod/terraform.tfvars.example:9` (`db_password/jwt_secret/credentials_secret_key`); plus `devops/terraform/environments/beta/terraform.tfvars.example:12`.
 
 **Evidence.** The prod `tfvars.example` lists the three core secrets as inline assignments (l9-11). Although comments say "prefer env vars," the example primes users to put real prod secrets into `terraform.tfvars` (gitignored only by convention), unlike `smtp_password`, which is shown as env-var-only.
 

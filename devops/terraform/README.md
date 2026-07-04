@@ -39,7 +39,7 @@ See [../../docs/deploying-to-aws.md](../../docs/deploying-to-aws.md#quick-start-
 ## Deploy an environment
 
 ```bash
-cd environments/dev
+cd environments/beta
 export TF_VAR_db_password="$(openssl rand -base64 24)"
 export TF_VAR_jwt_secret="$(openssl rand -hex 32)"
 export TF_VAR_credentials_secret_key="$(openssl rand -hex 32)"
