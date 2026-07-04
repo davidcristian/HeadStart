@@ -12,12 +12,14 @@ from unittest.mock import patch
 import httpx
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
+from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.models import Base
 from app.models.registration_lock import RegistrationLock
+from app.models.user import User
 from app.scrapers.http import HttpClient
 
 
@@ -26,6 +28,17 @@ def seed_registration_lock(session: Session) -> None:
     if session.get(RegistrationLock, 1) is None:
         session.add(RegistrationLock(id=1))
         session.flush()
+
+
+def seed_default_test_user(session: Session) -> User:
+    """Many unit tests reference user_id=1; seed a row so FK constraints hold."""
+    existing = session.get(User, 1)
+    if existing is not None:
+        return existing
+    user = User(id=1, email="test-user@example.com", password_hash="hash", plan="free")
+    session.add(user)
+    session.flush()
+    return user
 
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
@@ -52,6 +65,19 @@ def load_fixture(name: str) -> str:
 
 def load_json_fixture(name: str) -> object:
     return json.loads(load_fixture(name))
+
+
+@event.listens_for(Engine, "connect")
+def _enable_sqlite_foreign_keys(dbapi_connection: object, _connection_record: object) -> None:
+    """SQLite disables FK enforcement by default; match Postgres cascade semantics in tests."""
+    if dbapi_connection.__class__.__module__.startswith("sqlite3"):
+        dbapi_connection.execute("PRAGMA foreign_keys=ON")
+
+
+@pytest.fixture
+def default_test_user(db_session: Session) -> User:
+    """Opt-in row for tests that reference user_id=1 without creating a user."""
+    return seed_default_test_user(db_session)
 
 
 @pytest.fixture

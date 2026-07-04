@@ -205,6 +205,7 @@ def test_hosted_live_submit_posts_to_smartapply() -> None:
         if "smartapply.indeed.com" in url:
             seen["method"] = request.method
             seen["body"] = json.loads(request.content.decode())
+            seen["cookie"] = request.headers.get("cookie")
             return httpx.Response(
                 200,
                 text=apply_success,
@@ -235,6 +236,10 @@ def test_hosted_live_submit_posts_to_smartapply() -> None:
     body = seen["body"]
     assert isinstance(body, dict)
     assert body["jobKey"] == "hostedjobkey001"
+    cookie = seen["cookie"]
+    assert isinstance(cookie, str)
+    assert "PPID=test" in cookie
+    assert "SOCK=session" in cookie
 
 
 def test_unsupported_external_apply_url_fails_clearly() -> None:

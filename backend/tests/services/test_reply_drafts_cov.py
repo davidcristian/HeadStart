@@ -230,9 +230,18 @@ def test_truncate_body_and_subject(db_session: Session) -> None:
 def test_to_read_notes_from_non_str_payload(db_session: Session) -> None:
     user_id, _job = _seed_applied_job(db_session)
     service = ReplyDraftService(db_session)
+    classification = InboxClassification(
+        user_id=user_id,
+        message_uid=99,
+        label="follow_up",
+        confidence=0.9,
+        provider="heuristic",
+    )
+    db_session.add(classification)
+    db_session.flush()
     row = InboxReplyDraft(
         user_id=user_id,
-        inbox_classification_id=1,
+        inbox_classification_id=classification.id,
         message_uid=1,
         subject="Re: x",
         body_text="body",

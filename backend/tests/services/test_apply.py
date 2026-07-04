@@ -9,10 +9,29 @@ from app.core.exceptions import NotFoundError, ValidationError
 from app.models.application_log import ApplicationLog
 from app.models.seen_job import SeenJob
 from app.models.source import Source
+from app.models.user import User
 from app.schemas.profile import ProfileData
 from app.services.apply import ApplyService
 from app.services.profiles import ProfileService
 from tests.worker.test_pipeline import _make_search
+
+
+def _foreign_source_id(session: Session) -> int:
+    """A source owned by another user — valid FK, but invisible to the job owner's lookups."""
+    other = User(email="foreign-source@example.com", password_hash="hash")
+    session.add(other)
+    session.flush()
+    foreign = Source(
+        user_id=other.id,
+        name="Foreign",
+        adapter_key="greenhouse",
+        base_url="https://foreign.example.test",
+        default_config={},
+        enabled=True,
+    )
+    session.add(foreign)
+    session.flush()
+    return foreign.id
 
 
 def _seed_greenhouse_job(session: Session) -> tuple[int, int, SeenJob]:
@@ -246,8 +265,8 @@ def test_enqueue_auto_apply_from_pipeline_queues_when_eligible(db_session: Sessi
 def test_enqueue_auto_apply_from_pipeline_skips_when_source_missing(db_session: Session) -> None:
     user_id, job_id, job = _seed_greenhouse_job(db_session)
     _enable_and_profile(db_session, job, user_id)
-    # Repoint the search at a source id that no longer resolves for this user.
-    job.search.source_id = 987654
+    # Repoint the search at a source owned by another user so lookup returns None.
+    job.search.source_id = _foreign_source_id(db_session)
     db_session.flush()
 
     assert ApplyService(db_session).enqueue_auto_apply_from_pipeline(user_id, job_id) is None
@@ -425,8 +444,8 @@ def test_validate_apply_request_source_not_found(db_session: Session) -> None:
         user_id,
         ProfileData(full_name="Ada Lovelace", email="ada@example.com", resume_text="CV"),
     )
-    # Point the job's search at a source id that does not exist for this user.
-    job.search.source_id = 987654
+    # Point the job's search at a source owned by another user.
+    job.search.source_id = _foreign_source_id(db_session)
     db_session.flush()
 
     try:

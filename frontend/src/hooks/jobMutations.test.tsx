@@ -76,13 +76,15 @@ describe("useApplyToJob", () => {
     expect(keys).not.toContainEqual(["jobs"]);
   });
 
-  it("a submitted result also invalidates the jobs cache", async () => {
-    api.applyToJob.mockResolvedValueOnce({ status: "submitted" });
+  it("a queued live apply does not invalidate the jobs cache", async () => {
     const { result } = renderHook(() => useApplyToJob(), { wrapper });
     await act(async () => {
       await result.current.mutateAsync({ id: 1 });
     });
-    expect(invalidatedKeys()).toContainEqual(["jobs"]);
+    const keys = invalidatedKeys();
+    expect(keys).toContainEqual(["application-logs"]);
+    expect(keys).toContainEqual(["applications"]);
+    expect(keys).not.toContainEqual(["jobs"]);
   });
 });
 

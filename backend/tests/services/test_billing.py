@@ -380,7 +380,22 @@ def test_webhook_checkout_completed_records_promo(
 def test_on_checkout_completed_without_user_is_noop(
     db_session: Session, billing_settings: None
 ) -> None:
+    control = _add_user(db_session, email="control-checkout@example.com")
+    UserRepository(db_session).update_billing(
+        control,
+        stripe_customer_id="cus_control",
+        stripe_subscription_id="sub_control",
+        subscription_status="active",
+        plan="starter",
+    )
+    db_session.flush()
+
     BillingService(db_session)._on_checkout_completed({"metadata": {}})
+
+    db_session.refresh(control)
+    assert control.stripe_customer_id == "cus_control"
+    assert control.stripe_subscription_id == "sub_control"
+    assert control.plan == "starter"
 
 
 def test_on_checkout_completed_without_promo_metadata(
@@ -439,17 +454,49 @@ def test_on_checkout_completed_unknown_promo_id_ignored(
 def test_on_subscription_updated_unknown_user_is_noop(
     db_session: Session, billing_settings: None
 ) -> None:
+    control = _add_user(db_session, email="control-updated@example.com")
+    UserRepository(db_session).update_billing(
+        control,
+        stripe_customer_id="cus_real",
+        stripe_subscription_id="sub_real",
+        subscription_status="active",
+        plan="pro",
+    )
+    db_session.flush()
+
     BillingService(db_session)._on_subscription_updated(
         {"id": "sub_ghost", "customer": "cus_ghost", "status": "active", "metadata": {}}
     )
+
+    db_session.refresh(control)
+    assert control.stripe_customer_id == "cus_real"
+    assert control.stripe_subscription_id == "sub_real"
+    assert control.plan == "pro"
+    assert control.subscription_status == "active"
 
 
 def test_on_subscription_deleted_unknown_user_is_noop(
     db_session: Session, billing_settings: None
 ) -> None:
+    control = _add_user(db_session, email="control-deleted@example.com")
+    UserRepository(db_session).update_billing(
+        control,
+        stripe_customer_id="cus_keep",
+        stripe_subscription_id="sub_keep",
+        subscription_status="active",
+        plan="plus",
+    )
+    db_session.flush()
+
     BillingService(db_session)._on_subscription_deleted(
         {"id": "sub_ghost", "customer": "cus_ghost", "metadata": {}}
     )
+
+    db_session.refresh(control)
+    assert control.stripe_customer_id == "cus_keep"
+    assert control.stripe_subscription_id == "sub_keep"
+    assert control.plan == "plus"
+    assert control.subscription_status == "active"
 
 
 def test_plan_from_subscription_inactive_status_is_free(

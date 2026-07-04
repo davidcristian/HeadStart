@@ -4,8 +4,11 @@ from fastapi.testclient import TestClient
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.models.application_artifact import ApplicationArtifact
 from app.models.base import utcnow
 from app.models.notification_target import NotificationTarget
+from app.models.promo_code import PromoCode
+from app.models.promo_redemption import PromoRedemption
 from app.models.search import Search
 from app.models.source import Source
 from app.repositories.users import UserRepository
@@ -167,11 +170,30 @@ def test_delete_cascades_owned_rows(db_session: Session) -> None:
     )
     db_session.flush()
 
+    promo = PromoCode(code="CASCADE10", promo_type="percent_off", value_int=10)
+    db_session.add(promo)
+    db_session.flush()
+    db_session.add(
+        ApplicationArtifact(
+            user_id=user.id,
+            artifact_type="resume_pdf",
+            content_sha256="a" * 64,
+            filename="resume.pdf",
+            content_type="application/pdf",
+            size_bytes=4,
+            data_ciphertext="encrypted",
+        )
+    )
+    db_session.add(PromoRedemption(promo_code_id=promo.id, user_id=user.id))
+    db_session.flush()
+
     service.delete_account(user.id, DeleteAccountRequest(password="password123"))
 
     assert UserRepository(db_session).get(user.id) is None
     assert db_session.scalar(select(func.count()).select_from(Source)) == 0
     assert db_session.scalar(select(func.count()).select_from(Search)) == 0
+    assert db_session.scalar(select(func.count()).select_from(ApplicationArtifact)) == 0
+    assert db_session.scalar(select(func.count()).select_from(PromoRedemption)) == 0
 
 
 def test_last_admin_cannot_delete_while_other_users_exist(client: TestClient) -> None:

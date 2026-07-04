@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.exceptions import ValidationError
+from app.models.user import User
 from app.services.application_artifacts import ApplicationArtifactService
 from app.services.tailored_resume import (
     decode_tailored_resume,
@@ -45,10 +46,12 @@ def test_decode_tailored_resume_rejects_oversized(monkeypatch) -> None:
         decode_tailored_resume(base64.b64encode(FAKE_PDF).decode("ascii"))
 
 
-def test_resolve_tailored_resume_none_when_no_input(db_session: Session) -> None:
+def test_resolve_tailored_resume_none_when_no_input(
+    db_session: Session, default_test_user: User
+) -> None:
     resume, artifact_id = resolve_tailored_resume_for_apply(
         db_session,
-        1,
+        default_test_user.id,
         tailored_resume_b64=None,
         tailored_resume_artifact_id=None,
     )
@@ -56,13 +59,15 @@ def test_resolve_tailored_resume_none_when_no_input(db_session: Session) -> None
     assert artifact_id is None
 
 
-def test_resolve_tailored_resume_loads_existing_artifact(db_session: Session) -> None:
+def test_resolve_tailored_resume_loads_existing_artifact(
+    db_session: Session, default_test_user: User
+) -> None:
     artifact = ApplicationArtifactService(db_session).store_tailored_resume_pdf(
-        1, data=FAKE_PDF, filename="resume.pdf"
+        default_test_user.id, data=FAKE_PDF, filename="resume.pdf"
     )
     resume, artifact_id = resolve_tailored_resume_for_apply(
         db_session,
-        1,
+        default_test_user.id,
         tailored_resume_b64=None,
         tailored_resume_artifact_id=artifact.id,
     )
@@ -71,15 +76,19 @@ def test_resolve_tailored_resume_loads_existing_artifact(db_session: Session) ->
     assert artifact_id == artifact.id
 
 
-def test_resolve_tailored_resume_stores_new_from_b64(db_session: Session) -> None:
+def test_resolve_tailored_resume_stores_new_from_b64(
+    db_session: Session, default_test_user: User
+) -> None:
     resume, artifact_id = resolve_tailored_resume_for_apply(
         db_session,
-        1,
+        default_test_user.id,
         tailored_resume_b64=base64.b64encode(FAKE_PDF).decode("ascii"),
         tailored_resume_artifact_id=None,
     )
     assert resume is not None
     assert resume.data == FAKE_PDF
     assert artifact_id is not None
-    loaded = ApplicationArtifactService(db_session).load_tailored_resume_pdf(1, artifact_id)
+    loaded = ApplicationArtifactService(db_session).load_tailored_resume_pdf(
+        default_test_user.id, artifact_id
+    )
     assert loaded.data == FAKE_PDF

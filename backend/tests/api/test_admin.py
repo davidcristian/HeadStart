@@ -224,10 +224,18 @@ def test_update_user_persists_flags(db_session: Session) -> None:
     assert updated.plan == "pro"
 
 
-def test_list_data_requests_returns_recent(db_session: Session) -> None:
+def test_list_data_requests_returns_recent(
+    db_session: Session, default_test_user: User
+) -> None:
     from app.models.data_request_log import DataRequestLog
 
-    db_session.add(DataRequestLog(user_id=1, user_email="who@example.com", request_type="export"))
+    db_session.add(
+        DataRequestLog(
+            user_id=default_test_user.id,
+            user_email="who@example.com",
+            request_type="export",
+        )
+    )
     db_session.flush()
 
     rows = AdminService(db_session).list_data_requests(limit=10)

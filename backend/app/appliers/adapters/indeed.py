@@ -170,6 +170,9 @@ def _credential_headers(credentials: dict[str, dict[str, str]] | None) -> dict[s
     if csrf:
         headers.setdefault("indeed-co", "US")
         headers["X-Indeed-Csrf-Token"] = str(csrf)
+    cookies = credentials.get("cookies") or {}
+    if cookies:
+        headers["Cookie"] = "; ".join(f"{key}={value}" for key, value in cookies.items())
     return headers
 
 

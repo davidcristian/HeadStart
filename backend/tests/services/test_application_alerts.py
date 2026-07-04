@@ -10,10 +10,27 @@ from app.models.notification_target import NotificationTarget
 from app.models.search import Search
 from app.models.seen_job import SeenJob
 from app.models.source import Source
+from app.models.user import User
 from app.notifiers.types import DeliveryResult
 from app.services.application_alerts import ApplicationAlertService
 from tests.worker.pipeline_helpers import make_user
 from tests.worker.test_pipeline import _make_search
+
+
+def _foreign_target_id(session: Session) -> int:
+    """A target owned by another user — valid FK, but invisible to the job owner's lookups."""
+    other = User(email="foreign-target@example.com", password_hash="hash")
+    session.add(other)
+    session.flush()
+    foreign = NotificationTarget(
+        user_id=other.id,
+        name="Foreign",
+        type="ntfy",
+        config={"topic": "foreign"},
+    )
+    session.add(foreign)
+    session.flush()
+    return foreign.id
 
 
 def _seed_job_with_target(session: Session) -> tuple[int, SeenJob, NotificationTarget]:
@@ -144,8 +161,8 @@ def test_alert_falls_back_to_all_targets_when_search_target_missing(db_session: 
 
 def test_alert_falls_back_when_search_target_id_unresolvable(db_session: Session) -> None:
     user_id, job, target = _seed_job_with_target(db_session)
-    # target_id set but points at a row that does not resolve for this user.
-    job.search.target_id = 987654
+    # target_id set but points at a row owned by another user.
+    job.search.target_id = _foreign_target_id(db_session)
     db_session.flush()
     service = ApplicationAlertService(db_session)
     mock_notifier = MagicMock()
