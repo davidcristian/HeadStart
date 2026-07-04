@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.delivery_log import DeliveryLog
+from app.models.search import Search
 from app.models.seen_job import SeenJob
 from app.schemas.delivery import DeliveryFailureRead
 
@@ -16,6 +17,17 @@ class DeliveryLogRepository:
         self.session.add(log)
         self.session.flush()
         return log
+
+    def list_all_for_user(self, user_id: int) -> list[DeliveryLog]:
+        """Return every delivery attempt for jobs owned by the user."""
+        stmt = (
+            select(DeliveryLog)
+            .join(SeenJob, DeliveryLog.seen_job_id == SeenJob.id)
+            .join(Search, SeenJob.search_id == Search.id)
+            .where(Search.user_id == user_id)
+            .order_by(DeliveryLog.sent_at.desc())
+        )
+        return list(self.session.scalars(stmt))
 
     def recent_failures_for_searches(
         self, search_ids: list[int], *, limit: int = 5

@@ -5,8 +5,20 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
+from app.schemas.application_log import ApplicationLogRead
+from app.schemas.auth_export import (
+    ApplicationArtifactExport,
+    DeliveryLogExport,
+    InboxClassificationExport,
+    InboxPendingReplyExport,
+    InboxReplyDraftExport,
+    InboxReplySendLogExport,
+    MailboxCredentialExport,
+    ProfileFileExport,
+)
 from app.schemas.job import JobRead
 from app.schemas.profile import ProfileRead
+from app.schemas.promo import PromoRedemptionRead
 from app.schemas.search import SearchRead
 from app.schemas.source import SourceRead
 from app.schemas.target import TargetRead
@@ -97,11 +109,22 @@ class UserDataExport(BaseModel):
     """Machine-readable bundle of everything the signed-in user owns."""
 
     exported_at: datetime
-    format_version: int = 1
+    format_version: int = 2
     account: UserRead
     sources: list[SourceRead]
     searches: list[SearchRead]
     targets: list[TargetRead]
     credentials: list[CredentialExport]
     profile: ProfileRead | None = None
+    resume_file: ProfileFileExport | None = None
+    resume_template: ProfileFileExport | None = None
     jobs: list[JobRead]
+    applications: list[ApplicationLogRead] = Field(default_factory=list)
+    artifacts: list[ApplicationArtifactExport] = Field(default_factory=list)
+    deliveries: list[DeliveryLogExport] = Field(default_factory=list)
+    mailbox: MailboxCredentialExport | None = None
+    inbox_classifications: list[InboxClassificationExport] = Field(default_factory=list)
+    inbox_reply_drafts: list[InboxReplyDraftExport] = Field(default_factory=list)
+    inbox_pending_replies: list[InboxPendingReplyExport] = Field(default_factory=list)
+    inbox_reply_send_logs: list[InboxReplySendLogExport] = Field(default_factory=list)
+    promo_redemptions: list[PromoRedemptionRead] = Field(default_factory=list)

@@ -147,9 +147,14 @@ non-local environments require SMTP and never log the token.
 
 ## Account data export & deletion
 
-Users can download a portable JSON export of everything they own (`GET
-site credentials (including decrypted session material), application profile, and
-job history. Password hashes are never included.
+Users can download a portable JSON export of everything they own
+(`GET /auth/me/export`) — account, sources, searches, targets, site credentials
+(including decrypted session material), application profile (with resume and
+LaTeX template bytes), job history, application logs, generated artifacts
+(decrypted), delivery logs, mailbox metadata (secrets redacted), inbox
+classifications / reply drafts / pending replies / send logs, and promo
+redemptions. `format_version` is `2`. Password hashes and live mailbox OAuth
+tokens / IMAP passwords are never included.
 
 Permanent account deletion (`DELETE /auth/me` with `{ "password": "..." }`)
 requires the current password, clears the refresh cookie, and removes the user

@@ -66,8 +66,10 @@ class ApplicationLogRepository:
         )
         return self.session.scalar(stmt)
 
-    def list_recent_for_user(self, user_id: int, *, limit: int = 100) -> list[ApplicationLog]:
-        """Return recent application attempts for jobs owned by the user."""
+    def list_recent_for_user(
+        self, user_id: int, *, limit: int | None = 100
+    ) -> list[ApplicationLog]:
+        """Return application attempts for jobs owned by the user (newest first)."""
         stmt = (
             select(ApplicationLog)
             .join(SeenJob, ApplicationLog.seen_job_id == SeenJob.id)
@@ -78,6 +80,7 @@ class ApplicationLogRepository:
                 joinedload(ApplicationLog.tailored_resume_artifact),
             )
             .order_by(ApplicationLog.created_at.desc())
-            .limit(limit)
         )
+        if limit is not None:
+            stmt = stmt.limit(limit)
         return list(self.session.scalars(stmt).unique())

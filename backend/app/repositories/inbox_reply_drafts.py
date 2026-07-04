@@ -23,7 +23,7 @@ class InboxReplyDraftRepository:
         user_id: int,
         *,
         seen_job_id: int | None = None,
-        limit: int = 50,
+        limit: int | None = 50,
     ) -> list[InboxReplyDraft]:
         stmt = (
             select(InboxReplyDraft)
@@ -32,7 +32,9 @@ class InboxReplyDraftRepository:
         )
         if seen_job_id is not None:
             stmt = stmt.where(InboxReplyDraft.seen_job_id == seen_job_id)
-        stmt = stmt.order_by(InboxReplyDraft.created_at.desc()).limit(limit)
+        stmt = stmt.order_by(InboxReplyDraft.created_at.desc())
+        if limit is not None:
+            stmt = stmt.limit(limit)
         return list(self.session.scalars(stmt))
 
     def latest_by_seen_job_ids(

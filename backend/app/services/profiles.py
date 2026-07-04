@@ -63,6 +63,16 @@ class ProfileService:
         resume_file = stored_resume.to_resume_file() if stored_resume is not None else None
         return ApplyProfile(**data.model_dump(), exists=True, resume_file=resume_file)
 
+    def get_stored_files(
+        self, user_id: int
+    ) -> tuple[ResumeFileStored | None, ResumeTemplateStored | None]:
+        """Return encrypted-at-rest resume/template payloads for GDPR export."""
+        profile = self.repo.get(user_id)
+        if profile is None:
+            return None, None
+        _data, stored_resume, stored_template = self._decode(profile)
+        return stored_resume, stored_template
+
     def get_resume_template_tex(self, user_id: int) -> str | None:
         """Return the user's uploaded single-file LaTeX template source, if any."""
         profile = self.repo.get(user_id)

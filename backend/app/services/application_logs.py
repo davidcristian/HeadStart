@@ -19,8 +19,8 @@ class ApplicationLogService:
         self.session = session
         self.repo = ApplicationLogRepository(session)
 
-    def list_for_user(self, user_id: int, *, limit: int = 100) -> list[ApplicationLogRead]:
-        """Return recent auto-apply attempts for the authenticated user."""
+    def list_for_user(self, user_id: int, *, limit: int | None = 100) -> list[ApplicationLogRead]:
+        """Return auto-apply attempts for the authenticated user."""
         logs = self.repo.list_recent_for_user(user_id, limit=limit)
         return [self._to_read(log) for log in logs]
 

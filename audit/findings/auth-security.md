@@ -320,17 +320,13 @@ This area covers authentication and session management (login, registration, pas
 
 <a id="aut-32"></a>
 ### AUT-32 — GDPR data export omits several user-owned entities (inbox, applications, portals)
-⚪ **LOW** · 🐞 bug · Status: ☐ open · Confidence: high (3/5 verifiers) · Effort: M · WS18
+⚪ **LOW** · 🐞 bug · Status: ✅ done · Confidence: high (3/5 verifiers) · Effort: M · WS18
 
-**Locations:** `backend/app/services/auth_account.py:45` (`export_user_data`); plus `backend/app/repositories/application_logs.py:52`, `backend/app/repositories/inbox_classifications.py:35`, `backend/app/repositories/inbox_reply_drafts.py:21`, `backend/app/repositories/mailbox_credentials.py:13`.
+**Locations:** `backend/app/services/auth_account.py` / `auth_account_export.py` (`export_user_data`).
 
-**Evidence.** `UserDataExport` bundles only account/sources/searches/targets/credentials/profile/jobs. It never reads the user's `ApplicationLog`, `ApplicationArtifact`, `MailboxCredential`, `InboxClassification`, `InboxReplyDraft`/`SendLog`, or promo redemptions — all `user_id`-owned rows.
+**Evidence.** Same incomplete-export defect as **XCT-09** (merged XCT-09/XCT-10).
 
-**Failure scenario.** A user exercises GDPR Art.15/20 access/portability; the export silently excludes their application history, inbox classifications, drafted/sent recruiter replies, and mailbox config — an incomplete DSAR.
-
-**Suggested fix.** Extend `export_user_data` to include all `user_id`-scoped tables (application logs + artifacts, inbox classifications/drafts/send-logs, mailbox credential metadata, promo redemptions), each via its owner-scoped repo query.
-
-**Verification.** Confirmed 3/3 adversarial verifiers. `export_user_data` bundles only account/sources/searches/targets/credentials/profile/jobs; `ApplicationLog` (via `seen_job.user_id`), `InboxClassification`/`ReplyDraft`/`SendLog`, `MailboxCredential` and `PromoRedemption` are user-owned and omitted — a real GDPR Art.15/20 gap, low is fair.
+**Fix ([PR](https://github.com/davidcristian/HeadStart/pull/29)).** Closed with XCT-09: export `format_version` 2 includes application logs/artifacts, inbox rows, mailbox metadata, promo redemptions, and resume/template bytes.
 
 <a id="aut-33"></a>
 ### AUT-33 — Deletion destroys but never revokes mailbox OAuth tokens at providers

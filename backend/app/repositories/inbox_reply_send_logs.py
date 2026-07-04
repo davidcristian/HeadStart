@@ -30,11 +30,12 @@ class InboxReplySendLogRepository:
         )
         return int(count or 0)
 
-    def list_for_user(self, user_id: int, *, limit: int = 50) -> list[InboxReplySendLog]:
+    def list_for_user(self, user_id: int, *, limit: int | None = 50) -> list[InboxReplySendLog]:
         stmt = (
             select(InboxReplySendLog)
             .where(InboxReplySendLog.user_id == user_id)
             .order_by(InboxReplySendLog.created_at.desc())
-            .limit(limit)
         )
+        if limit is not None:
+            stmt = stmt.limit(limit)
         return list(self.session.scalars(stmt))

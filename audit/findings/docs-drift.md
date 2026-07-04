@@ -82,19 +82,11 @@ Merged: DOC-07 (uid 291) and DOC-10 (uid 299) reported the same defect and are f
 
 <a id="doc-13"></a>
 ### DOC-13 — auth.md data-export sentence corrupted: dangling paren, dropped endpoint + list
-⚪ **LOW** · 📝 doc · Status: ☐ open · Confidence: certain (3/3 verifiers) · Effort: XS · WS18
+⚪ **LOW** · 📝 doc · Status: ✅ done · Confidence: certain (3/3 verifiers) · Effort: XS · WS18
 
 Merged: DOC-14 (uid 294) reported the same truncation and is folded in here.
 
-**Locations:** `docs/modules/auth.md:138` (`Account data export & deletion`).
-
-**Evidence.** Lines 138-140 read "Users can download a portable JSON export of everything they own (`` `GET `` " and the next line begins "`` `site credentials (including decrypted session material)… ``". The closing "`` `GET /auth/me/export`) `` — sources, searches, targets," text was dropped in an edit, leaving an unbalanced parenthesis/backtick and a broken sentence.
-
-**Failure scenario.** A reader of the canonical auth doc sees a truncated, ungrammatical export description missing both the endpoint path and the sources/searches/targets it covers.
-
-**Suggested fix.** Restore the sentence: "…everything they own (`GET /auth/me/export`) — sources, searches, targets, site credentials (…), application profile, and job history."
-
-**Verification.** Confirmed 3/3 adversarial verifiers. auth.md:138-140 has a truncated sentence with dangling "(`GET" and the endpoint plus sources/searches/targets list dropped; certain corruption (two independent records converged).
+**Fix.** Restored in the XCT-09 auth.md rewrite: sentence again names `GET /auth/me/export` and the full export contents.
 
 <a id="doc-16"></a>
 ### DOC-16 — billing.md says "four public tiers" then lists only Starter, Plus, Pro
@@ -228,17 +220,9 @@ Merged: DOC-04 (uid 126) is a near-subset covering only the LinkedIn half and is
 
 <a id="doc-15"></a>
 ### DOC-15 — auth.md "everything they own" export omits apply logs, artifacts, inbox data
-⚪ **LOW** · 📝 doc · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: M · WS18
+⚪ **LOW** · 📝 doc · Status: ✅ done · Confidence: high (3/3 verifiers) · Effort: M · WS18
 
-**Locations:** `docs/modules/auth.md:138` (`export_user_data`); plus `backend/app/services/auth_account.py:45`.
-
-**Evidence.** `export_user_data` (`auth_account.py:45-59`) bundles account/sources/searches/targets/credentials/profile/jobs only. It excludes `application_log`, `application_artifact` (generated resumes/cover letters), and `inbox_*` rows. `auth.md:138-140` nonetheless says users "download a portable JSON export of everything they own".
-
-**Failure scenario.** A user (or DPO) relying on the GDPR export receives no auto-apply history, generated documents, or stored recruiter-email data, contradicting the "everything you own" claim (Art. 20 portability gap).
-
-**Suggested fix.** Either narrow the `auth.md` wording to the actually-exported entities, or extend `export_user_data` to include application logs/artifacts (inbox is dev-only — note the exclusion).
-
-**Verification.** Confirmed 3/3 adversarial verifiers. export_user_data (auth_account.py:45-59) bundles only account/sources/searches/targets/credentials/profile/jobs; excludes application_log/artifact/inbox while auth.md:138 claims "everything they own". Doc overstatement, low fair.
+**Fix.** Closed with XCT-09: export now includes the previously omitted entities, and auth.md lists them explicitly.
 
 ---
 

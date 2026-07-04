@@ -71,7 +71,7 @@ describe("SettingsPage", () => {
   it("downloads an export bundle", async () => {
     mockApi.exportMyData.mockResolvedValue({
       exported_at: "2026-06-28T12:00:00Z",
-      format_version: 1,
+      format_version: 2,
       account: {
         id: 1,
         email: "user@example.com",
@@ -87,7 +87,18 @@ describe("SettingsPage", () => {
       targets: [],
       credentials: [],
       profile: null,
+      resume_file: null,
+      resume_template: null,
       jobs: [],
+      applications: [],
+      artifacts: [],
+      deliveries: [],
+      mailbox: null,
+      inbox_classifications: [],
+      inbox_reply_drafts: [],
+      inbox_pending_replies: [],
+      inbox_reply_send_logs: [],
+      promo_redemptions: [],
     });
     const click = vi
       .spyOn(HTMLAnchorElement.prototype, "click")

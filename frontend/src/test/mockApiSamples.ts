@@ -64,7 +64,7 @@ export const sampleTeamUser: User = {
 
 export const sampleUserDataExport: UserDataExport = {
   exported_at: "2026-06-28T12:00:00Z",
-  format_version: 1,
+  format_version: 2,
   account: {
     id: 1,
     email: "admin@example.com",
@@ -80,7 +80,18 @@ export const sampleUserDataExport: UserDataExport = {
   targets: [],
   credentials: [],
   profile: null,
+  resume_file: null,
+  resume_template: null,
   jobs: [],
+  applications: [],
+  artifacts: [],
+  deliveries: [],
+  mailbox: null,
+  inbox_classifications: [],
+  inbox_reply_drafts: [],
+  inbox_pending_replies: [],
+  inbox_reply_send_logs: [],
+  promo_redemptions: [],
 };
 
 export const emptyAdminStats: AdminStats = {

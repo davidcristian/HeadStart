@@ -21,6 +21,15 @@ class InboxPendingReplyRepository:
             )
         )
 
+    def list_for_user(self, user_id: int) -> list[InboxPendingReply]:
+        """Return every pending-reply queue row owned by the user."""
+        stmt = (
+            select(InboxPendingReply)
+            .where(InboxPendingReply.user_id == user_id)
+            .order_by(InboxPendingReply.created_at.desc())
+        )
+        return list(self.session.scalars(stmt))
+
     def claim_due(
         self,
         *,

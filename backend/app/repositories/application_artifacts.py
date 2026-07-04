@@ -32,3 +32,12 @@ class ApplicationArtifactRepository:
             ApplicationArtifact.content_sha256 == content_sha256,
         )
         return self.session.scalar(stmt)
+
+    def list_all_for_user(self, user_id: int) -> list[ApplicationArtifact]:
+        """Return every generated document owned by the user (export / erasure)."""
+        stmt = (
+            select(ApplicationArtifact)
+            .where(ApplicationArtifact.user_id == user_id)
+            .order_by(ApplicationArtifact.created_at.desc())
+        )
+        return list(self.session.scalars(stmt))

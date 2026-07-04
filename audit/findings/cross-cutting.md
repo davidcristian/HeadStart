@@ -98,19 +98,15 @@ Note on merges: the `portal_search` schema-drift defect surfaced from three angl
 
 <a id="xct-09"></a>
 ### XCT-09 — Data export omits most user-owned tables (applications, artifacts, inbox, delivery, resume bytes, promos)
-🟡 **MEDIUM** · 🐞 bug · Status: ☐ open · Confidence: high (5/5 verifiers) · Effort: L · WS18
+🟡 **MEDIUM** · 🐞 bug · Status: ✅ done · Confidence: high (5/5 verifiers) · Effort: L · WS18
 
-**Locations:** `backend/app/services/auth_account.py:45` (`export_user_data`); plus `backend/app/schemas/auth.py:96`, `backend/app/schemas/profile.py:241`, `backend/app/models/application_log.py:17`, `backend/app/models/application_artifact.py:15`, `backend/app/models/mailbox_credential.py:19`, `backend/app/models/inbox_reply_draft.py:37`.
+**Merged finding.** Consolidates **XCT-09** and **XCT-10**, which flag the same incomplete-GDPR-export defect (one framed as bug/portability, one as security/PII). Both point at `export_user_data` and the same set of omitted `user_id`-owned tables. Same root cause as **AUT-32**.
 
-**Merged finding.** Consolidates **XCT-09** and **XCT-10**, which flag the same incomplete-GDPR-export defect (one framed as bug/portability, one as security/PII). Both point at `export_user_data` and the same set of omitted `user_id`-owned tables.
-
-**Evidence.** `UserDataExport` bundles only `account`/`sources`/`searches`/`targets`/`credentials`/`profile`/`jobs`. `profile` is `ProfileRead`, whose `resume_file` is `ResumeFileMeta` (filename/size, NOT the bytes). Excluded entirely: `application_log`, `application_artifact`, `delivery_log`, `inbox_classification`/`reply_draft`/`pending_reply`/`reply_send_log`/`mailbox_credential`, and `promo_redemption` — all `user_id`-scoped PII tables.
+**Evidence.** `UserDataExport` previously bundled only `account`/`sources`/`searches`/`targets`/`credentials`/`profile`/`jobs`. `profile` is `ProfileRead`, whose `resume_file` is `ResumeFileMeta` (filename/size, NOT the bytes). Excluded entirely: `application_log`, `application_artifact`, `delivery_log`, `inbox_classification`/`reply_draft`/`pending_reply`/`reply_send_log`/`mailbox_credential`, and `promo_redemption` — all `user_id`-scoped PII tables.
 
 **Failure scenario.** A user exercising GDPR Art.15/20 portability receives an export missing their uploaded resume content, tailored-resume PDFs, application history, notification/delivery logs, stored recruiter-email drafts, and promo redemptions — materially incomplete.
 
-**Suggested fix.** Extend `UserDataExport` + `export_user_data` to include every `user_id`-owned entity (application logs/artifacts, delivery logs, resume/template bytes, inbox entities, mailbox metadata, promo redemptions), or document each exclusion with a legal basis.
-
-**Verification.** Confirmed (5/5 and 3/3 verifiers). Export bundles only the seven listed groups; `application_artifact`, `promo_redemption`, `inbox_*`, `mailbox_credential` all carry `user_id` and are omitted, and resume bytes are absent, so the Art.15/20 export is materially incomplete. Compliance gap, no active leak, so medium.
+**Fix ([PR](https://github.com/davidcristian/HeadStart/pull/29)).** `UserDataExport` `format_version` is now `2` and includes applications, artifacts (decrypted `data_b64`), deliveries, mailbox metadata (secrets redacted), inbox classifications/drafts/pending replies/send logs, promo redemptions, plus `resume_file` / `resume_template` bytes. Builder lives in `auth_account_export.py`. Also closes AUT-32 and restores the corrupted auth.md export sentence (DOC-13/DOC-15).
 
 <a id="xct-11"></a>
 ### XCT-11 — detect_ghosted_applications unlocked, sets ghosted_at after send; overlap double-emails

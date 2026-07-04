@@ -70,6 +70,16 @@ class PromoCodeRepository:
             )
         )
 
+    def list_redemptions_for_user(self, user_id: int) -> list[PromoRedemption]:
+        """Return every promo redemption owned by the user."""
+        return list(
+            self.session.scalars(
+                select(PromoRedemption)
+                .where(PromoRedemption.user_id == user_id)
+                .order_by(PromoRedemption.created_at.desc())
+            )
+        )
+
     def add_redemption(self, redemption: PromoRedemption) -> PromoRedemption:
         self.session.add(redemption)
         self.session.flush()
