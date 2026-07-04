@@ -8,7 +8,7 @@ This area covers the deployment and infrastructure surface of the repo: the AWS 
 
 <a id="ops-01"></a>
 ### OPS-01 — deploy.sh redeploys task defs pinned to a tag never re-pushed by the build
-🟠 **HIGH** · 🐞 bug · Status: ☐ open · Confidence: high (5/5 verifiers) · Effort: M · WS36
+🟠 **HIGH** · 🐞 bug · Status: ✅ done · Confidence: high (5/5 verifiers) · Effort: M · WS36
 
 **Locations:** `scripts/deploy.sh:33` (`deploy loop`); plus `scripts/build-images.sh:39`, `devops/terraform/modules/ecs/main.tf:7`, `devops/terraform/environments/prod/terraform.tfvars.example:7`.
 

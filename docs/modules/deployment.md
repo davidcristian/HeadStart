@@ -89,9 +89,20 @@ bootstrap, `terraform apply`, and `just deploy` — see
 
 1. Build images (`scripts/build-images.sh`): lean `headstart-backend` (api/beat)
    and `headstart-backend-worker` (Playwright + Chromium).
-2. Push to ECR.
-3. Run DB migrations as a one-off ECS task.
-4. Update ECS services to the new image tag (rolling deploy).
+2. Push to ECR under tag `IMAGE_TAG` (git short SHA by default; CI uses the full
+   commit SHA).
+3. Register a new `headstart-migrate` task-definition revision whose container
+   image is pinned to that tag, then run migrations as a one-off ECS task.
+4. For each long-running service (`api`, `frontend`, `worker`, `beat`), register
+   a new task-definition revision pinned to the same tag (via
+   `python -m app.cli.ecs_task_def retarget`) and
+   `update-service --task-definition <new-arn> --force-new-deployment`.
+
+ECS services use `lifecycle { ignore_changes = [task_definition] }` so Terraform
+keeps the initial wiring while `deploy.sh` owns the image pin at roll time.
+Force-new-deployment alone is not enough: Terraform often pins `image_tag =
+"latest"`, and the build never re-pushes `:latest`, so a bare roll would keep
+serving the old image (OPS-01).
 
 All workflows live in `.github/workflows/`. The CI quality gate (`ci.yml`) runs
 on push/PR. `deploy.yml` (manual `workflow_dispatch`) and `terraform.yml`'s

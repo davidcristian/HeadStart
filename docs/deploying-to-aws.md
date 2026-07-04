@@ -184,9 +184,16 @@ just deploy
 1. Builds backend images (`scripts/build-images.sh --push`): lean API/beat image
    plus the Playwright-enabled worker image, and the frontend image
 2. Pushes them to ECR (tag = current git short SHA, or `latest` if not in git)
-3. Runs DB migrations as a one-off ECS task (`headstart-migrate`)
-4. Forces a rolling deploy of `headstart-api`, `headstart-frontend`,
-   `headstart-worker`, and `headstart-beat`
+3. Registers a new `headstart-migrate` task-definition revision pinned to that
+   tag, then runs DB migrations as a one-off ECS task
+4. Registers a new task-definition revision per long-running service
+   (`headstart-api`, `headstart-frontend`, `headstart-worker`, `headstart-beat`)
+   with the same image tag, then rolls each service onto that revision
+
+The retarget step matters: Terraform task defs often still reference
+`image_tag = "latest"`, which the build does not re-push. Updating the service
+with `--task-definition` (not only `--force-new-deployment`) is what makes the
+deployed image match the just-built tag.
 
 Verify rollout:
 

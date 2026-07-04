@@ -66,4 +66,7 @@ make deploy
   injected into ECS tasks at runtime.
 - `prod` enables Multi-AZ RDS and deletion protection; `dev` is minimal/cheap.
 - ECS service + task family names are stable (`headstart-api`, etc.) so the
-  same `deploy.sh` works against any environment's cluster.
+  same `deploy.sh` works against any environment's cluster. `deploy.sh`
+  registers a new task-definition revision per family pinned to the just-pushed
+  `IMAGE_TAG` before rolling services (Terraform's `image_tag` is only the
+  initial pin; ECS `ignore_changes` on `task_definition` leaves rolls to deploy).
