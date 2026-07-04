@@ -32,11 +32,33 @@ def test_placeholder_secrets_allowed_in_local(monkeypatch: pytest.MonkeyPatch) -
 
 
 def test_real_secrets_pass_outside_local(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Overriding both secrets lets a non-local deployment start normally."""
+    """Overriding both secrets + SMTP lets a non-local deployment start normally."""
     monkeypatch.setenv("ENVIRONMENT", "production")
     monkeypatch.setenv("JWT_SECRET", "a-real-long-random-production-secret-value")
     monkeypatch.setenv("CREDENTIALS_SECRET_KEY", "another-real-production-fernet-value")
+    monkeypatch.setenv("SMTP_HOST", "smtp.example.com")
     assert Settings(_env_file=None).environment == "production"  # type: ignore[call-arg]
+
+
+def test_smtp_host_required_outside_local(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Non-local boots must set SMTP_HOST so reset/verify tokens are never logged (AUT-01)."""
+    monkeypatch.setenv("ENVIRONMENT", "production")
+    monkeypatch.setenv("JWT_SECRET", "a-real-long-random-production-secret-value")
+    monkeypatch.setenv("CREDENTIALS_SECRET_KEY", "another-real-production-fernet-value")
+    with pytest.raises(ValidationError) as exc_info:
+        Settings(_env_file=None)  # type: ignore[call-arg]
+    assert "SMTP_HOST" in str(exc_info.value)
+
+
+def test_blank_smtp_host_rejected_outside_local(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Whitespace-only SMTP_HOST counts as unset outside local/test."""
+    monkeypatch.setenv("ENVIRONMENT", "staging")
+    monkeypatch.setenv("JWT_SECRET", "a-real-long-random-production-secret-value")
+    monkeypatch.setenv("CREDENTIALS_SECRET_KEY", "another-real-production-fernet-value")
+    monkeypatch.setenv("SMTP_HOST", "   ")
+    with pytest.raises(ValidationError) as exc_info:
+        Settings(_env_file=None)  # type: ignore[call-arg]
+    assert "SMTP_HOST" in str(exc_info.value)
 
 
 def test_default_credentials_key_rejected_even_with_real_jwt(

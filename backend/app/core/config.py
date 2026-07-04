@@ -33,8 +33,7 @@ class Settings(BaseSettings):
     ]
 
     # ---- auth (JWT) ----
-    # Secret signing access/refresh JWTs; a stable random value keeps sessions valid across
-    # restarts. Rejected at startup outside local/test — see core/secret_policy.py.
+    # Stable random JWT secret; rejected outside local/test — see core/secret_policy.py.
     jwt_secret: str = secret_policy.DEV_JWT_SECRET
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
@@ -63,7 +62,7 @@ class Settings(BaseSettings):
         return value
 
     # ---- email (password reset + email notifier) ----
-    # Leave SMTP_HOST empty in local dev; reset links are logged instead.
+    # Empty SMTP_HOST is local/test-only (links logged); required elsewhere (AUT-01).
     smtp_host: str = ""
     smtp_port: int = 587
     smtp_user: str = ""
@@ -248,10 +247,11 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def _reject_placeholder_secrets_outside_local(self) -> "Settings":
-        """Refuse to boot a non-local deployment using the dev placeholder secrets."""
+        """Refuse non-local boots with placeholder secrets or missing SMTP."""
         secret_policy.assert_secrets_safe_for_environment(
             self.environment, self.jwt_secret, self.credentials_secret_key
         )
+        secret_policy.assert_smtp_configured_for_environment(self.environment, self.smtp_host)
         return self
 
     @computed_field  # type: ignore[prop-decorator]

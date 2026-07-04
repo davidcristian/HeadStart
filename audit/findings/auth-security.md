@@ -8,7 +8,7 @@ This area covers authentication and session management (login, registration, pas
 
 <a id="aut-01"></a>
 ### AUT-01 — Reset & verify tokens logged in plaintext when SMTP unset (no prod guard)
-🟠 **HIGH** · 🔒 security · Status: ☐ open · Confidence: high (5/5 verifiers) · Effort: S · WS18
+🟠 **HIGH** · 🔒 security · Status: ✅ done · Confidence: high (5/5 verifiers) · Effort: S · WS18
 
 **Locations:** `backend/app/core/email.py:88` (`_send_or_log_email`); plus `backend/app/core/config.py:67`, `backend/app/core/email.py:38`.
 

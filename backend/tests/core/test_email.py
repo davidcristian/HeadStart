@@ -81,9 +81,51 @@ def test_send_verification_email_uses_smtp() -> None:
     assert "https://app/verify?x=1" in kwargs["body"]
 
 
-def test_send_or_log_email_falls_back_to_logging(monkeypatch: pytest.MonkeyPatch) -> None:
-    """When SMTP is unconfigured the link is logged instead of raising."""
+def test_send_or_log_email_falls_back_to_logging_in_local(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Local/test may log the reset URL when SMTP is unconfigured."""
     monkeypatch.setattr(settings, "smtp_host", "")
+    monkeypatch.setattr(settings, "environment", "local")
     with patch.object(email_module.logger, "info") as mock_log:
         send_password_reset_email(to_email="user@example.com", reset_url="https://app/reset")
     assert any("password reset" in str(call.args) for call in mock_log.call_args_list)
+
+
+def test_send_or_log_email_refuses_to_log_token_outside_local(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Non-local environments must not emit reset/verify tokens to logs (AUT-01)."""
+    monkeypatch.setattr(settings, "smtp_host", "")
+    monkeypatch.setattr(settings, "environment", "production")
+    with (
+        patch.object(email_module.logger, "info") as mock_info,
+        patch.object(email_module.logger, "error") as mock_error,
+        pytest.raises(SmtpNotConfiguredError),
+    ):
+        send_password_reset_email(
+            to_email="user@example.com",
+            reset_url="https://app/reset?token=secret-token",
+        )
+    mock_info.assert_not_called()
+    assert mock_error.called
+    logged = " ".join(str(call.args) for call in mock_error.call_args_list)
+    assert "secret-token" not in logged
+    assert "password reset" in logged
+
+
+def test_send_or_log_verification_refuses_to_log_token_outside_local(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Verification links follow the same non-local no-log rule as resets."""
+    monkeypatch.setattr(settings, "smtp_host", "")
+    monkeypatch.setattr(settings, "environment", "staging")
+    with (
+        patch.object(email_module.logger, "info") as mock_info,
+        pytest.raises(SmtpNotConfiguredError),
+    ):
+        send_verification_email(
+            to_email="user@example.com",
+            verify_url="https://app/verify?token=verify-secret",
+        )
+    mock_info.assert_not_called()

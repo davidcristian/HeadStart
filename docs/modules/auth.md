@@ -123,8 +123,9 @@ read from the httpOnly cookie (falls back to a `refresh_token` body field).
    must sign in again everywhere and re-issue feed links.
 
 **Email delivery:** configure SMTP via `SMTP_*` env vars. When `SMTP_HOST` is
-empty (typical local dev), the API logs the reset URL at INFO instead of sending
-mail.
+empty in `local`/`test`, the API logs the reset URL at INFO instead of sending
+mail. Outside those environments `SMTP_HOST` is required at startup, and the
+log fallback refuses to emit the token-bearing URL (AUT-01).
 
 ## Email verification
 
@@ -137,7 +138,8 @@ mail.
    (`/me`, export, delete) and `/app/settings` stay available while unverified.
 
 **Email delivery:** uses the same `SMTP_*` configuration as password reset. When
-`SMTP_HOST` is empty, the verification URL is logged at INFO.
+`SMTP_HOST` is empty in `local`/`test`, the verification URL is logged at INFO;
+non-local environments require SMTP and never log the token.
 
 ## Account data export & deletion
 

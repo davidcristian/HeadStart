@@ -1,10 +1,11 @@
-"""Outbound email helpers. Uses SMTP when configured; logs reset links in dev."""
+"""Outbound email helpers. Uses SMTP when configured; logs reset links in local/test."""
 
 from __future__ import annotations
 
 import smtplib
 from email.message import EmailMessage
 
+from app.core import secret_policy
 from app.core.config import settings
 from app.core.logging import get_logger
 
@@ -37,7 +38,7 @@ def send_email(*, to: str, subject: str, body: str, from_addr: str | None = None
 
 
 def send_password_reset_email(*, to_email: str, reset_url: str) -> None:
-    """Deliver a password-reset link. Falls back to logging when SMTP is not configured."""
+    """Deliver a password-reset link. Logs the URL only in local/test without SMTP."""
     subject = "Reset your HeadStart password"
     body = (
         "You requested a password reset for your HeadStart account.\n\n"
@@ -57,7 +58,7 @@ def send_password_reset_email(*, to_email: str, reset_url: str) -> None:
 
 
 def send_verification_email(*, to_email: str, verify_url: str) -> None:
-    """Deliver an email-verification link. Falls back to logging when SMTP is not configured."""
+    """Deliver an email-verification link. Logs the URL only in local/test without SMTP."""
     subject = "Verify your HeadStart email"
     body = (
         "Thanks for creating a HeadStart account.\n\n"
@@ -87,6 +88,17 @@ def _send_or_log_email(
     try:
         send_email(to=to_email, subject=subject, body=body)
     except SmtpNotConfiguredError:
+        # Never emit reset/verify tokens outside local/test (AUT-01). Startup
+        # already requires SMTP_HOST in non-local envs; this is defense in depth.
+        if not secret_policy.is_local_environment(settings.environment):
+            logger.error(
+                "SMTP not configured; refusing to log %s link for %s "
+                "(ENVIRONMENT=%s is not local/test)",
+                log_label,
+                to_email,
+                settings.environment,
+            )
+            raise
         logger.info(
             "SMTP not configured; %s link for %s: %s",
             log_label,
