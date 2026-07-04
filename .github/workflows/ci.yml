@@ -36,6 +36,26 @@ jobs:
       - name: Shell script validation
         run: just test --scripts
 
+  migrations:
+    name: Migrations (alembic on Postgres)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/pyproject.toml
+      - uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e backend
+      # Backend tests run on SQLite, so dialect-specific migration SQL is only
+      # ever exercised here, against the production dialect (Postgres).
+      - name: Apply all migrations to a fresh Postgres
+        run: just test-migrations
+
   frontend:
     name: Frontend (lint, types, tests, build)
     runs-on: ubuntu-latest
@@ -62,7 +82,7 @@ jobs:
 
   notify:
     name: Slack notify on failure
-    needs: [backend, frontend]
+    needs: [backend, frontend, migrations]
     if: failure() && github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:

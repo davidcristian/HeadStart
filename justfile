@@ -40,6 +40,10 @@ dev:
 test *args:
     ./scripts/test.sh {{ args }}
 
+# Apply all migrations to a disposable Postgres (needs docker; CI runs this)
+test-migrations:
+    ./scripts/test-migrations.sh
+
 # Lint all code; scope with --backend | --frontend
 lint *args:
     ./scripts/lint.sh {{ args }}
