@@ -24,6 +24,9 @@ logger = get_logger(__name__)
 
 MIN_REPLY_DELAY_SECONDS = 60
 
+# In-flight lease statuses that must not be re-queued by enqueue_for_draft.
+_IN_FLIGHT_STATUSES = frozenset({"pending", "ready", "sending"})
+
 
 @dataclass(frozen=True)
 class PendingReplyProcessResult:
@@ -84,7 +87,7 @@ class PendingReplyService:
             return None
 
         existing = self.pending.get_by_draft(user_id, draft.id)
-        if existing is not None and existing.status in {"pending", "ready"}:
+        if existing is not None and existing.status in _IN_FLIGHT_STATUSES:
             return existing
 
         send_after = self.compute_send_after(anchor=anchor)
@@ -118,9 +121,25 @@ class PendingReplyService:
         )
         return row
 
-    def process_due(self, *, now: datetime | None = None) -> PendingReplyProcessResult:
-        """Send due pending replies for users with auto-reply enabled."""
+    def claim_due_ids(self, *, now: datetime | None = None, limit: int = 100) -> list[int]:
+        """Lease due pending replies (flip to ``sending``) and return their ids.
+
+        Caller must commit before SMTP so overlapping ticks / ``acks_late``
+        redelivery cannot re-select the same rows (XCT-01 / XCT-03).
+        """
         if not settings.inbox_agent_enabled:
+            return []
+        current = now or utcnow()
+        return [row.id for row in self.pending.claim_due(now=current, limit=limit)]
+
+    def process_claimed(
+        self,
+        reply_ids: list[int],
+        *,
+        now: datetime | None = None,
+    ) -> PendingReplyProcessResult:
+        """SMTP-send previously leased rows and mark each terminal outcome."""
+        if not settings.inbox_agent_enabled or not reply_ids:
             return PendingReplyProcessResult(checked=0, sent=0, failed=0, skipped=0, blocked=0)
 
         current = now or utcnow()
@@ -130,7 +149,10 @@ class PendingReplyService:
         skipped = 0
         blocked = 0
 
-        for row in self.pending.list_due(now=current):
+        for reply_id in reply_ids:
+            row = self.pending.get_claimed(reply_id)
+            if row is None:
+                continue
             checked += 1
             outcome = self._send_one(row, now=current)
             if outcome == "sent":
@@ -158,6 +180,19 @@ class PendingReplyService:
             skipped=skipped,
             blocked=blocked,
         )
+
+    def process_due(self, *, now: datetime | None = None) -> PendingReplyProcessResult:
+        """Claim and send due pending replies in one session (tests / single-worker).
+
+        Production beat uses ``claim_due_ids`` then ``process_claimed`` across two
+        transactions so the ``sending`` lease is committed before SMTP.
+        """
+        if not settings.inbox_agent_enabled:
+            return PendingReplyProcessResult(checked=0, sent=0, failed=0, skipped=0, blocked=0)
+
+        current = now or utcnow()
+        reply_ids = [row.id for row in self.pending.claim_due(now=current)]
+        return self.process_claimed(reply_ids, now=current)
 
     def _send_one(self, row: InboxPendingReply, *, now: datetime) -> str:
         if not self.auto_reply_enabled(row.user_id):

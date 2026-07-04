@@ -21,12 +21,20 @@ class InboxPendingReplyRepository:
             )
         )
 
-    def list_due(
+    def claim_due(
         self,
         *,
         now: datetime,
         limit: int = 100,
     ) -> list[InboxPendingReply]:
+        """Atomically lease due pending replies so overlapping ticks cannot double-send.
+
+        Selects ``status == 'pending'`` rows whose ``send_after`` has elapsed, locks
+        them with ``FOR UPDATE SKIP LOCKED`` on Postgres, and flips each to
+        ``sending`` before returning. The caller must commit the lease before SMTP
+        so a crash/redelivery cannot re-select the same row. SQLite (tests) has no
+        row-level locking; the status flip still blocks a second claim in-process.
+        """
         stmt = (
             select(InboxPendingReply)
             .where(
@@ -37,7 +45,25 @@ class InboxPendingReplyRepository:
             .order_by(InboxPendingReply.send_after)
             .limit(limit)
         )
-        return list(self.session.scalars(stmt))
+        if not self._is_sqlite():
+            stmt = stmt.with_for_update(skip_locked=True)
+        rows = list(self.session.scalars(stmt).unique())
+        for row in rows:
+            row.status = "sending"
+        self.session.flush()
+        return rows
+
+    def get_claimed(self, reply_id: int) -> InboxPendingReply | None:
+        """Load one leased (``sending``) reply with draft/classification for send."""
+        stmt = (
+            select(InboxPendingReply)
+            .where(
+                InboxPendingReply.id == reply_id,
+                InboxPendingReply.status == "sending",
+            )
+            .options(joinedload(InboxPendingReply.draft).joinedload(InboxReplyDraft.classification))
+        )
+        return self.session.scalars(stmt).unique().first()
 
     def add(self, row: InboxPendingReply) -> InboxPendingReply:
         self.session.add(row)
@@ -51,3 +77,6 @@ class InboxPendingReplyRepository:
         row.status = "cancelled"
         row.error = None
         self.session.flush()
+
+    def _is_sqlite(self) -> bool:
+        return self.session.get_bind().dialect.name == "sqlite"

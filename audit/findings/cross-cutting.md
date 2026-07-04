@@ -10,7 +10,7 @@ Note on merges: the `portal_search` schema-drift defect surfaced from three angl
 
 <a id="xct-01"></a>
 ### XCT-01 — Pending auto-reply queue has no lease; overlapping ticks double-send recruiter emails
-🟠 **HIGH** · 🐞 bug · Status: ☐ open · Confidence: high (5/5 verifiers) · Effort: M · WS14
+🟠 **HIGH** · 🐞 bug · Status: ✅ done · Confidence: high (5/5 verifiers) · Effort: M · WS14
 
 **Locations:** `backend/app/repositories/inbox_pending_replies.py:24` (`InboxPendingReplyRepository.list_due`); plus `backend/app/services/pending_replies.py:133`, `backend/app/services/pending_replies.py:205`, `backend/app/worker/tasks.py:177`.
 
@@ -38,7 +38,7 @@ Note on merges: the `portal_search` schema-drift defect surfaced from three angl
 
 <a id="xct-03"></a>
 ### XCT-03 — process_pending_replies has no row lock; redelivery double-sends recruiter SMTP reply
-🟠 **HIGH** · 🐞 bug · Status: ☐ open · Confidence: high (5/5 verifiers) · Effort: M · WS14
+🟠 **HIGH** · 🐞 bug · Status: ✅ done · Confidence: high (5/5 verifiers) · Effort: M · WS14
 
 **Locations:** `backend/app/services/pending_replies.py:133` (`PendingReplyService.process_due`); plus `backend/app/repositories/inbox_pending_replies.py:24`, `backend/app/worker/celery_app.py:25`, `backend/app/worker/tasks.py:177`.
 

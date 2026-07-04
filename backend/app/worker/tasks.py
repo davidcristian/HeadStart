@@ -176,9 +176,20 @@ def process_inbox_messages() -> dict[str, int]:
 
 @celery_app.task(name="app.worker.tasks.process_pending_replies")
 def process_pending_replies() -> dict[str, int]:
-    """Beat tick: send recruiter replies whose human-like delay has elapsed."""
+    """Beat tick: lease then SMTP-send recruiter replies whose delay has elapsed.
+
+    Claim flips due rows to ``sending`` and commits before SMTP so overlapping
+    ticks / ``acks_late`` redelivery cannot re-select the same row (XCT-01/03).
+    """
+    now = utcnow()
     with session_scope() as session:
-        result = PendingReplyService(session).process_due(now=utcnow())
+        reply_ids = PendingReplyService(session).claim_due_ids(now=now)
+
+    if not reply_ids:
+        return {"checked": 0, "sent": 0, "failed": 0, "skipped": 0, "blocked": 0}
+
+    with session_scope() as session:
+        result = PendingReplyService(session).process_claimed(reply_ids, now=now)
 
     return {
         "checked": result.checked,

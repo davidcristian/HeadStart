@@ -211,6 +211,81 @@ def test_pending_reply_cancel_marks_pending_cancelled(db_session: Session) -> No
     assert pending.error is None
 
 
+def test_pending_reply_claim_due_leases_and_blocks_second_claim(db_session: Session) -> None:
+    """Claim flips pending → sending so overlapping ticks cannot re-select the row."""
+    user = _user(db_session)
+    cls = _classification(db_session, user.id, message_uid=1)
+    draft = _draft(db_session, user.id, cls.id)
+    pending = _pending(db_session, user.id, draft.id, status="pending")
+    pending.send_after = utcnow() - timedelta(minutes=1)
+    db_session.flush()
+    repo = InboxPendingReplyRepository(db_session)
+
+    first = repo.claim_due(now=utcnow())
+    assert [row.id for row in first] == [pending.id]
+    assert pending.status == "sending"
+
+    second = repo.claim_due(now=utcnow())
+    assert second == []
+
+    claimed = repo.get_claimed(pending.id)
+    assert claimed is not None
+    assert claimed.id == pending.id
+    assert repo.get_claimed(999) is None
+
+
+def test_pending_reply_claim_due_skips_future_and_non_pending(db_session: Session) -> None:
+    user = _user(db_session)
+    cls = _classification(db_session, user.id, message_uid=1)
+    draft = _draft(db_session, user.id, cls.id)
+    future = _pending(db_session, user.id, draft.id, status="pending")
+    future.send_after = utcnow() + timedelta(hours=1)
+    db_session.flush()
+    repo = InboxPendingReplyRepository(db_session)
+
+    assert repo.claim_due(now=utcnow()) == []
+
+
+def test_pending_reply_claim_due_takes_row_lock_branch_on_non_sqlite(
+    db_session: Session,
+) -> None:
+    """Force the FOR UPDATE SKIP LOCKED branch (SQLite silently drops the clause)."""
+    user = _user(db_session)
+    cls = _classification(db_session, user.id, message_uid=1)
+    draft = _draft(db_session, user.id, cls.id)
+    pending = _pending(db_session, user.id, draft.id, status="pending")
+    pending.send_after = utcnow() - timedelta(minutes=1)
+    db_session.flush()
+    repo = InboxPendingReplyRepository(db_session)
+    repo._is_sqlite = lambda: False  # type: ignore[method-assign]
+
+    claimed = repo.claim_due(now=utcnow())
+    assert [row.id for row in claimed] == [pending.id]
+    assert pending.status == "sending"
+
+
+def test_pending_reply_claim_due_compiles_skip_locked_for_postgres() -> None:
+    """Postgres claim SQL must include SKIP LOCKED so overlapping ticks cannot double-send."""
+    from sqlalchemy import select
+    from sqlalchemy.dialects import postgresql
+
+    now = utcnow()
+    stmt = (
+        select(InboxPendingReply)
+        .where(
+            InboxPendingReply.status == "pending",
+            InboxPendingReply.send_after <= now,
+        )
+        .order_by(InboxPendingReply.send_after)
+        .limit(100)
+        .with_for_update(skip_locked=True)
+    )
+    compiled = str(
+        stmt.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
+    )
+    assert "FOR UPDATE SKIP LOCKED" in compiled.upper()
+
+
 # ---- InboxClassificationRepository ----
 
 

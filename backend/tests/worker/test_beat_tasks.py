@@ -84,12 +84,31 @@ def test_process_inbox_messages(worker_scope: Session) -> None:
 
 def test_process_pending_replies(worker_scope: Session) -> None:
     result = MagicMock(checked=5, sent=2, failed=0, skipped=1, blocked=0)
-    with patch.object(tasks.PendingReplyService, "process_due", return_value=result):
+    with (
+        patch.object(tasks.PendingReplyService, "claim_due_ids", return_value=[1, 2, 3]),
+        patch.object(tasks.PendingReplyService, "process_claimed", return_value=result),
+    ):
         payload = tasks.process_pending_replies()
     assert payload == {
         "checked": 5,
         "sent": 2,
         "failed": 0,
         "skipped": 1,
+        "blocked": 0,
+    }
+
+
+def test_process_pending_replies_empty_claim_skips_send(worker_scope: Session) -> None:
+    with (
+        patch.object(tasks.PendingReplyService, "claim_due_ids", return_value=[]),
+        patch.object(tasks.PendingReplyService, "process_claimed") as process_mock,
+    ):
+        payload = tasks.process_pending_replies()
+    process_mock.assert_not_called()
+    assert payload == {
+        "checked": 0,
+        "sent": 0,
+        "failed": 0,
+        "skipped": 0,
         "blocked": 0,
     }

@@ -383,8 +383,12 @@ optional random jitter (`INBOX_REPLY_DELAY_JITTER_SECONDS`, default 900).
 - **Preview:** drafts are visible immediately via `GET /inbox/reply-drafts`; only
   SMTP send waits for the delay window.
 - **Send:** beat task `process_pending_replies` every
-  `INBOX_REPLY_SEND_INTERVAL_SECONDS` (default 60) calls
-  `PendingReplyService.process_due` to SMTP-send due rows and mark drafts `sent`.
+  `INBOX_REPLY_SEND_INTERVAL_SECONDS` (default 60) **claims** due
+  `inbox_pending_reply` rows (`status=pending` → `sending` under
+  `FOR UPDATE SKIP LOCKED` on Postgres), commits the lease, then SMTP-sends and
+  marks drafts `sent` (or `failed` / `blocked` / `cancelled`). Overlapping ticks
+  and `acks_late` redelivery therefore cannot re-select the same row.
 - **Safe-send:** topic blocklist, hourly/daily caps, and audit log via
   `ReplySafeSendService`; see [Follow-ups (Phase 20d)](#follow-ups-phase-20d).
-- **API fields:** `ReplyDraftRead.queue_status` and `send_after` expose queue state.
+- **API fields:** `ReplyDraftRead.queue_status` and `send_after` expose queue state
+  (`pending`, `sending`, `sent`, `failed`, `blocked`, `cancelled`).

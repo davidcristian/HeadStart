@@ -137,10 +137,10 @@ Poll batch size is capped by `INBOX_POLL_BATCH_SIZE` (default 50). See
 ## Pending reply auto-send (dev inbox)
 
 When `INBOX_AGENT_ENABLED=true`, beat also schedules `process_pending_replies`
-every `INBOX_REPLY_SEND_INTERVAL_SECONDS` (default 60). The task calls
-`PendingReplyService.process_due` to SMTP-send recruiter replies whose
-`send_after` delay has elapsed for users with `auto_reply_enabled` on their
-routing config. See [inbox.md](inbox.md).
+every `INBOX_REPLY_SEND_INTERVAL_SECONDS` (default 60). The task first claims due
+rows (`PendingReplyService.claim_due_ids` → `status=sending`) and commits, then
+SMTP-sends in a second transaction (`process_claimed`) so overlapping ticks /
+`acks_late` redelivery cannot double-send. See [inbox.md](inbox.md).
 
 ## Testing
 

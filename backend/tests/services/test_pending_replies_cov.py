@@ -45,6 +45,62 @@ def test_process_due_disabled_when_inbox_agent_off(db_session: Session, monkeypa
     assert result.sent == 0
 
 
+def test_claim_due_ids_disabled_when_inbox_agent_off(db_session: Session, monkeypatch) -> None:
+    monkeypatch.setattr(settings, "inbox_agent_enabled", False)
+    assert PendingReplyService(db_session).claim_due_ids() == []
+
+
+def test_process_claimed_empty_or_disabled(db_session: Session, monkeypatch) -> None:
+    monkeypatch.setattr(settings, "inbox_agent_enabled", False)
+    empty = PendingReplyService(db_session).process_claimed([1])
+    assert empty.checked == 0
+    monkeypatch.setattr(settings, "inbox_agent_enabled", True)
+    empty_ids = PendingReplyService(db_session).process_claimed([])
+    assert empty_ids.checked == 0
+
+
+def test_process_claimed_skips_missing_lease(db_session: Session, monkeypatch) -> None:
+    monkeypatch.setattr(settings, "inbox_agent_enabled", True)
+    result = PendingReplyService(db_session).process_claimed([999])
+    assert result.checked == 0
+
+
+def test_claim_due_ids_leases_then_second_claim_empty(db_session: Session, monkeypatch) -> None:
+    monkeypatch.setattr(settings, "inbox_agent_enabled", True)
+    search = _make_search(db_session)
+    user_id = search.user_id
+    _seed_mailbox(db_session, user_id, auto_reply=True)
+    draft = _seed_draft(db_session, user_id, search=search)
+    service = PendingReplyService(db_session)
+    now = datetime(2026, 6, 30, 12, 0, tzinfo=UTC)
+    row = service.enqueue_for_draft(user_id, draft, anchor=now - timedelta(hours=1))
+    assert row is not None
+    row.send_after = now - timedelta(minutes=1)
+    db_session.flush()
+
+    first = service.claim_due_ids(now=now)
+    assert first == [row.id]
+    assert row.status == "sending"
+    assert service.claim_due_ids(now=now) == []
+
+
+def test_enqueue_returns_existing_sending_row(db_session: Session, monkeypatch) -> None:
+    monkeypatch.setattr(settings, "inbox_agent_enabled", True)
+    search = _make_search(db_session)
+    user_id = search.user_id
+    _seed_mailbox(db_session, user_id, auto_reply=True)
+    draft = _seed_draft(db_session, user_id, search=search)
+    service = PendingReplyService(db_session)
+    first = service.enqueue_for_draft(user_id, draft)
+    assert first is not None
+    first.status = "sending"
+    db_session.flush()
+    second = service.enqueue_for_draft(user_id, draft)
+    assert second is not None
+    assert second.id == first.id
+    assert second.status == "sending"
+
+
 def test_enqueue_returns_existing_pending_row(db_session: Session, monkeypatch) -> None:
     monkeypatch.setattr(settings, "inbox_agent_enabled", True)
     search = _make_search(db_session)
