@@ -12,7 +12,6 @@ from app.core.config import settings
 from app.inbox.safe_send import TopicBlockResult, check_topic_blocklist
 from app.models.base import utcnow
 from app.models.inbox_classification import InboxClassification
-from app.models.inbox_classification import InboxClassification
 from app.models.inbox_pending_reply import InboxPendingReply
 from app.models.inbox_reply_draft import InboxReplyDraft
 from app.models.inbox_reply_send_log import InboxReplySendLog

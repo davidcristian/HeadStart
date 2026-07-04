@@ -37,9 +37,7 @@ def test_store_tailored_resume_pdf_rejects_non_pdf(
 ) -> None:
     service = ApplicationArtifactService(db_session)
     with pytest.raises(ValidationError, match="PDF"):
-        service.store_tailored_resume_pdf(
-            default_test_user.id, data=b"not pdf", filename="bad.pdf"
-        )
+        service.store_tailored_resume_pdf(default_test_user.id, data=b"not pdf", filename="bad.pdf")
 
 
 def test_store_tailored_resume_pdf_rejects_empty(
@@ -81,9 +79,7 @@ def test_load_pdf_bytes_rejects_wrong_type(db_session: Session, default_test_use
         service.load_pdf_bytes(default_test_user.id, artifact_id)
 
 
-def test_load_tailored_resume_pdf_round_trip(
-    db_session: Session, default_test_user: User
-) -> None:
+def test_load_tailored_resume_pdf_round_trip(db_session: Session, default_test_user: User) -> None:
     service = ApplicationArtifactService(db_session)
     artifact = service.store_tailored_resume_pdf(
         default_test_user.id,

@@ -9,7 +9,7 @@ from __future__ import annotations
 import ipaddress
 import socket
 from dataclasses import dataclass
-from urllib.parse import urlunparse, urlparse
+from urllib.parse import urlparse, urlunparse
 
 from app.core.config import get_settings
 

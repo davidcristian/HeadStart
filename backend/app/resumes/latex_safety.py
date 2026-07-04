@@ -19,6 +19,4 @@ def reject_dangerous_latex_content(tex: str, *, label: str) -> None:
     """Reject uploaded LaTeX that can read arbitrary files or invoke shell escape."""
     for pattern in _DANGEROUS_LATEX_PATTERNS:
         if pattern.search(tex):
-            raise ValidationError(
-                f"Resume template {label} contains disallowed LaTeX commands."
-            )
+            raise ValidationError(f"Resume template {label} contains disallowed LaTeX commands.")

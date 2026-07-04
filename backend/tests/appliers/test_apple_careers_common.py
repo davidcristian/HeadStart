@@ -107,8 +107,9 @@ def test_apply_error_message_variants() -> None:
     assert apply_error_message({"success": True}) is None
     assert apply_error_message({"success": False, "errors": [{"message": "bad"}]}) == "bad"
     assert apply_error_message({"success": False, "errors": [{"error": "worse"}]}) == "worse"
-    assert apply_error_message({"success": False, "errors": [{}]}) == "apple_careers apply request failed"
-    assert apply_error_message({"success": False, "errors": ["x"]}) == "apple_careers apply request failed"
+    failed = "apple_careers apply request failed"
+    assert apply_error_message({"success": False, "errors": [{}]}) == failed
+    assert apply_error_message({"success": False, "errors": ["x"]}) == failed
     assert apply_error_message({"success": False, "message": "closed req"}) == "closed req"
     assert apply_error_message({"success": False, "error": "plain error"}) == "plain error"
     assert apply_error_message({"success": False}) == "apple_careers apply request failed"

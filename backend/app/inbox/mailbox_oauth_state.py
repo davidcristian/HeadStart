@@ -37,7 +37,9 @@ def issue_mailbox_oauth_state(*, user_id: int, state_type: str) -> IssuedMailbox
     return IssuedMailboxOAuthState(state=token, nonce=nonce)
 
 
-def parse_mailbox_oauth_state(*, state: str, state_type: str, error_message: str) -> tuple[int, str]:
+def parse_mailbox_oauth_state(
+    *, state: str, state_type: str, error_message: str
+) -> tuple[int, str]:
     """Validate OAuth state and return the owning user id and bound nonce."""
     try:
         payload: dict[str, Any] = jwt.decode(
@@ -59,6 +61,4 @@ def parse_mailbox_oauth_state(*, state: str, state_type: str, error_message: str
 def verify_mailbox_oauth_nonce(cookie_nonce: str | None, expected_nonce: str) -> None:
     """Reject OAuth callbacks when the browser cookie does not match signed state."""
     if not cookie_nonce or not secrets.compare_digest(cookie_nonce, expected_nonce):
-        raise ValidationError(
-            "OAuth session mismatch. Start mailbox connect again from Settings."
-        )
+        raise ValidationError("OAuth session mismatch. Start mailbox connect again from Settings.")

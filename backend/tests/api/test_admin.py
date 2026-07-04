@@ -224,9 +224,7 @@ def test_update_user_persists_flags(db_session: Session) -> None:
     assert updated.plan == "pro"
 
 
-def test_list_data_requests_returns_recent(
-    db_session: Session, default_test_user: User
-) -> None:
+def test_list_data_requests_returns_recent(db_session: Session, default_test_user: User) -> None:
     from app.models.data_request_log import DataRequestLog
 
     db_session.add(

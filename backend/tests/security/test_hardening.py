@@ -15,6 +15,7 @@ from app.api.v1.inbox_oauth_cookies import (
     set_mailbox_oauth_nonce_cookie,
 )
 from app.core.config import settings
+from app.core.exceptions import ValidationError
 from app.core.outbound_http import apply_outbound_pin
 from app.core.outbound_url import UnsafeOutboundUrlError, pin_outbound_request
 from app.core.security import (
@@ -23,6 +24,7 @@ from app.core.security import (
 )
 from app.inbox.gmail_oauth import create_gmail_oauth_state
 from app.inbox.mailbox_oauth_state import verify_mailbox_oauth_nonce
+from app.models.base import utcnow
 from app.models.inbox_classification import InboxClassification
 from app.models.password_reset_token import PasswordResetToken
 from app.models.user import User
@@ -34,7 +36,6 @@ from app.services.auth import AuthService
 from app.services.feed import FeedService
 from app.services.inbox_gate import auto_reply_recipient_allowed
 from app.services.reply_safe_send import ReplySafeSendService
-from app.models.base import utcnow
 from tests.services.test_pending_replies import _seed_draft, _seed_mailbox
 from tests.worker.test_pipeline import _make_search
 
@@ -76,7 +77,9 @@ def test_pin_outbound_request_rejects_all_blocked_ips(monkeypatch: pytest.Monkey
         lambda: type("S", (), {"environment": "production"})(),
     )
 
-    def _loopback_only(*_args: object, **_kwargs: object) -> list[tuple[int, int, int, str, tuple[str, int]]]:
+    AddrInfo = tuple[int, int, int, str, tuple[str, int]]
+
+    def _loopback_only(*_args: object, **_kwargs: object) -> list[AddrInfo]:
         return [(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP, "", ("127.0.0.1", 443))]
 
     monkeypatch.setattr(socket, "getaddrinfo", _loopback_only)
@@ -111,9 +114,9 @@ def test_auth_logout_ignores_invalid_refresh_token(db_session: Session) -> None:
 
 
 def test_parse_mailbox_oauth_state_rejects_missing_nonce() -> None:
-    from app.inbox.mailbox_oauth_state import parse_mailbox_oauth_state
-
     import jwt
+
+    from app.inbox.mailbox_oauth_state import parse_mailbox_oauth_state
 
     token = jwt.encode(
         {"sub": "1", "type": "gmail_oauth", "exp": 9999999999},
@@ -139,11 +142,14 @@ def test_auto_reply_recipient_rejects_missing_employer_domain(db_session: Sessio
         log.payload = {}
     job.url = "https://example.test/jobs/1"
     db_session.flush()
-    assert auto_reply_recipient_allowed(
-        db_session,
-        from_addr="hr@acme.com",
-        classification=draft.classification,
-    ) is False
+    assert (
+        auto_reply_recipient_allowed(
+            db_session,
+            from_addr="hr@acme.com",
+            classification=draft.classification,
+        )
+        is False
+    )
 
 
 def test_auth_logout_revokes_refresh_token(db_session: Session) -> None:
@@ -163,7 +169,7 @@ def test_auth_refresh_rotates_token_version(db_session: Session) -> None:
     db_session.flush()
     old_refresh = create_refresh_token(user.id, version=user.token_version)
     AuthService(db_session).refresh(old_refresh)
-    with pytest.raises(Exception):
+    with pytest.raises(ValidationError, match="Session is no longer valid"):
         AuthService(db_session).refresh(old_refresh)
 
 
@@ -197,10 +203,12 @@ def test_auto_reply_recipient_allowed_requires_linked_job(db_session: Session) -
         provider="heuristic",
         from_addr="hr@acme.com",
     )
-    assert (
-        auto_reply_recipient_allowed(db_session, from_addr="hr@acme.com", classification=classification)
-        is False
+    allowed = auto_reply_recipient_allowed(
+        db_session,
+        from_addr="hr@acme.com",
+        classification=classification,
     )
+    assert allowed is False
 
 
 def test_auto_reply_recipient_allowed_matches_employer_domain(db_session: Session) -> None:
@@ -323,10 +331,12 @@ def test_auto_reply_recipient_allowed_when_job_missing(db_session: Session) -> N
         from_addr="hr@acme.com",
         seen_job_id=999_999,
     )
-    assert (
-        auto_reply_recipient_allowed(db_session, from_addr="hr@acme.com", classification=classification)
-        is False
+    allowed = auto_reply_recipient_allowed(
+        db_session,
+        from_addr="hr@acme.com",
+        classification=classification,
     )
+    assert allowed is False
 
 
 def test_auto_reply_recipient_allowed_when_domain_unknown(db_session: Session) -> None:
@@ -340,11 +350,14 @@ def test_auto_reply_recipient_allowed_when_domain_unknown(db_session: Session) -
         log.payload = {}
     job.url = "mailto:someone"
     db_session.flush()
-    assert auto_reply_recipient_allowed(
-        db_session,
-        from_addr="hr@acme.com",
-        classification=draft.classification,
-    ) is False
+    assert (
+        auto_reply_recipient_allowed(
+            db_session,
+            from_addr="hr@acme.com",
+            classification=draft.classification,
+        )
+        is False
+    )
 
 
 def test_parse_template_bundle_rejects_non_utf8_tex_member() -> None:

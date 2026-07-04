@@ -129,8 +129,9 @@ def test_api_error_message_variants() -> None:
     assert api_error_message("not a dict") is None
     assert api_error_message({"status": 200, "error": {"message": ""}, "data": {}}) is None
     assert api_error_message({"success": False, "errors": [{"message": "bad"}]}) == "bad"
-    assert api_error_message({"success": False, "errors": [{}]}) == "microsoft_careers apply request failed"
-    assert api_error_message({"success": False, "errors": ["string"]}) == "microsoft_careers apply request failed"
+    failed = "microsoft_careers apply request failed"
+    assert api_error_message({"success": False, "errors": [{}]}) == failed
+    assert api_error_message({"success": False, "errors": ["string"]}) == failed
     assert api_error_message({"success": False, "message": "closed req"}) == "closed req"
     assert api_error_message({"errors": [{"error": "worse"}]}) == "worse"
     assert api_error_message({"errors": [{}]}) is None
