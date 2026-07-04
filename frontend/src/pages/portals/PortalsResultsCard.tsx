@@ -1,4 +1,5 @@
 import { Card, EmptyState } from "../../components/ui";
+import { safeHref } from "../../lib/safeHref";
 import type { PortalSearchResult } from "../../types";
 
 type PortalsResultsCardProps = {
@@ -25,22 +26,25 @@ export function PortalsResultsCard({ results }: PortalsResultsCardProps) {
         <EmptyState>No matching jobs right now. Try broader keywords or more companies.</EmptyState>
       ) : (
         <ul className="portal-results-list">
-          {results.items.map((job) => (
-            <li key={`${job.portal_id}-${job.external_id}`} className="portal-result-row">
-              <div>
-                <strong>{job.title}</strong>
-                <div className="muted">
-                  {job.company_name}
-                  {job.location ? ` · ${job.location}` : ""}
+          {results.items.map((job) => {
+            const href = safeHref(job.url);
+            return (
+              <li key={`${job.portal_id}-${job.external_id}`} className="portal-result-row">
+                <div>
+                  <strong>{job.title}</strong>
+                  <div className="muted">
+                    {job.company_name}
+                    {job.location ? ` · ${job.location}` : ""}
+                  </div>
                 </div>
-              </div>
-              {job.url ? (
-                <a href={job.url} target="_blank" rel="noreferrer">
-                  View
-                </a>
-              ) : null}
-            </li>
-          ))}
+                {href ? (
+                  <a href={href} target="_blank" rel="noreferrer">
+                    View
+                  </a>
+                ) : null}
+              </li>
+            );
+          })}
         </ul>
       )}
     </Card>

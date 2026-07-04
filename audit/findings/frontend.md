@@ -37,7 +37,9 @@ _Merged with FRO-02 — both records describe the same defect: the module-level 
 
 <a id="fro-03"></a>
 ### FRO-03 — Scraped job URLs rendered into href with no scheme allow-list (javascript: XSS)
-🟡 **MEDIUM** · 🔒 security · Status: ☐ open · Confidence: high (5/5 verifiers) · Effort: S · WS16
+🟡 **MEDIUM** · 🔒 security · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/22)) · Confidence: high (5/5 verifiers) · Effort: S · WS16
+
+**Update (2026-07-10).** Fixed: shared `safeHref()` allows only `http`/`https`; the five scraped-URL anchors render plain text when the scheme is unsafe — [PR](https://github.com/davidcristian/HeadStart/pull/22).
 
 **Locations:** `frontend/src/components/JobList.tsx:134` (`JobTitle`); plus `frontend/src/components/ApplicationPipelineList.tsx:164`, `frontend/src/pages/portals/PortalsResultsCard.tsx:38`, `frontend/src/components/SearchHealth.tsx:55`, `frontend/src/components/profile/ApplicationHistoryTable.tsx:44`.
 

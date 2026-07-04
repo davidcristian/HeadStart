@@ -114,6 +114,12 @@ Server state is managed by **TanStack Query** (`@tanstack/react-query`). The
   directly.
 - The API client attaches the bearer token to every request automatically; pages
   never handle tokens directly.
+- **Scraped / untrusted URLs:** never put a job or portal URL into `href`
+  without `safeHref()` from `src/lib/safeHref.ts`. It allows only `http:` /
+  `https:` and returns `null` for `javascript:`, `data:`, relative paths, and
+  other schemes — callers render plain text instead of an anchor. Used by
+  `JobList`, `ApplicationPipelineList`, `SearchHealth`,
+  `ApplicationHistoryTable`, and `PortalsResultsCard`.
 
 ## Tests
 

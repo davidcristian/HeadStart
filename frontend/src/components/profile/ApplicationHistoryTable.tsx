@@ -1,6 +1,7 @@
 /** Application history audit log for the profile page. */
 
 import { EmptyState } from "../ui";
+import { safeHref } from "../../lib/safeHref";
 import type { ApplicationLog } from "../../types";
 
 interface ApplicationHistoryCardProps {
@@ -25,29 +26,32 @@ export function ApplicationHistoryTable({ entries, isPending }: ApplicationHisto
         </tr>
       </thead>
       <tbody>
-        {entries.map((entry) => (
-          <tr key={entry.id}>
-            <td className="muted">{new Date(entry.created_at).toLocaleString()}</td>
-            <td>
-              <strong>{entry.job_title}</strong>
-              <div className="muted">{entry.job_company}</div>
-            </td>
-            <td>
-              {entry.dry_run ? "Preview" : entry.status}
-              {entry.error && <div className="muted">{entry.error}</div>}
-            </td>
-            <td>
-              {entry.external_application_id && (
-                <div className="muted">ID: {entry.external_application_id}</div>
-              )}
-              {entry.job_url && (
-                <a href={entry.job_url} target="_blank" rel="noreferrer">
-                  View posting
-                </a>
-              )}
-            </td>
-          </tr>
-        ))}
+        {entries.map((entry) => {
+          const jobHref = safeHref(entry.job_url);
+          return (
+            <tr key={entry.id}>
+              <td className="muted">{new Date(entry.created_at).toLocaleString()}</td>
+              <td>
+                <strong>{entry.job_title}</strong>
+                <div className="muted">{entry.job_company}</div>
+              </td>
+              <td>
+                {entry.dry_run ? "Preview" : entry.status}
+                {entry.error && <div className="muted">{entry.error}</div>}
+              </td>
+              <td>
+                {entry.external_application_id && (
+                  <div className="muted">ID: {entry.external_application_id}</div>
+                )}
+                {jobHref && (
+                  <a href={jobHref} target="_blank" rel="noreferrer">
+                    View posting
+                  </a>
+                )}
+              </td>
+            </tr>
+          );
+        })}
       </tbody>
     </table>
   );

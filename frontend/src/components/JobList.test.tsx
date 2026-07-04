@@ -77,6 +77,19 @@ describe("JobList (desktop table)", () => {
     expect(screen.queryByRole("button", { name: "Apply" })).not.toBeInTheDocument();
   });
 
+  it("renders a plain title when the job url is a javascript: scheme", () => {
+    setMatchMedia(false);
+    render(
+      <JobList
+        jobs={[makeJob({ url: "javascript:alert(1)" })]}
+        onStatusChange={vi.fn()}
+      />,
+    );
+
+    expect(screen.queryByRole("link", { name: "Software Engineer" })).not.toBeInTheDocument();
+    expect(screen.getByText("Software Engineer")).toBeInTheDocument();
+  });
+
   it("hides Seen for seen/closed jobs and Applied for applied jobs", () => {
     setMatchMedia(false);
     render(

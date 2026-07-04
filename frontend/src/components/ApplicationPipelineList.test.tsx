@@ -144,6 +144,14 @@ describe("JobSummary", () => {
     expect(screen.queryByRole("link", { name: "Software Engineer" })).not.toBeInTheDocument();
     expect(screen.getByText("Software Engineer")).toBeInTheDocument();
   });
+
+  it("renders plain text when the item url is a javascript: scheme", () => {
+    renderWithClient(
+      <ApplicationPipelineList items={[makeItem({ url: "javascript:alert(1)" })]} />,
+    );
+    expect(screen.queryByRole("link", { name: "Software Engineer" })).not.toBeInTheDocument();
+    expect(screen.getByText("Software Engineer")).toBeInTheDocument();
+  });
 });
 
 describe("AttemptTimeline", () => {

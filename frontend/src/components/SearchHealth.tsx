@@ -1,6 +1,7 @@
 /** Scrape and delivery health indicators for a search row. */
 
 import { formatDateTime, formatRelativeTime } from "../lib/format";
+import { safeHref } from "../lib/safeHref";
 import type { Search } from "../types";
 
 function healthKind(search: Search): "ok" | "error" | "warn" | "unknown" {
@@ -50,15 +51,22 @@ export function SearchHealthDetails({ search }: { search: Search }) {
             {search.recent_delivery_failures.length >= 5 ? "+" : ""}):
           </strong>
           <ul className="health-failures">
-            {search.recent_delivery_failures.map((failure) => (
-              <li key={`${failure.sent_at}-${failure.job_title}`}>
-                <a href={failure.job_url} target="_blank" rel="noreferrer">
-                  {failure.job_title}
-                </a>
-                {failure.error ? ` — ${failure.error}` : ""}
-                <span className="muted"> ({formatRelativeTime(failure.sent_at)})</span>
-              </li>
-            ))}
+            {search.recent_delivery_failures.map((failure) => {
+              const href = safeHref(failure.job_url);
+              return (
+                <li key={`${failure.sent_at}-${failure.job_title}`}>
+                  {href ? (
+                    <a href={href} target="_blank" rel="noreferrer">
+                      {failure.job_title}
+                    </a>
+                  ) : (
+                    failure.job_title
+                  )}
+                  {failure.error ? ` — ${failure.error}` : ""}
+                  <span className="muted"> ({formatRelativeTime(failure.sent_at)})</span>
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}

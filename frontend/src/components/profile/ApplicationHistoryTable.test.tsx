@@ -76,4 +76,15 @@ describe("ApplicationHistoryTable", () => {
     expect(screen.queryByText(/^ID:/)).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "View posting" })).not.toBeInTheDocument();
   });
+
+  it("omits the posting link when job_url is a javascript: scheme", () => {
+    render(
+      <ApplicationHistoryTable
+        entries={[makeEntry({ job_url: "javascript:alert(1)" })]}
+        isPending={false}
+      />,
+    );
+
+    expect(screen.queryByRole("link", { name: "View posting" })).not.toBeInTheDocument();
+  });
 });

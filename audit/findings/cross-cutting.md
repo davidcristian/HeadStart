@@ -203,7 +203,9 @@ the local package. Regenerate via `just lock-backend` ([ADR-0012](../../docs/adr
 
 <a id="xct-17"></a>
 ### XCT-17 — Scraped, unvalidated job URLs rendered into href enable javascript:-scheme XSS
-🟡 **MEDIUM** · 🔒 security · Status: ☐ open · Confidence: high (5/5 verifiers) · Effort: M · WS16
+🟡 **MEDIUM** · 🔒 security · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/22)) · Confidence: high (5/5 verifiers) · Effort: M · WS16
+
+**Update (2026-07-10).** Fixed: shared `safeHref()` allows only `http`/`https`; the five scraped-URL anchors render plain text when the scheme is unsafe — [PR](https://github.com/davidcristian/HeadStart/pull/22).
 
 **Locations:** `frontend/src/components/JobList.tsx:134` (`JobTitle`); plus `frontend/src/components/ApplicationPipelineList.tsx:164`, `frontend/src/components/SearchHealth.tsx:55`, `frontend/src/components/profile/ApplicationHistoryTable.tsx:44`, `frontend/src/pages/portals/PortalsResultsCard.tsx:38`, `backend/app/scrapers/adapters/generic_html.py:78`, `backend/app/scrapers/types.py:19`, `backend/app/schemas/job.py:22`.
 

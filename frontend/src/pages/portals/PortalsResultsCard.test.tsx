@@ -79,4 +79,26 @@ describe("PortalsResultsCard", () => {
     expect(screen.getByText("Meta")).toBeInTheDocument();
     expect(screen.getAllByRole("link")).toHaveLength(1);
   });
+
+  it("omits the View link when the job url is a javascript: scheme", () => {
+    renderWithClient(
+      <PortalsResultsCard
+        results={makeResult({
+          items: [
+            {
+              portal_id: "stripe",
+              company_name: "Stripe",
+              external_id: "1",
+              title: "Hostile Engineer",
+              location: "Remote",
+              url: "javascript:alert(1)",
+            },
+          ],
+        })}
+      />,
+    );
+
+    expect(screen.getByText("Hostile Engineer")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "View" })).not.toBeInTheDocument();
+  });
 });

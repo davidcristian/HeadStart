@@ -117,4 +117,19 @@ describe("SearchHealthDetails", () => {
     );
     expect(screen.getByText(/Delivery failures \(5\+\):/)).toBeInTheDocument();
   });
+
+  it("renders a plain title when a failure job_url is a javascript: scheme", () => {
+    render(
+      <SearchHealthDetails
+        search={makeSearch({
+          last_error: null,
+          recent_delivery_failures: [
+            makeFailure({ job_title: "Hostile role", job_url: "javascript:alert(1)" }),
+          ],
+        })}
+      />,
+    );
+    expect(screen.queryByRole("link", { name: "Hostile role" })).not.toBeInTheDocument();
+    expect(screen.getByText(/Hostile role/)).toBeInTheDocument();
+  });
 });

@@ -3,6 +3,7 @@
 import { JobStatusBadge } from "./JobStatusBadge";
 import { Button } from "./ui";
 import { useMediaQuery } from "../hooks/useMediaQuery";
+import { safeHref } from "../lib/safeHref";
 import type { Job } from "../types";
 
 type JobAction = "seen" | "applied" | "archived";
@@ -129,9 +130,10 @@ function JobCard({
 }
 
 function JobTitle({ job }: { job: Job }) {
-  if (!job.url) return <span>{job.title}</span>;
+  const href = safeHref(job.url);
+  if (!href) return <span>{job.title}</span>;
   return (
-    <a href={job.url} target="_blank" rel="noreferrer">
+    <a href={href} target="_blank" rel="noreferrer">
       {job.title}
     </a>
   );

@@ -6,6 +6,7 @@ import { Button } from "./ui";
 import { useMediaQuery } from "../hooks/useMediaQuery";
 import { useDraftInboxReply } from "../hooks/mutations";
 import { downloadApplicationArtifact } from "../lib/applicationArtifacts";
+import { safeHref } from "../lib/safeHref";
 import type { ApplicationPipelineItem } from "../types";
 
 const ATTEMPT_LABELS: Record<string, string> = {
@@ -159,9 +160,10 @@ function ReplyDraftSection({ item }: { item: ApplicationPipelineItem }) {
 }
 
 function JobSummary({ item }: { item: ApplicationPipelineItem }) {
-  if (!item.url) return <strong>{item.title}</strong>;
+  const href = safeHref(item.url);
+  if (!href) return <strong>{item.title}</strong>;
   return (
-    <a href={item.url} target="_blank" rel="noreferrer">
+    <a href={href} target="_blank" rel="noreferrer">
       <strong>{item.title}</strong>
     </a>
   );
