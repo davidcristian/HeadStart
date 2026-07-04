@@ -139,6 +139,84 @@ def test_flush_search_records_error_and_reraises(db_session: Session) -> None:
         service._flush_search(search, pending)
 
 
+def test_flush_due_isolates_per_search_notifier_failure(db_session: Session) -> None:
+    """One bad target must not block other due digests (SVC-04)."""
+    # Lower id flushes first and fails; higher id must still succeed.
+    failing = _digest_search(db_session, interval=60)
+    failing.name = "failing"
+    succeeding = _digest_search(db_session, interval=60)
+    succeeding.name = "succeeding"
+    db_session.flush()
+    assert failing.id < succeeding.id
+
+    class SelectiveNotifier:
+        def __init__(self) -> None:
+            self.sent: list[str] = []
+
+        def send(self, ctx: NotifyContext, jobs: list[JobPosting]) -> list[DeliveryResult]:
+            if ctx.search_name == "failing":
+                raise RuntimeError("bad webhook")
+            self.sent.append(ctx.search_name or "")
+            return [DeliveryResult(external_id=j.external_id, status="sent") for j in jobs]
+
+    notifier = SelectiveNotifier()
+    _seed_pending(db_session, RecordingDigestNotifier(), failing, ["f1"])
+    _seed_pending(db_session, RecordingDigestNotifier(), succeeding, ["s1"])
+    old = (utcnow() - timedelta(seconds=120)).replace(tzinfo=None)
+    for row in db_session.query(PendingDigest).all():
+        row.created_at = old
+    # Commit setup so a failed flush's rollback cannot undo the due window.
+    db_session.commit()
+
+    flushed = DigestService(db_session, notifier_factory=lambda key: notifier).flush_due()
+    assert flushed == 1
+    assert notifier.sent == ["succeeding"]
+    db_session.expire_all()
+    assert db_session.query(PendingDigest).filter_by(search_id=failing.id).count() == 1
+    assert db_session.query(PendingDigest).filter_by(search_id=succeeding.id).count() == 0
+    assert db_session.query(DeliveryLog).count() == 1
+
+
+def test_flush_due_commits_before_later_search_failure(db_session: Session) -> None:
+    """A later send failure must not roll back an earlier delivered digest (SVC-05)."""
+    first = _digest_search(db_session, interval=60)
+    first.name = "first"
+    second = _digest_search(db_session, interval=60)
+    second.name = "second"
+    db_session.flush()
+    assert first.id < second.id
+
+    class FailSecondNotifier:
+        def __init__(self) -> None:
+            self.calls = 0
+
+        def send(self, ctx: NotifyContext, jobs: list[JobPosting]) -> list[DeliveryResult]:
+            self.calls += 1
+            if ctx.search_name == "second":
+                raise RuntimeError("second boom")
+            return [DeliveryResult(external_id=j.external_id, status="sent") for j in jobs]
+
+    notifier = FailSecondNotifier()
+    _seed_pending(db_session, RecordingDigestNotifier(), first, ["a"])
+    _seed_pending(db_session, RecordingDigestNotifier(), second, ["b"])
+    old = (utcnow() - timedelta(seconds=120)).replace(tzinfo=None)
+    for row in db_session.query(PendingDigest).all():
+        row.created_at = old
+    db_session.commit()
+
+    flushed = DigestService(db_session, notifier_factory=lambda key: notifier).flush_due()
+    assert flushed == 1
+    assert notifier.calls == 2
+
+    db_session.expire_all()
+    assert db_session.query(PendingDigest).filter_by(search_id=first.id).count() == 0
+    assert db_session.query(PendingDigest).filter_by(search_id=second.id).count() == 1
+    refreshed = db_session.get(type(first), first.id)
+    assert refreshed is not None
+    assert refreshed.last_digest_at is not None
+    assert db_session.query(DeliveryLog).count() == 1
+
+
 def test_flush_ignores_unknown_external_ids(db_session: Session) -> None:
     search = _digest_search(db_session, interval=60)
 

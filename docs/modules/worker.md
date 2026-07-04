@@ -24,7 +24,10 @@ Beat runs every `SCHEDULER_TICK_SECONDS`. On each tick (and once on startup) it:
    lease: a scrape slower than the tick interval, or an overlapping tick, cannot
    re-enqueue the same search and double-notify.
 2. Flushes digest queues whose `digest_interval_seconds` has elapsed (each search is
-   locked while flushing, so overlapping ticks don't double-send a digest).
+   locked while flushing, so overlapping ticks don't double-send a digest). A notifier
+   failure on one search is isolated: the tick logs it and continues, and each
+   successful flush commits before the next search so a later failure cannot roll
+   back already-delivered digests.
 
 Each search carries `interval_seconds`, `last_run_at`, `next_run_at`.
 
@@ -79,7 +82,8 @@ flowchart TD
 
 A separate beat task `flush_due_digests` sends batched notifications for digest
 searches whose interval has elapsed, then clears the queue and sets
-`last_digest_at`.
+`last_digest_at`. Flushes are per-search: one bad target cannot abort the tick or
+undo another search's already-sent digest bookkeeping.
 
 Failures at any external step are caught, logged, and recorded; the worker keeps
 running.

@@ -44,7 +44,9 @@ This area covers the backend business-logic layer (`backend/app/services/`): the
 
 <a id="svc-04"></a>
 ### SVC-04 — Digest flush tick has no per-search exception isolation
-🟡 **MEDIUM** · 🐞 bug · Status: ☐ open · Confidence: high (5/5 verifiers) · Effort: S · WS14
+🟡 **MEDIUM** · 🐞 bug · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/13)) · Confidence: high (5/5 verifiers) · Effort: S · WS14
+
+**Update (2026-07-10).** Fixed in [PR](https://github.com/davidcristian/HeadStart/pull/13): `flush_due` wraps each `_flush_search` in `try/except` (log + continue) and `session.commit()`s after each successful flush. Merged SVC-05 closed by the same per-search commit.
 
 **Locations:** `backend/app/services/digest.py:64` (`DigestService.flush_due`); also `backend/app/worker/tasks.py:137`, `backend/app/notifiers/adapters/webhook.py:46`.
 
@@ -58,7 +60,9 @@ This area covers the backend business-logic layer (`backend/app/services/`): the
 
 <a id="svc-05"></a>
 ### SVC-05 — Digest flush sends before commit; a later search failure re-sends earlier digests
-🟡 **MEDIUM** · 🐞 bug · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: S · WS14
+🟡 **MEDIUM** · 🐞 bug · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/13)) · Confidence: high (3/3 verifiers) · Effort: S · WS14
+
+**Update (2026-07-10).** Fixed together with SVC-04 in [PR](https://github.com/davidcristian/HeadStart/pull/13): each successful `_flush_search` commits before the next search, so a later notifier failure cannot roll back already-delivered digest bookkeeping.
 
 **Locations:** `backend/app/services/digest.py:57` (`DigestService.flush_due` / `_flush_search`); also `backend/app/worker/tasks.py:139`, `backend/app/services/digest.py:112`.
 

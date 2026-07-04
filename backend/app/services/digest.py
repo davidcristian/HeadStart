@@ -51,17 +51,29 @@ class DigestService:
         Each search is locked for the duration of its flush (Postgres row lock) and
         re-checked under the lock, so overlapping beat ticks cannot double-send a
         digest. SQLite (tests) has no row locking and runs single-threaded.
+
+        Per-search isolation (SVC-04 / SVC-05): a notifier failure on one search is
+        logged and skipped so other due digests still flush; each successful flush
+        commits immediately so a later failure cannot roll back already-delivered
+        bookkeeping and cause a duplicate send on the next tick.
         """
         when = now or utcnow()
         flushed = 0
         for candidate in self.pending.searches_with_pending():
-            search = self.searches.get_for_update(candidate.id, skip_locked=True)
+            search_id = candidate.id
+            search = self.searches.get_for_update(search_id, skip_locked=True)
             if search is None:
                 continue  # another tick is already flushing this search
             pending = self.pending.list_for_search(search.id)
             if not pending or not self._is_due(search, pending, when):
                 continue
-            self._flush_search(search, pending)
+            try:
+                self._flush_search(search, pending)
+                self.session.commit()
+            except Exception:
+                self.session.rollback()
+                logger.exception("digest flush failed for search %s; continuing", search_id)
+                continue
             flushed += 1
         return flushed
 
