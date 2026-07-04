@@ -168,7 +168,10 @@ IP or user agent — recoverable PII does not survive erasure (DAT-02). Admins
 list recent rows via `GET /admin/data-requests`.
 
 Public subprocessors and DPA overview: `/subprocessors` (linked from the privacy
-policy and site footer).
+policy and site footer). The list names AWS, Stripe, OpenAI, Google Gemini,
+Anthropic, Gmail / Outlook / Yahoo mailbox OAuth, and SMTP so Art.28 disclosure
+covers the shipped AI and inbox adapters (not only the original AWS/Stripe/OpenAI
+set).
 
 ## Plan limits
 

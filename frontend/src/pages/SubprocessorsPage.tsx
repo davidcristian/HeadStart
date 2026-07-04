@@ -3,7 +3,7 @@
 import { Link } from "react-router-dom";
 import { LegalPageLayout } from "../components/LegalPageLayout";
 
-const EFFECTIVE_DATE = "June 29, 2026";
+const EFFECTIVE_DATE = "July 4, 2026";
 
 const SUBPROCESSORS = [
   {
@@ -27,11 +27,57 @@ const SUBPROCESSORS = [
   {
     name: "OpenAI",
     purpose:
-      "Optional AI summaries explaining why a job matches your filters (when the operator enables the OpenAI provider).",
-    data: "Job title, company, location, and filter context — never your password or encrypted credentials.",
+      "Optional AI features (match summaries, cover letters, resume curation, email classification, reply drafting) when the operator enables the OpenAI provider.",
+    data: "Job and filter context, application-profile fields, resume text excerpts, and recruiter message content depending on the enabled purpose — never your password or encrypted credentials.",
     location: "United States.",
     safeguards: "OpenAI Data Processing Addendum available to business customers.",
     link: "https://openai.com/policies/data-processing-addendum",
+  },
+  {
+    name: "Google (Gemini)",
+    purpose:
+      "Optional AI features (match summaries, cover letters, resume curation, email classification, reply drafting) when the operator enables the Gemini provider.",
+    data: "Job and filter context, application-profile fields, resume text excerpts, and recruiter message content depending on the enabled purpose — never your password or encrypted credentials.",
+    location: "United States and other Google Cloud processing regions.",
+    safeguards: "Google Cloud Data Processing Addendum and SCCs where required.",
+    link: "https://cloud.google.com/terms/data-processing-addendum",
+  },
+  {
+    name: "Anthropic",
+    purpose:
+      "Optional AI features (match summaries, cover letters, resume curation, email classification, reply drafting) when the operator enables the Anthropic provider.",
+    data: "Job and filter context, application-profile fields, resume text excerpts, and recruiter message content depending on the enabled purpose — never your password or encrypted credentials.",
+    location: "United States.",
+    safeguards: "Anthropic Data Processing Addendum available to business customers.",
+    link: "https://www.anthropic.com/legal/commercial-terms",
+  },
+  {
+    name: "Google (Gmail)",
+    purpose:
+      "Optional inbox mailbox OAuth when a user connects Gmail for the application agent (dev inbox).",
+    data: "OAuth tokens, connected mailbox address, and message metadata/body processed for classification and reply drafting.",
+    location: "United States and other Google processing regions.",
+    safeguards: "Google API Services User Data Policy and Google Cloud DPA where applicable.",
+    link: "https://developers.google.com/terms/api-services-user-data-policy",
+  },
+  {
+    name: "Microsoft (Outlook)",
+    purpose:
+      "Optional inbox mailbox OAuth when a user connects Outlook / Microsoft 365 for the application agent (dev inbox).",
+    data: "OAuth tokens, connected mailbox address, and message metadata/body processed for classification and reply drafting.",
+    location: "Microsoft Azure regions configured for the tenant.",
+    safeguards: "Microsoft Products and Services Data Protection Addendum (DPA).",
+    link: "https://www.microsoft.com/licensing/docs/view/Microsoft-Products-and-Services-Data-Protection-Addendum-DPA",
+  },
+  {
+    name: "Yahoo",
+    purpose:
+      "Optional inbox mailbox OAuth when a user connects Yahoo Mail for the application agent (dev inbox).",
+    data: "OAuth tokens, connected mailbox address, and message metadata/body processed for classification and reply drafting.",
+    location: "United States and other Yahoo processing regions.",
+    safeguards:
+      "The operator should confirm Yahoo's applicable privacy terms and DPA coverage before enabling Yahoo OAuth in production.",
+    link: "https://legal.yahoo.com/us/en/yahoo/privacy/index.html",
   },
   {
     name: "SMTP email provider",
@@ -74,8 +120,8 @@ export function SubprocessorsPage() {
         <h2>Current subprocessors</h2>
         <p className="muted">
           The table reflects a typical self-hosted or AWS deployment. Your operator may disable
-          billing or AI summaries, which removes Stripe or OpenAI from the active subprocessor list
-          for that instance.
+          billing, AI providers, or inbox mailbox OAuth, which removes Stripe, OpenAI / Gemini /
+          Anthropic, or Gmail / Outlook / Yahoo from the active subprocessor list for that instance.
         </p>
         <div className="table-scroll">
           <table className="table legal-table">

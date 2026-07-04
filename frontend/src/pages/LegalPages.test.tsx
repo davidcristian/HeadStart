@@ -68,7 +68,7 @@ describe("Legal pages", () => {
     render(renderPublicPage(<SubprocessorsPage />));
 
     expect(screen.getByRole("heading", { name: "Subprocessors" })).toBeInTheDocument();
-    expect(screen.getByText(/Effective June 29, 2026/)).toBeInTheDocument();
+    expect(screen.getByText(/Effective July 4, 2026/)).toBeInTheDocument();
     expect(screen.getAllByRole("link", { name: "Privacy Policy" })[0]).toHaveAttribute(
       "href",
       "/privacy",
@@ -77,9 +77,21 @@ describe("Legal pages", () => {
       "href",
       "https://aws.amazon.com/compliance/gdpr-center/",
     );
+    expect(screen.getByRole("link", { name: "Google (Gemini)" })).toHaveAttribute(
+      "href",
+      "https://cloud.google.com/terms/data-processing-addendum",
+    );
+    expect(screen.getByRole("link", { name: "Anthropic" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Google (Gmail)" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Microsoft (Outlook)" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Yahoo" })).toBeInTheDocument();
+    expect(
+      screen.getByText(/OpenAI \/ Gemini \/ Anthropic, or Gmail \/ Outlook \/ Yahoo/i),
+    ).toBeInTheDocument();
     expect(screen.getAllByRole("link", { name: "Subprocessors" })[0]).toHaveAttribute(
       "href",
       "/subprocessors",
     );
   });
 });
+

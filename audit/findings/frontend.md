@@ -85,7 +85,7 @@ _Merged with FRO-02 — both records describe the same defect: the module-level 
 
 <a id="fro-06"></a>
 ### FRO-06 — Subprocessor list omits shipped Gemini/Anthropic AI and mailbox providers
-🟡 **MEDIUM** · 📝 doc · Status: ☐ open · Confidence: high (3/5 verifiers) · Effort: S · WS18
+🟡 **MEDIUM** · 📝 doc · Status: ✅ done · Confidence: high (3/5 verifiers) · Effort: S · WS18
 
 **Locations:** `frontend/src/pages/SubprocessorsPage.tsx:8` (`SUBPROCESSORS`).
 
