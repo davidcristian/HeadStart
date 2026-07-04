@@ -4,6 +4,10 @@ Living tracker for issues found in the codebase audit (2026-07-01). Same spirit 
 [roadmap.md](roadmap.md), but for **bugs, tech-debt, and doc drift** rather than new
 features. Update the Status column (and strike the row) when an item ships; link the PR.
 
+> A **second** full audit (2026-07-02) is tracked separately in
+> [`../audit/backlog.md`](../audit/backlog.md); its workstream numbering continues from WS13.
+> This file remains the historical record of the first audit.
+
 Produced by a read-only multi-agent audit — 13 subsystem clusters, every finding
 adversarially verified against the code. **77 confirmed** findings (1 critical, 9 high,
 16 medium, 51 low) — **all 77 are now resolved** (plus the later WS13 find). By cluster:
