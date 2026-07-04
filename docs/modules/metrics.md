@@ -35,6 +35,7 @@ per worker OS process (not an aggregate across concurrency slots).
 | `headstart_notification_deliveries_total` | Counter | `notifier`, `status` (`sent`, `failed`), `mode` (`immediate`, `digest`) | Per-job delivery attempts |
 | `headstart_digest_flushes_total` | Counter | `status` (`success`, `error`) | Digest batch sends |
 | `headstart_scheduler_searches_enqueued_total` | Counter | — | Due searches enqueued per beat tick |
+| `headstart_auth_login_failures_total` | Counter | — | Failed login attempts (AUT-10) |
 
 ### Example PromQL
 
@@ -48,6 +49,9 @@ sum(rate(headstart_scrape_runs_total[5m]))
 sum(rate(headstart_notification_deliveries_total{status="failed"}[5m]))
 /
 sum(rate(headstart_notification_deliveries_total[5m]))
+
+# Failed logins (credential stuffing signal)
+sum(rate(headstart_auth_login_failures_total[5m]))
 
 # p95 scrape latency per adapter
 histogram_quantile(0.95, sum by (adapter, le) (rate(headstart_scrape_duration_seconds_bucket[5m])))

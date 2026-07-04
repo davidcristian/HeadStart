@@ -28,6 +28,7 @@ def test_record_helpers_noop_when_disabled(metrics_disabled: None) -> None:
     metrics.record_notification("ntfy", "sent", "immediate")
     metrics.record_digest_flush("success")
     metrics.record_scheduler_enqueued(3)
+    metrics.record_auth_login_failure()
 
 
 def test_record_helpers_increment_when_enabled(metrics_enabled: None) -> None:
@@ -37,9 +38,11 @@ def test_record_helpers_increment_when_enabled(metrics_enabled: None) -> None:
     metrics.record_digest_flush("error")
     metrics.record_digest_flush("skipped_plan")
     metrics.record_scheduler_enqueued(2)
+    metrics.record_auth_login_failure()
 
     body, content_type = metrics.render_metrics()
     assert b"headstart_pipeline_runs_total" in body
+    assert b"headstart_auth_login_failures_total" in body
     assert "text" in content_type
 
 

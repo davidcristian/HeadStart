@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from sqlalchemy.orm import Session
 
+from app.core.auth_events import log_auth_event
 from app.core.exceptions import ValidationError
 from app.core.security import pseudonymize_email_for_audit, verify_password
 from app.models.data_request_log import DataRequestLog
@@ -59,6 +60,12 @@ def delete_user_account(
     )
     # Cancel Stripe billing before the local row (and Stripe IDs) disappear.
     release_stripe_billing(user)
+    log_auth_event(
+        "account_deleted",
+        email=user.email,
+        user_id=user.id,
+        ip_address=ip_address,
+    )
     repo.delete(user)
 
 

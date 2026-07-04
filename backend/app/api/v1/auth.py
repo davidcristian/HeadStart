@@ -78,7 +78,8 @@ def login(
     db: Session = Depends(get_db),
 ) -> AccessTokenResponse:
     limit_login(request, data.email)
-    return _issue(response, AuthService(db).login(data))
+    meta = request_meta(request)
+    return _issue(response, AuthService(db).login(data, ip_address=meta.ip_address))
 
 
 @router.post("/refresh", response_model=AccessTokenResponse)
@@ -100,12 +101,14 @@ def refresh(
 
 @router.post("/logout", response_model=MessageResponse)
 def logout(
+    request: Request,
     response: Response,
     refresh_cookie: str | None = Cookie(default=None, alias=settings.auth_cookie_name),
     db: Session = Depends(get_db),
 ) -> MessageResponse:
     """Clear the refresh cookie and revoke the server-side refresh session."""
-    AuthService(db).logout(refresh_cookie)
+    meta = request_meta(request)
+    AuthService(db).logout(refresh_cookie, ip_address=meta.ip_address)
     _clear_refresh_cookie(response)
     return MessageResponse(message="Logged out.")
 
@@ -116,7 +119,8 @@ def forgot_password(
 ) -> MessageResponse:
     """Request a password-reset email. Response is identical whether the email exists."""
     limit_forgot_password(request, data.email)
-    message = AuthService(db).request_password_reset(data)
+    meta = request_meta(request)
+    message = AuthService(db).request_password_reset(data, ip_address=meta.ip_address)
     return MessageResponse(message=message)
 
 
@@ -126,7 +130,8 @@ def reset_password(
 ) -> MessageResponse:
     """Set a new password using a token from the reset email."""
     limit_token_guess(request, kind="reset")
-    AuthService(db).reset_password(data)
+    meta = request_meta(request)
+    AuthService(db).reset_password(data, ip_address=meta.ip_address)
     return MessageResponse(message="Password updated. You can sign in with your new password.")
 
 

@@ -136,7 +136,7 @@ def test_login_returns_429_when_email_limit_exceeded(client: TestClient) -> None
 
 
 def test_forgot_password_returns_429_after_email_cap(client: TestClient) -> None:
-    with patch("app.services.auth.send_password_reset_email"):
+    with patch("app.services.auth_password.send_password_reset_email"):
         for _ in range(5):
             resp = client.post(
                 "/api/v1/auth/forgot-password",

@@ -53,6 +53,10 @@ SCHEDULER_SEARCHES_ENQUEUED = Counter(
     "headstart_scheduler_searches_enqueued_total",
     "Due searches enqueued by the scheduler",
 )
+AUTH_LOGIN_FAILURES = Counter(
+    "headstart_auth_login_failures_total",
+    "Failed login attempts (invalid credentials or inactive account)",
+)
 
 
 def record_pipeline_run(status: PipelineStatus) -> None:
@@ -90,6 +94,13 @@ def record_scheduler_enqueued(count: int) -> None:
     if not get_settings().metrics_enabled or count <= 0:
         return
     SCHEDULER_SEARCHES_ENQUEUED.inc(count)
+
+
+def record_auth_login_failure() -> None:
+    """Record one failed login for credential-stuffing alerts (AUT-10)."""
+    if not get_settings().metrics_enabled:
+        return
+    AUTH_LOGIN_FAILURES.inc()
 
 
 def render_metrics() -> tuple[bytes, str]:

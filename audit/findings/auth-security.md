@@ -104,7 +104,9 @@ This area covers authentication and session management (login, registration, pas
 
 <a id="aut-10"></a>
 ### AUT-10 — Auth security events (login, failed login, reset, deletion) are never logged
-🟡 **MEDIUM** · 🔒 security · Status: ☐ open · Confidence: high (3/5 verifiers) · Effort: M · WS19
+🟡 **MEDIUM** · 🔒 security · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/32)) · Confidence: high (3/5 verifiers) · Effort: M · WS19
+
+**Update (2026-07-10).** Fixed in [PR](https://github.com/davidcristian/HeadStart/pull/32): `app.core.auth_events` logs login success/failure, password-reset requested/completed, session invalidation, and account deletion with email HMAC fingerprints + client IP; failed logins increment `headstart_auth_login_failures_total`.
 
 **Locations:** `backend/app/services/auth.py:74` (`AuthService.login`/`reset_password`); plus `backend/app/services/auth.py:132`, `backend/app/services/auth_account.py:70`.
 

@@ -104,6 +104,24 @@ sliding window (`app.core.rate_limit`). Exceeding a bucket returns **429**
 Counters are process-local (each API task enforces its own ceiling). Tests call
 `reset_rate_limiter()` so suites do not leak 429s across cases.
 
+## Security event logging (AUT-10)
+
+Auth services emit structured INFO lines via `app.core.auth_events` (never
+plaintext email or tokens). Each line is `auth_event=<name>` plus optional
+`email_hash=` (HMAC fingerprint, same as GDPR audit pseudonyms), `user_id=`,
+`ip=`, `reason=`, and `issued=`.
+
+| Event | When |
+| ----- | ---- |
+| `login_success` / `login_failure` | Password check outcome (`reason=invalid_credentials` on fail) |
+| `password_reset_requested` | Forgot-password (always; `issued=true` only when mail was sent) |
+| `password_reset_completed` | Successful reset |
+| `session_invalidated` | Logout or reset (`reason=logout` / `password_reset`) |
+| `account_deleted` | Confirmed account erasure |
+
+Failed logins also increment Prometheus `headstart_auth_login_failures_total`
+(see [metrics.md](metrics.md)).
+
 ## Frontend
 
 - `frontend/src/lib/settings.ts` keeps the **access token in memory only** (a

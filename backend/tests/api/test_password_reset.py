@@ -33,8 +33,8 @@ def test_forgot_password_returns_same_message_for_unknown_email(client: TestClie
     assert "password reset link" in resp.json()["message"].lower()
 
 
-@patch("app.services.auth.send_password_reset_email")
-@patch("app.services.auth.generate_password_reset_token", return_value="known-reset-token")
+@patch("app.services.auth_password.send_password_reset_email")
+@patch("app.services.auth_password.generate_password_reset_token", return_value="known-reset-token")
 def test_forgot_and_reset_password_flow(
     _mock_token: object,
     _mock_email: object,
@@ -70,8 +70,8 @@ def test_forgot_and_reset_password_flow(
     )
 
 
-@patch("app.services.auth.send_password_reset_email")
-@patch("app.services.auth.generate_password_reset_token", return_value="known-reset-token")
+@patch("app.services.auth_password.send_password_reset_email")
+@patch("app.services.auth_password.generate_password_reset_token", return_value="known-reset-token")
 def test_reset_password_invalidates_captured_refresh_token(
     _mock_token: object,
     _mock_email: object,
@@ -111,8 +111,8 @@ def test_reset_password_invalidates_captured_refresh_token(
     )
 
 
-@patch("app.services.auth.send_password_reset_email")
-@patch("app.services.auth.generate_password_reset_token", return_value="known-reset-token")
+@patch("app.services.auth_password.send_password_reset_email")
+@patch("app.services.auth_password.generate_password_reset_token", return_value="known-reset-token")
 def test_reset_password_invalidates_existing_access_token(
     _mock_token: object,
     _mock_email: object,
@@ -227,8 +227,8 @@ def test_request_password_reset_creates_token(db_session) -> None:
     db_session.commit()
 
     with (
-        patch("app.services.auth.send_password_reset_email") as mock_email,
-        patch("app.services.auth.generate_password_reset_token", return_value="svc-token"),
+        patch("app.services.auth_password.send_password_reset_email") as mock_email,
+        patch("app.services.auth_password.generate_password_reset_token", return_value="svc-token"),
     ):
         message = AuthService(db_session).request_password_reset(
             ForgotPasswordRequest(email="svc@example.com")

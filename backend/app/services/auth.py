@@ -6,14 +6,11 @@ from datetime import timedelta
 
 from sqlalchemy.orm import Session
 
+from app.core.auth_events import log_auth_event
 from app.core.config import settings
-from app.core.email import send_password_reset_email, send_verification_email
+from app.core.email import send_verification_email
 from app.core.exceptions import ConflictError, NotFoundError, ValidationError
-from app.core.rate_limit import (
-    FORGOT_EMAIL,
-    enforce_rate_limit,
-    limit_verification_email_issue,
-)
+from app.core.rate_limit import limit_verification_email_issue
 from app.core.security import (
     TokenError,
     create_access_token,
@@ -26,7 +23,6 @@ from app.core.security import (
 )
 from app.models.base import utcnow
 from app.models.email_verification_token import EmailVerificationToken
-from app.models.password_reset_token import PasswordResetToken
 from app.models.user import User
 from app.repositories.email_verification_tokens import EmailVerificationTokenRepository
 from app.repositories.password_reset_tokens import PasswordResetTokenRepository
@@ -42,10 +38,13 @@ from app.schemas.auth import (
     VerifyEmailRequest,
 )
 from app.services.auth_account import delete_user_account, export_user_data
-
-_PASSWORD_RESET_SENT_MESSAGE = (
-    "If an account exists for that email, a password reset link has been sent."
+from app.services.auth_password import (
+    request_password_reset as issue_password_reset,
 )
+from app.services.auth_password import (
+    reset_password as apply_password_reset,
+)
+
 _VERIFICATION_SENT_MESSAGE = (
     "If your account is not yet verified, a verification link has been sent."
 )
@@ -76,15 +75,35 @@ class AuthService:
         self._issue_verification_email(user)
         return user
 
-    def login(self, data: LoginRequest) -> TokenResponse:
-        user = self.repo.get_by_email(data.email.lower())
+    def login(self, data: LoginRequest, *, ip_address: str | None = None) -> TokenResponse:
+        email = data.email.lower()
+        user = self.repo.get_by_email(email)
         # Run verify even when the user is missing to avoid leaking which emails
         # exist via response timing.
         placeholder = "$2b$12$" + "x" * 53
         if not verify_password(data.password, user.password_hash if user else placeholder):
+            log_auth_event(
+                "login_failure",
+                email=email,
+                ip_address=ip_address,
+                reason="invalid_credentials",
+            )
             raise ValidationError("Invalid email or password.")
         if user is None or not user.is_active:
+            log_auth_event(
+                "login_failure",
+                email=email,
+                user_id=None if user is None else user.id,
+                ip_address=ip_address,
+                reason="invalid_credentials",
+            )
             raise ValidationError("Invalid email or password.")
+        log_auth_event(
+            "login_success",
+            email=user.email,
+            user_id=user.id,
+            ip_address=ip_address,
+        )
         return self._issue_tokens(user)
 
     def refresh(self, refresh_token: str) -> TokenResponse:
@@ -100,7 +119,7 @@ class AuthService:
         self.repo.bump_token_version(user)
         return self._issue_tokens(user)
 
-    def logout(self, refresh_token: str | None) -> None:
+    def logout(self, refresh_token: str | None, *, ip_address: str | None = None) -> None:
         """Invalidate the refresh session when a valid refresh token is presented."""
         if not refresh_token:
             return
@@ -114,6 +133,13 @@ class AuthService:
         if payload.get("ver") != user.token_version:
             return
         self.repo.bump_token_version(user)
+        log_auth_event(
+            "session_invalidated",
+            email=user.email,
+            user_id=user.id,
+            ip_address=ip_address,
+            reason="logout",
+        )
 
     def me(self, user_id: int) -> User:
         user = self.repo.get(user_id)
@@ -129,50 +155,15 @@ class AuthService:
             self.session.flush()
         return user
 
-    def request_password_reset(self, data: ForgotPasswordRequest) -> str:
+    def request_password_reset(
+        self, data: ForgotPasswordRequest, *, ip_address: str | None = None
+    ) -> str:
         """Issue a reset token and email it. Always returns the same message."""
-        email = data.email.lower()
-        # Cap outbound reset mail per address even when the account is missing,
-        # so the route cannot be used to email-bomb a known inbox.
-        enforce_rate_limit(f"auth:forgot:email_issue:{email}", FORGOT_EMAIL)
-        user = self.repo.get_by_email(email)
-        if user is None or not user.is_active:
-            return _PASSWORD_RESET_SENT_MESSAGE
+        return issue_password_reset(self.session, data, ip_address=ip_address)
 
-        raw_token = generate_password_reset_token()
-        expires_at = utcnow() + timedelta(minutes=settings.password_reset_expire_minutes)
-        self.reset_tokens.delete_for_user(user.id)
-        self.reset_tokens.add(
-            PasswordResetToken(
-                user_id=user.id,
-                token_hash=hash_password_reset_token(raw_token),
-                expires_at=expires_at,
-            )
-        )
-
-        reset_url = f"{settings.frontend_base_url.rstrip('/')}/reset-password?token={raw_token}"
-        send_password_reset_email(to_email=user.email, reset_url=reset_url)
-        return _PASSWORD_RESET_SENT_MESSAGE
-
-    def reset_password(self, data: ResetPasswordRequest) -> None:
+    def reset_password(self, data: ResetPasswordRequest, *, ip_address: str | None = None) -> None:
         """Set a new password from a valid reset token."""
-        token_hash = hash_password_reset_token(data.token)
-        now = utcnow()
-        row = self.reset_tokens.get_valid_by_hash(token_hash, now=now)
-        if row is None:
-            raise ValidationError("Invalid or expired reset link. Request a new one.")
-
-        user = self.repo.get(row.user_id)
-        if user is None or not user.is_active:
-            raise ValidationError("Invalid or expired reset link. Request a new one.")
-
-        self.repo.update_password(user, hash_password(data.password))
-        # Terminate sessions that may have been opened with a compromised
-        # credential: bump the token version so outstanding access/refresh
-        # tokens (which carry the old `ver`) stop validating.
-        self.repo.bump_token_version(user)
-        self.repo.bump_feed_token_version(user)
-        self.reset_tokens.delete_for_user(user.id)
+        apply_password_reset(self.session, data, ip_address=ip_address)
 
     def verify_email(self, data: VerifyEmailRequest) -> User:
         """Confirm ownership of an email address from a verification link."""
