@@ -3,7 +3,7 @@
 import { Link } from "react-router-dom";
 import { LegalPageLayout } from "../components/LegalPageLayout";
 
-const EFFECTIVE_DATE = "June 29, 2026";
+const EFFECTIVE_DATE = "July 10, 2026";
 
 export function PrivacyPolicyPage() {
   return (
@@ -39,6 +39,10 @@ export function PrivacyPolicyPage() {
             status labels (seen, applied, archived), delivery logs, and scrape run metadata.
           </li>
           <li>
+            <strong>Inbox data (optional):</strong> when you connect a mailbox, message metadata and
+            content needed to classify recruiter email and draft replies.
+          </li>
+          <li>
             <strong>Technical data:</strong> API access logs, error reports, and operational metrics
             needed to run and secure the service.
           </li>
@@ -51,7 +55,10 @@ export function PrivacyPolicyPage() {
         <ul>
           <li>Run scheduled scrapes and match results against your filters.</li>
           <li>Deliver notifications through the channels you configure.</li>
-          <li>Power the jobs feed, RSS export, and optional AI summaries of why a role matches.</li>
+          <li>
+            Power the jobs feed, RSS export, and optional AI features you enable (match summaries,
+            cover letters, resume curation, email classification, and reply drafting).
+          </li>
           <li>Maintain your account, enforce access controls, and improve reliability.</li>
         </ul>
         <p>We do not sell your personal data. We do not use your data for advertising profiles.</p>
@@ -75,8 +82,27 @@ export function PrivacyPolicyPage() {
             Slack, Discord, Telegram, or a custom webhook URL).
           </li>
           <li>
-            <strong>AI summary providers</strong> when enabled (for example OpenAI) — only the job
-            title, company, location, and filter context needed to generate a short blurb.
+            <strong>AI providers</strong> when you enable an AI-backed feature (for example OpenAI,
+            Anthropic, or Google Gemini). What we send depends on the purpose:
+            <ul>
+              <li>
+                <strong>Match summaries:</strong> job title, company, location, and search filter
+                context for a short &quot;why this matches&quot; blurb.
+              </li>
+              <li>
+                <strong>Cover letters and resume curation:</strong> job posting context plus
+                application-profile fields such as name, contact details, skills, work history,
+                education, and resume text excerpts.
+              </li>
+              <li>
+                <strong>Email classification:</strong> inbound recruiter message metadata and body
+                (and linked application context when available).
+              </li>
+              <li>
+                <strong>Reply drafting:</strong> the recruiter&apos;s message plus profile contact
+                details, skills, and custom answers needed to draft a reply you can review.
+              </li>
+            </ul>
           </li>
           <li>
             <strong>Infrastructure providers</strong> that host the application and database when

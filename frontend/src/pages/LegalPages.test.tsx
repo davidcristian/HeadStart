@@ -20,9 +20,17 @@ describe("Legal pages", () => {
     render(renderPublicPage(<PrivacyPolicyPage />));
 
     expect(screen.getByRole("heading", { name: "Privacy Policy" })).toBeInTheDocument();
-    expect(screen.getByText(/Effective June 29, 2026/)).toBeInTheDocument();
+    expect(screen.getByText(/Effective July 4, 2026/)).toBeInTheDocument();
     expect(
       screen.getByText(/one-way pseudonym of the former email address/i),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Cover letters and resume curation/i)).toBeInTheDocument();
+    expect(screen.getByText(/resume text excerpts/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/inbound recruiter message metadata and body/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/recruiter's message plus profile contact details/i),
     ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Terms" })).toHaveAttribute("href", "/terms");
     expect(screen.getByRole("link", { name: "Privacy" })).toHaveAttribute("href", "/privacy");

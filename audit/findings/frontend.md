@@ -53,7 +53,9 @@ _Merged with FRO-02 — both records describe the same defect: the module-level 
 
 <a id="fro-04"></a>
 ### FRO-04 — Privacy policy understates AI data: resume/profile PII and recruiter emails sent
-🟡 **MEDIUM** · 📝 doc · Status: ☐ open · Confidence: high (3/5 verifiers) · Effort: S · WS18
+🟡 **MEDIUM** · 📝 doc · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/26)) · Confidence: high (3/5 verifiers) · Effort: S · WS18
+
+**Update (2026-07-10).** Fixed in [PR](https://github.com/davidcristian/HeadStart/pull/26): `/privacy` now discloses purpose-specific AI data categories (match summaries; cover letters / resume curation with profile PII and resume excerpts; email classification; reply drafting with recruiter message + contact details).
 
 **Locations:** `frontend/src/pages/PrivacyPolicyPage.tsx:78` (`PrivacyPolicyPage`).
 
