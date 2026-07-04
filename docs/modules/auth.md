@@ -189,7 +189,12 @@ pricing page) and enforced in `PlanLimitsService` — **services raise
 | Cross-portal search (`/portals/search`) | no | no | no | yes |
 
 **Downgrade behaviour:** existing rows stay; create/update that would exceed a
-cap or use a gated feature is rejected. Admins bypass all limits.
+cap or use a gated feature is rejected. Admins bypass all limits. At **pipeline
+consumption time**, premium scrapers and notifiers are re-checked: a downgraded
+user's `indeed`/`linkedin`/`playwright` source skips the scrape (run records an
+error and reschedules), and a `webhook` target skips delivery (immediate notify
+and digest queue/flush). Pending digest rows for a disallowed notifier are
+cleared without sending so they do not retry forever.
 
 `GET /meta` returns an `AccountPlanRead` snapshot (limits, current usage,
 allowed scrapers/notifiers) so the UI can disable options proactively.

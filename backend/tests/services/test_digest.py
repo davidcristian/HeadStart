@@ -114,6 +114,7 @@ def test_flush_search_returns_early_when_no_target(db_session: Session) -> None:
     _seed_pending(db_session, notifier, search, ["1"])
     # Remove the target link so _flush_search bails without notifying.
     search.target_id = None
+    search.target = None
     db_session.flush()
 
     pending = DigestService(db_session).pending.list_for_search(search.id)
@@ -238,3 +239,26 @@ def test_flush_ignores_unknown_external_ids(db_session: Session) -> None:
     assert flushed == 1
     # Only the known job produced a delivery log; the stranger id is ignored.
     assert db_session.query(DeliveryLog).count() == 1
+
+
+def test_flush_due_skips_send_when_notifier_not_on_plan(db_session: Session) -> None:
+    search = _digest_search(db_session, interval=60)
+    search.target.type = "webhook"
+    search.target.config = {"url": "https://example.test/hook"}
+    db_session.flush()
+
+    notifier = RecordingDigestNotifier()
+    _seed_pending(db_session, RecordingDigestNotifier(), search, ["1"])
+    old = (utcnow() - timedelta(seconds=120)).replace(tzinfo=None)
+    for row in db_session.query(PendingDigest).all():
+        row.created_at = old
+    search.user.is_admin = False
+    search.user.plan = "free"
+    db_session.flush()
+
+    flushed = DigestService(db_session, notifier_factory=lambda key: notifier).flush_due()
+    assert flushed == 1
+    assert len(notifier.batches) == 0
+    assert db_session.query(PendingDigest).count() == 0
+    assert db_session.query(DeliveryLog).count() == 0
+    assert search.last_digest_at is not None

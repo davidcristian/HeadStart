@@ -74,7 +74,7 @@ def record_notification(notifier: str, status: DeliveryStatus, mode: Notificatio
     NOTIFICATION_DELIVERIES.labels(notifier=notifier, status=status, mode=mode).inc()
 
 
-def record_digest_flush(status: Literal["success", "error"]) -> None:
+def record_digest_flush(status: Literal["success", "error", "skipped_plan"]) -> None:
     """Record a digest batch flush."""
     if not get_settings().metrics_enabled:
         return

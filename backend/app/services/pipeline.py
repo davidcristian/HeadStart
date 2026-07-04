@@ -102,7 +102,8 @@ class PipelineService:
             new_postings = self._dedupe(search_id, postings)
             result.new = len(new_postings)
             to_notify, result.skipped = self._filter_cross_search(search.user_id, new_postings)
-            if PlanLimitsService(self.session).allows_summaries(search.user_id):
+            limits = PlanLimitsService(self.session)
+            if limits.allows_summaries(search.user_id):
                 owner = self.session.get(User, search.user_id)
                 self.summaries.annotate(
                     to_notify,
@@ -112,7 +113,15 @@ class PipelineService:
                 )
             seen_rows = self._persist_new(search_id, new_postings)
             if to_notify:
-                if search.notification_mode == "digest":
+                target = search.target
+                notifier_ok = target is None or limits.allows_notifier(search.user_id, target.type)
+                if not notifier_ok:
+                    logger.info(
+                        "search %s: notifier '%s' not allowed on current plan; skipping delivery",
+                        search_id,
+                        target.type,  # type: ignore[union-attr]
+                    )
+                elif search.notification_mode == "digest":
                     result.queued = self._queue_digest(search_id, to_notify, seen_rows)
                 else:
                     sent, failed = self._notify(search, to_notify, seen_rows)
@@ -145,6 +154,8 @@ class PipelineService:
         config: dict[str, Any],
     ) -> list[JobPosting]:
         """Fetch postings once without persisting or notifying."""
+        if not PlanLimitsService(self.session).allows_scraper(user_id, adapter_key):
+            raise PermissionError(f"scraper '{adapter_key}' is not allowed on the current plan")
         cookies, headers = self._resolve_credentials(user_id, source_id)
         min_interval = resolve_min_interval(adapter_key, config)
         rate_limiter = RateLimiter(min_interval) if min_interval > 0 else None

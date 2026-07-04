@@ -29,6 +29,11 @@ from app.repositories.sources import SourceRepository
 from app.repositories.targets import TargetRepository
 from app.repositories.users import UserRepository
 from app.scrapers import available_scrapers
+from app.services.plan_limit_checks import (
+    require_notifier,
+    require_scraper,
+    require_under_cap,
+)
 
 
 class PlanLimitsService:
@@ -110,9 +115,21 @@ class PlanLimitsService:
         user = self.users.get(user_id)
         if user is None:
             return False
-        if user.is_admin:
-            return True
-        return plan_features_for(self.resolve_plan(user)).ai_summaries
+        return user.is_admin or plan_features_for(self.resolve_plan(user)).ai_summaries
+
+    def allows_scraper(self, user_id: int, adapter_key: str) -> bool:
+        """Whether this scraper may run for the user at consumption time."""
+        user = self.users.get(user_id)
+        if user is None:
+            return False
+        return user.is_admin or scraper_allowed(self.resolve_plan(user), adapter_key)
+
+    def allows_notifier(self, user_id: int, target_type: str) -> bool:
+        """Whether this notifier may deliver for the user at consumption time."""
+        user = self.users.get(user_id)
+        if user is None:
+            return False
+        return user.is_admin or notifier_allowed(self.resolve_plan(user), target_type)
 
     def allows_pipeline_auto_apply(self, user_id: int) -> bool:
         """Whether another live pipeline auto-apply may be queued under the daily cap."""
@@ -134,8 +151,8 @@ class PlanLimitsService:
         if user.is_admin:
             return
         plan = self.resolve_plan(user)
-        self._require_scraper(plan, adapter_key)
-        self._require_under_cap(
+        require_scraper(plan, adapter_key)
+        require_under_cap(
             plan,
             code="source_limit",
             resource="sources",
@@ -148,7 +165,7 @@ class PlanLimitsService:
         user = self._require_user(user_id)
         if user.is_admin:
             return
-        self._require_scraper(self.resolve_plan(user), adapter_key)
+        require_scraper(self.resolve_plan(user), adapter_key)
 
     def require_can_add_search(self, user_id: int) -> None:
         """Raise when the user cannot create another search."""
@@ -156,7 +173,7 @@ class PlanLimitsService:
         if user.is_admin:
             return
         plan = self.resolve_plan(user)
-        self._require_under_cap(
+        require_under_cap(
             plan,
             code="search_limit",
             resource="searches",
@@ -184,8 +201,8 @@ class PlanLimitsService:
         if user.is_admin:
             return
         plan = self.resolve_plan(user)
-        self._require_notifier(plan, target_type)
-        self._require_under_cap(
+        require_notifier(plan, target_type)
+        require_under_cap(
             plan,
             code="target_limit",
             resource="notification targets",
@@ -198,7 +215,7 @@ class PlanLimitsService:
         user = self._require_user(user_id)
         if user.is_admin:
             return
-        self._require_notifier(self.resolve_plan(user), target_type)
+        require_notifier(self.resolve_plan(user), target_type)
 
     def require_site_credentials(self, user_id: int) -> None:
         """Raise when encrypted site credentials are not on the user's plan."""
@@ -245,47 +262,3 @@ class PlanLimitsService:
         if user is None:
             raise PlanLimitError("User not found.", code="user_not_found", plan=DEFAULT_PLAN)
         return user
-
-    @staticmethod
-    def _require_under_cap(
-        plan: PlanId,
-        *,
-        code: str,
-        resource: str,
-        current: int,
-        maximum: int,
-    ) -> None:
-        if current < maximum:
-            return
-        label = plan_display_name(plan)
-        raise PlanLimitError(
-            f"{label} plan allows up to {maximum} {resource}. "
-            "Upgrade your plan or remove an existing one to add more.",
-            code=code,
-            plan=plan,
-            limit=maximum,
-        )
-
-    @staticmethod
-    def _require_scraper(plan: PlanId, adapter_key: str) -> None:
-        if scraper_allowed(plan, adapter_key):
-            return
-        label = plan_display_name(plan)
-        raise PlanLimitError(
-            f"The '{adapter_key}' scraper requires a {required_plan_phrase('plus')} plan "
-            f"(you are on {label}).",
-            code="premium_scraper",
-            plan=plan,
-        )
-
-    @staticmethod
-    def _require_notifier(plan: PlanId, target_type: str) -> None:
-        if notifier_allowed(plan, target_type):
-            return
-        label = plan_display_name(plan)
-        raise PlanLimitError(
-            f"The '{target_type}' notifier requires a {required_plan_phrase('pro')} plan "
-            f"(you are on {label}).",
-            code="premium_notifier",
-            plan=plan,
-        )

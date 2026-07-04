@@ -186,6 +186,30 @@ def test_allows_summaries_true_for_admin(db_session) -> None:
     assert PlanLimitsService(db_session).allows_summaries(admin.id) is True
 
 
+def test_allows_scraper_and_notifier_by_tier(db_session) -> None:
+    from app.models.user import User
+
+    service = PlanLimitsService(db_session)
+    free = User(email="free-gate@example.com", password_hash="x", plan="free")
+    plus = User(email="plus-gate@example.com", password_hash="x", plan="plus")
+    pro = User(email="pro-gate@example.com", password_hash="x", plan="pro")
+    admin = User(email="admin-gate@example.com", password_hash="x", plan="free", is_admin=True)
+    db_session.add_all([free, plus, pro, admin])
+    db_session.flush()
+
+    assert service.allows_scraper(free.id, "greenhouse") is True
+    assert service.allows_scraper(free.id, "indeed") is False
+    assert service.allows_scraper(plus.id, "indeed") is True
+    assert service.allows_scraper(admin.id, "linkedin") is True
+    assert service.allows_scraper(999999, "greenhouse") is False
+
+    assert service.allows_notifier(free.id, "ntfy") is True
+    assert service.allows_notifier(free.id, "webhook") is False
+    assert service.allows_notifier(pro.id, "webhook") is True
+    assert service.allows_notifier(admin.id, "webhook") is True
+    assert service.allows_notifier(999999, "ntfy") is False
+
+
 def test_require_user_missing_raises(db_session) -> None:
     from app.core.exceptions import PlanLimitError
 

@@ -34,6 +34,7 @@ def test_record_helpers_increment_when_enabled(metrics_enabled: None) -> None:
     metrics.record_scrape("greenhouse", "success", 0.25, 10)
     metrics.record_notification("ntfy", "sent", "digest")
     metrics.record_digest_flush("error")
+    metrics.record_digest_flush("skipped_plan")
     metrics.record_scheduler_enqueued(2)
 
     body, content_type = metrics.render_metrics()

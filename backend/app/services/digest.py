@@ -19,6 +19,7 @@ from app.notifiers.base import Notifier
 from app.repositories.digest import PendingDigestRepository
 from app.repositories.searches import SearchRepository
 from app.scrapers.types import JobPosting
+from app.services.plan_limits import PlanLimitsService
 
 logger = get_logger(__name__)
 
@@ -89,6 +90,19 @@ class DigestService:
     def _flush_search(self, search: Search, pending: list[PendingDigest]) -> None:
         target = search.target
         if target is None:
+            return
+
+        if not PlanLimitsService(self.session).allows_notifier(search.user_id, target.type):
+            logger.info(
+                "digest flush: notifier '%s' not allowed for search %s on current plan; "
+                "clearing pending without send",
+                target.type,
+                search.id,
+            )
+            self.pending.delete_for_search(search.id)
+            search.last_digest_at = utcnow()
+            self.session.flush()
+            record_digest_flush("skipped_plan")
             return
 
         seen_rows: list[SeenJob] = [row.seen_job for row in pending]

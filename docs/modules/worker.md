@@ -61,19 +61,25 @@ flowchart TD
 ## Pipeline (`run_search`)
 
 1. Load the search + its source + target (service).
-2. Resolve and run the scraper (`get_scraper(source.adapter_key).fetch(ctx)`).
-3. Sync job lifecycle: mark `new`/`seen` rows missing from the scrape as `closed`;
+2. Re-check the owner's plan for the source scraper (`allows_scraper`). If the
+   adapter is premium-only and the plan no longer allows it (e.g. after a
+   downgrade), skip the scrape, record the error on the search, and reschedule.
+3. Resolve and run the scraper (`get_scraper(source.adapter_key).fetch(ctx)`).
+4. Sync job lifecycle: mark `new`/`seen` rows missing from the scrape as `closed`;
    reopen `closed` rows that reappear as `seen`. Applied/archived rows are untouched.
-4. Apply the search's `filters` JSON to drop non-matching postings.
-5. Dedupe postings against `seen_job` for that search (by `external_id`).
-6. Skip notification when the normalized job URL was already seen in any of the
+5. Apply the search's `filters` JSON to drop non-matching postings.
+6. Dedupe postings against `seen_job` for that search (by `external_id`).
+7. Skip notification when the normalized job URL was already seen in any of the
    owner's other searches (cross-search dedup); still persist a `seen_job` row for
    this search so the Jobs feed stays complete.
-7. Send remaining new postings via `get_notifier(target.type).send(ctx, new_jobs)`,
+8. Re-check the owner's plan for the target notifier (`allows_notifier`). If the
+   type is not allowed (e.g. `webhook` after leaving Pro), skip delivery and do
+   not queue digest rows.
+9. Send remaining new postings via `get_notifier(target.type).send(ctx, new_jobs)`,
    or queue them in `pending_digest` when `notification_mode` is `digest`.
-8. Persist `seen_job` rows and `delivery_log` entries (immediate mode only);
+10. Persist `seen_job` rows and `delivery_log` entries (immediate mode only);
    update schedule fields.
-9. When `source.auto_apply_enabled`, the user has an application profile, and the
+11. When `source.auto_apply_enabled`, the user has an application profile, and the
    adapter supports apply: queue a live `apply_to_job` Celery task for each new
    match (including jobs skipped for notification by cross-search dedup), until
    the plan's rolling 24h live-apply volume cap is reached. Uses the profile
@@ -83,7 +89,8 @@ flowchart TD
 A separate beat task `flush_due_digests` sends batched notifications for digest
 searches whose interval has elapsed, then clears the queue and sets
 `last_digest_at`. Flushes are per-search: one bad target cannot abort the tick or
-undo another search's already-sent digest bookkeeping.
+undo another search's already-sent digest bookkeeping. Flush also re-checks
+`allows_notifier`; a disallowed target clears pending rows without sending.
 
 Failures at any external step are caught, logged, and recorded; the worker keeps
 running.
@@ -94,7 +101,7 @@ Live submissions from `POST /jobs/{id}/apply` (non–dry-run) are validated in t
 API, written to `application_log` with status `queued`, and enqueued as
 `apply_to_job`. The same queue path runs from the pipeline when
 `source.auto_apply_enabled` is on and a new match appears during `run_search`
-(see step 9 above). Pipeline auto-apply also respects the user's plan
+(see step 11 above). Pipeline auto-apply also respects the user's plan
 `max_auto_applies_per_day` rolling window (live `application_log` rows only;
 manual Apply is uncapped by this limit). A Celery worker runs
 `ApplyService.apply_to_job` with the queued log id, updates the audit row to

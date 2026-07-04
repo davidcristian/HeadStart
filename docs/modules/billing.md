@@ -136,6 +136,11 @@ Webhook handler updates `user.stripe_customer_id`, `stripe_subscription_id`,
 - `customer.subscription.created` / `updated`
 - `customer.subscription.deleted` (downgrades to `free`)
 
+Downgrade does **not** delete existing sources/targets. Premium scrapers and
+notifiers are re-checked when the pipeline runs or a digest flushes (see
+[auth.md](auth.md#plan-limits) and [worker.md](worker.md#pipeline-run_search)),
+so paid adapters stop consuming after the plan drops.
+
 Plan resolution prefers the Stripe Price ID (`billing_prices.plan_for_price_id`);
 subscription metadata `plan` is a fallback. An active subscription whose price and
 metadata are both unrecognized defaults to the **lowest paid tier** (`starter`)

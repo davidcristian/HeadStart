@@ -48,6 +48,8 @@ def test_run_skips_summaries_when_plan_disallows(db_session: Session) -> None:
     notifier = RecordingNotifier()
     svc = pipeline(db_session, scraper, notifier)
     with patch("app.services.pipeline.PlanLimitsService") as plan:
+        plan.return_value.allows_scraper.return_value = True
+        plan.return_value.allows_notifier.return_value = True
         plan.return_value.allows_summaries.return_value = False
         result = svc.run(search.id)
     assert result.new == 1
@@ -63,10 +65,82 @@ def test_run_annotates_summaries_when_allowed(db_session: Session) -> None:
         patch("app.services.pipeline.PlanLimitsService") as plan,
         patch.object(svc.summaries, "annotate") as annotate,
     ):
+        plan.return_value.allows_scraper.return_value = True
+        plan.return_value.allows_notifier.return_value = True
         plan.return_value.allows_summaries.return_value = True
         result = svc.run(search.id)
     annotate.assert_called_once()
     assert result.notified == 1
+
+
+def test_run_skips_scrape_when_scraper_not_on_plan(db_session: Session) -> None:
+    search = make_search(db_session)
+    search.user.is_admin = False
+    search.user.plan = "free"
+    search.source.adapter_key = "indeed"
+    db_session.flush()
+    scraper = FakeScraper([posting("1")])
+    notifier = RecordingNotifier()
+    result = pipeline(db_session, scraper, notifier).run(search.id)
+    assert result.error is not None
+    assert "indeed" in result.error
+    assert result.found == 0
+    assert result.notified == 0
+    assert len(notifier.batches) == 0
+
+
+def test_run_skips_notify_when_notifier_not_on_plan(db_session: Session) -> None:
+    search = make_search(db_session)
+    search.user.is_admin = False
+    search.user.plan = "free"
+    search.target.type = "webhook"
+    search.target.config = {"url": "https://example.test/hook"}
+    db_session.flush()
+    scraper = FakeScraper([posting("1")])
+    notifier = RecordingNotifier()
+    result = pipeline(db_session, scraper, notifier).run(search.id)
+    assert result.error is None
+    assert result.new == 1
+    assert result.notified == 0
+    assert len(notifier.batches) == 0
+
+
+def test_run_skips_digest_queue_when_notifier_not_on_plan(db_session: Session) -> None:
+    search = make_search(db_session)
+    search.user.is_admin = False
+    search.user.plan = "starter"
+    search.notification_mode = "digest"
+    search.target.type = "webhook"
+    search.target.config = {"url": "https://example.test/hook"}
+    db_session.flush()
+    scraper = FakeScraper([posting("1")])
+    notifier = RecordingNotifier()
+    result = pipeline(db_session, scraper, notifier).run(search.id)
+    assert result.error is None
+    assert result.new == 1
+    assert result.queued == 0
+    assert db_session.query(PendingDigest).count() == 0
+
+
+def test_scrape_raises_when_scraper_not_on_plan(db_session: Session) -> None:
+    search = make_search(db_session)
+    search.user.is_admin = False
+    search.user.plan = "free"
+    db_session.flush()
+    svc = PipelineService(
+        db_session,
+        scraper_factory=lambda key, http=None, rate_limiter=None: FakeScraper([]),  # type: ignore[arg-type,return-value]
+        notifier_factory=lambda key: RecordingNotifier(),  # type: ignore[arg-type,return-value]
+    )
+    with pytest.raises(PermissionError, match="indeed"):
+        svc.scrape(
+            adapter_key="indeed",
+            user_id=search.user_id,
+            source_id=search.source_id,
+            query_url="",
+            filters={},
+            config={},
+        )
 
 
 def test_run_queues_digest_mode(db_session: Session) -> None:

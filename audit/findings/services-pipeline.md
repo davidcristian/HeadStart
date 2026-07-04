@@ -92,7 +92,7 @@ This area covers the backend business-logic layer (`backend/app/services/`): the
 
 <a id="svc-07"></a>
 ### SVC-07 — Premium scraper/notifier gates not re-checked at pipeline run (survive downgrade)
-🟡 **MEDIUM** · 🔒 security · Status: ☐ open · Confidence: high (5/5 verifiers) · Effort: M · WS14
+🟡 **MEDIUM** · 🔒 security · Status: ✅ done · Confidence: high (5/5 verifiers) · Effort: M · WS14
 
 **Locations:** `backend/app/services/pipeline.py:105` (`PipelineService.run`); also `backend/app/services/pipeline.py:155`, `backend/app/services/pipeline.py:257`, `backend/app/services/billing.py:226`, `backend/app/services/admin.py:41`.
 
