@@ -77,8 +77,10 @@ are hit.
 | Companies search | `/app/portals` | Pro+ keyword search across the catalog; preview results; one-click alert setup |
 
 Free users see the catalog on Sources but cannot open `/app/portals` (upgrade
-prompt). Presets whose scraper is premium-only (`indeed`, `linkedin`,
-`playwright`) are not in this catalog.
+prompt). The Portals page reads `plan.features.portal_search` from `GET /meta`
+(Pro only) before enabling cross-portal search; the API still enforces
+`require_portal_search` server-side. Presets whose scraper is premium-only
+(`indeed`, `linkedin`, `playwright`) are not in this catalog.
 
 ## Adding a preset
 

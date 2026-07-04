@@ -68,7 +68,7 @@ Note on merges: the `portal_search` schema-drift defect surfaced from three angl
 
 <a id="xct-06"></a>
 ### XCT-06 — PlanFeaturesRead omits portal_search; /meta strips it and Pro portal search is gated off for all
-🟡 **MEDIUM** · 🐞 bug · Status: ☐ open · Confidence: high (5/5 verifiers) · Effort: XS · WS17
+🟡 **MEDIUM** · 🐞 bug · Status: ✅ done · Confidence: high (5/5 verifiers) · Effort: XS · WS17
 
 **Locations:** `backend/app/schemas/plan.py:22` (`PlanFeaturesRead`); plus `backend/app/services/plan_limits.py:83`, `backend/app/api/v1/health.py:32`, `frontend/src/pages/portals/usePortalsPage.ts:11`, `frontend/src/types/meta.ts:20`.
 
@@ -78,7 +78,7 @@ Note on merges: the `portal_search` schema-drift defect surfaced from three angl
 
 **Failure scenario.** A Pro/Plus user (`portal_search=True` in `core/plans.py`) opens the Portals page; `/meta` never carries `portal_search`, so `portalSearchAllowed` falls back to `false` and the paid cross-portal search stays disabled/hidden for every entitled user. (Note: the backend `require_portal_search` gate still enforces access server-side, so this is UI-only — but it hides a paid feature entirely.)
 
-**Suggested fix.** Add `portal_search: bool` to `PlanFeaturesRead` so `response_model` serialization mirrors `core.plans.PlanFeatures` and the frontend contract; add a serialization test asserting the flag survives `model_validate`.
+**Fix.** Add `portal_search: bool` to `PlanFeaturesRead` so `AccountPlanRead.model_validate(snapshot)` keeps the flag for `/meta` and the Portals UI. Same root defect as API-12. See [PR](https://github.com/davidcristian/HeadStart/pull/23).
 
 **Verification.** Confirmed across all reports (5/5, 3/3, and 5/5 verifiers respectively). `PlanFeaturesRead` omits `portal_search` though `snapshot()` emits it; `model_validate` with Pydantic `extra='ignore'` drops it, so `/meta` never returns it and `usePortalsPage.ts:11` defaults to `false`, gating the Pro-only Portals feature off for everyone.
 

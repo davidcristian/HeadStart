@@ -138,7 +138,7 @@ This area covers the FastAPI v1 routers under `backend/app/api/v1/` and the Pyda
 
 <a id="api-12"></a>
 ### API-12 — PlanFeaturesRead omits portal_search though snapshot() emits it
-⚪ **LOW** · 🔁 consistency · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: XS · WS17
+⚪ **LOW** · 🔁 consistency · Status: ✅ done · Confidence: high (3/3 verifiers) · Effort: XS · WS17
 
 **Locations:** `backend/app/schemas/plan.py:22` (`PlanFeaturesRead`); plus plan_limits.py:83, health.py:32.
 
@@ -146,7 +146,7 @@ This area covers the FastAPI v1 routers under `backend/app/api/v1/` and the Pyda
 
 **Failure scenario.** The `AccountPlanRead` response silently omits the `portal_search` flag, so the frontend cannot read it from the typed features object, risking client/server drift on Pro-only portal-search gating.
 
-**Suggested fix.** Add `portal_search: bool` to `PlanFeaturesRead` (and mirror it in the frontend types) so the schema matches the snapshot payload.
+**Fix.** Add `portal_search: bool` to `PlanFeaturesRead` (same change as XCT-06) so the schema matches the snapshot payload. See [PR](https://github.com/davidcristian/HeadStart/pull/23).
 
 **Verification.** Confirmed 3/3 adversarial verifiers. `snapshot()` emits `portal_search` (plan_limits.py:83) and `health.py:32` validates via `AccountPlanRead`, but `PlanFeaturesRead` lacks the field so it is dropped from the typed response; genuine schema drift, low is fair.
 

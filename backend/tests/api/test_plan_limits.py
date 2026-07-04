@@ -150,6 +150,7 @@ def test_meta_includes_plan_snapshot(client: TestClient) -> None:
     assert body["plan"]["plan"] == "free"
     assert body["plan"]["show_ads"] is True
     assert body["plan"]["limits"]["max_sources"] == 3
+    assert body["plan"]["features"]["portal_search"] is False
     assert "indeed" not in body["scrapers"]
     assert "webhook" not in body["notifiers"]
     assert "greenhouse" in body["scrapers"]
@@ -169,7 +170,9 @@ def test_meta_hides_ads_for_pro_plan(client: TestClient) -> None:
 
     resp = client.get("/api/v1/meta", headers=user_headers)
     assert resp.status_code == 200
-    assert resp.json()["plan"]["show_ads"] is False
+    plan = resp.json()["plan"]
+    assert plan["show_ads"] is False
+    assert plan["features"]["portal_search"] is True
 
 
 def test_admin_can_set_user_plan(client: TestClient) -> None:

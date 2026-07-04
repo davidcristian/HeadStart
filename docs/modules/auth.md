@@ -197,7 +197,9 @@ and digest queue/flush). Pending digest rows for a disallowed notifier are
 cleared without sending so they do not retry forever.
 
 `GET /meta` returns an `AccountPlanRead` snapshot (limits, current usage,
-allowed scrapers/notifiers) so the UI can disable options proactively.
+feature flags including `portal_search`, allowed scrapers/notifiers) so the UI
+can disable options proactively. `PlanFeaturesRead` mirrors
+`core.plans.PlanFeatures` so snapshot keys are not dropped on serialize.
 `PATCH /admin/users/{id}` accepts `plan` for manual overrides.
 
 ## Admin

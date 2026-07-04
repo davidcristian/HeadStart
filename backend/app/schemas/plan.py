@@ -26,6 +26,7 @@ class PlanFeaturesRead(BaseModel):
     ai_summaries: bool
     site_credentials: bool
     rss_feed: bool
+    portal_search: bool
 
 
 class AccountPlanRead(BaseModel):
