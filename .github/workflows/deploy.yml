@@ -1,12 +1,12 @@
 name: Deploy
 
 # Builds + pushes images to ECR, runs DB migrations, and rolls the ECS services.
-# Pushing to main deploys `dev`; deploy `prod` via the manual "Run workflow"
-# button (GitHub Environment protection can require an approval).
+# Manual-only: this workflow never runs on push. Trigger it from the Actions tab
+# ("Run workflow", choose dev/prod; GitHub Environment protection can require an
+# approval). The deploy job is additionally guarded on the `AWS_ROLE_ARN` repo
+# variable, so it no-ops until the AWS OIDC role is configured.
 
 on:
-  push:
-    branches: [main, master]
   workflow_dispatch:
     inputs:
       environment:
@@ -22,6 +22,8 @@ permissions:
 jobs:
   deploy:
     name: Deploy ${{ github.event.inputs.environment || 'dev' }}
+    # Skips cleanly (no failure) until the AWS OIDC role variable is configured.
+    if: ${{ vars.AWS_ROLE_ARN != '' }}
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment || 'dev' }}
     env:

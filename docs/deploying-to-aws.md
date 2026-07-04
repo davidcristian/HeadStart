@@ -326,12 +326,18 @@ curl "$(terraform output -raw app_url)/api/v1/health"
 
 ---
 
-## CI/CD (deploy optional)
+## CI/CD (CI active; deploy/terraform dormant)
 
-The quality gate (`ci.yml`) runs on every push/PR. The deploy workflow is
-manual and guarded on an AWS role variable; it needs an AWS role to assume
-and the same application secrets
-(`JWT_SECRET`, `CREDENTIALS_SECRET_KEY`) that Terraform stores in Secrets Manager.
+All workflows live in `.github/workflows/`. The **CI** quality gate (`ci.yml`)
+runs on every push and pull request — backend lint/type/tests and frontend
+lint/type/tests/build, both gated at 100% coverage. **`deploy.yml`** is
+manual-only (`workflow_dispatch`) and its job is guarded by
+`if: vars.AWS_ROLE_ARN != ''`, so it stays dormant until you set that repo
+variable; **`terraform.yml`** runs `fmt`/`validate` on `devops/terraform/**` PRs
+and its credentialed `plan` step is gated on the same variable. Configure the AWS
+OIDC role (`AWS_ROLE_ARN`) plus the application secrets (`JWT_SECRET`,
+`CREDENTIALS_SECRET_KEY`, and the `TF_VAR_*` secrets) to activate them — no files
+need to move.
 
 ---
 

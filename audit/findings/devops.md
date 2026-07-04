@@ -1,6 +1,6 @@
 # DevOps — Terraform/IaC, Docker, scripts, CI/CD
 
-This area covers the deployment and infrastructure surface of the repo: the AWS Terraform stack (`devops/terraform/`), the `Dockerfile`/`docker-compose.yml` container definitions, the shell scripts under `scripts/`, and the GitHub Actions workflows. The headline finding is a **build/release integrity bug**: `make deploy` pushes a git-SHA-tagged image but only force-new-deployments services whose task definitions pin an image tag the build never re-pushes, so new code silently never ships (OPS-01). The CI/CD quality gate advertised in `AGENTS.md` runs lint/type/test/coverage on push/PR, but it omits the LOC cap, shell-script validation, and prettier, and the local pre-commit gate omits most of the checks it claims to mirror, including a frontend-lint hook that scans zero files (OPS-03, OPS-04). The remainder is a broad, mostly low-severity Terraform hardening backlog: Redis broker without encryption/auth, mutable ECR tags, over-broad security groups, a public ntfy default topic, missing VPC flow logs / access logs / WAF, and various KMS/observability/HA gaps.
+This area covers the deployment and infrastructure surface of the repo: the AWS Terraform stack (`devops/terraform/`), the `Dockerfile`/`docker-compose.yml` container definitions, the shell scripts under `scripts/`, and the GitHub Actions workflows. The headline finding is a **build/release integrity bug**: `make deploy` pushes a git-SHA-tagged image but only force-new-deployments services whose task definitions pin an image tag the build never re-pushes, so new code silently never ships (OPS-01). The CI/CD quality gate advertised in `AGENTS.md` runs: `ci.yml` enforces lint/type/test/coverage on push/PR, but `ci.yml` still omits the LOC cap, shell-script validation, and prettier, and the local pre-commit gate omits those plus a frontend-lint hook that scans zero files (OPS-03, OPS-04). The `deploy.yml`/`terraform.yml` workflows are **dormant** — `deploy.yml` is manual-only (`workflow_dispatch`) and guarded on `vars.AWS_ROLE_ARN`, and `terraform.yml`'s `plan` step is guarded on the same variable — so nothing AWS-touching runs until that variable/secrets are configured (OPS-23, OPS-24). The remainder is a broad, mostly low-severity Terraform hardening backlog: Redis broker without encryption/auth, mutable ECR tags, over-broad security groups, a public ntfy default topic, missing VPC flow logs / access logs / WAF, and various KMS/observability/HA gaps.
 
 **Summary:** 0 critical · 1 high · 15 medium · 21 low (after merging duplicate records; 66 raw findings consolidated to 37).
 
@@ -32,7 +32,7 @@ This area covers the deployment and infrastructure surface of the repo: the AWS 
 
 **Evidence.** The hook is `entry: bash -c 'cd frontend && npx eslint --max-warnings=0'` with `pass_filenames: false` and no path argument. ESLint 8 (flat-less `.eslintrc.cjs`) given no path lints nothing. Reproduced: with a real `no-unused-vars` error in `src/*.tsx`, `npx eslint --max-warnings=0` exits 0, while `eslint .` (the npm `lint` script) exits 1 and reports it. As a secondary defect, the hook is named "frontend eslint (changed files)" but with `pass_filenames: false` it would (if given a path) lint the whole project, not the changed files — the label is doubly misleading.
 
-**Failure scenario.** A dev commits frontend TypeScript with lint errors; the only frontend pre-commit gate silently passes because it scans zero files. Bad code lands with nothing catching it locally; it only surfaces when ci.yml's eslint job fails server-side.
+**Failure scenario.** A dev commits frontend TypeScript with lint errors; the only frontend pre-commit gate silently passes because it scans zero files. Bad code lands and nothing catches it locally at commit time.
 
 **Suggested fix.** Pass changed filenames (`pass_filenames: true`) or lint an explicit path (`npx eslint . --max-warnings=0`), matching the npm `lint` script, and rename the hook to reflect its real scope.
 
@@ -41,20 +41,20 @@ This area covers the deployment and infrastructure surface of the repo: the AWS 
 ---
 
 <a id="ops-04"></a>
-### OPS-04 — Claimed gates (coverage/mypy/tsc/LOC/shell) unenforced: CI disabled, pre-commit omits them
+### OPS-04 — Claimed gates partially unenforced: ci.yml omits LOC/shell/prettier, pre-commit omits them too
 🟡 **MEDIUM** · 🧪 test · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: S · WS37
 
 **Locations:** `.pre-commit-config.yaml:2` (`repos` / header comment); plus `scripts/lint.sh:18`, `scripts/typecheck.sh:6`, `scripts/validate-shell-scripts.sh:1`.
 
 **Note:** Merged with OPS-25 (pre-commit claims to mirror CI but omits mypy/tsc/tests/coverage/LOC/shell); same defect, different severity vote.
 
-**Evidence.** The config header claims the hooks "mirror the CI quality gate," but ci.yml omits `check_loc.sh`, shell validation, and prettier, and pre-commit runs only whitespace/eof/yaml + ruff/black + the (broken) eslint hook. There is no mypy, no `tsc --noEmit`, no pytest/vitest/coverage, no prettier, no `check_loc.sh` (the 300-line cap), and no `validate-shell-scripts.sh`. Those omitted checks run only via a manual `make check`.
+**Evidence.** The pre-commit config header claims the hooks "mirror the CI quality gate." ci.yml runs ruff/black/mypy/pytest+coverage and eslint/tsc/vitest+coverage/build server-side, but neither ci.yml nor pre-commit runs `check_loc.sh` (the 300-line cap), `validate-shell-scripts.sh`, or `prettier --check`; pre-commit itself runs only whitespace/eof/yaml + ruff/black + the (broken) eslint hook, omitting the mypy/tsc/pytest/vitest/coverage that ci.yml covers.
 
-**Failure scenario.** A PR that breaks types, drops coverage below 100%, exceeds the 300-line cap, breaks a shell script, or violates Prettier formatting merges with zero automated enforcement — every "gated" guarantee in AGENTS.md §5/§6 is voluntary.
+**Failure scenario.** A PR that exceeds the 300-line cap, breaks a shell script, or violates Prettier formatting merges with zero automated enforcement — neither ci.yml nor pre-commit runs those checks; locally, a commit that breaks types or drops coverage below 100% passes pre-commit and is caught only later by ci.yml.
 
-**Suggested fix.** Extend ci.yml with `check_loc` and shell-validation jobs plus prettier, or wire these into pre-commit stages; alternatively reword the header to state pre-commit is a fast subset.
+**Suggested fix.** Add `check_loc`, shell-validation, and `prettier --check` jobs to ci.yml (and/or wire them into pre-commit stages) so all AGENTS.md §5/§6 gates run automatically; alternatively reword the pre-commit header to state it is a fast subset of ci.yml.
 
-**Verification.** Confirmed 3/3 adversarial verifiers. No `.github` dir exists; `.pre-commit-config` only runs ruff/black/eslint while the disabled `ci.yml` runs mypy/pytest/tsc/vitest — the "mirror the CI quality gate" header is false and the gates are not enforced automatically.
+**Verification.** Confirmed 3/3 adversarial verifiers. `.pre-commit-config` runs only ruff/black/eslint while the now-live `ci.yml` runs mypy/pytest/tsc/vitest+coverage but not check_loc/shell-validation/prettier — the "mirror the CI quality gate" header is inaccurate and the LOC/shell/prettier gates are not enforced automatically.
 
 ---
 
@@ -206,13 +206,13 @@ This area covers the deployment and infrastructure surface of the repo: the AWS 
 
 **Locations:** `.github/workflows/ci.yml:1` (`ci`).
 
-**Evidence.** A grep for `audit|safety|snyk|pip-audit|osv|trivy|dependabot|cve` across `.github(.disabled)/` and `scripts/` returns nothing, and there is no `.github/dependabot.yml` or `renovate.json`. The (disabled) gate is lint + type + test + coverage only — SCA is entirely absent.
+**Evidence.** A grep for `audit|safety|snyk|pip-audit|osv|trivy|dependabot|cve` across `.github(.disabled)/` and `scripts/` returns nothing, and there is no `.github/dependabot.yml` or `renovate.json`. The now-live ci.yml gate is lint + type + test + coverage only — SCA is entirely absent.
 
 **Failure scenario.** A newly disclosed CVE in a pinned or floating dependency (e.g. the next `cryptography`/`celery` advisory) ships to production undetected because no build step flags vulnerable dependencies.
 
 **Suggested fix.** Add `pip-audit` (backend) and `npm audit --audit-level=high` (frontend) as a CI job, plus a Dependabot/Renovate config for automated bump PRs.
 
-**Verification.** Confirmed 3/3 adversarial verifiers. Only `.github/workflows` exists, no `dependabot.yml`/`renovate.json`, and grep for audit/pip-audit/trivy/dependabot/cve returns nothing; low severity is fair.
+**Verification.** Confirmed 3/3 adversarial verifiers. ci.yml is now live under `.github/workflows/` but has no SCA step, there is no `dependabot.yml`/`renovate.json`, and grep for audit/pip-audit/trivy/dependabot/cve returns nothing; low severity is fair.
 
 ---
 
@@ -220,7 +220,7 @@ This area covers the deployment and infrastructure surface of the repo: the AWS 
 ### OPS-20 — All GitHub Actions pinned to floating major-version tags, not commit SHAs
 ⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: S · WS37
 
-**Locations:** `.github/workflows/ci.yml:20` (`uses:`); plus ci.yml:21/45/46, deploy.yml:31/34/41, terraform.yml:24/25.
+**Locations:** `.github/workflows/ci.yml:20` (`uses:`); plus ci.yml:21/45/46, `.github/workflows/deploy.yml:31/34/41`, `.github/workflows/terraform.yml:24/25`.
 
 **Evidence.** Every `uses:` references a mutable tag (`checkout@v4`, `configure-aws-credentials@v4`, `amazon-ecr-login@v2`, `setup-python@v5`, `setup-node@v4`, `setup-terraform@v3`). Tags are mutable; a re-pointed or compromised tag would run attacker code with the job's OIDC/AWS credentials and secrets.
 
@@ -228,7 +228,7 @@ This area covers the deployment and infrastructure surface of the repo: the AWS 
 
 **Suggested fix.** Pin every third-party action to a full commit SHA (with a version comment) and add Dependabot to bump the SHAs.
 
-**Verification.** Confirmed 3/3 adversarial verifiers. All `uses:` are floating tags (a real supply-chain gap), but the entire `.github/` directory is absent so none of these workflows execute at 2630231; it is a latent hardening issue, not live exposure.
+**Verification.** Confirmed 3/3 adversarial verifiers. All `uses:` are floating tags (a real supply-chain gap). ci.yml is now live under `.github/workflows/`, so its floating action tags execute on push/PR; the deploy.yml/terraform.yml `uses:` are present in `.github/workflows/` but stay dormant behind the `workflow_dispatch`/`vars.AWS_ROLE_ARN` guards.
 
 ---
 
@@ -276,7 +276,7 @@ This area covers the deployment and infrastructure surface of the repo: the AWS 
 
 **Suggested fix.** Add `role-session-name`/audience, document the required trust-policy `sub` scoping, and require an approving environment for the dev push path too.
 
-**Verification.** Confirmed 3/3 adversarial verifiers. Deploy uses environment protection but no in-workflow ref scoping and no documented trust-policy sub pinning; a legitimate hardening/doc nit, low.
+**Verification.** Confirmed 3/3 adversarial verifiers. The workflow is now present in `.github/workflows/` but stays dormant (manual `workflow_dispatch` only, gated on `vars.AWS_ROLE_ARN`); once enabled it uses environment protection but has no in-workflow ref scoping and no documented trust-policy sub pinning — a legitimate hardening/doc nit, low.
 
 ---
 
@@ -292,7 +292,7 @@ This area covers the deployment and infrastructure surface of the repo: the AWS 
 
 **Suggested fix.** Gate the credentialed plan behind an approved environment/label, scope OIDC trust to protected refs, and never expose deploy secrets on untrusted PR checkouts.
 
-**Verification.** Confirmed 3/3 adversarial verifiers. The credentialed Plan step is dormant: it is gated on `vars.AWS_ROLE_ARN != ''`; real only if the variable is configured, so low.
+**Verification.** Confirmed 3/3 adversarial verifiers. The workflow is now present in `.github/workflows/` but the credentialed Plan step stays dormant: it is gated on `vars.AWS_ROLE_ARN != ''`, so it runs nothing AWS-touching until that variable/secrets are configured; real only once enabled, so low.
 
 ---
 

@@ -371,11 +371,12 @@ _10 item(s): 1 high, 4 medium, 5 low._
 
 ## WS37 — CI/pre-commit quality gate & dependency scanning
 _11 item(s): 2 medium, 9 low._
+_deploy.yml/terraform.yml are dormant — deploy.yml is manual-only (`workflow_dispatch`) and guarded on `vars.AWS_ROLE_ARN`, and terraform.yml's `plan` step is guarded on the same variable — so nothing AWS-touching runs until that variable/secrets are configured. The open WS37 items: the deploy OIDC ref-scoping and terraform-plan-on-PR secrets hardening (OPS-23/OPS-24), dependency scanning, SHA-pinning, and pre-commit/ci parity for LOC/shell/prettier._
 
 | Sev | Type | Item | Location | Status |
 | --- | ---- | ---- | -------- | ------ |
 | 🟡 MED | 🐞 | [OPS-03](findings/devops.md#ops-03) Pre-commit frontend-lint runs eslint with no path: lints 0 files, always passes | `.pre-commit-config.yaml:38` | ☐ |
-| 🟡 MED | 🧪 | [OPS-04](findings/devops.md#ops-04) Claimed gates (coverage/mypy/tsc/LOC/shell) unenforced: CI disabled, pre-commit omits them | `.pre-commit-config.yaml:2` | ☐ |
+| 🟡 MED | 🧪 | [OPS-04](findings/devops.md#ops-04) Claimed gates (LOC/shell/prettier) still unenforced: ci.yml omits check_loc/shell-validation/prettier, pre-commit omits them too | `.pre-commit-config.yaml:2` | ☐ |
 | ⚪ LOW | 🔒 | [OPS-19](findings/devops.md#ops-19) No dependency vuln scanning (pip-audit / npm audit / Dependabot) in repo | `.github/workflows/ci.yml:1` | ☐ |
 | ⚪ LOW | 🔒 | [OPS-20](findings/devops.md#ops-20) All GitHub Actions pinned to floating major-version tags, not commit SHAs | `.github/workflows/ci.yml:20` | ☐ |
 | ⚪ LOW | 🐞 | [OPS-21](findings/devops.md#ops-21) CI Slack-failure notify guarded by env var never set at that scope, never fires | `.github/workflows/ci.yml:69` | ☐ |

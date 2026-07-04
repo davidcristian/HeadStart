@@ -18,9 +18,7 @@ from app.resumes.latex_safety import reject_dangerous_latex_content
         (r"\immediate\write18{uname -a}", "immediate-write18"),
     ],
 )
-def test_reject_dangerous_latex_content_blocks_shell_and_file_access(
-    tex: str, label: str
-) -> None:
+def test_reject_dangerous_latex_content_blocks_shell_and_file_access(tex: str, label: str) -> None:
     with pytest.raises(ValidationError, match="disallowed LaTeX commands"):
         reject_dangerous_latex_content(tex, label=label)
 

@@ -93,9 +93,11 @@ bootstrap, `terraform apply`, and `make deploy` — see
 3. Run DB migrations as a one-off ECS task.
 4. Update ECS services to the new image tag (rolling deploy).
 
-CI runs the quality gate on every push/PR; the AWS workflows
-run `terraform plan` on PRs and (gated) `terraform apply` + `make deploy` on
-merge to main.
+All workflows live in `.github/workflows/`. The CI quality gate (`ci.yml`) runs
+on push/PR. `deploy.yml` (manual `workflow_dispatch`) and `terraform.yml`'s
+credentialed `plan` step are guarded on `vars.AWS_ROLE_ARN`, so they stay dormant
+until AWS is configured; once set, `terraform plan` runs on PRs and `deploy` runs
+`terraform apply` + `make deploy` on demand.
 
 ## First-time setup
 
@@ -107,4 +109,5 @@ Summary:
 1. Bootstrap S3 state + DynamoDB lock (`environments/<env>/backend.tf`).
 2. `terraform init && terraform apply` in `environments/dev` (or `prod`).
 3. `make deploy` with `ECR_REGISTRY` and `ECS_CLUSTER` set.
-4. Optional: configure AWS/GitHub secrets so the deploy/terraform workflows can run.
+4. Optional: activate the deploy/terraform workflows by setting the `AWS_ROLE_ARN`
+   repo variable and the AWS/GitHub secrets (the workflow files are already in place).
