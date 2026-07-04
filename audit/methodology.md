@@ -32,7 +32,7 @@ Tie-break: PII/credential/money/code-exec code rounds up; config/preset data rou
 
 ## Prior-audit regression check
 
-Every agent read `docs/audit-backlog.md` (the 77 resolved items from 2026-07-01) as both an exclusion list and a regression checklist. Result: **0 regression(s)** of resolved items and **100 finding(s) related-to** (distinct deltas near) prior items were surfaced; all other confirmed findings are new ground.
+Every agent read the 2026-07-01 first audit's 77 resolved items as both an exclusion list and a regression checklist. Result: **0 regression(s)** of resolved items and **100 finding(s) related-to** (distinct deltas near) prior items were surfaced; all other confirmed findings are new ground.
 
 ## Coverage manifest
 

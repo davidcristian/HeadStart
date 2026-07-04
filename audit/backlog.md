@@ -1,6 +1,6 @@
 # Audit Backlog — Full Codebase Audit 2026-07-02
 
-Living tracker for the **second** full-codebase audit (branch `docs/audit-2026-07`, commit `2630231`). Same tracker format as the 2026-07-01 audit in [../docs/audit-backlog.md](../docs/audit-backlog.md); workstream numbering **continues at WS14**. Update the Status column (and strike the row) when an item ships; link the PR. Full context for every item lives in the linked [findings/](findings/) doc.
+Living tracker for the **second** full-codebase audit (branch `docs/audit-2026-07`, commit `2630231`). Same tracker format as the 2026-07-01 first audit; workstream numbering **continues at WS14**. Update the Status column (and strike the row) when an item ships; link the PR. Full context for every item lives in the linked [findings/](findings/) doc.
 
 Produced by a read-only multi-agent audit at commit `09957ec` — **every medium-and-up finding adversarially verified** by 3–5 independent refuters (majority vote). **269 tracked findings** from the original pass (0 critical · 12 high · 71 medium · 186 low), consolidated from 350 verified records (near-duplicates and systemic classes merged in the findings docs). This audit deliberately targeted ground the first audit did not cover — IaC/CI-CD security, accessibility, dependency CVEs, licensing, GDPR completeness, performance, observability — and swept the full *class* of every instance-fix the first audit made.
 

@@ -3,7 +3,7 @@
 An exhaustive, read-only audit of the entire repository, graded against market best
 practices and design patterns. This directory **documents** findings; it changes no
 product code. Fixes are tracked here and shipped later as scoped PRs — exactly as the
-first audit ([../docs/audit-backlog.md](../docs/audit-backlog.md)) was.
+first audit (2026-07-01) was.
 
 - **Audited commit:** `2630231` · **branch:** `docs/audit-2026-07` (off `master`)
 - **Scope:** backend (FastAPI/Celery, ~38k LOC), frontend (React/Vite), Terraform/IaC,
