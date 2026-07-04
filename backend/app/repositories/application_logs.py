@@ -10,8 +10,6 @@ from app.models.application_log import ApplicationLog
 from app.models.search import Search
 from app.models.seen_job import SeenJob
 
-_PENDING_STATUSES = ("queued", "processing")
-
 
 class ApplicationLogRepository:
     def __init__(self, session: Session) -> None:
@@ -48,20 +46,6 @@ class ApplicationLogRepository:
                 joinedload(ApplicationLog.seen_job),
                 joinedload(ApplicationLog.tailored_resume_artifact),
             )
-        )
-        return self.session.scalar(stmt)
-
-    def get_pending_for_job(self, seen_job_id: int) -> ApplicationLog | None:
-        """Return an in-flight apply log for a job, if any."""
-        stmt = (
-            select(ApplicationLog)
-            .where(
-                ApplicationLog.seen_job_id == seen_job_id,
-                ApplicationLog.dry_run.is_(False),
-                ApplicationLog.status.in_(_PENDING_STATUSES),
-            )
-            .order_by(ApplicationLog.created_at.desc())
-            .limit(1)
         )
         return self.session.scalar(stmt)
 

@@ -20,9 +20,7 @@ class ApplicationLog(Base):
             "uq_application_log_inflight_job",
             "seen_job_id",
             unique=True,
-            postgresql_where=text(
-                "status IN ('queued', 'processing') AND dry_run IS FALSE"
-            ),
+            postgresql_where=text("status IN ('queued', 'processing') AND dry_run IS FALSE"),
             sqlite_where=text("status IN ('queued', 'processing') AND dry_run = 0"),
         ),
     )
