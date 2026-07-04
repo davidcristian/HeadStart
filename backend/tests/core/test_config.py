@@ -114,6 +114,20 @@ def test_database_url_overrides_derived(monkeypatch: pytest.MonkeyPatch) -> None
     assert settings.sqlalchemy_url == "sqlite+pysqlite:///:memory:"
 
 
+def test_short_credentials_key_rejected_outside_local(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Non-placeholder but short CREDENTIALS_SECRET_KEY fails the AUT-05 length floor."""
+    monkeypatch.setenv("ENVIRONMENT", "production")
+    monkeypatch.setenv("JWT_SECRET", "a-real-long-random-production-secret-value")
+    monkeypatch.setenv("CREDENTIALS_SECRET_KEY", "too-short-to-be-safe")
+    monkeypatch.setenv("SMTP_HOST", "smtp.example.com")
+    with pytest.raises(ValidationError) as exc_info:
+        Settings(_env_file=None)  # type: ignore[call-arg]
+    assert "CREDENTIALS_SECRET_KEY" in str(exc_info.value)
+    assert "at least 32" in str(exc_info.value)
+
+
 def test_samesite_normalizer_passes_through_non_string() -> None:
     """The SameSite validator only lowercases strings; other types pass unchanged."""
     assert Settings._normalize_samesite(None) is None

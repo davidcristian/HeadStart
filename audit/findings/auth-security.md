@@ -56,7 +56,9 @@ This area covers authentication and session management (login, registration, pas
 
 <a id="aut-05"></a>
 ### AUT-05 — Fernet key: unsalted single SHA-256 derivation, no KDF, no key-rotation path
-🟡 **MEDIUM** · 🔒 security · Status: ☐ open · Confidence: medium (5/5 verifiers) · Effort: M · WS19
+🟡 **MEDIUM** · 🔒 security · Status: ✅ done · Confidence: medium (5/5 verifiers) · Effort: M · WS19
+
+**Update (2026-07-10).** Fixed in [PR](https://github.com/davidcristian/HeadStart/pull/31): `core.crypto` stretches `CREDENTIALS_SECRET_KEY` with scrypt, keeps legacy SHA-256 decrypt via `MultiFernet`, accepts `CREDENTIALS_SECRET_KEY_PREVIOUS` for rotation, and non-local boots require length ≥ 32.
 
 **Merge note.** Merges the lower-severity duplicate AUT-14 (uid 251, low) into this canonical medium finding — same unsalted-SHA-256 KDF defect; AUT-05 additionally covers the missing rotation path.
 

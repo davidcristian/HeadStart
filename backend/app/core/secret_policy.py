@@ -15,6 +15,11 @@ from __future__ import annotations
 DEV_JWT_SECRET = "dev-local-jwt-secret-change-me-to-a-long-random-value"
 DEV_CREDENTIALS_SECRET_KEY = "dev-local-credentials-key-change-me"
 
+# Floor for CREDENTIALS_SECRET_KEY outside local/test (AUT-05). Fernet.generate_key()
+# yields 44 urlsafe chars; openssl rand -hex 32 yields 64. Short custom strings
+# remain brute-forceable even after scrypt stretching.
+MIN_CREDENTIALS_SECRET_KEY_LEN = 32
+
 _LOCAL_ENVIRONMENTS = frozenset({"local", "test"})
 
 
@@ -26,7 +31,7 @@ def is_local_environment(environment: str) -> bool:
 def assert_secrets_safe_for_environment(
     environment: str, jwt_secret: str, credentials_secret_key: str
 ) -> None:
-    """Raise ``ValueError`` if a non-local env still uses a placeholder secret."""
+    """Raise ``ValueError`` if a non-local env uses a placeholder or short key."""
     if is_local_environment(environment):
         return
     insecure: list[str] = []
@@ -38,6 +43,11 @@ def assert_secrets_safe_for_environment(
         raise ValueError(
             f"{', '.join(insecure)} must be overridden when "
             f"ENVIRONMENT='{environment}'; the built-in default is insecure."
+        )
+    if len(credentials_secret_key) < MIN_CREDENTIALS_SECRET_KEY_LEN:
+        raise ValueError(
+            f"CREDENTIALS_SECRET_KEY must be at least {MIN_CREDENTIALS_SECRET_KEY_LEN} "
+            f"characters when ENVIRONMENT='{environment}'."
         )
 
 

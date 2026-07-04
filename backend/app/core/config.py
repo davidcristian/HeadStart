@@ -71,9 +71,11 @@ class Settings(BaseSettings):
     smtp_use_tls: bool = True
 
     # ---- credential encryption ----
-    # Fernet key (base64, 32 bytes) encrypting per-site credentials at rest. Generate with:
-    #   python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+    # Stretched via scrypt into a Fernet key (core/crypto.py). Prefer Fernet.generate_key().
+    # Non-local boots require length >= secret_policy.MIN_CREDENTIALS_SECRET_KEY_LEN.
     credentials_secret_key: str = secret_policy.DEV_CREDENTIALS_SECRET_KEY
+    # Prior key kept in MultiFernet so rotation does not brick ciphertext.
+    credentials_secret_key_previous: str = ""
 
     # Max resume file size for application-profile uploads (bytes).
     profile_resume_max_bytes: int = 2_097_152

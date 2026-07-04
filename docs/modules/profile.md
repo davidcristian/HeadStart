@@ -109,7 +109,8 @@ structured profile mapping (see [appliers.md](appliers.md)).
 ## Encryption & read safety
 
 The whole payload is **Fernet-encrypted before storage** (`core.crypto.encrypt`,
-keyed by `CREDENTIALS_SECRET_KEY`); only `data_ciphertext` reaches the database.
+keyed by scrypt-stretched `CREDENTIALS_SECRET_KEY`); only `data_ciphertext`
+reaches the database.
 The profile is PII, not a shared secret like a login cookie, so — unlike
 [site credentials](credentials.md) — the decrypted profile **is returned to its
 owner** so it can be reviewed and edited in the UI. It is never exposed to other

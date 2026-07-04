@@ -15,8 +15,12 @@ sensitive and must not leak.
 - Add a `site_credential` entity owned by a `(user, source)` pair. It stores a
   JSON payload `{cookies, headers, session}` that is **Fernet-encrypted at rest**
   (`app.core.crypto`); only `secret_ciphertext` is persisted.
-- Derive the Fernet key from `CREDENTIALS_SECRET_KEY` (SHA-256 → urlsafe base64)
-  so any human-friendly string is a valid key.
+- Stretch the Fernet key from `CREDENTIALS_SECRET_KEY` with **scrypt** (fixed
+  salt `headstart.credentials.v1`). `MultiFernet` also keeps the legacy
+  unsalted-SHA-256 derivation of the current secret (pre-AUT-05 ciphertext) and
+  an optional `CREDENTIALS_SECRET_KEY_PREVIOUS` so operators can rotate without
+  bricking stored secrets. Non-local boots require length ≥ 32 and reject the
+  built-in placeholder.
 - Never return secret values over the API. `CredentialRead` exposes metadata and
   booleans (`has_cookies` / `has_headers` / `has_session`) only.
 - Inject at the edge: `PipelineService` looks up the search owner's enabled
@@ -29,8 +33,9 @@ sensitive and must not leak.
 ## Consequences
 
 - Adds the `cryptography` dependency and a required `CREDENTIALS_SECRET_KEY`
-  secret. Rotating it makes previously-saved credentials unreadable (acceptable;
-  users re-enter them).
+  secret. Rotating it is supported via `CREDENTIALS_SECRET_KEY_PREVIOUS`
+  (MultiFernet); dropping the previous value without re-encrypting makes old
+  ciphertext unreadable.
 - Credentials follow the same per-user isolation as everything else (ADR-0004).
 - Provides a clean seam for future channels (auto-apply, authenticated APIs)
   without touching adapters.

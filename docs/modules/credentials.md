@@ -19,8 +19,13 @@ is a JSON object:
 ```
 
 It is **Fernet-encrypted before storage** (`core.crypto.encrypt`); only
-`secret_ciphertext` ever reaches the database. The encryption key is derived
-from `CREDENTIALS_SECRET_KEY` (any string is hashed into a valid Fernet key).
+`secret_ciphertext` ever reaches the database. The encryption key is stretched
+from `CREDENTIALS_SECRET_KEY` via **scrypt** (fixed app salt
+`headstart.credentials.v1`). Encrypt always uses the scrypt-derived primary;
+decrypt also accepts the legacy unsalted-SHA-256 derivation of the same secret
+(so pre-upgrade ciphertext stays readable) and an optional
+`CREDENTIALS_SECRET_KEY_PREVIOUS` for key rotation. Non-local boots require the
+primary secret to be at least 32 characters (and not the built-in placeholder).
 
 ## Read safety
 
