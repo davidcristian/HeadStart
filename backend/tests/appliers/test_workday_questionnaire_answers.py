@@ -70,13 +70,47 @@ def test_build_answers_records_missing_required_and_skips_optional() -> None:
     assert missing == ["q-req"]
 
 
-def test_build_answers_drops_entry_when_conversion_returns_none() -> None:
+def test_build_answers_drops_optional_when_conversion_returns_none() -> None:
     questionnaire = {"questions": [_question("q-num", "Numeric")]}
     answers, missing = build_questionnaire_answers(
         questionnaire, ProfileData(answers={"q-num": "not-a-number"}), {}
     )
     assert answers == []
     assert missing == []
+
+
+def test_build_answers_flags_required_when_numeric_unresolvable() -> None:
+    """APL-04: present-but-unconvertible required answers must not be dropped."""
+    questionnaire = {"questions": [_question("q-num", "Numeric", required=True)]}
+    answers, missing = build_questionnaire_answers(
+        questionnaire, ProfileData(answers={"q-num": "0"}), {}
+    )
+    assert answers == []
+    assert missing == ["q-num"]
+
+    answers, missing = build_questionnaire_answers(
+        questionnaire, ProfileData(answers={"q-num": "N/A"}), {}
+    )
+    assert answers == []
+    assert missing == ["q-num"]
+
+
+def test_build_answers_flags_required_when_choice_unresolvable() -> None:
+    questionnaire = {
+        "questions": [
+            {
+                "id": "q-choice",
+                "required": True,
+                "type": {"descriptor": "Single Choice"},
+                "possibleAnswers": [{"id": "ans-yes", "answerText": "Yes"}],
+            }
+        ]
+    }
+    answers, missing = build_questionnaire_answers(
+        questionnaire, ProfileData(answers={"q-choice": "Maybe"}), {}
+    )
+    assert answers == []
+    assert missing == ["q-choice"]
 
 
 def test_answer_entry_date_type() -> None:

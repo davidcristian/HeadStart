@@ -58,7 +58,9 @@ Merged with APL-07 (same defect, one location list): Microsoft SmartApply and Ap
 
 <a id="apl-04"></a>
 ### APL-04 — Required questionnaire answer silently dropped when value present but unresolvable
-🟠 **HIGH** · 🐞 bug · Status: ☐ open · Confidence: high (5/5 verifiers) · Effort: S · WS24
+🟠 **HIGH** · 🐞 bug · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/5)) · Confidence: high (5/5 verifiers) · Effort: S · WS24
+
+**Update (2026-07-09).** Fixed in [PR](https://github.com/davidcristian/HeadStart/pull/5): when a required question has a present `raw_value` but `_answer_entry` returns `None`, the question id is appended to `missing_required` (optional questions still drop silently).
 
 **Update (2026-07-03).** Re-verified still open — the fix wave never touched `workday_questionnaire_answers.py`. Reproduced: `build_questionnaire_answers({required numeric q}, {"q-num": "0"}) → ([], [])` (should flag `q-num` as missing).
 

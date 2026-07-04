@@ -344,7 +344,9 @@ proficiency and a native-language flag. Use dry run to preview `skills` /
 detail CXS response. The adapter fetches each questionnaire definition, maps
 `profile.answers` to `questionnaireAnswers`, and POSTs
 `jobapplication/{id}/questionnaireresponse?type=primary|secondary|supplementary`.
-Required questions without a mapped answer fail before finalize with a clear error.
+Required questions without a mapped answer — or with a present value that cannot
+be converted (unmatched choice label, non-int / non-positive numeric) — fail
+before finalize with a clear error listing the question ids.
 
 **Still manual / best-effort:** websites, and complex
 branching questionnaires where follow-up questions depend on earlier choices you

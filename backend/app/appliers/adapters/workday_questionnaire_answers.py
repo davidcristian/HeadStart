@@ -52,8 +52,14 @@ def build_questionnaire_answers(
                 missing_required.append(question_id)
             continue
         entry = _answer_entry(question, raw_value)
-        if entry is not None:
-            built.append(entry)
+        if entry is None:
+            # Present but unresolvable (bad choice label, non-int/'0' numeric,
+            # …) must fail the required guard — silent drop lets submit POST
+            # without the answer after the application is already created.
+            if question.get("required"):
+                missing_required.append(question_id)
+            continue
+        built.append(entry)
 
     return built, missing_required
 

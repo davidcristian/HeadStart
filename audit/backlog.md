@@ -6,7 +6,7 @@ Produced by a read-only multi-agent audit at commit `09957ec` — **every medium
 
 **Delta follow-up (2026-07-03).** A scoped re-audit of the fixes shipped since the baseline marked **APL-01** and **APL-02** ✅ done and **APL-03** 🔜 in progress (Microsoft closed; Apple residual [APL-28](findings/appliers.md#apl-28)), and re-confirmed **APL-04** still ☐ open. It also added **7 findings** (1 medium, 6 low) under **WS42**; the counts below include them (**281 tracked** total).
 
-**Progress (2026-07-09).** **WS26 fixed:** AIA-01 (the high-severity LaTeX-escape bug that broke every default-template and AI-curated resume) plus its WS26 companions AIA-12/AIA-16/AIA-17. Renderer now treats `experience` as controlled LaTeX and escapes only free-text/PII scalars; the heuristic path escapes its own free text; PDF-name derivation, the `import json` placement, and `_validate_pdf` settings injection are corrected. Full gate green (ruff/black/mypy, 3109 backend tests, 100% coverage). This closes 1 of the 12 highs (11 open) and 3 lows. Shipping WS26 also surfaced a pre-commit/CI formatter-pin drift that reformat-looped on clean files; fixed and recorded as **OPS-69** (WS37, new — brings the tally to 282 tracked).
+**Progress (2026-07-09).** **APL-04 fixed:** Workday `build_questionnaire_answers` now flags required questions whose present value cannot convert (choice/numeric) — [PR](https://github.com/davidcristian/HeadStart/pull/5). Closes 1 more of the remaining highs (merged APL-10). **Earlier same day — WS26 fixed:** AIA-01 (the high-severity LaTeX-escape bug that broke every default-template and AI-curated resume) plus its WS26 companions AIA-12/AIA-16/AIA-17. Renderer now treats `experience` as controlled LaTeX and escapes only free-text/PII scalars; the heuristic path escapes its own free text; PDF-name derivation, the `import json` placement, and `_validate_pdf` settings injection are corrected. Full gate green (ruff/black/mypy, 3109 backend tests, 100% coverage). This closes 1 of the 12 highs (11 open) and 3 lows. Shipping WS26 also surfaced a pre-commit/CI formatter-pin drift that reformat-looped on clean files; fixed and recorded as **OPS-69** (WS37, new — brings the tally to 282 tracked).
 
 **Status legend:** ☐ open · 🔜 in progress · ✅ done
 **Type:** 🐞 bug · 🔒 security · 📝 doc · 🧪 test · ♻️ refactor · 🔁 consistency · ⚡ perf
@@ -25,7 +25,7 @@ Produced by a read-only multi-agent audit at commit `09957ec` — **every medium
 | 🟠 HIGH | 🐞 | [APL-01](findings/appliers.md#apl-01) Apple applyJob reports submitted on {"success": false} 200 body despite modeling it | `backend/app/appliers/adapters/apple_careers_live.py:121` | ✅ |
 | 🟠 HIGH | 🐞 | [APL-02](findings/appliers.md#apl-02) Indeed live Easy Apply submit never sends the session cookies it gates on | `backend/app/appliers/adapters/indeed.py:124` | ✅ |
 | 🟠 HIGH | 🐞 | [APL-03](findings/appliers.md#apl-03) Microsoft/Apple SmartApply submits report success on 200 error body (no post-2xx check) | `backend/app/appliers/adapters/microsoft_careers.py:143` | 🔜 |
-| 🟠 HIGH | 🐞 | [APL-04](findings/appliers.md#apl-04) Required questionnaire answer silently dropped when value present but unresolvable | `backend/app/appliers/adapters/workday_questionnaire_answers.py:48` | ☐ |
+| 🟠 HIGH | 🐞 | [APL-04](findings/appliers.md#apl-04) Required questionnaire answer silently dropped when value present but unresolvable | `backend/app/appliers/adapters/workday_questionnaire_answers.py:48` | ✅ [PR](https://github.com/davidcristian/HeadStart/pull/5) |
 | 🟠 HIGH | 🔒 | [AUT-01](findings/auth-security.md#aut-01) Reset & verify tokens logged in plaintext when SMTP unset (no prod guard) | `backend/app/core/email.py:88` | ☐ |
 | 🟠 HIGH | 🐞 | [AUT-02](findings/auth-security.md#aut-02) Account deletion never cancels Stripe subscription or deletes Stripe customer | `backend/app/services/auth_account.py:70` | ☐ |
 | 🟠 HIGH | 🔒 | [DAT-01](findings/data-model.md#dat-01) Deleting bootstrap admin resets registration lock, auto-promoting next registrant to admin | `backend/app/repositories/users.py:37` | ☐ |
@@ -190,7 +190,7 @@ _10 item(s): 1 high, 3 medium, 6 low._
 
 | Sev | Type | Item | Location | Status |
 | --- | ---- | ---- | -------- | ------ |
-| 🟠 HIGH | 🐞 | [APL-04](findings/appliers.md#apl-04) Required questionnaire answer silently dropped when value present but unresolvable | `backend/app/appliers/adapters/workday_questionnaire_answers.py:48` | ☐ |
+| 🟠 HIGH | 🐞 | [APL-04](findings/appliers.md#apl-04) Required questionnaire answer silently dropped when value present but unresolvable | `backend/app/appliers/adapters/workday_questionnaire_answers.py:48` | ✅ [PR](https://github.com/davidcristian/HeadStart/pull/5) |
 | 🟡 MED | 🐞 | [APL-06](findings/appliers.md#apl-06) Meta education parallel arrays desync via per-column filters | `backend/app/appliers/adapters/meta_careers_payload.py:53` | ☐ |
 | 🟡 MED | 🐞 | [APL-08](findings/appliers.md#apl-08) Workday lookup prefix/substring fallback silently submits wrong degree/field/skill WID | `backend/app/appliers/adapters/workday_lookup.py:61` | ☐ |
 | 🟡 MED | 🐞 | [APL-13](findings/appliers.md#apl-13) flatten_lever_form_fields emits resume_file meta as dict-repr on live Lever submit | `backend/app/appliers/resume.py:59` | ☐ |
