@@ -145,7 +145,9 @@ _Merged with FRO-09 — both records describe the same defect: the nginx runtime
 
 <a id="fro-11"></a>
 ### FRO-11 — nginx serves SPA without any security response headers
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: high (3/5 verifiers) · Effort: S · WS20
+⚪ **LOW** · 🔒 security · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/35)) · Confidence: high (3/5 verifiers) · Effort: S · WS20
+
+**Update (2026-07-10).** Fixed with [XCT-16](cross-cutting.md#xct-16): production nginx emits CSP / framing / HSTS / nosniff / Referrer-Policy / Permissions-Policy on the SPA shell — [PR](https://github.com/davidcristian/HeadStart/pull/35).
 
 **Locations:** `frontend/nginx.conf:1` (server block).
 

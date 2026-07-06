@@ -154,6 +154,15 @@ the mobile bottom nav. Paid plans and admin accounts see nothing.
 - In the stack: served by nginx on :8080 (see `frontend/Dockerfile`,
   `frontend/nginx.conf`). Service worker assets (`sw.js`, `manifest.webmanifest`)
   are served with `Cache-Control: no-cache` so updates propagate.
+- **Security headers (production nginx):** the SPA `location /` block sets
+  `Content-Security-Policy` (same-origin scripts; Google Fonts; HTTPS
+  `connect-src` / partner-ad `frame-src`; `frame-ancestors 'none'`),
+  `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`,
+  `Referrer-Policy: strict-origin-when-cross-origin`,
+  `Strict-Transport-Security` (ALB terminates TLS; HSTS still applies on
+  HTTPS responses), and a locked-down `Permissions-Policy`. Asset and
+  service-worker locations repeat `nosniff` because nginx does not inherit
+  `add_header` into locations that define their own.
 
 ### Marketing screenshots
 

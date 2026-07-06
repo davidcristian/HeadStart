@@ -185,7 +185,9 @@ the local package. Regenerate via `just lock-backend` ([ADR-0012](../../docs/adr
 
 <a id="xct-16"></a>
 ### XCT-16 — SPA served with no CSP, X-Frame-Options, HSTS, X-Content-Type-Options or Referrer-Policy
-🟡 **MEDIUM** · 🔒 security · Status: ☐ open · Confidence: high (3/5 verifiers) · Effort: S · WS20
+🟡 **MEDIUM** · 🔒 security · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/35)) · Confidence: high (3/5 verifiers) · Effort: S · WS20
+
+**Update (2026-07-10).** Fixed: `frontend/nginx.conf` `location /` emits CSP (`frame-ancestors 'none'`), `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, HSTS, and `Permissions-Policy` with `always`; asset/SW locations restate `nosniff` (nginx `add_header` inheritance). Also closes [FRO-11](frontend.md#fro-11) — [PR](https://github.com/davidcristian/HeadStart/pull/35).
 
 **Locations:** `frontend/nginx.conf:1` (`server`); plus `backend/app/main.py:28`, `devops/terraform/modules/alb/variables.tf:9`, `frontend/Dockerfile:16`.
 
