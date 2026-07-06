@@ -114,7 +114,9 @@ Create a bot with [@BotFather](https://t.me/BotFather), send `/start` to it (or 
 group), then use your numeric chat id in config. Messages use HTML formatting with title,
 company, location, and an Apply link. Digest mode sends one HTML message listing
 all jobs. Outbound Bot API calls are DNS-pinned via `pinned_request` (SSRF
-defense-in-depth even though the host is fixed).
+defense-in-depth even though the host is fixed). On HTTP failure, the bot token is
+redacted from `DeliveryResult.error` and warning logs before persist (the Bot API
+embeds the token in the request URL, which httpx includes in `str(HTTPError)`).
 
 ## webhook adapter
 

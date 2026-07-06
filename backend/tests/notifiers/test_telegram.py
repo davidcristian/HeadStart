@@ -85,19 +85,38 @@ def test_telegram_escapes_html_in_job_fields() -> None:
 
 
 def test_telegram_records_failure_without_raising() -> None:
+    secret = "123456:SECRET-BOT-TOKEN"
+
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(400, json={"ok": False, "description": "bad chat"})
 
     notifier = TelegramNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
     ctx = NotifyContext(
         target_type="telegram",
-        config={"bot_token": "test-token", "chat_id": "123456789"},
+        config={"bot_token": secret, "chat_id": "123456789"},
     )
 
     results = notifier.send(ctx, [_job(), _job("2")])
 
     assert [r.status for r in results] == ["failed", "failed"]
     assert results[0].error
+    assert secret not in (results[0].error or "")
+    assert "[REDACTED]" in (results[0].error or "")
+
+
+def test_telegram_safe_http_error_redacts_bot_token() -> None:
+    secret = "999:LEAK-ME"
+    request = httpx.Request("POST", f"https://api.telegram.org/bot{secret}/sendMessage")
+    response = httpx.Response(401, request=request)
+    with pytest.raises(httpx.HTTPStatusError) as raised:
+        response.raise_for_status()
+    raw = str(raised.value)
+    safe = TelegramNotifier._safe_http_error(raised.value, secret)
+    assert secret in raw
+    assert secret not in safe
+    assert "[REDACTED]" in safe
+    assert TelegramNotifier._safe_http_error(ValueError("no url"), secret) == "no url"
+    assert TelegramNotifier._safe_http_error(ValueError("plain"), "") == "plain"
 
 
 def test_telegram_requires_bot_token_and_chat_id() -> None:
@@ -192,18 +211,22 @@ def test_telegram_digest_empty_jobs_returns_empty() -> None:
 
 
 def test_telegram_digest_records_failure() -> None:
+    secret = "digest:SECRET-TOKEN"
+
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(500, text="boom")
 
     notifier = TelegramNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
     ctx = NotifyContext(
         target_type="telegram",
-        config={"bot_token": "t", "chat_id": "1"},
+        config={"bot_token": secret, "chat_id": "1"},
         digest=True,
     )
     results = notifier.send(ctx, [_job(), _job("2")])
     assert [r.status for r in results] == ["failed", "failed"]
     assert results[0].error
+    assert secret not in (results[0].error or "")
+    assert "[REDACTED]" in (results[0].error or "")
 
 
 def test_telegram_close_behaviour() -> None:

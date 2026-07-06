@@ -48,15 +48,20 @@ class TelegramNotifier(Notifier):
         url = f"{_TELEGRAM_API}/bot{token}/sendMessage"
 
         if ctx.digest:
-            return self._send_digest(url, chat, ctx, jobs)
+            return self._send_digest(url, chat, token, ctx, jobs)
 
         results: list[DeliveryResult] = []
         for job in jobs:
-            results.append(self._send_one(url, chat, job))
+            results.append(self._send_one(url, chat, token, job))
         return results
 
     def _send_digest(
-        self, api_url: str, chat_id: str, ctx: NotifyContext, jobs: list[JobPosting]
+        self,
+        api_url: str,
+        chat_id: str,
+        bot_token: str,
+        ctx: NotifyContext,
+        jobs: list[JobPosting],
     ) -> list[DeliveryResult]:
         if not jobs:
             return []
@@ -66,21 +71,33 @@ class TelegramNotifier(Notifier):
             resp.raise_for_status()
             return [DeliveryResult(external_id=job.external_id, status="sent") for job in jobs]
         except httpx.HTTPError as exc:
-            logger.warning("telegram digest send failed: %s", exc)
+            safe = self._safe_http_error(exc, bot_token)
+            logger.warning("telegram digest send failed: %s", safe)
             return [
-                DeliveryResult(external_id=job.external_id, status="failed", error=str(exc))
+                DeliveryResult(external_id=job.external_id, status="failed", error=safe)
                 for job in jobs
             ]
 
-    def _send_one(self, api_url: str, chat_id: str, job: JobPosting) -> DeliveryResult:
+    def _send_one(
+        self, api_url: str, chat_id: str, bot_token: str, job: JobPosting
+    ) -> DeliveryResult:
         payload = self._payload(chat_id, job)
         try:
             resp = pinned_request(self._client, "POST", api_url, json=payload)
             resp.raise_for_status()
             return DeliveryResult(external_id=job.external_id, status="sent")
         except httpx.HTTPError as exc:
-            logger.warning("telegram send failed for %s: %s", job.external_id, exc)
-            return DeliveryResult(external_id=job.external_id, status="failed", error=str(exc))
+            safe = self._safe_http_error(exc, bot_token)
+            logger.warning("telegram send failed for %s: %s", job.external_id, safe)
+            return DeliveryResult(external_id=job.external_id, status="failed", error=safe)
+
+    @staticmethod
+    def _safe_http_error(exc: BaseException, bot_token: str) -> str:
+        """Strip the bot token from httpx error text before log/persist."""
+        text = str(exc)
+        if bot_token and bot_token in text:
+            return text.replace(bot_token, "[REDACTED]")
+        return text
 
     @staticmethod
     def _payload(chat_id: str, job: JobPosting) -> dict[str, Any]:

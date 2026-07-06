@@ -38,7 +38,9 @@ This area covers the notification adapters (Slack, Discord, Telegram, ntfy, webh
 
 <a id="ntf-02"></a>
 ### NTF-02 — Telegram bot token leaked into persisted DeliveryLog.error and logs via str(HTTPError)
-🟡 **MEDIUM** · 🔒 security · Status: ☐ open · Confidence: high (5/5 verifiers) · Effort: S · WS31
+🟡 **MEDIUM** · 🔒 security · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/56)) · Confidence: high (5/5 verifiers) · Effort: S · WS31
+
+**Update (2026-07-10).** Fixed in [PR](https://github.com/davidcristian/HeadStart/pull/56): `_safe_http_error` replaces the bot token in `str(httpx.HTTPError)` before warning logs and `DeliveryResult.error` on both immediate and digest sends.
 
 **Locations:** `backend/app/notifiers/adapters/telegram.py:70` (`TelegramNotifier._send_digest` / `_send_one`); plus `backend/app/notifiers/adapters/telegram.py:82`, `backend/app/services/pipeline.py:271`, `backend/app/services/digest.py:104`.
 
