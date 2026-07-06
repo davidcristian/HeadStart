@@ -9,7 +9,10 @@ from dataclasses import dataclass
 from typing import Final
 
 from app.core.exceptions import ValidationError
-from app.resumes.latex_safety import reject_dangerous_latex_content
+from app.resumes.latex_safety import (
+    is_scanned_bundle_member,
+    reject_dangerous_latex_content,
+)
 from app.resumes.template import render_resume_template
 from app.resumes.types import CuratedResumeFields
 
@@ -57,17 +60,26 @@ def render_template_bundle(
     bundle: ResumeTemplateBundle,
     fields: CuratedResumeFields,
 ) -> dict[str, bytes]:
-    """Apply [[placeholder]] substitution to every .tex file in the bundle."""
+    """Apply [[placeholder]] substitution to every .tex file in the bundle.
+
+    Scans TeX-like members after substitution so absolute/pipe/parent ``\\input``
+    (and related primitives) cannot reach the compiler via template body or
+    verbatim placeholders such as ``[[experience]]``.
+    """
     rendered: dict[str, bytes] = {}
     for path, data in bundle.files.items():
-        if not path.lower().endswith(".tex"):
-            rendered[path] = data
+        if path.lower().endswith(".tex"):
+            try:
+                tex = data.decode("utf-8")
+            except UnicodeDecodeError as exc:
+                raise ValidationError(f"LaTeX file {path} must be valid UTF-8 text") from exc
+            out = render_resume_template(tex, fields)
+            reject_dangerous_latex_content(out, label=path)
+            rendered[path] = out.encode("utf-8")
             continue
-        try:
-            tex = data.decode("utf-8")
-        except UnicodeDecodeError as exc:
-            raise ValidationError(f"LaTeX file {path} must be valid UTF-8 text") from exc
-        rendered[path] = render_resume_template(tex, fields).encode("utf-8")
+        if is_scanned_bundle_member(path):
+            _scan_tex_like_member(path, data)
+        rendered[path] = data
     return rendered
 
 
@@ -99,16 +111,21 @@ def _read_bundle(archive: zipfile.ZipFile) -> ResumeTemplateBundle:
         data = archive.read(info)
         if len(data) != info.file_size:
             raise ValidationError(f"Resume template bundle could not read file: {rel_path}")
-        if rel_path.lower().endswith(".tex"):
-            try:
-                tex = data.decode("utf-8")
-            except UnicodeDecodeError as exc:
-                raise ValidationError(f"LaTeX file {rel_path} must be valid UTF-8 text") from exc
-            reject_dangerous_latex_content(tex, label=rel_path)
+        if is_scanned_bundle_member(rel_path):
+            _scan_tex_like_member(rel_path, data)
         files[rel_path] = data
 
     entrypoint = _resolve_entrypoint(files)
     return ResumeTemplateBundle(entrypoint=entrypoint, files=files)
+
+
+def _scan_tex_like_member(rel_path: str, data: bytes) -> None:
+    """Decode and reject dangerous primitives in .tex/.sty/.cls members."""
+    try:
+        tex = data.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise ValidationError(f"LaTeX file {rel_path} must be valid UTF-8 text") from exc
+    reject_dangerous_latex_content(tex, label=rel_path)
 
 
 def _normalize_member_path(raw: str) -> str:

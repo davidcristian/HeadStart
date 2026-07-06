@@ -5,14 +5,19 @@ from __future__ import annotations
 import pytest
 
 from app.core.exceptions import ValidationError
-from app.resumes.latex_safety import reject_dangerous_latex_content
+from app.resumes.latex_safety import is_scanned_bundle_member, reject_dangerous_latex_content
 
 
 @pytest.mark.parametrize(
     ("tex", "label"),
     [
         (r"\input{/etc/passwd}", "absolute-input"),
+        (r"\input{ /etc/passwd}", "absolute-input-spaced"),
+        (r"\input /etc/passwd", "absolute-input-braceless"),
+        (r"\input{../secret.tex}", "parent-input"),
+        (r"\input ../secret.tex", "parent-input-braceless"),
         (r"\include{|whoami}", "pipe-include"),
+        (r"\include{../other.tex}", "parent-include"),
         (r"\openin 5=/etc/passwd", "openin"),
         (r"\write18{rm -rf /}", "write18"),
         (r"\immediate\write18{uname -a}", "immediate-write18"),
@@ -25,6 +30,20 @@ def test_reject_dangerous_latex_content_blocks_shell_and_file_access(tex: str, l
 
 def test_reject_dangerous_latex_content_allows_safe_markup() -> None:
     reject_dangerous_latex_content(
-        r"\documentclass{article}\begin{document}Hello\end{document}",
+        r"\documentclass{article}\input{section}\begin{document}Hello\end{document}",
         label="safe.tex",
     )
+
+
+@pytest.mark.parametrize(
+    ("path", "expected"),
+    [
+        ("main.tex", True),
+        ("pkg/style.sty", True),
+        ("resume.cls", True),
+        ("photo.png", False),
+        ("refs.bib", False),
+    ],
+)
+def test_is_scanned_bundle_member(path: str, expected: bool) -> None:
+    assert is_scanned_bundle_member(path) is expected

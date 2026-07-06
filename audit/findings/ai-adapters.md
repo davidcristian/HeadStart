@@ -45,7 +45,7 @@ See [AIA-01](#aia-01) — this record (uid 134, `backend/app/resumes/template.py
 
 This entry merges the shell-escape / `\write18` concern reported at three severities against the same code path: **AIA-03** (uid 138, medium, high confidence), **AIA-04** (uid 240, medium, medium confidence), and **AIA-09** (uid 135, low, defense-in-depth framing). All confirmed.
 
-**Update (2026-07-10).** Fixed (tracker alignment): `compile_latex_workspace` already prefers tectonic, and the pdflatex fallback passes `-no-shell-escape` under a minimal `_compiler_env()` that forces `openin_any=p` / `openout_any=p` / `shell_escape=f` (shipped in `0135f08`). Regression coverage now asserts the pdflatex argv flag and sandbox env (and that app secrets are not forwarded). Companion content-scan / absolute-`\input` layers remain tracked as [AIA-06](#aia-06) / [AIA-07](#aia-07).
+**Update (2026-07-10).** Fixed (tracker alignment): `compile_latex_workspace` already prefers tectonic, and the pdflatex fallback passes `-no-shell-escape` under a minimal `_compiler_env()` that forces `openin_any=p` / `openout_any=p` / `shell_escape=f` (shipped in `0135f08`). Regression coverage now asserts the pdflatex argv flag and sandbox env (and that app secrets are not forwarded). Companion content-scan / absolute-`\input` layer closed as [AIA-06](#aia-06); upload-time primitive deny-list depth remains tracked as [AIA-07](#aia-07).
 
 **Evidence (pre-fix).** pdflatex was invoked with only `-interaction=nonstopmode` and `-output-directory`; there was no `-no-shell-escape`, and no `env=` forcing `openin_any=p`/`openout_any=p`. The compiled body is the user's uploaded template bundle — render only substitutes `[[placeholder]]` values, and the `.tex/.sty/.cls` bytes pass through verbatim. TeX Live defaults (`openin_any=a`, `shell_escape=p`) read arbitrary files and enable restricted `\write18`; a host configured with `shell_escape=t` enables unrestricted `\write18`.
 
@@ -69,7 +69,9 @@ See [AIA-03](#aia-03) — this record (uid 240, `backend/app/resumes/compile.py:
 <a id="aia-06"></a>
 ### AIA-06 — Bundle .tex content passed to compiler verbatim allows \input of absolute server paths
 
-🟡 **MEDIUM** · 🔒 security · Status: ☐ open · Confidence: medium (5/5 verifiers) · Effort: M · WS27
+🟡 **MEDIUM** · 🔒 security · Status: ✅ done · Confidence: medium (5/5 verifiers) · Effort: M · WS27
+
+**Fix.** Dual defense: (1) compile already forces `openin_any=p` (AIA-03); (2) `.tex`/`.sty`/`.cls` members are deny-scanned for `\write18`, `\openin`, and absolute/pipe/parent-path `\input`/`\include` (brace and brace-less forms) at upload and again in `render_template_bundle` after placeholder substitution so verbatim `[[experience]]` cannot smuggle file-read primitives into the compiler. Relative same-tree includes like `\input{section}` remain allowed.
 
 **Locations:** `backend/app/resumes/template_bundle.py:59` (`render_template_bundle`).
 

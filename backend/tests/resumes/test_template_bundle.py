@@ -63,6 +63,7 @@ def test_render_template_bundle_substitutes_in_all_tex_files() -> None:
             "main.tex": b"Name: [[full_name]]",
             "section.tex": b"Role: [[job_title]]",
             "style.sty": b"static",
+            "logo.png": b"\x89PNG",
         },
     )
     rendered = render_template_bundle(
@@ -72,6 +73,7 @@ def test_render_template_bundle_substitutes_in_all_tex_files() -> None:
     assert rendered["main.tex"] == b"Name: Ada"
     assert rendered["section.tex"] == b"Role: Engineer"
     assert rendered["style.sty"] == b"static"
+    assert rendered["logo.png"] == b"\x89PNG"
 
 
 def test_parse_template_bundle_rejects_empty_bytes() -> None:
@@ -163,3 +165,57 @@ def test_render_template_bundle_rejects_non_utf8_tex() -> None:
     )
     with pytest.raises(ValidationError, match="valid UTF-8"):
         render_template_bundle(bundle, CuratedResumeFields())
+
+
+def test_parse_template_bundle_rejects_absolute_input_in_sty() -> None:
+    data = _zip_files(
+        {
+            "main.tex": r"\documentclass{article}\usepackage{evil}\begin{document}Hi\end{document}",
+            "evil.sty": r"\input{/etc/passwd}",
+        }
+    )
+    with pytest.raises(ValidationError, match="disallowed LaTeX commands"):
+        parse_template_bundle(data)
+
+
+def test_render_template_bundle_rejects_absolute_input_after_substitution() -> None:
+    """AIA-06: verbatim [[experience]] must not smuggle absolute \\input into compile."""
+    bundle = ResumeTemplateBundle(
+        entrypoint="main.tex",
+        files={"main.tex": b"[[experience]]"},
+    )
+    with pytest.raises(ValidationError, match="disallowed LaTeX commands"):
+        render_template_bundle(
+            bundle,
+            CuratedResumeFields(experience=r"\input{/etc/passwd}"),
+        )
+
+
+def test_render_template_bundle_rejects_dangerous_sty_member() -> None:
+    bundle = ResumeTemplateBundle(
+        entrypoint="main.tex",
+        files={
+            "main.tex": b"Name: [[full_name]]",
+            "evil.sty": b"\\input{/app/.env}",
+        },
+    )
+    with pytest.raises(ValidationError, match="disallowed LaTeX commands"):
+        render_template_bundle(bundle, CuratedResumeFields(full_name="Ada"))
+
+
+def test_render_template_bundle_rejects_non_utf8_sty() -> None:
+    bundle = ResumeTemplateBundle(
+        entrypoint="main.tex",
+        files={
+            "main.tex": b"ok",
+            "evil.sty": b"\xff\xfe",
+        },
+    )
+    with pytest.raises(ValidationError, match="valid UTF-8"):
+        render_template_bundle(bundle, CuratedResumeFields())
+
+
+def test_parse_template_bundle_rejects_parent_path_input_in_tex() -> None:
+    data = _zip_files({"main.tex": r"\input{../secrets.tex}"})
+    with pytest.raises(ValidationError, match="disallowed LaTeX commands"):
+        parse_template_bundle(data)
