@@ -325,7 +325,9 @@ the local package. Regenerate via `just lock-backend` ([ADR-0012](../../docs/adr
 
 <a id="xct-26"></a>
 ### XCT-26 — NTFY_DEFAULT_TOPIC defaults to guessable value and propagates to prod
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: high (3/5 verifiers) · Effort: XS · WS31
+⚪ **LOW** · 🔒 security · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/57), closed with OPS-16) · Confidence: high (3/5 verifiers) · Effort: XS · WS31
+
+**Update (2026-07-10).** Closed with [OPS-16](../devops.md#ops-16): prod/beta Terraform variables no longer default to `headstart-change-me`, tfvars examples omit an active assignment, and non-local app boots reject the placeholder.
 
 **Locations:** `devops/terraform/environments/prod/variables.tf:55` (`ntfy_default_topic`); plus `backend/app/core/config.py:167`, `.env.example:194`, `devops/terraform/environments/beta/terraform.tfvars.example:29`.
 

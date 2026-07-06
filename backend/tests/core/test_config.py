@@ -32,11 +32,12 @@ def test_placeholder_secrets_allowed_in_local(monkeypatch: pytest.MonkeyPatch) -
 
 
 def test_real_secrets_pass_outside_local(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Overriding both secrets + SMTP lets a non-local deployment start normally."""
+    """Overriding secrets + SMTP + ntfy topic lets a non-local deployment start normally."""
     monkeypatch.setenv("ENVIRONMENT", "production")
     monkeypatch.setenv("JWT_SECRET", "a-real-long-random-production-secret-value")
     monkeypatch.setenv("CREDENTIALS_SECRET_KEY", "another-real-production-fernet-value")
     monkeypatch.setenv("SMTP_HOST", "smtp.example.com")
+    monkeypatch.setenv("NTFY_DEFAULT_TOPIC", "jobs-a1b2c3d4e5f67890")
     assert Settings(_env_file=None).environment == "production"  # type: ignore[call-arg]
 
 
@@ -45,6 +46,7 @@ def test_smtp_host_required_outside_local(monkeypatch: pytest.MonkeyPatch) -> No
     monkeypatch.setenv("ENVIRONMENT", "production")
     monkeypatch.setenv("JWT_SECRET", "a-real-long-random-production-secret-value")
     monkeypatch.setenv("CREDENTIALS_SECRET_KEY", "another-real-production-fernet-value")
+    monkeypatch.setenv("NTFY_DEFAULT_TOPIC", "jobs-a1b2c3d4e5f67890")
     with pytest.raises(ValidationError) as exc_info:
         Settings(_env_file=None)  # type: ignore[call-arg]
     assert "SMTP_HOST" in str(exc_info.value)
@@ -56,6 +58,7 @@ def test_blank_smtp_host_rejected_outside_local(monkeypatch: pytest.MonkeyPatch)
     monkeypatch.setenv("JWT_SECRET", "a-real-long-random-production-secret-value")
     monkeypatch.setenv("CREDENTIALS_SECRET_KEY", "another-real-production-fernet-value")
     monkeypatch.setenv("SMTP_HOST", "   ")
+    monkeypatch.setenv("NTFY_DEFAULT_TOPIC", "jobs-a1b2c3d4e5f67890")
     with pytest.raises(ValidationError) as exc_info:
         Settings(_env_file=None)  # type: ignore[call-arg]
     assert "SMTP_HOST" in str(exc_info.value)
@@ -122,10 +125,50 @@ def test_short_credentials_key_rejected_outside_local(
     monkeypatch.setenv("JWT_SECRET", "a-real-long-random-production-secret-value")
     monkeypatch.setenv("CREDENTIALS_SECRET_KEY", "too-short-to-be-safe")
     monkeypatch.setenv("SMTP_HOST", "smtp.example.com")
+    monkeypatch.setenv("NTFY_DEFAULT_TOPIC", "jobs-a1b2c3d4e5f67890")
     with pytest.raises(ValidationError) as exc_info:
         Settings(_env_file=None)  # type: ignore[call-arg]
     assert "CREDENTIALS_SECRET_KEY" in str(exc_info.value)
     assert "at least 32" in str(exc_info.value)
+
+
+def test_placeholder_ntfy_topic_rejected_outside_local(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Non-local boots must override the guessable ntfy default topic (OPS-16)."""
+    monkeypatch.setenv("ENVIRONMENT", "production")
+    monkeypatch.setenv("JWT_SECRET", "a-real-long-random-production-secret-value")
+    monkeypatch.setenv("CREDENTIALS_SECRET_KEY", "another-real-production-fernet-value")
+    monkeypatch.setenv("SMTP_HOST", "smtp.example.com")
+    with pytest.raises(ValidationError) as exc_info:
+        Settings(_env_file=None)  # type: ignore[call-arg]
+    assert "NTFY_DEFAULT_TOPIC" in str(exc_info.value)
+
+
+def test_blank_ntfy_topic_rejected_outside_local(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Whitespace-only NTFY_DEFAULT_TOPIC counts as unset outside local/test."""
+    monkeypatch.setenv("ENVIRONMENT", "staging")
+    monkeypatch.setenv("JWT_SECRET", "a-real-long-random-production-secret-value")
+    monkeypatch.setenv("CREDENTIALS_SECRET_KEY", "another-real-production-fernet-value")
+    monkeypatch.setenv("SMTP_HOST", "smtp.example.com")
+    monkeypatch.setenv("NTFY_DEFAULT_TOPIC", "   ")
+    with pytest.raises(ValidationError) as exc_info:
+        Settings(_env_file=None)  # type: ignore[call-arg]
+    assert "NTFY_DEFAULT_TOPIC" in str(exc_info.value)
+
+
+def test_change_me_ntfy_topic_rejected_outside_local(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Any topic containing change-me is rejected outside local/test."""
+    monkeypatch.setenv("ENVIRONMENT", "production")
+    monkeypatch.setenv("JWT_SECRET", "a-real-long-random-production-secret-value")
+    monkeypatch.setenv("CREDENTIALS_SECRET_KEY", "another-real-production-fernet-value")
+    monkeypatch.setenv("SMTP_HOST", "smtp.example.com")
+    monkeypatch.setenv("NTFY_DEFAULT_TOPIC", "my-topic-change-me-please")
+    with pytest.raises(ValidationError) as exc_info:
+        Settings(_env_file=None)  # type: ignore[call-arg]
+    assert "NTFY_DEFAULT_TOPIC" in str(exc_info.value)
 
 
 def test_samesite_normalizer_passes_through_non_string() -> None:

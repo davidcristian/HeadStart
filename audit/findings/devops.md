@@ -166,7 +166,9 @@ This area covers the deployment and infrastructure surface of the repo: the AWS 
 
 <a id="ops-16"></a>
 ### OPS-16 — ntfy_default_topic defaults to static public topic "headstart-change-me"
-🟡 **MEDIUM** · 🔒 security · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: S · WS31
+🟡 **MEDIUM** · 🔒 security · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/57)) · Confidence: high (3/3 verifiers) · Effort: S · WS31
+
+**Update (2026-07-10).** Fixed: Terraform `ntfy_default_topic` is required (no default) with validation rejecting empty/`change-me` placeholders in the stack module and beta/prod env wrappers; tfvars examples no longer assign the public topic; non-local `Settings` boots refuse `headstart-change-me` and any topic containing `change-me` via `secret_policy.assert_ntfy_topic_safe_for_environment` (also closes [XCT-26](../cross-cutting.md#xct-26)).
 
 **Locations:** `devops/terraform/modules/stack/variables.tf:82` (`ntfy_default_topic`); plus `devops/terraform/environments/prod/variables.tf:55`, `devops/terraform/environments/prod/terraform.tfvars.example:25`, `devops/terraform/environments/beta/terraform.tfvars.example:27`, `devops/terraform/modules/stack/main.tf:163`, `backend/app/core/config.py:167`.
 

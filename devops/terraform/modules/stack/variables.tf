@@ -79,9 +79,19 @@ variable "ntfy_default_server_url" {
   type    = string
   default = "https://ntfy.sh"
 }
+
+# Required: ntfy.sh topics are public by name — never ship a guessable default (OPS-16).
 variable "ntfy_default_topic" {
-  type    = string
-  default = "headstart-change-me"
+  type        = string
+  description = "Unguessable ntfy topic for the seeded default notification target."
+
+  validation {
+    condition = (
+      length(trimspace(var.ntfy_default_topic)) > 0 &&
+      !strcontains(lower(var.ntfy_default_topic), "change-me")
+    )
+    error_message = "ntfy_default_topic must be a non-empty unguessable value (not a change-me placeholder)."
+  }
 }
 
 # Optional SMTP for password-reset and email notifications.

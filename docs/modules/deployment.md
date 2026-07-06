@@ -65,7 +65,10 @@ terminate TLS:
 
 `app_url`, `CORS_ORIGINS`, and `FRONTEND_BASE_URL` default to `https://<domain>`
 when HTTPS is enabled. Optional `smtp_*` variables configure transactional email
-(`SMTP_PASSWORD` in Secrets Manager). See
+(`SMTP_PASSWORD` in Secrets Manager). `ntfy_default_topic` is **required** (no
+Terraform default): ntfy.sh topics are public by name, so beta/prod reject empty
+or `change-me` placeholders and the app refuses the same guessable default
+outside `local`/`test` (OPS-16). See
 [deploying-to-aws.md](../deploying-to-aws.md#custom-domain--https) and
 [launch-checklist.md](../launch-checklist.md).
 

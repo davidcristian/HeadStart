@@ -163,21 +163,18 @@ class Settings(BaseSettings):
     llamacpp_model: str = "local"
     llamacpp_api_key: str = ""
 
-    # ---- ntfy defaults (used by seed + default target) ----
+    # ---- ntfy defaults (seed demo target) ----
     ntfy_default_server_url: str = "https://ntfy.sh"
-    ntfy_default_topic: str = "headstart-change-me"
+    ntfy_default_topic: str = secret_policy.DEV_NTFY_DEFAULT_TOPIC
 
-    # ---- free-tier ads (optional third-party slot; house upgrade CTA is always on) ----
-    # Set ADS_ENABLED=false to hide all in-app ads, including the built-in upgrade card.
-    ads_enabled: bool = True
-    # HTTPS URL of a hosted ad iframe (e.g. AdSense); shown only when the user accepts
-    # optional cookies. Leave empty to show only the built-in upgrade promotion.
+    # ---- free-tier ads ----
+    ads_enabled: bool = True  # false hides all in-app ads (including upgrade card)
+    # HTTPS ad iframe URL (optional-cookie gated); empty = upgrade CTA only.
     ads_external_slot_url: str = ""
 
     # ---- inbox agent (dev-only; Phase 20c mailbox connector) ----
-    # Disabled by default — do not enable on hosted multi-tenant prod.
-    inbox_agent_enabled: bool = False
-    # When true, fall back to INBOX_* env vars for every user without saved creds.
+    inbox_agent_enabled: bool = False  # do not enable on hosted multi-tenant prod
+    # Fall back to INBOX_* env vars when a user has no saved mailbox creds.
     inbox_use_env_credentials: bool = False
     inbox_imap_host: str = ""
     inbox_imap_port: int = 993
@@ -249,11 +246,14 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def _reject_placeholder_secrets_outside_local(self) -> "Settings":
-        """Refuse non-local boots with placeholder secrets or missing SMTP."""
-        secret_policy.assert_secrets_safe_for_environment(
-            self.environment, self.jwt_secret, self.credentials_secret_key
+        """Refuse non-local boots with placeholder secrets / SMTP / ntfy topic."""
+        secret_policy.assert_boot_safe_for_environment(
+            self.environment,
+            self.jwt_secret,
+            self.credentials_secret_key,
+            self.smtp_host,
+            self.ntfy_default_topic,
         )
-        secret_policy.assert_smtp_configured_for_environment(self.environment, self.smtp_host)
         return self
 
     @computed_field  # type: ignore[prop-decorator]

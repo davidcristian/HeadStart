@@ -131,8 +131,9 @@ export TF_VAR_db_password="$(openssl rand -base64 24)"
 export TF_VAR_jwt_secret="$(openssl rand -hex 32)"
 export TF_VAR_credentials_secret_key="$(openssl rand -hex 32)"
 
-# Optional but recommended: unguessable default ntfy topic.
-export TF_VAR_ntfy_default_topic="jobs-$(openssl rand -hex 4)"
+# Required: unguessable default ntfy topic (ntfy.sh topics are public by name).
+# Terraform rejects empty / change-me placeholders (OPS-16).
+export TF_VAR_ntfy_default_topic="jobs-$(openssl rand -hex 8)"
 
 terraform init
 terraform plan

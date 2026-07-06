@@ -24,4 +24,7 @@ credentials_secret_key = "change-me-long-random-credentials-key"
 # smtp_password = "..."   # prefer TF_VAR_smtp_password in the shell
 # smtp_from     = "noreply@jobs.example.com"   # defaults to noreply@<domain_name>
 
-ntfy_default_topic = "headstart-change-me"
+# Required: ntfy.sh topics are public by name. Set via TF_VAR or uncomment and
+# replace with your own unguessable value (terraform rejects change-me placeholders):
+#   export TF_VAR_ntfy_default_topic="jobs-$(openssl rand -hex 8)"
+# ntfy_default_topic = "jobs-a1b2c3d4e5f67890"
