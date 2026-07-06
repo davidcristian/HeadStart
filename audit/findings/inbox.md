@@ -107,7 +107,9 @@ _Merged with INB-21 and INB-22 (all three flag the same gap: `inbound_from` bypa
 
 <a id="inb-09"></a>
 ### INB-09 — Email classifier sends raw subject/From/To to the LLM with no injection guard
-🟡 **MEDIUM** · 🔒 security · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: S · WS29
+🟡 **MEDIUM** · 🔒 security · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/50)) · Confidence: high (3/3 verifiers) · Effort: S · WS29
+
+**Update (2026-07-10).** Fixed in [PR](https://github.com/davidcristian/HeadStart/pull/50): `prepare_message` sanitizes From/To/Subject via `sanitize_message_header`; `EmailClassificationService` forces the heuristic classifier when those headers or the body match injection patterns (payload records `injection_guarded`); heuristic haystack also covers From/To.
 
 _Merged with INB-15 and INB-16 (all three flag that `prepare_message` sanitizes body only, and the classifier emits raw subject/From/To to the LLM with no `looks_like_prompt_injection` guard on the LLM adapters). INB-15/INB-16 were rated low; this record was rated low as a consistency finding — reported here as the security defect all three describe._
 

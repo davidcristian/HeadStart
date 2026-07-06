@@ -17,7 +17,7 @@ from app.email_classifiers import (
     LinkedApplicationContext,
     get_email_classifier,
 )
-from app.email_classifiers.sanitize import prepare_message
+from app.email_classifiers.sanitize import looks_like_prompt_injection, prepare_message
 from app.inbox.fastmail_jmap_parse import JMAP_EMAIL_ID_HEADER
 from app.inbox.types import InboxMessage
 from app.models.inbox_classification import InboxClassification
@@ -46,6 +46,17 @@ LLM_PROVIDERS = frozenset({"openai", "gemini", "anthropic", "llamacpp"})
 ClassifierFactory = Callable[[str, Any], EmailClassifier]
 GRAPH_MESSAGE_ID_HEADER = "x-ms-graph-id"
 GMAIL_MESSAGE_ID_HEADER = "x-gmail-id"
+
+
+def _inbound_looks_like_injection(message: InboxMessage) -> bool:
+    """True when sanitized subject/From/To/body match instruction-injection patterns."""
+    parts = [
+        message.subject,
+        message.from_addr,
+        *message.to_addrs,
+        message.body_text,
+    ]
+    return any(looks_like_prompt_injection(part) for part in parts if part)
 
 
 def _classification_payload(
@@ -106,6 +117,14 @@ class EmailClassificationService:
         linked_job = self._link_job(user_id, message)
         ctx = self._build_context(user_id, message, linked_job)
         requested = self._resolve_provider(user)
+        injection = requested != "heuristic" and _inbound_looks_like_injection(ctx.message)
+        if injection:
+            logger.warning(
+                "email classify uid %s: inbound from/to/subject/body matched "
+                "injection patterns; forcing heuristic classifier",
+                message.uid,
+            )
+            requested = "heuristic"
         fallback = False
         provider = requested
 
@@ -126,6 +145,9 @@ class EmailClassificationService:
                 linked_job,
                 latest_live_attempt(linked_job.application_logs),
             )
+        payload = _classification_payload(message, linked_payload)
+        if injection:
+            payload["injection_guarded"] = True
         row = InboxClassification(
             user_id=user_id,
             seen_job_id=linked_job.id if linked_job is not None else None,
@@ -138,7 +160,7 @@ class EmailClassificationService:
             fallback=fallback,
             subject=message.subject,
             from_addr=message.from_addr,
-            payload=_classification_payload(message, linked_payload),
+            payload=payload,
         )
         self.classifications.add(row)
         if linked_job is not None:

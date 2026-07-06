@@ -44,6 +44,16 @@ def looks_like_prompt_injection(text: str) -> bool:
 
 
 def prepare_message(message: InboxMessage, *, max_chars: int) -> InboxMessage:
-    """Return a copy of the message with a sanitized body for classification."""
+    """Return a copy with sanitized body and headers for classification prompts."""
     sanitized_body = sanitize_message_body(message.body_text, max_chars=max_chars)
-    return message.model_copy(update={"body_text": sanitized_body})
+    sanitized_subject = sanitize_message_header(message.subject, max_chars=max_chars)
+    sanitized_from = sanitize_message_header(message.from_addr, max_chars=max_chars)
+    sanitized_to = [sanitize_message_header(addr, max_chars=max_chars) for addr in message.to_addrs]
+    return message.model_copy(
+        update={
+            "body_text": sanitized_body,
+            "subject": sanitized_subject,
+            "from_addr": sanitized_from,
+            "to_addrs": sanitized_to,
+        }
+    )

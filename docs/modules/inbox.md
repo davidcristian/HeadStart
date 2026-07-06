@@ -227,8 +227,12 @@ Labels: `general`, `rejection`, `follow_up`, `interview_request`,
 - **LLM providers:** `openai`, `gemini`, `anthropic`, `llamacpp` — selected via
   `resolve_ai_settings(..., "email_classify")` (Pro users can override per-purpose
   in Settings → AI models).
-- **Sanitization:** HTML stripped, body capped (`EMAIL_CLASSIFY_MAX_BODY_CHARS`);
-  obvious prompt-injection patterns map to `out_of_scope`.
+- **Sanitization:** HTML stripped from body and From/To/Subject headers
+  (`sanitize_message_header` preserves angle-addrs); body/headers capped
+  (`EMAIL_CLASSIFY_MAX_BODY_CHARS`). Obvious prompt-injection patterns in
+  subject, From, To, or body force the offline heuristic (which maps them to
+  `out_of_scope`) before any LLM classifier runs — same guard pattern as reply
+  drafting (INB-07 / INB-09).
 - **Thread linking:** `app/services/inbox_linking.py` scores employer domain,
   job title/company mentions, and optional `In-Reply-To` against
   `application_log.payload`.

@@ -49,7 +49,14 @@ class HeuristicEmailClassifier(EmailClassifier):
 
 def _classify(ctx: EmailClassifyContext) -> EmailClassificationResult:
     message = ctx.message
-    haystack = f"{message.subject}\n{message.body_text}"
+    haystack = "\n".join(
+        [
+            message.subject,
+            message.from_addr,
+            " ".join(message.to_addrs),
+            message.body_text,
+        ]
+    )
 
     if is_self_ghost_archive_message(message, ctx.mailbox_user_email):
         return EmailClassificationResult(
@@ -62,7 +69,7 @@ def _classify(ctx: EmailClassifyContext) -> EmailClassificationResult:
         return EmailClassificationResult(
             label="out_of_scope",
             confidence=0.9,
-            reason="Body contains instruction-injection patterns.",
+            reason="Inbound content contains instruction-injection patterns.",
         )
 
     if _matches_any(_REJECTION_PATTERNS, haystack):
