@@ -81,9 +81,14 @@ carries curated `\item`/`\textbf` list markup (the default template wraps it in 
 before substitution. Bundle archives must include `main.tex` or
 `resume.tex` (or a single `.tex` file); allowed member types are `.tex`, `.sty`,
 `.cls`, `.bib`, and common image formats. When no template is uploaded, a
-built-in default template is used. `POST /jobs/{id}/generate-resume` curates
-placeholders (Pro users: `resume_curation` AI purpose), renders LaTeX, compiles a
-tailored PDF (requires `tectonic` or `pdflatex` locally), and persists it in
+built-in default template is used. Uploaded `.tex` members are scanned for
+dangerous primitives (`\write18`, absolute/pipe `\input`/`\include`, `\openin`)
+before storage. `POST /jobs/{id}/generate-resume` curates placeholders (Pro
+users: `resume_curation` AI purpose), renders LaTeX, and compiles a tailored PDF
+(prefers `tectonic`, falls back to `pdflatex` with `-no-shell-escape` and a
+minimal env that forces `openin_any=p` / `openout_any=p` / `shell_escape=f` so
+host `texmf.cnf` defaults cannot re-enable shell escape or absolute-path reads).
+The PDF persists in
 `application_artifact` (per-user SHA-256 dedup, Fernet-encrypted). The response
 includes `artifact_id` for preview/download via
 `GET /application-artifacts/{id}/download`. On apply, pass `tailored_resume_artifact_id`

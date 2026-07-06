@@ -138,13 +138,22 @@ def test_run_compiler_workspace_tectonic_success(monkeypatch, tmp_path) -> None:
 
 
 def test_run_compiler_workspace_pdflatex_success(monkeypatch) -> None:
+    """pdflatex must disable shell-escape and pin a restricted TeX open policy (AIA-03)."""
+    captured_env: dict[str, str] = {}
+
     def fake_run(cmd_args, **kwargs):
         # pdflatex invocation uses -output-directory and cwd.
         assert "-interaction=nonstopmode" in cmd_args
+        assert "-no-shell-escape" in cmd_args
+        captured_env.update(kwargs.get("env", {}))
+        assert "JWT_SECRET" not in captured_env
+        assert "CREDENTIALS_SECRET_KEY" not in captured_env
         out_dir = Path(kwargs["cwd"])
         (out_dir / "main.pdf").write_bytes(b"%PDF-pdflatex")
         return _FakeProc(returncode=0)
 
+    monkeypatch.setenv("JWT_SECRET", "should-not-reach-compiler")
+    monkeypatch.setenv("CREDENTIALS_SECRET_KEY", "should-not-reach-compiler")
     monkeypatch.setattr("app.resumes.compile.subprocess.run", fake_run)
     pdf = _run_compiler_workspace(
         "/usr/bin/pdflatex",
@@ -154,6 +163,9 @@ def test_run_compiler_workspace_pdflatex_success(monkeypatch) -> None:
         timeout=5.0,
     )
     assert pdf == b"%PDF-pdflatex"
+    assert captured_env["openin_any"] == "p"
+    assert captured_env["openout_any"] == "p"
+    assert captured_env["shell_escape"] == "f"
 
 
 def test_run_compiler_workspace_raises_on_nonzero_exit(monkeypatch) -> None:

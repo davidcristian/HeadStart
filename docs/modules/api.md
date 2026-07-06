@@ -49,7 +49,7 @@ never touch the DB directly (services use repositories). See
 | PATCH  | `/jobs/{id}`          | Update triage status (`seen` / `applied` / `archived`) |
 | POST   | `/jobs/{id}/apply`    | Submit or preview an auto-apply (`dry_run`, optional `cover_letter`, optional `tailored_resume_b64` or `tailored_resume_artifact_id`). Live submit returns `queued` + `application_log_id`; poll `GET /application-logs/{id}`. |
 | POST   | `/jobs/{id}/generate-cover-letter` | Draft a tailored cover letter from the job + application profile (`provider`, `fallback`). Pro users use the effective `SUMMARY_PROVIDER`; others get the offline heuristic generator. |
-| POST   | `/jobs/{id}/generate-resume` | Generate a tailored resume PDF from the LaTeX template + profile (`pdf_b64`, `artifact_id`, `provider`, `fallback`). Persists the PDF in `application_artifact` (SHA-256 dedup). Requires `tectonic` or `pdflatex` locally to compile. |
+| POST   | `/jobs/{id}/generate-resume` | Generate a tailored resume PDF from the LaTeX template + profile (`pdf_b64`, `artifact_id`, `provider`, `fallback`). Persists the PDF in `application_artifact` (SHA-256 dedup). Compiles with `tectonic` or `pdflatex` (`-no-shell-escape` + restricted `openin_any`/`openout_any` env). |
 | GET    | `/application-logs` | List recent auto-apply attempts (`limit`, default 100) |
 | GET    | `/application-logs/{id}` | Poll one queued/live apply log until terminal status |
 | GET    | `/application-artifacts/{id}` | Metadata for one stored generated document (owner only) |

@@ -39,13 +39,15 @@ See [AIA-01](#aia-01) — this record (uid 134, `backend/app/resumes/template.py
 <a id="aia-03"></a>
 ### AIA-03 — User LaTeX template compiled without -no-shell-escape and without an openin/sandbox restriction
 
-🟡 **MEDIUM** · 🔒 security · Status: ☐ open · Confidence: high (5/5 verifiers) · Effort: M · WS27
+🟡 **MEDIUM** · 🔒 security · Status: ✅ done · Confidence: high (5/5 verifiers) · Effort: M · WS27
 
-**Locations:** `backend/app/resumes/compile.py:84` and `:91`/`:92` (`_run_compiler_workspace`); plus `backend/app/resumes/template_bundle.py:44`/`:73`, `backend/app/services/resumes.py:88`/`:93`, `backend/app/api/v1/profile.py:77`.
+**Locations:** `backend/app/resumes/compile.py` (`_run_compiler_workspace` / `_compiler_env`); plus `backend/app/resumes/template_bundle.py`, `backend/app/services/resumes.py`, `backend/app/api/v1/profile.py`.
 
 This entry merges the shell-escape / `\write18` concern reported at three severities against the same code path: **AIA-03** (uid 138, medium, high confidence), **AIA-04** (uid 240, medium, medium confidence), and **AIA-09** (uid 135, low, defense-in-depth framing). All confirmed.
 
-**Evidence.** pdflatex is invoked with only `-interaction=nonstopmode` and `-output-directory`; there is no `-no-shell-escape`, and no `env=` forcing `openin_any=p`/`openout_any=p`. The compiled body is the user's uploaded template bundle — render only substitutes `[[placeholder]]` values, and the `.tex/.sty/.cls` bytes pass through verbatim. TeX Live defaults (`openin_any=a`, `shell_escape=p`) read arbitrary files and enable restricted `\write18`; a host configured with `shell_escape=t` enables unrestricted `\write18`.
+**Update (2026-07-10).** Fixed (tracker alignment): `compile_latex_workspace` already prefers tectonic, and the pdflatex fallback passes `-no-shell-escape` under a minimal `_compiler_env()` that forces `openin_any=p` / `openout_any=p` / `shell_escape=f` (shipped in `0135f08`). Regression coverage now asserts the pdflatex argv flag and sandbox env (and that app secrets are not forwarded). Companion content-scan / absolute-`\input` layers remain tracked as [AIA-06](#aia-06) / [AIA-07](#aia-07).
+
+**Evidence (pre-fix).** pdflatex was invoked with only `-interaction=nonstopmode` and `-output-directory`; there was no `-no-shell-escape`, and no `env=` forcing `openin_any=p`/`openout_any=p`. The compiled body is the user's uploaded template bundle — render only substitutes `[[placeholder]]` values, and the `.tex/.sty/.cls` bytes pass through verbatim. TeX Live defaults (`openin_any=a`, `shell_escape=p`) read arbitrary files and enable restricted `\write18`; a host configured with `shell_escape=t` enables unrestricted `\write18`.
 
 **Failure scenario.** An authenticated user uploads a template containing `\immediate\write18{...}`; if the worker's TeX config enables shell-escape (host-dependent), this is arbitrary command execution in the compile process, running with the app's environment. Even without shell-escape, restricted `\write18` plus the unrestricted `openin_any` broadens the read/exec foothold. tectonic is tried first (sandboxed, no shell-escape by default), and pdflatex is only the fallback, which is why verifiers scoped this medium rather than high.
 
@@ -58,7 +60,7 @@ This entry merges the shell-escape / `\write18` concern reported at three severi
 <a id="aia-04"></a>
 ### AIA-04 — (merged into AIA-03)
 
-🟡 **MEDIUM** · 🔒 security · Status: ☐ open · Confidence: medium (3/3 verifiers) · Effort: S · WS27
+🟡 **MEDIUM** · 🔒 security · Status: ✅ done · Confidence: medium (3/3 verifiers) · Effort: S · WS27
 
 See [AIA-03](#aia-03) — this record (uid 240, `backend/app/resumes/compile.py:92`) is the same shell-escape concern and is documented in full above.
 
