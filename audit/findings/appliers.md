@@ -110,7 +110,7 @@ Merged with APL-10 (same defect at the same guard, `build_questionnaire_answers`
 
 <a id="apl-08"></a>
 ### APL-08 — Workday lookup prefix/substring fallback silently submits wrong degree/field/skill WID
-🟡 **MEDIUM** · 🐞 bug · Status: ☐ open · Confidence: high (5/5 verifiers) · Effort: S · WS24
+🟡 **MEDIUM** · 🐞 bug · Status: ✅ done · Confidence: high (5/5 verifiers) · Effort: S · WS24
 
 Merged with APL-09 (same `match_lookup_item` over-eager fallback; APL-09 anchored line 61, APL-08 line 70 — same two fallback branches). Highest-confidence record kept as the primary.
 

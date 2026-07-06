@@ -15,7 +15,7 @@ def is_workday_id(value: str) -> bool:
 
 
 def normalize_lookup_text(value: str) -> str:
-    """Normalize free text for fuzzy institution-value matching."""
+    """Normalize free text for exact institution-value matching."""
     lowered = value.strip().lower()
     return re.sub(r"[^a-z0-9]+", "", lowered)
 
@@ -35,7 +35,12 @@ def parse_lookup_items(data: Any) -> list[dict[str, str]]:
 
 
 def match_lookup_item(items: list[dict[str, str]], value: str) -> dict[str, str] | None:
-    """Pick the best catalog row for a profile value."""
+    """Pick the catalog row that exactly (or normalized-equal) matches a profile value.
+
+    Prefix/substring fallbacks are intentionally omitted: short or common labels
+    (e.g. ``BS``, ``Java``) otherwise bind a longer unrelated catalog WID.
+    Callers fall back to a self-reported descriptor when this returns None.
+    """
     stripped = value.strip()
     if not stripped:
         return None
@@ -56,20 +61,6 @@ def match_lookup_item(items: list[dict[str, str]], value: str) -> dict[str, str]
     for item in items:
         descriptor = item.get("descriptor", "")
         if normalize_lookup_text(descriptor) == normalized_target:
-            return item
-
-    for item in items:
-        descriptor = item.get("descriptor", "")
-        normalized_descriptor = normalize_lookup_text(descriptor)
-        if normalized_descriptor and (
-            normalized_descriptor.startswith(normalized_target)
-            or normalized_target.startswith(normalized_descriptor)
-        ):
-            return item
-
-    for item in items:
-        descriptor = item.get("descriptor", "")
-        if target in descriptor.lower() or descriptor.lower() in target:
             return item
 
     return None

@@ -94,14 +94,17 @@ def test_match_lookup_item_normalized_match() -> None:
     assert match_lookup_item(items, "computer science") == items[0]
 
 
-def test_match_lookup_item_prefix_match() -> None:
+def test_match_lookup_item_rejects_prefix_only_match() -> None:
+    """Prefix hits must not bind a longer catalog row (APL-08)."""
     items = [{"id": "w1", "descriptor": "Bachelor of Science in Engineering"}]
-    assert match_lookup_item(items, "Bachelor of Science") == items[0]
+    assert match_lookup_item(items, "Bachelor of Science") is None
 
 
-def test_match_lookup_item_substring_match() -> None:
+def test_match_lookup_item_rejects_substring_only_match() -> None:
+    """Substring hits must not bind a related-but-different catalog row (APL-08)."""
     items = [{"id": "w1", "descriptor": "MS Data"}]
-    assert match_lookup_item(items, "Advanced MS Data degree") == items[0]
+    assert match_lookup_item(items, "Advanced MS Data degree") is None
+    assert match_lookup_item([{"id": "w2", "descriptor": "JavaScript"}], "Java") is None
 
 
 def test_match_lookup_item_returns_none_without_match() -> None:

@@ -324,7 +324,8 @@ start month/year; education needs at least a school name. Degree and field of
 study are resolved against tenant catalogs via
 `GET …/institutionvalues/degree?searchText=…` and
 `GET …/institutionvalues/fieldOfStudy?searchText=…` when session cookies are
-available (exact → normalized → fuzzy match, then descriptor fallback). Paste a
+available (exact or normalized-equal match only, then descriptor fallback —
+prefix/substring catalog hits are not auto-bound). Paste a
 catalog WID directly into the profile degree/field fields or set
 `education_lookup_aliases` to override a label. Use dry run to preview resolved
 `id` values before live apply. Set `skip_education_lookup` to force
@@ -336,7 +337,7 @@ either section.
 `jobapplication/{id}/skills` and `jobapplication/{id}/languages` after
 experience/education and before questionnaires. Skills are resolved against the
 tenant catalog via `GET …/institutionvalues/skill?searchText=…` when session
-cookies are available (exact → normalized → fuzzy match, then descriptor
+cookies are available (exact or normalized-equal match only, then descriptor
 fallback). Paste a catalog WID directly into the profile skill name or set
 `skill_lookup_aliases` to override a label. Languages support optional
 proficiency and a native-language flag. Use dry run to preview `skills` /
