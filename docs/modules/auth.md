@@ -265,6 +265,12 @@ remove their own admin flag, or demote the last remaining admin account.
 Deactivating an account bumps `token_version` so outstanding sessions stay
 revoked even if the account is later reactivated.
 
+Every successful `PATCH /admin/users/{id}` that changes `is_active`, `is_admin`,
+or `plan` emits a structured INFO audit line via `app.core.admin_events`
+(`admin_event=user_update actor_id=… target_id=… before=… after=…`) so privilege
+and plan mutations leave a server-side trail for incident response (BIL-01).
+No-op patches (same values) do not log.
+
 ## Configuration
 
 `JWT_SECRET`, `ACCESS_TOKEN_EXPIRE_MINUTES`, `REFRESH_TOKEN_EXPIRE_DAYS`,

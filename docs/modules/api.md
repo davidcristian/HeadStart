@@ -73,7 +73,7 @@ never touch the DB directly (services use repositories). See
 | DELETE | `/profile/resume`     | Remove the stored resume file only |
 | DELETE | `/profile`            | Clear the application profile            |
 | GET    | `/admin/users`        | List all users (admin only)              |
-| PATCH  | `/admin/users/{id}`   | Toggle `is_active` / `is_admin` / `plan` (admin) |
+| PATCH  | `/admin/users/{id}`   | Toggle `is_active` / `is_admin` / `plan` (admin; structured `admin_event=user_update` audit log) |
 | GET    | `/admin/stats`        | Global scrape/delivery aggregates (admin)|
 | GET    | `/admin/data-requests` | Recent GDPR export/deletion audit rows (admin; deletion rows are email-pseudonymized) |
 | GET    | `/admin/promo-codes`  | List promo codes (admin)                 |

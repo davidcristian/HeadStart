@@ -8,7 +8,9 @@ This area covers Stripe checkout and subscription webhooks (`services/billing.py
 
 <a id="bil-01"></a>
 ### BIL-01 — Admin user mutations (deactivate, grant admin, plan change) write no audit record
-🟡 **MEDIUM** · 🔒 security · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: M · WS19
+🟡 **MEDIUM** · 🔒 security · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/34)) · Confidence: high (3/3 verifiers) · Effort: M · WS19
+
+**Update (2026-07-10).** Fixed: `AdminService.update_user` snapshots before/after `is_active` / `is_admin` / `plan` and emits a structured `admin_event=user_update` INFO line (`actor_id`, `target_id`, changed fields only) via `app.core.admin_events`. No-op patches do not log.
 
 **Locations:** `backend/app/services/admin.py:26` (`AdminService.update_user`).
 

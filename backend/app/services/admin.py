@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from sqlalchemy.orm import Session
 
+from app.core.admin_events import log_admin_user_update
 from app.core.exceptions import NotFoundError, ValidationError
 from app.core.plans import VALID_PLANS
+from app.models.user import User
 from app.repositories.admin_stats import AdminStatsRepository
 from app.repositories.data_request_logs import DataRequestLogRepository
 from app.repositories.users import UserRepository
@@ -38,6 +42,7 @@ class AdminService:
         if data.plan is not None and data.plan not in VALID_PLANS:
             raise ValidationError(f"Unknown plan '{data.plan}'.")
 
+        before = _admin_flags(user)
         # Deactivation must permanently invalidate outstanding JWTs so a later
         # reactivation cannot resurrect pre-lockout access/refresh tokens (XCT-08).
         revoke_sessions = data.is_active is False and user.is_active
@@ -50,6 +55,12 @@ class AdminService:
         )
         if revoke_sessions:
             updated = self.users.bump_token_version(updated)
+        log_admin_user_update(
+            actor_id=actor_id,
+            target_id=updated.id,
+            before=before,
+            after=_admin_flags(updated),
+        )
         return AdminUserRead.model_validate(updated)
 
     def get_stats(self) -> AdminStatsRead:
@@ -62,3 +73,12 @@ class AdminService:
             DataRequestLogRead.model_validate(row)
             for row in self.data_requests.list_recent(limit=limit)
         ]
+
+
+def _admin_flags(user: User) -> dict[str, Any]:
+    """Snapshot the admin-managed fields used for mutation audit trails."""
+    return {
+        "is_active": user.is_active,
+        "is_admin": user.is_admin,
+        "plan": user.plan,
+    }

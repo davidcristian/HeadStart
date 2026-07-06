@@ -129,6 +129,10 @@ Admin endpoints (prefix `/api/v1/admin`):
 | PATCH | `/promo-codes/{id}` | Update (`active`, `max_redemptions`, `expires_at`) |
 | GET | `/promo-codes/{id}/redemptions` | Redemption audit log |
 
+Manual plan overrides via `PATCH /admin/users/{id}` (see [auth.md](auth.md#admin))
+emit a structured `admin_event=user_update` audit log with actor, target, and
+before/after `plan` / privilege flags.
+
 Webhook handler updates `user.stripe_customer_id`, `stripe_subscription_id`,
 `subscription_status`, and `plan` on:
 
