@@ -37,11 +37,6 @@ class ReplyDraftRead(BaseModel):
     created_at: datetime
 
 
-class ReplyDraftListParams(BaseModel):
-    seen_job_id: int | None = Field(default=None, ge=1)
-    limit: int = Field(default=50, ge=1, le=200)
-
-
 class ReplyDraftSummary(BaseModel):
     """Compact reply draft for the application pipeline view."""
 

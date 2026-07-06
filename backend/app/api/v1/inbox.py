@@ -14,13 +14,9 @@ from app.core.config import settings
 from app.core.exceptions import ValidationError
 from app.inbox.types import FetchResult
 from app.models.user import User
-from app.schemas.inbox_classification import (
-    EmailClassificationListParams,
-    EmailClassificationRead,
-    EmailClassifyRequest,
-)
-from app.schemas.inbox_reply_draft import ReplyDraftListParams, ReplyDraftRead, ReplyDraftRequest
-from app.schemas.inbox_reply_send_log import ReplySendLogListParams, ReplySendLogRead
+from app.schemas.inbox_classification import EmailClassificationRead, EmailClassifyRequest
+from app.schemas.inbox_reply_draft import ReplyDraftRead, ReplyDraftRequest
+from app.schemas.inbox_reply_send_log import ReplySendLogRead
 from app.schemas.inbox_routing import (
     InboxRouteRequest,
     InboxRouteResponse,
@@ -221,13 +217,12 @@ def classify_inbox_message(
 
 @router.get("/classifications", response_model=list[EmailClassificationRead])
 def list_inbox_classifications(
-    limit: int = 50,
+    limit: int = Query(default=50, ge=1, le=200),
     db: Session = Depends(get_db),
     user: User = Depends(get_verified_user),
 ) -> list[EmailClassificationRead]:
     """List recent persisted email classifications for the current user."""
-    params = EmailClassificationListParams(limit=limit)
-    return EmailClassificationService(db).list_for_user(user.id, limit=params.limit)
+    return EmailClassificationService(db).list_for_user(user.id, limit=limit)
 
 
 @router.get("/routing", response_model=InboxRoutingConfigRead)
@@ -270,25 +265,21 @@ def draft_inbox_reply(
 
 @router.get("/reply-drafts", response_model=list[ReplyDraftRead])
 def list_inbox_reply_drafts(
-    seen_job_id: int | None = None,
-    limit: int = 50,
+    seen_job_id: int | None = Query(default=None, ge=1),
+    limit: int = Query(default=50, ge=1, le=200),
     db: Session = Depends(get_db),
     user: User = Depends(get_verified_user),
 ) -> list[ReplyDraftRead]:
     """List persisted reply drafts for the current user."""
-    params = ReplyDraftListParams(seen_job_id=seen_job_id, limit=limit)
-    return ReplyDraftService(db).list_for_user(
-        user.id, seen_job_id=params.seen_job_id, limit=params.limit
-    )
+    return ReplyDraftService(db).list_for_user(user.id, seen_job_id=seen_job_id, limit=limit)
 
 
 @router.get("/reply-send-logs", response_model=list[ReplySendLogRead])
 def list_inbox_reply_send_logs(
-    limit: int = 50,
+    limit: int = Query(default=50, ge=1, le=200),
     db: Session = Depends(get_db),
     user: User = Depends(get_verified_user),
 ) -> list[ReplySendLogRead]:
     """List audit rows for autonomous recruiter reply decisions."""
-    params = ReplySendLogListParams(limit=limit)
-    rows = ReplySafeSendService(db).list_for_user(user.id, limit=params.limit)
+    rows = ReplySafeSendService(db).list_for_user(user.id, limit=limit)
     return [ReplySendLogRead.model_validate(row) for row in rows]

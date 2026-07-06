@@ -40,7 +40,7 @@ This area covers the FastAPI v1 routers under `backend/app/api/v1/` and the Pyda
 
 <a id="api-04"></a>
 ### API-04 — Out-of-bounds limit/seen_job_id on inbox list routes returns HTTP 500, not 422
-🟡 **LOW** · 🐞 bug · Status: ☐ open · Confidence: certain (5/5 verifiers) · Effort: S · WS32
+🟡 **LOW** · 🐞 bug · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/60)) · Confidence: certain (5/5 verifiers) · Effort: S · WS32
 
 *(Merged: this is the same defect as reported under API-06 — out-of-bounds inbox `limit` producing an uncaught pydantic error. Both records cite `list_inbox_classifications` at inbox.py:227 with the same root cause; combined here.)*
 

@@ -54,7 +54,3 @@ class EmailClassificationRead(BaseModel):
     routing_status: str | None = None
     routing_error: str | None = None
     created_at: datetime
-
-
-class EmailClassificationListParams(BaseModel):
-    limit: int = Field(default=50, ge=1, le=200)

@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict
 
 
 class ReplySendLogRead(BaseModel):
@@ -18,7 +18,3 @@ class ReplySendLogRead(BaseModel):
     body_excerpt: str
     payload: dict[str, Any] | None = None
     created_at: datetime
-
-
-class ReplySendLogListParams(BaseModel):
-    limit: int = Field(default=50, ge=1, le=200)
