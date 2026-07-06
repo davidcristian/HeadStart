@@ -89,19 +89,13 @@ or the lock already points at a user.
 
 <a id="dat-05"></a>
 ### DAT-05 — Cross-search dedup normalizes user's whole job-URL history in Python per scrape
-🟡 **MEDIUM** · ⚡ perf · Status: ☐ open · Confidence: high (5/5 verifiers) · Effort: M · WS33
+🟡 **MEDIUM** · ⚡ perf · Status: ✅ done · Confidence: high (5/5 verifiers) · Effort: M · WS33
 
 > Merged with DAT-06 (uid 268, `jobs.py:60`, same symbol, confirmed 3/3), which is the identical defect. Combined here as one finding.
 
-**Locations:** `backend/app/repositories/jobs.py:60` (`SeenJobRepository.existing_normalized_urls_for_user`). Note: the alternate record cited line 839, which is stale; the real query is around lines 67-73. Called every scrape at `backend/app/services/pipeline.py:205`.
+**Locations:** `backend/app/repositories/jobs.py` (`SeenJobRepository.existing_normalized_urls_for_user`); write path `backend/app/services/pipeline_delivery.py` (`persist_new_seen_jobs`); column `seen_job.normalized_url`.
 
-**Evidence.** `existing_normalized_urls_for_user` selects `SeenJob.url` for **all** of a user's searches (no limit, only `user_id` + `url != ''` filters), then computes `{normalize_job_url(url) for url in ...}` in Python. Because normalization is application-side, no index can help. It runs on every scrape just to intersect with the current batch's URLs, so cost is O(total jobs) per run regardless of batch size — and there is no upstream batch bound.
-
-**Failure scenario.** An active user accumulates tens of thousands of seen jobs; every poll cycle transfers and re-normalizes their entire history, growing scrape latency and DB load unboundedly with account age rather than with how many new postings actually arrived.
-
-**Suggested fix.** Persist an indexed `normalized_url` column written at insert time and intersect in SQL (`WHERE normalized_url IN (:batch)`), instead of normalizing the full history in Python per scrape.
-
-**Verification.** Confirmed 5/5 adversarial verifiers (merged record DAT-06 confirmed 3/3). `jobs.py` selects all of a user's `seen_job.url` and normalizes in Python with no SQL filter by wanted URLs; called every scrape (pipeline.py:205), so latency grows unbounded with account history. The cited line 839 is stale but the symbol is correct.
+**Update (2026-07-10).** Fixed: `seen_job` stores indexed `normalized_url` at insert; `existing_normalized_urls_for_user` intersects `WHERE normalized_url IN (:batch)` scoped to the user, so scrape cost tracks batch size rather than account history.
 
 ---
 

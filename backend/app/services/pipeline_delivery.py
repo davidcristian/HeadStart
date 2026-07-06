@@ -14,6 +14,7 @@ from app.notifiers import NotifyContext
 from app.notifiers.base import Notifier
 from app.repositories.jobs import SeenJobRepository
 from app.scrapers.types import JobPosting
+from app.scrapers.url import normalize_job_url
 from app.services.compensation import format_compensation_display
 from app.services.digest import DigestService
 
@@ -39,6 +40,7 @@ def persist_new_seen_jobs(
             location=posting.location,
             salary=format_compensation_display(posting),
             url=posting.url,
+            normalized_url=normalize_job_url(posting.url),
             summary=posting.summary,
         )
         seen_jobs.add(row)

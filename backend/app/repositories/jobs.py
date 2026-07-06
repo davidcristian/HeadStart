@@ -65,15 +65,17 @@ class SeenJobRepository:
             return set()
         wanted = set(normalized_urls)
         stmt = (
-            select(SeenJob.url)
+            select(SeenJob.normalized_url)
             .join(Search, SeenJob.search_id == Search.id)
             .where(Search.user_id == user_id)
-            .where(SeenJob.url != "")
+            .where(SeenJob.normalized_url.in_(wanted))
         )
-        known = {normalize_job_url(url) for url in self.session.scalars(stmt)}
-        return wanted & known
+        return set(self.session.scalars(stmt))
 
     def add(self, seen_job: SeenJob) -> SeenJob:
+        # Keep the indexed column in sync when callers only set url (DAT-05).
+        if not seen_job.normalized_url and seen_job.url:
+            seen_job.normalized_url = normalize_job_url(seen_job.url)
         self.session.add(seen_job)
         self.session.flush()
         return seen_job

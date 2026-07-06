@@ -151,6 +151,7 @@ dedup is also applied across a user's searches by normalized job URL (see
 | location      | str         |                                               |
 | salary        | str         | Formatted compensation when scraped (optional) |
 | url           | str         |                                               |
+| normalized_url| str         | Canonical form of `url` for cross-search dedup (DAT-05); written at insert |
 | summary       | str         | "Why this matches" blurb (optional); see [summaries.md](summaries.md) |
 | status        | str         | `new` / `seen` / `applied` / `archived` / `closed` |
 | first_seen_at | datetime    |                                               |
@@ -158,6 +159,7 @@ dedup is also applied across a user's searches by normalized job URL (see
 | ghosted_at    | datetime?   | Set when ghost-detection leases a stale apply |
 |               |             | **Unique (search_id, external_id)**           |
 |               |             | **Index** `ix_seen_job_status_applied_at_unghosted` on `(status, applied_at)` where `ghosted_at IS NULL` (DAT-03; ghost-detection tick) |
+|               |             | **Index** `ix_seen_job_normalized_url` on `normalized_url` (DAT-05; cross-search URL dedup) |
 
 **`status` lifecycle:**
 

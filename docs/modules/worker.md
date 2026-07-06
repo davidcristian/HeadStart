@@ -73,8 +73,8 @@ flowchart TD
 5. Apply the search's `filters` JSON to drop non-matching postings.
 6. Dedupe postings against `seen_job` for that search (by `external_id`).
 7. Skip notification when the normalized job URL was already seen in any of the
-   owner's other searches (cross-search dedup); still persist a `seen_job` row for
-   this search so the Jobs feed stays complete.
+   owner's other searches (cross-search dedup via indexed `seen_job.normalized_url`);
+   still persist a `seen_job` row for this search so the Jobs feed stays complete.
 8. Re-check the owner's plan for the target notifier (`allows_notifier`). If the
    type is not allowed (e.g. `webhook` after leaving Pro), skip delivery and do
    not queue digest rows.

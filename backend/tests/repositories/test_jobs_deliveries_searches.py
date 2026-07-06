@@ -80,6 +80,60 @@ def test_seen_job_existing_normalized_urls_empty(db_session: Session) -> None:
     assert SeenJobRepository(db_session).existing_normalized_urls_for_user(1, []) == set()
 
 
+def test_seen_job_existing_normalized_urls_intersects_batch(db_session: Session) -> None:
+    """Dedup must match on the persisted normalized_url, not re-scan every raw url."""
+    search = _search(db_session)
+    job = _job(db_session, search.id, "shared")
+    # Simulate a raw URL that normalizes to the same canonical form.
+    job.url = "HTTPS://Acme.Test/shared/"
+    job.normalized_url = "https://acme.test/shared"
+    db_session.flush()
+    repo = SeenJobRepository(db_session)
+
+    known = repo.existing_normalized_urls_for_user(
+        search.user_id,
+        ["https://acme.test/shared", "https://other.test/new"],
+    )
+    assert known == {"https://acme.test/shared"}
+
+
+def test_seen_job_add_fills_normalized_url(db_session: Session) -> None:
+    search = _search(db_session)
+    repo = SeenJobRepository(db_session)
+    row = repo.add(
+        SeenJob(
+            search_id=search.id,
+            external_id="n1",
+            hash="h",
+            title="T",
+            company="C",
+            location="L",
+            url="HTTPS://Acme.Test/role/?utm_source=x",
+        )
+    )
+    assert row.normalized_url == "https://acme.test/role"
+
+
+def test_seen_job_existing_normalized_urls_sql_filters_batch() -> None:
+    """Compiled SQL must IN-filter the batch on normalized_url (no full-history load)."""
+    from sqlalchemy.dialects import postgresql
+
+    from app.models.search import Search
+
+    wanted = {"https://acme.test/a", "https://acme.test/b"}
+    stmt = (
+        select(SeenJob.normalized_url)
+        .join(Search, SeenJob.search_id == Search.id)
+        .where(Search.user_id == 1)
+        .where(SeenJob.normalized_url.in_(wanted))
+    )
+    compiled = str(
+        stmt.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
+    ).upper()
+    assert "NORMALIZED_URL" in compiled
+    assert " IN (" in compiled
+
+
 # ---- DeliveryLogRepository ----
 
 

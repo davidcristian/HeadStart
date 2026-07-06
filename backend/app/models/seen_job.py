@@ -26,6 +26,8 @@ class SeenJob(Base):
             postgresql_where=text("ghosted_at IS NULL"),
             sqlite_where=text("ghosted_at IS NULL"),
         ),
+        # Cross-search URL dedup intersects the current batch in SQL (DAT-05).
+        Index("ix_seen_job_normalized_url", "normalized_url"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -40,6 +42,8 @@ class SeenJob(Base):
     location: Mapped[str] = mapped_column(String(300), nullable=False, default="")
     salary: Mapped[str] = mapped_column(String(200), nullable=False, default="")
     url: Mapped[str] = mapped_column(String(2000), nullable=False, default="")
+    # Canonical form of url for cross-search dedup; written at insert (DAT-05).
+    normalized_url: Mapped[str] = mapped_column(String(2000), nullable=False, default="")
     summary: Mapped[str] = mapped_column(String(1000), nullable=False, default="")
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="new")
     first_seen_at: Mapped[datetime] = mapped_column(
