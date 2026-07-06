@@ -54,7 +54,7 @@ Note on merges: the `portal_search` schema-drift defect surfaced from three angl
 
 <a id="xct-05"></a>
 ### XCT-05 — Single stored AI key sent to whichever provider a purpose resolves to
-🟡 **MEDIUM** · 🔒 security · Status: ☐ open · Confidence: high (3/5 verifiers) · Effort: M · WS28
+🟡 **MEDIUM** · 🔒 security · Status: ✅ done · Confidence: high (3/5 verifiers) · Effort: M · WS28
 
 **Locations:** `backend/app/ai/runtime_settings.py:111` (`resolve_ai_settings`); plus `backend/app/services/summary_preferences.py:139`, `backend/app/models/user.py:57`, `backend/app/ai/runtime_settings.py:113`.
 
@@ -62,7 +62,7 @@ Note on merges: the `portal_search` schema-drift defect surfaced from three angl
 
 **Failure scenario.** A user sets global `provider=openai` (key = OpenAI secret) and an `email_draft` override of `gemini`. Drafting then sends the OpenAI secret to Google as `x-goog-api-key`, disclosing the key to a different vendor.
 
-**Suggested fix.** Store one ciphertext per provider, or only apply the user key when the resolved provider matches the provider the key was entered for; drop it otherwise.
+**Fix ([PR](https://github.com/davidcristian/HeadStart/pull/47)).** `resolve_ai_settings` attaches the decrypted user key only when the resolved purpose provider equals `user.summary_provider` (the provider the key was entered for). Crossed purpose overrides fall back to the deployment/env key for that vendor.
 
 **Verification.** Confirmed 3/3 adversarial verifiers. Single key assigned to `api_key_overrides[resolved_provider]` (`runtime_settings.py:111`) regardless of origin; `gemini.py:40` + `llm_common.py:61` send it as `x-goog-api-key`. A crossed purpose override leaks the user's key to another vendor, though the misconfiguration is self-inflicted.
 

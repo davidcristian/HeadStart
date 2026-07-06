@@ -107,8 +107,19 @@ def resolve_ai_settings(base: Any, user: User | None, purpose: AiPurposeId = "su
     """Return effective AI settings for one purpose."""
     provider = resolve_provider_for_purpose(base, user, purpose)
 
+    # The single stored key belongs to summary_provider only — never attach it
+    # when a purpose resolves to a different vendor (XCT-05).
     api_key_overrides: dict[str, str] = {}
-    if user is not None and user.summary_api_key_ciphertext and provider in _PROVIDER_API_KEY_ATTR:
+    key_provider = (
+        str(user.summary_provider) if user is not None and user.summary_provider else None
+    )
+    if (
+        user is not None
+        and user.summary_api_key_ciphertext
+        and key_provider is not None
+        and provider == key_provider
+        and provider in _PROVIDER_API_KEY_ATTR
+    ):
         try:
             api_key_overrides[provider] = decrypt(user.summary_api_key_ciphertext)
         except DecryptionError:

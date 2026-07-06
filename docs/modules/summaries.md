@@ -57,12 +57,15 @@ inbox/resume agents — unset purposes inherit the global default, then env defa
 | `GET /summary-preferences` | Global + per-purpose selection, effective providers/models, and available options |
 | `PATCH /summary-preferences` | Set global `provider` and optional `api_key`; patch `purpose_preferences` for `cover_letter`, `resume_curation`, `email_classify`, `email_draft` |
 
-Keys are Fernet-encrypted at rest (`summary_api_key_ciphertext` on `user`). Purpose
-overrides live in `ai_purpose_providers` / `ai_purpose_models` JSON columns. The
-pipeline resolves per-user settings via `resolve_summary_settings` (summaries) or
-`resolve_ai_settings(..., purpose)` (cover letters and future agents). Non-Pro users
-may read preferences but receive `402` on update (`feature_ai_summaries`). Settings
-UI: **Settings → AI models**.
+Keys are Fernet-encrypted at rest (`summary_api_key_ciphertext` on `user`). The key
+belongs to the user's global `summary_provider` only: `resolve_ai_settings` attaches it
+when the resolved purpose provider matches that global selection, and drops it otherwise
+so a purpose override (e.g. `email_draft=gemini` while the stored key is OpenAI) cannot
+send the secret to another vendor. Purpose overrides live in `ai_purpose_providers` /
+`ai_purpose_models` JSON columns. The pipeline resolves per-user settings via
+`resolve_summary_settings` (summaries) or `resolve_ai_settings(..., purpose)` (cover
+letters and future agents). Non-Pro users may read preferences but receive `402` on
+update (`feature_ai_summaries`). Settings UI: **Settings → AI models**.
 
 ## Configuration
 
