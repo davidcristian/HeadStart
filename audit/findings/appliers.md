@@ -142,7 +142,7 @@ Merged with APL-12 (the `/name`-step subset of this same defect at `workday_subm
 
 <a id="apl-13"></a>
 ### APL-13 — flatten_lever_form_fields emits resume_file meta as dict-repr on live Lever submit
-🟡 **MEDIUM** · 🐞 bug · Status: ☐ open · Confidence: high (5/5 verifiers) · Effort: S · WS24
+🟡 **MEDIUM** · 🐞 bug · Status: ✅ done · Confidence: high (5/5 verifiers) · Effort: S · WS24
 
 Merged with APL-14 (identical defect and location, `resume.py:59`).
 

@@ -67,6 +67,9 @@ def flatten_lever_form_fields(payload: dict[str, Any]) -> dict[str, str]:
                 parts[f"urls[{label}]"] = str(url)
         elif key == "consent" and isinstance(value, dict):
             parts["consent"] = json.dumps(value)
+        elif key == "resume_file":
+            # Dry-run metadata only; live bytes go in the multipart `resume` part.
+            continue
         elif isinstance(value, bool):
             parts[key] = "true" if value else "false"
         else:

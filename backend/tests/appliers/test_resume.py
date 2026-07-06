@@ -109,3 +109,21 @@ def test_flatten_lever_form_fields_handles_urls_consent_bool_scalar() -> None:
     assert parts["opt_in"] == "true"
     assert parts["opt_out"] == "false"
     assert parts["name"] == "Ada"
+
+
+def test_flatten_lever_form_fields_skips_resume_file_metadata() -> None:
+    """APL-13: do not stringify resume_file meta beside the multipart resume part."""
+    from app.appliers.resume import flatten_lever_form_fields
+
+    parts = flatten_lever_form_fields(
+        {
+            "name": "Ada",
+            "resume_file": {
+                "filename": "resume.pdf",
+                "content_type": "application/pdf",
+                "size_bytes": 4,
+            },
+        }
+    )
+    assert parts == {"name": "Ada"}
+    assert "resume_file" not in parts

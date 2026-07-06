@@ -158,7 +158,9 @@ context or configure custom questions via `answers`.
 Store in source config or, preferably, credential `session.postings_api_key`.
 When the profile has an uploaded resume file, the adapter switches to
 `multipart/form-data` with a `resume` part; otherwise `resume_text` is appended
-to `comments` when present.
+to `comments` when present. Dry-run payloads may include a `resume_file`
+metadata object (filename / content type / size, no bytes); that key is omitted
+from multipart form fields on live submit so Lever only receives the file part.
 
 ### Ashby
 

@@ -144,6 +144,8 @@ def test_live_submit_uses_multipart_when_resume_file_present() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         seen["content_type"] = request.headers.get("content-type", "")
         seen["has_resume"] = b'name="resume"' in request.content
+        # APL-13: metadata-only resume_file must not appear as a form field.
+        seen["has_resume_file_field"] = b'name="resume_file"' in request.content
         return httpx.Response(200, json={"ok": True, "applicationId": "with-resume"})
 
     resume = ResumeFile(
@@ -171,6 +173,9 @@ def test_live_submit_uses_multipart_when_resume_file_present() -> None:
     assert isinstance(content_type, str)
     assert "multipart/form-data" in content_type
     assert seen["has_resume"] is True
+    assert seen["has_resume_file_field"] is False
+    assert result.payload is not None
+    assert result.payload.get("resume_file", {}).get("filename") == "resume.pdf"
 
 
 def test_missing_api_key_fails_with_helpful_error() -> None:
