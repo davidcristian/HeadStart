@@ -70,7 +70,11 @@ SMTP host/port/TLS, credentials, optional `smtp_from`).
 - `GMAIL_OAUTH_REDIRECT_URI` — e.g. `http://localhost:8000/api/v1/inbox/gmail/callback`
 
 Token refresh runs automatically before fetch/send when the access token is near
-expiry (`app/inbox/gmail_oauth.py`).
+expiry (`app/inbox/gmail_oauth.py`). Near-expiry refresh locks the
+`mailbox_credential` row (`SELECT … FOR UPDATE` on Postgres), re-reads the
+stored tokens, and skips the provider call when another worker already rotated
+them — so concurrent inbox/ghost/pending-reply ticks cannot invalidate each
+other's refresh_token (INB-06).
 
 ## outlook adapter
 
@@ -106,7 +110,9 @@ expiry (`app/inbox/gmail_oauth.py`).
 4. Create a client secret and copy it to `OUTLOOK_OAUTH_CLIENT_SECRET`.
 
 Token refresh runs automatically before fetch/send when the access token is near
-expiry (`app/inbox/outlook_oauth.py`).
+expiry (`app/inbox/outlook_oauth.py`). Refresh is serialized on the
+`mailbox_credential` row (same lock + re-check as Gmail; INB-06) because
+Microsoft may rotate the refresh_token on each grant.
 
 ## yahoo adapter
 
@@ -138,7 +144,9 @@ publish a Gmail/Graph-style REST API — mail access is over standard protocols.
 4. Copy client ID and secret to `YAHOO_OAUTH_CLIENT_ID` / `YAHOO_OAUTH_CLIENT_SECRET`.
 
 Token refresh runs automatically before fetch/send when the access token is near
-expiry (`app/inbox/yahoo_oauth.py`).
+expiry (`app/inbox/yahoo_oauth.py`). Refresh is serialized on the
+`mailbox_credential` row (same lock + re-check as Gmail/Outlook; INB-06) because
+Yahoo may rotate the refresh_token on each grant.
 
 ## fastmail adapter
 

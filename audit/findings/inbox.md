@@ -65,9 +65,11 @@ r"\bworkers[' ] compensation\b"
 
 <a id="inb-06"></a>
 ### INB-06 — Unlocked concurrent OAuth token refresh rotates Outlook/Yahoo token, breaks mailbox
-🟡 **MEDIUM** · 🐞 bug · Status: ☐ open · Confidence: high (5/5 verifiers) · Effort: M · WS30
+🟡 **MEDIUM** · 🐞 bug · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/53)) · Confidence: high (5/5 verifiers) · Effort: M · WS30
 
 _Merged with INB-19 (`inbox_oauth.py:63`, same TOCTOU refresh race; INB-19 was rated low, this record high — reported at the higher-verifier medium framing)._
+
+**Update (2026-07-10).** Fixed in [PR](https://github.com/davidcristian/HeadStart/pull/53): near-expiry Gmail/Outlook/Yahoo refresh locks `mailbox_credential` (`SELECT … FOR UPDATE` on Postgres), re-decodes tokens under the lock, and skips the provider call when a peer already rotated the refresh_token.
 
 **Locations:** `backend/app/services/inbox_oauth.py:63` (`ensure_fresh_outlook_config`); plus `backend/app/services/inbox_oauth.py:49`, `backend/app/services/inbox_oauth.py:77`, `backend/app/inbox/outlook_oauth.py:153`, `backend/app/inbox/yahoo_oauth.py:145`, `backend/app/repositories/mailbox_credentials.py:13`.
 
