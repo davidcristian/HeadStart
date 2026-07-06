@@ -8,9 +8,11 @@ This area covers the inbound-mail subsystem: mailbox protocol adapters (Gmail, O
 
 <a id="inb-01"></a>
 ### INB-01 — Fastmail JMAP send/move report success on per-method errors (silent failed auto-send)
-🟡 **MEDIUM** · 🐞 bug · Status: ☐ open · Confidence: high (5/5 verifiers) · Effort: S · WS30
+🟡 **MEDIUM** · 🐞 bug · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/51)) · Confidence: high (5/5 verifiers) · Effort: S · WS30
 
 _Merged with INB-02 (`fastmail_jmap.py:162`, same defect: JMAP method-level errors ignored on send/move)._
+
+**Update (2026-07-10).** Fixed in [PR](https://github.com/davidcristian/HeadStart/pull/51): `raise_on_jmap_method_errors` runs inside `_call` for every method batch (method-level `error` rows and non-empty `notCreated`/`notUpdated`/`notDestroyed`), and `send_message` requires both `Email/set` and `EmailSubmission/set` to return `created` so a silent no-op cannot report success.
 
 **Locations:** `backend/app/inbox/fastmail_jmap.py:246` (`FastmailJmapClient._call`); plus `backend/app/inbox/fastmail_jmap.py:139`, `backend/app/inbox/fastmail_jmap.py:162` (`send_message`), `backend/app/inbox/fastmail_jmap.py:181`, `backend/app/inbox/fastmail_jmap.py:202`, `backend/app/inbox/fastmail_jmap.py:231`, and the adapter at `backend/app/inbox/adapters/fastmail.py:56`.
 

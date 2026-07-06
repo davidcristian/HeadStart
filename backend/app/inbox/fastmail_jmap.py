@@ -16,6 +16,8 @@ from app.inbox.fastmail_jmap_protocol import (
     JMAP_MAIL,
     JMAP_SUBMISSION,
     JmapSession,
+    raise_on_jmap_method_errors,
+    response_created,
     response_list,
 )
 from app.inbox.types import OutboundMessage
@@ -159,7 +161,7 @@ class FastmailJmapClient:
         }
         if headers:
             draft["headers"] = headers
-        self._call(
+        responses = self._call(
             session,
             using=[JMAP_CORE, JMAP_MAIL, JMAP_SUBMISSION],
             method_calls=[
@@ -177,6 +179,10 @@ class FastmailJmapClient:
                 ],
             ],
         )
+        if not response_created(responses, "Email/set"):
+            raise ValueError("JMAP Email/set did not create draft")
+        if not response_created(responses, "EmailSubmission/set"):
+            raise ValueError("JMAP EmailSubmission/set did not create submission")
 
     def move_message(
         self,
@@ -246,4 +252,5 @@ class FastmailJmapClient:
         method_responses = payload.get("methodResponses")
         if not isinstance(method_responses, list):
             raise ValueError("JMAP response missing methodResponses")
+        raise_on_jmap_method_errors(method_responses)
         return method_responses

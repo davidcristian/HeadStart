@@ -151,6 +151,10 @@ expiry (`app/inbox/yahoo_oauth.py`).
 - **Send:** JMAP `Email/set` (draft) + `EmailSubmission/set`.
 - **Move / route:** JMAP `Email/set` updates `mailboxIds`; destination mailboxes
   are created with `Mailbox/set` when missing (same folder names as IMAP routing).
+- **Method errors:** `_call` treats JMAP per-method `error` rows and non-empty
+  `notCreated` / `notUpdated` / `notDestroyed` maps as failures (HTTP 200 alone is
+  not success). Send also requires both `*/set` responses to include `created`, so
+  a silent no-op cannot report `status="sent"`.
 
 **User setup:**
 

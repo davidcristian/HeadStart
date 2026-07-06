@@ -5,6 +5,7 @@ import pytest
 from app.inbox.fastmail_jmap_mailboxes import ensure_mailbox, mailbox_id_by_role
 from app.inbox.fastmail_jmap_protocol import (
     JmapSession,
+    raise_on_jmap_method_errors,
     response_created,
     response_ids,
     response_list,
@@ -74,6 +75,84 @@ def test_response_created_variants() -> None:
     # created dict but values not dicts -> {}
     assert response_created([["Target", {"created": {"a": "nope"}}, ""]], "Target") == {}
     assert response_created([], "Target") == {}
+
+
+# --------------------------------------------------------------------------- #
+# raise_on_jmap_method_errors
+# --------------------------------------------------------------------------- #
+
+
+def test_raise_on_jmap_method_errors_ignores_success_and_empty_maps() -> None:
+    raise_on_jmap_method_errors(
+        [
+            ["Short"],
+            "not-a-list",
+            ["Email/get", {"list": []}, "g0"],
+            ["Email/set", {"created": {"draft": {"id": "d1"}}, "notCreated": {}}, "0"],
+            ["Email/set", "not-a-dict", "1"],
+        ]
+    )
+
+
+def test_raise_on_jmap_method_errors_on_error_row() -> None:
+    with pytest.raises(ValueError, match="quota exceeded"):
+        raise_on_jmap_method_errors(
+            [["error", {"type": "serverFail", "description": "quota exceeded"}, "0"]]
+        )
+
+
+def test_raise_on_jmap_method_errors_on_error_type_only() -> None:
+    with pytest.raises(ValueError, match="JMAP error: invalidArguments"):
+        raise_on_jmap_method_errors([["error", {"type": "invalidArguments"}, "0"]])
+
+
+def test_raise_on_jmap_method_errors_on_error_non_dict_body() -> None:
+    with pytest.raises(ValueError, match="JMAP method error"):
+        raise_on_jmap_method_errors([["error", "boom", "0"]])
+
+
+def test_raise_on_jmap_method_errors_on_error_empty_dict() -> None:
+    with pytest.raises(ValueError, match="JMAP method error"):
+        raise_on_jmap_method_errors([["error", {}, "0"]])
+
+
+def test_raise_on_jmap_method_errors_on_not_created() -> None:
+    with pytest.raises(ValueError, match="Email/set notCreated for draft"):
+        raise_on_jmap_method_errors(
+            [
+                [
+                    "Email/set",
+                    {
+                        "notCreated": {
+                            "draft": {
+                                "type": "invalidProperties",
+                                "description": "missing to",
+                            }
+                        }
+                    },
+                    "0",
+                ]
+            ]
+        )
+
+
+def test_raise_on_jmap_method_errors_on_not_updated() -> None:
+    with pytest.raises(ValueError, match="Email/set notUpdated for M1"):
+        raise_on_jmap_method_errors(
+            [["Email/set", {"notUpdated": {"M1": {"type": "notFound"}}}, ""]]
+        )
+
+
+def test_raise_on_jmap_method_errors_on_not_destroyed() -> None:
+    with pytest.raises(ValueError, match="Email/set notDestroyed for M1"):
+        raise_on_jmap_method_errors(
+            [["Email/set", {"notDestroyed": {"M1": {"type": "forbidden"}}}, ""]]
+        )
+
+
+def test_raise_on_jmap_method_errors_non_string_method_and_scalar_failure() -> None:
+    with pytest.raises(ValueError, match="JMAP notCreated for x: plain"):
+        raise_on_jmap_method_errors([[42, {"notCreated": {"x": "plain"}}, ""]])
 
 
 # --------------------------------------------------------------------------- #

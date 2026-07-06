@@ -239,3 +239,199 @@ def test_move_message_noop_when_dest_equals_source() -> None:
     respx.post(API_URL).mock(side_effect=handler)
     # dest resolves to "same-id" which equals the inbox source -> early return, no Email/set
     FastmailJmapClient("token").move_message(email_id="M1", destination="Same")
+
+
+@respx.mock
+def test_send_message_raises_on_submission_not_created() -> None:
+    respx.get(SESSION_URL).mock(return_value=Response(200, json=_session_json()))
+
+    def handler(request):
+        payload = json.loads(request.content)
+        methods = [c[0] for c in payload["methodCalls"]]
+        if "EmailSubmission/set" in methods:
+            return Response(
+                200,
+                json={
+                    "methodResponses": [
+                        ["Email/set", {"created": {"draft": {"id": "d1"}}}, "0"],
+                        [
+                            "EmailSubmission/set",
+                            {
+                                "notCreated": {
+                                    "sendIt": {
+                                        "type": "forbidden",
+                                        "description": "blocked recipient",
+                                    }
+                                }
+                            },
+                            "1",
+                        ],
+                    ]
+                },
+            )
+        if "Identity/get" in methods:
+            return Response(
+                200,
+                json={
+                    "methodResponses": [
+                        [
+                            "Identity/get",
+                            {"list": [{"id": "id-1", "email": "user@fastmail.test"}]},
+                            "",
+                        ]
+                    ]
+                },
+            )
+        return Response(
+            200,
+            json={
+                "methodResponses": [
+                    ["Mailbox/query", {"ids": ["drafts-id"]}, "mq0"],
+                    ["Mailbox/get", {"list": [{"id": "drafts-id", "role": "drafts"}]}, "mg0"],
+                ]
+            },
+        )
+
+    respx.post(API_URL).mock(side_effect=handler)
+    with pytest.raises(ValueError, match="EmailSubmission/set notCreated"):
+        FastmailJmapClient("token").send_message(
+            from_email="user@fastmail.test",
+            message=OutboundMessage(to=["hr@x"], subject="S", body="B"),
+        )
+
+
+@respx.mock
+def test_send_message_raises_when_created_missing() -> None:
+    respx.get(SESSION_URL).mock(return_value=Response(200, json=_session_json()))
+
+    def handler(request):
+        payload = json.loads(request.content)
+        methods = [c[0] for c in payload["methodCalls"]]
+        if "EmailSubmission/set" in methods:
+            return Response(
+                200,
+                json={
+                    "methodResponses": [
+                        ["Email/set", {}, "0"],
+                        ["EmailSubmission/set", {"created": {"sendIt": {"id": "s1"}}}, "1"],
+                    ]
+                },
+            )
+        if "Identity/get" in methods:
+            return Response(
+                200,
+                json={
+                    "methodResponses": [
+                        [
+                            "Identity/get",
+                            {"list": [{"id": "id-1", "email": "user@fastmail.test"}]},
+                            "",
+                        ]
+                    ]
+                },
+            )
+        return Response(
+            200,
+            json={
+                "methodResponses": [
+                    ["Mailbox/query", {"ids": ["drafts-id"]}, "mq0"],
+                    ["Mailbox/get", {"list": [{"id": "drafts-id", "role": "drafts"}]}, "mg0"],
+                ]
+            },
+        )
+
+    respx.post(API_URL).mock(side_effect=handler)
+    with pytest.raises(ValueError, match="did not create draft"):
+        FastmailJmapClient("token").send_message(
+            from_email="user@fastmail.test",
+            message=OutboundMessage(to=["hr@x"], subject="S", body="B"),
+        )
+
+
+@respx.mock
+def test_send_message_raises_when_submission_created_missing() -> None:
+    respx.get(SESSION_URL).mock(return_value=Response(200, json=_session_json()))
+
+    def handler(request):
+        payload = json.loads(request.content)
+        methods = [c[0] for c in payload["methodCalls"]]
+        if "EmailSubmission/set" in methods:
+            return Response(
+                200,
+                json={
+                    "methodResponses": [
+                        ["Email/set", {"created": {"draft": {"id": "d1"}}}, "0"],
+                        ["EmailSubmission/set", {}, "1"],
+                    ]
+                },
+            )
+        if "Identity/get" in methods:
+            return Response(
+                200,
+                json={
+                    "methodResponses": [
+                        [
+                            "Identity/get",
+                            {"list": [{"id": "id-1", "email": "user@fastmail.test"}]},
+                            "",
+                        ]
+                    ]
+                },
+            )
+        return Response(
+            200,
+            json={
+                "methodResponses": [
+                    ["Mailbox/query", {"ids": ["drafts-id"]}, "mq0"],
+                    ["Mailbox/get", {"list": [{"id": "drafts-id", "role": "drafts"}]}, "mg0"],
+                ]
+            },
+        )
+
+    respx.post(API_URL).mock(side_effect=handler)
+    with pytest.raises(ValueError, match="did not create submission"):
+        FastmailJmapClient("token").send_message(
+            from_email="user@fastmail.test",
+            message=OutboundMessage(to=["hr@x"], subject="S", body="B"),
+        )
+
+
+@respx.mock
+def test_move_message_raises_on_not_updated() -> None:
+    respx.get(SESSION_URL).mock(return_value=Response(200, json=_session_json()))
+
+    def handler(request):
+        payload = json.loads(request.content)
+        methods = [c[0] for c in payload["methodCalls"]]
+        if "Email/set" in methods:
+            return Response(
+                200,
+                json={
+                    "methodResponses": [
+                        [
+                            "Email/set",
+                            {"notUpdated": {"M1": {"type": "notFound", "description": "gone"}}},
+                            "",
+                        ]
+                    ]
+                },
+            )
+        filter_body = payload["methodCalls"][0][1].get("filter", {})
+        if filter_body.get("name"):
+            return Response(
+                200,
+                json={"methodResponses": [["Mailbox/query", {"ids": ["archive-id"]}, ""]]},
+            )
+        return Response(
+            200,
+            json={
+                "methodResponses": [
+                    ["Mailbox/query", {"ids": ["inbox-id"]}, "mq0"],
+                    ["Mailbox/get", {"list": [{"id": "inbox-id", "role": "inbox"}]}, "mg0"],
+                ]
+            },
+        )
+
+    respx.post(API_URL).mock(side_effect=handler)
+    with pytest.raises(ValueError, match="notUpdated for M1"):
+        FastmailJmapClient("token").move_message(email_id="M1", destination="Archive")

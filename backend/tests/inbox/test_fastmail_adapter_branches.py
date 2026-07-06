@@ -122,6 +122,65 @@ def test_send_message_failure_returns_failed() -> None:
 
 
 @respx.mock
+def test_send_message_jmap_not_created_returns_failed() -> None:
+    _mock_session()
+
+    def handler(request):
+        methods = [c[0] for c in json.loads(request.content)["methodCalls"]]
+        if "EmailSubmission/set" in methods:
+            return Response(
+                200,
+                json={
+                    "methodResponses": [
+                        ["Email/set", {"created": {"draft": {"id": "d1"}}}, "0"],
+                        [
+                            "EmailSubmission/set",
+                            {
+                                "notCreated": {
+                                    "sendIt": {
+                                        "type": "forbidden",
+                                        "description": "blocked recipient",
+                                    }
+                                }
+                            },
+                            "1",
+                        ],
+                    ]
+                },
+            )
+        if "Identity/get" in methods:
+            return Response(
+                200,
+                json={
+                    "methodResponses": [
+                        [
+                            "Identity/get",
+                            {"list": [{"id": "id-1", "email": "user@fastmail.test"}]},
+                            "",
+                        ]
+                    ]
+                },
+            )
+        return Response(
+            200,
+            json={
+                "methodResponses": [
+                    ["Mailbox/query", {"ids": ["drafts-id"]}, "mq0"],
+                    ["Mailbox/get", {"list": [{"id": "drafts-id", "role": "drafts"}]}, "mg0"],
+                ]
+            },
+        )
+
+    respx.post(API_URL).mock(side_effect=handler)
+    result = FastmailMailbox().send_message(
+        CTX, OutboundMessage(to=["hr@x"], subject="S", body="B")
+    )
+    assert result.status == "failed"
+    assert result.error is not None
+    assert "notCreated" in result.error
+
+
+@respx.mock
 def test_test_connection_email_mismatch() -> None:
     _mock_session(username="different@fastmail.test")
 
