@@ -172,3 +172,29 @@ def test_process_due_skips_before_send_after(db_session: Session, monkeypatch) -
     assert result.checked == 0
     send_mock.assert_not_called()
     assert row.status == "pending"
+
+
+def test_process_due_blocks_mismatched_recipient_domain(db_session: Session, monkeypatch) -> None:
+    """INB-03: forged From outside employer_domain must not auto-send."""
+    monkeypatch.setattr(settings, "inbox_agent_enabled", True)
+    search = _make_search(db_session)
+    user_id = search.user_id
+    _seed_mailbox(db_session, user_id, auto_reply=True)
+    draft = _seed_draft(db_session, user_id, search=search)
+    assert draft.classification is not None
+    draft.classification.from_addr = "attacker@evil.com"
+    service = PendingReplyService(db_session)
+    now = datetime(2026, 6, 30, 12, 0, tzinfo=UTC)
+    row = service.enqueue_for_draft(user_id, draft, anchor=now - timedelta(hours=1))
+    assert row is not None
+    row.send_after = now - timedelta(minutes=1)
+
+    with patch.object(service.inbox, "send_message") as send_mock:
+        result = service.process_due(now=now)
+
+    assert result.blocked == 1
+    assert result.sent == 0
+    assert row.status == "blocked"
+    assert draft.status == "draft"
+    assert "employer domain" in (row.error or "")
+    send_mock.assert_not_called()

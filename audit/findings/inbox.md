@@ -24,7 +24,9 @@ _Merged with INB-02 (`fastmail_jmap.py:162`, same defect: JMAP method-level erro
 
 <a id="inb-03"></a>
 ### INB-03 — Auto-reply recipient is raw inbound From, not checked vs linked employer domain
-🟡 **MEDIUM** · 🔒 security · Status: ☐ open · Confidence: medium (3/3 verifiers) · Effort: S · WS29
+🟡 **MEDIUM** · 🔒 security · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/48)) · Confidence: medium (3/3 verifiers) · Effort: S · WS29
+
+**Update (2026-07-10).** Already fixed in `0135f08`: `ReplySafeSendService.evaluate_before_send` calls `auto_reply_recipient_allowed`, which requires the inbound `From` domain to match the linked application's `employer_domain` (or job URL host). Mismatches return `blocked_recipient` and never SMTP-send. Tracker/docs/regression aligned — [PR](https://github.com/davidcristian/HeadStart/pull/48).
 
 **Locations:** `backend/app/inbox/reply_message.py:16` (`build_recruiter_reply_message`); plus `backend/app/services/pending_replies.py:207`, `backend/app/services/inbox_gate.py:63`.
 
