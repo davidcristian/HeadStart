@@ -3,8 +3,13 @@
 from __future__ import annotations
 
 import errno
+import hmac
 import logging
+import threading
+from collections.abc import Callable, Iterable
 from typing import Literal
+from wsgiref.simple_server import WSGIRequestHandler, make_server
+from wsgiref.types import StartResponse, WSGIEnvironment
 
 from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
 
@@ -58,6 +63,8 @@ AUTH_LOGIN_FAILURES = Counter(
     "Failed login attempts (invalid credentials or inactive account)",
 )
 
+WSGIApp = Callable[[WSGIEnvironment, StartResponse], Iterable[bytes]]
+
 
 def record_pipeline_run(status: PipelineStatus) -> None:
     """Record a completed pipeline run."""
@@ -108,19 +115,53 @@ def render_metrics() -> tuple[bytes, str]:
     return generate_latest(), CONTENT_TYPE_LATEST
 
 
+def metrics_bearer_authorized(authorization: str, token: str) -> bool:
+    """Return True when token is unset or Authorization matches Bearer token."""
+    if not token:
+        return True
+    expected = f"Bearer {token}".encode()
+    return hmac.compare_digest(authorization.encode(), expected)
+
+
+def authorized_metrics_app(token: str) -> WSGIApp:
+    """WSGI app that exposes Prometheus metrics behind optional Bearer auth (AUT-06)."""
+    from prometheus_client import make_wsgi_app
+
+    base_app = make_wsgi_app()
+
+    def app(environ: WSGIEnvironment, start_response: StartResponse) -> Iterable[bytes]:
+        auth = environ.get("HTTP_AUTHORIZATION", "")
+        if not metrics_bearer_authorized(auth, token):
+            start_response("401 Unauthorized", [("Content-Type", "text/plain")])
+            return [b"Unauthorized\n"]
+        return base_app(environ, start_response)
+
+    return app
+
+
+class _SilentHandler(WSGIRequestHandler):
+    """Suppress per-request access logs from the worker metrics server."""
+
+    def log_message(self, format: str, *args: object) -> None:  # noqa: A003
+        return
+
+
 def start_metrics_server(port: int) -> None:
     """Expose /metrics on a background HTTP server (worker processes).
 
     Prefork Celery children all call this on the same ``METRICS_PORT``. The
     first binder wins; later children hit ``EADDRINUSE`` and must skip so the
     pool does not crash-loop (XCT-13). Only that child's registry is scraped.
-    """
-    if not get_settings().metrics_enabled:
-        return
-    from prometheus_client import start_http_server
 
+    When ``METRICS_TOKEN`` is set, scrapes must send ``Authorization: Bearer``
+    (same contract as the API ``GET /metrics`` route — AUT-06 / XCT-20).
+    """
+    settings = get_settings()
+    if not settings.metrics_enabled:
+        return
+    app = authorized_metrics_app(settings.metrics_token)
     try:
-        start_http_server(port)
+        httpd = make_server("0.0.0.0", port, app, handler_class=_SilentHandler)
     except OSError as exc:
         if exc.errno == errno.EADDRINUSE:
             logger.warning(
@@ -129,3 +170,5 @@ def start_metrics_server(port: int) -> None:
             )
             return
         raise
+    thread = threading.Thread(target=httpd.serve_forever, daemon=True)
+    thread.start()

@@ -14,7 +14,8 @@ healthy?" without reading worker logs.
 | Worker (Celery) | `GET :METRICS_PORT/metrics` (default `9090`) | Scheduled pipeline runs, digest flushes, scheduler enqueue |
 
 Scrape **both** targets in production — they run in separate processes and each
-holds its own registry.
+holds its own registry. When `METRICS_TOKEN` is set, **both** endpoints require
+`Authorization: Bearer <token>` (API route and worker WSGI server — AUT-06).
 
 ### Prefork worker port binding (XCT-13)
 
@@ -63,9 +64,12 @@ histogram_quantile(0.95, sum by (adapter, le) (rate(headstart_scrape_duration_se
 | ------- | ------- | ------- |
 | `METRICS_ENABLED` | `true` | Set `false` to disable recording and hide `/metrics` |
 | `METRICS_PORT` | `9090` | Worker-only HTTP port for `/metrics` |
-| `METRICS_TOKEN` | *(empty)* | When set, `GET /metrics` requires `Authorization: Bearer <token>` |
+| `METRICS_TOKEN` | *(empty)* | When set, API and worker `/metrics` require `Authorization: Bearer <token>` |
 
-Set `METRICS_TOKEN` in any deployment reachable from the internet.
+Set `METRICS_TOKEN` in any deployment reachable from the internet (or any network
+that can reach the worker metrics port). Empty token keeps both surfaces open for
+local scrapes; production should always set a token (Terraform injection is still
+tracked separately as OPS-54).
 
 ## AWS / CloudWatch
 

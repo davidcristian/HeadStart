@@ -162,7 +162,9 @@ Merged: DOC-18 (uid 233) reported the same omission and is folded in here.
 
 <a id="doc-22"></a>
 ### DOC-22 — metrics.md implies METRICS_TOKEN guards /metrics, but worker :9090 has no auth
-⚪ **LOW** · 📝 doc · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: S · WS21
+⚪ **LOW** · 📝 doc · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/36)) · Confidence: high (3/3 verifiers) · Effort: S · WS21
+
+**Update (2026-07-10).** Closed with [AUT-06](auth-security.md#aut-06): worker honors `METRICS_TOKEN`, and `docs/modules/metrics.md` now states both scrape targets require Bearer auth when the token is set.
 
 **Locations:** `docs/modules/metrics.md:54` (`Configuration / METRICS_TOKEN`).
 

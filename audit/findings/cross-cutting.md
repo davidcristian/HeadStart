@@ -237,7 +237,9 @@ the local package. Regenerate via `just lock-backend` ([ADR-0012](../../docs/adr
 
 <a id="xct-20"></a>
 ### XCT-20 — Worker /metrics HTTP server ignores metrics_token — unauthenticated even when set
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: high (3/5 verifiers) · Effort: M · WS21
+⚪ **LOW** · 🔒 security · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/36)) · Confidence: high (3/5 verifiers) · Effort: M · WS21
+
+**Update (2026-07-10).** Fixed with [AUT-06](auth-security.md#aut-06): worker metrics WSGI app enforces Bearer `METRICS_TOKEN` when set.
 
 **Locations:** `backend/app/core/metrics.py:102` (`start_metrics_server`); plus `backend/app/worker/celery_app.py:36`, `docker-compose.yml:76`.
 

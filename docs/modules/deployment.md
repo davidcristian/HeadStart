@@ -84,8 +84,9 @@ Prometheus metrics are exposed from two scrape targets:
 - **Worker** service: `GET /metrics` on `METRICS_PORT` (default 9090).
 
 See [modules/metrics.md](../modules/metrics.md) for metric names, PromQL examples,
-and optional `METRICS_TOKEN` auth. On AWS, add the worker metrics port to the task
-security group and scrape with Prometheus or the CloudWatch agent.
+and `METRICS_TOKEN` Bearer auth (honored by both API and worker scrape targets).
+On AWS, add the worker metrics port to the task security group and scrape with
+Prometheus or the CloudWatch agent.
 
 ## Deploy flow
 

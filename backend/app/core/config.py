@@ -110,7 +110,7 @@ class Settings(BaseSettings):
     metrics_enabled: bool = True
     # Worker-only HTTP port for /metrics when the pipeline runs in Celery.
     metrics_port: int = 9090
-    # Optional bearer token for GET /metrics (empty = unauthenticated).
+    # Optional bearer token for API and worker GET /metrics (empty = unauthenticated).
     metrics_token: str = ""
 
     # ---- AI summaries ("why this matches" blurb in notifications) ----
