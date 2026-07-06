@@ -23,6 +23,8 @@ class ApplicationLog(Base):
             postgresql_where=text("status IN ('queued', 'processing') AND dry_run IS FALSE"),
             sqlite_where=text("status IN ('queued', 'processing') AND dry_run = 0"),
         ),
+        # Applications pipeline distinct subquery filters dry_run (DAT-03).
+        Index("ix_application_log_dry_run_seen_job_id", "dry_run", "seen_job_id"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)

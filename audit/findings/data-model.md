@@ -51,7 +51,7 @@ or the lock already points at a user.
 
 <a id="dat-03"></a>
 ### DAT-03 — Missing indexes on seen_job.status/applied_at and application_log.dry_run
-🟡 **MEDIUM** · ⚡ perf · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: S · WS33
+🟡 **MEDIUM** · ⚡ perf · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/61)) · Confidence: high (3/3 verifiers) · Effort: S · WS33
 
 > Rolls up the missing-index pattern on `seen_job`. Near-duplicates DAT-11 (`seen_job.status` unindexed, low) and DAT-14 (ghost sweep full-scan, low) are kept as separate low-severity records below because each cites a distinct caller; this record is the broadest and covers both tables.
 
@@ -62,6 +62,8 @@ or the lock already points at a user.
 **Failure scenario.** As `seen_job` grows to millions of rows, the periodic `detect_ghosted_applications` tick performs a full table scan on every run, and the applications-pipeline distinct subquery scans `application_log` — both degrading progressively with total history.
 
 **Suggested fix.** Add a composite/partial index on `(status, applied_at)` (partial `WHERE ghosted_at IS NULL`), and consider an index on `application_log(dry_run, seen_job_id)`.
+
+**Fix.** Models declare `ix_seen_job_status_applied_at_unghosted` (partial `(status, applied_at)` where `ghosted_at IS NULL`) and `ix_application_log_dry_run_seen_job_id` on `(dry_run, seen_job_id)`; Alembic revision `0042_seen_job_app_log_idx`.
 
 **Verification.** Confirmed 3/3 adversarial verifiers. `seen_job` indexes only `search_id`; `status`/`applied_at`/`ghosted_at` and `application_log.dry_run` are unindexed, and `list_stale_applications` filters `status`/`applied_at` each ghost-detection tick, so a growing table triggers full scans.
 

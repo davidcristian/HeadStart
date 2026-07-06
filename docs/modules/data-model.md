@@ -155,7 +155,9 @@ dedup is also applied across a user's searches by normalized job URL (see
 | status        | str         | `new` / `seen` / `applied` / `archived` / `closed` |
 | first_seen_at | datetime    |                                               |
 | applied_at    | datetime    | Set when a live apply succeeds (manual or pipeline) |
+| ghosted_at    | datetime?   | Set when ghost-detection leases a stale apply |
 |               |             | **Unique (search_id, external_id)**           |
+|               |             | **Index** `ix_seen_job_status_applied_at_unghosted` on `(status, applied_at)` where `ghosted_at IS NULL` (DAT-03; ghost-detection tick) |
 
 **`status` lifecycle:**
 
@@ -245,6 +247,10 @@ Audit of auto-apply attempts (preview and live).
 | payload                  | JSON?       | Adapter body plus `employer_domain` + `posting` metadata for triage, and a `user_consent` stamp (`basis`, `mechanism`, `live_submission`, `recorded_at`) for each attempt |
 | external_application_id  | str?        | Board-assigned ID on success             |
 | created_at               | datetime    |                                          |
+
+**Indexes (DAT-03):** `ix_application_log_dry_run_seen_job_id` on
+`(dry_run, seen_job_id)` supports the applications-pipeline distinct subquery
+that lists jobs with live (non–dry-run) apply activity.
 
 **In-flight uniqueness (XCT-02 / SVC-01):** partial unique index
 `uq_application_log_inflight_job` on `seen_job_id` where

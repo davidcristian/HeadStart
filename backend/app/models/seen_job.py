@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, ForeignKey, String, UniqueConstraint
+from sqlalchemy import DateTime, ForeignKey, Index, String, UniqueConstraint, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, utcnow
@@ -18,6 +18,14 @@ class SeenJob(Base):
     __tablename__ = "seen_job"
     __table_args__ = (
         UniqueConstraint("search_id", "external_id", name="uq_seen_job_search_external"),
+        # Ghost-detection tick filters status/applied_at over unghosted rows (DAT-03).
+        Index(
+            "ix_seen_job_status_applied_at_unghosted",
+            "status",
+            "applied_at",
+            postgresql_where=text("ghosted_at IS NULL"),
+            sqlite_where=text("ghosted_at IS NULL"),
+        ),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
