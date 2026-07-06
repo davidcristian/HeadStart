@@ -101,7 +101,9 @@ or the lock already points at a user.
 
 <a id="dat-07"></a>
 ### DAT-07 — Erasure of artifacts/promos relies on DB-only FK cascade, untested (SQLite FK off)
-🟡 **MEDIUM** · 🐞 bug · Status: ☐ open · Confidence: medium (3/3 verifiers) · Effort: M · WS33
+🟡 **MEDIUM** · 🐞 bug · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/64)) · Confidence: medium (3/3 verifiers) · Effort: M · WS33
+
+**Update (2026-07-10).** Fixed in [PR](https://github.com/davidcristian/HeadStart/pull/64): `User` gained `delete-orphan` relationships for `application_artifact`, `promo_redemption`, and `promo_validation_attempt`; cascade tests assert child rows are gone (including with SQLite FKs off). Also closes DAT-12 / TST-01.
 
 > Related to DAT-12 (low, `user.py:63`) which frames the same gap as a consistency issue with a broader table inventory. Kept separate because DAT-12 is scoped to the ORM-relationship convention; this record is the erasure/test-coverage bug. See DAT-12 below.
 
@@ -187,7 +189,9 @@ or the lock already points at a user.
 
 <a id="dat-12"></a>
 ### DAT-12 — Three user-owned tables cascade only via DB FK, no ORM relationship on User
-⚪ **LOW** · 🔁 consistency · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: S · WS33
+⚪ **LOW** · 🔁 consistency · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/64)) · Confidence: high (3/3 verifiers) · Effort: S · WS33
+
+**Update (2026-07-10).** Fixed with DAT-07 in [PR](https://github.com/davidcristian/HeadStart/pull/64): matching `User` ORM `delete-orphan` relationships for the three tables.
 
 > Same gap as DAT-07 (medium bug), framed as the ORM-relationship consistency convention. See [DAT-07](#dat-07) for the erasure/test-coverage angle.
 

@@ -200,7 +200,10 @@ tokens / IMAP passwords are never included.
 
 Permanent account deletion (`DELETE /auth/me` with `{ "password": "..." }`)
 requires the current password, clears the refresh cookie, and removes the user
-row. Owned data cascades via FK/`ON DELETE CASCADE`. The last admin account
+row. Owned data cascades via ORM `delete-orphan` relationships on `User`
+(including `application_artifact`, `promo_redemption`, and
+`promo_validation_attempt`) plus DB `ON DELETE CASCADE`. Tests enable SQLite
+`PRAGMA foreign_keys=ON` so both layers are exercised. The last admin account
 cannot be deleted while other users remain (promote another admin first).
 
 When Stripe is configured and the account has billing IDs, deletion first

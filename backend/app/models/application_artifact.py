@@ -32,4 +32,4 @@ class ApplicationArtifact(Base):
         DateTime(timezone=True), default=utcnow, nullable=False
     )
 
-    user: Mapped["User"] = relationship()
+    user: Mapped["User"] = relationship(back_populates="application_artifacts")

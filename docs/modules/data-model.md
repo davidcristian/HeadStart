@@ -21,10 +21,13 @@ erDiagram
   NOTIFICATION_TARGET ||--o{ DELIVERY_LOG : via
 ```
 
-**Ownership:** `source`, `search`, `notification_target`, `site_credential`, and
-`application_profile` each carry a `user_id` FK (`ON DELETE CASCADE`). `seen_job`,
-`delivery_log`, and `application_log` have no `user_id`; they are scoped transitively
-through their parent `search`.
+**Ownership:** `source`, `search`, `notification_target`, `site_credential`,
+`application_profile`, `application_artifact`, `promo_redemption`,
+`promo_validation_attempt`, and the inbox/mailbox owned tables each carry a
+`user_id` FK (`ON DELETE CASCADE`) and a matching `User` ORM relationship with
+`cascade="all, delete-orphan"` so account erasure does not rely on the DB FK
+alone (DAT-07 / DAT-12). `seen_job`, `delivery_log`, and `application_log` have
+no `user_id`; they are scoped transitively through their parent `search`.
 All API queries filter by the authenticated user — see [auth.md](auth.md).
 
 ### user

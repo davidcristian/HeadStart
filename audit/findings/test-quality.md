@@ -8,7 +8,9 @@ This area examines whether the repository's 100%-coverage gate reflects real beh
 
 <a id="tst-01"></a>
 ### TST-01 — Test SQLite engines never set PRAGMA foreign_keys=ON; cascade/FK behavior unenforced
-🟡 **MEDIUM** · 🧪 test · Status: ☐ open · Confidence: certain · Effort: S · WS33
+🟡 **MEDIUM** · 🧪 test · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/64)) · Confidence: certain · Effort: S · WS33
+
+**Update (2026-07-10).** Fixed with DAT-07 in [PR](https://github.com/davidcristian/HeadStart/pull/64): conftest already enables `PRAGMA foreign_keys=ON`; regression test asserts it, and user-deletion cascade covers artifacts/promos.
 
 **Locations:** `backend/tests/conftest.py:60` (`db_session / client`); plus `backend/tests/conftest.py:91`, `backend/app/core/db.py:11`, `backend/tests/repositories/test_owned_repositories.py:20`.
 

@@ -1,11 +1,15 @@
 """PromoValidationAttempt: rate-limit promo code validation attempts."""
 
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, ForeignKey, String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, utcnow
+
+if TYPE_CHECKING:
+    from app.models.user import User
 
 
 class PromoValidationAttempt(Base):
@@ -19,3 +23,5 @@ class PromoValidationAttempt(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, nullable=False, index=True
     )
+
+    user: Mapped["User"] = relationship(back_populates="promo_validation_attempts")

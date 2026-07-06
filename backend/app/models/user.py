@@ -9,6 +9,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import Base, TimestampMixin
 
 if TYPE_CHECKING:
+    from app.models.application_artifact import ApplicationArtifact
     from app.models.application_profile import ApplicationProfile
     from app.models.email_verification_token import EmailVerificationToken
     from app.models.inbox_classification import InboxClassification
@@ -19,6 +20,8 @@ if TYPE_CHECKING:
     from app.models.mailbox_credential import MailboxCredential
     from app.models.notification_target import NotificationTarget
     from app.models.password_reset_token import PasswordResetToken
+    from app.models.promo_redemption import PromoRedemption
+    from app.models.promo_validation_attempt import PromoValidationAttempt
     from app.models.search import Search
     from app.models.site_credential import SiteCredential
     from app.models.source import Source
@@ -100,5 +103,16 @@ class User(Base, TimestampMixin):
         back_populates="user", cascade="all, delete-orphan"
     )
     inbox_reply_send_logs: Mapped[list["InboxReplySendLog"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+    # DB FK already ON DELETE CASCADE; ORM cascade keeps SQLite/test erasure
+    # aligned when foreign_keys are off and matches the other owned collections.
+    application_artifacts: Mapped[list["ApplicationArtifact"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+    promo_redemptions: Mapped[list["PromoRedemption"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+    promo_validation_attempts: Mapped[list["PromoValidationAttempt"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )

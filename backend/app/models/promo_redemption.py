@@ -34,4 +34,4 @@ class PromoRedemption(Base):
     )
 
     promo_code: Mapped["PromoCode"] = relationship(back_populates="redemptions")
-    user: Mapped["User"] = relationship()
+    user: Mapped["User"] = relationship(back_populates="promo_redemptions")

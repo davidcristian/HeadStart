@@ -22,9 +22,11 @@ from app.models.mailbox_credential import MailboxCredential
 from app.models.notification_target import NotificationTarget
 from app.models.promo_code import PromoCode
 from app.models.promo_redemption import PromoRedemption
+from app.models.promo_validation_attempt import PromoValidationAttempt
 from app.models.search import Search
 from app.models.seen_job import SeenJob
 from app.models.source import Source
+from app.models.user import User
 from app.repositories.users import UserRepository
 from app.schemas.auth import DeleteAccountRequest, RegisterRequest
 from app.services.auth import AuthService
@@ -384,6 +386,7 @@ def test_delete_cascades_owned_rows(db_session: Session) -> None:
         )
     )
     db_session.add(PromoRedemption(promo_code_id=promo.id, user_id=user.id))
+    db_session.add(PromoValidationAttempt(user_id=user.id, code_entered="CASCADE10"))
     db_session.flush()
 
     service.delete_account(user.id, DeleteAccountRequest(password="password123"))
@@ -393,6 +396,47 @@ def test_delete_cascades_owned_rows(db_session: Session) -> None:
     assert db_session.scalar(select(func.count()).select_from(Search)) == 0
     assert db_session.scalar(select(func.count()).select_from(ApplicationArtifact)) == 0
     assert db_session.scalar(select(func.count()).select_from(PromoRedemption)) == 0
+    assert db_session.scalar(select(func.count()).select_from(PromoValidationAttempt)) == 0
+
+
+def test_orm_cascade_erases_artifacts_without_sqlite_fk(db_session: Session) -> None:
+    """DAT-07: User ORM delete-orphan must purge artifacts/promos even if SQLite FKs are off."""
+    from sqlalchemy import text
+
+    db_session.execute(text("PRAGMA foreign_keys=OFF"))
+    assert db_session.scalar(text("PRAGMA foreign_keys")) == 0
+
+    user = UserRepository(db_session).add(
+        User(
+            email="orm-cascade@example.com",
+            password_hash="hash",
+            plan="free",
+        )
+    )
+    promo = PromoCode(code="ORMCASCADE", promo_type="percent_off", value_int=5)
+    db_session.add(promo)
+    db_session.flush()
+    db_session.add(
+        ApplicationArtifact(
+            user_id=user.id,
+            artifact_type="resume_pdf",
+            content_sha256="b" * 64,
+            filename="resume.pdf",
+            content_type="application/pdf",
+            size_bytes=4,
+            data_ciphertext="encrypted",
+        )
+    )
+    db_session.add(PromoRedemption(promo_code_id=promo.id, user_id=user.id))
+    db_session.add(PromoValidationAttempt(user_id=user.id, code_entered="ORMCASCADE"))
+    db_session.flush()
+
+    UserRepository(db_session).delete(user)
+    db_session.expire_all()
+
+    assert db_session.scalar(select(func.count()).select_from(ApplicationArtifact)) == 0
+    assert db_session.scalar(select(func.count()).select_from(PromoRedemption)) == 0
+    assert db_session.scalar(select(func.count()).select_from(PromoValidationAttempt)) == 0
 
 
 def test_last_admin_cannot_delete_while_other_users_exist(client: TestClient) -> None:
