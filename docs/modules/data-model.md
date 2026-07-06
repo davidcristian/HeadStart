@@ -233,6 +233,11 @@ Audit of notification attempts.
 | error       | str?        | Present when failed            |
 | sent_at     | datetime    |                                |
 
+**Search-status top-N (DAT-04):** `DeliveryLogRepository.recent_failures_for_searches`
+ranks failed rows with `ROW_NUMBER() PARTITION BY seen_job.search_id ORDER BY
+sent_at DESC` and keeps only the newest N per search, so the searches list
+endpoint does not load unbounded failure history into Python.
+
 ### application_log
 
 Audit of auto-apply attempts (preview and live).

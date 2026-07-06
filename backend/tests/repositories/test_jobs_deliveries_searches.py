@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.models.base import utcnow
@@ -100,6 +101,62 @@ def test_delivery_recent_failures_respects_limit(db_session: Session) -> None:
 
     by_search = repo.recent_failures_for_searches([search.id], limit=2)
     assert len(by_search[search.id]) == 2  # third failure skipped by the limit
+    assert [f.error for f in by_search[search.id]] == ["e2", "e1"]
+
+
+def test_delivery_recent_failures_empty_search_ids(db_session: Session) -> None:
+    assert DeliveryLogRepository(db_session).recent_failures_for_searches([]) == {}
+
+
+def test_delivery_recent_failures_ranks_per_search(db_session: Session) -> None:
+    """Each search keeps its own top-N; one noisy search cannot crowd out another."""
+    search_a = _search(db_session)
+    search_b = _search(db_session)
+    job_a = _job(db_session, search_a.id, "da")
+    job_b = _job(db_session, search_b.id, "db")
+    repo = DeliveryLogRepository(db_session)
+    for i in range(5):
+        repo.add(DeliveryLog(seen_job_id=job_a.id, status="failed", error=f"a{i}"))
+    repo.add(DeliveryLog(seen_job_id=job_b.id, status="sent", error=None))
+    for i in range(3):
+        repo.add(DeliveryLog(seen_job_id=job_b.id, status="failed", error=f"b{i}"))
+
+    by_search = repo.recent_failures_for_searches([search_a.id, search_b.id], limit=2)
+    assert [f.error for f in by_search[search_a.id]] == ["a4", "a3"]
+    assert [f.error for f in by_search[search_b.id]] == ["b2", "b1"]
+
+
+def test_delivery_recent_failures_sql_uses_row_number() -> None:
+    """Compiled SQL must rank per search so the outer query never loads all failures."""
+    from sqlalchemy.dialects import postgresql
+
+    ranked = (
+        select(
+            DeliveryLog.id.label("log_id"),
+            SeenJob.id.label("job_id"),
+            func.row_number()
+            .over(
+                partition_by=SeenJob.search_id,
+                order_by=DeliveryLog.sent_at.desc(),
+            )
+            .label("rn"),
+        )
+        .join(SeenJob, DeliveryLog.seen_job_id == SeenJob.id)
+        .where(SeenJob.search_id.in_([1, 2]))
+        .where(DeliveryLog.status == "failed")
+    ).subquery()
+    stmt = (
+        select(DeliveryLog, SeenJob)
+        .join(ranked, DeliveryLog.id == ranked.c.log_id)
+        .join(SeenJob, SeenJob.id == ranked.c.job_id)
+        .where(ranked.c.rn <= 5)
+        .order_by(DeliveryLog.sent_at.desc())
+    )
+    compiled = str(
+        stmt.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
+    ).upper()
+    assert "ROW_NUMBER()" in compiled
+    assert "PARTITION BY" in compiled
 
 
 # ---- SearchRepository ----

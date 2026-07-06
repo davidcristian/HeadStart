@@ -71,7 +71,9 @@ or the lock already points at a user.
 
 <a id="dat-04"></a>
 ### DAT-04 — recent_failures_for_searches loads all failed deliveries, trims in Python (no SQL LIMIT)
-🟡 **MEDIUM** · ⚡ perf · Status: ☐ open · Confidence: high (5/5 verifiers) · Effort: M · WS33
+🟡 **MEDIUM** · ⚡ perf · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/62)) · Confidence: high (5/5 verifiers) · Effort: M · WS33
+
+**Update (2026-07-10).** Fixed in [PR](https://github.com/davidcristian/HeadStart/pull/62): `recent_failures_for_searches` ranks failed rows with `ROW_NUMBER() PARTITION BY seen_job.search_id ORDER BY sent_at DESC` and keeps only the newest N per search in SQL.
 
 **Locations:** `backend/app/repositories/deliveries.py:361` (`DeliveryLogRepository.recent_failures_for_searches`). Note: cited line 361 is stale — the file is ~47 lines; the query is around lines 26-36. Symbol and evidence hold. Called from the search-status view (`searches.py:107`).
 

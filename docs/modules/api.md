@@ -90,7 +90,9 @@ never touch the DB directly (services use repositories). See
 
 `SearchRead` includes scrape health: `last_run_at`, `last_error` (most recent
 scrape failure), and `recent_delivery_failures` (up to five recent failed
-notification attempts with job title, URL, error, and timestamp).
+notification attempts with job title, URL, error, and timestamp). The failures
+list is ranked in SQL per search (`ROW_NUMBER()` over `sent_at`) so listing
+searches never materializes a search's full `delivery_log` failure history.
 
 ## Auth
 

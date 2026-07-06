@@ -1,6 +1,6 @@
 """Data access for DeliveryLog."""
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.models.delivery_log import DeliveryLog
@@ -35,19 +35,33 @@ class DeliveryLogRepository:
         """Return the most recent failed deliveries per search, newest first."""
         if not search_ids:
             return {}
-        stmt = (
-            select(DeliveryLog, SeenJob)
+        # Rank in SQL so search-status never materializes a search's full
+        # failure history just to show the newest N rows (DAT-04).
+        ranked = (
+            select(
+                DeliveryLog.id.label("log_id"),
+                SeenJob.id.label("job_id"),
+                func.row_number()
+                .over(
+                    partition_by=SeenJob.search_id,
+                    order_by=DeliveryLog.sent_at.desc(),
+                )
+                .label("rn"),
+            )
             .join(SeenJob, DeliveryLog.seen_job_id == SeenJob.id)
             .where(SeenJob.search_id.in_(search_ids))
             .where(DeliveryLog.status == "failed")
+        ).subquery()
+        stmt = (
+            select(DeliveryLog, SeenJob)
+            .join(ranked, DeliveryLog.id == ranked.c.log_id)
+            .join(SeenJob, SeenJob.id == ranked.c.job_id)
+            .where(ranked.c.rn <= limit)
             .order_by(DeliveryLog.sent_at.desc())
         )
         by_search: dict[int, list[DeliveryFailureRead]] = {sid: [] for sid in search_ids}
         for log, job in self.session.execute(stmt).all():
-            bucket = by_search[job.search_id]
-            if len(bucket) >= limit:
-                continue
-            bucket.append(
+            by_search[job.search_id].append(
                 DeliveryFailureRead(
                     job_title=job.title,
                     job_url=job.url,
