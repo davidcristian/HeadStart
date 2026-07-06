@@ -187,5 +187,87 @@ def test_discord_close_behaviour() -> None:
     client.close()
 
 
+def test_discord_escapes_poisoned_title_and_summary() -> None:
+    captured: list[dict] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured.append(json.loads(request.content))
+        return httpx.Response(204)
+
+    notifier = DiscordNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
+    ctx = NotifyContext(
+        target_type="discord",
+        config={"webhook_url": "https://discord.fixture.test/api/webhooks/123/secret"},
+    )
+    job = JobPosting(
+        external_id="1",
+        title="[Click](https://evil.tld)",
+        company="Acme",
+        summary="See [here](https://evil.tld)",
+        url="https://careers.example/jobs/1",
+    )
+    notifier.send(ctx, [job])
+    embed = captured[0]["embeds"][0]
+    assert "[Click](https://evil.tld)" not in embed["title"]
+    assert "Click(https://evil.tld)" in embed["title"]
+    assert "here(https://evil.tld)" in embed["description"]
+    assert embed["url"] == "https://careers.example/jobs/1"
+
+
+def test_discord_omits_embed_url_for_non_http() -> None:
+    captured: list[dict] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured.append(json.loads(request.content))
+        return httpx.Response(204)
+
+    notifier = DiscordNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
+    ctx = NotifyContext(
+        target_type="discord",
+        config={"webhook_url": "https://discord.fixture.test/api/webhooks/123/secret"},
+    )
+    notifier.send(
+        ctx,
+        [JobPosting(external_id="1", title="Engineer", url="javascript:alert(1)")],
+    )
+    embed = captured[0]["embeds"][0]
+    assert "url" not in embed
+    assert "javascript:" not in str(embed)
+
+
+def test_discord_digest_escapes_poisoned_fields_and_skips_bad_urls() -> None:
+    captured: list[dict] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured.append(json.loads(request.content))
+        return httpx.Response(204)
+
+    notifier = DiscordNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
+    ctx = NotifyContext(
+        target_type="discord",
+        config={"webhook_url": "https://discord.fixture.test/api/webhooks/123/secret"},
+        digest=True,
+        search_name="Backend [roles]",
+    )
+    poisoned = JobPosting(
+        external_id="1",
+        title="[phish](https://evil.tld)",
+        company="ACME",
+        summary="[click](https://evil.tld)",
+        url="javascript:alert(1)",
+    )
+    good = _job("2")
+    notifier.send(ctx, [poisoned, good])
+    embed = captured[0]["embeds"][0]
+    assert "Backend roles" in embed["title"]
+    assert "[" not in embed["title"]
+    assert "[phish](https://evil.tld)" not in embed["description"]
+    assert "javascript:" not in embed["description"]
+    assert "phish(https://evil.tld)" in embed["description"]
+    assert "click(https://evil.tld)" in embed["description"]
+    link = "[Software Engineer @ Google (Amsterdam)](https://careers.example/jobs/1)"
+    assert link in embed["description"]
+
+
 def test_registry_resolves_discord() -> None:
     assert isinstance(get_notifier("discord"), DiscordNotifier)

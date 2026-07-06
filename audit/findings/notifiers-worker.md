@@ -24,7 +24,7 @@ This area covers the notification adapters (Slack, Discord, Telegram, ntfy, webh
 
 <a id="ntf-01"></a>
 ### NTF-01 — Unescaped scraped fields in Slack mrkdwn / Discord markdown -> phishing links
-🟡 **MEDIUM** · 🔒 security · Status: ☐ open · Confidence: high (5/5 verifiers) · Effort: S · WS31
+🟡 **MEDIUM** · 🔒 security · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/55)) · Confidence: high (5/5 verifiers) · Effort: S · WS31
 
 **Locations:** `backend/app/notifiers/adapters/slack.py:108` (`SlackNotifier._text` / `_digest_payload`); plus `backend/app/notifiers/adapters/slack.py:94`, `backend/app/notifiers/adapters/discord.py:82`, `backend/app/notifiers/adapters/discord.py:107`.
 

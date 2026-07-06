@@ -18,6 +18,7 @@ from app.core.outbound_http import pinned_request
 from app.core.outbound_url import UnsafeOutboundUrlError, assert_safe_outbound_url
 from app.notifiers.base import Notifier, register_notifier
 from app.notifiers.digest_format import digest_blocks, digest_title
+from app.notifiers.markup import escape_slack_mrkdwn, slack_apply_link
 from app.notifiers.types import DeliveryResult, NotifyContext
 from app.scrapers.types import JobPosting
 
@@ -93,13 +94,14 @@ class SlackNotifier(Notifier):
 
     @staticmethod
     def _digest_payload(ctx: NotifyContext, jobs: list[JobPosting]) -> dict[str, Any]:
-        lines = [digest_title(len(jobs), ctx.search_name), ""]
+        lines = [escape_slack_mrkdwn(digest_title(len(jobs), ctx.search_name)), ""]
         for block in digest_blocks(jobs):
-            lines.append(f"• {block.headline}")
+            lines.append(f"• {escape_slack_mrkdwn(block.headline)}")
             if block.summary:
-                lines.append(f"  {block.summary}")
-            if block.url:
-                lines.append(f"  <{block.url}|Apply>")
+                lines.append(f"  {escape_slack_mrkdwn(block.summary)}")
+            apply = slack_apply_link(block.url) if block.url else None
+            if apply:
+                lines.append(f"  {apply}")
         text = "\n".join(lines)
         return {
             "text": text,
@@ -108,15 +110,16 @@ class SlackNotifier(Notifier):
 
     @staticmethod
     def _text(job: JobPosting) -> str:
-        title = f"*{job.title}*" if job.title else "New job"
-        headline = f"{title} @ {job.company}" if job.company else title
+        title = f"*{escape_slack_mrkdwn(job.title)}*" if job.title else "New job"
+        headline = f"{title} @ {escape_slack_mrkdwn(job.company)}" if job.company else title
         lines = [headline]
         if job.summary:
-            lines.append(job.summary)
+            lines.append(escape_slack_mrkdwn(job.summary))
         if job.location:
-            lines.append(job.location)
-        if job.url:
-            lines.append(f"<{job.url}|Apply>")
+            lines.append(escape_slack_mrkdwn(job.location))
+        apply = slack_apply_link(job.url) if job.url else None
+        if apply:
+            lines.append(apply)
         return "\n".join(lines)
 
     def close(self) -> None:

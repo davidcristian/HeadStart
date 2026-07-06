@@ -84,9 +84,12 @@ cannot block or duplicate other users' digests.
 Posts one Slack message per new job via an [incoming webhook](https://api.slack.com/messaging/webhooks).
 Create the webhook in your Slack workspace (Apps → Incoming Webhooks), then paste
 the URL into the target config. Messages use mrkdwn with title, company,
-location, and an Apply link. Digest mode sends one message listing all jobs.
-Outbound URLs are validated against private/loopback addresses (SSRF protection)
-and POSTs are DNS-pinned via `pinned_request`.
+location, and an Apply link. Scraped title/company/summary/location text is
+escaped for Slack mrkdwn (`&`, `<`, `>`), and Apply links are emitted only for
+http(s) URLs that cannot break out of `<url|label>` syntax. Digest mode sends
+one message listing all jobs. Outbound webhook URLs are validated against
+private/loopback addresses (SSRF protection) and POSTs are DNS-pinned via
+`pinned_request`.
 
 ## discord adapter
 
@@ -95,9 +98,12 @@ and POSTs are DNS-pinned via `pinned_request`.
 Posts one Discord message per new job via a [channel webhook](https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks).
 Create the webhook in your server (Server Settings → Integrations → Webhooks),
 then paste the URL into the target config. Messages use a rich embed with title,
-company, location, and a clickable apply link. Digest mode uses one embed with
-a bullet list. Outbound URLs are validated against private/loopback addresses
-(SSRF protection) and POSTs are DNS-pinned via `pinned_request`.
+company, location, and a clickable apply link. Scraped text is escaped so
+markdown link/emphasis metacharacters cannot inject attacker-controlled links;
+embed and digest Apply URLs are restricted to http(s). Digest mode uses one
+embed with a bullet list. Outbound webhook URLs are validated against
+private/loopback addresses (SSRF protection) and POSTs are DNS-pinned via
+`pinned_request`.
 
 ## telegram adapter
 

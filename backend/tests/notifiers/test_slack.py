@@ -200,5 +200,102 @@ def test_slack_close_behaviour() -> None:
     client.close()
 
 
+def test_slack_escapes_poisoned_title_and_summary() -> None:
+    captured: list[dict] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured.append(json.loads(request.content))
+        return httpx.Response(200, text="ok")
+
+    notifier = SlackNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
+    ctx = NotifyContext(
+        target_type="slack",
+        config={"webhook_url": "https://slack.fixture.test/services/T00/B00/secret"},
+    )
+    job = JobPosting(
+        external_id="1",
+        title="<https://evil.tld|Click>",
+        company="Acme & Co",
+        summary="See <https://evil.tld|here>",
+        url="https://careers.example/jobs/1",
+    )
+    notifier.send(ctx, [job])
+    text = captured[0]["text"]
+    assert "<https://evil.tld|Click>" not in text
+    assert "*&lt;https://evil.tld|Click&gt;* @ Acme &amp; Co" in text
+    assert "See &lt;https://evil.tld|here&gt;" in text
+    assert "<https://careers.example/jobs/1|Apply>" in text
+
+
+def test_slack_omits_apply_link_for_non_http_or_breakout_url() -> None:
+    captured: list[dict] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured.append(json.loads(request.content))
+        return httpx.Response(200, text="ok")
+
+    notifier = SlackNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
+    ctx = NotifyContext(
+        target_type="slack",
+        config={"webhook_url": "https://slack.fixture.test/services/T00/B00/secret"},
+    )
+    notifier.send(
+        ctx,
+        [
+            JobPosting(
+                external_id="1",
+                title="Engineer",
+                url="javascript:alert(1)",
+            )
+        ],
+    )
+    assert "Apply" not in captured[0]["text"]
+    assert "javascript:" not in captured[0]["text"]
+
+    captured.clear()
+    notifier.send(
+        ctx,
+        [
+            JobPosting(
+                external_id="2",
+                title="Engineer",
+                url="https://evil.tld|phish>",
+            )
+        ],
+    )
+    assert "Apply" not in captured[0]["text"]
+    assert "|phish" not in captured[0]["text"]
+
+
+def test_slack_digest_escapes_poisoned_fields() -> None:
+    captured: list[dict] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured.append(json.loads(request.content))
+        return httpx.Response(200, text="ok")
+
+    notifier = SlackNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
+    ctx = NotifyContext(
+        target_type="slack",
+        config={"webhook_url": "https://slack.fixture.test/services/T00/B00/secret"},
+        digest=True,
+        search_name="Backend <roles>",
+    )
+    job = JobPosting(
+        external_id="1",
+        title="Engineer <https://evil.tld|x>",
+        company="ACME",
+        summary="<https://evil.tld|Click>",
+        url="https://careers.example/jobs/1",
+    )
+    notifier.send(ctx, [job])
+    text = captured[0]["text"]
+    assert "Backend &lt;roles&gt;" in text
+    assert "<https://evil.tld|x>" not in text
+    assert "&lt;https://evil.tld|x&gt;" in text
+    assert "&lt;https://evil.tld|Click&gt;" in text
+    assert "<https://careers.example/jobs/1|Apply>" in text
+
+
 def test_registry_resolves_slack() -> None:
     assert isinstance(get_notifier("slack"), SlackNotifier)

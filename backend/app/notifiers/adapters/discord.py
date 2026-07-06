@@ -18,6 +18,11 @@ from app.core.outbound_http import pinned_request
 from app.core.outbound_url import UnsafeOutboundUrlError, assert_safe_outbound_url
 from app.notifiers.base import Notifier, register_notifier
 from app.notifiers.digest_format import digest_blocks, digest_title
+from app.notifiers.markup import (
+    discord_markdown_link,
+    escape_discord_markdown,
+    safe_http_url,
+)
 from app.notifiers.types import DeliveryResult, NotifyContext
 from app.scrapers.types import JobPosting
 
@@ -82,17 +87,17 @@ class DiscordNotifier(Notifier):
 
     @staticmethod
     def _payload(job: JobPosting) -> dict[str, Any]:
-        title = job.title or "New job"
+        title = escape_discord_markdown(job.title) if job.title else "New job"
         if job.company:
-            title = f"{title} @ {job.company}"
+            title = f"{title} @ {escape_discord_markdown(job.company)}"
 
         description_parts: list[str] = []
         if job.summary:
-            description_parts.append(job.summary)
+            description_parts.append(escape_discord_markdown(job.summary))
         if job.company and job.title:
-            description_parts.append(job.company)
+            description_parts.append(escape_discord_markdown(job.company))
         if job.location:
-            description_parts.append(job.location)
+            description_parts.append(escape_discord_markdown(job.location))
 
         embed: dict[str, Any] = {
             "title": title,
@@ -100,8 +105,9 @@ class DiscordNotifier(Notifier):
         }
         if description_parts:
             embed["description"] = "\n".join(description_parts)
-        if job.url:
-            embed["url"] = job.url
+        apply_url = safe_http_url(job.url) if job.url else None
+        if apply_url:
+            embed["url"] = apply_url
 
         return {"embeds": [embed]}
 
@@ -109,14 +115,15 @@ class DiscordNotifier(Notifier):
     def _digest_payload(ctx: NotifyContext, jobs: list[JobPosting]) -> dict[str, Any]:
         description_parts: list[str] = []
         for block in digest_blocks(jobs):
-            if block.url:
-                description_parts.append(f"• [{block.headline}]({block.url})")
+            link = discord_markdown_link(block.headline, block.url) if block.url else None
+            if link:
+                description_parts.append(f"• {link}")
             else:
-                description_parts.append(f"• {block.headline}")
+                description_parts.append(f"• {escape_discord_markdown(block.headline)}")
             if block.summary:
-                description_parts.append(f"  {block.summary}")
+                description_parts.append(f"  {escape_discord_markdown(block.summary)}")
         embed: dict[str, Any] = {
-            "title": digest_title(len(jobs), ctx.search_name),
+            "title": escape_discord_markdown(digest_title(len(jobs), ctx.search_name)),
             "description": "\n".join(description_parts),
             "color": _EMBED_COLOR,
         }
