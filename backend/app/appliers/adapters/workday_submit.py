@@ -82,7 +82,7 @@ def submit_live_application(
         credentials=credentials,
     )
     try:
-        http.post_json(
+        named = http.post_json(
             name_url,
             json=build_name_body(profile, config),
             headers=name_headers,
@@ -91,6 +91,13 @@ def submit_live_application(
         return ApplyResult(
             status="failed",
             error=str(exc),
+            payload=profile_payload,
+            external_application_id=application_id_str,
+        )
+    if isinstance(named, dict) and named.get("errorCode"):
+        return ApplyResult(
+            status="failed",
+            error=extract_error_message(named) or "workday name rejected",
             payload=profile_payload,
             external_application_id=application_id_str,
         )
@@ -145,7 +152,7 @@ def submit_live_application(
 
     if config.get("auto_terms_consent"):
         try:
-            submit_terms_consent(
+            terms = submit_terms_consent(
                 http,
                 target=target,
                 application_id=application_id_str,
@@ -155,6 +162,11 @@ def submit_live_application(
             )
         except httpx.HTTPError as exc:
             return progress.failure(str(exc), application_id_str)
+        if isinstance(terms, dict) and terms.get("errorCode"):
+            return progress.failure(
+                extract_error_message(terms) or "workday terms consent rejected",
+                application_id_str,
+            )
 
     finalize_url = cxs_jobapplication_url(target, application_id_str, "finalize")
     finalize_headers = request_headers(

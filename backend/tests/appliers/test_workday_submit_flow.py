@@ -82,6 +82,29 @@ def test_name_http_error_returns_failed_with_application_id() -> None:
     assert result.external_application_id == "app-abc123"
 
 
+def test_name_error_code_returns_failed_without_finalize() -> None:
+    seen: dict[str, bool] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        path = request.url.path
+        if path.endswith("/jobapplications"):
+            return httpx.Response(200, json=CREATE_OK)
+        if path.endswith("/name"):
+            return httpx.Response(
+                200, json={"errorCode": "INVALID_NAME", "message": "bad legal name"}
+            )
+        if path.endswith("/finalize"):
+            seen["finalize"] = True
+            return httpx.Response(200, json={"ok": True})
+        raise AssertionError(f"unexpected request: {request.url}")
+
+    result = _submit(handler)
+    assert result.status == "failed"
+    assert result.error == "bad legal name"
+    assert result.external_application_id == "app-abc123"
+    assert seen.get("finalize") is not True
+
+
 def test_resume_upload_failure_returns_failed() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         if request.url.path.endswith("/jobapplications"):
@@ -220,6 +243,32 @@ def test_auto_terms_consent_http_error_returns_failed() -> None:
     result = _submit(handler, config={"skip_questionnaires": True, "auto_terms_consent": True})
     assert result.status == "failed"
     assert result.external_application_id == "app-abc123"
+
+
+def test_auto_terms_consent_error_code_returns_failed_without_finalize() -> None:
+    seen: dict[str, bool] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        path = request.url.path
+        if path.endswith("/jobapplications"):
+            return httpx.Response(200, json=CREATE_OK)
+        if path.endswith("/name"):
+            return httpx.Response(200, json={"ok": True})
+        if path.endswith("/termsandconditions"):
+            return httpx.Response(
+                200,
+                json={"errorCode": "TERMS_REJECTED", "message": "consent not recorded"},
+            )
+        if path.endswith("/finalize"):
+            seen["finalize"] = True
+            return httpx.Response(200, json={"ok": True})
+        raise AssertionError(f"unexpected request: {request.url}")
+
+    result = _submit(handler, config={"skip_questionnaires": True, "auto_terms_consent": True})
+    assert result.status == "failed"
+    assert result.error == "consent not recorded"
+    assert result.external_application_id == "app-abc123"
+    assert seen.get("finalize") is not True
 
 
 def test_finalize_http_error_returns_failed() -> None:

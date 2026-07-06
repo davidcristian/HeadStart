@@ -124,7 +124,7 @@ Merged with APL-09 (same `match_lookup_item` over-eager fallback; APL-09 anchore
 
 <a id="apl-11"></a>
 ### APL-11 — Workday name POST and terms PUT skip the post-2xx errorCode check sibling steps enforce
-🟡 **MEDIUM** · 🐞 bug · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: S · WS23
+🟡 **MEDIUM** · 🐞 bug · Status: ✅ done · Confidence: high (3/3 verifiers) · Effort: S · WS23
 
 Merged with APL-12 (the `/name`-step subset of this same defect at `workday_submit.py:85`).
 

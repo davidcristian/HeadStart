@@ -306,6 +306,9 @@ the resume file to the CXS `attachments` endpoint and registers it on
 `resumeattachments` (when the application profile has a stored file), submits
 mapped **primary / secondary / supplementary questionnaires** (when the job
 posting exposes them), optionally accepts terms (`auto_terms_consent`), and calls
+finalize. A 2xx body with `errorCode` on the name POST, terms PUT, section
+submits, or finalize is treated as `status=failed` (same guard as resume upload
+and questionnaires) so a rejected name or unrecorded consent cannot proceed to
 finalize. Question answers come from `profile.answers` (question WID or label →
 answer WID or label such as `Yes` / `No`). Use **dry run** to preview
 `questionnaireAnswers` and `resumeAttachments` before enabling live apply.
