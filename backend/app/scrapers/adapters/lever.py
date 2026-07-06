@@ -11,11 +11,11 @@ Config / context:
   - `config["region"]`: optional `"eu"` for the EU API host.
 """
 
-from datetime import UTC, datetime
 from typing import Any
 from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 
 from app.scrapers.base import Scraper, register_scraper
+from app.scrapers.dates import parse_epoch_millis
 from app.scrapers.types import JobPosting, ScrapeContext
 
 LEVER_API = {
@@ -84,10 +84,7 @@ class LeverScraper(Scraper):
                 all_locs = categories.get("allLocations")
                 if isinstance(all_locs, list) and all_locs:
                     location = str(all_locs[0])
-        posted_at = None
-        created = job.get("createdAt")
-        if isinstance(created, (int, float)):
-            posted_at = datetime.fromtimestamp(created / 1000, tz=UTC)
+        posted_at = parse_epoch_millis(job.get("createdAt"))
         return JobPosting(
             external_id=str(job.get("id", "")),
             title=str(job.get("text", "")),

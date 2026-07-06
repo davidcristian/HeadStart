@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import json
-from datetime import UTC, datetime
 from typing import Any
 
 from selectolax.parser import HTMLParser
 
+from app.scrapers.dates import parse_epoch_millis
 from app.scrapers.types import JobPosting
 
 _MOSAIC_MARKERS = (
@@ -121,10 +121,7 @@ def _to_posting(job: dict[str, Any], origin: str) -> JobPosting | None:
     company = str(job.get("company") or job.get("truncatedCompany") or "").strip()
     location = str(job.get("formattedLocation") or "").strip()
     url = _job_url(job, origin, jobkey)
-    posted_at = None
-    pub_date = job.get("pubDate")
-    if isinstance(pub_date, (int, float)):
-        posted_at = datetime.fromtimestamp(pub_date / 1000, tz=UTC)
+    posted_at = parse_epoch_millis(job.get("pubDate"))
     return JobPosting(
         external_id=jobkey,
         title=title,

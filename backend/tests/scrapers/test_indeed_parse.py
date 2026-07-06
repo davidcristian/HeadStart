@@ -130,6 +130,13 @@ def test_to_posting_with_numeric_pub_date() -> None:
     assert posting.posted_at is not None
 
 
+def test_to_posting_overflow_pub_date_returns_none() -> None:
+    """Out-of-range pubDate must not raise (SCR-02)."""
+    posting = _to_posting({"jobkey": "k", "title": "Role", "pubDate": 1e30}, ORIGIN)
+    assert posting is not None
+    assert posting.posted_at is None
+
+
 def test_job_url_variants() -> None:
     assert _job_url({"viewJobLink": "https://x.co/j/1"}, ORIGIN, "k") == "https://x.co/j/1"
     assert _job_url({"viewJobLink": "/viewjob?jk=k"}, ORIGIN, "k") == f"{ORIGIN}/viewjob?jk=k"

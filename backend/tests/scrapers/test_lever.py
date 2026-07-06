@@ -168,3 +168,35 @@ def test_lever_empty_categories_and_empty_all_locations() -> None:
 
     assert postings[0].location == ""
     assert postings[0].posted_at is None
+
+
+def test_lever_overflow_created_at_returns_none() -> None:
+    """Out-of-range createdAt must not abort the scrape (SCR-02)."""
+    payload = json.dumps(
+        [
+            {
+                "id": "job-overflow",
+                "text": "Eng",
+                "categories": {"location": "Remote"},
+                "createdAt": 1e30,
+                "hostedUrl": "https://jobs.lever.co/acme/job-overflow",
+            },
+            {
+                "id": "job-ok",
+                "text": "Eng 2",
+                "categories": {"location": "Remote"},
+                "createdAt": 1700000000000,
+                "hostedUrl": "https://jobs.lever.co/acme/job-ok",
+            },
+        ]
+    )
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, text=payload, headers={"content-type": "application/json"})
+
+    scraper = get_scraper("lever", http=make_http_client(handler))
+    postings = scraper.fetch(ScrapeContext(config={"site": "acme"}))
+
+    assert len(postings) == 2
+    assert postings[0].posted_at is None
+    assert postings[1].posted_at is not None

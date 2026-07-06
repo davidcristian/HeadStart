@@ -17,11 +17,12 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Any
 from urllib.parse import parse_qs, urlencode, urlparse
 
 from app.scrapers.base import Scraper, register_scraper
+from app.scrapers.dates import parse_epoch_seconds
 from app.scrapers.types import JobPosting, ScrapeContext
 
 _ORIGIN = "https://apply.careers.microsoft.com"
@@ -213,10 +214,7 @@ class MicrosoftCareersScraper(Scraper):
 
     @staticmethod
     def _posted_at(job: dict[str, Any]) -> datetime | None:
-        raw = job.get("postedTs")
-        if not isinstance(raw, (int, float)) or isinstance(raw, bool):
-            return None
-        return datetime.fromtimestamp(float(raw), tz=UTC)
+        return parse_epoch_seconds(job.get("postedTs"))
 
 
 @dataclass(frozen=True, slots=True)

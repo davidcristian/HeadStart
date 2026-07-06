@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import json
 import re
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Any
 from urllib.parse import urlencode
 
+from app.scrapers.dates import parse_epoch_seconds
 from app.scrapers.types import JobPosting
 
 _INIT_DATA_MARKER = "AF_initDataCallback({key: 'ds:1'"
@@ -145,10 +146,7 @@ def _location_from_record(record: list[Any]) -> str:
 def _posted_at_from_record(record: list[Any]) -> datetime | None:
     if len(record) <= 12 or not isinstance(record[12], list) or not record[12]:
         return None
-    seconds = record[12][0]
-    if not isinstance(seconds, int | float):
-        return None
-    return datetime.fromtimestamp(float(seconds), tz=UTC)
+    return parse_epoch_seconds(record[12][0])
 
 
 def _slugify(title: str) -> str:

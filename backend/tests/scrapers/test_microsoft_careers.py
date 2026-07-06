@@ -311,6 +311,27 @@ def test_microsoft_careers_location_and_url_fallbacks() -> None:
     assert by_id["5"].url == "https://apply.careers.microsoft.com/careers/job/5"
 
 
+def test_microsoft_careers_overflow_posted_ts_returns_none() -> None:
+    """Out-of-range postedTs must not abort the scrape page (SCR-02)."""
+    payload = {
+        "data": {
+            "positions": [
+                {"id": 1, "name": "Huge ts", "postedTs": 1e30},
+                {"id": 2, "name": "Ok", "postedTs": 1700000000},
+            ],
+            "count": 2,
+        }
+    }
+    scraper = get_scraper(
+        "microsoft_careers", http=make_http_client(lambda r: httpx.Response(200, json=payload))
+    )
+    postings = scraper.fetch(ScrapeContext(config={"company": "Microsoft", "page_size": 5}))
+    by_id = {p.external_id: p for p in postings}
+    assert by_id["1"].posted_at is None
+    assert by_id["2"].posted_at is not None
+    assert len(postings) == 2
+
+
 def test_microsoft_careers_url_origin_fallback_when_no_url_no_id() -> None:
     # positionUrl empty and id falsy -> job_url returns origin + careers path.
     payload = {"data": {"positions": [{"id": 0, "displayJobId": "D9", "name": "X"}], "count": 1}}

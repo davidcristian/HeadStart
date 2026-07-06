@@ -8,7 +8,9 @@ This area covers the pluggable scraper adapters under `backend/app/scrapers/` �
 
 <a id="scr-02"></a>
 ### SCR-02 — Unguarded fromtimestamp on untrusted epoch aborts whole scrape (4 adapters)
-🟡 **MEDIUM** · 🐞 bug · Status: ☐ open · Confidence: high (5/5 verifiers) · Effort: S · WS34
+🟡 **MEDIUM** · 🐞 bug · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/65)) · Confidence: high (5/5 verifiers) · Effort: S · WS34
+
+**Update (2026-07-10).** Fixed in [PR](https://github.com/davidcristian/HeadStart/pull/65): shared `parse_epoch_seconds` / `parse_epoch_millis` catch `OverflowError`/`OSError`/`ValueError` from `fromtimestamp`; Google, Microsoft, Lever, and Indeed posted-at paths use them so one hostile epoch degrades to `None` instead of aborting the page.
 
 > Merged from three records (SCR-01, SCR-02, SCR-03) describing the same defect across the same set of adapters. The highest-verified record (5/5) is used as the canonical entry.
 
