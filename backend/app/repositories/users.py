@@ -2,11 +2,16 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from sqlalchemy import func, select, update
 from sqlalchemy.orm import Session
 
 from app.models.registration_lock import RegistrationLock
 from app.models.user import User
+
+# Distinguishes "leave unchanged" from an explicit None clear in update_billing.
+_UNSET: Any = object()
 
 
 class UserRepository:
@@ -94,19 +99,22 @@ class UserRepository:
         user: User,
         *,
         stripe_customer_id: str | None = None,
-        stripe_subscription_id: str | None = None,
+        stripe_subscription_id: Any = _UNSET,
         subscription_status: str | None = None,
         plan: str | None = None,
+        stripe_billing_event_at: Any = _UNSET,
     ) -> User:
         """Patch Stripe billing fields on a user."""
         if stripe_customer_id is not None:
             user.stripe_customer_id = stripe_customer_id
-        if stripe_subscription_id is not None:
+        if stripe_subscription_id is not _UNSET:
             user.stripe_subscription_id = stripe_subscription_id
         if subscription_status is not None:
             user.subscription_status = subscription_status
         if plan is not None:
             user.plan = plan
+        if stripe_billing_event_at is not _UNSET:
+            user.stripe_billing_event_at = stripe_billing_event_at
         self.session.flush()
         return user
 

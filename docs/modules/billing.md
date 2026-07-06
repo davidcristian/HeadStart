@@ -134,11 +134,19 @@ emit a structured `admin_event=user_update` audit log with actor, target, and
 before/after `plan` / privilege flags.
 
 Webhook handler updates `user.stripe_customer_id`, `stripe_subscription_id`,
-`subscription_status`, and `plan` on:
+`subscription_status`, `plan`, and `stripe_billing_event_at` on:
 
 - `checkout.session.completed`
 - `customer.subscription.created` / `updated`
-- `customer.subscription.deleted` (downgrades to `free`)
+- `customer.subscription.deleted` (downgrades to `free`, clears
+  `stripe_subscription_id`)
+
+Subscription `updated` / `deleted` events are applied only when the event's
+subscription id matches the user's current `stripe_subscription_id` (or the
+user has none yet, for the first `updated`/`created`). Events whose Stripe
+`created` timestamp is older than `user.stripe_billing_event_at` are ignored,
+so a delayed `updated` cannot re-grant a plan after `deleted`, and a late
+`deleted` for a superseded subscription cannot wipe a newer one.
 
 Downgrade does **not** delete existing sources/targets. Premium scrapers and
 notifiers are re-checked when the pipeline runs or a digest flushes (see
@@ -166,6 +174,8 @@ On `user`:
 - `stripe_customer_id`
 - `stripe_subscription_id`
 - `subscription_status` — last known Stripe status (`active`, `trialing`, `past_due`, `canceled`, …)
+- `stripe_billing_event_at` — unix `created` of the last applied subscription
+  lifecycle webhook (ordering guard)
 
 ## UI
 

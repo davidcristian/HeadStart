@@ -8,26 +8,24 @@ from typing import Any
 import stripe
 from sqlalchemy.orm import Session
 
-from app.core.billing_prices import (
-    BillingPeriod,
-    plan_for_price_id,
-    price_id_for,
-    subscription_grants_plan,
-)
+from app.core.billing_prices import BillingPeriod, price_id_for, subscription_grants_plan
 from app.core.config import settings
 from app.core.exceptions import NotFoundError, ValidationError
 from app.core.plans import VALID_PLANS, PlanId
 from app.models.user import User
 from app.repositories.users import UserRepository
 from app.schemas.billing import BillingStatusRead
+from app.services.billing_subscription_events import (
+    apply_subscription_deleted,
+    apply_subscription_updated,
+    plan_from_subscription,
+    user_for_subscription,
+)
 from app.services.promo_codes import PromoCodeService
 
 logger = logging.getLogger(__name__)
 
 _CHECKOUT_PLANS: frozenset[str] = frozenset({"starter", "plus", "pro"})
-# Fallback for an active subscription whose price/metadata can't be mapped: the
-# lowest paid tier, never the top tier (which would grant Pro for free).
-_UNRESOLVED_PLAN: PlanId = "starter"
 
 
 class BillingService:
@@ -156,13 +154,15 @@ class BillingService:
 
         event_type = event["type"]
         data_object = event["data"]["object"]
+        event_created = event.get("created")
+        event_at = event_created if isinstance(event_created, int) else None
 
         if event_type == "checkout.session.completed":
             self._on_checkout_completed(data_object)
         elif event_type in {"customer.subscription.created", "customer.subscription.updated"}:
-            self._on_subscription_updated(data_object)
+            self._on_subscription_updated(data_object, event_at=event_at)
         elif event_type == "customer.subscription.deleted":
-            self._on_subscription_deleted(data_object)
+            self._on_subscription_deleted(data_object, event_at=event_at)
 
     def _on_checkout_completed(self, session: dict[str, Any]) -> None:
         user = self._user_from_reference(session)
@@ -199,53 +199,18 @@ class BillingService:
                         ),
                     )
 
-    def _on_subscription_updated(self, subscription: dict[str, Any]) -> None:
-        user = self._user_for_subscription(subscription)
-        if user is None:
-            logger.warning(
-                "subscription update for unknown customer %s", subscription.get("customer")
-            )
-            return
-        status = str(subscription.get("status") or "")
-        plan = self._plan_from_subscription(subscription, status)
-        self.users.update_billing(
-            user,
-            stripe_subscription_id=str(subscription.get("id") or user.stripe_subscription_id or ""),
-            subscription_status=status or None,
-            plan=plan,
-        )
+    def _on_subscription_updated(
+        self, subscription: dict[str, Any], *, event_at: int | None = None
+    ) -> None:
+        apply_subscription_updated(self.users, subscription, event_at=event_at)
 
-    def _on_subscription_deleted(self, subscription: dict[str, Any]) -> None:
-        user = self._user_for_subscription(subscription)
-        if user is None:
-            return
-        self.users.update_billing(
-            user,
-            stripe_subscription_id=None,
-            subscription_status="canceled",
-            plan="free",
-        )
+    def _on_subscription_deleted(
+        self, subscription: dict[str, Any], *, event_at: int | None = None
+    ) -> None:
+        apply_subscription_deleted(self.users, subscription, event_at=event_at)
 
     def _plan_from_subscription(self, subscription: dict[str, Any], status: str) -> PlanId:
-        if not subscription_grants_plan(status):
-            return "free"
-        items = subscription.get("items", {}).get("data", [])
-        if items:
-            price = items[0].get("price", {})
-            price_id = price.get("id")
-            if isinstance(price_id, str):
-                resolved = plan_for_price_id(price_id)
-                if resolved:
-                    return resolved
-        metadata_plan = subscription.get("metadata", {}).get("plan")
-        if isinstance(metadata_plan, str) and metadata_plan in VALID_PLANS:
-            return metadata_plan  # type: ignore[return-value]
-        logger.warning(
-            "subscription %s grants a plan but price/metadata is unrecognized; defaulting to %s",
-            subscription.get("id"),
-            _UNRESOLVED_PLAN,
-        )
-        return _UNRESOLVED_PLAN
+        return plan_from_subscription(subscription, status)
 
     def _user_from_reference(self, session: dict[str, Any]) -> User | None:
         metadata = session.get("metadata") or {}
@@ -261,19 +226,7 @@ class BillingService:
         return None
 
     def _user_for_subscription(self, subscription: dict[str, Any]) -> User | None:
-        metadata = subscription.get("metadata") or {}
-        user_id = metadata.get("user_id")
-        if user_id is not None:
-            try:
-                user = self.users.get(int(user_id))
-                if user:
-                    return user
-            except (TypeError, ValueError):
-                pass
-        customer_id = subscription.get("customer")
-        if isinstance(customer_id, str):
-            return self.users.get_by_stripe_customer_id(customer_id)
-        return None
+        return user_for_subscription(self.users, subscription)
 
     def _ensure_customer(self, user: User) -> str:
         if user.stripe_customer_id:

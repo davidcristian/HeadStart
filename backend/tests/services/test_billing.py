@@ -499,6 +499,204 @@ def test_on_subscription_deleted_unknown_user_is_noop(
     assert control.subscription_status == "active"
 
 
+def test_subscription_deleted_clears_id_and_downgrades(
+    db_session: Session, billing_settings: None
+) -> None:
+    user = _add_user(db_session)
+    UserRepository(db_session).update_billing(
+        user,
+        stripe_customer_id="cus_del",
+        stripe_subscription_id="sub_del",
+        subscription_status="active",
+        plan="pro",
+    )
+    BillingService(db_session)._on_subscription_deleted(
+        {
+            "id": "sub_del",
+            "customer": "cus_del",
+            "metadata": {"user_id": str(user.id)},
+        },
+        event_at=1_700_000_100,
+    )
+    db_session.refresh(user)
+    assert user.stripe_subscription_id is None
+    assert user.subscription_status == "canceled"
+    assert user.plan == "free"
+    assert user.stripe_billing_event_at == 1_700_000_100
+
+
+def test_stale_subscription_updated_after_delete_does_not_regrant(
+    db_session: Session, billing_settings: None
+) -> None:
+    """BIL-02: a delayed updated must not revive a plan after deleted."""
+    user = _add_user(db_session)
+    UserRepository(db_session).update_billing(
+        user,
+        stripe_customer_id="cus_stale",
+        stripe_subscription_id="sub_stale",
+        subscription_status="active",
+        plan="pro",
+    )
+    service = BillingService(db_session)
+    service._on_subscription_deleted(
+        {
+            "id": "sub_stale",
+            "customer": "cus_stale",
+            "metadata": {"user_id": str(user.id)},
+        },
+        event_at=1_700_000_200,
+    )
+    service._on_subscription_updated(
+        {
+            "id": "sub_stale",
+            "customer": "cus_stale",
+            "status": "active",
+            "metadata": {"user_id": str(user.id), "plan": "pro"},
+            "items": {"data": [{"price": {"id": "price_pro_monthly"}}]},
+        },
+        event_at=1_700_000_150,
+    )
+    db_session.refresh(user)
+    assert user.plan == "free"
+    assert user.subscription_status == "canceled"
+    assert user.stripe_subscription_id is None
+    assert user.stripe_billing_event_at == 1_700_000_200
+
+
+def test_deleted_for_superseded_subscription_does_not_wipe_current(
+    db_session: Session, billing_settings: None
+) -> None:
+    """BIL-03: late deleted for an old sub must not downgrade a newer one."""
+    user = _add_user(db_session)
+    UserRepository(db_session).update_billing(
+        user,
+        stripe_customer_id="cus_new",
+        stripe_subscription_id="sub_new",
+        subscription_status="active",
+        plan="plus",
+        stripe_billing_event_at=1_700_000_300,
+    )
+    BillingService(db_session)._on_subscription_deleted(
+        {
+            "id": "sub_old",
+            "customer": "cus_new",
+            "metadata": {"user_id": str(user.id)},
+        },
+        event_at=1_700_000_250,
+    )
+    db_session.refresh(user)
+    assert user.stripe_subscription_id == "sub_new"
+    assert user.plan == "plus"
+    assert user.subscription_status == "active"
+    assert user.stripe_billing_event_at == 1_700_000_300
+
+
+def test_updated_for_superseded_subscription_is_ignored(
+    db_session: Session, billing_settings: None
+) -> None:
+    user = _add_user(db_session)
+    UserRepository(db_session).update_billing(
+        user,
+        stripe_customer_id="cus_cur",
+        stripe_subscription_id="sub_cur",
+        subscription_status="active",
+        plan="starter",
+        stripe_billing_event_at=1_700_000_400,
+    )
+    BillingService(db_session)._on_subscription_updated(
+        {
+            "id": "sub_old",
+            "customer": "cus_cur",
+            "status": "active",
+            "metadata": {"user_id": str(user.id), "plan": "pro"},
+            "items": {"data": [{"price": {"id": "price_pro_monthly"}}]},
+        },
+        event_at=1_700_000_450,
+    )
+    db_session.refresh(user)
+    assert user.stripe_subscription_id == "sub_cur"
+    assert user.plan == "starter"
+
+
+def test_stale_subscription_deleted_is_ignored(db_session: Session, billing_settings: None) -> None:
+    user = _add_user(db_session)
+    UserRepository(db_session).update_billing(
+        user,
+        stripe_customer_id="cus_stale_del",
+        stripe_subscription_id="sub_stale_del",
+        subscription_status="active",
+        plan="pro",
+        stripe_billing_event_at=1_700_000_600,
+    )
+    BillingService(db_session)._on_subscription_deleted(
+        {
+            "id": "sub_stale_del",
+            "customer": "cus_stale_del",
+            "metadata": {"user_id": str(user.id)},
+        },
+        event_at=1_700_000_500,
+    )
+    db_session.refresh(user)
+    assert user.plan == "pro"
+    assert user.stripe_subscription_id == "sub_stale_del"
+    assert user.subscription_status == "active"
+
+
+def test_unsigned_subscription_updated_ignored_after_watermark(
+    db_session: Session, billing_settings: None
+) -> None:
+    user = _add_user(db_session)
+    UserRepository(db_session).update_billing(
+        user,
+        stripe_customer_id="cus_unsigned",
+        stripe_subscription_id="sub_unsigned",
+        subscription_status="canceled",
+        plan="free",
+        stripe_billing_event_at=1_700_000_700,
+    )
+    BillingService(db_session)._on_subscription_updated(
+        {
+            "id": "sub_unsigned",
+            "customer": "cus_unsigned",
+            "status": "active",
+            "metadata": {"user_id": str(user.id), "plan": "pro"},
+            "items": {"data": [{"price": {"id": "price_pro_monthly"}}]},
+        },
+    )
+    db_session.refresh(user)
+    assert user.plan == "free"
+    assert user.subscription_status == "canceled"
+
+
+@patch("app.services.billing.stripe.Webhook.construct_event")
+def test_webhook_passes_event_created_into_subscription_handlers(
+    mock_construct: MagicMock, db_session: Session, billing_settings: None
+) -> None:
+    user = _add_user(db_session)
+    UserRepository(db_session).update_billing(
+        user,
+        stripe_customer_id="cus_wh",
+        stripe_subscription_id="sub_wh",
+    )
+    mock_construct.return_value = {
+        "type": "customer.subscription.updated",
+        "created": 1_700_000_500,
+        "data": {
+            "object": {
+                "id": "sub_wh",
+                "customer": "cus_wh",
+                "status": "active",
+                "metadata": {"user_id": str(user.id), "plan": "pro"},
+                "items": {"data": [{"price": {"id": "price_pro_monthly"}}]},
+            }
+        },
+    }
+    BillingService(db_session).handle_webhook(b"{}", "sig")
+    db_session.refresh(user)
+    assert user.plan == "pro"
+    assert user.stripe_billing_event_at == 1_700_000_500
+
+
 def test_plan_from_subscription_inactive_status_is_free(
     db_session: Session, billing_settings: None
 ) -> None:

@@ -24,7 +24,7 @@ This area covers Stripe checkout and subscription webhooks (`services/billing.py
 
 <a id="bil-02"></a>
 ### BIL-02 — subscription.updated applied unconditionally; stale/out-of-order event re-grants plan
-🟡 **MEDIUM** · 🐞 bug · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: M · WS22
+🟡 **MEDIUM** · 🐞 bug · Status: ✅ done · Confidence: high (3/3 verifiers) · Effort: M · WS22
 
 **Locations:** `backend/app/services/billing.py:202` (`_on_subscription_updated`); plus `backend/app/services/billing.py:162`, `backend/app/services/billing.py:218`.
 
@@ -38,7 +38,7 @@ This area covers Stripe checkout and subscription webhooks (`services/billing.py
 
 <a id="bil-03"></a>
 ### BIL-03 — Subscription webhook applies stale/out-of-order events (deleted for old sub wipes plan)
-🟡 **MEDIUM** · 🐞 bug · Status: ☐ open · Confidence: medium (3/3 verifiers) · Effort: S · WS22
+🟡 **MEDIUM** · 🐞 bug · Status: ✅ done · Confidence: medium (3/3 verifiers) · Effort: S · WS22
 
 **Locations:** `backend/app/services/billing.py:218` (`_on_subscription_deleted`); plus `backend/app/services/billing.py:202`.
 

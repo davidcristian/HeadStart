@@ -45,6 +45,7 @@ admin cannot re-open self-service admin creation (see [auth.md](auth.md)).
 | stripe_customer_id    | str?     | Stripe customer ID (set on first checkout) |
 | stripe_subscription_id | str?  | Active Stripe subscription ID |
 | subscription_status   | str?     | Last known Stripe status (`active`, `trialing`, `canceled`, …) |
+| stripe_billing_event_at | int?   | Unix `created` of last applied subscription webhook (stale-event guard) |
 | onboarding_completed_at | datetime? | Set when the first-run wizard is finished or skipped |
 | email_verified_at | datetime? | Set when the user confirms their email address |
 | created_at    | datetime |                                    |

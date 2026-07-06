@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import JSON, Boolean, DateTime, String, Text
+from sqlalchemy import JSON, Boolean, DateTime, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, TimestampMixin
@@ -51,6 +51,9 @@ class User(Base, TimestampMixin):
     stripe_customer_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
     stripe_subscription_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
     subscription_status: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    # Unix `created` of the last applied Stripe subscription lifecycle event
+    # (updated/deleted). Stale/out-of-order webhooks older than this are ignored.
+    stripe_billing_event_at: Mapped[int | None] = mapped_column(Integer, nullable=True)
     # Optional override for SUMMARY_PROVIDER; null uses the server default.
     summary_provider: Mapped[str | None] = mapped_column(String(32), nullable=True)
     # Fernet-encrypted API key for the selected hosted provider (openai/gemini/anthropic).
