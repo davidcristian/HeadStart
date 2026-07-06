@@ -99,7 +99,9 @@ _Merged with INB-21 and INB-22 (all three flag the same gap: `inbound_from` bypa
 
 <a id="inb-08"></a>
 ### INB-08 — Safe-send topic blocklist scans raw, HTML-encoded, 500-char-truncated inbound body
-🟡 **MEDIUM** · 🔒 security · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: S · WS30
+🟡 **MEDIUM** · 🔒 security · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/54)) · Confidence: high (3/3 verifiers) · Effort: S · WS30
+
+**Update (2026-07-10).** Fixed in [PR](https://github.com/davidcristian/HeadStart/pull/54): `_classification_payload` stores `sanitize_message_body(...)` up to `EMAIL_CLASSIFY_MAX_BODY_CHARS`, and `ReplySafeSendService._inbound_body` re-sanitizes with `max_chars=0` before `check_topic_blocklist`, so HTML-entity and late-in-body sensitive terms still block auto-replies.
 
 **Locations:** `backend/app/services/reply_safe_send.py:153` (`ReplySafeSendService._inbound_body`); plus `backend/app/services/email_classification.py:56`, `backend/app/inbox/safe_send.py:38`.
 

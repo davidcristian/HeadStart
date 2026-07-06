@@ -203,3 +203,65 @@ def test_body_excerpt_truncates_long_body(db_session: Session) -> None:
 def test_body_excerpt_short_body_unchanged(db_session: Session) -> None:
     service = ReplySafeSendService(db_session)
     assert service._body_excerpt("  short  ") == "short"
+
+
+def test_inbound_body_unescapes_html_entities_for_topic_scan(db_session: Session) -> None:
+    """HTML-encoded sensitive terms must still hit the topic blocklist (INB-08)."""
+    service = ReplySafeSendService(db_session)
+    # &#108;awsuit → lawsuit after html.unescape
+    row = InboxClassification(
+        user_id=1,
+        message_uid=1,
+        label="general",
+        confidence=1.0,
+        reason="r",
+        provider="heuristic",
+        payload={"body_excerpt": "Please review this &#108;awsuit filing carefully."},
+    )
+    assert "lawsuit" in service._inbound_body(row).lower()
+
+
+def test_evaluate_before_send_blocks_html_encoded_inbound_topic(
+    db_session: Session, monkeypatch
+) -> None:
+    monkeypatch.setattr(settings, "inbox_agent_enabled", True)
+    search = _make_search(db_session)
+    user_id = search.user_id
+    _seed_mailbox(db_session, user_id, auto_reply=True)
+    draft = _seed_draft(db_session, user_id, search=search)
+    assert draft.classification is not None
+    draft.classification.payload = {
+        "body_excerpt": "We received a <b>&#108;awsuit</b> notice yesterday."
+    }
+    db_session.flush()
+    service = ReplySafeSendService(db_session)
+
+    decision = service.evaluate_before_send(user_id, draft, draft.classification)
+
+    assert decision.allowed is False
+    assert decision.outcome == "blocked_topic"
+    assert "lawsuit" in decision.payload["matched_topics"]
+
+
+def test_evaluate_before_send_blocks_sensitive_topic_past_legacy_500_char_cut(
+    db_session: Session, monkeypatch
+) -> None:
+    """Topic terms beyond the old raw 500-char excerpt must still block (INB-08)."""
+    monkeypatch.setattr(settings, "inbox_agent_enabled", True)
+    search = _make_search(db_session)
+    user_id = search.user_id
+    _seed_mailbox(db_session, user_id, auto_reply=True)
+    draft = _seed_draft(db_session, user_id, search=search)
+    assert draft.classification is not None
+    # Simulate a post-fix classification payload that keeps text past 500 chars.
+    draft.classification.payload = {
+        "body_excerpt": ("x" * 520) + " Please discuss the harassment complaint."
+    }
+    db_session.flush()
+    service = ReplySafeSendService(db_session)
+
+    decision = service.evaluate_before_send(user_id, draft, draft.classification)
+
+    assert decision.allowed is False
+    assert decision.outcome == "blocked_topic"
+    assert "harassment" in decision.payload["matched_topics"]

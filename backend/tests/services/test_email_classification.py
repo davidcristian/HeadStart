@@ -281,6 +281,23 @@ def test_classification_payload_omits_absent_ids() -> None:
     assert "gmail_message_id" not in payload
 
 
+def test_classification_payload_sanitizes_and_keeps_body_past_500() -> None:
+    """Stored body_excerpt is HTML-decoded and not hard-capped at 500 (INB-08)."""
+    long_prefix = "a" * 520
+    message = InboxMessage(
+        uid=1,
+        subject="S",
+        body_text=f"<p>{long_prefix} &#108;awsuit notice</p>",
+    )
+    payload = _classification_payload(message, None)
+    excerpt = payload["body_excerpt"]
+    assert isinstance(excerpt, str)
+    assert len(excerpt) > 500
+    assert "lawsuit" in excerpt.lower()
+    assert "<p>" not in excerpt
+    assert "&#108;" not in excerpt
+
+
 def test_resolve_message_fetches_by_uid(db_session: Session, monkeypatch) -> None:
     monkeypatch.setattr(settings, "inbox_agent_enabled", True)
     user_id, _job = _seed_applied_job(db_session)

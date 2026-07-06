@@ -9,6 +9,7 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.email_classifiers.sanitize import sanitize_message_body
 from app.inbox.safe_send import TopicBlockResult, check_topic_blocklist
 from app.models.base import utcnow
 from app.models.inbox_classification import InboxClassification
@@ -168,10 +169,15 @@ class ReplySafeSendService:
         )
 
     def _inbound_body(self, classification: InboxClassification | None) -> str:
+        """Return inbound body text for topic scanning (HTML-decoded, not re-truncated)."""
         if classification is None or not classification.payload:
             return ""
         excerpt = classification.payload.get("body_excerpt")
-        return str(excerpt) if isinstance(excerpt, str) else ""
+        if not isinstance(excerpt, str):
+            return ""
+        # max_chars=0: keep the stored excerpt intact after unescape/tag-strip so
+        # terms past a historical 500-char raw cut still match (INB-08).
+        return sanitize_message_body(excerpt, max_chars=0)
 
     def _body_excerpt(self, body: str) -> str:
         text = body.strip()

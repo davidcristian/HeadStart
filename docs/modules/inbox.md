@@ -391,7 +391,11 @@ Supported classification labels: `follow_up`, `general`.
 
 **Safe-send guardrails:** built-in legal/HR topic blocklist on inbound + draft
 text (including plain `workers compensation` and apostrophe forms via
-`SENSITIVE_TOPIC_PATTERNS` in `app.inbox.safe_send`); per-user hourly/daily caps
+`SENSITIVE_TOPIC_PATTERNS` in `app.inbox.safe_send`). Inbound body text is
+HTML-unescaped and tag-stripped via `sanitize_message_body` before the scan,
+and classification stores a sanitized excerpt up to
+`EMAIL_CLASSIFY_MAX_BODY_CHARS` (not a raw 500-char slice) so encoded or
+late-in-body sensitive terms still match; per-user hourly/daily caps
 (`INBOX_REPLY_MAX_PER_HOUR`, `INBOX_REPLY_MAX_PER_DAY`); recipient domain must
 match the linked application's `employer_domain` (or the job posting URL host)
 before auto-send (`auto_reply_recipient_allowed` in

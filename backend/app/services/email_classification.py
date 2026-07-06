@@ -17,7 +17,11 @@ from app.email_classifiers import (
     LinkedApplicationContext,
     get_email_classifier,
 )
-from app.email_classifiers.sanitize import looks_like_prompt_injection, prepare_message
+from app.email_classifiers.sanitize import (
+    looks_like_prompt_injection,
+    prepare_message,
+    sanitize_message_body,
+)
 from app.inbox.fastmail_jmap_parse import JMAP_EMAIL_ID_HEADER
 from app.inbox.types import InboxMessage
 from app.models.inbox_classification import InboxClassification
@@ -63,8 +67,11 @@ def _classification_payload(
     message: InboxMessage,
     linked_payload: dict[str, object] | None,
 ) -> dict[str, object]:
+    # Sanitize + keep up to email_classify_max_body_chars so safe-send topic
+    # scanning sees HTML-decoded text beyond a raw 500-char slice (INB-08).
+    max_chars = int(getattr(default_settings, "email_classify_max_body_chars", 8000))
     payload: dict[str, object] = {
-        "body_excerpt": message.body_text[:500],
+        "body_excerpt": sanitize_message_body(message.body_text, max_chars=max_chars),
         "linked_application": linked_payload,
         "in_reply_to": message.in_reply_to,
         "references": message.references,
