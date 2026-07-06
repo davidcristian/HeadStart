@@ -93,6 +93,12 @@ address past the check. See `app.core.outbound_url` / `app.core.outbound_http`.
 Playwright pages use `ignore_https_errors` because the pinned connect is an IP
 literal while certificate SANs name the hostname.
 
+Response bodies are streamed and capped (default **5 MiB**, override with
+`SCRAPER_MAX_RESPONSE_BYTES` / `HttpClient(max_response_bytes=…)`). An oversized
+`Content-Length` is rejected before the body is read; chunked responses that
+cross the cap raise `ResponseTooLargeError` mid-stream so a hostile `query_url`
+cannot OOM a shared worker.
+
 ## Rate limiting
 
 Each adapter has a default minimum gap between outbound HTTP requests during one

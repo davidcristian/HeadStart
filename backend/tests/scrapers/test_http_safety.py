@@ -11,7 +11,12 @@ import pytest
 
 from app.core import outbound_url
 from app.core.outbound_url import UnsafeOutboundUrlError
-from app.scrapers.http import HttpClient, _prepare_outbound_request
+from app.scrapers.http import (
+    HttpClient,
+    ResponseTooLargeError,
+    _prepare_outbound_request,
+    _read_body_limited,
+)
 from app.scrapers.rate_limit import RateLimiter
 from tests.conftest import make_http_client
 
@@ -155,3 +160,119 @@ def test_wait_rate_limit_noop_when_unset() -> None:
     http = make_http_client(_echo({"ok": True}))
     assert http._rate_limiter is None
     http._wait_rate_limit()  # should be a no-op and not raise
+
+
+def _client_with_cap(
+    handler: Callable[[httpx.Request], httpx.Response], *, max_bytes: int
+) -> HttpClient:
+    transport = httpx.MockTransport(handler)
+    return HttpClient(
+        client=httpx.Client(transport=transport, follow_redirects=True),
+        max_response_bytes=max_bytes,
+    )
+
+
+def test_get_text_rejects_oversized_content_length() -> None:
+    """Content-Length above the cap fails before the body is buffered (SCR-04)."""
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200,
+            content=b"tiny",
+            headers={"content-length": "100"},
+        )
+
+    http = _client_with_cap(handler, max_bytes=50)
+    with pytest.raises(ResponseTooLargeError, match="Content-Length"):
+        http.get_text("https://board.test/huge")
+
+
+def test_get_text_rejects_body_that_exceeds_cap_without_content_length() -> None:
+    """Chunked/unknown-length bodies abort once streamed past the cap (SCR-04)."""
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        # ByteStream omits Content-Length so the client must count streamed bytes.
+        return httpx.Response(200, stream=httpx.ByteStream(b"x" * 80))
+
+    http = _client_with_cap(handler, max_bytes=50)
+    with pytest.raises(ResponseTooLargeError, match="body exceeds"):
+        http.get_text("https://board.test/stream")
+
+
+def test_get_json_accepts_body_at_cap() -> None:
+    payload = b'{"ok":true}'
+    assert len(payload) <= 50
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200,
+            content=payload,
+            headers={"content-type": "application/json", "content-length": str(len(payload))},
+        )
+
+    http = _client_with_cap(handler, max_bytes=50)
+    assert http.get_json("https://board.test/j") == {"ok": True}
+
+
+def test_invalid_content_length_falls_through_to_stream_cap() -> None:
+    """Non-integer Content-Length is ignored; the streamed body is still capped."""
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        # Stream without a trustworthy Content-Length so the byte counter applies.
+        return httpx.Response(
+            200,
+            stream=httpx.ByteStream(b"y" * 60),
+            headers={"content-length": "not-a-number"},
+        )
+
+    http = _client_with_cap(handler, max_bytes=50)
+    with pytest.raises(ResponseTooLargeError, match="body exceeds"):
+        http.get_text("https://board.test/bad-cl")
+
+
+def test_negative_content_length_falls_through_to_stream_cap() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200,
+            stream=httpx.ByteStream(b"z" * 60),
+            headers={"content-length": "-1"},
+        )
+
+    http = _client_with_cap(handler, max_bytes=50)
+    with pytest.raises(ResponseTooLargeError, match="body exceeds"):
+        http.get_text("https://board.test/neg-cl")
+
+
+def test_max_response_bytes_none_uses_settings(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        "app.core.config.get_settings",
+        lambda: SimpleNamespace(scraper_max_response_bytes=12),
+    )
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, stream=httpx.ByteStream(b"a" * 20))
+
+    transport = httpx.MockTransport(handler)
+    http = HttpClient(client=httpx.Client(transport=transport, follow_redirects=True))
+    assert http._max_response_bytes == 12
+    with pytest.raises(ResponseTooLargeError):
+        http.get_text("https://board.test/settings-cap")
+
+
+def test_read_body_limited_skips_empty_chunks() -> None:
+    """Empty iter_bytes chunks are ignored so they do not inflate the counter."""
+    response = MagicMock()
+    response.headers = httpx.Headers({})
+    response.iter_bytes.return_value = iter([b"", b"ok", b""])
+    assert _read_body_limited(response, max_bytes=10) == b"ok"
+    response.close.assert_not_called()
+
+
+def test_settings_default_matches_module_constant() -> None:
+    from app.core.config import Settings
+    from app.scrapers.http import DEFAULT_MAX_RESPONSE_BYTES
+
+    settings = Settings(_env_file=None)  # type: ignore[call-arg]
+    assert settings.scraper_max_response_bytes == DEFAULT_MAX_RESPONSE_BYTES

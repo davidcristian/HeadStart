@@ -103,8 +103,8 @@ class Settings(BaseSettings):
 
     # ---- playwright (worker / opt-in scraper) ----
     playwright_navigation_timeout_ms: int = 30_000
-    # Retries after the first attempt (0 = no retries).
-    playwright_max_retries: int = 1
+    playwright_max_retries: int = 1  # retries after first attempt; 0 = none
+    scraper_max_response_bytes: int = 5_242_880  # SCR-04 HTTP body cap
 
     # ---- metrics (Prometheus) ----
     metrics_enabled: bool = True

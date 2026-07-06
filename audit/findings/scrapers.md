@@ -29,7 +29,9 @@ This area covers the pluggable scraper adapters under `backend/app/scrapers/` �
 
 <a id="scr-04"></a>
 ### SCR-04 — Scraper HTTP client reads unbounded response bodies — hostile upstream can OOM worker
-🟡 **MEDIUM** · 🔒 security · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: M · WS34
+🟡 **MEDIUM** · 🔒 security · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/66)) · Confidence: high (3/3 verifiers) · Effort: M · WS34
+
+**Update (2026-07-10).** Fixed in [PR](https://github.com/davidcristian/HeadStart/pull/66): `HttpClient` streams all responses, rejects oversized `Content-Length` up front, and raises `ResponseTooLargeError` once streamed bytes exceed `SCRAPER_MAX_RESPONSE_BYTES` (default 5 MiB).
 
 **Locations:** `backend/app/scrapers/http.py:44` (`HttpClient.get_text`/`get_json`); plus:
 - `backend/app/scrapers/adapters/generic_html.py:40`
