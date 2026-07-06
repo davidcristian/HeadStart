@@ -6,20 +6,22 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_db, get_verified_user
 from app.appliers import ApplyResult
 from app.models.user import User
+from app.schemas.document_generation import DocumentGenerationRead
 from app.schemas.job import (
     JobApplyRequest,
     JobApplyResult,
-    JobCoverLetterResult,
     JobRead,
-    JobResumeResult,
     JobStatus,
     JobUpdate,
 )
 from app.services.apply import ApplyService
-from app.services.cover_letters import CoverLetterService
+from app.services.document_generations import DocumentGenerationService
 from app.services.jobs import JobService
-from app.services.resumes import ResumeService
-from app.worker.tasks import apply_to_job_task
+from app.worker.tasks import (
+    apply_to_job_task,
+    generate_cover_letter_task,
+    generate_resume_task,
+)
 
 router = APIRouter()
 
@@ -64,26 +66,30 @@ def update_job(
     return JobRead.model_validate(JobService(db).update(job_id, user.id, data))
 
 
-@router.post("/{job_id}/generate-cover-letter", response_model=JobCoverLetterResult)
+@router.post("/{job_id}/generate-cover-letter", response_model=DocumentGenerationRead)
 def generate_cover_letter(
     job_id: int,
     db: Session = Depends(get_db),
     user: User = Depends(get_verified_user),
-) -> JobCoverLetterResult:
-    """Draft a tailored cover letter for one job using the user's profile."""
-    result = CoverLetterService(db).generate(user.id, job_id)
-    return JobCoverLetterResult.model_validate(result)
+) -> DocumentGenerationRead:
+    """Queue a tailored cover letter; poll GET /document-generations/{id}."""
+    queued = DocumentGenerationService(db).enqueue_cover_letter(user.id, job_id)
+    db.commit()
+    generate_cover_letter_task.delay(queued.id, user.id, job_id)
+    return queued
 
 
-@router.post("/{job_id}/generate-resume", response_model=JobResumeResult)
+@router.post("/{job_id}/generate-resume", response_model=DocumentGenerationRead)
 def generate_resume(
     job_id: int,
     db: Session = Depends(get_db),
     user: User = Depends(get_verified_user),
-) -> JobResumeResult:
-    """Generate a tailored resume PDF for one job from the user's LaTeX template."""
-    result = ResumeService(db).generate(user.id, job_id)
-    return JobResumeResult.model_validate(result)
+) -> DocumentGenerationRead:
+    """Queue a tailored resume PDF; poll GET /document-generations/{id}."""
+    queued = DocumentGenerationService(db).enqueue_resume(user.id, job_id)
+    db.commit()
+    generate_resume_task.delay(queued.id, user.id, job_id)
+    return queued
 
 
 @router.post("/{job_id}/apply", response_model=JobApplyResult)

@@ -1,12 +1,20 @@
 """API tests for application artifact download."""
 
+from collections.abc import Iterator
+from contextlib import contextmanager, suppress
 from unittest.mock import patch
 
 from fastapi.testclient import TestClient
+from sqlalchemy.orm import Session
 
+from app.api.deps import get_db
+from app.appliers import ApplyResult
+from app.main import app
 from app.scrapers.types import JobPosting
+from app.services.document_generations import DocumentGenerationService
 from app.services.pipeline import PipelineService
 from app.services.resumes import ResumeService
+from app.worker.tasks import generate_resume_task
 from tests.conftest import register_and_login
 
 FAKE_PDF = b"%PDF-1.4\nfake resume\n"
@@ -40,6 +48,34 @@ def _seed_job(client: TestClient, headers: dict[str, str]) -> int:
     return client.get("/api/v1/jobs", headers=headers).json()[0]["id"]
 
 
+@contextmanager
+def _client_db_session() -> Iterator[Session]:
+    """Open a session from the TestClient's get_db override (same in-memory DB)."""
+    db_gen = app.dependency_overrides[get_db]()
+    session = next(db_gen)
+    try:
+        yield session
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        with suppress(StopIteration):
+            next(db_gen)
+
+
+def _complete_queued_resume(generation_id: int, user_id: int, job_id: int) -> None:
+    """Run claim + compile for a queued generate-resume without Celery/Redis."""
+    with _client_db_session() as session:
+        service = DocumentGenerationService(session)
+        assert service.claim(generation_id) is not None
+    with (
+        _client_db_session() as session,
+        patch.object(ResumeService, "_compile_pdf", return_value=FAKE_PDF),
+    ):
+        DocumentGenerationService(session).complete_resume(generation_id, user_id, job_id)
+
+
 def test_generate_resume_persists_artifact(client: TestClient) -> None:
     headers = register_and_login(client, "artifact-generate@example.com")
     job_id = _seed_job(client, headers)
@@ -49,17 +85,24 @@ def test_generate_resume_persists_artifact(client: TestClient) -> None:
         headers=headers,
     )
 
-    with patch.object(ResumeService, "_compile_pdf", return_value=FAKE_PDF):
+    with patch.object(generate_resume_task, "delay") as mock_delay:
         resp = client.post(f"/api/v1/jobs/{job_id}/generate-resume", headers=headers)
 
     assert resp.status_code == 200
     body = resp.json()
-    artifact_id = body["artifact_id"]
+    assert body["status"] == "queued"
+    generation_id = body["id"]
+    user_id = mock_delay.call_args[0][1]
+    _complete_queued_resume(generation_id, user_id, job_id)
+
+    ready = client.get(f"/api/v1/document-generations/{generation_id}", headers=headers).json()
+    assert ready["status"] == "ready"
+    artifact_id = ready["result"]["artifact_id"]
     assert artifact_id > 0
 
     meta = client.get(f"/api/v1/application-artifacts/{artifact_id}", headers=headers)
     assert meta.status_code == 200
-    assert meta.json()["filename"] == body["filename"]
+    assert meta.json()["filename"] == ready["result"]["filename"]
 
     download = client.get(
         f"/api/v1/application-artifacts/{artifact_id}/download",
@@ -84,15 +127,17 @@ def test_apply_with_artifact_id_links_log(client: TestClient) -> None:
         headers=headers,
     )
 
-    with patch.object(ResumeService, "_compile_pdf", return_value=FAKE_PDF):
-        artifact_id = client.post(
+    with patch.object(generate_resume_task, "delay") as mock_delay:
+        queued = client.post(
             f"/api/v1/jobs/{job_id}/generate-resume",
             headers=headers,
-        ).json()["artifact_id"]
+        ).json()
+    _complete_queued_resume(queued["id"], mock_delay.call_args[0][1], job_id)
+    artifact_id = client.get(
+        f"/api/v1/document-generations/{queued['id']}", headers=headers
+    ).json()["result"]["artifact_id"]
 
     with patch("app.appliers.adapters.greenhouse.GreenhouseApplier.apply") as mock_apply:
-        from app.appliers import ApplyResult
-
         mock_apply.return_value = ApplyResult(status="dry_run", payload={"ok": True})
         resp = client.post(
             f"/api/v1/jobs/{job_id}/apply",

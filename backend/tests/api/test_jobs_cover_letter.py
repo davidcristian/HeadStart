@@ -1,4 +1,4 @@
-"""Route tests for cover-letter generation."""
+"""Route tests for cover-letter generation (async queue, API-01)."""
 
 from unittest.mock import patch
 
@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 
 from app.scrapers.types import JobPosting
 from app.services.pipeline import PipelineService
+from app.worker.tasks import generate_cover_letter_task
 from tests.conftest import register_and_login
 
 
@@ -50,7 +51,7 @@ def test_generate_cover_letter_requires_profile(client: TestClient) -> None:
     assert "application profile" in resp.json()["detail"].lower()
 
 
-def test_generate_cover_letter_heuristic(client: TestClient) -> None:
+def test_generate_cover_letter_queues(client: TestClient) -> None:
     headers = register_and_login(client, "cover-heuristic@example.com")
     job_id = _seed_job(client, headers)
     client.put(
@@ -64,10 +65,11 @@ def test_generate_cover_letter_heuristic(client: TestClient) -> None:
         headers=headers,
     )
 
-    resp = client.post(f"/api/v1/jobs/{job_id}/generate-cover-letter", headers=headers)
+    with patch.object(generate_cover_letter_task, "delay") as mock_delay:
+        resp = client.post(f"/api/v1/jobs/{job_id}/generate-cover-letter", headers=headers)
     assert resp.status_code == 200
     body = resp.json()
-    assert body["provider"] == "heuristic"
-    assert body["fallback"] is False
-    assert "Dear ACME team" in body["cover_letter"]
-    assert "Senior Engineer" in body["cover_letter"]
+    assert body["status"] == "queued"
+    assert body["kind"] == "cover_letter"
+    assert body["id"] > 0
+    mock_delay.assert_called_once()

@@ -254,6 +254,22 @@ treats `IntegrityError` as “already in progress”, so concurrent
 `POST /jobs/{id}/apply` or pipeline auto-apply cannot queue two Celery live
 submits for the same job.
 
+### document_generation
+
+Ephemeral queue row for async resume / cover-letter generation (API-01).
+
+| Column       | Type        | Notes                                              |
+| ------------ | ----------- | -------------------------------------------------- |
+| id           | int PK      |                                                    |
+| user_id      | FK user     | Owner; cascade on delete                           |
+| seen_job_id  | FK seen_job | Job being tailored; cascade on delete              |
+| kind         | str         | `resume` or `cover_letter`                         |
+| status       | str         | `queued` / `processing` / `ready` / `failed`       |
+| error        | text?       | Present when failed                                |
+| result       | JSON?       | Kind-specific payload when `ready`                 |
+| created_at   | datetime    |                                                    |
+| updated_at   | datetime    |                                                    |
+
 ## Migrations
 
 Change a model, then `just makemigration "..."`, review, `just migrate`.

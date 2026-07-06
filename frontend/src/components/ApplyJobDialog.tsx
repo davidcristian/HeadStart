@@ -5,6 +5,12 @@ import { Link } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { pollApplicationLog } from "../api/pollApplicationLog";
 import { previewApplicationArtifact } from "../lib/applicationArtifacts";
+import {
+  awaitCoverLetterGeneration,
+  awaitResumeGeneration,
+  coverLetterStatusMessage,
+  resumeStatusMessage,
+} from "../lib/documentGeneration";
 import { Banner, Button, Field } from "./ui";
 import { useApplyToJob, useGenerateCoverLetter, useGenerateResume } from "../hooks/mutations";
 import { useFocusTrap } from "../hooks/useFocusTrap";
@@ -76,17 +82,9 @@ export function ApplyJobDialog({
     setError(null);
     setGenerateMessage(null);
     try {
-      const result = await generateCoverLetterAsync(job.id);
+      const result = await awaitCoverLetterGeneration(generateCoverLetterAsync, job.id);
       setCoverLetter(result.cover_letter);
-      if (result.fallback) {
-        setGenerateMessage(
-          "AI generation was unavailable; a draft was created from your profile instead.",
-        );
-      } else if (result.provider !== "heuristic") {
-        setGenerateMessage(`Draft generated with ${result.provider}.`);
-      } else {
-        setGenerateMessage("Draft generated from your profile.");
-      }
+      setGenerateMessage(coverLetterStatusMessage(result));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not generate a cover letter.");
     }
@@ -96,19 +94,11 @@ export function ApplyJobDialog({
     setError(null);
     setResumeMessage(null);
     try {
-      const result = await generateResumeAsync(job.id);
+      const result = await awaitResumeGeneration(generateResumeAsync, job.id);
       setTailoredResumeB64(result.pdf_b64);
       setTailoredResumeArtifactId(result.artifact_id);
       setTailoredResumeLabel(`${result.filename} (${result.size_bytes.toLocaleString()} bytes)`);
-      if (result.fallback) {
-        setResumeMessage(
-          "AI curation was unavailable; a resume was built from your profile instead.",
-        );
-      } else if (result.provider !== "heuristic") {
-        setResumeMessage(`Tailored resume generated with ${result.provider}.`);
-      } else {
-        setResumeMessage("Tailored resume generated from your profile.");
-      }
+      setResumeMessage(resumeStatusMessage(result));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not generate a tailored resume.");
     }

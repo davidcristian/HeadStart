@@ -8,7 +8,9 @@ This area covers the FastAPI v1 routers under `backend/app/api/v1/` and the Pyda
 
 <a id="api-01"></a>
 ### API-01 — Sync LaTeX subprocess + LLM curation runs inline in generate-resume request
-🟡 **MEDIUM** · ⚡ perf · Status: ☐ open · Confidence: high (5/5 verifiers) · Effort: M · WS32
+🟡 **MEDIUM** · ⚡ perf · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/58)) · Confidence: high (5/5 verifiers) · Effort: M · WS32
+
+**Update (2026-07-10).** Fixed in [PR](https://github.com/davidcristian/HeadStart/pull/58): `POST /jobs/{id}/generate-resume` and `generate-cover-letter` enqueue `document_generation` rows and Celery tasks; clients poll `GET /document-generations/{id}` for the ready payload. LLM curation and LaTeX compile no longer run in the HTTP anyio threadpool.
 
 **Locations:** `backend/app/api/v1/jobs.py:78` (`generate_resume`); plus `backend/app/services/resumes.py:88`, `backend/app/services/resumes.py:94`, `backend/app/resumes/compile.py:84`, `backend/app/api/v1/jobs.py:67`.
 

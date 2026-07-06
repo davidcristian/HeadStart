@@ -12,7 +12,8 @@ are queued to Celery and polled via `GET /api/v1/application-logs/{id}`.
 ## Cover letter generation
 
 Before submit, the Jobs apply dialog can draft a tailored cover letter via
-`POST /api/v1/jobs/{id}/generate-cover-letter`. Generators live in
+`POST /api/v1/jobs/{id}/generate-cover-letter` (returns `queued`; poll
+`GET /document-generations/{id}`). Generators live in
 `backend/app/cover_letters/` (registry pattern matching summarizers). The offline
 `heuristic` provider is available on every plan; Pro users use the effective
 `SUMMARY_PROVIDER` (`openai`, `gemini`, `anthropic`, or `llamacpp` for local dev).

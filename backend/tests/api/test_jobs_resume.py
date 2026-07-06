@@ -1,4 +1,4 @@
-"""Route tests for tailored resume generation."""
+"""Route tests for tailored resume generation (async queue, API-01)."""
 
 from unittest.mock import patch
 
@@ -6,10 +6,8 @@ from fastapi.testclient import TestClient
 
 from app.scrapers.types import JobPosting
 from app.services.pipeline import PipelineService
-from app.services.resumes import ResumeService
+from app.worker.tasks import generate_resume_task
 from tests.conftest import register_and_login
-
-FAKE_PDF = b"%PDF-1.4\nfake resume\n"
 
 
 def _seed_job(client: TestClient, headers: dict[str, str]) -> int:
@@ -53,7 +51,7 @@ def test_generate_resume_requires_profile(client: TestClient) -> None:
     assert "application profile" in resp.json()["detail"].lower()
 
 
-def test_generate_resume_heuristic(client: TestClient) -> None:
+def test_generate_resume_queues(client: TestClient) -> None:
     headers = register_and_login(client, "resume-heuristic@example.com")
     job_id = _seed_job(client, headers)
     client.put(
@@ -66,14 +64,12 @@ def test_generate_resume_heuristic(client: TestClient) -> None:
         headers=headers,
     )
 
-    with patch.object(ResumeService, "_compile_pdf", return_value=FAKE_PDF):
+    with patch.object(generate_resume_task, "delay") as mock_delay:
         resp = client.post(f"/api/v1/jobs/{job_id}/generate-resume", headers=headers)
 
     assert resp.status_code == 200
     body = resp.json()
-    assert body["provider"] == "heuristic"
-    assert body["fallback"] is False
-    assert body["size_bytes"] == len(FAKE_PDF)
-    assert body["filename"].startswith("resume-")
-    assert body["pdf_b64"]
-    assert body["artifact_id"] > 0
+    assert body["status"] == "queued"
+    assert body["kind"] == "resume"
+    assert body["id"] > 0
+    mock_delay.assert_called_once()

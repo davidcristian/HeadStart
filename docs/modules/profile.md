@@ -87,14 +87,16 @@ absolute/pipe/home(`~`)/parent-path `\input`/`\include`) at upload
 (including zip-bundle parse during `PUT /profile/resume-template` validation)
 and again after placeholder substitution (so verbatim `[[experience]]` markup
 cannot smuggle file-read primitives into the compiler). Relative same-tree
-includes like `\input{section}` remain allowed. `POST /jobs/{id}/generate-resume` curates placeholders (Pro
-users: `resume_curation` AI purpose), renders LaTeX, and compiles a tailored PDF
+includes like `\input{section}` remain allowed. `POST /jobs/{id}/generate-resume`
+queues curation + compile on a Celery worker (API-01); poll
+`GET /document-generations/{id}` until `ready`. Pro users use the
+`resume_curation` AI purpose; the worker renders LaTeX and compiles a tailored PDF
 (prefers `tectonic`, falls back to `pdflatex` with `-no-shell-escape` and a
 minimal env that forces `openin_any=p` / `openout_any=p` / `shell_escape=f` so
 host `texmf.cnf` defaults cannot re-enable shell escape or absolute-path reads).
 The PDF persists in
-`application_artifact` (per-user SHA-256 dedup, Fernet-encrypted). The response
-includes `artifact_id` for preview/download via
+`application_artifact` (per-user SHA-256 dedup, Fernet-encrypted). The ready
+`result` includes `artifact_id` for preview/download via
 `GET /application-artifacts/{id}/download`. On apply, pass `tailored_resume_artifact_id`
 (or `tailored_resume_b64`) on `POST /jobs/{id}/apply` to attach the tailored PDF
 instead of the static resume file.

@@ -37,6 +37,11 @@ import {
   updatedSearchRecord,
   updatedSourceRecord,
 } from "./mockApiSamples";
+import {
+  sampleDocumentGeneration,
+  sampleQueuedCoverLetterGeneration,
+  sampleQueuedResumeGeneration,
+} from "./mockDocumentGenerationSamples";
 
 const mockApi = vi.hoisted(() => ({
   meta: vi.fn(async () => sampleMeta),
@@ -60,19 +65,9 @@ const mockApi = vi.hoisted(() => ({
     status: data.status,
   })),
   applyToJob: vi.fn(async () => sampleApplyJobResult),
-  generateCoverLetter: vi.fn(async () => ({
-    cover_letter: "Dear ACME team,\n\nI am excited about the Software Engineer role.",
-    provider: "heuristic",
-    fallback: false,
-  })),
-  generateResume: vi.fn(async () => ({
-    filename: "resume-ACME-Software-Engineer.pdf",
-    size_bytes: 128,
-    content_sha256: "abc123",
-    pdf_b64: "JVBERi0xLjQK",
-    provider: "heuristic",
-    fallback: false,
-  })),
+  generateCoverLetter: vi.fn(async () => sampleQueuedCoverLetterGeneration),
+  generateResume: vi.fn(async () => sampleQueuedResumeGeneration),
+  getDocumentGeneration: vi.fn(async (id: number) => sampleDocumentGeneration(id)),
   getFeedUrl: vi.fn(async () => sampleFeedUrl),
   rotateFeedUrl: vi.fn(async () => sampleRotatedFeedUrl),
   listTargets: vi.fn(async (): Promise<NotificationTarget[]> => []),

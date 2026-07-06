@@ -226,6 +226,8 @@ describe("api jobs", () => {
     expect(lastCall()[0]).toBe("/api/v1/jobs/1/generate-cover-letter");
     await api.generateResume(1);
     expect(lastCall()[0]).toBe("/api/v1/jobs/1/generate-resume");
+    await api.getDocumentGeneration(9);
+    expect(lastCall()[0]).toBe("/api/v1/document-generations/9");
   });
 });
 

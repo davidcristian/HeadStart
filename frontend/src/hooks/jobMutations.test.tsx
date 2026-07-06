@@ -7,8 +7,33 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const api = vi.hoisted(() => ({
   updateJob: vi.fn(async () => ({ id: 1 })),
   applyToJob: vi.fn(async () => ({ status: "queued" })),
-  generateCoverLetter: vi.fn(async () => ({ cover_letter: "hi" })),
-  generateResume: vi.fn(async () => ({ pdf_b64: "x" })),
+  generateCoverLetter: vi.fn(async () => ({
+    id: 1,
+    kind: "cover_letter" as const,
+    status: "queued" as const,
+    error: null,
+    result: null,
+    created_at: "2026-07-10T00:00:00Z",
+    updated_at: "2026-07-10T00:00:00Z",
+  })),
+  generateResume: vi.fn(async () => ({
+    id: 2,
+    kind: "resume" as const,
+    status: "queued" as const,
+    error: null,
+    result: null,
+    created_at: "2026-07-10T00:00:00Z",
+    updated_at: "2026-07-10T00:00:00Z",
+  })),
+  getDocumentGeneration: vi.fn(async () => ({
+    id: 1,
+    kind: "cover_letter" as const,
+    status: "ready" as const,
+    error: null,
+    result: { cover_letter: "hi", provider: "heuristic", fallback: false },
+    created_at: "2026-07-10T00:00:00Z",
+    updated_at: "2026-07-10T00:00:00Z",
+  })),
 }));
 vi.mock("../api", () => ({ api }));
 

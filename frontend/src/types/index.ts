@@ -16,6 +16,9 @@ export type {
   JobApplyResult,
   JobCoverLetterResult,
   JobResumeResult,
+  DocumentGeneration,
+  DocumentGenerationKind,
+  DocumentGenerationStatus,
   ApplicationLog,
 } from "./job";
 export type {

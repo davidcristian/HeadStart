@@ -8,6 +8,7 @@ from app.models.application_profile import ApplicationProfile
 from app.models.base import Base
 from app.models.data_request_log import DataRequestLog
 from app.models.delivery_log import DeliveryLog
+from app.models.document_generation import DocumentGeneration
 from app.models.email_verification_token import EmailVerificationToken
 from app.models.inbox_classification import InboxClassification
 from app.models.inbox_pending_reply import InboxPendingReply
@@ -35,6 +36,7 @@ __all__ = [
     "Base",
     "DataRequestLog",
     "DeliveryLog",
+    "DocumentGeneration",
     "InboxClassification",
     "InboxPendingReply",
     "InboxPollState",

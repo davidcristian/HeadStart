@@ -5,7 +5,12 @@ import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import { sampleJob } from "../test/fixtures";
 import { renderWithClient } from "../test/renderWithClient";
-import type { JobApplyResult, JobCoverLetterResult, JobResumeResult } from "../types";
+import type {
+  DocumentGeneration,
+  JobApplyResult,
+  JobCoverLetterResult,
+  JobResumeResult,
+} from "../types";
 import { ApplyJobDialog } from "./ApplyJobDialog";
 
 // The shared mockApi infers narrow return types from its default fixtures; re-type
@@ -15,21 +20,64 @@ const applyToJobMock = mockApi.applyToJob as unknown as Mock<
   (id: number, data: unknown) => Promise<JobApplyResult>
 >;
 const generateCoverLetterMock = mockApi.generateCoverLetter as unknown as Mock<
-  () => Promise<JobCoverLetterResult>
+  () => Promise<DocumentGeneration>
 >;
 const generateResumeMock = mockApi.generateResume as unknown as Mock<
-  () => Promise<JobResumeResult>
+  () => Promise<DocumentGeneration>
 >;
 
 const pollApplicationLog = vi.hoisted(() => vi.fn());
+const pollDocumentGeneration = vi.hoisted(() => vi.fn());
 const previewApplicationArtifact = vi.hoisted(() => vi.fn());
 
 vi.mock("../api/pollApplicationLog", () => ({
   pollApplicationLog: (id: number) => pollApplicationLog(id),
 }));
+vi.mock("../api/pollDocumentGeneration", () => ({
+  pollDocumentGeneration: (id: number) => pollDocumentGeneration(id),
+}));
 vi.mock("../lib/applicationArtifacts", () => ({
   previewApplicationArtifact: (id: number) => previewApplicationArtifact(id),
 }));
+
+function queuedGeneration(
+  kind: DocumentGeneration["kind"],
+  id = kind === "resume" ? 2 : 1,
+): DocumentGeneration {
+  return {
+    id,
+    kind,
+    status: "queued",
+    error: null,
+    result: null,
+    created_at: "2026-07-10T00:00:00Z",
+    updated_at: "2026-07-10T00:00:00Z",
+  };
+}
+
+function readyCover(result: JobCoverLetterResult): DocumentGeneration {
+  return {
+    id: 1,
+    kind: "cover_letter",
+    status: "ready",
+    error: null,
+    result,
+    created_at: "2026-07-10T00:00:00Z",
+    updated_at: "2026-07-10T00:00:00Z",
+  };
+}
+
+function readyResume(result: JobResumeResult): DocumentGeneration {
+  return {
+    id: 2,
+    kind: "resume",
+    status: "ready",
+    error: null,
+    result,
+    created_at: "2026-07-10T00:00:00Z",
+    updated_at: "2026-07-10T00:00:00Z",
+  };
+}
 
 function renderDialog(props: Partial<Parameters<typeof ApplyJobDialog>[0]> = {}) {
   const onClose = props.onClose ?? vi.fn();
@@ -57,6 +105,7 @@ describe("ApplyJobDialog", () => {
   beforeEach(() => {
     resetMockApi();
     pollApplicationLog.mockReset();
+    pollDocumentGeneration.mockReset();
     previewApplicationArtifact.mockReset();
     applyToJobMock.mockResolvedValue({
       status: "dry_run",
@@ -66,19 +115,25 @@ describe("ApplyJobDialog", () => {
       job: null,
       application_log_id: null,
     });
-    generateCoverLetterMock.mockResolvedValue({
-      cover_letter: "Generated letter",
-      provider: "heuristic",
-      fallback: false,
-    });
-    generateResumeMock.mockResolvedValue({
-      filename: "resume.pdf",
-      size_bytes: 1234,
-      content_sha256: "abc",
-      pdf_b64: "JVBERi0=",
-      artifact_id: 55,
-      provider: "heuristic",
-      fallback: false,
+    generateCoverLetterMock.mockResolvedValue(queuedGeneration("cover_letter"));
+    generateResumeMock.mockResolvedValue(queuedGeneration("resume"));
+    pollDocumentGeneration.mockImplementation(async (id: number) => {
+      if (id === 2) {
+        return readyResume({
+          filename: "resume.pdf",
+          size_bytes: 1234,
+          content_sha256: "abc",
+          pdf_b64: "JVBERi0=",
+          artifact_id: 55,
+          provider: "heuristic",
+          fallback: false,
+        });
+      }
+      return readyCover({
+        cover_letter: "Generated letter",
+        provider: "heuristic",
+        fallback: false,
+      });
     });
   });
 
@@ -163,11 +218,9 @@ describe("ApplyJobDialog", () => {
   });
 
   it("generates a cover letter from an AI provider", async () => {
-    generateCoverLetterMock.mockResolvedValue({
-      cover_letter: "AI letter",
-      provider: "openai",
-      fallback: false,
-    });
+    pollDocumentGeneration.mockResolvedValue(
+      readyCover({ cover_letter: "AI letter", provider: "openai", fallback: false }),
+    );
     renderDialog();
     fireEvent.click(screen.getByRole("button", { name: "Generate cover letter" }));
     await waitFor(() => expect(textarea().value).toBe("AI letter"));
@@ -183,11 +236,9 @@ describe("ApplyJobDialog", () => {
   });
 
   it("shows the fallback cover letter message", async () => {
-    generateCoverLetterMock.mockResolvedValue({
-      cover_letter: "Fallback letter",
-      provider: "heuristic",
-      fallback: true,
-    });
+    pollDocumentGeneration.mockResolvedValue(
+      readyCover({ cover_letter: "Fallback letter", provider: "heuristic", fallback: true }),
+    );
     renderDialog();
     fireEvent.click(screen.getByRole("button", { name: "Generate cover letter" }));
     await waitFor(() =>
@@ -197,6 +248,21 @@ describe("ApplyJobDialog", () => {
         ),
       ).toBeInTheDocument(),
     );
+  });
+
+  it("surfaces a failed document generation status from the poller", async () => {
+    pollDocumentGeneration.mockResolvedValue({
+      id: 1,
+      kind: "cover_letter",
+      status: "failed",
+      error: "compile failed",
+      result: null,
+      created_at: "2026-07-10T00:00:00Z",
+      updated_at: "2026-07-10T00:00:00Z",
+    });
+    renderDialog();
+    fireEvent.click(screen.getByRole("button", { name: "Generate cover letter" }));
+    await waitFor(() => expect(screen.getByText("compile failed")).toBeInTheDocument());
   });
 
   it("surfaces a cover letter generation error (Error instance)", async () => {
@@ -225,15 +291,17 @@ describe("ApplyJobDialog", () => {
   });
 
   it("shows the AI resume provider message", async () => {
-    generateResumeMock.mockResolvedValue({
-      filename: "resume.pdf",
-      size_bytes: 10,
-      content_sha256: "x",
-      pdf_b64: "JVBERi0=",
-      artifact_id: 7,
-      provider: "gemini",
-      fallback: false,
-    });
+    pollDocumentGeneration.mockResolvedValue(
+      readyResume({
+        filename: "resume.pdf",
+        size_bytes: 10,
+        content_sha256: "x",
+        pdf_b64: "JVBERi0=",
+        artifact_id: 7,
+        provider: "gemini",
+        fallback: false,
+      }),
+    );
     renderDialog();
     fireEvent.click(screen.getByRole("button", { name: "Generate tailored resume" }));
     await waitFor(() =>
@@ -242,15 +310,17 @@ describe("ApplyJobDialog", () => {
   });
 
   it("shows the fallback resume message", async () => {
-    generateResumeMock.mockResolvedValue({
-      filename: "resume.pdf",
-      size_bytes: 10,
-      content_sha256: "x",
-      pdf_b64: "JVBERi0=",
-      artifact_id: 8,
-      provider: "heuristic",
-      fallback: true,
-    });
+    pollDocumentGeneration.mockResolvedValue(
+      readyResume({
+        filename: "resume.pdf",
+        size_bytes: 10,
+        content_sha256: "x",
+        pdf_b64: "JVBERi0=",
+        artifact_id: 8,
+        provider: "heuristic",
+        fallback: true,
+      }),
+    );
     renderDialog();
     fireEvent.click(screen.getByRole("button", { name: "Generate tailored resume" }));
     await waitFor(() =>
@@ -259,6 +329,23 @@ describe("ApplyJobDialog", () => {
           "AI curation was unavailable; a resume was built from your profile instead.",
         ),
       ).toBeInTheDocument(),
+    );
+  });
+
+  it("surfaces a failed resume generation status from the poller", async () => {
+    pollDocumentGeneration.mockResolvedValue({
+      id: 2,
+      kind: "resume",
+      status: "failed",
+      error: null,
+      result: null,
+      created_at: "2026-07-10T00:00:00Z",
+      updated_at: "2026-07-10T00:00:00Z",
+    });
+    renderDialog();
+    fireEvent.click(screen.getByRole("button", { name: "Generate tailored resume" }));
+    await waitFor(() =>
+      expect(screen.getByText("Could not generate a tailored resume.")).toBeInTheDocument(),
     );
   });
 

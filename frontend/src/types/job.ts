@@ -42,6 +42,19 @@ export interface JobResumeResult {
   fallback: boolean;
 }
 
+export type DocumentGenerationKind = "resume" | "cover_letter";
+export type DocumentGenerationStatus = "queued" | "processing" | "ready" | "failed";
+
+export interface DocumentGeneration {
+  id: number;
+  kind: DocumentGenerationKind;
+  status: DocumentGenerationStatus;
+  error: string | null;
+  result: JobCoverLetterResult | JobResumeResult | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface ApplicationLog {
   id: number;
   seen_job_id: number;

@@ -12,7 +12,8 @@ Celery provides the scheduler (beat) and the workers. The worker package is
 - `schedule.py` — beat ticks: enqueue due searches, flush digest queues, and
   (when inbox agent is enabled) inbox polling and ghost detection.
 - `tasks.py` — `run_search(search_id)`, `flush_due_digests()`, `apply_to_job`,
-  `process_inbox_messages`, and `detect_ghosted_applications`.
+  `generate_resume`, `generate_cover_letter`, `process_inbox_messages`, and
+  `detect_ghosted_applications`.
 
 ## Due-based scheduling with catch-up
 
@@ -117,6 +118,17 @@ the claim, the row stays `processing` so the in-flight unique index still blocks
 a user re-apply. Preview (`dry_run: true`) still runs synchronously in the API.
 Clients poll `GET /application-logs/{id}` until the log reaches a terminal
 status.
+
+## Queued document generation (API-01)
+
+`POST /jobs/{id}/generate-resume` and `POST /jobs/{id}/generate-cover-letter`
+validate ownership/profile/feature flags in the API, write a
+`document_generation` row (`queued`), commit, and enqueue
+`generate_resume` / `generate_cover_letter`. The worker claims
+`queued` → `processing`, runs LLM curation + (for resumes) LaTeX compile, then
+stores the payload in `result` with status `ready` (or `failed` + `error`).
+Clients poll `GET /document-generations/{id}` until terminal. This keeps the
+HTTP anyio threadpool free of long LLM/subprocess work.
 
 Celery is configured with `task_acks_late`, `task_reject_on_worker_lost`, soft/
 hard `task_time_limit` (10m / 11m), and `result_expires` (1h) so hung tasks are

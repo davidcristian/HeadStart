@@ -9,8 +9,7 @@ import type {
   Health,
   Job,
   JobApplyResult,
-  JobCoverLetterResult,
-  JobResumeResult,
+  DocumentGeneration,
   ApplicationLog,
   ApplicationPipelineItem,
   ApplicationPipelineStage,
@@ -215,15 +214,17 @@ export const api = {
     },
   ) => request<JobApplyResult>(`/api/v1/jobs/${id}/apply`, { method: "POST", body: data }),
   generateCoverLetter: (id: number) =>
-    request<JobCoverLetterResult>(`/api/v1/jobs/${id}/generate-cover-letter`, {
+    request<DocumentGeneration>(`/api/v1/jobs/${id}/generate-cover-letter`, {
       method: "POST",
       body: {},
     }),
   generateResume: (id: number) =>
-    request<JobResumeResult>(`/api/v1/jobs/${id}/generate-resume`, {
+    request<DocumentGeneration>(`/api/v1/jobs/${id}/generate-resume`, {
       method: "POST",
       body: {},
     }),
+  getDocumentGeneration: (id: number) =>
+    request<DocumentGeneration>(`/api/v1/document-generations/${id}`),
 
   listApplicationLogs: (limit = 100) =>
     request<ApplicationLog[]>(`/api/v1/application-logs?limit=${limit}`),

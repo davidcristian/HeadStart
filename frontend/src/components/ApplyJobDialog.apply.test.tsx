@@ -6,6 +6,7 @@ import { sampleJob } from "../test/fixtures";
 import { renderWithClient } from "../test/renderWithClient";
 import type {
   ApplicationLog,
+  DocumentGeneration,
   Job,
   JobApplyResult,
   JobCoverLetterResult,
@@ -20,21 +21,64 @@ const applyToJobMock = mockApi.applyToJob as unknown as Mock<
   (id: number, data: unknown) => Promise<JobApplyResult>
 >;
 const generateCoverLetterMock = mockApi.generateCoverLetter as unknown as Mock<
-  () => Promise<JobCoverLetterResult>
+  () => Promise<DocumentGeneration>
 >;
 const generateResumeMock = mockApi.generateResume as unknown as Mock<
-  () => Promise<JobResumeResult>
+  () => Promise<DocumentGeneration>
 >;
 
 const pollApplicationLog = vi.hoisted(() => vi.fn());
+const pollDocumentGeneration = vi.hoisted(() => vi.fn());
 const previewApplicationArtifact = vi.hoisted(() => vi.fn());
 
 vi.mock("../api/pollApplicationLog", () => ({
   pollApplicationLog: (id: number) => pollApplicationLog(id),
 }));
+vi.mock("../api/pollDocumentGeneration", () => ({
+  pollDocumentGeneration: (id: number) => pollDocumentGeneration(id),
+}));
 vi.mock("../lib/applicationArtifacts", () => ({
   previewApplicationArtifact: (id: number) => previewApplicationArtifact(id),
 }));
+
+function queuedGeneration(
+  kind: DocumentGeneration["kind"],
+  id = kind === "resume" ? 2 : 1,
+): DocumentGeneration {
+  return {
+    id,
+    kind,
+    status: "queued",
+    error: null,
+    result: null,
+    created_at: "2026-07-10T00:00:00Z",
+    updated_at: "2026-07-10T00:00:00Z",
+  };
+}
+
+function readyCover(result: JobCoverLetterResult): DocumentGeneration {
+  return {
+    id: 1,
+    kind: "cover_letter",
+    status: "ready",
+    error: null,
+    result,
+    created_at: "2026-07-10T00:00:00Z",
+    updated_at: "2026-07-10T00:00:00Z",
+  };
+}
+
+function readyResume(result: JobResumeResult): DocumentGeneration {
+  return {
+    id: 2,
+    kind: "resume",
+    status: "ready",
+    error: null,
+    result,
+    created_at: "2026-07-10T00:00:00Z",
+    updated_at: "2026-07-10T00:00:00Z",
+  };
+}
 
 function terminalLog(overrides: Partial<ApplicationLog> = {}): ApplicationLog {
   return {
@@ -76,6 +120,7 @@ describe("ApplyJobDialog apply flow", () => {
   beforeEach(() => {
     resetMockApi();
     pollApplicationLog.mockReset();
+    pollDocumentGeneration.mockReset();
     previewApplicationArtifact.mockReset();
     applyToJobMock.mockResolvedValue({
       status: "dry_run",
@@ -85,19 +130,25 @@ describe("ApplyJobDialog apply flow", () => {
       job: null,
       application_log_id: null,
     });
-    generateCoverLetterMock.mockResolvedValue({
-      cover_letter: "Generated letter",
-      provider: "heuristic",
-      fallback: false,
-    });
-    generateResumeMock.mockResolvedValue({
-      filename: "resume.pdf",
-      size_bytes: 1234,
-      content_sha256: "abc",
-      pdf_b64: "JVBERi0=",
-      artifact_id: 55,
-      provider: "heuristic",
-      fallback: false,
+    generateCoverLetterMock.mockResolvedValue(queuedGeneration("cover_letter"));
+    generateResumeMock.mockResolvedValue(queuedGeneration("resume"));
+    pollDocumentGeneration.mockImplementation(async (id: number) => {
+      if (id === 2) {
+        return readyResume({
+          filename: "resume.pdf",
+          size_bytes: 1234,
+          content_sha256: "abc",
+          pdf_b64: "JVBERi0=",
+          artifact_id: 55,
+          provider: "heuristic",
+          fallback: false,
+        });
+      }
+      return readyCover({
+        cover_letter: "Generated letter",
+        provider: "heuristic",
+        fallback: false,
+      });
     });
   });
 

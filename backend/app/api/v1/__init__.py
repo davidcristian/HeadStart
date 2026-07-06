@@ -10,6 +10,7 @@ from app.api.v1 import (
     auth,
     billing,
     credentials,
+    document_generations,
     feed,
     health,
     inbox,
@@ -38,6 +39,11 @@ api_router.include_router(
     application_artifacts.router,
     prefix="/application-artifacts",
     tags=["application-artifacts"],
+)
+api_router.include_router(
+    document_generations.router,
+    prefix="/document-generations",
+    tags=["document-generations"],
 )
 api_router.include_router(applications.router, prefix="/applications", tags=["applications"])
 api_router.include_router(feed.router, prefix="/feed", tags=["feed"])
