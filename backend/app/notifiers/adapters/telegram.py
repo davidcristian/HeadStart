@@ -16,6 +16,7 @@ from typing import Any
 import httpx
 
 from app.core.logging import get_logger
+from app.core.outbound_http import pinned_request
 from app.notifiers.base import Notifier, register_notifier
 from app.notifiers.digest_format import digest_blocks, digest_title
 from app.notifiers.types import DeliveryResult, NotifyContext
@@ -61,7 +62,7 @@ class TelegramNotifier(Notifier):
             return []
         payload = self._digest_payload(chat_id, ctx, jobs)
         try:
-            resp = self._client.post(api_url, json=payload)
+            resp = pinned_request(self._client, "POST", api_url, json=payload)
             resp.raise_for_status()
             return [DeliveryResult(external_id=job.external_id, status="sent") for job in jobs]
         except httpx.HTTPError as exc:
@@ -74,7 +75,7 @@ class TelegramNotifier(Notifier):
     def _send_one(self, api_url: str, chat_id: str, job: JobPosting) -> DeliveryResult:
         payload = self._payload(chat_id, job)
         try:
-            resp = self._client.post(api_url, json=payload)
+            resp = pinned_request(self._client, "POST", api_url, json=payload)
             resp.raise_for_status()
             return DeliveryResult(external_id=job.external_id, status="sent")
         except httpx.HTTPError as exc:

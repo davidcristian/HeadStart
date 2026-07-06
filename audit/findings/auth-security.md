@@ -92,7 +92,9 @@ This area covers authentication and session management (login, registration, pas
 
 <a id="aut-08"></a>
 ### AUT-08 — SSRF guard resolves DNS then lets httpx re-resolve — DNS-rebinding TOCTOU bypass
-🟡 **MEDIUM** · 🔒 security · Status: ☐ open · Confidence: medium (3/5 verifiers) · Effort: L · WS21
+🟡 **MEDIUM** · 🔒 security · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/37)) · Confidence: medium (3/5 verifiers) · Effort: L · WS21
+
+**Update (2026-07-10).** Fixed with XCT-21 in [PR](https://github.com/davidcristian/HeadStart/pull/37): `apply_outbound_pin` / `pinned_request` rewrite the connect URL to the validated IP and set `Host` + HTTPS `sni_hostname` so httpx cannot re-resolve at connect time; Playwright routes pin the same way (context uses `ignore_https_errors` because cert SANs name the hostname); telegram joins the other notifiers on `pinned_request`.
 
 **Locations:** `backend/app/core/outbound_url.py:55` (`assert_safe_outbound_url`); plus `backend/app/scrapers/http.py:41`/`:46`.
 

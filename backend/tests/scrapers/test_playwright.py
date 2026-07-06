@@ -19,8 +19,10 @@ def _reset_browser_pool() -> None:
 
 def _make_browser_mock() -> tuple[MagicMock, MagicMock, MagicMock]:
     page = MagicMock()
+    context = MagicMock()
+    context.new_page.return_value = page
     browser = MagicMock()
-    browser.new_page.return_value = page
+    browser.new_context.return_value = context
     playwright = MagicMock()
     playwright.chromium.launch.return_value = browser
     cm = MagicMock()
@@ -108,7 +110,9 @@ def test_playwright_extracts_items() -> None:
         timeout=30_000,
     )
     page.route.assert_called_once()
-    page.close.assert_called_once()
+    browser.new_context.assert_called_once_with(ignore_https_errors=True)
+    context = browser.new_context.return_value
+    context.close.assert_called_once()
 
 
 def test_playwright_retries_on_navigation_failure(monkeypatch: pytest.MonkeyPatch) -> None:

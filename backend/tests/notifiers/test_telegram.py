@@ -1,10 +1,23 @@
 import json
+from urllib.parse import urlparse
 
 import httpx
+import pytest
 
 from app.notifiers import NotifyContext, get_notifier
 from app.notifiers.adapters.telegram import TelegramNotifier
 from app.scrapers.types import JobPosting
+
+
+@pytest.fixture(autouse=True)
+def _skip_live_dns_pin(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Keep telegram unit tests offline: pin without rewriting to a resolved IP."""
+
+    def _identity(url: str) -> object:
+        host = urlparse(url).hostname or ""
+        return type("Pinned", (), {"request_url": url, "host_header": host})()
+
+    monkeypatch.setattr("app.core.outbound_http.pin_outbound_request", _identity)
 
 
 def _job(external_id: str = "1") -> JobPosting:

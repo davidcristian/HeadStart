@@ -253,7 +253,9 @@ the local package. Regenerate via `just lock-backend` ([ADR-0012](../../docs/adr
 
 <a id="xct-21"></a>
 ### XCT-21 — SSRF guard resolves DNS once; httpx re-resolves at connect (rebinding)
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: medium (3/5 verifiers) · Effort: M · WS21
+⚪ **LOW** · 🔒 security · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/37)) · Confidence: medium (3/5 verifiers) · Effort: M · WS21
+
+**Update (2026-07-10).** Fixed with AUT-08 in [PR](https://github.com/davidcristian/HeadStart/pull/37): scrapers (httpx event hook), notifiers (`pinned_request`, including telegram), and Playwright route continues all connect via the IP from a single validated `getaddrinfo`, with Host/SNI preserved.
 
 **Locations:** `backend/app/core/outbound_url.py:56` (`assert_safe_outbound_url`); plus `backend/app/scrapers/http.py:41`, `backend/app/notifiers/adapters/webhook.py:50`, `backend/app/notifiers/adapters/ntfy.py:48`, `backend/app/notifiers/adapters/telegram.py:35`.
 

@@ -85,7 +85,11 @@ than raising. Aborting is reserved for a payload that isn't recognizable at all
 Outbound HTTP from scrapers is restricted to public `http`/`https` destinations.
 Private, loopback, link-local, and cloud-metadata addresses are rejected in the
 shared `HttpClient` (including redirect targets) and on every Playwright request
-(including redirects). See `app.core.outbound_url`.
+(including redirects). DNS is resolved once and the connect uses that IP (Host +
+TLS SNI keep the original hostname) so a rebinding resolver cannot slip a private
+address past the check. See `app.core.outbound_url` / `app.core.outbound_http`.
+Playwright pages use `ignore_https_errors` because the pinned connect is an IP
+literal while certificate SANs name the hostname.
 
 ## Rate limiting
 

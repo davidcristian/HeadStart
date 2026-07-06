@@ -51,7 +51,8 @@ For each new job it POSTs to `{server_url}/{topic}` with headers:
 
 Sends are best-effort per job and recorded in `delivery_log` with status/error.
 In digest mode, one batched push lists every new job in the window. The
-`server_url` is validated against private/loopback addresses (SSRF protection).
+`server_url` is validated against private/loopback addresses (SSRF protection)
+and the POST is DNS-pinned (single resolve, connect by IP with Host/SNI).
 
 ## email adapter
 
@@ -84,7 +85,8 @@ Posts one Slack message per new job via an [incoming webhook](https://api.slack.
 Create the webhook in your Slack workspace (Apps → Incoming Webhooks), then paste
 the URL into the target config. Messages use mrkdwn with title, company,
 location, and an Apply link. Digest mode sends one message listing all jobs.
-Outbound URLs are validated against private/loopback addresses (SSRF protection).
+Outbound URLs are validated against private/loopback addresses (SSRF protection)
+and POSTs are DNS-pinned via `pinned_request`.
 
 ## discord adapter
 
@@ -95,7 +97,7 @@ Create the webhook in your server (Server Settings → Integrations → Webhooks
 then paste the URL into the target config. Messages use a rich embed with title,
 company, location, and a clickable apply link. Digest mode uses one embed with
 a bullet list. Outbound URLs are validated against private/loopback addresses
-(SSRF protection).
+(SSRF protection) and POSTs are DNS-pinned via `pinned_request`.
 
 ## telegram adapter
 
@@ -105,7 +107,8 @@ Posts one Telegram message per new job via the [Bot API](https://core.telegram.o
 Create a bot with [@BotFather](https://t.me/BotFather), send `/start` to it (or add it to a
 group), then use your numeric chat id in config. Messages use HTML formatting with title,
 company, location, and an Apply link. Digest mode sends one HTML message listing
-all jobs.
+all jobs. Outbound Bot API calls are DNS-pinned via `pinned_request` (SSRF
+defense-in-depth even though the host is fixed).
 
 ## webhook adapter
 
@@ -128,7 +131,7 @@ job includes `external_id`, `title`, `company`, `location`, `url`, `summary`
 When `secret` is set, requests include an `X-HeadStart-Signature` header with
 `sha256=<hex>` (HMAC-SHA256 of the JSON body). Optional `headers` are merged
 into the request. Outbound URLs are validated against private/loopback addresses
-(SSRF protection).
+(SSRF protection) and POSTs are DNS-pinned via `pinned_request`.
 
 ## Adding a channel
 

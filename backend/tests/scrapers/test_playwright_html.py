@@ -27,8 +27,10 @@ def _reset_browser_pool() -> None:
 
 def _make_browser_mock() -> tuple[MagicMock, MagicMock, MagicMock]:
     page = MagicMock()
+    context = MagicMock()
+    context.new_page.return_value = page
     browser = MagicMock()
-    browser.new_page.return_value = page
+    browser.new_context.return_value = context
     playwright = MagicMock()
     playwright.chromium.launch.return_value = browser
     cm = MagicMock()

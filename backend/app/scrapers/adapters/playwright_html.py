@@ -73,7 +73,10 @@ class PlaywrightScraper(Scraper):
 
         postings: list[JobPosting] = []
         browser = get_browser()
-        page = browser.new_page()
+        # ignore_https_errors: outbound guard connects by pinned IP literal while
+        # keeping Host for virtual hosts; cert SANs name the hostname, not the IP.
+        context = browser.new_context(ignore_https_errors=True)
+        page = context.new_page()
         assert_outbound = install_playwright_outbound_guard(page)
         try:
             page.goto(ctx.query_url, wait_until=wait_until, timeout=timeout_ms)
@@ -83,7 +86,7 @@ class PlaywrightScraper(Scraper):
                 if posting is not None:
                     postings.append(posting)
         finally:
-            page.close()
+            context.close()
         return postings
 
     @staticmethod

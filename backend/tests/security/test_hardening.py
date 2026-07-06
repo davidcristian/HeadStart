@@ -60,13 +60,14 @@ def test_apply_outbound_pin_rewrites_resolved_ip(monkeypatch: pytest.MonkeyPatch
         lambda url: type(
             "Pinned",
             (),
-            {"request_url": "http://93.184.216.34/", "host_header": "example.com"},
+            {"request_url": "https://93.184.216.34/", "host_header": "example.com"},
         )(),
     )
     request = httpx.Request("GET", "https://example.com/path")
     apply_outbound_pin(request)
-    assert str(request.url) == "http://93.184.216.34/"
+    assert str(request.url) == "https://93.184.216.34/"
     assert request.headers["Host"] == "example.com"
+    assert request.extensions["sni_hostname"] == "example.com"
 
 
 def test_pin_outbound_request_rejects_all_blocked_ips(monkeypatch: pytest.MonkeyPatch) -> None:
