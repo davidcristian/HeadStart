@@ -77,7 +77,7 @@ _Merged with INB-19 (`inbox_oauth.py:63`, same TOCTOU refresh race; INB-19 was r
 
 <a id="inb-07"></a>
 ### INB-07 — Reply-drafter feeds raw inbound From into the LLM with no sanitize or injection guard
-🟡 **MEDIUM** · 🔒 security · Status: ☐ open · Confidence: high (5/5 verifiers) · Effort: S · WS29
+🟡 **MEDIUM** · 🔒 security · Status: ✅ done · Confidence: high (5/5 verifiers) · Effort: S · WS29
 
 _Merged with INB-21 and INB-22 (all three flag the same gap: `inbound_from` bypasses `sanitize_message_body` and the `looks_like_prompt_injection` guard, then reaches the auto-send drafter LLM). INB-21/INB-22 were rated low; reported here at the highest-verifier medium framing._
 

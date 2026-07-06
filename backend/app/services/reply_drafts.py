@@ -11,7 +11,11 @@ from app.ai.runtime_settings import resolve_ai_settings
 from app.core.config import settings as default_settings
 from app.core.exceptions import NotFoundError, ValidationError
 from app.core.logging import get_logger
-from app.email_classifiers.sanitize import looks_like_prompt_injection, sanitize_message_body
+from app.email_classifiers.sanitize import (
+    looks_like_prompt_injection,
+    sanitize_message_body,
+    sanitize_message_header,
+)
 from app.email_classifiers.types import LinkedApplicationContext
 from app.models.inbox_classification import InboxClassification
 from app.models.inbox_reply_draft import InboxReplyDraft
@@ -92,11 +96,12 @@ class ReplyDraftService:
         injection = requested != "heuristic" and (
             looks_like_prompt_injection(ctx.inbound_body)
             or looks_like_prompt_injection(ctx.inbound_subject)
+            or looks_like_prompt_injection(ctx.inbound_from)
         )
         if injection:
             logger.warning(
-                "reply draft for classification %s: inbound subject/body matched injection "
-                "patterns; forcing heuristic drafter",
+                "reply draft for classification %s: inbound from/subject/body matched "
+                "injection patterns; forcing heuristic drafter",
                 classification.id,
             )
             requested = "heuristic"
@@ -190,7 +195,10 @@ class ReplyDraftService:
             body_excerpt = sanitize_message_body(
                 classification.payload["body_excerpt"], max_chars=max_chars
             )
-        inbound_subject = sanitize_message_body(classification.subject or "", max_chars=max_chars)
+        inbound_subject = sanitize_message_header(classification.subject or "", max_chars=max_chars)
+        # From is recruiter-controlled (display-name + addr) and reaches the LLM prompt;
+        # sanitize + injection-check it the same way as subject/body (INB-07).
+        inbound_from = sanitize_message_header(classification.from_addr or "", max_chars=max_chars)
         linked_application = None
         if classification.seen_job is not None:
             raw = linked_application_context(
@@ -206,7 +214,7 @@ class ReplyDraftService:
             )
         return ReplyDraftContext(
             inbound_subject=inbound_subject,
-            inbound_from=classification.from_addr,
+            inbound_from=inbound_from,
             inbound_body=body_excerpt,
             classification_label=classification.label,
             linked_application=linked_application,

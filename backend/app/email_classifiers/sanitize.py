@@ -15,6 +15,9 @@ _INJECTION_PATTERNS: tuple[re.Pattern[str], ...] = (
     re.compile(r"jailbreak", re.I),
 )
 
+# RFC5322 angle-addr; rewritten before HTML tag stripping so `<user@host>` is kept.
+_ANGLE_ADDR = re.compile(r"<([^<>\s]+@[^<>\s]+)>")
+
 
 def sanitize_message_body(body: str, *, max_chars: int) -> str:
     """Strip HTML, collapse whitespace, and cap body length."""
@@ -24,6 +27,13 @@ def sanitize_message_body(body: str, *, max_chars: int) -> str:
     if max_chars > 0 and len(text) > max_chars:
         return text[: max_chars - 1].rstrip() + "…"
     return text
+
+
+def sanitize_message_header(value: str, *, max_chars: int) -> str:
+    """Sanitize a From/Subject header for LLM prompts without dropping angle-addrs."""
+    text = html.unescape(value or "")
+    text = _ANGLE_ADDR.sub(r" \1 ", text)
+    return sanitize_message_body(text, max_chars=max_chars)
 
 
 def looks_like_prompt_injection(text: str) -> bool:
