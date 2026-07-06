@@ -42,7 +42,9 @@ _Merged with INB-02 (`fastmail_jmap.py:162`, same defect: JMAP method-level erro
 
 <a id="inb-04"></a>
 ### INB-04 — Sensitive-topic filter misses plain "workers compensation" (auto-reply guard bypass)
-🟡 **MEDIUM** · 🐞 bug · Status: ☐ open · Confidence: certain (3/3 verifiers) · Effort: XS · WS30
+🟡 **MEDIUM** · 🐞 bug · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/52)) · Confidence: certain (3/3 verifiers) · Effort: XS · WS30
+
+**Update (2026-07-10).** Fixed in [PR](https://github.com/davidcristian/HeadStart/pull/52): `workers_comp` pattern is now `r"\bworkers['’]?\s*compensation\b"` so plain `workers compensation`, ASCII apostrophe, and curly-apostrophe forms all block auto-reply.
 
 _Merged with INB-05 (exact duplicate record for the same regex bug at the same line)._
 

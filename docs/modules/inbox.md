@@ -382,15 +382,17 @@ Supported classification labels: `follow_up`, `general`.
   **Draft reply** button when a draftable classification exists.
 
 **Safe-send guardrails:** built-in legal/HR topic blocklist on inbound + draft
-text; per-user hourly/daily caps (`INBOX_REPLY_MAX_PER_HOUR`,
-`INBOX_REPLY_MAX_PER_DAY`); recipient domain must match the linked application's
-`employer_domain` (or the job posting URL host) before auto-send
-(`auto_reply_recipient_allowed` in `ReplySafeSendService.evaluate_before_send` —
-outcome `blocked_recipient` when the inbound `From` is outside that domain,
-even if the inbox gate admitted the message via forged thread headers or an
-allowlist); audit log at `GET /inbox/reply-send-logs` for queue,
-send, and blocked decisions. Blocked sends set `inbox_pending_reply.status=blocked`
-and leave the draft in `draft` for manual review.
+text (including plain `workers compensation` and apostrophe forms via
+`SENSITIVE_TOPIC_PATTERNS` in `app.inbox.safe_send`); per-user hourly/daily caps
+(`INBOX_REPLY_MAX_PER_HOUR`, `INBOX_REPLY_MAX_PER_DAY`); recipient domain must
+match the linked application's `employer_domain` (or the job posting URL host)
+before auto-send (`auto_reply_recipient_allowed` in
+`ReplySafeSendService.evaluate_before_send` — outcome `blocked_recipient` when
+the inbound `From` is outside that domain, even if the inbox gate admitted the
+message via forged thread headers or an allowlist); audit log at
+`GET /inbox/reply-send-logs` for queue, send, and blocked decisions. Blocked
+sends set `inbox_pending_reply.status=blocked` and leave the draft in `draft`
+for manual review.
 
 ## Response delay queue (Phase 20d)
 

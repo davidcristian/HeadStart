@@ -33,3 +33,20 @@ def test_check_topic_blocklist_blocks_discrimination_thread() -> None:
     assert result is not None
     assert "discrimination" in result.matched_topics
     assert "Auto-reply blocked" in result.reason
+
+
+def test_check_topic_blocklist_blocks_plain_workers_compensation() -> None:
+    """INB-04: single-space spelling must match, not only the apostrophe form."""
+    for body in (
+        "Please discuss workers compensation with HR.",
+        "Please discuss workers' compensation with HR.",
+        "Please discuss workers’ compensation with HR.",
+    ):
+        result = check_topic_blocklist(
+            inbound_subject="Benefits question",
+            inbound_body=body,
+            draft_subject="Re: Benefits question",
+            draft_body="Happy to help.",
+        )
+        assert result is not None, body
+        assert "workers_comp" in result.matched_topics
