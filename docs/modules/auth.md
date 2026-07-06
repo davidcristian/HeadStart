@@ -155,10 +155,15 @@ Failed logins also increment Prometheus `headstart_auth_login_failures_total`
 1. User submits their email on `/forgot-password` → `POST /auth/forgot-password`.
 2. If the account exists and is active, a single-use token is stored (hashed) and
    emailed. The API always returns the same success message (no email enumeration).
-3. The email link opens `/reset-password?token=...` → `POST /auth/reset-password`
+3. Token generation and hashing always run — including for unknown or inactive
+   emails — so the miss path does not skip that work. The reset email is queued
+   on FastAPI `BackgroundTasks` so the HTTP response does not wait on SMTP;
+   response timing therefore cannot enumerate accounts via the mail round-trip
+   (AUT-26). Direct service callers without a scheduler still send synchronously.
+4. The email link opens `/reset-password?token=...` → `POST /auth/reset-password`
    with the token and new password.
-4. Valid tokens are deleted after use; expired tokens are rejected.
-5. The reset **bumps `token_version` and `feed_token_version`**, so any
+5. Valid tokens are deleted after use; expired tokens are rejected.
+6. The reset **bumps `token_version` and `feed_token_version`**, so any
    access/refresh token or RSS feed URL issued before the reset (e.g. one
    captured from a compromised session) immediately stops validating — the user
    must sign in again everywhere and re-issue feed links.

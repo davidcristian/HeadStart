@@ -1,6 +1,6 @@
 """Auth endpoints: register, login, refresh, logout, password reset, current-user."""
 
-from fastapi import APIRouter, Cookie, Depends, Request, Response, status
+from fastapi import APIRouter, BackgroundTasks, Cookie, Depends, Request, Response, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db, get_verified_user
@@ -115,12 +115,20 @@ def logout(
 
 @router.post("/forgot-password", response_model=MessageResponse)
 def forgot_password(
-    data: ForgotPasswordRequest, request: Request, db: Session = Depends(get_db)
+    data: ForgotPasswordRequest,
+    request: Request,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
 ) -> MessageResponse:
     """Request a password-reset email. Response is identical whether the email exists."""
     limit_forgot_password(request, data.email)
     meta = request_meta(request)
-    message = AuthService(db).request_password_reset(data, ip_address=meta.ip_address)
+    # Defer SMTP so response timing cannot enumerate accounts (AUT-26).
+    message = AuthService(db).request_password_reset(
+        data,
+        ip_address=meta.ip_address,
+        schedule_email=background_tasks.add_task,
+    )
     return MessageResponse(message=message)
 
 

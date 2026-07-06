@@ -266,3 +266,90 @@ def test_reset_password_rejects_expired_token(db_session) -> None:
         AuthService(db_session).reset_password(
             ResetPasswordRequest(token="expired-token", password="new-password-99")
         )
+
+
+def test_forgot_password_burns_token_crypto_for_unknown_email(db_session) -> None:
+    """Unknown emails still generate+hash a token so timing matches the hit path (AUT-26)."""
+    with (
+        patch("app.services.auth_password.send_password_reset_email") as mock_email,
+        patch(
+            "app.services.auth_password.generate_password_reset_token",
+            return_value="discarded-token",
+        ) as mock_generate,
+        patch(
+            "app.services.auth_password.hash_password_reset_token",
+            return_value="discarded-hash",
+        ) as mock_hash,
+    ):
+        message = AuthService(db_session).request_password_reset(
+            ForgotPasswordRequest(email="nobody@example.com")
+        )
+
+    assert "password reset link" in message.lower()
+    mock_generate.assert_called_once()
+    mock_hash.assert_called_once_with("discarded-token")
+    mock_email.assert_not_called()
+    assert (
+        PasswordResetTokenRepository(db_session).get_valid_by_hash(
+            "discarded-hash",
+            now=utcnow(),
+        )
+        is None
+    )
+
+
+def test_forgot_password_defers_email_via_scheduler(db_session) -> None:
+    """When schedule_email is set, SMTP is not invoked on the request path (AUT-26)."""
+    UserRepository(db_session).add(
+        User(
+            email="defer@example.com",
+            password_hash="hash",
+            is_admin=False,
+            is_active=True,
+        )
+    )
+    db_session.commit()
+
+    scheduled: list[tuple[object, dict[str, str]]] = []
+
+    def _schedule(fn: object, **kwargs: str) -> None:
+        scheduled.append((fn, kwargs))
+
+    with (
+        patch("app.services.auth_password.send_password_reset_email") as mock_email,
+        patch(
+            "app.services.auth_password.generate_password_reset_token",
+            return_value="defer-token",
+        ),
+    ):
+        AuthService(db_session).request_password_reset(
+            ForgotPasswordRequest(email="defer@example.com"),
+            schedule_email=_schedule,
+        )
+
+    mock_email.assert_not_called()
+    assert len(scheduled) == 1
+    fn, kwargs = scheduled[0]
+    assert kwargs["to_email"] == "defer@example.com"
+    assert "defer-token" in kwargs["reset_url"]
+    fn(**kwargs)  # type: ignore[operator]
+    mock_email.assert_called_once_with(
+        to_email="defer@example.com",
+        reset_url=kwargs["reset_url"],
+    )
+
+
+def test_forgot_password_unknown_email_does_not_schedule(db_session) -> None:
+    scheduled: list[object] = []
+
+    def _schedule(fn: object, **kwargs: str) -> None:
+        scheduled.append(fn)
+
+    with patch("app.services.auth_password.send_password_reset_email") as mock_email:
+        AuthService(db_session).request_password_reset(
+            ForgotPasswordRequest(email="ghost@example.com"),
+            schedule_email=_schedule,
+        )
+
+    assert scheduled == []
+    mock_email.assert_not_called()

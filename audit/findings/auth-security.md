@@ -120,7 +120,9 @@ This area covers authentication and session management (login, registration, pas
 
 <a id="aut-26"></a>
 ### AUT-26 — forgot-password leaks account existence via timing (early return vs synchronous SMTP)
-🟡 **MEDIUM** · 🔒 security · Status: ☐ open · Confidence: high (3/5 verifiers) · Effort: S · WS19
+🟡 **MEDIUM** · 🔒 security · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/33)) · Confidence: high (3/5 verifiers) · Effort: S · WS19
+
+**Update (2026-07-10).** Fixed: `request_password_reset` always generates and hashes a token (including unknown/inactive emails), and the `/forgot-password` route schedules `send_password_reset_email` via FastAPI `BackgroundTasks` so the HTTP response does not wait on SMTP. Regression tests cover crypto burn on the miss path and deferred scheduling.
 
 **Locations:** `backend/app/services/auth.py:113` (`AuthService.request_password_reset`); plus `backend/app/core/email.py:29`.
 

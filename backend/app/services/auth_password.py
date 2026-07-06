@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import timedelta
+from typing import Any
 
 from sqlalchemy.orm import Session
 
@@ -26,14 +28,24 @@ _PASSWORD_RESET_SENT_MESSAGE = (
     "If an account exists for that email, a password reset link has been sent."
 )
 
+# Matches BackgroundTasks.add_task / Celery-style deferral: call(fn, **kwargs).
+EmailScheduler = Callable[..., Any]
+
 
 def request_password_reset(
     session: Session,
     data: ForgotPasswordRequest,
     *,
     ip_address: str | None = None,
+    schedule_email: EmailScheduler | None = None,
 ) -> str:
-    """Issue a reset token and email it. Always returns the same message."""
+    """Issue a reset token and email it. Always returns the same message.
+
+    Token generation/hashing always runs (even for unknown emails) so response
+    work matches the issued path before any mail I/O. When ``schedule_email`` is
+    provided (API BackgroundTasks), SMTP runs after the response so timing cannot
+    enumerate accounts via the SMTP round-trip (AUT-26).
+    """
     email = data.email.lower()
     # Cap outbound reset mail per address even when the account is missing,
     # so the route cannot be used to email-bomb a known inbox.
@@ -41,6 +53,11 @@ def request_password_reset(
     users = UserRepository(session)
     reset_tokens = PasswordResetTokenRepository(session)
     user = users.get_by_email(email)
+
+    # Burn the same crypto cost on the miss path (mirrors login's placeholder bcrypt).
+    raw_token = generate_password_reset_token()
+    token_hash = hash_password_reset_token(raw_token)
+
     if user is None or not user.is_active:
         log_auth_event(
             "password_reset_requested",
@@ -50,19 +67,25 @@ def request_password_reset(
         )
         return _PASSWORD_RESET_SENT_MESSAGE
 
-    raw_token = generate_password_reset_token()
     expires_at = utcnow() + timedelta(minutes=settings.password_reset_expire_minutes)
     reset_tokens.delete_for_user(user.id)
     reset_tokens.add(
         PasswordResetToken(
             user_id=user.id,
-            token_hash=hash_password_reset_token(raw_token),
+            token_hash=token_hash,
             expires_at=expires_at,
         )
     )
 
     reset_url = f"{settings.frontend_base_url.rstrip('/')}/reset-password?token={raw_token}"
-    send_password_reset_email(to_email=user.email, reset_url=reset_url)
+    if schedule_email is not None:
+        schedule_email(
+            send_password_reset_email,
+            to_email=user.email,
+            reset_url=reset_url,
+        )
+    else:
+        send_password_reset_email(to_email=user.email, reset_url=reset_url)
     log_auth_event(
         "password_reset_requested",
         email=user.email,

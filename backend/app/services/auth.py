@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import timedelta
+from typing import Any
 
 from sqlalchemy.orm import Session
 
@@ -156,10 +158,19 @@ class AuthService:
         return user
 
     def request_password_reset(
-        self, data: ForgotPasswordRequest, *, ip_address: str | None = None
+        self,
+        data: ForgotPasswordRequest,
+        *,
+        ip_address: str | None = None,
+        schedule_email: Callable[..., Any] | None = None,
     ) -> str:
         """Issue a reset token and email it. Always returns the same message."""
-        return issue_password_reset(self.session, data, ip_address=ip_address)
+        return issue_password_reset(
+            self.session,
+            data,
+            ip_address=ip_address,
+            schedule_email=schedule_email,
+        )
 
     def reset_password(self, data: ResetPasswordRequest, *, ip_address: str | None = None) -> None:
         """Set a new password from a valid reset token."""
