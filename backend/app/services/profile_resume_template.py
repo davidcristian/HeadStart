@@ -29,6 +29,8 @@ def validate_resume_template_upload(*, filename: str, content_type: str, data: b
             raise ValidationError(
                 f"Resume template bundle exceeds the {max_bytes // 1_048_576} MB limit"
             )
+        # Parse + content-scan TeX-like members before encryption (AIA-07).
+        parse_template_bundle(data)
         return
     if not lower.endswith(".tex"):
         raise ValidationError("Resume template must be a .tex file or .zip bundle")

@@ -58,9 +58,37 @@ def test_validate_zip_rejects_oversized_bundle(monkeypatch) -> None:
 
 
 def test_validate_zip_accepts_valid_bundle() -> None:
-    validate_resume_template_upload(
-        filename="bundle.zip", content_type="application/zip", data=b"PK\x03\x04"
+    data = _zip_files(
+        {
+            "main.tex": r"\documentclass{article}\input{section}\begin{document}Hi\end{document}",
+            "section.tex": "Section body",
+        }
     )
+    validate_resume_template_upload(
+        filename="bundle.zip", content_type="application/zip", data=data
+    )
+
+
+def test_validate_zip_rejects_dangerous_tex_content() -> None:
+    """AIA-07: upload validation content-scans bundle members before storage."""
+    data = _zip_files(
+        {
+            "main.tex": r"\documentclass{article}\begin{document}\read 5 to \x\end{document}",
+        }
+    )
+    with pytest.raises(ValidationError, match="disallowed LaTeX commands"):
+        validate_resume_template_upload(
+            filename="bundle.zip", content_type="application/zip", data=data
+        )
+
+
+def test_validate_tex_rejects_read_primitive() -> None:
+    with pytest.raises(ValidationError, match="disallowed LaTeX commands"):
+        validate_resume_template_upload(
+            filename="resume.tex",
+            content_type="text/plain",
+            data=b"\\documentclass{article}\\read 5 to \\x",
+        )
 
 
 def test_validate_rejects_unknown_extension() -> None:

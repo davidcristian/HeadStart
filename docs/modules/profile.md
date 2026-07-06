@@ -82,10 +82,12 @@ before substitution. Bundle archives must include `main.tex` or
 `resume.tex` (or a single `.tex` file); allowed member types are `.tex`, `.sty`,
 `.cls`, `.bib`, and common image formats. When no template is uploaded, a
 built-in default template is used. Uploaded `.tex` / `.sty` / `.cls` members are
-scanned for dangerous primitives (`\write18`, absolute/pipe/parent-path
-`\input`/`\include`, `\openin`) at upload and again after placeholder
-substitution (so verbatim `[[experience]]` markup cannot smuggle file-read
-primitives into the compiler). `POST /jobs/{id}/generate-resume` curates placeholders (Pro
+scanned for dangerous primitives (`\write18`, `\openin`, `\read`, and
+absolute/pipe/home(`~`)/parent-path `\input`/`\include`) at upload
+(including zip-bundle parse during `PUT /profile/resume-template` validation)
+and again after placeholder substitution (so verbatim `[[experience]]` markup
+cannot smuggle file-read primitives into the compiler). Relative same-tree
+includes like `\input{section}` remain allowed. `POST /jobs/{id}/generate-resume` curates placeholders (Pro
 users: `resume_curation` AI purpose), renders LaTeX, and compiles a tailored PDF
 (prefers `tectonic`, falls back to `pdflatex` with `-no-shell-escape` and a
 minimal env that forces `openin_any=p` / `openout_any=p` / `shell_escape=f` so
