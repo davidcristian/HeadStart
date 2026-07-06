@@ -523,9 +523,12 @@ and returns the mapped application state that would be posted to
 
 **Live submit:** requires the candidate's own logged-in Meta Careers session
 cookies and `session_id`. Resume files upload via Relay multipart on the submit
-mutation. Meta's AI-assisted application flow may require additional
-`profile.answers` mappings for employer-specific questionnaires. Treat live
-auto-apply as best-effort; always preview with dry run first.
+mutation. Both the JSON and multipart submit paths reject a 2xx GraphQL
+`errors` envelope (mapped to `status=failed`); a resume attachment must not
+report `submitted` when Meta returns GraphQL errors. Meta's AI-assisted
+application flow may require additional `profile.answers` mappings for
+employer-specific questionnaires. Treat live auto-apply as best-effort; always
+preview with dry run first.
 
 ### Indeed
 

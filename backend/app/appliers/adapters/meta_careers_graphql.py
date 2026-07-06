@@ -89,8 +89,10 @@ def post_graphql_multipart(
             referer=referer,
         ),
     )
+    # post_multipart may return a parsed JSON dict; still enforce the same
+    # GraphQL errors envelope as the non-resume JSON path (APL-05).
     if isinstance(response, dict):
-        return response
+        return _parse_graphql_payload(response)
     return _parse_graphql_json(str(response))
 
 
@@ -109,11 +111,8 @@ def _request_headers(
     )
 
 
-def _parse_graphql_json(body: str) -> dict[str, Any]:
-    try:
-        data = json.loads(body)
-    except json.JSONDecodeError as exc:
-        raise ValueError("meta_careers GraphQL returned invalid JSON") from exc
+def _parse_graphql_payload(data: object) -> dict[str, Any]:
+    """Reject GraphQL error envelopes so resume and non-resume submits agree."""
     if not isinstance(data, dict):
         raise ValueError("meta_careers GraphQL returned unexpected payload")
     errors = data.get("errors")
@@ -125,3 +124,11 @@ def _parse_graphql_json(body: str) -> dict[str, Any]:
                 raise ValueError(f"meta_careers GraphQL error: {message.strip()}")
         raise ValueError("meta_careers GraphQL returned errors")
     return data
+
+
+def _parse_graphql_json(body: str) -> dict[str, Any]:
+    try:
+        data = json.loads(body)
+    except json.JSONDecodeError as exc:
+        raise ValueError("meta_careers GraphQL returned invalid JSON") from exc
+    return _parse_graphql_payload(data)

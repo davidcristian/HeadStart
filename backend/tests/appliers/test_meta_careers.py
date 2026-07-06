@@ -249,6 +249,51 @@ def test_live_submit_with_resume_uses_multipart() -> None:
     assert result.payload["submit_input"]["candidateResumeFile"] == "candidateResumeFile"
 
 
+def test_live_submit_with_resume_fails_on_graphql_errors() -> None:
+    """Multipart resume submit must not report submitted on GraphQL errors (APL-05)."""
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.method == "GET":
+            return httpx.Response(200, text=load_fixture(PAGE_FIXTURE))
+        body = request.content.decode()
+        if "CandidatePortalJobDetailsViewQuery" in body:
+            return httpx.Response(
+                200,
+                text=load_fixture(DETAIL_FIXTURE),
+                headers={"content-type": "application/json"},
+            )
+        return httpx.Response(
+            200,
+            json={"errors": [{"message": "attachment rejected"}]},
+            headers={"content-type": "application/json"},
+        )
+
+    resume = ResumeFile(
+        filename="resume.pdf",
+        content_type="application/pdf",
+        size_bytes=4,
+        data=b"%PDF",
+    )
+    profile = ApplyProfile(**_profile().model_dump(), exists=True, resume_file=resume)
+    applier = MetaCareersApplier(http=make_http_client(handler))
+    result = applier.apply(
+        ApplyContext(
+            job_external_id=JOB_ID,
+            job_title="Technical Program Manager, MTIA Software",
+            company="Meta",
+            job_url=JOB_URL,
+            config={"company": "Meta"},
+            profile=profile,
+            resume_file=resume,
+            credentials=_credentials(),
+            dry_run=False,
+        )
+    )
+
+    assert result.status == "failed"
+    assert "attachment rejected" in (result.error or "")
+
+
 def test_live_submit_requires_session_cookies() -> None:
     handler = _graphql_handler(load_fixture(PAGE_FIXTURE), load_fixture(DETAIL_FIXTURE))
     applier = MetaCareersApplier(http=make_http_client(handler))

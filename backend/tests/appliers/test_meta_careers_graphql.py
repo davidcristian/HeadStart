@@ -84,6 +84,27 @@ def test_post_graphql_multipart_returns_dict_directly() -> None:
     assert result == {"data": {"x": 1}}
 
 
+def test_post_graphql_multipart_rejects_dict_error_envelope() -> None:
+    """Resume multipart must fail on GraphQL errors like the JSON path (APL-05)."""
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200,
+            json={"errors": [{"message": "  resume rejected  "}]},
+            headers={"content-type": "application/json"},
+        )
+
+    with pytest.raises(ValueError, match="GraphQL error: resume rejected"):
+        post_graphql_multipart(
+            make_http_client(handler),
+            lsd="l",
+            friendly_name="Q",
+            doc_id="1",
+            variables={"input": {}},
+            uploadables={"candidateResumeFile": ("r.pdf", b"%PDF", "application/pdf")},
+        )
+
+
 def test_post_graphql_multipart_parses_string_response(monkeypatch: pytest.MonkeyPatch) -> None:
     # Force post_multipart to return a non-dict string so the parse branch runs.
     def fake_post_multipart(self: HttpClient, url: str, **kwargs: object) -> object:
@@ -99,6 +120,24 @@ def test_post_graphql_multipart_parses_string_response(monkeypatch: pytest.Monke
         uploadables={"candidateResumeFile": ("r.pdf", b"%PDF", "application/pdf")},
     )
     assert result == {"data": {"y": 2}}
+
+
+def test_post_graphql_multipart_rejects_string_error_envelope(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def fake_post_multipart(self: HttpClient, url: str, **kwargs: object) -> object:
+        return '{"errors": [{"message": "string path boom"}]}'
+
+    monkeypatch.setattr(HttpClient, "post_multipart", fake_post_multipart)
+    with pytest.raises(ValueError, match="GraphQL error: string path boom"):
+        post_graphql_multipart(
+            make_http_client(_unexpected),
+            lsd="l",
+            friendly_name="Q",
+            doc_id="1",
+            variables={"input": {}},
+            uploadables={"candidateResumeFile": ("r.pdf", b"%PDF", "application/pdf")},
+        )
 
 
 # --- resolve_lsd_token -------------------------------------------------------

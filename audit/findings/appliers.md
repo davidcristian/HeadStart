@@ -80,7 +80,7 @@ Merged with APL-10 (same defect at the same guard, `build_questionnaire_answers`
 
 <a id="apl-05"></a>
 ### APL-05 — Meta resume (multipart) submit skips the GraphQL errors check the JSON path enforces
-🟡 **MEDIUM** · 🐞 bug · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: S · WS23
+🟡 **MEDIUM** · 🐞 bug · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/39)) · Confidence: high (3/3 verifiers) · Effort: S · WS23
 
 **Locations:** `backend/app/appliers/adapters/meta_careers_graphql.py:92` (`post_graphql_multipart`); plus `meta_careers_graphql.py:112`, `meta_careers_live.py:51`.
 
