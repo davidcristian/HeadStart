@@ -94,7 +94,9 @@ Merged with APL-10 (same defect at the same guard, `build_questionnaire_answers`
 
 <a id="apl-06"></a>
 ### APL-06 — Meta education parallel arrays desync via per-column filters
-🟡 **MEDIUM** · 🐞 bug · Status: ☐ open · Confidence: high (5/5 verifiers) · Effort: S · WS24
+🟡 **MEDIUM** · 🐞 bug · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/41)) · Confidence: high (5/5 verifiers) · Effort: S · WS24
+
+**Update (2026-07-10).** Fixed in [PR](https://github.com/davidcristian/HeadStart/pull/41): education is filtered once (drop fully-empty rows) and every `college*` column is built from that same list, matching the work-history parallel-array pattern.
 
 **Locations:** `backend/app/appliers/adapters/meta_careers_payload.py:53` (`build_application_state`); plus `meta_careers_payload.py:54`, `:55`, and test `backend/tests/appliers/test_meta_careers.py:57`.
 

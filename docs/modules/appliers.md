@@ -524,6 +524,12 @@ Config / credentials:
 and returns the mapped application state that would be posted to
 `xcp_create_application_v2`. No Meta login required.
 
+**Structured profile:** Meta's form state uses positional parallel arrays
+(`workEmployerNames[i]` / `workPositionNames[i]`, and `collegeSchoolNames[i]` /
+`collegeDegreeNames[i]` / `collegeConcentration1Names[i]`). Work and education
+lists are each filtered once (drop fully-empty rows), then every column is built
+from that same list so a blank degree or company cannot desync sibling fields.
+
 **Live submit:** requires the candidate's own logged-in Meta Careers session
 cookies and `session_id`. Resume files upload via Relay multipart on the submit
 mutation. Both the JSON and multipart submit paths reject a 2xx GraphQL

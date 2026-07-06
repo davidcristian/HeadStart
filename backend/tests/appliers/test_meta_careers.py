@@ -19,7 +19,7 @@ from app.appliers.adapters.meta_careers_payload import (
     build_application_state,
 )
 from app.appliers.base import get_applier, has_applier
-from app.schemas.profile import ApplyProfile, ProfileData, ResumeFile
+from app.schemas.profile import ApplyProfile, EducationEntry, ProfileData, ResumeFile
 from tests.conftest import load_fixture, load_json_fixture, make_http_client
 
 JOB_ID = "2132019417725760"
@@ -140,7 +140,33 @@ def test_build_application_state_maps_profile_fields() -> None:
     assert state["candidateEmail"] == "ada@example.com"
     assert state["candidateFirstName"] == "Ada"
     assert state["workEmployerNames"] == ["Example Corp"]
+    assert state["collegeSchoolNames"] == ["Example University"]
+    assert state["collegeDegreeNames"] == ["BS"]
+    assert state["collegeConcentration1Names"] == ["Computer Science"]
     assert state["workEligibleUS"] == "0"
+
+
+def test_build_application_state_keeps_education_arrays_aligned() -> None:
+    """School-only rows must not drop degree/field slots (APL-06)."""
+    detail = parse_job_detail_response(load_json_fixture(DETAIL_FIXTURE), requisition_id=JOB_ID)
+    profile = _profile()
+    profile.education = [
+        EducationEntry(school="Community College"),
+        EducationEntry(
+            school="Example University",
+            degree="BS",
+            field_of_study="Computer Science",
+        ),
+    ]
+    state = build_application_state(
+        detail,
+        profile,
+        company="Meta",
+        job_title=detail.title,
+    )
+    assert state["collegeSchoolNames"] == ["Community College", "Example University"]
+    assert state["collegeDegreeNames"] == ["", "BS"]
+    assert state["collegeConcentration1Names"] == ["", "Computer Science"]
 
 
 def test_dry_run_fetches_job_and_returns_payload() -> None:

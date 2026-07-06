@@ -33,12 +33,18 @@ def build_application_state(
     # workPositionNames[i], workStartMonths[i]... all describe the same job. Filter
     # the work list ONCE (drop fully-empty rows) and build every column from it, so
     # a row with (say) a blank company can't desync employer/title/date pairing.
+    # Same rule for college* arrays: filter education once, then emit every column
+    # from that list so a school-only row cannot shift degrees onto another school.
     work = [
         entry
         for entry in profile.work_experience
         if entry.company.strip() or entry.job_title.strip()
     ]
-    education = list(profile.education)
+    education = [
+        entry
+        for entry in profile.education
+        if entry.school.strip() or entry.degree.strip() or entry.field_of_study.strip()
+    ]
     skills = [skill.strip() for skill in profile.skills if skill.strip()]
 
     state: dict[str, Any] = {
@@ -50,11 +56,9 @@ def build_application_state(
         "candidateEmail": email,
         "candidateLocationID": profile.answers.get("candidate_location_id"),
         "urls": _profile_urls(profile),
-        "collegeSchoolNames": [entry.school for entry in education if entry.school.strip()],
-        "collegeDegreeNames": [entry.degree for entry in education if entry.degree.strip()],
-        "collegeConcentration1Names": [
-            entry.field_of_study for entry in education if entry.field_of_study.strip()
-        ],
+        "collegeSchoolNames": [entry.school for entry in education],
+        "collegeDegreeNames": [entry.degree for entry in education],
+        "collegeConcentration1Names": [entry.field_of_study for entry in education],
         "collegeConcentration2Names": [],
         "highSchoolName": profile.answers.get("high_school_name"),
         "candidateSkills": skills,
