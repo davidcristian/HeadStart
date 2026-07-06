@@ -10,8 +10,8 @@ healthy?" without reading worker logs.
 
 | Process | URL | What it measures |
 | ------- | --- | ---------------- |
-| API (`uvicorn`) | `GET /metrics` | Synchronous "Run now" / source-test scrapes and any API-triggered pipeline runs |
-| Worker (Celery) | `GET :METRICS_PORT/metrics` (default `9090`) | Scheduled pipeline runs, digest flushes, scheduler enqueue |
+| API (`uvicorn`) | `GET /metrics` | Source-test scrapes and other API-side work (manual Run now is queued on the worker — API-02) |
+| Worker (Celery) | `GET :METRICS_PORT/metrics` (default `9090`) | Scheduled + manual pipeline runs, digest flushes, scheduler enqueue |
 
 Scrape **both** targets in production — they run in separate processes and each
 holds its own registry. When `METRICS_TOKEN` is set, **both** endpoints require

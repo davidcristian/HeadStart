@@ -12,7 +12,22 @@ const api = vi.hoisted(() => ({
   createSearch: vi.fn(async () => ({ id: 1 })),
   updateSearch: vi.fn(async () => ({ id: 1 })),
   deleteSearch: vi.fn(async () => undefined),
-  runSearch: vi.fn(async () => ({ ok: true })),
+  runSearch: vi.fn(async () => ({
+    id: 1,
+    search_id: 1,
+    status: "ready",
+    found: 0,
+    new: 0,
+    notified: 0,
+    failed: 0,
+    skipped: 0,
+    filtered: 0,
+    queued: 0,
+    closed: 0,
+    error: null,
+    created_at: "2026-07-10T00:00:00Z",
+    updated_at: "2026-07-10T00:00:00Z",
+  })),
   createTarget: vi.fn(async () => ({ id: 1 })),
   deleteTarget: vi.fn(async () => undefined),
   testTarget: vi.fn(async () => ({ status: "sent" })),
@@ -31,7 +46,26 @@ const api = vi.hoisted(() => ({
   subscribePortals: vi.fn(async () => ({ created: 1 })),
   draftInboxReply: vi.fn(async () => ({ draft: "hi" })),
 }));
+const pollSearchRun = vi.hoisted(() =>
+  vi.fn(async () => ({
+    id: 9,
+    search_id: 2,
+    status: "ready",
+    found: 2,
+    new: 1,
+    notified: 1,
+    failed: 0,
+    skipped: 0,
+    filtered: 0,
+    queued: 0,
+    closed: 0,
+    error: null,
+    created_at: "2026-07-10T00:00:00Z",
+    updated_at: "2026-07-10T00:00:01Z",
+  })),
+);
 vi.mock("../api", () => ({ api }));
+vi.mock("../api/pollSearchRun", () => ({ pollSearchRun }));
 
 import * as mutations from "./mutations";
 
@@ -48,6 +82,7 @@ function keys(): unknown[] {
 
 beforeEach(() => {
   Object.values(api).forEach((fn) => fn.mockClear());
+  pollSearchRun.mockClear();
   client = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
   invalidateSpy = vi.spyOn(client, "invalidateQueries").mockResolvedValue();
 });
@@ -101,9 +136,30 @@ describe("search mutations", () => {
     expect(keys()).toEqual(expect.arrayContaining([["searches"], ["meta"]]));
   });
 
-  it("run invalidates searches", async () => {
+  it("run invalidates searches and jobs", async () => {
     await run(mutations.useRunSearch, 2);
-    expect(keys()).toContainEqual(["searches"]);
+    expect(keys()).toEqual(expect.arrayContaining([["searches"], ["jobs", null, null]]));
+  });
+
+  it("run polls when the enqueue response is still queued", async () => {
+    api.runSearch.mockResolvedValueOnce({
+      id: 9,
+      search_id: 2,
+      status: "queued",
+      found: 0,
+      new: 0,
+      notified: 0,
+      failed: 0,
+      skipped: 0,
+      filtered: 0,
+      queued: 0,
+      closed: 0,
+      error: null,
+      created_at: "2026-07-10T00:00:00Z",
+      updated_at: "2026-07-10T00:00:00Z",
+    });
+    await run(mutations.useRunSearch, 2);
+    expect(pollSearchRun).toHaveBeenCalledWith(9);
   });
 });
 

@@ -198,6 +198,7 @@ export const api = {
   deleteSearch: (id: number) => request<void>(`/api/v1/searches/${id}`, { method: "DELETE" }),
   runSearch: (id: number) =>
     request<SearchRunResult>(`/api/v1/searches/${id}/run`, { method: "POST" }),
+  getSearchRun: (id: number) => request<SearchRunResult>(`/api/v1/search-runs/${id}`),
 
   // jobs
   listJobs: (searchId?: number, status?: string) =>

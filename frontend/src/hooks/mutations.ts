@@ -4,6 +4,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api";
+import { pollSearchRun } from "../api/pollSearchRun";
 import type {
   CredentialCreate,
   PlanId,
@@ -93,8 +94,17 @@ export function useDeleteSearch() {
 export function useRunSearch() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: number) => api.runSearch(id),
-    onSuccess: () => invalidate(qc, queryKeys.searches),
+    mutationFn: async (id: number) => {
+      const queued = await api.runSearch(id);
+      if (queued.status === "ready" || queued.status === "failed") {
+        return queued;
+      }
+      return pollSearchRun(queued.id);
+    },
+    onSuccess: () => {
+      invalidate(qc, queryKeys.searches);
+      invalidate(qc, queryKeys.jobs());
+    },
   });
 }
 

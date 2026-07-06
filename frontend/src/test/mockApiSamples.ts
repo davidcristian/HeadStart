@@ -118,7 +118,9 @@ export const sampleBillingStatus = {
 };
 
 export const sampleRunSearchResult = {
+  id: 1,
   search_id: 20,
+  status: "ready" as const,
   found: 3,
   new: 1,
   notified: 1,
@@ -128,6 +130,8 @@ export const sampleRunSearchResult = {
   queued: 0,
   closed: 0,
   error: null,
+  created_at: "2026-07-10T00:00:00Z",
+  updated_at: "2026-07-10T00:00:00Z",
 };
 
 export const sampleApplyJobResult = {

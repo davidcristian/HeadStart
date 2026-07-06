@@ -17,6 +17,7 @@ from app.api.v1 import (
     jobs,
     portals,
     profile,
+    search_runs,
     searches,
     sources,
     summary_preferences,
@@ -31,6 +32,7 @@ api_router.include_router(admin.router, prefix="/admin", tags=["admin"])
 api_router.include_router(sources.router, prefix="/sources", tags=["sources"])
 api_router.include_router(portals.router, prefix="/portals", tags=["portals"])
 api_router.include_router(searches.router, prefix="/searches", tags=["searches"])
+api_router.include_router(search_runs.router, prefix="/search-runs", tags=["search-runs"])
 api_router.include_router(jobs.router, prefix="/jobs", tags=["jobs"])
 api_router.include_router(
     application_logs.router, prefix="/application-logs", tags=["application-logs"]

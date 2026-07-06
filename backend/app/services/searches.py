@@ -11,8 +11,7 @@ from app.repositories.deliveries import DeliveryLogRepository
 from app.repositories.searches import SearchRepository
 from app.repositories.sources import SourceRepository
 from app.repositories.targets import TargetRepository
-from app.schemas.search import SearchCreate, SearchRead, SearchRunRead, SearchUpdate
-from app.services.pipeline import PipelineService
+from app.schemas.search import SearchCreate, SearchRead, SearchUpdate
 from app.services.plan_limits import PlanLimitsService
 
 
@@ -79,23 +78,6 @@ class SearchService:
 
     def delete(self, search_id: int, user_id: int) -> None:
         self.repo.delete(self.get(search_id, user_id))
-
-    def run_now(self, search_id: int, user_id: int) -> SearchRunRead:
-        """Run the full pipeline immediately and return its outcome."""
-        self.get(search_id, user_id)
-        result = PipelineService(self.session).run(search_id)
-        return SearchRunRead(
-            search_id=result.search_id,
-            found=result.found,
-            new=result.new,
-            notified=result.notified,
-            failed=result.failed,
-            skipped=result.skipped,
-            filtered=result.filtered,
-            queued=result.queued,
-            closed=result.closed,
-            error=result.error,
-        )
 
     def _validate_refs(self, user_id: int, source_id: int, target_id: int | None) -> None:
         if self.sources.get(source_id, user_id) is None:

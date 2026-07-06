@@ -63,7 +63,7 @@ other unknown path redirects to the landing page.
 | Sources     | List/create/edit sources (name, adapter, base URL, config); browse curated company portals; test scrape |
 | Companies   | Pro+ cross-portal search at `/app/portals`: keyword search across curated FAANG/unicorn/AI boards, results preview, one-click alert setup |
 | Searches    | Create a search: pick source + target, query URL + structured filters (keywords, location, workplace, salary) + |
-|             | interval; enable/disable; run now (immediate results); view last |
+|             | interval; enable/disable; run now (queues Celery; UI polls `search_run`); view last |
 |             | run, scrape errors, and recent delivery failures                 |
 | Jobs        | Feed of seen jobs, filterable by search and status; mark seen/applied/archived; **Apply** on supported sources (preview + submit; generate cover letter / tailored resume via queued `document_generation` poll); salary when scraped; copy RSS feed URL |
 | Applications | Pipeline view at `/app/applications`: applied jobs with derived stage (`queued`, `awaiting_reply`, `apply_failed`, `closed`, `archived`), attempt timeline, and stage filter; see `GET /applications` |

@@ -47,18 +47,3 @@ class SearchRead(SearchBase):
     next_run_at: datetime
     created_at: datetime
     recent_delivery_failures: list[DeliveryFailureRead] = Field(default_factory=list)
-
-
-class SearchRunRead(BaseModel):
-    """Immediate pipeline result from POST /searches/{id}/run."""
-
-    search_id: int
-    found: int = 0
-    new: int = 0
-    notified: int = 0
-    failed: int = 0
-    skipped: int = 0
-    filtered: int = 0
-    queued: int = 0
-    closed: int = 0
-    error: str | None = None

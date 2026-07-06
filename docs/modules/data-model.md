@@ -270,6 +270,21 @@ Ephemeral queue row for async resume / cover-letter generation (API-01).
 | created_at   | datetime    |                                                    |
 | updated_at   | datetime    |                                                    |
 
+### search_run
+
+Ephemeral queue row for async manual `POST /searches/{id}/run` (API-02).
+
+| Column       | Type        | Notes                                              |
+| ------------ | ----------- | -------------------------------------------------- |
+| id           | int PK      |                                                    |
+| user_id      | FK user     | Owner; cascade on delete                           |
+| search_id    | FK search   | Search being run; cascade on delete                |
+| status       | str         | `queued` / `processing` / `ready` / `failed`       |
+| error        | text?       | Present when the pipeline recorded an error        |
+| result       | JSON?       | Count fields (`found`, `new`, `notified`, …)       |
+| created_at   | datetime    |                                                    |
+| updated_at   | datetime    |                                                    |
+
 ## Migrations
 
 Change a model, then `just makemigration "..."`, review, `just migrate`.

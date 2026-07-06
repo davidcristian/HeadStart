@@ -41,8 +41,12 @@ export type SearchCreate = Pick<
   | "enabled"
 >;
 
+export type SearchRunStatus = "queued" | "processing" | "ready" | "failed";
+
 export interface SearchRunResult {
+  id: number;
   search_id: number;
+  status: SearchRunStatus;
   found: number;
   new: number;
   notified: number;
@@ -52,6 +56,8 @@ export interface SearchRunResult {
   queued: number;
   closed: number;
   error: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface FeedUrl {

@@ -59,6 +59,7 @@ const mockApi = vi.hoisted(() => ({
   updateSearch: vi.fn(async (_id: number, data: unknown) => updatedSearchRecord(data)),
   deleteSearch: vi.fn(async () => undefined),
   runSearch: vi.fn(async () => sampleRunSearchResult),
+  getSearchRun: vi.fn(async () => sampleRunSearchResult),
   listJobs: vi.fn(async (): Promise<Job[]> => []),
   updateJob: vi.fn(async (_id: number, data: { status: string }) => ({
     ...sampleJob,

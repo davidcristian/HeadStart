@@ -83,7 +83,7 @@ def test_generate_resume_task_skips_when_not_queued(db_session: Session) -> None
     )
     db_session.add(row)
     db_session.commit()
-    with patch("app.worker.tasks.session_scope", _scope(db_session)):
+    with patch("app.worker.document_generation_tasks.session_scope", _scope(db_session)):
         result = generate_resume_task(row.id, user_id, job_id)
     assert result["status"] == "skipped"
 
@@ -165,7 +165,7 @@ def test_enqueue_cover_letter_disabled(db_session: Session) -> None:
 
 def test_generate_cover_letter_task_skips_when_not_queued(db_session: Session) -> None:
     user_id, job_id = _seed_job(db_session, with_profile=False)
-    with patch("app.worker.tasks.session_scope", _scope(db_session)):
+    with patch("app.worker.document_generation_tasks.session_scope", _scope(db_session)):
         result = generate_cover_letter_task(999999, user_id, job_id)
     assert result["status"] == "skipped"
 
@@ -184,7 +184,7 @@ def test_worker_resume_success_path(db_session: Session) -> None:
     db_session.commit()
 
     with (
-        patch("app.worker.tasks.session_scope", _scope(db_session)),
+        patch("app.worker.document_generation_tasks.session_scope", _scope(db_session)),
         patch.object(ResumeService, "_compile_pdf", return_value=b"%PDF-1.4\nok\n"),
     ):
         result = generate_resume_task(row.id, user_id, job_id)
@@ -204,6 +204,6 @@ def test_worker_cover_letter_success_path(db_session: Session) -> None:
     db_session.add(row)
     db_session.commit()
 
-    with patch("app.worker.tasks.session_scope", _scope(db_session)):
+    with patch("app.worker.document_generation_tasks.session_scope", _scope(db_session)):
         result = generate_cover_letter_task(row.id, user_id, job_id)
     assert result["status"] == "ready"

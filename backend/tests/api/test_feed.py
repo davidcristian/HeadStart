@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 
 from app.scrapers.types import JobPosting
 from app.services.pipeline import PipelineService
-from tests.conftest import register_and_login
+from tests.conftest import post_search_run, register_and_login
 
 
 def _seed_job_via_api(client: TestClient, headers: dict[str, str]) -> None:
@@ -28,7 +28,7 @@ def _seed_job_via_api(client: TestClient, headers: dict[str, str]) -> None:
         url="https://acme.test/rss-job",
     )
     with patch.object(PipelineService, "scrape", return_value=[posting]):
-        client.post(f"/api/v1/searches/{search_id}/run", headers=headers)
+        post_search_run(client, search_id, headers)
 
 
 def test_feed_url_requires_auth(client: TestClient) -> None:

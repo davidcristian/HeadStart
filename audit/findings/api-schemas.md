@@ -24,7 +24,7 @@ This area covers the FastAPI v1 routers under `backend/app/api/v1/` and the Pyda
 
 <a id="api-02"></a>
 ### API-02 — POST /searches/{id}/run runs the full scrape+summary pipeline synchronously
-🟡 **MEDIUM** · ⚡ perf · Status: ☐ open · Confidence: high (5/5 verifiers) · Effort: M · WS32
+🟡 **MEDIUM** · ⚡ perf · Status: ✅ done · Confidence: high (5/5 verifiers) · Effort: M · WS32
 
 **Locations:** `backend/app/api/v1/searches.py:54` (`run_search_now`); plus `backend/app/services/searches.py:83`, `backend/app/services/pipeline.py:80`.
 
@@ -35,6 +35,8 @@ This area covers the FastAPI v1 routers under `backend/app/api/v1/` and the Pyda
 **Suggested fix.** Dispatch `run_search.delay(search_id)` and return 202 with a run handle the UI polls, mirroring the beat path; do not scrape inline in the request.
 
 **Verification.** Confirmed 5/5 adversarial verifiers. `run_search_now` runs the full `PipelineService.run` (rate-limited scrape + LLM) inline in the request thread with no throttling — a real threadpool-starvation DoS, but the rubric places DoS at medium, so high would be inflated.
+
+**Update (2026-07-10).** Fixed: `POST /searches/{id}/run` writes a `search_run` row, returns HTTP 202, and enqueues `run_search_run`; clients poll `GET /search-runs/{id}` for counts (same pattern as API-01 document generation) — [PR](https://github.com/davidcristian/HeadStart/pull/59).
 
 <a id="api-04"></a>
 ### API-04 — Out-of-bounds limit/seen_job_id on inbox list routes returns HTTP 500, not 422

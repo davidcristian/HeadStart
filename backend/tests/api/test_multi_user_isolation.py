@@ -12,7 +12,7 @@ from fastapi.testclient import TestClient
 
 from app.scrapers.types import JobPosting
 from app.services.pipeline import PipelineService
-from tests.conftest import register_and_login
+from tests.conftest import post_search_run, register_and_login
 
 
 def _seed_job(client: TestClient, headers: dict[str, str], *, external_id: str = "iso-job") -> int:
@@ -35,7 +35,7 @@ def _seed_job(client: TestClient, headers: dict[str, str], *, external_id: str =
         url=f"https://boards.greenhouse.io/acme/jobs/{external_id}",
     )
     with patch.object(PipelineService, "scrape", return_value=[posting]):
-        client.post(f"/api/v1/searches/{search_id}/run", headers=headers)
+        post_search_run(client, search_id, headers)
     return client.get("/api/v1/jobs", headers=headers).json()[0]["id"]
 
 

@@ -179,6 +179,10 @@ describe("useOnboardingWizard", () => {
 
   it("reports scrape failure from runFirstSearch", async () => {
     mockApi.runSearch.mockResolvedValueOnce({
+      id: 1,
+      status: "ready" as const,
+      created_at: "2026-07-10T00:00:00Z",
+      updated_at: "2026-07-10T00:00:00Z",
       search_id: 20,
       found: 0,
       new: 0,
@@ -200,6 +204,10 @@ describe("useOnboardingWizard", () => {
 
   it("includes filtered count in the run notice", async () => {
     mockApi.runSearch.mockResolvedValueOnce({
+      id: 1,
+      status: "ready" as const,
+      created_at: "2026-07-10T00:00:00Z",
+      updated_at: "2026-07-10T00:00:00Z",
       search_id: 20,
       found: 5,
       new: 2,

@@ -11,7 +11,8 @@ Celery provides the scheduler (beat) and the workers. The worker package is
   settings).
 - `schedule.py` — beat ticks: enqueue due searches, flush digest queues, and
   (when inbox agent is enabled) inbox polling and ghost detection.
-- `tasks.py` — `run_search(search_id)`, `flush_due_digests()`, `apply_to_job`,
+- `tasks.py` — `run_search(search_id)`, `run_search_run` (manual Run now),
+  `flush_due_digests()`, `apply_to_job`,
   `generate_resume`, `generate_cover_letter`, `process_inbox_messages`, and
   `detect_ghosted_applications`.
 
@@ -129,6 +130,16 @@ validate ownership/profile/feature flags in the API, write a
 stores the payload in `result` with status `ready` (or `failed` + `error`).
 Clients poll `GET /document-generations/{id}` until terminal. This keeps the
 HTTP anyio threadpool free of long LLM/subprocess work.
+
+## Queued manual search run (API-02)
+
+`POST /searches/{id}/run` validates ownership in the API, writes a `search_run`
+row (`queued`), commits, and enqueues `run_search_run`. The worker claims
+`queued` → `processing`, runs the same `PipelineService.run` path as the beat
+task (scrape → summarize → notify), then stores counts in `result` with status
+`ready` (or `failed` + `error`). Clients poll `GET /search-runs/{id}` until
+terminal. Scheduled beat runs still use `run_search(search_id)` without a
+`search_run` row.
 
 Celery is configured with `task_acks_late`, `task_reject_on_worker_lost`, soft/
 hard `task_time_limit` (10m / 11m), and `result_expires` (1h) so hung tasks are

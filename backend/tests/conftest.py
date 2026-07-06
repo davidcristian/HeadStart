@@ -59,6 +59,39 @@ def register_and_login(
     return {"Authorization": f"Bearer {token}"}
 
 
+def post_search_run(client: TestClient, search_id: int, headers: dict[str, str]):
+    """POST /searches/{id}/run and execute the Celery task on the test DB (API-02)."""
+    from contextlib import contextmanager
+
+    from app.worker.tasks import run_search_run_task
+
+    factory = getattr(client, "_session_factory", None)
+    if factory is None:
+        raise RuntimeError("TestClient missing _session_factory; use the client fixture")
+
+    @contextmanager
+    def test_scope():
+        session = factory()
+        try:
+            yield session
+            session.commit()
+        except Exception:
+            session.rollback()
+            raise
+        finally:
+            session.close()
+
+    with (
+        patch("app.worker.tasks.session_scope", test_scope),
+        patch.object(
+            run_search_run_task,
+            "delay",
+            side_effect=lambda *args, **kwargs: run_search_run_task(*args, **kwargs),
+        ),
+    ):
+        return client.post(f"/api/v1/searches/{search_id}/run", headers=headers)
+
+
 def load_fixture(name: str) -> str:
     return (FIXTURES_DIR / name).read_text(encoding="utf-8")
 
@@ -145,6 +178,7 @@ def client() -> Iterator[TestClient]:
 
     app.dependency_overrides[get_db] = override_get_db
     with TestClient(app) as test_client:
+        test_client._session_factory = factory  # type: ignore[attr-defined]
         yield test_client
     app.dependency_overrides.clear()
     engine.dispose()

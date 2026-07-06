@@ -8,7 +8,7 @@ from app.models.seen_job import SeenJob
 from app.schemas.job import JobUpdate
 from app.services.jobs import JobService
 from app.services.pipeline import PipelineService
-from tests.conftest import register_and_login
+from tests.conftest import post_search_run, register_and_login
 from tests.worker.test_pipeline import (
     FakeScraper,
     RecordingNotifier,
@@ -144,7 +144,7 @@ def test_job_api_patch_and_filter(client: TestClient, auth_headers: dict[str, st
         url="https://acme.test/api-job",
     )
     with patch.object(PipelineService, "scrape", return_value=[posting]):
-        client.post(f"/api/v1/searches/{search_id}/run", headers=auth_headers)
+        post_search_run(client, search_id, auth_headers)
 
     jobs = client.get("/api/v1/jobs", headers=auth_headers).json()
     assert len(jobs) == 1
@@ -200,6 +200,6 @@ def test_users_cannot_see_each_others_jobs(client: TestClient) -> None:
             )
         ],
     ):
-        client.post(f"/api/v1/searches/{search_id}/run", headers=alice)
+        post_search_run(client, search_id, alice)
 
     assert client.get("/api/v1/jobs", headers=bob).json() == []

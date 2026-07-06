@@ -44,7 +44,8 @@ never touch the DB directly (services use repositories). See
 | GET    | `/searches/{id}`      | Get a search                             |
 | PATCH  | `/searches/{id}`      | Update a search (enable/disable, retune) |
 | DELETE | `/searches/{id}`      | Delete a search                          |
-| POST   | `/searches/{id}/run`  | Run the search pipeline immediately (returns found/new/notified counts) |
+| POST   | `/searches/{id}/run`  | Queue the search pipeline (`status=queued`, HTTP 202). Poll `GET /search-runs/{id}` until `ready`/`failed`; response includes found/new/notified counts. |
+| GET    | `/search-runs/{id}`   | Poll one queued manual search run until terminal status |
 | GET    | `/jobs`               | Feed of seen jobs (filter by `search_id`, `status`) |
 | PATCH  | `/jobs/{id}`          | Update triage status (`seen` / `applied` / `archived`) |
 | POST   | `/jobs/{id}/apply`    | Submit or preview an auto-apply (`dry_run`, optional `cover_letter`, optional `tailored_resume_b64` or `tailored_resume_artifact_id`). Live submit returns `queued` + `application_log_id`; poll `GET /application-logs/{id}`. |

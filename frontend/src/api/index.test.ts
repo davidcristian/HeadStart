@@ -202,6 +202,8 @@ describe("api searches", () => {
     expect(lastCall()).toEqual(["/api/v1/searches/9", { method: "DELETE" }]);
     await api.runSearch(9);
     expect(lastCall()).toEqual(["/api/v1/searches/9/run", { method: "POST" }]);
+    await api.getSearchRun(9);
+    expect(lastCall()[0]).toBe("/api/v1/search-runs/9");
   });
 });
 

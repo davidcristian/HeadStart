@@ -24,6 +24,7 @@ from app.models.promo_redemption import PromoRedemption
 from app.models.promo_validation_attempt import PromoValidationAttempt
 from app.models.registration_lock import RegistrationLock
 from app.models.search import Search
+from app.models.search_run import SearchRun
 from app.models.seen_job import SeenJob
 from app.models.site_credential import SiteCredential
 from app.models.source import Source
@@ -52,6 +53,7 @@ __all__ = [
     "PromoValidationAttempt",
     "RegistrationLock",
     "Search",
+    "SearchRun",
     "SeenJob",
     "SiteCredential",
     "Source",

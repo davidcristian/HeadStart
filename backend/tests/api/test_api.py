@@ -3,6 +3,7 @@ from unittest.mock import patch
 from fastapi.testclient import TestClient
 
 from app.services.pipeline import PipelineService, RunResult
+from app.worker.tasks import run_search_run_task
 
 
 def test_health(client: TestClient) -> None:
@@ -129,14 +130,20 @@ def test_search_lifecycle(client: TestClient, auth_headers: dict[str, str]) -> N
     assert body["recent_delivery_failures"] == []
     search_id = body["id"]
 
-    with patch.object(
-        PipelineService,
-        "run",
-        return_value=RunResult(search_id=search_id, found=0, new=0, notified=0, failed=0),
+    with (
+        patch.object(run_search_run_task, "delay") as mock_delay,
+        patch.object(
+            PipelineService,
+            "run",
+            return_value=RunResult(search_id=search_id, found=0, new=0, notified=0, failed=0),
+        ),
     ):
         run = client.post(f"/api/v1/searches/{search_id}/run", headers=auth_headers)
-    assert run.status_code == 200
-    assert run.json()["search_id"] == search_id
+    assert run.status_code == 202
+    body = run.json()
+    assert body["search_id"] == search_id
+    assert body["status"] == "queued"
+    mock_delay.assert_called_once()
 
 
 def test_source_test_returns_sample(client: TestClient, auth_headers: dict[str, str]) -> None:
