@@ -26,3 +26,13 @@ output "https_listener_arn" {
 output "https_enabled" {
   value = local.https_enabled
 }
+
+output "access_logs_bucket" {
+  description = "S3 bucket receiving ALB access logs."
+  value       = aws_s3_bucket.access_logs.id
+}
+
+output "web_acl_arn" {
+  description = "WAFv2 web ACL ARN associated with the ALB."
+  value       = aws_wafv2_web_acl.this.arn
+}

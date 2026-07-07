@@ -143,6 +143,11 @@ variable "db_deletion_protection" {
   type    = bool
   default = false
 }
+variable "alb_deletion_protection" {
+  type        = bool
+  default     = false
+  description = "Prevent accidental ALB destroy (enable on prod)."
+}
 variable "db_backup_retention_days" {
   type        = number
   default     = 7

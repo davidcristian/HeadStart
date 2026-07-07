@@ -113,7 +113,9 @@ SHA pin. `aws-first-deploy.sh` sets `TF_VAR_image_tag` from the short SHA when
 
 <a id="ops-08"></a>
 ### OPS-08 — ALB lacks access logs, WAF, deletion protection, and drop_invalid_header_fields
-🟡 **MEDIUM** · 🔒 security · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: M · WS38
+🟡 **MEDIUM** · 🔒 security · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/74)) · Confidence: high (3/3 verifiers) · Effort: M · WS38
+
+**Update (2026-07-10).** Fixed: ALB sets `drop_invalid_header_fields = true`, ships access logs to a private S3 bucket (90-day lifecycle + ELB delivery policy), and associates a regional WAFv2 web ACL (AWS Managed Common + Known Bad Inputs). Stack knob `alb_deletion_protection` is enabled on prod so a fat-finger destroy cannot delete the public entrypoint.
 
 **Locations:** `devops/terraform/modules/alb/main.tf:9` (`aws_lb.this`).
 

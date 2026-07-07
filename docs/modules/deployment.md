@@ -40,7 +40,7 @@ devops/terraform/
 │   ├── rds/       # Postgres
 │   ├── redis/     # ElastiCache
 │   ├── acm/       # DNS-validated TLS certificates (optional)
-│   ├── alb/       # load balancer, listeners, target groups
+│   ├── alb/       # load balancer, listeners, target groups, access logs, WAF
 │   ├── ecs/       # cluster, task defs + services (api, frontend, worker, beat)
 │   ├── iam/       # task execution + task roles
 │   └── secrets/   # Secrets Manager / SSM params
@@ -81,7 +81,7 @@ with Chromium pre-installed. Default Fargate sizing is **1024 CPU / 2048 MiB**
 (vs **256 / 512** for api, beat, and frontend). Override via stack module vars
 `worker_cpu` and `worker_memory` in `environments/<env>/main.tf`.
 
-## Prod resilience knobs (OPS-05)
+## Prod resilience knobs (OPS-05 / OPS-08)
 
 `environments/prod/main.tf` raises durability beyond the stack defaults that
 `beta` keeps:
@@ -89,6 +89,7 @@ with Chromium pre-installed. Default Fargate sizing is **1024 CPU / 2048 MiB**
 | Knob | Stack default (beta) | Prod |
 | ---- | -------------------- | ---- |
 | `db_multi_az` / `db_deletion_protection` | false | true |
+| `alb_deletion_protection` | false | true |
 | `db_backup_retention_days` | 7 | 30 |
 | `log_retention_days` (ECS CloudWatch) | 30 | 90 |
 | `redis_automatic_failover` | false (single-node cluster) | true (Multi-AZ replication group, 2 nodes) |
@@ -101,6 +102,19 @@ downtime on apply). Prod also requires an explicit immutable `image_tag` (git
 SHA): there is no `"latest"` default, and Terraform rejects `latest` so a task
 recycle cannot silently pull a different build (OPS-07). Ongoing rolls still
 retarget task defs via `deploy.sh` / `IMAGE_TAG`.
+
+### ALB hardening (OPS-08)
+
+Every environment's ALB (beta and prod) enables:
+
+- `drop_invalid_header_fields = true` (reject request-smuggling via malformed headers)
+- S3 access logs (`{name}-alb-access-logs-{account}`) with a 90-day lifecycle
+- A regional WAFv2 web ACL (AWS Managed Common + Known Bad Inputs rule groups)
+
+Prod additionally sets `alb_deletion_protection = true` so a fat-finger
+`terraform destroy` cannot delete the public entrypoint. Beta keeps deletion
+protection off so throwaway stacks can tear down cleanly (the access-logs
+bucket uses `force_destroy` when deletion protection is off).
 
 ## Observability
 

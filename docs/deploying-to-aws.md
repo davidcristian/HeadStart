@@ -66,7 +66,9 @@ Terraform (`devops/terraform/`) provisions:
   `CREDENTIALS_SECRET_KEY`
 
 Default region is **`us-east-2`**. Use the **`beta`** environment first (cheaper);
-**`prod`** adds Multi-AZ RDS and deletion protection.
+**`prod`** adds Multi-AZ RDS and deletion protection on RDS and the ALB. Both
+environments enable ALB access logs, `drop_invalid_header_fields`, and a
+regional WAFv2 ACL (OPS-08).
 
 > **Cost:** even `beta` runs an ALB, four Fargate tasks, RDS, and Redis — expect
 > ongoing monthly charges, not a free-tier-only stack.
@@ -278,7 +280,7 @@ When ready for production:
 4. Deploy with `ENVIRONMENT=prod` and `ECS_CLUSTER=headstart-prod`.
 
 `prod` uses larger instances, Multi-AZ RDS, and deletion protection on the
-database.
+database and ALB. ALB access logs + WAF apply in beta and prod (OPS-08).
 
 ---
 

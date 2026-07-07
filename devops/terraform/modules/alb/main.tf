@@ -7,12 +7,22 @@ locals {
 }
 
 resource "aws_lb" "this" {
-  name               = "${var.name}-alb"
-  internal           = false
-  load_balancer_type = "application"
-  security_groups    = [var.security_group_id]
-  subnets            = var.public_subnet_ids
-  tags               = var.tags
+  name                       = "${var.name}-alb"
+  internal                   = false
+  load_balancer_type         = "application"
+  security_groups            = [var.security_group_id]
+  subnets                    = var.public_subnet_ids
+  drop_invalid_header_fields = true
+  enable_deletion_protection = var.enable_deletion_protection
+  tags                       = var.tags
+
+  access_logs {
+    bucket  = aws_s3_bucket.access_logs.id
+    prefix  = "alb"
+    enabled = true
+  }
+
+  depends_on = [aws_s3_bucket_policy.access_logs]
 }
 
 resource "aws_lb_target_group" "frontend" {

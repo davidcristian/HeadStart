@@ -65,8 +65,12 @@ make deploy
   `terraform.tfvars` (gitignored). They are stored in AWS Secrets Manager and
   injected into ECS tasks at runtime.
 - `prod` enables Multi-AZ RDS, 30-day DB backups, 90-day ECS log retention,
-  deletion protection, and Multi-AZ Redis with automatic failover; `beta` stays
-  minimal/cheap (7-day backups, 30-day logs, single-node Redis).
+  RDS + ALB deletion protection, and Multi-AZ Redis with automatic failover;
+  `beta` stays minimal/cheap (7-day backups, 30-day logs, single-node Redis,
+  no ALB deletion protection).
+- Every environment's ALB drops invalid headers, ships access logs to a private
+  S3 bucket, and attaches a regional WAFv2 ACL (AWS Managed Common + Known Bad
+  Inputs). See [deployment.md](../../docs/modules/deployment.md#alb-hardening-ops-08).
 - Prod `image_tag` is required and must not be `latest` (immutable git SHA pin;
   OPS-07). Beta may still default to `latest` for throwaway stacks; `deploy.sh`
   retargets task defs to `IMAGE_TAG` on every roll either way.

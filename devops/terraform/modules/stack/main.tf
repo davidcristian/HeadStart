@@ -90,13 +90,14 @@ module "acm" {
 }
 
 module "alb" {
-  source            = "../alb"
-  name              = local.name
-  vpc_id            = module.network.vpc_id
-  public_subnet_ids = module.network.public_subnet_ids
-  security_group_id = module.security.alb_sg_id
-  certificate_arn   = local.https_enabled ? local.certificate_arn : null
-  tags              = local.tags
+  source                     = "../alb"
+  name                       = local.name
+  vpc_id                     = module.network.vpc_id
+  public_subnet_ids          = module.network.public_subnet_ids
+  security_group_id          = module.security.alb_sg_id
+  certificate_arn            = local.https_enabled ? local.certificate_arn : null
+  enable_deletion_protection = var.alb_deletion_protection
+  tags                       = local.tags
 }
 
 resource "aws_route53_record" "app" {

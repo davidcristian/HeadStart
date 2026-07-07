@@ -24,6 +24,7 @@ module "stack" {
   db_instance_class        = "db.t4g.small"
   db_multi_az              = true
   db_deletion_protection   = true
+  alb_deletion_protection  = true
   db_backup_retention_days = 30
   log_retention_days       = 90
   redis_node_type          = "cache.t4g.small"
