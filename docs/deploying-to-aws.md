@@ -186,7 +186,8 @@ just deploy
    plus the Playwright-enabled worker image, and the frontend image
 2. Pushes them to ECR (tag = current git short SHA, or `latest` if not in git)
 3. Registers a new `headstart-migrate` task-definition revision pinned to that
-   tag, then runs DB migrations as a one-off ECS task
+   tag, then runs DB migrations as a one-off ECS task, waits until the task
+   stops, and aborts the deploy unless every container exits 0 (OPS-17)
 4. Registers a new task-definition revision per long-running service
    (`headstart-api`, `headstart-frontend`, `headstart-worker`, `headstart-beat`)
    with the same image tag, then rolls each service onto that revision
@@ -197,6 +198,8 @@ tag such as `latest` (which the build does not re-push), a bare
 with `--task-definition` (not only `--force-new-deployment`) is what makes the
 deployed image match the just-built tag (OPS-01). Prod Terraform also requires
 an immutable `image_tag` (git SHA) up front and rejects `latest` (OPS-07).
+The migrate await matters too: without it, a failed or still-running schema
+change would let new app images roll and serve 500s until noticed.
 
 Verify rollout:
 

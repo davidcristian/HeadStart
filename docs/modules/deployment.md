@@ -128,6 +128,10 @@ bootstrap, `terraform apply`, and `just deploy` — see
    commit SHA).
 3. Register a new `headstart-migrate` task-definition revision whose container
    image is pinned to that tag, then run migrations as a one-off ECS task.
+   `deploy.sh` waits for the task to stop and requires every container
+   `exitCode == 0` before continuing — a failed or still-running migration
+   aborts the deploy so new app images never roll against a bad schema
+   (OPS-17).
 4. For each long-running service (`api`, `frontend`, `worker`, `beat`), register
    a new task-definition revision pinned to the same tag (via
    `python -m app.cli.ecs_task_def retarget`) and

@@ -193,7 +193,7 @@ SHA pin. `aws-first-deploy.sh` sets `TF_VAR_image_tag` from the short SHA when
 
 <a id="ops-17"></a>
 ### OPS-17 — Deploy rolls all ECS services regardless of DB migration success (fire-and-forget)
-🟡 **MEDIUM** · 🐞 bug · Status: ☐ open · Confidence: high (5/5 verifiers) · Effort: M · WS36
+🟡 **MEDIUM** · 🐞 bug · Status: ✅ done · Confidence: high (5/5 verifiers) · Effort: M · WS36
 
 **Locations:** `scripts/deploy.sh:26` (`deploy migrate step` / `run-task migrate`).
 
