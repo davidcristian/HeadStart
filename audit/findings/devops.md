@@ -1,6 +1,6 @@
 # DevOps — Terraform/IaC, Docker, scripts, CI/CD
 
-This area covers the deployment and infrastructure surface of the repo: the AWS Terraform stack (`devops/terraform/`), the `Dockerfile`/`docker-compose.yml` container definitions, the shell scripts under `scripts/`, and the GitHub Actions workflows. The headline finding is a **build/release integrity bug**: `make deploy` pushes a git-SHA-tagged image but only force-new-deployments services whose task definitions pin an image tag the build never re-pushes, so new code silently never ships (OPS-01). The CI/CD quality gate advertised in `AGENTS.md` runs: `ci.yml` enforces lint/type/test/coverage on push/PR, but `ci.yml` still omits the LOC cap, shell-script validation, and prettier, and the local pre-commit gate omits those plus a frontend-lint hook that scans zero files (OPS-03, OPS-04). The `deploy.yml`/`terraform.yml` workflows are **dormant** — `deploy.yml` is manual-only (`workflow_dispatch`) and guarded on `vars.AWS_ROLE_ARN`, and `terraform.yml`'s `plan` step is guarded on the same variable — so nothing AWS-touching runs until that variable/secrets are configured (OPS-23, OPS-24). The remainder is a broad, mostly low-severity Terraform hardening backlog: Redis broker without encryption/auth, mutable ECR tags, over-broad security groups, a public ntfy default topic, missing VPC flow logs / access logs / WAF, and various KMS/observability/HA gaps.
+This area covers the deployment and infrastructure surface of the repo: the AWS Terraform stack (`devops/terraform/`), the `Dockerfile`/`docker-compose.yml` container definitions, the shell scripts under `scripts/`, and the GitHub Actions workflows. The headline finding is a **build/release integrity bug**: `make deploy` pushes a git-SHA-tagged image but only force-new-deployments services whose task definitions pin an image tag the build never re-pushes, so new code silently never ships (OPS-01). The CI/CD quality gate advertised in `AGENTS.md` runs: `ci.yml` enforces lint/type/test/coverage (including LOC via `just lint --backend`, shell via `just test --scripts`, and prettier via `just lint --frontend`) on push/PR, and pre-commit is a fast subset covering ruff/black/eslint/prettier/LOC/shell (OPS-03, OPS-04 closed). The `deploy.yml`/`terraform.yml` workflows are **dormant** — `deploy.yml` is manual-only (`workflow_dispatch`) and guarded on `vars.AWS_ROLE_ARN`, and `terraform.yml`'s `plan` step is guarded on the same variable — so nothing AWS-touching runs until that variable/secrets are configured (OPS-23, OPS-24). The remainder is a broad, mostly low-severity Terraform hardening backlog: Redis broker without encryption/auth, mutable ECR tags, over-broad security groups, a public ntfy default topic, missing VPC flow logs / access logs / WAF, and various KMS/observability/HA gaps.
 
 **Summary:** 0 critical · 1 high · 15 medium · 21 low (after merging duplicate records; 66 raw findings consolidated to 37).
 
@@ -48,7 +48,13 @@ ESLint 8 scans zero files and exits 0 —
 
 <a id="ops-04"></a>
 ### OPS-04 — Claimed gates partially unenforced: ci.yml omits LOC/shell/prettier, pre-commit omits them too
-🟡 **MEDIUM** · 🧪 test · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: S · WS37
+🟡 **MEDIUM** · 🧪 test · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/73)) · Confidence: high (3/3 verifiers) · Effort: S · WS37
+
+**Update (2026-07-10).** Fixed: `just lint --frontend` / CI run
+`prettier --check`; pre-commit adds `frontend-prettier`, `check-loc`, and
+`validate-shell-scripts` hooks; the pre-commit header now describes a fast
+subset of CI (LOC and shell were already on the CI path via
+`just lint --backend` / `just test --scripts`).
 
 **Locations:** `.pre-commit-config.yaml:2` (`repos` / header comment); plus `scripts/lint.sh:18`, `scripts/typecheck.sh:6`, `scripts/validate-shell-scripts.sh:1`.
 

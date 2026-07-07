@@ -109,7 +109,8 @@ Server state is managed by **TanStack Query** (`@tanstack/react-query`). The
 
 ## Conventions
 
-- Strict TypeScript; prettier + eslint.
+- Strict TypeScript; prettier + eslint. `just lint --frontend` runs both
+  `eslint` and `prettier --check` (CI uses the same recipe).
 - All network calls go through `src/api/` (wrapped by the React Query hooks in
   `src/hooks/`) using `VITE_API_BASE_URL`. Components do not call `api.*`
   directly.

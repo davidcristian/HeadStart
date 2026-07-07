@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Lint backend (ruff + black + repo LOC gate) and frontend (eslint).
+# Lint backend (ruff + black + repo LOC gate) and frontend (eslint + prettier).
 # Pass --backend or --frontend to scope (CI uses this); default is all.
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
@@ -21,6 +21,11 @@ run_frontend() {
   require_frontend_deps
   log "Frontend lint (eslint)"
   ( cd "${FRONTEND_DIR}" && npm run lint --silent )
+
+  # Prettier is the frontend formatter (black's counterpart). CI and
+  # `just lint` must enforce it — format-only drift is otherwise silent (OPS-04).
+  log "Frontend format check (prettier)"
+  ( cd "${FRONTEND_DIR}" && npm run format:check --silent )
 }
 
 case "${scope}" in

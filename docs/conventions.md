@@ -37,6 +37,8 @@ table in [AGENTS.md](../AGENTS.md) §1.
 ## TypeScript (frontend)
 
 - Strict mode on. Formatting by **prettier**, linting by **eslint**.
+  `just lint --frontend` (and CI) runs `npm run format:check` so prettier
+  drift fails the gate the same way `black --check` does for the backend.
 - Functional components + hooks. Server state via **TanStack Query** hooks in
   `src/hooks/` (`queries.ts` / `mutations.ts`), which wrap the typed API client
   in `src/api/`. Components do not call `api.*` directly. No business logic in

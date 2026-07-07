@@ -27,7 +27,7 @@ jobs:
       - name: Install
         run: ./scripts/install-backend.sh --dev
       # CI runs the same scripts as local dev, through the same just recipes,
-      # so the gates cannot drift apart (the LOC gate rides with lint).
+      # so the gates cannot drift apart (LOC rides with lint; shell with test).
       - name: Lint (ruff + black + LOC gate)
         run: just lint --backend
       - name: Type-check (mypy)
@@ -71,7 +71,8 @@ jobs:
       - name: Install
         run: npm ci
         working-directory: frontend
-      - name: Lint (eslint)
+      # `just lint --frontend` runs eslint + prettier --check (OPS-04).
+      - name: Lint (eslint + prettier)
         run: just lint --frontend
       - name: Type-check (tsc)
         run: just typecheck --frontend
