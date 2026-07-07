@@ -81,7 +81,7 @@ with Chromium pre-installed. Default Fargate sizing is **1024 CPU / 2048 MiB**
 (vs **256 / 512** for api, beat, and frontend). Override via stack module vars
 `worker_cpu` and `worker_memory` in `environments/<env>/main.tf`.
 
-## Prod resilience knobs (OPS-05 / OPS-08)
+## Prod resilience knobs (OPS-05 / OPS-08 / OPS-10)
 
 `environments/prod/main.tf` raises durability beyond the stack defaults that
 `beta` keeps:
@@ -92,18 +92,23 @@ with Chromium pre-installed. Default Fargate sizing is **1024 CPU / 2048 MiB**
 | `alb_deletion_protection` | false | true |
 | `db_backup_retention_days` | 7 | 30 |
 | `log_retention_days` (ECS CloudWatch) | 30 | 90 |
-| `redis_automatic_failover` | false (single-node cluster) | true (Multi-AZ replication group, 2 nodes) |
+| `redis_automatic_failover` | false (1-node replication group) | true (Multi-AZ, 2 nodes) |
 
 `backup_retention_days` and `log_retention_days` are plumbed through the stack
-module into `rds` / `ecs`. Redis HA swaps `aws_elasticache_cluster` for
-`aws_elasticache_replication_group` with `automatic_failover_enabled` — enabling
-it on an existing single-node broker replaces the resource (brief Celery
-downtime on apply). Prod also requires an explicit immutable `image_tag` (git
-SHA): there is no `"latest"` default, and Terraform rejects `latest` so a task
-recycle cannot silently pull a different build (OPS-07). ECR repositories set
-`image_tag_mutability = "IMMUTABLE"` so a re-push cannot overwrite a tag that
-task definitions still reference (OPS-09). Ongoing rolls still retarget task
-defs via `deploy.sh` / `IMAGE_TAG`.
+module into `rds` / `ecs`. Redis is always an
+`aws_elasticache_replication_group` (required for in-transit encryption) with
+`transit_encryption_enabled`, `at_rest_encryption_enabled` (AWS-managed KMS by
+default; optional `kms_key_id`), and an AUTH token from `random_password` stored
+in Secrets Manager as `REDIS_PASSWORD`. ECS tasks get `REDIS_TLS=true` and the
+password secret so Celery builds `rediss://` broker/result URLs with
+`ssl_cert_reqs=required` (OPS-10).
+Enabling encryption/AUTH on an existing unencrypted broker replaces the
+resource (brief Celery downtime on apply). Prod also requires an explicit
+immutable `image_tag` (git SHA): there is no `"latest"` default, and Terraform
+rejects `latest` so a task recycle cannot silently pull a different build
+(OPS-07). ECR repositories set `image_tag_mutability = "IMMUTABLE"` so a
+re-push cannot overwrite a tag that task definitions still reference (OPS-09).
+Ongoing rolls still retarget task defs via `deploy.sh` / `IMAGE_TAG`.
 
 ### ALB hardening (OPS-08)
 

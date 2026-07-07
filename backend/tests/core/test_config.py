@@ -110,6 +110,32 @@ def test_derived_urls(monkeypatch: pytest.MonkeyPatch) -> None:
     assert settings.result_backend == "redis://redis:6379/1"
 
 
+def test_redis_tls_auth_builds_rediss_urls(monkeypatch: pytest.MonkeyPatch) -> None:
+    """OPS-10: ElastiCache AUTH + TLS → rediss:// with URL-encoded password."""
+    monkeypatch.setenv("REDIS_HOST", "cache.example")
+    monkeypatch.setenv("REDIS_PORT", "6379")
+    monkeypatch.setenv("REDIS_PASSWORD", "p@ss/word")
+    monkeypatch.setenv("REDIS_TLS", "true")
+    settings = Settings(_env_file=None)  # type: ignore[call-arg]
+    assert (
+        settings.broker_url == "rediss://:p%40ss%2Fword@cache.example:6379/0?ssl_cert_reqs=required"
+    )
+    assert (
+        settings.result_backend
+        == "rediss://:p%40ss%2Fword@cache.example:6379/1?ssl_cert_reqs=required"
+    )
+
+
+def test_celery_broker_url_overrides_derived(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Explicit CELERY_BROKER_URL wins over REDIS_* derivation."""
+    monkeypatch.setenv("REDIS_HOST", "ignored")
+    monkeypatch.setenv("CELERY_BROKER_URL", "rediss://:tok@broker:6380/0")
+    monkeypatch.setenv("CELERY_RESULT_BACKEND", "rediss://:tok@broker:6380/1")
+    settings = Settings(_env_file=None)  # type: ignore[call-arg]
+    assert settings.broker_url == "rediss://:tok@broker:6380/0"
+    assert settings.result_backend == "rediss://:tok@broker:6380/1"
+
+
 def test_database_url_overrides_derived(monkeypatch: pytest.MonkeyPatch) -> None:
     """An explicit DATABASE_URL takes precedence over the derived Postgres URL."""
     monkeypatch.setenv("DATABASE_URL", "sqlite+pysqlite:///:memory:")

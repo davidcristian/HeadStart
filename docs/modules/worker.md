@@ -8,7 +8,10 @@ Celery provides the scheduler (beat) and the workers. The worker package is
 ## Pieces
 
 - `celery_app.py` — the Celery application + config (broker/result backend from
-  settings).
+  settings). On AWS, Terraform sets `REDIS_TLS=true` and injects
+  `REDIS_PASSWORD` (ElastiCache AUTH) so settings build `rediss://` URLs
+  with `ssl_cert_reqs=required`; local docker Redis stays plaintext
+  `redis://` with no password.
 - `schedule.py` — beat ticks: enqueue due searches, flush digest queues, and
   (when inbox agent is enabled) inbox polling and ghost detection.
 - `tasks.py` — `run_search(search_id)`, `run_search_run` (manual Run now),

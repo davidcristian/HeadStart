@@ -153,7 +153,9 @@ SHA pin. `aws-first-deploy.sh` sets `TF_VAR_image_tag` from the short SHA when
 
 <a id="ops-10"></a>
 ### OPS-10 — ElastiCache Redis broker has no in-transit/at-rest encryption and no AUTH token
-🟡 **MEDIUM** · 🔒 security · Status: ☐ open · Confidence: high (5/5 verifiers) · Effort: M · WS38
+🟡 **MEDIUM** · 🔒 security · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/76)) · Confidence: high (5/5 verifiers) · Effort: M · WS38
+
+**Update (2026-07-10).** Fixed: Redis module always uses `aws_elasticache_replication_group` with `transit_encryption_enabled`, `at_rest_encryption_enabled` (optional CMK via `kms_key_id`), and `auth_token` from stack `random_password` stored as Secrets Manager `REDIS_PASSWORD`. ECS sets `REDIS_TLS=true` so Settings builds `rediss://` Celery broker/result URLs. Also closes merged OPS-11/OPS-12/OPS-13/OPS-50.
 
 **Locations:** `devops/terraform/modules/redis/main.tf:9` (`aws_elasticache_cluster.this`); plus `devops/terraform/modules/redis/variables.tf:1`.
 

@@ -169,8 +169,8 @@ variable "redis_automatic_failover" {
 }
 variable "redis_num_cache_clusters" {
   type        = number
-  default     = 2
-  description = "Redis replication-group size when redis_automatic_failover is true."
+  default     = 1
+  description = "Redis replication-group size (1 for single primary; >=2 with failover)."
 }
 
 variable "ecs_cpu" {

@@ -11,6 +11,8 @@ from pydantic import computed_field, field_validator, model_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 from app.core import secret_policy
+from app.core.feature_flags import stripe_billing_configured
+from app.core.redis_url import redis_url_from_settings
 
 
 class Settings(BaseSettings):
@@ -95,6 +97,8 @@ class Settings(BaseSettings):
     # ---- redis / celery ----
     redis_host: str = "localhost"
     redis_port: int = 6379
+    redis_password: str = ""  # ElastiCache AUTH; empty for local docker Redis
+    redis_tls: bool = False  # rediss:// when true (required with AUTH — OPS-10)
     celery_broker_url: str | None = None
     celery_result_backend: str | None = None
 
@@ -269,27 +273,18 @@ class Settings(BaseSettings):
     @computed_field  # type: ignore[prop-decorator]
     @property
     def broker_url(self) -> str:
-        return self.celery_broker_url or f"redis://{self.redis_host}:{self.redis_port}/0"
+        return self.celery_broker_url or redis_url_from_settings(self, 0)
 
     @computed_field  # type: ignore[prop-decorator]
     @property
     def result_backend(self) -> str:
-        return self.celery_result_backend or f"redis://{self.redis_host}:{self.redis_port}/1"
+        return self.celery_result_backend or redis_url_from_settings(self, 1)
 
     @computed_field  # type: ignore[prop-decorator]
     @property
     def billing_enabled(self) -> bool:
         """True when Stripe keys and all paid-tier price IDs are configured."""
-        return bool(
-            self.stripe_secret_key
-            and self.stripe_webhook_secret
-            and self.stripe_price_starter_monthly
-            and self.stripe_price_starter_annual
-            and self.stripe_price_plus_monthly
-            and self.stripe_price_plus_annual
-            and self.stripe_price_pro_monthly
-            and self.stripe_price_pro_annual
-        )
+        return stripe_billing_configured(self)
 
 
 @lru_cache

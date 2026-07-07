@@ -1,6 +1,12 @@
 # Full HeadStart stack for one environment. Each environment (beta, prod) calls
 # this module with its own provider + remote state.
 
+# OPS-10: ElastiCache AUTH token (alphanumeric avoids /@" which Redis rejects).
+resource "random_password" "redis_auth" {
+  length  = 32
+  special = false
+}
+
 locals {
   name = "headstart-${var.environment}"
   tags = merge(var.tags, {
@@ -37,6 +43,7 @@ locals {
     POSTGRES_PASSWORD      = var.db_password
     JWT_SECRET             = var.jwt_secret
     CREDENTIALS_SECRET_KEY = var.credentials_secret_key
+    REDIS_PASSWORD         = random_password.redis_auth.result
   }
   smtp_secret_values = var.smtp_password != "" ? { SMTP_PASSWORD = var.smtp_password } : {}
   secret_values      = merge(local.base_secret_values, local.smtp_secret_values)
@@ -137,6 +144,7 @@ module "redis" {
   node_type          = var.redis_node_type
   automatic_failover = var.redis_automatic_failover
   num_cache_clusters = var.redis_num_cache_clusters
+  auth_token         = random_password.redis_auth.result
   tags               = local.tags
 }
 
@@ -153,16 +161,18 @@ locals {
 
   ecs_environment = merge(
     {
-      ENVIRONMENT                      = var.environment
-      LOG_LEVEL                        = "INFO"
-      POSTGRES_HOST                    = module.rds.address
-      POSTGRES_PORT                    = tostring(module.rds.port)
-      POSTGRES_DB                      = module.rds.db_name
-      POSTGRES_USER                    = var.db_username
-      REDIS_HOST                       = module.redis.address
-      REDIS_PORT                       = tostring(module.redis.port)
-      CORS_ORIGINS                     = join(",", local.effective_cors)
-      FRONTEND_BASE_URL                = local.app_base_url
+      ENVIRONMENT   = var.environment
+      LOG_LEVEL     = "INFO"
+      POSTGRES_HOST = module.rds.address
+      POSTGRES_PORT = tostring(module.rds.port)
+      POSTGRES_DB   = module.rds.db_name
+      POSTGRES_USER = var.db_username
+      REDIS_HOST    = module.redis.address
+      REDIS_PORT    = tostring(module.redis.port)
+      # OPS-10: ElastiCache requires TLS when AUTH is enabled → Celery rediss://.
+      REDIS_TLS         = "true"
+      CORS_ORIGINS      = join(",", local.effective_cors)
+      FRONTEND_BASE_URL = local.app_base_url
       # Match Secure cookie flag to ALB scheme (HTTP default drops Secure cookies).
       AUTH_COOKIE_SECURE               = local.https_enabled ? "true" : "false"
       NTFY_DEFAULT_SERVER_URL          = var.ntfy_default_server_url
@@ -179,6 +189,7 @@ locals {
       POSTGRES_PASSWORD      = module.secrets.secret_arns["POSTGRES_PASSWORD"]
       JWT_SECRET             = module.secrets.secret_arns["JWT_SECRET"]
       CREDENTIALS_SECRET_KEY = module.secrets.secret_arns["CREDENTIALS_SECRET_KEY"]
+      REDIS_PASSWORD         = module.secrets.secret_arns["REDIS_PASSWORD"]
     },
     var.smtp_password != "" ? {
       SMTP_PASSWORD = module.secrets.secret_arns["SMTP_PASSWORD"]

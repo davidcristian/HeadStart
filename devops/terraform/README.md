@@ -66,8 +66,9 @@ make deploy
   injected into ECS tasks at runtime.
 - `prod` enables Multi-AZ RDS, 30-day DB backups, 90-day ECS log retention,
   RDS + ALB deletion protection, and Multi-AZ Redis with automatic failover;
-  `beta` stays minimal/cheap (7-day backups, 30-day logs, single-node Redis,
-  no ALB deletion protection).
+  `beta` stays minimal/cheap (7-day backups, 30-day logs, single-primary Redis
+  with encryption/AUTH, no Multi-AZ failover). See
+  [docs/modules/deployment.md](../../docs/modules/deployment.md#prod-resilience-knobs-ops-05--ops-08--ops-10).
 - Every environment's ALB drops invalid headers, ships access logs to a private
   S3 bucket, and attaches a regional WAFv2 ACL (AWS Managed Common + Known Bad
   Inputs). See [deployment.md](../../docs/modules/deployment.md#alb-hardening-ops-08).
