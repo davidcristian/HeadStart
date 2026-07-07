@@ -24,7 +24,13 @@ This area covers the deployment and infrastructure surface of the repo: the AWS 
 
 <a id="ops-03"></a>
 ### OPS-03 — Pre-commit frontend-lint runs eslint with no path: lints 0 files, always passes
-🟡 **MEDIUM** · 🐞 bug · Status: ☐ open · Confidence: certain (5/5 verifiers) · Effort: XS · WS37
+🟡 **MEDIUM** · 🐞 bug · Status: ✅ done · Confidence: certain (5/5 verifiers) · Effort: XS · WS37
+
+**Update (2026-07-10).** Fixed: pre-commit `frontend-lint` runs
+`npx eslint . --max-warnings=0` (same as `npm run lint`) and is renamed to
+`frontend eslint` so ESLint always receives an explicit path. Without a path,
+ESLint 8 scans zero files and exits 0 —
+[PR](https://github.com/davidcristian/HeadStart/pull/72).
 
 **Locations:** `.pre-commit-config.yaml:38` (`frontend-lint hook`); plus `.pre-commit-config.yaml:36` (hook name label).
 

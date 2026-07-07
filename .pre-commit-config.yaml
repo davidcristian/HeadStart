@@ -34,11 +34,13 @@ repos:
       - id: black
         files: ^backend/(app|tests)/
 
+  # Frontend eslint must pass an explicit path (`.`): ESLint 8 with no path
+  # argument lints zero files and always exits 0 (OPS-03). Matches `npm run lint`.
   - repo: local
     hooks:
       - id: frontend-lint
-        name: frontend eslint (changed files)
+        name: frontend eslint
         language: system
-        entry: bash -c 'cd frontend && npx eslint --max-warnings=0'
+        entry: bash -c 'cd frontend && npx eslint . --max-warnings=0'
         files: ^frontend/src/.*\.(ts|tsx)$
         pass_filenames: false
