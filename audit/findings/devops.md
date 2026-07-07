@@ -60,7 +60,9 @@ This area covers the deployment and infrastructure surface of the repo: the AWS 
 
 <a id="ops-05"></a>
 ### OPS-05 — Prod block sets RDS AZ/deletion-protection but omits backup + log retention and Redis HA
-🟡 **MEDIUM** · 🔁 consistency · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: M · WS36
+🟡 **MEDIUM** · 🔁 consistency · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/67)) · Confidence: high (3/3 verifiers) · Effort: M · WS36
+
+**Update (2026-07-10).** Fixed: stack exposes `db_backup_retention_days` and `log_retention_days`; prod sets 30-day RDS backups, 90-day ECS CloudWatch retention, and `redis_automatic_failover` (Multi-AZ replication group). Also closes OPS-49.
 
 **Locations:** `devops/terraform/environments/prod/main.tf:23` (`module.stack (prod knobs)`); plus `devops/terraform/modules/stack/variables.tf:123`, `devops/terraform/modules/stack/main.tf:116`, `devops/terraform/modules/rds/variables.tf:37`, `devops/terraform/modules/ecs/variables.tf:82`, `devops/terraform/modules/redis/main.tf:14`.
 
@@ -500,7 +502,9 @@ This area covers the deployment and infrastructure surface of the repo: the AWS 
 
 <a id="ops-49"></a>
 ### OPS-49 — Redis cluster is single-node with no failover (Celery broker SPOF)
-⚪ **LOW** · 🐞 bug · Status: ☐ open · Confidence: medium (3/3 verifiers) · Effort: M · WS38
+⚪ **LOW** · 🐞 bug · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/67)) · Confidence: medium (3/3 verifiers) · Effort: M · WS38
+
+**Update (2026-07-10).** Closed by OPS-05: redis module can provision a Multi-AZ replication group with automatic failover; prod enables it.
 
 **Locations:** `devops/terraform/modules/redis/main.tf:9` (`aws_elasticache_cluster.this`).
 

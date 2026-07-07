@@ -20,9 +20,13 @@ module "stack" {
   smtp_from              = var.smtp_from
   smtp_use_tls           = var.smtp_use_tls
 
-  # Prod: HA database, deletion protection, larger nodes.
-  db_instance_class      = "db.t4g.small"
-  db_multi_az            = true
-  db_deletion_protection = true
-  redis_node_type        = "cache.t4g.small"
+  # Prod: HA database, longer backups/logs, deletion protection, Redis failover.
+  db_instance_class        = "db.t4g.small"
+  db_multi_az              = true
+  db_deletion_protection   = true
+  db_backup_retention_days = 30
+  log_retention_days       = 90
+  redis_node_type          = "cache.t4g.small"
+  redis_automatic_failover = true
+  redis_num_cache_clusters = 2
 }

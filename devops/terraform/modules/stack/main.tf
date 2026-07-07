@@ -114,26 +114,29 @@ resource "aws_route53_record" "app" {
 }
 
 module "rds" {
-  source              = "../rds"
-  name                = local.name
-  subnet_ids          = module.network.private_subnet_ids
-  security_group_id   = module.security.rds_sg_id
-  instance_class      = var.db_instance_class
-  multi_az            = var.db_multi_az
-  deletion_protection = var.db_deletion_protection
-  db_name             = var.db_name
-  username            = var.db_username
-  password            = var.db_password
-  tags                = local.tags
+  source                = "../rds"
+  name                  = local.name
+  subnet_ids            = module.network.private_subnet_ids
+  security_group_id     = module.security.rds_sg_id
+  instance_class        = var.db_instance_class
+  multi_az              = var.db_multi_az
+  deletion_protection   = var.db_deletion_protection
+  backup_retention_days = var.db_backup_retention_days
+  db_name               = var.db_name
+  username              = var.db_username
+  password              = var.db_password
+  tags                  = local.tags
 }
 
 module "redis" {
-  source            = "../redis"
-  name              = local.name
-  subnet_ids        = module.network.private_subnet_ids
-  security_group_id = module.security.redis_sg_id
-  node_type         = var.redis_node_type
-  tags              = local.tags
+  source             = "../redis"
+  name               = local.name
+  subnet_ids         = module.network.private_subnet_ids
+  security_group_id  = module.security.redis_sg_id
+  node_type          = var.redis_node_type
+  automatic_failover = var.redis_automatic_failover
+  num_cache_clusters = var.redis_num_cache_clusters
+  tags               = local.tags
 }
 
 locals {
@@ -198,6 +201,7 @@ module "ecs" {
   worker_memory             = var.worker_memory
   api_target_group_arn      = module.alb.api_target_group_arn
   frontend_target_group_arn = module.alb.frontend_target_group_arn
+  log_retention_days        = var.log_retention_days
 
   environment = local.ecs_environment
   secrets     = local.ecs_secrets

@@ -79,6 +79,24 @@ with Chromium pre-installed. Default Fargate sizing is **1024 CPU / 2048 MiB**
 (vs **256 / 512** for api, beat, and frontend). Override via stack module vars
 `worker_cpu` and `worker_memory` in `environments/<env>/main.tf`.
 
+## Prod resilience knobs (OPS-05)
+
+`environments/prod/main.tf` raises durability beyond the stack defaults that
+`beta` keeps:
+
+| Knob | Stack default (beta) | Prod |
+| ---- | -------------------- | ---- |
+| `db_multi_az` / `db_deletion_protection` | false | true |
+| `db_backup_retention_days` | 7 | 30 |
+| `log_retention_days` (ECS CloudWatch) | 30 | 90 |
+| `redis_automatic_failover` | false (single-node cluster) | true (Multi-AZ replication group, 2 nodes) |
+
+`backup_retention_days` and `log_retention_days` are plumbed through the stack
+module into `rds` / `ecs`. Redis HA swaps `aws_elasticache_cluster` for
+`aws_elasticache_replication_group` with `automatic_failover_enabled` — enabling
+it on an existing single-node broker replaces the resource (brief Celery
+downtime on apply).
+
 ## Observability
 
 Prometheus metrics are exposed from two scrape targets:

@@ -143,9 +143,29 @@ variable "db_deletion_protection" {
   type    = bool
   default = false
 }
+variable "db_backup_retention_days" {
+  type        = number
+  default     = 7
+  description = "RDS automated backup retention in days (prod should raise this)."
+}
+variable "log_retention_days" {
+  type        = number
+  default     = 30
+  description = "CloudWatch log group retention for ECS tasks (days)."
+}
 variable "redis_node_type" {
   type    = string
   default = "cache.t4g.micro"
+}
+variable "redis_automatic_failover" {
+  type        = bool
+  default     = false
+  description = "Provision Multi-AZ Redis with automatic failover (prod)."
+}
+variable "redis_num_cache_clusters" {
+  type        = number
+  default     = 2
+  description = "Redis replication-group size when redis_automatic_failover is true."
 }
 
 variable "ecs_cpu" {

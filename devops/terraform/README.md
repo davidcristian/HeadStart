@@ -64,7 +64,9 @@ make deploy
 - Secrets are never committed. Provide them via `TF_VAR_*` env vars or a local
   `terraform.tfvars` (gitignored). They are stored in AWS Secrets Manager and
   injected into ECS tasks at runtime.
-- `prod` enables Multi-AZ RDS and deletion protection; `dev` is minimal/cheap.
+- `prod` enables Multi-AZ RDS, 30-day DB backups, 90-day ECS log retention,
+  deletion protection, and Multi-AZ Redis with automatic failover; `beta` stays
+  minimal/cheap (7-day backups, 30-day logs, single-node Redis).
 - ECS service + task family names are stable (`headstart-api`, etc.) so the
   same `deploy.sh` works against any environment's cluster. `deploy.sh`
   registers a new task-definition revision per family pinned to the just-pushed
