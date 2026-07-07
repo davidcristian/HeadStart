@@ -3,8 +3,11 @@
 #   export TF_VAR_jwt_secret=...
 #   export TF_VAR_credentials_secret_key=...
 
-region    = "us-east-2"
-image_tag = "latest"
+region = "us-east-2"
+# Required: immutable pin (git SHA). Terraform rejects empty / "latest" (OPS-07).
+# Prefer TF_VAR_image_tag from the shell so the pin matches the just-built image:
+#   export TF_VAR_image_tag="$(git rev-parse --short HEAD)"
+image_tag = "REPLACE_WITH_GIT_SHA"
 
 db_password            = "change-me-strong-password"
 jwt_secret             = "change-me-long-random-jwt-secret"

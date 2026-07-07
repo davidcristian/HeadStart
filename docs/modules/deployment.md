@@ -95,7 +95,10 @@ with Chromium pre-installed. Default Fargate sizing is **1024 CPU / 2048 MiB**
 module into `rds` / `ecs`. Redis HA swaps `aws_elasticache_cluster` for
 `aws_elasticache_replication_group` with `automatic_failover_enabled` — enabling
 it on an existing single-node broker replaces the resource (brief Celery
-downtime on apply).
+downtime on apply). Prod also requires an explicit immutable `image_tag` (git
+SHA): there is no `"latest"` default, and Terraform rejects `latest` so a task
+recycle cannot silently pull a different build (OPS-07). Ongoing rolls still
+retarget task defs via `deploy.sh` / `IMAGE_TAG`.
 
 ## Observability
 
@@ -132,9 +135,10 @@ bootstrap, `terraform apply`, and `just deploy` — see
 
 ECS services use `lifecycle { ignore_changes = [task_definition] }` so Terraform
 keeps the initial wiring while `deploy.sh` owns the image pin at roll time.
-Force-new-deployment alone is not enough: Terraform often pins `image_tag =
-"latest"`, and the build never re-pushes `:latest`, so a bare roll would keep
-serving the old image (OPS-01).
+Force-new-deployment alone is not enough when the task def still points at a
+tag the build never re-pushes (historically Terraform's `image_tag = "latest"`;
+prod now requires an immutable SHA pin — OPS-07). `deploy.sh` registers a new
+revision pinned to `IMAGE_TAG` before rolling (OPS-01).
 
 All workflows live in `.github/workflows/`. The CI quality gate (`ci.yml`) runs
 on push/PR. `deploy.yml` (manual `workflow_dispatch`) and `terraform.yml`'s

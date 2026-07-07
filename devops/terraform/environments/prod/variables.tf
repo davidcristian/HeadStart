@@ -8,9 +8,19 @@ variable "azs" {
   default = ["us-east-2a", "us-east-2b"]
 }
 
+# Required: pin ECS task images to an immutable tag (git SHA). Floating
+# "latest" is rejected so a recycle cannot silently pull a different build (OPS-07).
 variable "image_tag" {
-  type    = string
-  default = "latest"
+  type        = string
+  description = "Immutable container image tag (git SHA). Do not use latest."
+
+  validation {
+    condition = (
+      length(trimspace(var.image_tag)) > 0 &&
+      lower(trimspace(var.image_tag)) != "latest"
+    )
+    error_message = "image_tag must be a non-empty immutable tag (git SHA), not latest."
+  }
 }
 
 variable "db_password" {

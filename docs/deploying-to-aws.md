@@ -191,10 +191,12 @@ just deploy
    (`headstart-api`, `headstart-frontend`, `headstart-worker`, `headstart-beat`)
    with the same image tag, then rolls each service onto that revision
 
-The retarget step matters: Terraform task defs often still reference
-`image_tag = "latest"`, which the build does not re-push. Updating the service
+The retarget step matters: if a task definition still pointed at a floating
+tag such as `latest` (which the build does not re-push), a bare
+`--force-new-deployment` would keep serving the old image. Updating the service
 with `--task-definition` (not only `--force-new-deployment`) is what makes the
-deployed image match the just-built tag.
+deployed image match the just-built tag (OPS-01). Prod Terraform also requires
+an immutable `image_tag` (git SHA) up front and rejects `latest` (OPS-07).
 
 Verify rollout:
 
@@ -262,7 +264,9 @@ When ready for production:
 
 1. Update `devops/terraform/environments/prod/backend.tf` with your state bucket.
 2. `cd environments/prod` and run `terraform init && terraform apply` with the
-   same `TF_VAR_*` secrets pattern.
+   same `TF_VAR_*` secrets pattern. Prod also requires an immutable image pin
+   (no `"latest"` default; Terraform rejects `latest` — OPS-07):
+   `export TF_VAR_image_tag="$(git rev-parse --short HEAD)"`.
 3. Set `TF_VAR_cors_origins` to your real domain(s) — see
    `prod/terraform.tfvars.example`.
 4. Deploy with `ENVIRONMENT=prod` and `ECS_CLUSTER=headstart-prod`.

@@ -67,6 +67,9 @@ make deploy
 - `prod` enables Multi-AZ RDS, 30-day DB backups, 90-day ECS log retention,
   deletion protection, and Multi-AZ Redis with automatic failover; `beta` stays
   minimal/cheap (7-day backups, 30-day logs, single-node Redis).
+- Prod `image_tag` is required and must not be `latest` (immutable git SHA pin;
+  OPS-07). Beta may still default to `latest` for throwaway stacks; `deploy.sh`
+  retargets task defs to `IMAGE_TAG` on every roll either way.
 - ECS service + task family names are stable (`headstart-api`, etc.) so the
   same `deploy.sh` works against any environment's cluster. `deploy.sh`
   registers a new task-definition revision per family pinned to the just-pushed

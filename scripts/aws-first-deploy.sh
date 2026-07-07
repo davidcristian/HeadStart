@@ -126,6 +126,15 @@ ensure_tf_secrets() {
     export TF_VAR_ntfy_default_topic="jobs-$(openssl rand -hex 4)"
     generated=1
   fi
+  # Prod Terraform requires an immutable image_tag (rejects empty / latest; OPS-07).
+  if [[ "${ENVIRONMENT}" == "prod" ]]; then
+    if [[ -z "${TF_VAR_image_tag:-}" || "${TF_VAR_image_tag}" == "latest" ]]; then
+      export TF_VAR_image_tag="$(git -C "${REPO_ROOT}" rev-parse --short HEAD 2>/dev/null || true)"
+      [[ -n "${TF_VAR_image_tag}" && "${TF_VAR_image_tag}" != "latest" ]] \
+        || die "Prod requires TF_VAR_image_tag set to an immutable git SHA (not latest)."
+      generated=1
+    fi
+  fi
 
   if [[ "${generated}" == "1" ]]; then
     log "Writing generated secrets to ${SECRETS_FILE} (gitignored)"
@@ -138,6 +147,9 @@ export TF_VAR_jwt_secret='${TF_VAR_jwt_secret}'
 export TF_VAR_credentials_secret_key='${TF_VAR_credentials_secret_key}'
 export TF_VAR_ntfy_default_topic='${TF_VAR_ntfy_default_topic}'
 EOF
+    if [[ -n "${TF_VAR_image_tag:-}" ]]; then
+      echo "export TF_VAR_image_tag='${TF_VAR_image_tag}'" >>"${SECRETS_FILE}"
+    fi
     warn "Back up ${SECRETS_FILE} — these values are not shown again."
   fi
 }

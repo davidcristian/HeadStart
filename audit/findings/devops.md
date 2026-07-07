@@ -80,7 +80,12 @@ This area covers the deployment and infrastructure surface of the repo: the AWS 
 
 <a id="ops-07"></a>
 ### OPS-07 — Prod deploys mutable image_tag "latest" — no immutable pin or rollback
-🟡 **MEDIUM** · 🐞 bug · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: S · WS36
+🟡 **MEDIUM** · 🐞 bug · Status: ✅ done · Confidence: high (3/3 verifiers) · Effort: S · WS36
+
+**Update (2026-07-10).** Fixed: prod `image_tag` has no default, validates
+non-empty and rejects `latest`, and `terraform.tfvars.example` documents a git
+SHA pin. `aws-first-deploy.sh` sets `TF_VAR_image_tag` from the short SHA when
+`ENVIRONMENT=prod`. ECR tag mutability remains tracked as [OPS-09](#ops-09).
 
 **Locations:** `devops/terraform/environments/prod/variables.tf:11` (`variable image_tag`); plus `devops/terraform/environments/prod/terraform.tfvars.example:7`, `devops/terraform/environments/prod/main.tf:7`, `devops/terraform/modules/stack/variables.tf:24`.
 
