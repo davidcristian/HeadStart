@@ -64,7 +64,9 @@ terminate TLS:
 - Or pass a pre-validated `acm_certificate_arn` in the same region as the ALB.
 
 `app_url`, `CORS_ORIGINS`, and `FRONTEND_BASE_URL` default to `https://<domain>`
-when HTTPS is enabled. Optional `smtp_*` variables configure transactional email
+when HTTPS is enabled. `AUTH_COOKIE_SECURE` is derived the same way (`true` when
+`https_enabled`, otherwise `false`) so the refresh cookie is not dropped on the
+default HTTP ALB. Optional `smtp_*` variables configure transactional email
 (`SMTP_PASSWORD` in Secrets Manager). `ntfy_default_topic` is **required** (no
 Terraform default): ntfy.sh topics are public by name, so beta/prod reject empty
 or `change-me` placeholders and the app refuses the same guessable default

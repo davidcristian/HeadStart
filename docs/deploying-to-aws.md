@@ -74,6 +74,9 @@ Default region is **`us-east-2`**. Use the **`beta`** environment first (cheaper
 > **HTTPS:** without a custom domain the ALB serves **HTTP on port 80** at
 > `http://<alb-dns-name>`. To enable TLS, set `domain_name` and `route53_zone_id`
 > (or bring your own `acm_certificate_arn`) — see [Custom domain & HTTPS](#custom-domain--https) below.
+> On HTTP-only deploys Terraform sets `AUTH_COOKIE_SECURE=false` (derived from
+> `https_enabled`) so the httpOnly refresh cookie is stored; with HTTPS it stays
+> `true`. Do not override that coupling unless you terminate TLS elsewhere.
 
 ---
 
@@ -300,6 +303,8 @@ On `terraform apply`, Terraform will:
 4. Create a Route53 alias `A` record pointing at the ALB
 5. Set `CORS_ORIGINS` to `https://<domain_name>` unless you override `cors_origins`
 6. Set `FRONTEND_BASE_URL` to the same public URL (password-reset and Stripe links)
+7. Set `AUTH_COOKIE_SECURE=true` (HTTP-only ALB deploys keep it `false` so the
+   refresh cookie is not dropped by the browser)
 
 ### Transactional email (optional)
 

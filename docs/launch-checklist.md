@@ -27,9 +27,10 @@ complements [deploying-to-aws.md](deploying-to-aws.md) (infrastructure) and
 - [ ] **`CORS_ORIGINS`** includes your public origin (defaults to `app_url` when
   `domain_name` is set). Add extra origins only if the UI is served from
   another hostname.
-- [ ] **Auth cookies work over HTTPS** — `AUTH_COOKIE_SECURE` defaults to
-  `true` in production images. Do not serve the authenticated app over plain HTTP
-  on a public domain.
+- [ ] **Auth cookies match the public scheme** — Terraform sets
+  `AUTH_COOKIE_SECURE` from `https_enabled` (`true` with TLS, `false` on the
+  default HTTP ALB). Do not force `true` on a plain-HTTP public URL (browsers
+  drop the refresh cookie). On a public domain, prefer HTTPS.
 
 ---
 

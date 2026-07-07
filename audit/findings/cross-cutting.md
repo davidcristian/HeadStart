@@ -171,7 +171,12 @@ the local package. Regenerate via `just lock-backend` ([ADR-0012](../../docs/adr
 
 <a id="xct-15"></a>
 ### XCT-15 — HTTP AWS deploy keeps AUTH_COOKIE_SECURE=true, so refresh cookie is dropped
-🟡 **MEDIUM** · 🐞 bug · Status: ☐ open · Confidence: high (5/5 verifiers) · Effort: S · WS36
+🟡 **MEDIUM** · 🐞 bug · Status: ✅ done · Confidence: high (5/5 verifiers) · Effort: S · WS36
+
+**Update (2026-07-10).** Fixed: stack `ecs_environment` sets `AUTH_COOKIE_SECURE`
+from `local.https_enabled` (`false` on the default HTTP ALB, `true` with TLS) so
+the refresh cookie is stored on the documented no-domain deploy —
+[PR](https://github.com/davidcristian/HeadStart/pull/71).
 
 **Locations:** `devops/terraform/modules/stack/main.tf:150` (`ecs_environment`); plus `backend/app/core/config.py:54`, `backend/app/api/v1/auth.py:37`, `docs/deploying-to-aws.md:74`.
 
