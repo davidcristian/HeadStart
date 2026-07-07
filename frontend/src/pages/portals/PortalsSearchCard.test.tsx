@@ -33,7 +33,7 @@ function renderCard(overrides: Partial<Props> = {}) {
     setWorkplace: vi.fn(),
     catalogItems: [makePortal("stripe"), makePortal("meta")],
     selectedIds: new Set(["stripe"]),
-    setSelectedIds: vi.fn(),
+    selectPortals: vi.fn(),
     togglePortal: vi.fn(),
     portalsPending: false,
     portalsError: false,
@@ -79,10 +79,25 @@ describe("PortalsSearchCard", () => {
     const { props } = renderCard();
 
     fireEvent.click(screen.getByRole("button", { name: "Select all" }));
-    expect(props.setSelectedIds).toHaveBeenCalledWith(new Set(["stripe", "meta"]));
+    expect(props.selectPortals).toHaveBeenCalledWith(new Set(["stripe", "meta"]));
 
     fireEvent.click(screen.getByRole("button", { name: "Clear" }));
-    expect(props.setSelectedIds).toHaveBeenCalledWith(new Set());
+    expect(props.selectPortals).toHaveBeenCalledWith(new Set());
+  });
+
+  it("surfaces the max-selection hint and disables unselected portals at the cap", () => {
+    const ids = Array.from({ length: 31 }, (_, i) => `p${i}`);
+    const selected = new Set(ids.slice(0, 30));
+    renderCard({
+      catalogItems: ids.map((id) => makePortal(id)),
+      selectedIds: selected,
+    });
+
+    expect(screen.getByText("30 of 31 selected (max 30 per search)")).toBeInTheDocument();
+    const checkboxes = screen.getAllByRole("checkbox");
+    expect(checkboxes).toHaveLength(31);
+    expect(checkboxes[30]).toBeDisabled();
+    expect(checkboxes[0]).not.toBeDisabled();
   });
 
   it("toggles an individual portal and runs the search", () => {

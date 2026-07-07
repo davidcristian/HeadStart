@@ -1,5 +1,5 @@
 import { Banner, Button, Card, EmptyState, Field } from "../../components/ui";
-import { PORTAL_CATEGORY_LABELS } from "../../lib/portals";
+import { MAX_PORTAL_SELECTION, PORTAL_CATEGORY_LABELS } from "../../lib/portals";
 import type { Portal, PortalCategory } from "../../types";
 import { PortalSelectCard } from "./PortalSelectCard";
 
@@ -15,7 +15,7 @@ type PortalsSearchCardProps = {
   setWorkplace: (value: "" | "remote" | "hybrid" | "onsite") => void;
   catalogItems: Portal[];
   selectedIds: Set<string>;
-  setSelectedIds: (ids: Set<string>) => void;
+  selectPortals: (ids: Set<string>) => void;
   togglePortal: (portalId: string) => void;
   portalsPending: boolean;
   portalsError: boolean;
@@ -35,13 +35,15 @@ export function PortalsSearchCard({
   setWorkplace,
   catalogItems,
   selectedIds,
-  setSelectedIds,
+  selectPortals,
   togglePortal,
   portalsPending,
   portalsError,
   onSearch,
   searchPending,
 }: PortalsSearchCardProps) {
+  const atCap = selectedIds.size >= MAX_PORTAL_SELECTION;
+
   return (
     <Card title="Search">
       <div className="portal-catalog-toolbar">
@@ -103,28 +105,35 @@ export function PortalsSearchCard({
         <div className="portal-select-toolbar">
           <span className="muted">
             {selectedIds.size} of {catalogItems.length} selected
+            {catalogItems.length > MAX_PORTAL_SELECTION
+              ? ` (max ${MAX_PORTAL_SELECTION} per search)`
+              : ""}
           </span>
           <Button
             variant="ghost"
-            onClick={() => setSelectedIds(new Set(catalogItems.map((p) => p.id)))}
+            onClick={() => selectPortals(new Set(catalogItems.map((p) => p.id)))}
           >
             Select all
           </Button>
-          <Button variant="ghost" onClick={() => setSelectedIds(new Set())}>
+          <Button variant="ghost" onClick={() => selectPortals(new Set())}>
             Clear
           </Button>
         </div>
       )}
       {catalogItems.length > 0 && (
         <ul className="portal-grid portal-select-grid">
-          {catalogItems.map((portal) => (
-            <PortalSelectCard
-              key={portal.id}
-              portal={portal}
-              checked={selectedIds.has(portal.id)}
-              onToggle={() => togglePortal(portal.id)}
-            />
-          ))}
+          {catalogItems.map((portal) => {
+            const checked = selectedIds.has(portal.id);
+            return (
+              <PortalSelectCard
+                key={portal.id}
+                portal={portal}
+                checked={checked}
+                disabled={!checked && atCap}
+                onToggle={() => togglePortal(portal.id)}
+              />
+            );
+          })}
         </ul>
       )}
       {!portalsPending && catalogItems.length === 0 && (

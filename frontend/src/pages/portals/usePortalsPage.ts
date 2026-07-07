@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMeta, usePortals, useTargets } from "../../hooks/queries";
 import { useSearchPortals, useSubscribePortals } from "../../hooks/mutations";
+import { MAX_PORTAL_SELECTION, capPortalIds } from "../../lib/portals";
 import type { PortalCategory, PortalSearchResult } from "../../types";
 
 export function usePortalsPage() {
@@ -29,9 +30,9 @@ export function usePortalsPage() {
     return items.filter((portal) => portal.allowed_on_plan);
   }, [portals.data?.items]);
 
-  // Select all portals when the available catalog changes (first load or a new
+  // Select portals when the available catalog changes (first load or a new
   // category), but keep the user's manual selection across plain refetches that
-  // return the same set of portals.
+  // return the same set of portals. Cap at the API portal_ids max.
   const catalogKey = useMemo(
     () =>
       catalogItems
@@ -45,16 +46,24 @@ export function usePortalsPage() {
     if (catalogItems.length === 0) return;
     if (initializedKeyRef.current === catalogKey) return;
     initializedKeyRef.current = catalogKey;
-    setSelectedIds(new Set(catalogItems.map((portal) => portal.id)));
+    setSelectedIds(capPortalIds(catalogItems.map((portal) => portal.id)));
   }, [catalogItems, catalogKey]);
 
   function togglePortal(portalId: string) {
     setSelectedIds((current) => {
       const next = new Set(current);
-      if (next.has(portalId)) next.delete(portalId);
-      else next.add(portalId);
+      if (next.has(portalId)) {
+        next.delete(portalId);
+        return next;
+      }
+      if (next.size >= MAX_PORTAL_SELECTION) return current;
+      next.add(portalId);
       return next;
     });
+  }
+
+  function selectPortals(ids: Set<string>) {
+    setSelectedIds(capPortalIds(ids));
   }
 
   function searchPayload() {
@@ -67,6 +76,11 @@ export function usePortalsPage() {
     };
   }
 
+  function selectionError(): string | undefined {
+    if (selectedIds.size === 0) return "Select at least one company portal.";
+    return undefined;
+  }
+
   async function runSearch() {
     setError(undefined);
     setNotice(undefined);
@@ -74,8 +88,9 @@ export function usePortalsPage() {
       setError("Enter keywords to search across company portals.");
       return;
     }
-    if (selectedIds.size === 0) {
-      setError("Select at least one company portal.");
+    const selection = selectionError();
+    if (selection) {
+      setError(selection);
       return;
     }
     try {
@@ -93,8 +108,9 @@ export function usePortalsPage() {
       setError("Enter keywords before creating alerts.");
       return;
     }
-    if (selectedIds.size === 0) {
-      setError("Select at least one company portal.");
+    const selection = selectionError();
+    if (selection) {
+      setError(selection);
       return;
     }
     if (targetId === "") {
@@ -140,7 +156,7 @@ export function usePortalsPage() {
     workplace,
     setWorkplace,
     selectedIds,
-    setSelectedIds,
+    selectPortals,
     catalogItems,
     togglePortal,
     portals,

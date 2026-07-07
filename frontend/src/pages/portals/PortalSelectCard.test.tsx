@@ -53,4 +53,23 @@ describe("PortalSelectCard", () => {
     expect(screen.getByText("Source added")).toBeInTheDocument();
     expect(screen.getByText("AI")).toBeInTheDocument();
   });
+
+  it("disables the checkbox when selection is at the cap", () => {
+    const onToggle = vi.fn();
+    renderWithClient(
+      <ul>
+        <PortalSelectCard
+          portal={makePortal()}
+          checked={false}
+          disabled={true}
+          onToggle={onToggle}
+        />
+      </ul>,
+    );
+
+    const checkbox = screen.getByRole("checkbox");
+    expect(checkbox).toBeDisabled();
+    fireEvent.click(checkbox);
+    expect(onToggle).not.toHaveBeenCalled();
+  });
 });

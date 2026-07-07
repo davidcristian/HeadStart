@@ -49,7 +49,7 @@ describe("usePortalsPage runSearch", () => {
     const { result } = renderHook(() => usePortalsPage());
     act(() => {
       result.current.setKeywords("engineer");
-      result.current.setSelectedIds(new Set());
+      result.current.selectPortals(new Set());
     });
     await act(async () => {
       await result.current.runSearch();
@@ -112,7 +112,7 @@ describe("usePortalsPage createAlerts", () => {
     const { result } = renderHook(() => usePortalsPage());
     act(() => {
       result.current.setKeywords("engineer");
-      result.current.setSelectedIds(new Set());
+      result.current.selectPortals(new Set());
     });
     await act(async () => {
       await result.current.createAlerts();

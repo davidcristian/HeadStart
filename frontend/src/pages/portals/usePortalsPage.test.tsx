@@ -54,4 +54,20 @@ describe("usePortalsPage selection", () => {
 
     expect(result.current.selectedIds).toEqual(new Set(["google", "apple"]));
   });
+
+  it("caps the default selection and refuses toggles past the API max", () => {
+    const ids = Array.from({ length: 35 }, (_, i) => `p${i}`);
+    mockUsePortals.mockReturnValue(catalog(ids));
+    const { result } = renderHook(() => usePortalsPage());
+
+    expect(result.current.selectedIds.size).toBe(30);
+    expect([...result.current.selectedIds]).toEqual(ids.slice(0, 30));
+
+    act(() => result.current.togglePortal("p34"));
+    expect(result.current.selectedIds.has("p34")).toBe(false);
+    expect(result.current.selectedIds.size).toBe(30);
+
+    act(() => result.current.selectPortals(new Set(ids)));
+    expect(result.current.selectedIds.size).toBe(30);
+  });
 });

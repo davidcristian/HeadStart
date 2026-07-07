@@ -37,7 +37,7 @@ export function PortalsPage() {
         setWorkplace={page.setWorkplace}
         catalogItems={page.catalogItems}
         selectedIds={page.selectedIds}
-        setSelectedIds={page.setSelectedIds}
+        selectPortals={page.selectPortals}
         togglePortal={page.togglePortal}
         portalsPending={page.portals.isPending}
         portalsError={page.portals.isError}

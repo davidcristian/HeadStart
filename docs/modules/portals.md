@@ -55,6 +55,8 @@ Request body (`PortalSearchRequest`):
 - `keywords` (required) — applied as search filters after each portal scrape
 - `category` — optional filter to one catalog category
 - `portal_ids` — optional subset (max 30); defaults to all allowed presets on the user's plan
+  (the Companies UI caps selection at 30 — default / Select-all take the first 30 in catalog
+  order — so Search / Subscribe never 422 on the happy path)
 - `location`, `workplace` — optional structured filters (same semantics as search filters)
 
 The service scrapes each portal via `PipelineService.scrape` (no DB writes),
@@ -74,7 +76,7 @@ are hit.
 | Surface | Path | Purpose |
 | ------- | ---- | ------- |
 | Sources catalog | `/app/sources` | Browse/filter presets; **Add source** pre-fills adapter + config |
-| Companies search | `/app/portals` | Pro+ keyword search across the catalog; preview results; one-click alert setup |
+| Companies search | `/app/portals` | Pro+ keyword search across the catalog (max 30 portals per request); preview results; one-click alert setup |
 
 Free users see the catalog on Sources but cannot open `/app/portals` (upgrade
 prompt). The Portals page reads `plan.features.portal_search` from `GET /meta`

@@ -5,13 +5,19 @@ type PortalSelectCardProps = {
   portal: Portal;
   checked: boolean;
   onToggle: () => void;
+  disabled?: boolean;
 };
 
-export function PortalSelectCard({ portal, checked, onToggle }: PortalSelectCardProps) {
+export function PortalSelectCard({
+  portal,
+  checked,
+  onToggle,
+  disabled = false,
+}: PortalSelectCardProps) {
   return (
     <li className={`portal-card portal-select-card ${checked ? "selected" : ""}`}>
       <label className="portal-select-label">
-        <input type="checkbox" checked={checked} onChange={onToggle} />
+        <input type="checkbox" checked={checked} disabled={disabled} onChange={onToggle} />
         <span>
           <strong>{portal.company_name}</strong>
           <span className="portal-card-meta">
