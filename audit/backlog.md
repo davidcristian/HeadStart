@@ -444,7 +444,7 @@ _30 item(s): 1 medium, 29 low._
 
 | Sev | Type | Item | Location | Status |
 | --- | ---- | ---- | -------- | ------ |
-| 🟡 MED | 🐞 | [FRO-07](findings/frontend.md#fro-07) Portals default all-selected exceeds backend portal_ids cap of 30, Search/Subscribe 422s | `frontend/src/pages/portals/usePortalsPage.ts:48` | ☐ |
+| 🟡 MED | 🐞 | [FRO-07](findings/frontend.md#fro-07) Portals default all-selected exceeds backend portal_ids cap of 30, Search/Subscribe 422s | `frontend/src/pages/portals/usePortalsPage.ts:48` | 🔜 |
 | ⚪ LOW | 🐞 | [FRO-13](findings/frontend.md#fro-13) 401 refresh has no in-flight dedup: concurrent requests fire N parallel refresh POSTs | `frontend/src/api/client.ts:55` | ☐ |
 | ⚪ LOW | 🐞 | [FRO-14](findings/frontend.md#fro-14) parse() throws raw SyntaxError on malformed 2xx body instead of ApiError | `frontend/src/api/client.ts:69` | ☐ |
 | ⚪ LOW | 🐞 | [FRO-16](findings/frontend.md#fro-16) refreshSession does not guard resp.json()/network errors, bypassing graceful 401->login | `frontend/src/api/client.ts:61` | ☐ |

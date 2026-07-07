@@ -99,7 +99,7 @@ _Merged with FRO-02 — both records describe the same defect: the module-level 
 
 <a id="fro-07"></a>
 ### FRO-07 — Portals default all-selected exceeds backend portal_ids cap of 30, Search/Subscribe 422s
-🟡 **MEDIUM** · 🐞 bug · Status: ☐ open · Confidence: high (3/5 verifiers) · Effort: S · WS41
+🟡 **MEDIUM** · 🐞 bug · Status: 🔜 in progress · Confidence: high (3/5 verifiers) · Effort: S · WS41
 
 **Locations:** `frontend/src/pages/portals/usePortalsPage.ts:48` (`usePortalsPage effect / runSearch / createAlerts`); plus `frontend/src/pages/portals/PortalsSearchCard.tsx:109`, `backend/app/schemas/portal.py:36`, `backend/app/schemas/portal.py:72`.
 
