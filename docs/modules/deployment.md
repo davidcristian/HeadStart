@@ -123,6 +123,14 @@ Prod additionally sets `alb_deletion_protection = true` so a fat-finger
 protection off so throwaway stacks can tear down cleanly (the access-logs
 bucket uses `force_destroy` when deletion protection is off).
 
+### Tasks SG from ALB (OPS-14)
+
+The shared ECS tasks security group accepts ingress from the ALB SG only on the
+two target-group ports: **80** (frontend) and **8000** (api). A prior
+`0–65535` rule would also have exposed the worker metrics port (`9090`) to any
+member of the ALB SG. Worker/beat have no ALB targets; scrape them from a
+dedicated Prometheus/CloudWatch agent security group, not via the ALB rule.
+
 ## Observability
 
 Prometheus metrics are exposed from two scrape targets:
@@ -132,8 +140,8 @@ Prometheus metrics are exposed from two scrape targets:
 
 See [modules/metrics.md](../modules/metrics.md) for metric names, PromQL examples,
 and `METRICS_TOKEN` Bearer auth (honored by both API and worker scrape targets).
-On AWS, add the worker metrics port to the task security group and scrape with
-Prometheus or the CloudWatch agent.
+On AWS, open worker `:9090` from your scraper security group (not the ALB SG;
+see OPS-14 above) and scrape with Prometheus or the CloudWatch agent.
 
 ## Deploy flow
 

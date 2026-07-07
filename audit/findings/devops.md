@@ -173,7 +173,9 @@ SHA pin. `aws-first-deploy.sh` sets `TF_VAR_image_tag` from the short SHA when
 
 <a id="ops-14"></a>
 ### OPS-14 — Tasks security group ingress from ALB opens all TCP ports 0-65535
-🟡 **MEDIUM** · 🔒 security · Status: ☐ open · Confidence: high (5/5 verifiers) · Effort: S · WS38
+🟡 **MEDIUM** · 🔒 security · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/77)) · Confidence: high (5/5 verifiers) · Effort: S · WS38
+
+**Update (2026-07-10).** Fixed: `tasks_from_alb` replaced with `tasks_http_from_alb` (port 80) and `tasks_api_from_alb` (port 8000), both sourced from the ALB SG — worker metrics `:9090` is no longer reachable via the ALB rule ([PR](https://github.com/davidcristian/HeadStart/pull/77)).
 
 **Locations:** `devops/terraform/modules/security/main.tf:61` (`aws_security_group_rule.tasks_from_alb`).
 

@@ -58,12 +58,23 @@ resource "aws_security_group_rule" "alb_egress" {
 }
 
 # ---- Tasks ----
-resource "aws_security_group_rule" "tasks_from_alb" {
+# OPS-14: only the ALB target-group ports (frontend 80, api 8000). A 0–65535
+# range would also expose the worker metrics port (9090) to the ALB SG.
+resource "aws_security_group_rule" "tasks_http_from_alb" {
   type                     = "ingress"
   security_group_id        = aws_security_group.tasks.id
   protocol                 = "tcp"
-  from_port                = 0
-  to_port                  = 65535
+  from_port                = 80
+  to_port                  = 80
+  source_security_group_id = aws_security_group.alb.id
+}
+
+resource "aws_security_group_rule" "tasks_api_from_alb" {
+  type                     = "ingress"
+  security_group_id        = aws_security_group.tasks.id
+  protocol                 = "tcp"
+  from_port                = 8000
+  to_port                  = 8000
   source_security_group_id = aws_security_group.alb.id
 }
 
