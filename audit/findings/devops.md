@@ -133,7 +133,9 @@ SHA pin. `aws-first-deploy.sh` sets `TF_VAR_image_tag` from the short SHA when
 
 <a id="ops-09"></a>
 ### OPS-09 — ECR repositories use MUTABLE image tags, allowing tag overwrite
-🟡 **MEDIUM** · 🔒 security · Status: ☐ open · Confidence: high (5/5 verifiers) · Effort: S · WS38
+🟡 **MEDIUM** · 🔒 security · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/75)) · Confidence: high (5/5 verifiers) · Effort: S · WS38
+
+**Update (2026-07-10).** Fixed: ECR repositories set `image_tag_mutability = "IMMUTABLE"` so a re-push cannot overwrite a tag that ECS task definitions still reference by `${var.image_tag}`. Deploy continues to use unique git-SHA tags (`IMAGE_TAG` / prod `image_tag`); optional customer-managed KMS encryption remains out of scope (AES-256 at rest is the AWS default).
 
 **Locations:** `devops/terraform/modules/ecr/main.tf:7` (`aws_ecr_repository.this`).
 

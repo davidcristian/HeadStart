@@ -100,8 +100,10 @@ module into `rds` / `ecs`. Redis HA swaps `aws_elasticache_cluster` for
 it on an existing single-node broker replaces the resource (brief Celery
 downtime on apply). Prod also requires an explicit immutable `image_tag` (git
 SHA): there is no `"latest"` default, and Terraform rejects `latest` so a task
-recycle cannot silently pull a different build (OPS-07). Ongoing rolls still
-retarget task defs via `deploy.sh` / `IMAGE_TAG`.
+recycle cannot silently pull a different build (OPS-07). ECR repositories set
+`image_tag_mutability = "IMMUTABLE"` so a re-push cannot overwrite a tag that
+task definitions still reference (OPS-09). Ongoing rolls still retarget task
+defs via `deploy.sh` / `IMAGE_TAG`.
 
 ### ALB hardening (OPS-08)
 

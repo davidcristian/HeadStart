@@ -62,6 +62,8 @@ Terraform (`devops/terraform/`) provisions:
 - ECS Fargate cluster with services: `api`, `frontend`, `worker`, `beat`
 - RDS Postgres + ElastiCache Redis
 - ECR repositories for backend, backend-worker (Playwright), and frontend images
+  (tags are **immutable** — re-pushing the same tag fails; use a new git SHA —
+  OPS-09)
 - Secrets Manager entries for `POSTGRES_PASSWORD`, `JWT_SECRET`,
   `CREDENTIALS_SECRET_KEY`
 
@@ -189,7 +191,9 @@ just deploy
 
 1. Builds backend images (`scripts/build-images.sh --push`): lean API/beat image
    plus the Playwright-enabled worker image, and the frontend image
-2. Pushes them to ECR (tag = current git short SHA, or `latest` if not in git)
+2. Pushes them to ECR (tag = current git short SHA, or `latest` if not in git).
+   ECR tags are immutable (OPS-09), so re-pushing an existing tag fails — use a
+   new commit SHA (or a unique `IMAGE_TAG`) for each build.
 3. Registers a new `headstart-migrate` task-definition revision pinned to that
    tag, then runs DB migrations as a one-off ECS task, waits until the task
    stops, and aborts the deploy unless every container exits 0 (OPS-17)
@@ -203,6 +207,9 @@ tag such as `latest` (which the build does not re-push), a bare
 with `--task-definition` (not only `--force-new-deployment`) is what makes the
 deployed image match the just-built tag (OPS-01). Prod Terraform also requires
 an immutable `image_tag` (git SHA) up front and rejects `latest` (OPS-07).
+ECR repositories themselves reject tag overwrite (`image_tag_mutability =
+"IMMUTABLE"`, OPS-09), so a compromised or accidental re-push cannot replace
+the digest behind a tag still referenced by task definitions.
 The migrate await matters too: without it, a failed or still-running schema
 change would let new app images roll and serve 500s until noticed.
 
