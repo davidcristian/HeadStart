@@ -500,8 +500,11 @@ No Apple login required.
 cookies, `talent_id`, and CSRF token. Resume files upload via
 `/file/uploadFile` before submit. Retail **PIPE** roles with
 `role_location_selection` need explicit `store_locations` / `post_locations` in
-source config. Treat live auto-apply as best-effort; always preview with dry run
-first.
+source config. A 2xx `applyJob` body with `success: false`, a non-empty
+`errors` list, or an `error` value is treated as a failed submit (same
+post-2xx envelope check as Microsoft SmartApply) — not a success with a null
+application id. Treat live auto-apply as best-effort; always preview with dry
+run first.
 
 ### Meta Careers
 

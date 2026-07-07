@@ -40,7 +40,9 @@ This area covers `backend/app/appliers/` — the pluggable adapters that autonom
 
 <a id="apl-03"></a>
 ### APL-03 — Microsoft/Apple SmartApply submits report success on 200 error body (no post-2xx check)
-🟠 **HIGH** · 🐞 bug · Status: 🔜 in progress (2026-07-03, `a294e81`) · Confidence: high (5/5 verifiers) · Effort: S · WS23
+🟠 **HIGH** · 🐞 bug · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/70)) · Confidence: high (5/5 verifiers) · Effort: S · WS23
+
+**Update (2026-07-10).** Apple residual closed via [APL-28](#apl-28): `apply_error_message` now rejects bare `errors` / `error` envelopes without `success:false`, matching Microsoft's `api_error_message` fallthrough — [PR](https://github.com/davidcristian/HeadStart/pull/70).
 
 **Update (2026-07-03).** Partially fixed: Microsoft `apply()` now checks `api_error_message()` after candidate/resume/submit — the Microsoft path is fully closed (a claim that top-level string `error` bodies slip through was refuted; the real envelope models `error` as a dict, which is caught). Apple's `apply_error_message` is stricter and still misses bare-`errors` bodies, so the Apple half remains open as [APL-28](#apl-28).
 
@@ -320,7 +322,9 @@ Merged with APL-25 (same defect at `_resolve_choice_ids` line 126; APL-25's `ver
 
 <a id="apl-28"></a>
 ### APL-28 — Apple apply_error_message only rejects strict `success is False`; bare-`errors` 200 bodies still report submitted
-🟡 **MEDIUM** · 🐞 bug · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: S · WS42
+🟡 **MEDIUM** · 🐞 bug · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/70)) · Confidence: high (3/3 verifiers) · Effort: S · WS42
+
+**Update (2026-07-10).** Fixed in [PR](https://github.com/davidcristian/HeadStart/pull/70): `apply_error_message` mirrors Microsoft's `api_error_message` fallthrough — a non-empty `errors` list or an `error` value fails the submit even when `success` is absent. Regression covered by unit variants and `test_live_submit_fails_on_bare_errors_body`. Also closes the Apple half of [APL-03](#apl-03).
 
 Residual of the APL-01/APL-03 fix (commit `a294e81`): the Apple and Microsoft error-body checks added in the same commit are asymmetric.
 

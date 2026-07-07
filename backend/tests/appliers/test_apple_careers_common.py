@@ -104,6 +104,7 @@ def test_unwrap_response_data_only_and_passthrough() -> None:
 
 
 def test_apply_error_message_variants() -> None:
+    assert apply_error_message("not a dict") is None
     assert apply_error_message({"success": True}) is None
     assert apply_error_message({"success": False, "errors": [{"message": "bad"}]}) == "bad"
     assert apply_error_message({"success": False, "errors": [{"error": "worse"}]}) == "worse"
@@ -113,6 +114,18 @@ def test_apply_error_message_variants() -> None:
     assert apply_error_message({"success": False, "message": "closed req"}) == "closed req"
     assert apply_error_message({"success": False, "error": "plain error"}) == "plain error"
     assert apply_error_message({"success": False}) == "apple_careers apply request failed"
+    # APL-28: bare errors/error envelopes without success:false
+    assert apply_error_message({"errors": [{"message": "missing required answer"}]}) == (
+        "missing required answer"
+    )
+    assert apply_error_message({"errors": [{"error": "worse"}]}) == "worse"
+    assert apply_error_message({"errors": [{}]}) is None
+    assert apply_error_message({"errors": ["string"]}) is None
+    assert apply_error_message({"error": {"message": "validation failed"}}) == "validation failed"
+    assert apply_error_message({"error": {"message": ""}}) is None
+    assert apply_error_message({"error": "plain error"}) == "plain error"
+    assert apply_error_message({"error": "  "}) is None
+    assert apply_error_message({"status": 200}) is None
 
 
 def test_extract_application_id_non_dict_and_roles_lookup() -> None:

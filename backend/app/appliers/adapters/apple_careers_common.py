@@ -155,8 +155,22 @@ def unwrap_response(response: Any) -> Any:
 
 def apply_error_message(response: Any) -> str | None:
     """Human-readable message when an applyJob JSON body reports failure."""
-    if not isinstance(response, dict) or response.get("success") is not False:
+    if not isinstance(response, dict):
         return None
+    if response.get("success") is False:
+        errors = response.get("errors")
+        if isinstance(errors, list) and errors:
+            first = errors[0]
+            if isinstance(first, dict):
+                message = first.get("message") or first.get("error")
+                if message:
+                    return str(message)
+        for key in ("message", "error"):
+            value = response.get(key)
+            if value and str(value).strip():
+                return str(value)
+        return "apple_careers apply request failed"
+    # Bare error envelopes (no success:false) — same fallthrough as Microsoft.
     errors = response.get("errors")
     if isinstance(errors, list) and errors:
         first = errors[0]
@@ -164,11 +178,14 @@ def apply_error_message(response: Any) -> str | None:
             message = first.get("message") or first.get("error")
             if message:
                 return str(message)
-    for key in ("message", "error"):
-        value = response.get(key)
-        if value and str(value).strip():
-            return str(value)
-    return "apple_careers apply request failed"
+    error = response.get("error")
+    if isinstance(error, dict):
+        message = error.get("message")
+        if message and str(message).strip():
+            return str(message)
+    if error and not isinstance(error, (dict, list)) and str(error).strip():
+        return str(error)
+    return None
 
 
 def extract_application_id(response: Any) -> str | None:

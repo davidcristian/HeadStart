@@ -461,6 +461,40 @@ def test_live_submit_fails_on_success_false_body() -> None:
     assert result.error == "questionnaire incomplete"
 
 
+def test_live_submit_fails_on_bare_errors_body() -> None:
+    """APL-28: 200 {"errors":[...]} without success:false must not report submitted."""
+    detail_fixture = load_fixture("apple_careers_job_detail.html")
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path.endswith("/ai-engineer-sensing-connectivity"):
+            return httpx.Response(200, text=detail_fixture)
+        if request.url.path.endswith("/questionnaire"):
+            return httpx.Response(200, json={"success": True, "data": {}}, headers=_JSON_HEADERS)
+        if request.url.path.endswith("/applyJob"):
+            return httpx.Response(
+                200,
+                json={"errors": [{"message": "missing required answer"}]},
+                headers=_JSON_HEADERS,
+            )
+        raise AssertionError(f"unexpected request: {request.method} {request.url}")
+
+    applier = AppleCareersApplier(http=make_http_client(handler))
+    result = applier.apply(
+        ApplyContext(
+            job_external_id=JOB_ID,
+            job_title="AI Engineer, Sensing & Connectivity",
+            company="Apple",
+            job_url=JOB_URL,
+            config={"locale": "en-us"},
+            profile=_profile(),
+            credentials=_credentials(),
+            dry_run=False,
+        )
+    )
+    assert result.status == "failed"
+    assert result.error == "missing required answer"
+
+
 def test_build_application_payload_includes_resume_metadata_on_dry_run() -> None:
     detail = parse_job_detail_page(load_fixture("apple_careers_job_detail.html"))
     contact = build_contact(_profile())
