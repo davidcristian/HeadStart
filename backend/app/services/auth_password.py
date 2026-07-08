@@ -107,9 +107,12 @@ def reset_password(
     reset_tokens = PasswordResetTokenRepository(session)
     token_hash = hash_password_reset_token(data.token)
     now = utcnow()
-    row = reset_tokens.get_valid_by_hash(token_hash, now=now)
+    row = reset_tokens.claim_valid_by_hash(token_hash, now=now)
     if row is None:
         raise ValidationError("Invalid or expired reset link. Request a new one.")
+    # Persist the consume before any path that may raise so single-use does not
+    # depend on a later delete surviving the request transaction (DAT-18).
+    session.commit()
 
     user = users.get(row.user_id)
     if user is None or not user.is_active:

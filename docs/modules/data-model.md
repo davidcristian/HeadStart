@@ -73,6 +73,7 @@ Single-use, time-limited token for email address verification.
 | user_id    | FK user  | Owner; cascade delete              |
 | token_hash | str      | SHA-256 of the raw token (unique)  |
 | expires_at | datetime |                                    |
+| used_at    | datetime?| Set atomically on claim (DAT-18)   |
 | created_at | datetime |                                    |
 
 ### password_reset_token
@@ -85,6 +86,7 @@ Single-use, time-limited token for email-based password reset.
 | user_id    | FK user  | Owner; cascade delete              |
 | token_hash | str      | SHA-256 of the raw token (unique)  |
 | expires_at | datetime |                                    |
+| used_at    | datetime?| Set atomically on claim (DAT-18)   |
 | created_at | datetime |                                    |
 
 ### source

@@ -94,10 +94,11 @@ def test_me_missing_user_raises(db_session: Session) -> None:
 def test_reset_password_inactive_user_rejected(db_session: Session) -> None:
     user = _user(db_session, email="rst@example.com")
     raw = "reset-raw-token"
+    token_hash = hash_password_reset_token(raw)
     PasswordResetTokenRepository(db_session).add(
         PasswordResetToken(
             user_id=user.id,
-            token_hash=hash_password_reset_token(raw),
+            token_hash=token_hash,
             expires_at=utcnow() + timedelta(minutes=30),
         )
     )
@@ -109,14 +110,21 @@ def test_reset_password_inactive_user_rejected(db_session: Session) -> None:
             ResetPasswordRequest(token=raw, password="newpassword123")
         )
 
+    # Consume is committed before the inactive check so the link cannot be
+    # replayed after reactivation (DAT-18).
+    assert (
+        PasswordResetTokenRepository(db_session).get_valid_by_hash(token_hash, now=utcnow()) is None
+    )
+
 
 def test_verify_email_inactive_user_rejected(db_session: Session) -> None:
     user = _user(db_session, email="vrf@example.com")
     raw = "verify-raw-token"
+    token_hash = hash_password_reset_token(raw)
     EmailVerificationTokenRepository(db_session).add(
         EmailVerificationToken(
             user_id=user.id,
-            token_hash=hash_password_reset_token(raw),
+            token_hash=token_hash,
             expires_at=utcnow() + timedelta(minutes=30),
         )
     )
@@ -125,6 +133,11 @@ def test_verify_email_inactive_user_rejected(db_session: Session) -> None:
 
     with pytest.raises(ValidationError, match="Invalid or expired"):
         AuthService(db_session).verify_email(VerifyEmailRequest(token=raw))
+
+    assert (
+        EmailVerificationTokenRepository(db_session).get_valid_by_hash(token_hash, now=utcnow())
+        is None
+    )
 
 
 def test_verify_email_already_verified_is_idempotent(db_session: Session) -> None:

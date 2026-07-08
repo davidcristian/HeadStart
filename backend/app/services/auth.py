@@ -180,9 +180,12 @@ class AuthService:
         """Confirm ownership of an email address from a verification link."""
         token_hash = hash_password_reset_token(data.token)
         now = utcnow()
-        row = self.verification_tokens.get_valid_by_hash(token_hash, now=now)
+        row = self.verification_tokens.claim_valid_by_hash(token_hash, now=now)
         if row is None:
             raise ValidationError("Invalid or expired verification link. Request a new one.")
+        # Persist the consume before any path that may raise so single-use does
+        # not depend on a later delete surviving the request transaction (DAT-18).
+        self.session.commit()
 
         user = self.repo.get(row.user_id)
         if user is None or not user.is_active:

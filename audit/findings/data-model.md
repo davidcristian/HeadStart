@@ -277,7 +277,7 @@ or the lock already points at a user.
 
 <a id="dat-18"></a>
 ### DAT-18 — Reset/verify token single-use relies only on post-use deletion, no consumed marker
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: medium (3/3 verifiers) · Effort: S · WS18
+⚪ **LOW** · 🔒 security · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/83)) · Confidence: medium (3/3 verifiers) · Effort: S · WS18
 
 **Locations:** `backend/app/repositories/password_reset_tokens.py:22` (`get_valid_by_hash`); plus `backend/app/repositories/email_verification_tokens.py:22`, `backend/app/services/auth.py:132`.
 
