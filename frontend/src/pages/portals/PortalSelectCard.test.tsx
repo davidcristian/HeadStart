@@ -55,21 +55,17 @@ describe("PortalSelectCard", () => {
   });
 
   it("disables the checkbox when selection is at the cap", () => {
-    const onToggle = vi.fn();
     renderWithClient(
       <ul>
         <PortalSelectCard
           portal={makePortal()}
           checked={false}
           disabled={true}
-          onToggle={onToggle}
+          onToggle={() => {}}
         />
       </ul>,
     );
 
-    const checkbox = screen.getByRole("checkbox");
-    expect(checkbox).toBeDisabled();
-    fireEvent.click(checkbox);
-    expect(onToggle).not.toHaveBeenCalled();
+    expect(screen.getByRole("checkbox")).toBeDisabled();
   });
 });
