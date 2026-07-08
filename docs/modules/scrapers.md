@@ -84,6 +84,23 @@ payload node is skipped, and a non-finite or out-of-range count/index falls back
 to a safe default rather than raising. Aborting is reserved for a payload that
 isn't recognizable at all (e.g. the expected top-level array/object is missing).
 
+### HTML parsing (selectolax)
+
+Adapters that parse HTML (`generic_html`, Indeed fallback, LinkedIn guest
+fragments) use **selectolax** (Modest/lolhtml C extension). That dependency is
+declared as `selectolax>=0.4.10` in `backend/pyproject.toml` and pinned with
+hashes in the pip-tools lockfiles (`backend/requirements*.txt`; see
+[ADR-0012](../adr/0012-backend-dependency-lockfiles.md)). Do not raise the floor
+or bump the lock without reviewing the release notes — this code path ingests
+attacker-influenced markup.
+
+**Upstream health / fallback.** If selectolax stalls, ships an unpatched parser
+CVE, or a release looks untrustworthy, pin (or roll back) via `just lock-backend`
+and treat **lxml** (`lxml.html`) as the drop-in CSS-selector fallback for
+`generic_html` / Indeed HTML parsing. LinkedIn fragment parsing would follow the
+same swap. Prefer keeping one HTML library; do not add lxml alongside selectolax
+unless the pin is blocked.
+
 Outbound HTTP from scrapers is restricted to public `http`/`https` destinations.
 Private, loopback, link-local, and cloud-metadata addresses are rejected in the
 shared `HttpClient` (including redirect targets) and on every Playwright request

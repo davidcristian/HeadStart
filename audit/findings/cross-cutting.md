@@ -274,7 +274,9 @@ the refresh cookie is stored on the documented no-domain deploy —
 
 <a id="xct-22"></a>
 ### XCT-22 — selectolax native C-ext on untrusted-HTML path: bus-factor / unpinned
-⚪ **LOW** · ♻️ refactor · Status: ☐ open · Confidence: medium (3/5 verifiers) · Effort: S · WS15
+⚪ **LOW** · ♻️ refactor · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/79)) · Confidence: medium (3/5 verifiers) · Effort: S · WS15
+
+**Update (2026-07-10).** Floor raised to `selectolax>=0.4.10` (matches the hash-pinned lock from XCT-14 / ADR-0012). `docs/modules/scrapers.md` records the pin policy and lxml fallback plan; devops regression tests guard floor + lock hashes.
 
 **Locations:** `backend/pyproject.toml:23` (`selectolax`).
 
