@@ -50,8 +50,10 @@ data isolation.
   `token_version` when the refresh JWT is still valid. Non-browser clients may
   `refresh_token` in the `/refresh` body. See
   [adr/0007-httponly-refresh-cookie.md](../adr/0007-httponly-refresh-cookie.md).
-- `decode_token(token, expected_type=...)` validates signature, expiry, and the
-  `type` claim, raising `TokenError` otherwise.
+- `decode_token(token, expected_type=...)` validates signature, required claims
+  (`exp`, `iat`, `sub`, `ver` — PyJWT `options.require`, RFC 8725), expiry, and
+  the `type` claim, raising `TokenError` otherwise. `decode_feed_token` applies
+  the same required-claim set before checking `type == "feed"`.
 - Passwords: `hash_password` / `verify_password` (bcrypt, input truncated to the
   72-byte bcrypt limit).
 

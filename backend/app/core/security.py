@@ -65,14 +65,15 @@ def decode_feed_token(token: str) -> dict[str, Any]:
     """Decode and validate a feed JWT. Raises `TokenError`."""
     try:
         payload: dict[str, Any] = jwt.decode(
-            token, settings.jwt_secret, algorithms=[settings.jwt_algorithm]
+            token,
+            settings.jwt_secret,
+            algorithms=[settings.jwt_algorithm],
+            options={"require": ["exp", "iat", "sub", "ver"]},
         )
     except jwt.PyJWTError as exc:
         raise TokenError(str(exc)) from exc
     if payload.get("type") != "feed":
         raise TokenError("Expected a feed token.")
-    if "ver" not in payload:
-        raise TokenError("Feed token is missing a version.")
     return payload
 
 
@@ -119,7 +120,10 @@ def decode_token(token: str, *, expected_type: TokenType) -> dict[str, Any]:
     """Decode and validate a JWT, enforcing its `type`. Raises `TokenError`."""
     try:
         payload: dict[str, Any] = jwt.decode(
-            token, settings.jwt_secret, algorithms=[settings.jwt_algorithm]
+            token,
+            settings.jwt_secret,
+            algorithms=[settings.jwt_algorithm],
+            options={"require": ["exp", "iat", "sub", "ver"]},
         )
     except jwt.PyJWTError as exc:
         raise TokenError(str(exc)) from exc

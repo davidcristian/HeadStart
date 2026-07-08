@@ -218,7 +218,7 @@ This area covers authentication and session management (login, registration, pas
 
 <a id="aut-21"></a>
 ### AUT-21 — JWT decode paths do not require exp/iat (RFC 8725) — accept unexpiring tokens
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: high (3/5 verifiers) · Effort: XS · WS19
+⚪ **LOW** · 🔒 security · Status: ✅ done · [PR](https://github.com/davidcristian/HeadStart/pull/89) · Confidence: high (3/5 verifiers) · Effort: XS · WS19
 
 **Locations:** `backend/app/core/security.py:110` (`decode_token`); plus `backend/app/core/security.py:66` (`decode_feed_token`).
 

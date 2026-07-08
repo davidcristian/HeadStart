@@ -101,6 +101,23 @@ def test_decode_token_rejects_wrong_signature() -> None:
         decode_token(forged, expected_type="access")
 
 
+@pytest.mark.parametrize("missing_claim", ["exp", "iat", "sub", "ver"])
+def test_decode_token_requires_lifetime_and_identity_claims(missing_claim: str) -> None:
+    """Reject signed JWTs that omit exp/iat/sub/ver (RFC 8725 defense-in-depth)."""
+    now = utcnow()
+    payload: dict[str, object] = {
+        "sub": "1",
+        "type": "access",
+        "ver": 0,
+        "iat": now,
+        "exp": now + timedelta(minutes=5),
+    }
+    del payload[missing_claim]
+    token = jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
+    with pytest.raises(TokenError, match=missing_claim):
+        decode_token(token, expected_type="access")
+
+
 def test_feed_token_roundtrip() -> None:
     token = create_feed_token(9, version=3)
     payload = decode_feed_token(token)
@@ -115,11 +132,18 @@ def test_decode_feed_token_rejects_non_feed_type() -> None:
         decode_feed_token(access)
 
 
-def test_decode_feed_token_requires_version_claim() -> None:
-    legacy = jwt.encode(
-        {"sub": "1", "type": "feed", "iat": utcnow(), "exp": utcnow() + timedelta(days=1)},
-        settings.jwt_secret,
-        algorithm=settings.jwt_algorithm,
-    )
-    with pytest.raises(TokenError, match="missing a version"):
-        decode_feed_token(legacy)
+@pytest.mark.parametrize("missing_claim", ["exp", "iat", "sub", "ver"])
+def test_decode_feed_token_requires_lifetime_and_identity_claims(missing_claim: str) -> None:
+    """Feed JWTs must carry exp/iat/sub/ver; missing claims fail closed."""
+    now = utcnow()
+    payload: dict[str, object] = {
+        "sub": "1",
+        "type": "feed",
+        "ver": 0,
+        "iat": now,
+        "exp": now + timedelta(days=1),
+    }
+    del payload[missing_claim]
+    token = jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
+    with pytest.raises(TokenError, match=missing_claim):
+        decode_feed_token(token)
