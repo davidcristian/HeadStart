@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 
+import pytest
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -76,6 +77,15 @@ def test_seen_job_list_all_filters_by_search_id(db_session: Session) -> None:
     assert [j.external_id for j in rows] == ["a1"]
 
 
+def test_seen_job_list_all_limit_none_returns_all(db_session: Session) -> None:
+    """limit=None must skip LIMIT so callers can still request the full page."""
+    search = _search(db_session)
+    for i in range(3):
+        _job(db_session, search.id, f"all{i}")
+    rows = SeenJobRepository(db_session).list_all(user_id=search.user_id, limit=None)
+    assert len(rows) == 3
+
+
 def test_seen_job_existing_normalized_urls_empty(db_session: Session) -> None:
     assert SeenJobRepository(db_session).existing_normalized_urls_for_user(1, []) == set()
 
@@ -95,6 +105,46 @@ def test_seen_job_existing_normalized_urls_intersects_batch(db_session: Session)
         ["https://acme.test/shared", "https://other.test/new"],
     )
     assert known == {"https://acme.test/shared"}
+
+
+def test_seen_job_iter_for_user_pages_across_chunks(db_session: Session) -> None:
+    """Export iteration must cover every row via bounded keyset pages (AUT-34)."""
+    search = _search(db_session)
+    base = utcnow()
+    for i in range(5):
+        job = _job(db_session, search.id, f"j{i}")
+        job.first_seen_at = base + timedelta(seconds=i)
+        db_session.flush()
+    repo = SeenJobRepository(db_session)
+
+    ids = [row.external_id for row in repo.iter_for_user(search.user_id, chunk_size=2)]
+    assert ids == ["j4", "j3", "j2", "j1", "j0"]
+
+
+def test_seen_job_iter_for_user_keyset_ties_on_same_timestamp(db_session: Session) -> None:
+    """Equal first_seen_at values must still page stably on id (AUT-34)."""
+    search = _search(db_session)
+    base = utcnow()
+    for i in range(3):
+        job = _job(db_session, search.id, f"tie{i}")
+        job.first_seen_at = base
+        db_session.flush()
+    ids = [
+        row.external_id
+        for row in SeenJobRepository(db_session).iter_for_user(search.user_id, chunk_size=1)
+    ]
+    assert ids == ["tie2", "tie1", "tie0"]
+
+
+def test_seen_job_iter_for_user_rejects_non_positive_chunk(db_session: Session) -> None:
+    repo = SeenJobRepository(db_session)
+    with pytest.raises(ValueError, match="chunk_size"):
+        next(repo.iter_for_user(1, chunk_size=0))
+
+
+def test_seen_job_iter_for_user_empty(db_session: Session) -> None:
+    search = _search(db_session)
+    assert list(SeenJobRepository(db_session).iter_for_user(search.user_id)) == []
 
 
 def test_seen_job_add_fills_normalized_url(db_session: Session) -> None:

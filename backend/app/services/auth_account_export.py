@@ -17,7 +17,7 @@ from app.repositories.inbox_classifications import InboxClassificationRepository
 from app.repositories.inbox_pending_replies import InboxPendingReplyRepository
 from app.repositories.inbox_reply_drafts import InboxReplyDraftRepository
 from app.repositories.inbox_reply_send_logs import InboxReplySendLogRepository
-from app.repositories.jobs import SeenJobRepository
+from app.repositories.jobs import DEFAULT_EXPORT_JOBS_CHUNK_SIZE, SeenJobRepository
 from app.repositories.mailbox_credentials import MailboxCredentialRepository
 from app.repositories.promo_codes import PromoCodeRepository
 from app.repositories.searches import SearchRepository
@@ -45,7 +45,12 @@ from app.services.credentials import CredentialService
 from app.services.profiles import ProfileService
 
 
-def build_user_data_export(session: Session, user: User) -> UserDataExport:
+def build_user_data_export(
+    session: Session,
+    user: User,
+    *,
+    jobs_chunk_size: int = DEFAULT_EXPORT_JOBS_CHUNK_SIZE,
+) -> UserDataExport:
     """Collect every user-owned entity into a portable JSON-ready bundle."""
     user_id = user.id
     profile_service = ProfileService(session)
@@ -90,10 +95,7 @@ def build_user_data_export(session: Session, user: User) -> UserDataExport:
             if template_stored is not None
             else None
         ),
-        jobs=[
-            JobRead.model_validate(row)
-            for row in SeenJobRepository(session).list_all(user_id=user_id, limit=None)
-        ],
+        jobs=_job_exports(session, user_id, chunk_size=jobs_chunk_size),
         applications=ApplicationLogService(session).list_for_user(user_id, limit=None),
         artifacts=_artifact_exports(session, user_id),
         deliveries=[
@@ -122,6 +124,21 @@ def build_user_data_export(session: Session, user: User) -> UserDataExport:
             for row in PromoCodeRepository(session).list_redemptions_for_user(user_id)
         ],
     )
+
+
+def _job_exports(
+    session: Session,
+    user_id: int,
+    *,
+    chunk_size: int = DEFAULT_EXPORT_JOBS_CHUNK_SIZE,
+) -> list[JobRead]:
+    """Serialize job history in keyset pages so export never issues one unbounded SELECT."""
+    jobs: list[JobRead] = []
+    for row in SeenJobRepository(session).iter_for_user(user_id, chunk_size=chunk_size):
+        jobs.append(JobRead.model_validate(row))
+        # Drop the ORM instance so peak identity-map memory stays O(chunk_size).
+        session.expunge(row)
+    return jobs
 
 
 def _artifact_exports(session: Session, user_id: int) -> list[ApplicationArtifactExport]:

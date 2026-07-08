@@ -196,7 +196,10 @@ LaTeX template bytes), job history, application logs, generated artifacts
 (decrypted), delivery logs, mailbox metadata (secrets redacted), inbox
 classifications / reply drafts / pending replies / send logs, and promo
 redemptions. `format_version` is `2`. Password hashes and live mailbox OAuth
-tokens / IMAP passwords are never included.
+tokens / IMAP passwords are never included. Job history is loaded in keyset
+pages (`SeenJobRepository.iter_for_user`, default 500 rows) and each ORM row is
+expunged after `JobRead` serialization so export never issues one unbounded
+`seen_job` SELECT (AUT-34).
 
 Permanent account deletion (`DELETE /auth/me` with `{ "password": "..." }`)
 requires the current password, clears the refresh cookie, and removes the user

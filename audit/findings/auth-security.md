@@ -356,7 +356,7 @@ This area covers authentication and session management (login, registration, pas
 
 <a id="aut-34"></a>
 ### AUT-34 — GDPR data export loads every SeenJob with limit=None into memory in one request
-⚪ **LOW** · ⚡ perf · Status: ☐ open · Confidence: medium (3/5 verifiers) · Effort: M · WS18
+⚪ **LOW** · ⚡ perf · Status: ✅ done · Confidence: medium (3/5 verifiers) · Effort: M · WS18
 
 **Locations:** `backend/app/services/auth_account.py:56` (`build_user_data_export`).
 

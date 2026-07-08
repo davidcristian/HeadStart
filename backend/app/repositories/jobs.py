@@ -2,12 +2,18 @@
 
 from __future__ import annotations
 
-from sqlalchemy import select
+from collections.abc import Iterator
+from datetime import datetime
+
+from sqlalchemy import and_, or_, select
 from sqlalchemy.orm import Session
 
 from app.models.search import Search
 from app.models.seen_job import SeenJob
 from app.scrapers.url import normalize_job_url
+
+# GDPR export walks the full ledger in bounded SELECTs (AUT-34).
+DEFAULT_EXPORT_JOBS_CHUNK_SIZE = 500
 
 
 class SeenJobRepository:
@@ -28,7 +34,7 @@ class SeenJobRepository:
             select(SeenJob)
             .join(Search, SeenJob.search_id == Search.id)
             .where(Search.user_id == user_id)
-            .order_by(SeenJob.first_seen_at.desc())
+            .order_by(SeenJob.first_seen_at.desc(), SeenJob.id.desc())
         )
         if limit is not None:
             stmt = stmt.limit(limit)
@@ -37,6 +43,45 @@ class SeenJobRepository:
         if status is not None:
             stmt = stmt.where(SeenJob.status == status)
         return list(self.session.scalars(stmt))
+
+    def iter_for_user(
+        self,
+        user_id: int,
+        *,
+        chunk_size: int = DEFAULT_EXPORT_JOBS_CHUNK_SIZE,
+    ) -> Iterator[SeenJob]:
+        """Yield every owned job newest-first via keyset pages (no unbounded SELECT)."""
+        if chunk_size < 1:
+            raise ValueError("chunk_size must be a positive integer")
+        cursor_seen_at: datetime | None = None
+        cursor_id: int | None = None
+        while True:
+            stmt = (
+                select(SeenJob)
+                .join(Search, SeenJob.search_id == Search.id)
+                .where(Search.user_id == user_id)
+                .order_by(SeenJob.first_seen_at.desc(), SeenJob.id.desc())
+                .limit(chunk_size)
+            )
+            if cursor_seen_at is not None and cursor_id is not None:
+                stmt = stmt.where(
+                    or_(
+                        SeenJob.first_seen_at < cursor_seen_at,
+                        and_(
+                            SeenJob.first_seen_at == cursor_seen_at,
+                            SeenJob.id < cursor_id,
+                        ),
+                    )
+                )
+            rows = list(self.session.scalars(stmt))
+            if not rows:
+                break
+            yield from rows
+            if len(rows) < chunk_size:
+                break
+            last = rows[-1]
+            cursor_seen_at = last.first_seen_at
+            cursor_id = last.id
 
     def get(self, job_id: int, user_id: int) -> SeenJob | None:
         stmt = (
