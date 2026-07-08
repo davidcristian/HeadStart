@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import Any, Literal
 
 from app.core.logging import get_logger
 from app.core.metrics import record_auth_login_failure
@@ -31,16 +31,23 @@ def log_auth_event(
 ) -> None:
     """Emit one auth security log line; never includes plaintext email or tokens."""
     parts = [f"auth_event={event}"]
+    extra: dict[str, Any] = {"auth_event": event}
     if email is not None:
-        parts.append(f"email_hash={pseudonymize_email_for_audit(email)}")
+        email_hash = pseudonymize_email_for_audit(email)
+        parts.append(f"email_hash={email_hash}")
+        extra["email_hash"] = email_hash
     if user_id is not None:
         parts.append(f"user_id={user_id}")
+        extra["user_id"] = user_id
     if ip_address is not None:
         parts.append(f"ip={ip_address}")
+        extra["ip"] = ip_address
     if reason is not None:
         parts.append(f"reason={reason}")
+        extra["reason"] = reason
     if issued is not None:
         parts.append(f"issued={str(issued).lower()}")
-    logger.info(" ".join(parts))
+        extra["issued"] = issued
+    logger.info(" ".join(parts), extra=extra)
     if event == "login_failure":
         record_auth_login_failure()

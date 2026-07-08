@@ -131,7 +131,7 @@ Admin endpoints (prefix `/api/v1/admin`):
 
 Manual plan overrides via `PATCH /admin/users/{id}` (see [auth.md](auth.md#admin))
 emit a structured `admin_event=user_update` audit log with actor, target, and
-before/after `plan` / privilege flags.
+before/after `plan` / privilege flags (JSON extras when `LOG_FORMAT=json`).
 
 Webhook handler updates `user.stripe_customer_id`, `stripe_subscription_id`,
 `subscription_status`, `plan`, and `stripe_billing_event_at` on:

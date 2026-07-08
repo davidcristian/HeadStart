@@ -268,3 +268,28 @@ def test_samesite_normalizer_passes_through_non_string() -> None:
     """The SameSite validator only lowercases strings; other types pass unchanged."""
     assert Settings._normalize_samesite(None) is None
     assert Settings._normalize_samesite(123) == 123
+
+
+def test_log_format_defaults_to_json() -> None:
+    settings = Settings(_env_file=None)  # type: ignore[call-arg]
+    assert settings.log_format == "json"
+
+
+def test_log_format_normalizes_case(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("LOG_FORMAT", " TEXT ")
+    assert Settings(_env_file=None).log_format == "text"  # type: ignore[call-arg]
+
+
+def test_log_format_rejects_unknown(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("LOG_FORMAT", "yaml")
+    with pytest.raises(ValidationError, match="LOG_FORMAT"):
+        Settings(_env_file=None)  # type: ignore[call-arg]
+
+
+def test_parse_log_format_rejects_non_string() -> None:
+    from app.core.log_format import parse_log_format
+
+    with pytest.raises(TypeError, match="LOG_FORMAT"):
+        parse_log_format(None)
+    with pytest.raises(TypeError, match="LOG_FORMAT"):
+        parse_log_format(1)

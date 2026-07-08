@@ -46,21 +46,33 @@ def test_log_auth_event_omits_plaintext_email(caplog: pytest.LogCaptureFixture) 
             ip_address="203.0.113.9",
         )
     assert len(caplog.records) == 1
-    message = caplog.records[0].getMessage()
+    record = caplog.records[0]
+    message = record.getMessage()
     assert "secret@example.com" not in message
-    assert f"email_hash={pseudonymize_email_for_audit('secret@example.com')}" in message
+    email_hash = pseudonymize_email_for_audit("secret@example.com")
+    assert f"email_hash={email_hash}" in message
     assert "auth_event=login_success" in message
     assert "user_id=7" in message
     assert "ip=203.0.113.9" in message
+    assert record.auth_event == "login_success"
+    assert record.email_hash == email_hash
+    assert record.user_id == 7
+    assert record.ip == "203.0.113.9"
 
 
 def test_log_auth_event_without_email(caplog: pytest.LogCaptureFixture) -> None:
     with caplog.at_level("INFO", logger="app.core.auth_events"):
         log_auth_event("session_invalidated", user_id=3, reason="logout")
-    message = caplog.records[0].getMessage()
+    record = caplog.records[0]
+    message = record.getMessage()
     assert "email_hash=" not in message
     assert "user_id=3" in message
     assert "reason=logout" in message
+    assert record.auth_event == "session_invalidated"
+    assert record.user_id == 3
+    assert record.reason == "logout"
+    assert not hasattr(record, "email_hash")
+    assert not hasattr(record, "issued")
 
 
 def test_login_failure_logs_and_increments_metric(

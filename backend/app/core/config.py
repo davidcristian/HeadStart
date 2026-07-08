@@ -7,11 +7,12 @@ This is the single place that reads configuration. Everything else imports the
 from functools import lru_cache
 from typing import Annotated
 
-from pydantic import computed_field, field_validator, model_validator
+from pydantic import BeforeValidator, computed_field, field_validator, model_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 from app.core import secret_policy
 from app.core.feature_flags import stripe_billing_configured
+from app.core.log_format import parse_log_format
 from app.core.redis_url import redis_url_from_settings
 
 
@@ -26,7 +27,8 @@ class Settings(BaseSettings):
     # ---- general ----
     environment: str = "local"
     log_level: str = "INFO"
-
+    # json (default) for CloudWatch/Loki; text for local grepping (AUT-16).
+    log_format: Annotated[str, BeforeValidator(parse_log_format)] = "json"
     # ---- api ----
     # NoDecode: stop pydantic-settings JSON-parsing the env var so the validator accepts CSV.
     cors_origins: Annotated[list[str], NoDecode] = [

@@ -186,7 +186,7 @@ This area covers authentication and session management (login, registration, pas
 
 <a id="aut-16"></a>
 ### AUT-16 — Logs are unstructured plaintext, not JSON; not machine-parseable for alerting
-⚪ **LOW** · ♻️ refactor · Status: ☐ open · Confidence: medium (3/5 verifiers) · Effort: M · WS19
+⚪ **LOW** · ♻️ refactor · Status: ✅ done · Confidence: medium (3/5 verifiers) · Effort: M · WS19
 
 **Locations:** `backend/app/core/logging.py:19` (`configure_logging`).
 

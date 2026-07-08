@@ -120,10 +120,20 @@ see [auth.md](auth.md#rate-limiting-aut-03).
 
 Every HTTP response includes an `X-Request-ID` header. Clients may send their
 own `X-Request-ID` (letters, digits, `.`, `_`, `-`; max 128 chars); otherwise
-the API mints a UUID4. The active id is bound via a contextvar and appears in
-every log line as `[request_id]` so interleaved API output can be grepped to one
-request. Celery workers bind the same field to the task id for the duration of
-each task (see [worker.md](worker.md#request-correlation-id-aut-15)).
+the API mints a UUID4. The active id is bound via a contextvar and appears on
+every log line as the `request_id` JSON field (or `[request_id]` when
+`LOG_FORMAT=text`) so interleaved API output can be filtered to one request.
+Celery workers bind the same field to the task id for the duration of each
+task (see [worker.md](worker.md#request-correlation-id-aut-15)).
+
+## Structured JSON logs (AUT-16)
+
+`configure_logging()` defaults to one JSON object per stdout line
+(`LOG_FORMAT=json`): `timestamp`, `level`, `logger`, `request_id`, `message`,
+plus any logger `extra` fields (auth/admin audit events attach
+`auth_event` / `admin_event`, `user_id`, `ip`, `before`/`after`, …). Set
+`LOG_FORMAT=text` for the legacy human-readable line format during local
+debugging. Invalid values fail settings validation at boot.
 
 ## Adding an endpoint
 

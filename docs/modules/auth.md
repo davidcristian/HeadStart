@@ -109,7 +109,8 @@ Counters are process-local (each API task enforces its own ceiling). Tests call
 Auth services emit structured INFO lines via `app.core.auth_events` (never
 plaintext email or tokens). Each line is `auth_event=<name>` plus optional
 `email_hash=` (HMAC fingerprint, same as GDPR audit pseudonyms), `user_id=`,
-`ip=`, `reason=`, and `issued=`.
+`ip=`, `reason=`, and `issued=`. The same fields are attached as JSON log
+extras when `LOG_FORMAT=json` (default; see [api.md](api.md#structured-json-logs-aut-16)).
 
 | Event | When |
 | ----- | ---- |
@@ -288,9 +289,10 @@ revoked even if the account is later reactivated.
 
 Every successful `PATCH /admin/users/{id}` that changes `is_active`, `is_admin`,
 or `plan` emits a structured INFO audit line via `app.core.admin_events`
-(`admin_event=user_update actor_id=… target_id=… before=… after=…`) so privilege
-and plan mutations leave a server-side trail for incident response (BIL-01).
-No-op patches (same values) do not log.
+(`admin_event=user_update actor_id=… target_id=… before=… after=…`, also as JSON
+extras under `LOG_FORMAT=json`) so privilege and plan mutations leave a
+server-side trail for incident response (BIL-01). No-op patches (same values)
+do not log.
 
 ## Configuration
 

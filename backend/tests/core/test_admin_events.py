@@ -20,12 +20,18 @@ def test_log_admin_user_update_emits_before_after(caplog: pytest.LogCaptureFixtu
             after={"is_active": False, "is_admin": True, "plan": "pro"},
         )
     assert len(caplog.records) == 1
-    message = caplog.records[0].getMessage()
+    record = caplog.records[0]
+    message = record.getMessage()
     assert "admin_event=user_update" in message
     assert "actor_id=1" in message
     assert "target_id=2" in message
     assert "before=is_active=true,is_admin=false,plan=free" in message
     assert "after=is_active=false,is_admin=true,plan=pro" in message
+    assert record.admin_event == "user_update"
+    assert record.actor_id == 1
+    assert record.target_id == 2
+    assert record.before == {"is_active": True, "is_admin": False, "plan": "free"}
+    assert record.after == {"is_active": False, "is_admin": True, "plan": "pro"}
 
 
 def test_log_admin_user_update_skips_noop(caplog: pytest.LogCaptureFixture) -> None:
@@ -43,11 +49,14 @@ def test_log_admin_user_update_only_changed_fields(caplog: pytest.LogCaptureFixt
             before={"is_active": True, "is_admin": False, "plan": "free"},
             after={"is_active": True, "is_admin": False, "plan": "plus"},
         )
-    message = caplog.records[0].getMessage()
+    record = caplog.records[0]
+    message = record.getMessage()
     assert "before=plan=free" in message
     assert "after=plan=plus" in message
     assert "is_active" not in message
     assert "is_admin" not in message
+    assert record.before == {"plan": "free"}
+    assert record.after == {"plan": "plus"}
 
 
 def test_update_user_logs_admin_audit(

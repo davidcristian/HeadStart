@@ -28,7 +28,16 @@ def log_admin_user_update(
         f"before={_format_flags(before_changed)}",
         f"after={_format_flags(changed)}",
     ]
-    logger.info(" ".join(parts))
+    logger.info(
+        " ".join(parts),
+        extra={
+            "admin_event": "user_update",
+            "actor_id": actor_id,
+            "target_id": target_id,
+            "before": before_changed,
+            "after": changed,
+        },
+    )
 
 
 def _format_flags(flags: dict[str, Any]) -> str:

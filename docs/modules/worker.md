@@ -23,10 +23,11 @@ Celery provides the scheduler (beat) and the workers. The worker package is
 
 ## Request correlation id (AUT-15)
 
-While a task runs, log lines include `[<celery-task-id>]` (same formatter field
-as the API's `X-Request-ID`). That lets scrape/notify/apply warnings from
-overlapping worker children be attributed to one task without JSON log
-restructuring (AUT-16 is separate).
+While a task runs, log lines include the Celery task id as `request_id` (same
+field as the API's `X-Request-ID`). With the default `LOG_FORMAT=json` that is a
+top-level JSON key; with `LOG_FORMAT=text` it appears as `[<celery-task-id>]`.
+That lets scrape/notify/apply warnings from overlapping worker children be
+attributed to one task (see [api.md](api.md#structured-json-logs-aut-16)).
 
 ## Due-based scheduling with catch-up
 
