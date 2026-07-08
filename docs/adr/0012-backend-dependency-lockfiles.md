@@ -19,10 +19,11 @@ Commit pip-tools lockfiles with hashes under `backend/`:
 - `requirements-dev.txt` — runtime + `dev` extra
 - `requirements-playwright.txt` — runtime + `playwright` extra
 
-`pyproject.toml` keeps human-editable `>=` floors. Builds install from the
-lockfiles (`--require-hashes`), then install the local package with
-`--no-deps`. Regenerate with `just lock-backend` whenever floors or extras
-change.
+`pyproject.toml` keeps human-editable `>=` floors. Those floors must track the
+majors CI actually tests via the lockfiles (XCT-23) — do not advertise an older
+major the suite never runs. Builds install from the lockfiles
+(`--require-hashes`), then install the local package with `--no-deps`.
+Regenerate with `just lock-backend` whenever floors or extras change.
 
 ## Consequences
 

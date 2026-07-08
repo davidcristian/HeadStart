@@ -290,7 +290,12 @@ the refresh cookie is stored on the documented no-domain deploy —
 
 <a id="xct-23"></a>
 ### XCT-23 — Manifest floors lag installed majors, hiding real support contract
-⚪ **LOW** · 🔁 consistency · Status: ☐ open · Confidence: high (3/5 verifiers) · Effort: S · WS15
+⚪ **LOW** · 🔁 consistency · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/80)) · Confidence: high (3/5 verifiers) · Effort: S · WS15
+
+**Update (2026-07-10).** `pyproject.toml` floors raised to the majors already
+pinned/tested (`celery>=5.6`, `redis>=6.0`, `httpx>=0.28`, `cryptography>=49.0`,
+`stripe>=15.0`); deployment.md + ADR-0012 document the floor↔lock contract;
+regression tests assert floors and lock pins stay aligned.
 
 **Locations:** `backend/pyproject.toml:20` (`dependencies`).
 

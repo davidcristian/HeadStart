@@ -17,15 +17,16 @@ dependencies = [
     "pydantic>=2.7",
     "pydantic[email]>=2.7",
     "pydantic-settings>=2.3",
-    "celery[redis]>=5.4",
-    "redis>=5.0",
-    "httpx>=0.27",
+    # Floors match majors CI/lockfiles actually test (XCT-23); do not lag pins.
+    "celery[redis]>=5.6",
+    "redis>=6.0",
+    "httpx>=0.28",
     "selectolax>=0.4.10",
     "pyjwt>=2.8",
     "bcrypt>=4.1",
-    "cryptography>=42.0",
+    "cryptography>=49.0",
     "prometheus-client>=0.20",
-    "stripe>=10.0",
+    "stripe>=15.0",
 ]
 
 [project.optional-dependencies]
