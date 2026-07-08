@@ -99,7 +99,9 @@ _Merged with FRO-02 — both records describe the same defect: the module-level 
 
 <a id="fro-07"></a>
 ### FRO-07 — Portals default all-selected exceeds backend portal_ids cap of 30, Search/Subscribe 422s
-🟡 **MEDIUM** · 🐞 bug · Status: 🔜 in progress · Confidence: high (3/5 verifiers) · Effort: S · WS41
+🟡 **MEDIUM** · 🐞 bug · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/78)) · Confidence: high (3/5 verifiers) · Effort: S · WS41
+
+**Update (2026-07-10).** Company search caps selection at 30 (`MAX_PORTAL_SELECTION` / `capPortalIds`): default load and Select-all take the first 30 in catalog order, toggles refuse adds at the cap, and unselected checkboxes disable when full — [PR](https://github.com/davidcristian/HeadStart/pull/78).
 
 **Locations:** `frontend/src/pages/portals/usePortalsPage.ts:48` (`usePortalsPage effect / runSearch / createAlerts`); plus `frontend/src/pages/portals/PortalsSearchCard.tsx:109`, `backend/app/schemas/portal.py:36`, `backend/app/schemas/portal.py:72`.
 
