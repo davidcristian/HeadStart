@@ -70,6 +70,9 @@ def test_assert_boot_safe_runs_all_guards() -> None:
         "another-real-production-fernet-value",
         "smtp.example.com",
         "jobs-a1b2c3d4e5f67890",
+        auth_cookie_secure=True,
+        auth_cookie_samesite="lax",
+        frontend_base_url="https://app.example.com",
     )
     with pytest.raises(ValueError, match="NTFY_DEFAULT_TOPIC"):
         secret_policy.assert_boot_safe_for_environment(
@@ -78,6 +81,74 @@ def test_assert_boot_safe_runs_all_guards() -> None:
             "another-real-production-fernet-value",
             "smtp.example.com",
             secret_policy.DEV_NTFY_DEFAULT_TOPIC,
+            auth_cookie_secure=True,
+            auth_cookie_samesite="lax",
+            frontend_base_url="https://app.example.com",
+        )
+
+
+def test_assert_auth_cookie_allows_local_incoherent_combo() -> None:
+    """local/test keep convenient defaults (Secure + http localhost)."""
+    secret_policy.assert_auth_cookie_coherent_for_environment(
+        "local",
+        True,
+        "lax",
+        "http://localhost:5173",
+    )
+    secret_policy.assert_auth_cookie_coherent_for_environment(
+        "test",
+        False,
+        "none",
+        "http://localhost:5173",
+    )
+
+
+def test_assert_auth_cookie_rejects_secure_with_http_frontend() -> None:
+    with pytest.raises(ValueError, match="AUTH_COOKIE_SECURE"):
+        secret_policy.assert_auth_cookie_coherent_for_environment(
+            "production",
+            True,
+            "lax",
+            "http://app.example.com",
+        )
+
+
+def test_assert_auth_cookie_rejects_samesite_none_without_secure() -> None:
+    with pytest.raises(ValueError, match="AUTH_COOKIE_SAMESITE"):
+        secret_policy.assert_auth_cookie_coherent_for_environment(
+            "staging",
+            False,
+            "None",
+            "https://app.example.com",
+        )
+
+
+def test_assert_auth_cookie_allows_secure_https_and_http_insecure() -> None:
+    secret_policy.assert_auth_cookie_coherent_for_environment(
+        "production",
+        True,
+        "none",
+        "https://app.example.com",
+    )
+    secret_policy.assert_auth_cookie_coherent_for_environment(
+        "production",
+        False,
+        "lax",
+        "http://alb.example.com",
+    )
+
+
+def test_assert_boot_safe_rejects_incoherent_cookie_flags() -> None:
+    with pytest.raises(ValueError, match="AUTH_COOKIE_SECURE"):
+        secret_policy.assert_boot_safe_for_environment(
+            "production",
+            "a-real-long-random-production-secret-value",
+            "another-real-production-fernet-value",
+            "smtp.example.com",
+            "jobs-a1b2c3d4e5f67890",
+            auth_cookie_secure=True,
+            auth_cookie_samesite="lax",
+            frontend_base_url="http://app.example.com",
         )
 
 

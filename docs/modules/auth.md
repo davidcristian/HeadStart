@@ -300,7 +300,11 @@ No-op patches (same values) do not log.
 `AUTH_COOKIE_NAME` / `AUTH_COOKIE_PATH` / `AUTH_COOKIE_SECURE` /
 `AUTH_COOKIE_SAMESITE`, and optional `SMTP_*` (see `.env.example`). The cookie
 defaults are production-safe (`Secure` + `SameSite=Lax`); for local dev over
-plain HTTP set `AUTH_COOKIE_SECURE=false`. On AWS, Terraform sets
-`AUTH_COOKIE_SECURE` from `https_enabled` in the ECS task environment (false on
-the default HTTP ALB, true when TLS is configured); secrets such as `JWT_SECRET`
-still come from Secrets Manager (see [deployment.md](deployment.md)).
+plain HTTP set `AUTH_COOKIE_SECURE=false`. Outside `local`/`test`, startup
+rejects incoherent combos (AUT-13): `AUTH_COOKIE_SAMESITE=none` without
+`AUTH_COOKIE_SECURE=true`, and `AUTH_COOKIE_SECURE=true` with a non-`https`
+`FRONTEND_BASE_URL` (use `AUTH_COOKIE_SECURE=false` for plain-HTTP frontends).
+On AWS, Terraform sets `AUTH_COOKIE_SECURE` from `https_enabled` in the ECS
+task environment (false on the default HTTP ALB, true when TLS is configured);
+secrets such as `JWT_SECRET` still come from Secrets Manager (see
+[deployment.md](deployment.md)).

@@ -38,7 +38,74 @@ def test_real_secrets_pass_outside_local(monkeypatch: pytest.MonkeyPatch) -> Non
     monkeypatch.setenv("CREDENTIALS_SECRET_KEY", "another-real-production-fernet-value")
     monkeypatch.setenv("SMTP_HOST", "smtp.example.com")
     monkeypatch.setenv("NTFY_DEFAULT_TOPIC", "jobs-a1b2c3d4e5f67890")
+    monkeypatch.setenv("FRONTEND_BASE_URL", "https://app.example.com")
     assert Settings(_env_file=None).environment == "production"  # type: ignore[call-arg]
+
+
+def test_http_frontend_with_secure_cookie_rejected_outside_local(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """AUT-13: Secure refresh cookie + http FRONTEND_BASE_URL must fail fast outside local."""
+    monkeypatch.setenv("ENVIRONMENT", "production")
+    monkeypatch.setenv("JWT_SECRET", "a-real-long-random-production-secret-value")
+    monkeypatch.setenv("CREDENTIALS_SECRET_KEY", "another-real-production-fernet-value")
+    monkeypatch.setenv("SMTP_HOST", "smtp.example.com")
+    monkeypatch.setenv("NTFY_DEFAULT_TOPIC", "jobs-a1b2c3d4e5f67890")
+    monkeypatch.setenv("FRONTEND_BASE_URL", "http://app.example.com")
+    monkeypatch.setenv("AUTH_COOKIE_SECURE", "true")
+    with pytest.raises(ValidationError) as exc_info:
+        Settings(_env_file=None)  # type: ignore[call-arg]
+    assert "AUTH_COOKIE_SECURE" in str(exc_info.value)
+    assert "FRONTEND_BASE_URL" in str(exc_info.value)
+
+
+def test_http_frontend_with_insecure_cookie_allowed_outside_local(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """HTTP ALB deploys (XCT-15) keep AUTH_COOKIE_SECURE=false with an http frontend."""
+    monkeypatch.setenv("ENVIRONMENT", "production")
+    monkeypatch.setenv("JWT_SECRET", "a-real-long-random-production-secret-value")
+    monkeypatch.setenv("CREDENTIALS_SECRET_KEY", "another-real-production-fernet-value")
+    monkeypatch.setenv("SMTP_HOST", "smtp.example.com")
+    monkeypatch.setenv("NTFY_DEFAULT_TOPIC", "jobs-a1b2c3d4e5f67890")
+    monkeypatch.setenv("FRONTEND_BASE_URL", "http://alb.example.com")
+    monkeypatch.setenv("AUTH_COOKIE_SECURE", "false")
+    settings = Settings(_env_file=None)  # type: ignore[call-arg]
+    assert settings.auth_cookie_secure is False
+
+
+def test_samesite_none_without_secure_rejected_outside_local(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """AUT-13: SameSite=None without Secure is rejected outside local/test."""
+    monkeypatch.setenv("ENVIRONMENT", "staging")
+    monkeypatch.setenv("JWT_SECRET", "a-real-long-random-production-secret-value")
+    monkeypatch.setenv("CREDENTIALS_SECRET_KEY", "another-real-production-fernet-value")
+    monkeypatch.setenv("SMTP_HOST", "smtp.example.com")
+    monkeypatch.setenv("NTFY_DEFAULT_TOPIC", "jobs-a1b2c3d4e5f67890")
+    monkeypatch.setenv("FRONTEND_BASE_URL", "https://app.example.com")
+    monkeypatch.setenv("AUTH_COOKIE_SECURE", "false")
+    monkeypatch.setenv("AUTH_COOKIE_SAMESITE", "None")
+    with pytest.raises(ValidationError) as exc_info:
+        Settings(_env_file=None)  # type: ignore[call-arg]
+    assert "AUTH_COOKIE_SAMESITE" in str(exc_info.value)
+
+
+def test_samesite_none_with_secure_https_allowed_outside_local(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """SameSite=None is valid when Secure is set and the frontend is https."""
+    monkeypatch.setenv("ENVIRONMENT", "production")
+    monkeypatch.setenv("JWT_SECRET", "a-real-long-random-production-secret-value")
+    monkeypatch.setenv("CREDENTIALS_SECRET_KEY", "another-real-production-fernet-value")
+    monkeypatch.setenv("SMTP_HOST", "smtp.example.com")
+    monkeypatch.setenv("NTFY_DEFAULT_TOPIC", "jobs-a1b2c3d4e5f67890")
+    monkeypatch.setenv("FRONTEND_BASE_URL", "https://app.example.com")
+    monkeypatch.setenv("AUTH_COOKIE_SECURE", "true")
+    monkeypatch.setenv("AUTH_COOKIE_SAMESITE", "none")
+    settings = Settings(_env_file=None)  # type: ignore[call-arg]
+    assert settings.auth_cookie_samesite == "none"
+    assert settings.auth_cookie_secure is True
 
 
 def test_smtp_host_required_outside_local(monkeypatch: pytest.MonkeyPatch) -> None:

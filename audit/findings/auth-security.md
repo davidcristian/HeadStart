@@ -158,7 +158,7 @@ This area covers authentication and session management (login, registration, pas
 
 <a id="aut-13"></a>
 ### AUT-13 — No prod validator couples AUTH_COOKIE_SECURE/SameSite to FRONTEND_BASE_URL scheme
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: medium (3/5 verifiers) · Effort: S · WS19
+⚪ **LOW** · 🔒 security · Status: ✅ done · Confidence: medium (3/5 verifiers) · Effort: S · WS19
 
 **Locations:** `backend/app/core/config.py:249` (`_reject_placeholder_secrets_outside_local`); plus `backend/app/core/config.py:54`.
 

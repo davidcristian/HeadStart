@@ -5,12 +5,16 @@ A default ``jwt_secret`` lets anyone forge access/refresh tokens; a default
 Unset ``SMTP_HOST`` outside local/test would otherwise log password-reset and
 email-verification URLs (token embedded) to stdout. A guessable
 ``NTFY_DEFAULT_TOPIC`` (e.g. ``headstart-change-me``) publishes job alerts to
-a public ntfy.sh channel anyone can subscribe to. The values live here (not
-inline in ``config.py``) so the settings schema can stay under the file-length
-cap while the policy has one obvious home.
+a public ntfy.sh channel anyone can subscribe to. Incoherent refresh-cookie
+flags (``SameSite=None`` without ``Secure``, or ``Secure`` with an ``http``
+``FRONTEND_BASE_URL``) boot into silent auth breakage (AUT-13). The values live
+here (not inline in ``config.py``) so the settings schema can stay under the
+file-length cap while the policy has one obvious home.
 """
 
 from __future__ import annotations
+
+from urllib.parse import urlparse
 
 # Placeholder secrets shipped for local dev convenience. Used as the field
 # defaults in ``config.py`` and as the sentinels this module rejects in prod.
@@ -79,14 +83,51 @@ def assert_ntfy_topic_safe_for_environment(environment: str, ntfy_default_topic:
     )
 
 
+def assert_auth_cookie_coherent_for_environment(
+    environment: str,
+    auth_cookie_secure: bool,
+    auth_cookie_samesite: str,
+    frontend_base_url: str,
+) -> None:
+    """Reject SameSite=None without Secure, or Secure cookies with an http frontend URL."""
+    if is_local_environment(environment):
+        return
+    samesite = auth_cookie_samesite.strip().lower()
+    if samesite == "none" and not auth_cookie_secure:
+        raise ValueError(
+            f"AUTH_COOKIE_SAMESITE=none requires AUTH_COOKIE_SECURE=true when "
+            f"ENVIRONMENT='{environment}' (browsers reject insecure SameSite=None)."
+        )
+    if not auth_cookie_secure:
+        return
+    scheme = urlparse(frontend_base_url.strip()).scheme.lower()
+    if scheme == "https":
+        return
+    raise ValueError(
+        f"AUTH_COOKIE_SECURE=true requires an https FRONTEND_BASE_URL when "
+        f"ENVIRONMENT='{environment}' (got scheme={scheme!r}); "
+        "set AUTH_COOKIE_SECURE=false for plain-HTTP frontends."
+    )
+
+
 def assert_boot_safe_for_environment(
     environment: str,
     jwt_secret: str,
     credentials_secret_key: str,
     smtp_host: str,
     ntfy_default_topic: str,
+    *,
+    auth_cookie_secure: bool = True,
+    auth_cookie_samesite: str = "lax",
+    frontend_base_url: str = "https://example.invalid",
 ) -> None:
-    """Run every non-local startup guard (secrets, SMTP, ntfy topic)."""
+    """Run every non-local startup guard (secrets, SMTP, ntfy, cookie coherence)."""
     assert_secrets_safe_for_environment(environment, jwt_secret, credentials_secret_key)
     assert_smtp_configured_for_environment(environment, smtp_host)
     assert_ntfy_topic_safe_for_environment(environment, ntfy_default_topic)
+    assert_auth_cookie_coherent_for_environment(
+        environment,
+        auth_cookie_secure,
+        auth_cookie_samesite,
+        frontend_base_url,
+    )

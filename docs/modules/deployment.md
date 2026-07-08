@@ -72,12 +72,14 @@ terminate TLS:
 `app_url`, `CORS_ORIGINS`, and `FRONTEND_BASE_URL` default to `https://<domain>`
 when HTTPS is enabled. `AUTH_COOKIE_SECURE` is derived the same way (`true` when
 `https_enabled`, otherwise `false`) so the refresh cookie is not dropped on the
-default HTTP ALB. Optional `smtp_*` variables configure transactional email
-(`SMTP_PASSWORD` in Secrets Manager). `ntfy_default_topic` is **required** (no
-Terraform default): ntfy.sh topics are public by name, so beta/prod reject empty
-or `change-me` placeholders and the app refuses the same guessable default
-outside `local`/`test` (OPS-16). See
-[deploying-to-aws.md](../deploying-to-aws.md#custom-domain--https) and
+default HTTP ALB. Outside `local`/`test`, the API also refuses to boot when
+`AUTH_COOKIE_SECURE=true` is paired with a non-`https` `FRONTEND_BASE_URL`, or
+when `AUTH_COOKIE_SAMESITE=none` is set without Secure (AUT-13). Optional
+`smtp_*` variables configure transactional email (`SMTP_PASSWORD` in Secrets
+Manager). `ntfy_default_topic` is **required** (no Terraform default): ntfy.sh
+topics are public by name, so beta/prod reject empty or `change-me` placeholders
+and the app refuses the same guessable default outside `local`/`test` (OPS-16).
+See [deploying-to-aws.md](../deploying-to-aws.md#custom-domain--https) and
 [launch-checklist.md](../launch-checklist.md).
 
 ## Worker sizing (Playwright)

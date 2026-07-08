@@ -250,13 +250,16 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def _reject_placeholder_secrets_outside_local(self) -> "Settings":
-        """Refuse non-local boots with placeholder secrets / SMTP / ntfy topic."""
+        """Refuse non-local boots with placeholder secrets / SMTP / ntfy / cookie drift."""
         secret_policy.assert_boot_safe_for_environment(
             self.environment,
             self.jwt_secret,
             self.credentials_secret_key,
             self.smtp_host,
             self.ntfy_default_topic,
+            auth_cookie_secure=self.auth_cookie_secure,
+            auth_cookie_samesite=self.auth_cookie_samesite,
+            frontend_base_url=self.frontend_base_url,
         )
         return self
 
