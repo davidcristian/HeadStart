@@ -10,6 +10,17 @@ def test_cors_origins_parses_comma_separated_env(monkeypatch: pytest.MonkeyPatch
     assert settings.cors_origins == ["http://a.test", "http://b.test"]
 
 
+def test_trusted_proxy_cidrs_parses_and_validates(monkeypatch: pytest.MonkeyPatch) -> None:
+    """AUT-17: TRUSTED_PROXY_CIDRS accepts CSV CIDRs and rejects junk at boot."""
+    monkeypatch.setenv("TRUSTED_PROXY_CIDRS", "10.0.0.0/8, 2001:db8::/32")
+    settings = Settings(_env_file=None)  # type: ignore[call-arg]
+    assert settings.trusted_proxy_cidrs == ["10.0.0.0/8", "2001:db8::/32"]
+
+    monkeypatch.setenv("TRUSTED_PROXY_CIDRS", "not-a-cidr")
+    with pytest.raises(ValidationError, match="TRUSTED_PROXY_CIDRS"):
+        Settings(_env_file=None)  # type: ignore[call-arg]
+
+
 def test_cors_origins_accepts_list_default() -> None:
     settings = Settings(_env_file=None)  # type: ignore[call-arg]
     assert isinstance(settings.cors_origins, list)
@@ -266,8 +277,11 @@ def test_change_me_ntfy_topic_rejected_outside_local(
 
 def test_samesite_normalizer_passes_through_non_string() -> None:
     """The SameSite validator only lowercases strings; other types pass unchanged."""
-    assert Settings._normalize_samesite(None) is None
-    assert Settings._normalize_samesite(123) == 123
+    from app.core.trusted_proxies import normalize_samesite
+
+    assert normalize_samesite(None) is None
+    assert normalize_samesite(123) == 123
+    assert Settings._normalize_samesite("Lax") == "lax"
 
 
 def test_log_format_defaults_to_json() -> None:
@@ -293,3 +307,13 @@ def test_parse_log_format_rejects_non_string() -> None:
         parse_log_format(None)
     with pytest.raises(TypeError, match="LOG_FORMAT"):
         parse_log_format(1)
+
+
+def test_parse_csv_list_and_validate_trusted_proxy_cidrs() -> None:
+    from app.core.trusted_proxies import parse_csv_list, validate_trusted_proxy_cidrs
+
+    assert parse_csv_list("10.0.0.0/8, 192.168.0.0/16") == ["10.0.0.0/8", "192.168.0.0/16"]
+    assert parse_csv_list(["10.0.0.0/8"]) == ["10.0.0.0/8"]
+    assert validate_trusted_proxy_cidrs(["10.0.0.0/8"]) == ["10.0.0.0/8"]
+    with pytest.raises(ValueError, match="TRUSTED_PROXY_CIDRS"):
+        validate_trusted_proxy_cidrs(["nope"])

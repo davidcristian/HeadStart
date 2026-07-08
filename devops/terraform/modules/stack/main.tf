@@ -173,6 +173,8 @@ locals {
       REDIS_TLS         = "true"
       CORS_ORIGINS      = join(",", local.effective_cors)
       FRONTEND_BASE_URL = local.app_base_url
+      # AUT-17: trust ALB-appended X-Forwarded-For from peers in this VPC.
+      TRUSTED_PROXY_CIDRS              = var.vpc_cidr
       # Match Secure cookie flag to ALB scheme (HTTP default drops Secure cookies).
       AUTH_COOKIE_SECURE               = local.https_enabled ? "true" : "false"
       NTFY_DEFAULT_SERVER_URL          = var.ntfy_default_server_url

@@ -101,6 +101,9 @@ sliding window (`app.core.rate_limit`). Exceeding a bucket returns **429**
 | `POST /refresh` | client IP | 60 / 15 min |
 | Outbound reset / verify email | email address | 5 / hour |
 
+Client IP for these buckets uses the same `request_meta` rules as GDPR audit
+logging (trusted-proxy XFF or TCP peer; see below).
+
 Counters are process-local (each API task enforces its own ceiling). Tests call
 `reset_rate_limiter()` so suites do not leak 429s across cases.
 
@@ -231,7 +234,12 @@ grant to revoke. Provider errors are logged and do not block local erasure
 
 Successful export and deletion requests are recorded in `data_request_log`.
 Export rows keep the live email (and optional client IP / user agent) while the
-account exists. On deletion, prior export rows for that user are redacted and
+account exists. Client IP comes from `app.core.request_meta`: the TCP peer by
+default, or — when `TRUSTED_PROXY_CIDRS` includes that peer — the rightmost
+untrusted hop in `X-Forwarded-For` (validated/normalized, max 45 chars). Empty
+`TRUSTED_PROXY_CIDRS` ignores XFF so clients cannot forge GDPR/audit IPs
+(AUT-17); ECS sets the VPC CIDR so ALB-appended addresses are trusted. On
+deletion, prior export rows for that user are redacted and
 the deletion row stores only an HMAC email pseudonym (`erased:<hex>`) with no
 IP or user agent — recoverable PII does not survive erasure (DAT-02). Admins
 list recent rows via `GET /admin/data-requests`.

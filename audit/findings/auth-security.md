@@ -200,7 +200,7 @@ This area covers authentication and session management (login, registration, pas
 
 <a id="aut-17"></a>
 ### AUT-17 — GDPR/audit client IP taken from unverified, unbounded X-Forwarded-For (spoofable)
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: high (3/5 verifiers) · Effort: S · WS19
+⚪ **LOW** · 🔒 security · Status: ✅ done · Confidence: high (3/5 verifiers) · Effort: S · WS19
 
 **Merge note.** Consolidates four confirmed records reporting the same defect: AUT-17 (uid 3), AUT-18 (uid 7, which adds the varchar(45)-overflow angle), AUT-19 (uid 238) and AUT-20 (uid 328).
 
@@ -213,6 +213,8 @@ This area covers authentication and session management (login, registration, pas
 **Suggested fix.** Only honor XFF from a configured trusted-proxy hop (parse right-to-left past trusted CIDRs), validate that it parses as an IP, and truncate/normalize before persisting; otherwise fall back to `request.client.host`.
 
 **Verification.** Confirmed 3/3 adversarial verifiers (all four merged records confirmed 3/3). `request_meta` takes `split(',')[0]` with no trusted-proxy allowlist or length cap and persists to the GDPR `DataRequestLog`; the field is audit-only (not authz/rate-limit), so impact is audit-trail integrity plus the insert-overflow 500 — hardening, low.
+
+**Resolution.** `request_meta` now ignores XFF unless the TCP peer is in `TRUSTED_PROXY_CIDRS`, walks hops right-to-left past trusted CIDRs, and stores only normalized IPs (≤45 chars). Empty allowlist (local default) uses the peer only; ECS sets `TRUSTED_PROXY_CIDRS` to the VPC CIDR. See [PR #88](https://github.com/davidcristian/HeadStart/pull/88).
 
 <a id="aut-21"></a>
 ### AUT-21 — JWT decode paths do not require exp/iat (RFC 8725) — accept unexpiring tokens

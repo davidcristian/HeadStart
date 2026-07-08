@@ -8,12 +8,13 @@ from functools import lru_cache
 from typing import Annotated
 
 from pydantic import BeforeValidator, computed_field, field_validator, model_validator
-from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from app.core import secret_policy
 from app.core.feature_flags import stripe_billing_configured
 from app.core.log_format import parse_log_format
 from app.core.redis_url import redis_url_from_settings
+from app.core.trusted_proxies import CsvStrList, TrustedProxyCidrs, normalize_samesite
 
 
 class Settings(BaseSettings):
@@ -30,11 +31,12 @@ class Settings(BaseSettings):
     # json (default) for CloudWatch/Loki; text for local grepping (AUT-16).
     log_format: Annotated[str, BeforeValidator(parse_log_format)] = "json"
     # ---- api ----
-    # NoDecode: stop pydantic-settings JSON-parsing the env var so the validator accepts CSV.
-    cors_origins: Annotated[list[str], NoDecode] = [
+    cors_origins: CsvStrList = [
         "http://localhost:5173",
         "http://localhost:8080",
     ]
+    # Empty = ignore XFF. ECS sets VPC CIDR so ALB client IPs are trusted (AUT-17).
+    trusted_proxy_cidrs: TrustedProxyCidrs = []
 
     # ---- auth (JWT) ----
     # Stable random JWT secret; rejected outside local/test — see core/secret_policy.py.
@@ -44,14 +46,10 @@ class Settings(BaseSettings):
     refresh_token_expire_days: int = 7
     password_reset_expire_minutes: int = 60
     email_verification_expire_minutes: int = 1440  # 24 hours
-    # Base URL of the web UI (used in password-reset and verification links).
     frontend_base_url: str = "http://localhost:5173"
 
     # ---- auth refresh cookie ----
-    # The refresh token is delivered as an httpOnly cookie (never readable by JS,
-    # so it is out of reach of XSS). Scope it to the auth endpoints. Defaults are
-    # production-safe (Secure + Lax, same-site behind nginx); over plain-HTTP
-    # local dev set AUTH_COOKIE_SECURE=false.
+    # httpOnly refresh cookie (XSS-safe). Prod defaults Secure+Lax; local HTTP: SECURE=false.
     auth_cookie_name: str = "headstart_refresh"
     auth_cookie_path: str = "/api/v1/auth"
     auth_cookie_secure: bool = True
@@ -60,10 +58,7 @@ class Settings(BaseSettings):
     @field_validator("auth_cookie_samesite", mode="before")
     @classmethod
     def _normalize_samesite(cls, value: object) -> object:
-        """SameSite is case-insensitive; Starlette expects a lowercase literal."""
-        if isinstance(value, str):
-            return value.strip().lower()
-        return value
+        return normalize_samesite(value)
 
     # ---- email (password reset + email notifier) ----
     # Empty SMTP_HOST is local/test-only (links logged); required elsewhere (AUT-01).
@@ -75,17 +70,12 @@ class Settings(BaseSettings):
     smtp_use_tls: bool = True
 
     # ---- credential encryption ----
-    # Stretched via scrypt into a Fernet key (core/crypto.py). Prefer Fernet.generate_key().
-    # Non-local boots require length >= secret_policy.MIN_CREDENTIALS_SECRET_KEY_LEN.
+    # scrypt → Fernet (core/crypto.py). Non-local length >= MIN_CREDENTIALS_SECRET_KEY_LEN.
     credentials_secret_key: str = secret_policy.DEV_CREDENTIALS_SECRET_KEY
-    # Prior key kept in MultiFernet so rotation does not brick ciphertext.
-    credentials_secret_key_previous: str = ""
+    credentials_secret_key_previous: str = ""  # MultiFernet rotation
 
-    # Max resume file size for application-profile uploads (bytes).
     profile_resume_max_bytes: int = 2_097_152
-    # Max LaTeX resume template size (bytes).
     profile_resume_template_max_bytes: int = 524_288
-    # Max multi-file LaTeX template bundle (.zip) size (bytes).
     profile_resume_template_bundle_max_bytes: int = 2_097_152
 
     # ---- database ----
@@ -114,57 +104,41 @@ class Settings(BaseSettings):
 
     # ---- metrics (Prometheus) ----
     metrics_enabled: bool = True
-    # Worker-only HTTP port for /metrics when the pipeline runs in Celery.
-    metrics_port: int = 9090
-    # Optional bearer token for API and worker GET /metrics (empty = unauthenticated).
-    metrics_token: str = ""
+    metrics_port: int = 9090  # worker /metrics bind
+    metrics_token: str = ""  # empty = unauthenticated
 
     # ---- AI summaries ("why this matches" blurb in notifications) ----
-    # Generate a short blurb per new job and include it in notifications + the
-    # Jobs feed. The default provider is offline and free.
     summaries_enabled: bool = True
-    # Registered summarizer key: "heuristic" (offline, default), "openai",
-    # "gemini", "anthropic", or "llamacpp" (local dev only).
+    # heuristic | openai | gemini | anthropic | llamacpp
     summary_provider: str = "heuristic"
-    # Hard cap on a blurb's length before it is stored/sent.
     summary_max_chars: int = 280
 
-    # ---- AI cover letters (apply dialog; reuses SUMMARY_PROVIDER for Pro users) ----
+    # ---- AI cover letters / resume curation ----
     cover_letters_enabled: bool = True
     cover_letter_max_chars: int = 4000
     cover_letter_max_tokens: int = 900
-
-    # ---- AI resume curation (LaTeX template → tailored PDF) ----
     resume_curation_enabled: bool = True
     resume_curation_max_tokens: int = 1200
     resume_compile_timeout_seconds: float = 60.0
 
-    # ---- AI inbox email classification (dev-only inbox agent) ----
+    # ---- AI inbox classification / reply drafting (dev) ----
     email_classify_max_body_chars: int = 8000
     email_classify_max_tokens: int = 256
-
-    # ---- AI inbox reply drafting (dev-only; dry-run, no auto-send) ----
     reply_drafts_enabled: bool = True
     email_draft_max_chars: int = 4000
     email_draft_max_tokens: int = 600
 
-    # ---- OpenAI (used only when summary_provider = "openai") ----
+    # ---- OpenAI / Gemini / Anthropic / llama.cpp ----
     openai_api_key: str = ""
     openai_model: str = "gpt-4o-mini"
     openai_base_url: str = "https://api.openai.com/v1"
-
-    # ---- Gemini (used only when summary_provider = "gemini") ----
     gemini_api_key: str = ""
     gemini_model: str = "gemini-2.0-flash"
     gemini_base_url: str = "https://generativelanguage.googleapis.com/v1beta"
-
-    # ---- Anthropic (used only when summary_provider = "anthropic") ----
     anthropic_api_key: str = ""
     anthropic_model: str = "claude-3-5-haiku-latest"
     anthropic_base_url: str = "https://api.anthropic.com/v1"
     anthropic_api_version: str = "2023-06-01"
-
-    # ---- llama.cpp (used only when summary_provider = "llamacpp"; local dev) ----
     llamacpp_base_url: str = "http://localhost:8080/v1"
     llamacpp_model: str = "local"
     llamacpp_api_key: str = ""
@@ -174,13 +148,11 @@ class Settings(BaseSettings):
     ntfy_default_topic: str = secret_policy.DEV_NTFY_DEFAULT_TOPIC
 
     # ---- free-tier ads ----
-    ads_enabled: bool = True  # false hides all in-app ads (including upgrade card)
-    # HTTPS ad iframe URL (optional-cookie gated); empty = upgrade CTA only.
-    ads_external_slot_url: str = ""
+    ads_enabled: bool = True
+    ads_external_slot_url: str = ""  # HTTPS iframe; empty = upgrade CTA only
 
     # ---- inbox agent (dev-only; Phase 20c mailbox connector) ----
-    inbox_agent_enabled: bool = False  # do not enable on hosted multi-tenant prod
-    # Fall back to INBOX_* env vars when a user has no saved mailbox creds.
+    inbox_agent_enabled: bool = False
     inbox_use_env_credentials: bool = False
     inbox_imap_host: str = ""
     inbox_imap_port: int = 993
@@ -194,61 +166,39 @@ class Settings(BaseSettings):
     inbox_smtp_user: str = ""
     inbox_smtp_password: str = ""
     inbox_smtp_from: str = ""
-    # Gmail OAuth (dev-only inbox connector; optional)
     gmail_oauth_client_id: str = ""
     gmail_oauth_client_secret: str = ""
     gmail_oauth_redirect_uri: str = ""
-    # Outlook OAuth (dev-only inbox connector; optional)
     outlook_oauth_client_id: str = ""
     outlook_oauth_client_secret: str = ""
     outlook_oauth_redirect_uri: str = ""
-    # Yahoo OAuth (dev-only inbox connector; optional)
     yahoo_oauth_client_id: str = ""
     yahoo_oauth_client_secret: str = ""
     yahoo_oauth_redirect_uri: str = ""
-    # Days without recruiter reply before a self-sent ghost summary is emailed.
     inbox_ghost_window_days: int = 14
-    # How often beat checks for stale applications (seconds).
     inbox_ghost_check_interval_seconds: int = 3600
-    # How often beat polls mailboxes for new_string classification (seconds).
     inbox_poll_interval_seconds: int = 300
-    # Max messages to fetch and classify per user per poll tick.
     inbox_poll_batch_size: int = 50
-    # Minimum delay before auto-sent recruiter replies (seconds; never below 60).
     inbox_reply_min_delay_seconds: int = 1800
-    # Random extra delay added on top of the minimum (seconds).
     inbox_reply_delay_jitter_seconds: int = 900
-    # How often beat processes due pending auto-replies (seconds).
     inbox_reply_send_interval_seconds: int = 60
-    # Max autonomous recruiter replies per user per hour (0 = unlimited).
     inbox_reply_max_per_hour: int = 10
-    # Max autonomous recruiter replies per user per day (0 = unlimited).
     inbox_reply_max_per_day: int = 30
 
-    # ---- Stripe billing (optional; leave empty to disable paid checkout) ----
+    # ---- Stripe billing (optional; empty disables paid checkout) ----
     stripe_secret_key: str = ""
     stripe_webhook_secret: str = ""
-    # Stripe Price IDs (create in the Stripe Dashboard; must be recurring).
     stripe_price_starter_monthly: str = ""
     stripe_price_starter_annual: str = ""
     stripe_price_plus_monthly: str = ""
     stripe_price_plus_annual: str = ""
     stripe_price_pro_monthly: str = ""
     stripe_price_pro_annual: str = ""
-    # Optional trial length for new Pro subscriptions (days).
     stripe_trial_days: int = 14
 
-    # ---- seed (local demo account that owns the example data) ----
+    # ---- seed (local demo account) ----
     seed_user_email: str = "demo@example.com"
     seed_user_password: str = "demo-password-change-me"
-
-    @field_validator("cors_origins", mode="before")
-    @classmethod
-    def _split_csv(cls, value: object) -> object:
-        """Allow CORS origins as a comma-separated string in the environment."""
-        if isinstance(value, str):
-            return [item.strip() for item in value.split(",") if item.strip()]
-        return value
 
     @model_validator(mode="after")
     def _reject_placeholder_secrets_outside_local(self) -> "Settings":
