@@ -1,11 +1,17 @@
 """Celery application used by both the worker and beat processes."""
 
 from celery import Celery
-from celery.signals import worker_process_init, worker_process_shutdown
+from celery.signals import (
+    task_postrun,
+    task_prerun,
+    worker_process_init,
+    worker_process_shutdown,
+)
 
 from app.core.config import settings
-from app.core.logging import configure_logging
+from app.core.logging import configure_logging, reset_request_id
 from app.core.metrics import start_metrics_server
+from app.core.request_id import bind_celery_task_id
 from app.worker.schedule import beat_schedule
 
 configure_logging()
@@ -53,6 +59,18 @@ def _close_playwright_browser(**_: object) -> None:
     from app.scrapers.playwright_browser import close_browser
 
     close_browser()
+
+
+@task_prerun.connect
+def _bind_task_request_id(task_id: str | None = None, **_: object) -> None:
+    """Correlate worker log lines to the Celery task id (AUT-15)."""
+    bind_celery_task_id(task_id)
+
+
+@task_postrun.connect
+def _clear_task_request_id(**_: object) -> None:
+    """Drop the task correlation id so the next task cannot inherit it."""
+    reset_request_id()
 
 
 # Importing the tasks module registers the task functions on this app.

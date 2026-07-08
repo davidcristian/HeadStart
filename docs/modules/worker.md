@@ -11,13 +11,22 @@ Celery provides the scheduler (beat) and the workers. The worker package is
   settings). On AWS, Terraform sets `REDIS_TLS=true` and injects
   `REDIS_PASSWORD` (ElastiCache AUTH) so settings build `rediss://` URLs
   with `ssl_cert_reqs=required`; local docker Redis stays plaintext
-  `redis://` with no password.
+  `redis://` with no password. Task `prerun`/`postrun` signals bind the
+  Celery task id into the shared log correlation field (see
+  [Request correlation id](#request-correlation-id-aut-15)).
 - `schedule.py` — beat ticks: enqueue due searches, flush digest queues, and
   (when inbox agent is enabled) inbox polling and ghost detection.
 - `tasks.py` — `run_search(search_id)`, `run_search_run` (manual Run now),
   `flush_due_digests()`, `apply_to_job`,
   `generate_resume`, `generate_cover_letter`, `process_inbox_messages`, and
   `detect_ghosted_applications`.
+
+## Request correlation id (AUT-15)
+
+While a task runs, log lines include `[<celery-task-id>]` (same formatter field
+as the API's `X-Request-ID`). That lets scrape/notify/apply warnings from
+overlapping worker children be attributed to one task without JSON log
+restructuring (AUT-16 is separate).
 
 ## Due-based scheduling with catch-up
 

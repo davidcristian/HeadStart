@@ -172,7 +172,7 @@ This area covers authentication and session management (login, registration, pas
 
 <a id="aut-15"></a>
 ### AUT-15 — No request/correlation ID in logs; log lines cannot be tied to a request or user
-⚪ **LOW** · ♻️ refactor · Status: ☐ open · Confidence: high (3/5 verifiers) · Effort: M · WS19
+⚪ **LOW** · ♻️ refactor · Status: ✅ done · [PR](https://github.com/davidcristian/HeadStart/pull/86) · Confidence: high (3/5 verifiers) · Effort: M · WS19
 
 **Locations:** `backend/app/core/logging.py:18` (`configure_logging`).
 

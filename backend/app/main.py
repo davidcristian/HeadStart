@@ -18,6 +18,7 @@ from app.core.exceptions import (
 )
 from app.core.logging import configure_logging
 from app.core.metrics import render_metrics
+from app.core.request_id import RequestIdMiddleware
 
 API_PREFIX = "/api/v1"
 
@@ -31,6 +32,8 @@ def create_app() -> FastAPI:
         summary="Configure job-site searches and get notified about new postings.",
     )
 
+    # Last add_middleware wins as outermost; CORS must wrap the app for preflight.
+    app.add_middleware(RequestIdMiddleware)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,

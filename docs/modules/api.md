@@ -116,6 +116,15 @@ Auth abuse endpoints (`/auth/login`, `/register`, `/forgot-password`,
 **429** when their per-IP / per-email / per-user sliding windows are exceeded —
 see [auth.md](auth.md#rate-limiting-aut-03).
 
+## Request correlation id (AUT-15)
+
+Every HTTP response includes an `X-Request-ID` header. Clients may send their
+own `X-Request-ID` (letters, digits, `.`, `_`, `-`; max 128 chars); otherwise
+the API mints a UUID4. The active id is bound via a contextvar and appears in
+every log line as `[request_id]` so interleaved API output can be grepped to one
+request. Celery workers bind the same field to the task id for the duration of
+each task (see [worker.md](worker.md#request-correlation-id-aut-15)).
+
 ## Adding an endpoint
 
 See [../recipes.md](../recipes.md) → "add an API endpoint".
