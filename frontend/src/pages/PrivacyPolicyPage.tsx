@@ -178,11 +178,17 @@ export function PrivacyPolicyPage() {
           permanently delete your account from <strong>Settings → Your account</strong> in the app.
         </p>
         <p>
-          After account deletion we keep a minimal audit record that a deletion occurred (timestamp
-          and a one-way pseudonym of the former email address). That record does not retain your
-          plaintext email, IP address, or user agent. Export audit rows for an active account may
-          include email and request metadata until you delete the account, at which point they are
-          redacted the same way.
+          <strong>Inbox / recruiter email:</strong> when you connect a mailbox, we retain message
+          metadata, classification excerpts, reply drafts, pending auto-replies, and send logs
+          needed for inbox features for as long as the account (and mailbox connection) remains.
+          That recruiter-email content is removed with your account — it does not survive erasure.
+        </p>
+        <p>
+          <strong>Post-deletion audit log:</strong> after account deletion we keep a minimal
+          compliance record that a deletion occurred (timestamp and a one-way pseudonym of the
+          former email address). That record does not retain your plaintext email, IP address, or
+          user agent. Export audit rows for an active account may include email and request metadata
+          until you delete the account, at which point they are redacted the same way.
         </p>
       </section>
 

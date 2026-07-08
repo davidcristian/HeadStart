@@ -543,7 +543,7 @@ _Merged with FRO-15 — both records describe the same defect: no single-flight 
 
 <a id="fro-40"></a>
 ### FRO-40 — Retention section omits post-deletion audit-email retention and inbox data
-⚪ **LOW** · 📝 doc · Status: ☐ open · Confidence: high (3/5 verifiers) · Effort: S · WS18
+⚪ **LOW** · 📝 doc · Status: ✅ done · Confidence: high (3/5 verifiers) · Effort: S · WS18
 
 **Locations:** `frontend/src/pages/PrivacyPolicyPage.tsx:120` (`PrivacyPolicyPage`).
 
