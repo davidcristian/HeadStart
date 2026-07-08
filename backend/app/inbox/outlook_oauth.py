@@ -19,6 +19,9 @@ from app.models.base import utcnow
 
 MICROSOFT_AUTH_URL = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize"
 MICROSOFT_TOKEN_URL = "https://login.microsoftonline.com/common/oauth2/v2.0/token"
+# Microsoft has no Google-style per-app token revoke for multi-tenant Mail.* apps.
+# Graph revokeSignInSessions would invalidate *all* of the user's refresh tokens
+# (Teams/Outlook/etc.) and requires User.RevokeSessions.All, which we do not hold.
 GRAPH_ME_URL = "https://graph.microsoft.com/v1.0/me"
 OUTLOOK_SCOPES = (
     "offline_access",

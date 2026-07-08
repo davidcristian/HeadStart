@@ -342,7 +342,7 @@ This area covers authentication and session management (login, registration, pas
 
 <a id="aut-33"></a>
 ### AUT-33 — Deletion destroys but never revokes mailbox OAuth tokens at providers
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: high (3/5 verifiers) · Effort: M · WS18
+⚪ **LOW** · 🔒 security · Status: ✅ done · Confidence: high (3/5 verifiers) · Effort: M · WS18
 
 **Locations:** `backend/app/services/auth_account.py:93` (`delete_user_account`).
 

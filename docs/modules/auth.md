@@ -210,6 +210,17 @@ When Stripe is configured and the account has billing IDs, deletion first
 cancels any `stripe_subscription_id` and deletes the `stripe_customer_id`
 (best-effort: Stripe errors are logged and do not block local erasure).
 
+Before the local user row (and cascaded `mailbox_credential`) is removed,
+deletion also best-effort revokes mailbox OAuth grants at the provider:
+Gmail via `https://oauth2.googleapis.com/revoke` and Yahoo via
+`https://api.login.yahoo.com/oauth2/revoke`. Microsoft identity platform has
+no safe per-app revoke for multi-tenant Mail.* apps (Graph
+`revokeSignInSessions` would invalidate all of the user's refresh tokens and
+requires scopes we do not hold), so Outlook tokens are discarded locally only;
+users can revoke at account.microsoft.com. IMAP/Fastmail have no OAuth refresh
+grant to revoke. Provider errors are logged and do not block local erasure
+(AUT-33).
+
 Successful export and deletion requests are recorded in `data_request_log`.
 Export rows keep the live email (and optional client IP / user agent) while the
 account exists. On deletion, prior export rows for that user are redacted and

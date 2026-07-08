@@ -19,6 +19,7 @@ from app.models.base import utcnow
 
 YAHOO_AUTH_URL = "https://api.login.yahoo.com/oauth2/request_auth"
 YAHOO_TOKEN_URL = "https://api.login.yahoo.com/oauth2/get_token"
+YAHOO_REVOKE_URL = "https://api.login.yahoo.com/oauth2/revoke"
 YAHOO_USERINFO_URL = "https://api.login.yahoo.com/openid/v1/userinfo"
 YAHOO_SCOPES = ("openid", "email", "mail-w")
 YAHOO_OAUTH_STATE_TYPE = "yahoo_oauth"
@@ -159,6 +160,19 @@ def yahoo_token_needs_refresh(config: YahooMailboxConfig) -> bool:
     except ValueError:
         return True
     return expiry <= utcnow() + timedelta(minutes=2)
+
+
+def revoke_yahoo_tokens(config: YahooMailboxConfig) -> None:
+    """Revoke the stored Yahoo refresh token at Yahoo."""
+    require_yahoo_oauth_configured()
+    response = httpx.post(
+        YAHOO_REVOKE_URL,
+        data={"token": config.refresh_token},
+        auth=(settings.yahoo_oauth_client_id, settings.yahoo_oauth_client_secret),
+        timeout=30.0,
+    )
+    if response.status_code >= 400:
+        raise YahooOAuthError(f"Yahoo token revoke failed with HTTP {response.status_code}.")
 
 
 def _fetch_yahoo_profile_email(access_token: str) -> str:

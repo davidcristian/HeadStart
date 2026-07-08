@@ -14,6 +14,7 @@ from app.repositories.users import UserRepository
 from app.schemas.auth import DeleteAccountRequest, UserDataExport
 from app.services.auth_account_export import build_user_data_export
 from app.services.billing_account_cleanup import release_stripe_billing
+from app.services.mailbox_account_cleanup import release_mailbox_oauth
 
 
 def export_user_data(
@@ -58,8 +59,10 @@ def delete_user_account(
         ip_address=ip_address,
         user_agent=user_agent,
     )
-    # Cancel Stripe billing before the local row (and Stripe IDs) disappear.
+    # Cancel Stripe billing and revoke mailbox OAuth before the local row
+    # (and encrypted tokens) disappear.
     release_stripe_billing(user)
+    release_mailbox_oauth(session, user.id)
     log_auth_event(
         "account_deleted",
         email=user.email,

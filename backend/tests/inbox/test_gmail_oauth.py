@@ -1,16 +1,19 @@
 """Tests for Gmail OAuth helpers (mocked HTTP)."""
 
 import jwt
+import pytest
 import respx
 from httpx import Response
 
 from app.core.config import settings
 from app.inbox.gmail_oauth import (
+    GmailOAuthError,
     build_gmail_authorization_url,
     create_gmail_oauth_state,
     decode_gmail_oauth_state,
     exchange_gmail_code,
     gmail_oauth_configured,
+    revoke_gmail_tokens,
 )
 from app.inbox.types import GmailMailboxConfig
 
@@ -81,3 +84,36 @@ def test_decode_rejects_wrong_token_type() -> None:
     except Exception:
         raised = True
     assert raised
+
+
+@respx.mock
+def test_revoke_gmail_tokens_posts_refresh_token(monkeypatch) -> None:
+    monkeypatch.setattr(settings, "gmail_oauth_client_id", "client-id")
+    monkeypatch.setattr(settings, "gmail_oauth_client_secret", "secret")
+    monkeypatch.setattr(settings, "gmail_oauth_redirect_uri", "http://localhost/callback")
+    route = respx.post("https://oauth2.googleapis.com/revoke").mock(return_value=Response(200))
+    revoke_gmail_tokens(
+        GmailMailboxConfig(
+            email_address="user@gmail.com",
+            access_token="access",
+            refresh_token="refresh-to-revoke",
+        )
+    )
+    assert route.called
+    assert route.calls.last.request.content == b"token=refresh-to-revoke"
+
+
+@respx.mock
+def test_revoke_gmail_tokens_raises_on_http_error(monkeypatch) -> None:
+    monkeypatch.setattr(settings, "gmail_oauth_client_id", "client-id")
+    monkeypatch.setattr(settings, "gmail_oauth_client_secret", "secret")
+    monkeypatch.setattr(settings, "gmail_oauth_redirect_uri", "http://localhost/callback")
+    respx.post("https://oauth2.googleapis.com/revoke").mock(return_value=Response(400))
+    with pytest.raises(GmailOAuthError, match="token revoke failed"):
+        revoke_gmail_tokens(
+            GmailMailboxConfig(
+                email_address="user@gmail.com",
+                access_token="access",
+                refresh_token="refresh-to-revoke",
+            )
+        )

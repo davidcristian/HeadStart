@@ -1,16 +1,19 @@
 """Tests for Yahoo OAuth helpers (mocked HTTP)."""
 
 import jwt
+import pytest
 import respx
 from httpx import Response
 
 from app.core.config import settings
 from app.inbox.types import YahooMailboxConfig
 from app.inbox.yahoo_oauth import (
+    YahooOAuthError,
     build_yahoo_authorization_url,
     create_yahoo_oauth_state,
     decode_yahoo_oauth_state,
     exchange_yahoo_code,
+    revoke_yahoo_tokens,
     yahoo_oauth_configured,
 )
 from app.inbox.yahoo_sasl import build_yahoo_oauth_bearer_string
@@ -96,3 +99,36 @@ def test_oauth_bearer_string_includes_host_and_token() -> None:
     assert "host=imap.mail.yahoo.com" in auth_string
     assert "port=993" in auth_string
     assert "auth=Bearer token-value" in auth_string
+
+
+@respx.mock
+def test_revoke_yahoo_tokens_posts_refresh_token(monkeypatch) -> None:
+    monkeypatch.setattr(settings, "yahoo_oauth_client_id", "client-id")
+    monkeypatch.setattr(settings, "yahoo_oauth_client_secret", "secret")
+    monkeypatch.setattr(settings, "yahoo_oauth_redirect_uri", "http://localhost/callback")
+    route = respx.post("https://api.login.yahoo.com/oauth2/revoke").mock(return_value=Response(200))
+    revoke_yahoo_tokens(
+        YahooMailboxConfig(
+            email_address="user@yahoo.test",
+            access_token="access",
+            refresh_token="refresh-to-revoke",
+        )
+    )
+    assert route.called
+    assert b"token=refresh-to-revoke" in route.calls.last.request.content
+
+
+@respx.mock
+def test_revoke_yahoo_tokens_raises_on_http_error(monkeypatch) -> None:
+    monkeypatch.setattr(settings, "yahoo_oauth_client_id", "client-id")
+    monkeypatch.setattr(settings, "yahoo_oauth_client_secret", "secret")
+    monkeypatch.setattr(settings, "yahoo_oauth_redirect_uri", "http://localhost/callback")
+    respx.post("https://api.login.yahoo.com/oauth2/revoke").mock(return_value=Response(500))
+    with pytest.raises(YahooOAuthError, match="token revoke failed"):
+        revoke_yahoo_tokens(
+            YahooMailboxConfig(
+                email_address="user@yahoo.test",
+                access_token="access",
+                refresh_token="refresh-to-revoke",
+            )
+        )

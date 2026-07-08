@@ -19,6 +19,7 @@ from app.models.base import utcnow
 
 GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
+GOOGLE_REVOKE_URL = "https://oauth2.googleapis.com/revoke"
 GMAIL_SCOPES = (
     "https://www.googleapis.com/auth/gmail.readonly",
     "https://www.googleapis.com/auth/gmail.send",
@@ -162,6 +163,19 @@ def gmail_token_needs_refresh(config: GmailMailboxConfig) -> bool:
     except ValueError:
         return True
     return expiry <= utcnow() + timedelta(minutes=2)
+
+
+def revoke_gmail_tokens(config: GmailMailboxConfig) -> None:
+    """Revoke the stored Gmail refresh token at Google."""
+    require_gmail_oauth_configured()
+    response = httpx.post(
+        GOOGLE_REVOKE_URL,
+        data={"token": config.refresh_token},
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
+        timeout=30.0,
+    )
+    if response.status_code >= 400:
+        raise GmailOAuthError(f"Google token revoke failed with HTTP {response.status_code}.")
 
 
 def _fetch_gmail_profile_email(access_token: str) -> str:

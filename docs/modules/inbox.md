@@ -76,6 +76,10 @@ stored tokens, and skips the provider call when another worker already rotated
 them — so concurrent inbox/ghost/pending-reply ticks cannot invalidate each
 other's refresh_token (INB-06).
 
+Account deletion (`DELETE /auth/me`) best-effort revokes the stored Gmail
+refresh token at Google before the encrypted credential row is removed (AUT-33;
+see [auth.md](auth.md#account-data-export--deletion)).
+
 ## outlook adapter
 
 **Key:** `outlook`. Uses Microsoft identity OAuth 2.0 and Microsoft Graph mail APIs
@@ -114,6 +118,10 @@ expiry (`app/inbox/outlook_oauth.py`). Refresh is serialized on the
 `mailbox_credential` row (same lock + re-check as Gmail; INB-06) because
 Microsoft may rotate the refresh_token on each grant.
 
+Account deletion discards Outlook tokens locally only: Microsoft has no safe
+per-app OAuth revoke for Mail.* multi-tenant apps (AUT-33). Users can revoke
+app access at account.microsoft.com.
+
 ## yahoo adapter
 
 **Key:** `yahoo`. Uses Yahoo identity OAuth 2.0 and IMAP/SMTP with SASL
@@ -147,6 +155,9 @@ Token refresh runs automatically before fetch/send when the access token is near
 expiry (`app/inbox/yahoo_oauth.py`). Refresh is serialized on the
 `mailbox_credential` row (same lock + re-check as Gmail/Outlook; INB-06) because
 Yahoo may rotate the refresh_token on each grant.
+
+Account deletion best-effort revokes the stored Yahoo refresh token at Yahoo
+before the encrypted credential row is removed (AUT-33).
 
 ## fastmail adapter
 
