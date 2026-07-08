@@ -126,9 +126,13 @@ export function JobsPage() {
           <>
             <p className="muted">
               Subscribe in any RSS reader. The URL respects the search and status filters selected
-              below.
+              below. Links expire after a bounded period — use Regenerate link if one may have
+              leaked.
             </p>
-            <Field label="Feed URL" hint="Anyone with this link can read your job feed.">
+            <Field
+              label="Feed URL"
+              hint="Anyone with this link can read your job feed until it expires or you regenerate it."
+            >
               <input readOnly value={filteredFeedUrl} onFocus={(e) => e.target.select()} />
             </Field>
             <div className="row-actions">

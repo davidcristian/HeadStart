@@ -29,6 +29,13 @@ data isolation.
   of `{sub: user_id, type, ver, iat, exp}` with `settings.jwt_secret`.
 - Access tokens are short-lived (`ACCESS_TOKEN_EXPIRE_MINUTES`, default 30);
   refresh tokens last `REFRESH_TOKEN_EXPIRE_DAYS` (default 7).
+- **RSS feed tokens** (`create_feed_token`) expire after
+  `FEED_TOKEN_EXPIRE_DAYS` (default **90**). They still travel as `?token=` for
+  RSS readers (query strings can land in logs/Referer), so the lifetime is
+  deliberately bounded; `POST /feed/rotate` (and password reset) bumps
+  `feed_token_version` to revoke leaked links early. `GET /feed/rss` also
+  accepts `Authorization: Bearer <feed_token>` so clients that can avoid the
+  query string may do so.
 - **Session revocation:** `ver` carries `user.token_version`. `get_current_user`
   (access) and `/refresh` reject any token whose `ver` no longer matches the
   user's current version, so bumping `token_version` invalidates every
@@ -307,9 +314,9 @@ do not log.
 ## Configuration
 
 `JWT_SECRET`, `ACCESS_TOKEN_EXPIRE_MINUTES`, `REFRESH_TOKEN_EXPIRE_DAYS`,
-`PASSWORD_RESET_EXPIRE_MINUTES`, `EMAIL_VERIFICATION_EXPIRE_MINUTES`,
-`FRONTEND_BASE_URL`, the refresh-cookie settings
-`AUTH_COOKIE_NAME` / `AUTH_COOKIE_PATH` / `AUTH_COOKIE_SECURE` /
+`FEED_TOKEN_EXPIRE_DAYS`, `PASSWORD_RESET_EXPIRE_MINUTES`,
+`EMAIL_VERIFICATION_EXPIRE_MINUTES`, `FRONTEND_BASE_URL`, the refresh-cookie
+settings `AUTH_COOKIE_NAME` / `AUTH_COOKIE_PATH` / `AUTH_COOKIE_SECURE` /
 `AUTH_COOKIE_SAMESITE`, and optional `SMTP_*` (see `.env.example`). The cookie
 defaults are production-safe (`Secure` + `SameSite=Lax`); for local dev over
 plain HTTP set `AUTH_COOKIE_SECURE=false`. Outside `local`/`test`, startup

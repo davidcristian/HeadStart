@@ -59,7 +59,7 @@ never touch the DB directly (services use repositories). See
 | GET    | `/applications` | Application pipeline rows (`stage` filter optional): job + derived `pipeline_stage`, `latest_attempt`, chronological `attempts` |
 | GET    | `/feed/url`           | Signed RSS feed URL for the current user             |
 | POST   | `/feed/rotate`        | Invalidate prior feed URLs and issue a new one       |
-| GET    | `/feed/rss`           | RSS 2.0 job feed (public; `token` query param)     |
+| GET    | `/feed/rss`           | RSS 2.0 job feed (public; `token` query **or** `Authorization: Bearer`) |
 | GET    | `/targets`            | List notification targets                |
 | POST   | `/targets`            | Create a target (e.g. ntfy topic)        |
 | PATCH  | `/targets/{id}`       | Update a target                          |

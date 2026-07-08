@@ -126,6 +126,26 @@ def test_feed_token_roundtrip() -> None:
     assert payload["ver"] == 3
 
 
+def test_feed_token_uses_configured_lifetime(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Feed JWTs expire after FEED_TOKEN_EXPIRE_DAYS, not a decade (AUT-22)."""
+    monkeypatch.setattr(settings, "feed_token_expire_days", 90)
+    token = create_feed_token(1, version=0)
+    payload = jwt.decode(
+        token,
+        settings.jwt_secret,
+        algorithms=[settings.jwt_algorithm],
+        options={"require": ["exp", "iat"]},
+    )
+    assert payload["exp"] - payload["iat"] == int(timedelta(days=90).total_seconds())
+
+
+def test_decode_feed_token_rejects_expired(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(settings, "feed_token_expire_days", -1)
+    expired = create_feed_token(1, version=0)
+    with pytest.raises(TokenError):
+        decode_feed_token(expired)
+
+
 def test_decode_feed_token_rejects_non_feed_type() -> None:
     access = create_access_token(1, version=0)
     with pytest.raises(TokenError, match="Expected a feed token"):

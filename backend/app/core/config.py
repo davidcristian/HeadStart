@@ -44,6 +44,8 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
     refresh_token_expire_days: int = 7
+    # RSS feed JWTs travel in ?token= URLs; keep far shorter than a decade (AUT-22).
+    feed_token_expire_days: int = 90
     password_reset_expire_minutes: int = 60
     email_verification_expire_minutes: int = 1440  # 24 hours
     frontend_base_url: str = "http://localhost:5173"

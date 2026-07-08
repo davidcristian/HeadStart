@@ -49,14 +49,14 @@ def generate_password_reset_token() -> str:
 
 
 def create_feed_token(subject: str | int, *, version: int) -> str:
-    """Issue a long-lived JWT for unauthenticated RSS feed access."""
+    """Issue a time-bounded JWT for unauthenticated RSS feed access."""
     now = utcnow()
     payload = {
         "sub": str(subject),
         "type": "feed",
         "ver": version,
         "iat": now,
-        "exp": now + timedelta(days=3650),
+        "exp": now + timedelta(days=settings.feed_token_expire_days),
     }
     return jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
 

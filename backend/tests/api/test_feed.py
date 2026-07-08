@@ -56,6 +56,51 @@ def test_rss_feed_rejects_invalid_token(client: TestClient) -> None:
     assert resp.status_code == 401
 
 
+def test_rss_feed_rejects_missing_token(client: TestClient) -> None:
+    resp = client.get("/api/v1/feed/rss")
+    assert resp.status_code == 401
+    assert resp.json()["detail"] == "Missing feed token."
+
+
+def test_rss_feed_accepts_bearer_token(client: TestClient) -> None:
+    headers = register_and_login(client, "rss-bearer@example.com")
+    _seed_job_via_api(client, headers)
+    token = client.get("/api/v1/feed/url", headers=headers).json()["token"]
+
+    rss = client.get(
+        "/api/v1/feed/rss",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert rss.status_code == 200
+    assert rss.headers["content-type"].startswith("application/rss+xml")
+    assert "Platform Engineer" in rss.text
+
+
+def test_rss_feed_query_token_wins_over_bearer(client: TestClient) -> None:
+    headers = register_and_login(client, "rss-query-wins@example.com")
+    token = client.get("/api/v1/feed/url", headers=headers).json()["token"]
+
+    assert (
+        client.get(
+            f"/api/v1/feed/rss?token={token}",
+            headers={"Authorization": "Bearer not-a-valid-token"},
+        ).status_code
+        == 200
+    )
+
+
+def test_rss_feed_rejects_non_bearer_authorization(client: TestClient) -> None:
+    resp = client.get("/api/v1/feed/rss", headers={"Authorization": "Basic abc"})
+    assert resp.status_code == 401
+    assert resp.json()["detail"] == "Missing feed token."
+
+
+def test_rss_feed_rejects_empty_bearer(client: TestClient) -> None:
+    resp = client.get("/api/v1/feed/rss", headers={"Authorization": "Bearer "})
+    assert resp.status_code == 401
+    assert resp.json()["detail"] == "Missing feed token."
+
+
 def test_rotate_feed_url_invalidates_old_link(client: TestClient) -> None:
     headers = register_and_login(client, "rss-rotate@example.com")
 

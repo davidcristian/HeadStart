@@ -232,7 +232,9 @@ This area covers authentication and session management (login, registration, pas
 
 <a id="aut-22"></a>
 ### AUT-22 — RSS feed JWT is a 10-year bearer credential passed in the URL
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: high (3/5 verifiers) · Effort: S · WS19
+⚪ **LOW** · 🔒 security · Status: ✅ done · Confidence: high (3/5 verifiers) · Effort: S · WS19
+
+**Fix.** `FEED_TOKEN_EXPIRE_DAYS` (default 90) bounds `create_feed_token` expiry; `GET /feed/rss` accepts `Authorization: Bearer` as well as `?token=`; docs/UI encourage rotate-on-leak — [PR](https://github.com/davidcristian/HeadStart/pull/90).
 
 **Locations:** `backend/app/core/security.py:58` (`create_feed_token`).
 
