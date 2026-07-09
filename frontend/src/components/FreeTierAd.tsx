@@ -48,7 +48,7 @@ export function FreeTierAd({ variant = "sidebar" }: Props) {
             src={externalSlot}
             loading="lazy"
             referrerPolicy="no-referrer"
-            sandbox="allow-scripts allow-same-origin allow-popups"
+            sandbox="allow-scripts allow-popups"
           />
         ) : (
           <p className="free-tier-ad-consent muted">

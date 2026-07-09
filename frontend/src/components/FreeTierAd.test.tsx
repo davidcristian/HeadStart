@@ -102,10 +102,11 @@ describe("FreeTierAd", () => {
 
     renderAd();
 
-    expect(screen.getByTitle("Partner advertisement")).toHaveAttribute(
-      "src",
-      "https://ads.example.com/slot",
-    );
+    const frame = screen.getByTitle("Partner advertisement");
+    expect(frame).toHaveAttribute("src", "https://ads.example.com/slot");
+    // FRO-20: never combine allow-scripts with allow-same-origin on untrusted embeds.
+    expect(frame).toHaveAttribute("sandbox", "allow-scripts allow-popups");
+    expect(frame.getAttribute("sandbox")).not.toContain("allow-same-origin");
   });
 
   it("reveals the partner iframe reactively when consent is accepted, without a reload", () => {

@@ -147,7 +147,9 @@ the mobile bottom nav. Paid plans and admin accounts see nothing.
   the backend env. The iframe loads only when the user has accepted optional cookies —
   `FreeTierAd` reads the choice from `CookieConsentContext` (not `localStorage` directly) so it
   reacts to consent changes without a reload. Otherwise a short link to
-  **Settings → Privacy & cookies** is shown.
+  **Settings → Privacy & cookies** is shown. The partner iframe uses
+  `sandbox="allow-scripts allow-popups"` (no `allow-same-origin`) so a same-origin or
+  open-redirect slot cannot lift its own sandbox and script the parent app (FRO-20).
 - **Kill switch** — `ADS_ENABLED=false` hides all in-app ads (house + partner).
 
 ## Dev

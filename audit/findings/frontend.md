@@ -134,7 +134,9 @@ _Merged with FRO-09 — both records describe the same defect: the nginx runtime
 
 <a id="fro-20"></a>
 ### FRO-20 — Partner-ad iframe sandbox allows both allow-scripts and allow-same-origin
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: medium (3/5 verifiers) · Effort: S · WS20
+⚪ **LOW** · 🔒 security · Status: ✅ done · Confidence: medium (3/5 verifiers) · Effort: S · WS20
+
+**Update (2026-07-10).** Fixed: partner `FreeTierAd` iframe sandbox is `allow-scripts allow-popups` only (no `allow-same-origin`), so a same-origin or open-redirect slot cannot lift its sandbox and script the parent app — [PR](https://github.com/davidcristian/HeadStart/pull/105).
 
 **Locations:** `frontend/src/components/FreeTierAd.tsx:51` (`FreeTierAd`).
 
