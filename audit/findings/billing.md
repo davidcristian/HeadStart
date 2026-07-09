@@ -86,7 +86,7 @@ return await service.list_data_requests(limit=min(limit, 500))
 
 <a id="bil-07"></a>
 ### BIL-07 — plans.py comment says 'Pro unlocks the rest' but premium scrapers are Plus+
-⚪ **LOW** · 📝 doc · Status: ☐ open · Confidence: certain (5/5 verifiers) · Effort: XS · WS22
+⚪ **LOW** · 📝 doc · Status: ✅ done · Confidence: certain (5/5 verifiers) · Effort: XS · WS22
 
 **Locations:** `backend/app/core/plans.py:16` (`FREE_SCRAPERS` / `scraper_allowed`); plus `backend/app/core/plans.py:111`.
 
@@ -95,6 +95,8 @@ return await service.list_data_requests(limit=min(limit, 500))
 **Failure scenario.** A developer reading the inline comment believes premium scrapers are Pro-exclusive and "fixes" the gate to `plan == 'pro'`, wrongly revoking access for paying Plus users.
 
 **Suggested fix.** Reword the comment to "Plus+ unlocks the premium scrapers" to match `scraper_allowed` / ADR 0010.
+
+**Resolution.** Comment rewritten to "Plus+ unlocks PREMIUM_SCRAPERS" in the BIL-06 change; `docs/modules/billing.md` now states premium scrapers are Plus+ (webhook remains Pro-only). Gate tests already assert Plus unlocks `indeed`/`linkedin`/`playwright`.
 
 **Verification.** Confirmed 5/5 adversarial verifiers. Real but harmless doc drift.
 

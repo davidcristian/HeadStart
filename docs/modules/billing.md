@@ -148,8 +148,9 @@ user has none yet, for the first `updated`/`created`). Events whose Stripe
 so a delayed `updated` cannot re-grant a plan after `deleted`, and a late
 `deleted` for a superseded subscription cannot wipe a newer one.
 
-Downgrade does **not** delete existing sources/targets. Premium scrapers and
-notifiers are re-checked when the pipeline runs or a digest flushes (see
+Downgrade does **not** delete existing sources/targets. Premium scrapers
+(`indeed` / `linkedin` / `playwright`, **Plus+**) and the webhook notifier
+(**Pro only**) are re-checked when the pipeline runs or a digest flushes (see
 [auth.md](auth.md#plan-limits) and [worker.md](worker.md#pipeline-run_search)),
 so paid adapters stop consuming after the plan drops. Scraper keys omitted from
 `FREE_SCRAPERS` / `PREMIUM_SCRAPERS` fail closed (denied on every plan) so a new
