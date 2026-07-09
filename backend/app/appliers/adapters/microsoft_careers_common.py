@@ -6,6 +6,8 @@ import re
 from typing import Any
 from urllib.parse import urlencode
 
+import httpx
+
 from app.scrapers.http import HttpClient
 
 ORIGIN = "https://apply.careers.microsoft.com"
@@ -87,7 +89,7 @@ def resolve_csrf_token(
             return str(value)
     try:
         html = http.get_text(apply_url)
-    except Exception:
+    except httpx.HTTPError:
         return None
     match = _CSRF_META_RE.search(html)
     return match.group(1) if match else None

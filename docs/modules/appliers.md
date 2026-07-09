@@ -434,9 +434,12 @@ questionnaire: only `profile.answers` whose key matches a `questionId` in the
 questions payload are sent, so unrelated answer keys are never leaked to Microsoft.
 
 **Live submit:** requires the candidate's own logged-in Microsoft Careers session
-cookies. Resume files upload via `/api/pcsx/upload_resume` before submit. Complex
-country-specific questionnaires (e.g. EEO, consent) may need explicit
-`profile.answers` mappings. Always preview with dry run first.
+cookies. When `csrf_token` is omitted, the adapter fetches the apply-page meta
+tag and treats only `httpx.HTTPError` as a soft miss (returns no token); SSRF
+rejects and other non-HTTP failures propagate so they are not misreported as a
+missing CSRF token. Resume files upload via `/api/pcsx/upload_resume` before
+submit. Complex country-specific questionnaires (e.g. EEO, consent) may need
+explicit `profile.answers` mappings. Always preview with dry run first.
 
 ### Amazon Jobs
 

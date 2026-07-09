@@ -220,7 +220,7 @@ Merged with APL-18 (the record's own `verify_note` flags it as a duplicate of ui
 
 <a id="apl-20"></a>
 ### APL-20 — Microsoft CSRF fetch swallows all exceptions via bare except Exception
-⚪ **LOW** · 🐞 bug · Status: ☐ open · Confidence: medium (3/3 verifiers) · Effort: XS · WS23
+⚪ **LOW** · 🐞 bug · Status: ✅ done · Confidence: medium (3/3 verifiers) · Effort: XS · WS23
 
 **Locations:** `backend/app/appliers/adapters/microsoft_careers_common.py:90` (`resolve_csrf_token`).
 

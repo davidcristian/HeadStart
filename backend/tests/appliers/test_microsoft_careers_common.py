@@ -1,6 +1,7 @@
 """Tests for Microsoft Careers shared HTTP helpers."""
 
 import httpx
+import pytest
 
 from app.appliers.adapters.microsoft_careers_common import (
     api_error_message,
@@ -11,6 +12,7 @@ from app.appliers.adapters.microsoft_careers_common import (
     resolve_csrf_token,
     resolve_position_id,
 )
+from app.core.outbound_url import UnsafeOutboundUrlError
 from tests.conftest import make_http_client
 
 
@@ -71,6 +73,17 @@ def test_resolve_csrf_token_handles_fetch_error() -> None:
     assert (
         resolve_csrf_token(None, {}, http=make_http_client(handler), apply_url=_APPLY_URL) is None
     )
+
+
+def test_resolve_csrf_token_propagates_non_http_errors() -> None:
+    """SSRF / programming errors must not collapse into a missing-CSRF result (APL-20)."""
+    with pytest.raises(UnsafeOutboundUrlError):
+        resolve_csrf_token(
+            None,
+            {},
+            http=make_http_client(_unexpected),
+            apply_url="http://127.0.0.1/careers/apply/1",
+        )
 
 
 def test_build_http_client_merges_credentials() -> None:
