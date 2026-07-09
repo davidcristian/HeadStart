@@ -196,9 +196,11 @@ Failed logins also increment Prometheus `headstart_auth_login_failures_total`
 4. The email link opens `/reset-password?token=...` → `POST /auth/reset-password`
    with the token and new password.
 5. Valid tokens are **claimed** (`used_at` stamped under row lock) and that
-   consume is committed before the password change; rows are also deleted after
-   a successful reset. A second use of the same link fails even if the delete
-   never runs (DAT-18). Expired or already-used tokens are rejected.
+   consume is committed before the password change **and before** the
+   inactive/missing-user check; rows are also deleted after a successful reset.
+   A second use of the same link fails even if the delete never runs (DAT-18),
+   including after a deactivate-then-reactivate within the expiry window
+   (AUT-30). Expired or already-used tokens are rejected.
 6. The reset **bumps `token_version` and `feed_token_version`**, so any
    access/refresh token or RSS feed URL issued before the reset (e.g. one
    captured from a compromised session) immediately stops validating — the user
@@ -217,7 +219,8 @@ log fallback refuses to emit the token-bearing URL (AUT-01).
    verification token (see Registration above).
 2. The email link opens `/verify-email?token=...` → `POST /auth/verify-email`
    with the token. The token is claimed (`used_at`) and committed before the
-   verify write, same single-use rule as password reset (DAT-18).
+   verify write and before the inactive/missing-user check, same single-use
+   rule as password reset (DAT-18 / AUT-30).
 3. Signed-in users can request another email via `POST /auth/resend-verification`.
 4. Most API routes require a verified email (`403` otherwise). Auth self-service
    (`/me`, export, delete) and `/app/settings` stay available while unverified.

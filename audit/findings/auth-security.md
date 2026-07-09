@@ -308,9 +308,9 @@ This area covers authentication and session management (login, registration, pas
 
 <a id="aut-30"></a>
 ### AUT-30 — reset/verify leave token row unconsumed when user inactive/missing
-⚪ **LOW** · 🐞 bug · Status: ☐ open · Confidence: medium (3/5 verifiers) · Effort: XS · WS19
+⚪ **LOW** · 🐞 bug · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/93)) · Confidence: medium (3/5 verifiers) · Effort: XS · WS19
 
-**Locations:** `backend/app/services/auth.py:141` (`AuthService.reset_password`); plus `backend/app/services/auth.py:160` (`verify_email`).
+**Locations:** `backend/app/services/auth.py` (`AuthService.verify_email`); plus `backend/app/services/auth_password.py` (`reset_password`).
 
 **Evidence.** When the token row is found but the user is `None`/inactive, `reset_password` and `verify_email` raise without calling `delete_for_user`. `get_valid_by_hash` does not filter on user active state, so the token hash stays valid in the table until its expiry window.
 
@@ -319,6 +319,8 @@ This area covers authentication and session management (login, registration, pas
 **Suggested fix.** Delete the token row (single-use consume) in the inactive/missing-user branch too, or scope `get_valid_by_hash` to also require the joined user be active.
 
 **Verification.** Confirmed 3/3 adversarial verifiers. `get_valid_by_hash` does not filter on user active state, and `reset_password`/`verify_email` raise without `delete_for_user` when the user is `None`/inactive, leaving the token queryable until expiry; a deactivate-then-reactivate within the window allows reset-token replay. Genuine single-use lifecycle gap.
+
+**Fix.** Closed by the DAT-18 claim path: `claim_valid_by_hash` stamps `used_at` under row lock and that consume is committed **before** the inactive/missing-user check, so a rejected attempt still burns the link. Regression tests reactivate the user and assert the same raw token cannot reset/verify again. Docs: [`docs/modules/auth.md`](../../docs/modules/auth.md).
 
 <a id="aut-31"></a>
 ### AUT-31 — Email-verification tokens hashed via hash_password_reset_token (naming drift)

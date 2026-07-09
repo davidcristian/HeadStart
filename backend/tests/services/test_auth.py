@@ -111,10 +111,16 @@ def test_reset_password_inactive_user_rejected(db_session: Session) -> None:
         )
 
     # Consume is committed before the inactive check so the link cannot be
-    # replayed after reactivation (DAT-18).
+    # replayed after reactivation (DAT-18 / AUT-30).
     assert (
         PasswordResetTokenRepository(db_session).get_valid_by_hash(token_hash, now=utcnow()) is None
     )
+    user.is_active = True
+    db_session.flush()
+    with pytest.raises(ValidationError, match="Invalid or expired"):
+        AuthService(db_session).reset_password(
+            ResetPasswordRequest(token=raw, password="newpassword123")
+        )
 
 
 def test_verify_email_inactive_user_rejected(db_session: Session) -> None:
@@ -138,6 +144,10 @@ def test_verify_email_inactive_user_rejected(db_session: Session) -> None:
         EmailVerificationTokenRepository(db_session).get_valid_by_hash(token_hash, now=utcnow())
         is None
     )
+    user.is_active = True
+    db_session.flush()
+    with pytest.raises(ValidationError, match="Invalid or expired"):
+        AuthService(db_session).verify_email(VerifyEmailRequest(token=raw))
 
 
 def test_verify_email_already_verified_is_idempotent(db_session: Session) -> None:

@@ -111,7 +111,8 @@ def reset_password(
     if row is None:
         raise ValidationError("Invalid or expired reset link. Request a new one.")
     # Persist the consume before any path that may raise so single-use does not
-    # depend on a later delete surviving the request transaction (DAT-18).
+    # depend on a later delete surviving the request transaction (DAT-18), and
+    # so an inactive/missing user cannot leave a replayable link (AUT-30).
     session.commit()
 
     user = users.get(row.user_id)
