@@ -19,6 +19,7 @@ from app.core.exceptions import (
 from app.core.logging import configure_logging
 from app.core.metrics import render_metrics
 from app.core.request_id import RequestIdMiddleware
+from app.core.security_headers import SecurityHeadersMiddleware
 
 API_PREFIX = "/api/v1"
 
@@ -33,6 +34,7 @@ def create_app() -> FastAPI:
     )
 
     # Last add_middleware wins as outermost; CORS must wrap the app for preflight.
+    # Security headers sit outside CORS so every response (incl. preflight) is stamped.
     app.add_middleware(RequestIdMiddleware)
     app.add_middleware(
         CORSMiddleware,
@@ -41,6 +43,7 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    app.add_middleware(SecurityHeadersMiddleware)
 
     app.include_router(api_router, prefix=API_PREFIX)
     _register_exception_handlers(app)

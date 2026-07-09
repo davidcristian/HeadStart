@@ -248,7 +248,7 @@ This area covers authentication and session management (login, registration, pas
 
 <a id="aut-23"></a>
 ### AUT-23 — No security response headers (HSTS, nosniff, X-Frame-Options, Referrer-Policy) anywhere
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: high (3/5 verifiers) · Effort: S · WS20
+⚪ **LOW** · 🔒 security · Status: ✅ done · Confidence: high (3/5 verifiers) · Effort: S · WS20
 
 **Merge note.** Merges the near-duplicate AUT-24 (uid 6) — same missing-headers defect.
 
@@ -261,6 +261,8 @@ This area covers authentication and session management (login, registration, pas
 **Suggested fix.** Add a small response-headers middleware (HSTS in prod, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `X-Frame-Options: DENY`/`frame-ancestors`) or set them at the API reverse proxy.
 
 **Verification.** Confirmed 3/3 adversarial verifiers (merged duplicate 3/3). `create_app` registers only `CORSMiddleware`; `nginx.conf` proxies no `/api`, so nothing adds HSTS/nosniff/framing. Defense-in-depth, low.
+
+**Fix ([PR](https://github.com/davidcristian/HeadStart/pull/95)).** SPA nginx headers were already closed by XCT-16 / FRO-11. API side: `SecurityHeadersMiddleware` stamps every response with `nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, `CSP: frame-ancestors 'none'`, and HSTS outside `local`/`test`. Docs: [`docs/modules/api.md`](../../docs/modules/api.md).
 
 <a id="aut-25"></a>
 ### AUT-25 — Swagger /docs, /redoc and /openapi.json exposed publicly in prod

@@ -126,6 +126,23 @@ every log line as the `request_id` JSON field (or `[request_id]` when
 Celery workers bind the same field to the task id for the duration of each
 task (see [worker.md](worker.md#request-correlation-id-aut-15)).
 
+## Security response headers (AUT-23)
+
+`SecurityHeadersMiddleware` stamps every API response (including CORS
+preflight and `/docs`) with:
+
+| Header | Value |
+| ------ | ----- |
+| `X-Content-Type-Options` | `nosniff` |
+| `X-Frame-Options` | `DENY` |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` |
+| `Content-Security-Policy` | `frame-ancestors 'none'` (API may still serve HTML docs) |
+| `Strict-Transport-Security` | `max-age=31536000; includeSubDomains` outside `local`/`test` |
+
+HSTS is omitted in `local`/`test` so browsers do not pin plain-HTTP localhost.
+The SPA nginx shell sets the same baseline (see [frontend.md](frontend.md));
+the API is a separate origin behind the ALB and needs its own middleware.
+
 ## Structured JSON logs (AUT-16)
 
 `configure_logging()` defaults to one JSON object per stdout line
