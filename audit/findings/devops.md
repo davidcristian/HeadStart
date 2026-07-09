@@ -563,9 +563,11 @@ SHA pin. `aws-first-deploy.sh` sets `TF_VAR_image_tag` from the short SHA when
 
 <a id="ops-54"></a>
 ### OPS-54 — METRICS_TOKEN never set by Terraform; /metrics unauthenticated on prod tasks
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: S · WS21
+⚪ **LOW** · 🔒 security · Status: ✅ done · Confidence: high (3/3 verifiers) · Effort: S · WS21
 
-**Locations:** `devops/terraform/modules/stack/main.tf:150` (`ecs_environment`); plus `backend/app/main.py:49`, `backend/app/core/config.py:113`.
+**Locations:** `devops/terraform/modules/stack/main.tf` (`random_password.metrics_token` + `ecs_secrets`); plus `backend/app/main.py`, `backend/app/core/config.py`.
+
+**Update (2026-07-10).** Fixed: stack generates `METRICS_TOKEN` with `random_password`, stores it in Secrets Manager, and always injects it into ECS task secrets so API and worker `/metrics` require Bearer auth on AWS.
 
 **Evidence.** `config.py:113` defaults `metrics_token` to `''`, and `main.py:49` only enforces a bearer token when it is non-empty. The `ecs_environment` block (`stack/main.tf:150-169`) sets no `METRICS_TOKEN` and there is no corresponding tf variable, so prod always runs `/metrics` unauthenticated.
 

@@ -149,6 +149,8 @@ Prometheus metrics are exposed from two scrape targets:
 
 See [modules/metrics.md](../modules/metrics.md) for metric names, PromQL examples,
 and `METRICS_TOKEN` Bearer auth (honored by both API and worker scrape targets).
+Terraform always stores a generated `METRICS_TOKEN` in Secrets Manager and injects
+it into ECS tasks (OPS-54), so AWS scrapes must send `Authorization: Bearer`.
 On AWS, open worker `:9090` from your scraper security group (not the ALB SG;
 see OPS-14 above) and scrape with Prometheus or the CloudWatch agent.
 

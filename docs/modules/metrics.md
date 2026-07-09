@@ -68,8 +68,9 @@ histogram_quantile(0.95, sum by (adapter, le) (rate(headstart_scrape_duration_se
 
 Set `METRICS_TOKEN` in any deployment reachable from the internet (or any network
 that can reach the worker metrics port). Empty token keeps both surfaces open for
-local scrapes; production should always set a token (Terraform injection is still
-tracked separately as OPS-54).
+local scrapes; AWS ECS always injects a generated token from Secrets Manager
+(OPS-54) — retrieve it with `aws secretsmanager get-secret-value` for Prometheus
+`Authorization: Bearer` scrapes.
 
 ## AWS / CloudWatch
 

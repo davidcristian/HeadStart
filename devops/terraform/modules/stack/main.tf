@@ -7,6 +7,12 @@ resource "random_password" "redis_auth" {
   special = false
 }
 
+# OPS-54: Bearer token for API + worker /metrics (empty METRICS_TOKEN = open scrape).
+resource "random_password" "metrics_token" {
+  length  = 32
+  special = false
+}
+
 locals {
   name = "headstart-${var.environment}"
   tags = merge(var.tags, {
@@ -44,6 +50,7 @@ locals {
     JWT_SECRET             = var.jwt_secret
     CREDENTIALS_SECRET_KEY = var.credentials_secret_key
     REDIS_PASSWORD         = random_password.redis_auth.result
+    METRICS_TOKEN          = random_password.metrics_token.result
   }
   smtp_secret_values = var.smtp_password != "" ? { SMTP_PASSWORD = var.smtp_password } : {}
   secret_values      = merge(local.base_secret_values, local.smtp_secret_values)
@@ -192,6 +199,8 @@ locals {
       JWT_SECRET             = module.secrets.secret_arns["JWT_SECRET"]
       CREDENTIALS_SECRET_KEY = module.secrets.secret_arns["CREDENTIALS_SECRET_KEY"]
       REDIS_PASSWORD         = module.secrets.secret_arns["REDIS_PASSWORD"]
+      # OPS-54: always inject so ECS /metrics is never unauthenticated.
+      METRICS_TOKEN          = module.secrets.secret_arns["METRICS_TOKEN"]
     },
     var.smtp_password != "" ? {
       SMTP_PASSWORD = module.secrets.secret_arns["SMTP_PASSWORD"]

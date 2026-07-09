@@ -78,7 +78,7 @@ This area covers authentication and session management (login, registration, pas
 
 **Merge note.** Merges AUT-07 (uid 325, medium) — the same worker-metrics-ignores-METRICS_TOKEN defect, reported against the adjacent line. Same defect as [XCT-20](cross-cutting.md#xct-20); doc drift tracked as [DOC-22](docs-drift.md#doc-22).
 
-**Update (2026-07-10).** Fixed: `start_metrics_server` serves a WSGI app that applies the same optional Bearer `METRICS_TOKEN` check as the API `/metrics` route (closes XCT-20 / DOC-22). Terraform still does not inject the token (OPS-54).
+**Update (2026-07-10).** Fixed: `start_metrics_server` serves a WSGI app that applies the same optional Bearer `METRICS_TOKEN` check as the API `/metrics` route (closes XCT-20 / DOC-22). Terraform injects a generated `METRICS_TOKEN` via Secrets Manager (OPS-54).
 
 **Locations:** `backend/app/core/metrics.py:102` (`start_metrics_server`, also cited at `:96`); plus `backend/app/worker/celery_app.py:36`, `backend/app/main.py:49`.
 
