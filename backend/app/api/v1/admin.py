@@ -1,6 +1,6 @@
 """Admin endpoints (user management and global stats)."""
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_admin, get_db
@@ -44,11 +44,11 @@ def get_stats(
 
 @router.get("/data-requests", response_model=list[DataRequestLogRead])
 def list_data_requests(
-    limit: int = 100,
+    limit: int = Query(default=100, ge=1, le=500),
     db: Session = Depends(get_db),
     _admin: User = Depends(get_current_admin),
 ) -> list[DataRequestLogRead]:
-    return AdminService(db).list_data_requests(limit=min(limit, 500))
+    return AdminService(db).list_data_requests(limit=limit)
 
 
 @router.get("/promo-codes", response_model=list[PromoCodeRead])

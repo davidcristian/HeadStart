@@ -52,7 +52,7 @@ This area covers Stripe checkout and subscription webhooks (`services/billing.py
 
 <a id="bil-04"></a>
 ### BIL-04 — GET /admin/data-requests `limit` has no lower bound; negative reaches SQL LIMIT
-⚪ **LOW** · 🐞 bug · Status: ☐ open · Confidence: medium (5/5 verifiers) · Effort: XS · WS22
+⚪ **LOW** · 🐞 bug · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/107)) · Confidence: medium (5/5 verifiers) · Effort: XS · WS22
 
 **Locations:** `backend/app/api/v1/admin.py:47` (`list_data_requests`); reaches the query at `backend/app/repositories/data_request_logs.py:22`. Merged from two identical records (uid 46 and uid 301) reporting the same defect.
 

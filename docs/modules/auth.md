@@ -280,7 +280,8 @@ untrusted hop in `X-Forwarded-For` (validated/normalized, max 45 chars). Empty
 deletion, prior export rows for that user are redacted and
 the deletion row stores only an HMAC email pseudonym (`erased:<hex>`) with no
 IP or user agent — recoverable PII does not survive erasure (DAT-02). Admins
-list recent rows via `GET /admin/data-requests`.
+list recent rows via `GET /admin/data-requests` (`limit` bounded `1..500`,
+default 100 — BIL-04).
 
 Public subprocessors and DPA overview: `/subprocessors` (linked from the privacy
 policy and site footer). The list names AWS, Stripe, OpenAI, Google Gemini,

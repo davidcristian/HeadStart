@@ -128,6 +128,20 @@ def test_admin_data_requests_requires_admin(client: TestClient) -> None:
     assert client.get("/api/v1/admin/data-requests", headers=member).status_code == 403
 
 
+def test_admin_data_requests_limit_out_of_bounds_returns_422(client: TestClient) -> None:
+    """BIL-04: negative/zero/over-max limit must 422 before reaching SQL LIMIT."""
+    admin = register_and_login(client, "admin@example.com")
+
+    negative = client.get("/api/v1/admin/data-requests?limit=-1", headers=admin)
+    assert negative.status_code == 422
+
+    zero = client.get("/api/v1/admin/data-requests?limit=0", headers=admin)
+    assert zero.status_code == 422
+
+    too_high = client.get("/api/v1/admin/data-requests?limit=501", headers=admin)
+    assert too_high.status_code == 422
+
+
 def test_admin_lists_recent_data_requests(client: TestClient) -> None:
     admin = register_and_login(client, "admin@example.com")
     member = register_and_login(client, "member@example.com")
