@@ -132,6 +132,7 @@ def test_admin_snapshot_is_unlimited(db_session) -> None:
 
     snapshot = PlanLimitsService(db_session).snapshot(user)
     assert snapshot["unlimited"] is True
+    assert snapshot["plan"] == "free"
     assert snapshot["effective_plan"] == "pro"
 
 

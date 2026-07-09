@@ -153,7 +153,7 @@ Shipped in [PR #110](https://github.com/davidcristian/HeadStart/pull/110).
 
 <a id="bil-11"></a>
 ### BIL-11 — snapshot() plan field uses a no-op ternary (both branches identical)
-⚪ **LOW** · ♻️ refactor · Status: ☐ open · Confidence: certain (3/3 verifiers) · Effort: XS · WS22
+⚪ **LOW** · ♻️ refactor · Status: ✅ done · Confidence: certain (3/3 verifiers) · Effort: XS · WS22
 
 **Locations:** `backend/app/services/plan_limits.py:68` (`PlanLimitsService.snapshot`). Merged from two identical records (uid 25 and uid 31) reporting the same dead ternary.
 

@@ -76,7 +76,7 @@ class PlanLimitsService:
         features = plan_features_for(plan)
         usage = self.usage(user.id)
         return {
-            "plan": user.plan if not user.is_admin else user.plan,
+            "plan": user.plan,
             "effective_plan": plan,
             "unlimited": user.is_admin,
             "show_ads": self.show_ads_for(user),

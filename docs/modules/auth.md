@@ -326,8 +326,10 @@ cleared without sending so they do not retry forever.
 
 `GET /meta` returns an `AccountPlanRead` snapshot (limits, current usage,
 feature flags including `portal_search`, allowed scrapers/notifiers) so the UI
-can disable options proactively. `PlanFeaturesRead` mirrors
-`core.plans.PlanFeatures` so snapshot keys are not dropped on serialize.
+can disable options proactively. The snapshot's `plan` is the stored
+`user.plan`; `effective_plan` is what limits use (`resolve_plan` maps admins to
+`pro`). `PlanFeaturesRead` mirrors `core.plans.PlanFeatures` so snapshot keys
+are not dropped on serialize.
 `PATCH /admin/users/{id}` accepts `plan` for manual overrides when the user
 has no Stripe subscription status that still grants access (`active` /
 `trialing` / `past_due`); otherwise the API returns 422 so webhooks remain the
