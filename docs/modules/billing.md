@@ -159,6 +159,13 @@ user has none yet, for the first `updated`/`created`). Events whose Stripe
 so a delayed `updated` cannot re-grant a plan after `deleted`, and a late
 `deleted` for a superseded subscription cannot wipe a newer one.
 
+Events for an unknown Stripe customer (no matching `user.stripe_customer_id`)
+are no-ops: checkout / subscription handlers return without mutating any other
+user's billing fields. Unit tests seed a control user and assert the full
+billing snapshot (`stripe_customer_id`, `stripe_subscription_id`,
+`subscription_status`, `plan`, `stripe_billing_event_at`) is unchanged after
+those ghost-customer calls (TST-05).
+
 Downgrade does **not** delete existing sources/targets. Premium scrapers
 (`indeed` / `linkedin` / `playwright`, **Plus+**) and the webhook notifier
 (**Pro only**) are re-checked when the pipeline runs or a digest flushes (see

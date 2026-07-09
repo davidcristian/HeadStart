@@ -74,9 +74,17 @@ This area examines whether the repository's 100%-coverage gate reflects real beh
 
 <a id="tst-05"></a>
 ### TST-05 — Stripe-webhook 'unknown user is noop' tests assert nothing, cannot catch a regression
-⚪ **LOW** · 🧪 test · Status: ☐ open · Confidence: high · Effort: S · WS22
+⚪ **LOW** · 🧪 test · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/115)) · Confidence: high · Effort: S · WS22
 
-**Locations:** `backend/tests/services/test_billing_part2.py:161` (`test_on_subscription_updated_unknown_user_is_noop`); plus `backend/tests/services/test_billing_part2.py:169`, `:68`, `:102`.
+**Update (2026-07-11).** Control-user asserts landed in `87c258d` (tests live in
+`backend/tests/services/test_billing.py` after the part2 merge). This drain run
+tightens the snapshot to include `subscription_status` + `stripe_billing_event_at`
+and documents the no-op contract in `docs/modules/billing.md`.
+
+**Locations:** `backend/tests/services/test_billing.py`
+(`test_on_subscription_updated_unknown_user_is_noop`,
+`test_on_subscription_deleted_unknown_user_is_noop`,
+`test_on_checkout_completed_without_user_is_noop`).
 
 **Evidence.** The test bodies simply call `BillingService(db)._on_subscription_updated({...ghost customer...})` with no assertion. `billing.py:202`/`:218` look up a user and take the `None`-path early return; the test verifies only that no exception is raised, not that no user row was mutated or plan changed.
 

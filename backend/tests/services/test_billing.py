@@ -32,6 +32,41 @@ def _add_user(db_session: Session, email: str = "billing-user@example.com") -> U
     return UserRepository(db_session).add(user)
 
 
+def _billing_snapshot(user: User) -> tuple[str | None, str | None, str | None, str, int | None]:
+    """Capture Stripe billing fields so unknown-customer handlers cannot mutate peers."""
+    return (
+        user.stripe_customer_id,
+        user.stripe_subscription_id,
+        user.subscription_status,
+        user.plan,
+        user.stripe_billing_event_at,
+    )
+
+
+def _seed_control_billing(
+    db_session: Session,
+    *,
+    email: str,
+    stripe_customer_id: str,
+    stripe_subscription_id: str,
+    plan: str,
+    subscription_status: str = "active",
+    stripe_billing_event_at: int = 1_700_000_000,
+) -> User:
+    """Insert a billed control user used to prove unknown-customer webhooks are no-ops."""
+    control = _add_user(db_session, email=email)
+    UserRepository(db_session).update_billing(
+        control,
+        stripe_customer_id=stripe_customer_id,
+        stripe_subscription_id=stripe_subscription_id,
+        subscription_status=subscription_status,
+        plan=plan,
+        stripe_billing_event_at=stripe_billing_event_at,
+    )
+    db_session.flush()
+    return control
+
+
 def test_status_for_free_user(db_session: Session, billing_settings: None) -> None:
     user = _add_user(db_session)
     status = BillingService(db_session).status(user.id)
@@ -414,22 +449,19 @@ def test_webhook_checkout_completed_records_promo(
 def test_on_checkout_completed_without_user_is_noop(
     db_session: Session, billing_settings: None
 ) -> None:
-    control = _add_user(db_session, email="control-checkout@example.com")
-    UserRepository(db_session).update_billing(
-        control,
+    control = _seed_control_billing(
+        db_session,
+        email="control-checkout@example.com",
         stripe_customer_id="cus_control",
         stripe_subscription_id="sub_control",
-        subscription_status="active",
         plan="starter",
     )
-    db_session.flush()
+    before = _billing_snapshot(control)
 
     BillingService(db_session)._on_checkout_completed({"metadata": {}})
 
     db_session.refresh(control)
-    assert control.stripe_customer_id == "cus_control"
-    assert control.stripe_subscription_id == "sub_control"
-    assert control.plan == "starter"
+    assert _billing_snapshot(control) == before
 
 
 def test_on_checkout_completed_without_promo_metadata(
@@ -488,49 +520,41 @@ def test_on_checkout_completed_unknown_promo_id_ignored(
 def test_on_subscription_updated_unknown_user_is_noop(
     db_session: Session, billing_settings: None
 ) -> None:
-    control = _add_user(db_session, email="control-updated@example.com")
-    UserRepository(db_session).update_billing(
-        control,
+    control = _seed_control_billing(
+        db_session,
+        email="control-updated@example.com",
         stripe_customer_id="cus_real",
         stripe_subscription_id="sub_real",
-        subscription_status="active",
         plan="pro",
     )
-    db_session.flush()
+    before = _billing_snapshot(control)
 
     BillingService(db_session)._on_subscription_updated(
         {"id": "sub_ghost", "customer": "cus_ghost", "status": "active", "metadata": {}}
     )
 
     db_session.refresh(control)
-    assert control.stripe_customer_id == "cus_real"
-    assert control.stripe_subscription_id == "sub_real"
-    assert control.plan == "pro"
-    assert control.subscription_status == "active"
+    assert _billing_snapshot(control) == before
 
 
 def test_on_subscription_deleted_unknown_user_is_noop(
     db_session: Session, billing_settings: None
 ) -> None:
-    control = _add_user(db_session, email="control-deleted@example.com")
-    UserRepository(db_session).update_billing(
-        control,
+    control = _seed_control_billing(
+        db_session,
+        email="control-deleted@example.com",
         stripe_customer_id="cus_keep",
         stripe_subscription_id="sub_keep",
-        subscription_status="active",
         plan="plus",
     )
-    db_session.flush()
+    before = _billing_snapshot(control)
 
     BillingService(db_session)._on_subscription_deleted(
         {"id": "sub_ghost", "customer": "cus_ghost", "metadata": {}}
     )
 
     db_session.refresh(control)
-    assert control.stripe_customer_id == "cus_keep"
-    assert control.stripe_subscription_id == "sub_keep"
-    assert control.plan == "plus"
-    assert control.subscription_status == "active"
+    assert _billing_snapshot(control) == before
 
 
 def test_subscription_deleted_clears_id_and_downgrades(
