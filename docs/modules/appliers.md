@@ -573,7 +573,10 @@ keys, Workday cookies, etc.) — the preview payload includes `indeed_route` and
 **Live submit (Indeed-hosted):** when the listing has no external ATS URL but
 does expose an Easy Apply button, posts to
 `smartapply.indeed.com/beta/indeedapply/v2/applications` with the user's Indeed
-session cookies. When the application profile has an uploaded resume file, live
+session cookies. A 2xx response whose body reports `success: false`, `error` /
+`errors`, or a `message` without an application id is treated as failure (same
+post-2xx guard as Greenhouse / SmartRecruiters) — not `submitted`. When the
+application profile has an uploaded resume file, live
 submit includes `applicant.resume.file` (`fileName`, `contentType`, Base64
 `data`) per the Indeed Apply payload shape; plain `resumeText` is used only when
 no file is stored. Multi-step employer questionnaires are best-effort; map answers
@@ -612,7 +615,10 @@ keys, Workday cookies, etc.) — the preview payload includes `linkedin_route` a
 **Live submit (LinkedIn-hosted Easy Apply):** when the listing exposes an Easy
 Apply button, loads the application form via Voyager GraphQL and posts to
 `/voyager/api/voyagerJobsDashOnsiteApplyApplication?action=submitApplication`
-with the user's LinkedIn session cookies. When the application profile has an
+with the user's LinkedIn session cookies. A 2xx response whose body reports
+`success: false`, `error` / `errors`, or a `message` without an application id
+is treated as failure (same post-2xx guard as Greenhouse / SmartRecruiters) —
+not `submitted`. When the application profile has an
 uploaded resume file and the form includes a document-upload field, live submit
 registers the file via `voyagerMediaUploadMetadata`, uploads it to LinkedIn's
 Ambry endpoint, and includes the asset URN in `fileUploadResponses`. Plain

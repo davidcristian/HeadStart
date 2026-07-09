@@ -176,7 +176,7 @@ Merged with APL-14 (identical defect and location, `resume.py:59`).
 
 <a id="apl-16"></a>
 ### APL-16 — Indeed & LinkedIn-hosted live submit skip the post-2xx error-body check siblings enforce
-⚪ **LOW** · 🔁 consistency · Status: ☐ open · Confidence: high (5/5 verifiers) · Effort: S · WS23
+⚪ **LOW** · 🔁 consistency · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/116)) · Confidence: high (5/5 verifiers) · Effort: S · WS23
 
 Merged with APL-18 (the record's own `verify_note` flags it as a duplicate of uid 122 — same defect at `indeed.py:132` and `linkedin.py:215`).
 

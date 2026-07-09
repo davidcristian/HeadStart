@@ -235,6 +235,54 @@ def test_hosted_live_submit_posts_to_voyager() -> None:
     assert len(body["responses"]) == 3
 
 
+def test_hosted_live_submit_fails_on_2xx_error_body() -> None:
+    """APL-16: Voyager 200 with errors must not report submitted."""
+    viewjob = load_fixture("linkedin_job_easy_apply.html")
+    form = load_fixture("linkedin_easy_apply_form_simple.json")
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        url = str(request.url)
+        if "jobs-guest/jobs/api/jobPosting" in url:
+            return httpx.Response(200, text=viewjob)
+        if "voyager/api/graphql" in url:
+            return httpx.Response(
+                200,
+                text=form,
+                headers={"content-type": "application/json"},
+            )
+        if "voyager/api/jobs/jobPostings" in url:
+            return httpx.Response(
+                200,
+                text="{}",
+                headers={"content-type": "application/json"},
+            )
+        if "voyagerJobsDashOnsiteApplyApplication" in url:
+            return httpx.Response(
+                200,
+                json={"errors": [{"message": "Already applied"}]},
+                headers={"content-type": "application/json"},
+            )
+        raise AssertionError(f"unexpected network call: {request.method} {url}")
+
+    applier = LinkedInApplier(http=make_http_client(handler))
+    result = applier.apply(
+        ApplyContext(
+            job_external_id="4434410881",
+            job_title="Quantitative Trader",
+            company="Example Co",
+            job_url="https://www.linkedin.com/jobs/view/quantitative-trader-at-example-co-4434410881",
+            config={},
+            profile=_profile(),
+            credentials=_linkedin_credentials(),
+            dry_run=False,
+        )
+    )
+    assert result.status == "failed"
+    assert result.error == "Already applied"
+    assert result.external_application_id is None
+    assert result.payload is not None
+
+
 def test_resolve_job_posting_url_builds_guest_api_url() -> None:
     url = resolve_job_posting_url("4434410881", "")
     assert url == "https://www.linkedin.com/jobs-guest/jobs/api/jobPosting/4434410881"

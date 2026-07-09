@@ -395,6 +395,41 @@ def test_hosted_live_submit_handles_http_error() -> None:
     assert result.payload is not None
 
 
+def test_hosted_live_submit_fails_on_2xx_error_body() -> None:
+    """APL-16: smartapply 200 with success:false must not report submitted."""
+    viewjob = load_fixture("indeed_viewjob_hosted.html")
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        url = str(request.url)
+        if "viewjob" in url:
+            return httpx.Response(200, text=viewjob)
+        if "smartapply.indeed.com" in url:
+            return httpx.Response(
+                200,
+                json={"success": False, "error": "duplicate application"},
+                headers={"content-type": "application/json"},
+            )
+        raise AssertionError(f"unexpected: {url}")
+
+    applier = IndeedApplier(http=make_http_client(handler))
+    result = applier.apply(
+        ApplyContext(
+            job_external_id="hostedjobkey001",
+            job_title="Customer Support Specialist",
+            company="Hosted Co",
+            job_url="https://www.indeed.com/viewjob?jk=hostedjobkey001",
+            config={},
+            profile=_profile(),
+            credentials={"cookies": {"PPID": "x"}, "session": {}, "headers": {}},
+            dry_run=False,
+        )
+    )
+    assert result.status == "failed"
+    assert result.error == "duplicate application"
+    assert result.external_application_id is None
+    assert result.payload is not None
+
+
 def test_delegate_wraps_payload_none_result() -> None:
     from unittest.mock import MagicMock, patch
 
@@ -428,12 +463,32 @@ def test_delegate_wraps_payload_none_result() -> None:
 
 
 def test_extract_application_id_and_credential_headers() -> None:
-    from app.appliers.adapters.indeed import _credential_headers, _extract_application_id
+    from app.appliers.adapters.indeed import (
+        _credential_headers,
+        _extract_application_id,
+        _extract_error_message,
+        _response_has_error,
+    )
 
     assert _extract_application_id({"application_id": "a-1"}) == "a-1"
     assert _extract_application_id({"id": "i-1"}) == "i-1"
     assert _extract_application_id({}) is None
     assert _extract_application_id("nope") is None
+
+    assert _response_has_error("nope") is False
+    assert _response_has_error({"success": True}) is False
+    assert _response_has_error({"success": False}) is True
+    assert _response_has_error({"error": "boom"}) is True
+    assert _response_has_error({"errors": ["x"]}) is True
+    assert _response_has_error({"message": "rate limited"}) is True
+    assert _response_has_error({"message": "ok", "applicationId": "a-1"}) is False
+
+    assert _extract_error_message({"error": " boom "}) == "boom"
+    assert _extract_error_message({"errors": ["a", {"message": "b"}]}) == "a; b"
+    assert _extract_error_message({"errors": "flat error"}) == "flat error"
+    assert _extract_error_message({"message": " soft fail "}) == "soft fail"
+    assert _extract_error_message({}) == "indeed apply rejected the submission"
+    assert _extract_error_message("nope") == "indeed apply rejected the submission"
 
     assert _credential_headers(None) == {}
     assert _credential_headers({"headers": {"X": "1"}, "session": {}}) == {"X": "1"}

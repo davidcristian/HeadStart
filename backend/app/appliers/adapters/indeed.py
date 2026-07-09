@@ -15,6 +15,10 @@ from typing import Any
 
 import httpx
 
+from app.appliers.adapters.hosted_submit_response import (
+    extract_error_message,
+    response_has_error,
+)
 from app.appliers.adapters.indeed_detail import (
     IndeedJobDetail,
     parse_viewjob_page,
@@ -129,6 +133,11 @@ class IndeedApplier(Applier):
         except httpx.HTTPError as exc:
             return ApplyResult(status="failed", error=str(exc), payload=payload)
 
+        if _response_has_error(response):
+            return ApplyResult(
+                status="failed", error=_extract_error_message(response), payload=payload
+            )
+
         app_id = _extract_application_id(response)
         return ApplyResult(status="submitted", payload=payload, external_application_id=app_id)
 
@@ -183,6 +192,16 @@ def _extract_application_id(response: Any) -> str | None:
             if value is not None:
                 return str(value)
     return None
+
+
+def _response_has_error(response: Any) -> bool:
+    """Indeed smartapply can return 2xx with an error body; siblings check this."""
+    return response_has_error(response, extract_application_id=_extract_application_id)
+
+
+def _extract_error_message(response: Any) -> str:
+    """Best-effort error string from an Indeed smartapply error body."""
+    return extract_error_message(response, default="indeed apply rejected the submission")
 
 
 def _resolve_resume_file(ctx: ApplyContext) -> ResumeFile | None:

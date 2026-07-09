@@ -10,6 +10,8 @@ from app.appliers.adapters.linkedin import (
     LinkedInApplier,
     _detail_from_override,
     _extract_application_id,
+    _extract_error_message,
+    _response_has_error,
 )
 from app.schemas.profile import ApplyProfile, ProfileData, ResumeFile
 from tests.conftest import load_fixture, make_http_client
@@ -493,3 +495,21 @@ def test_extract_application_id_variants() -> None:
     assert _extract_application_id({"value": "not-dict", "application_id": "a"}) == "a"
     assert _extract_application_id("not-a-dict") is None
     assert _extract_application_id({}) is None
+
+
+def test_response_error_helpers() -> None:
+    assert _response_has_error("nope") is False
+    assert _response_has_error({"success": True}) is False
+    assert _response_has_error({"success": False}) is True
+    assert _response_has_error({"error": "boom"}) is True
+    assert _response_has_error({"errors": ["x"]}) is True
+    assert _response_has_error({"message": "rate limited"}) is True
+    assert _response_has_error({"message": "ok", "applicationId": "a-1"}) is False
+    assert _response_has_error({"message": "ok", "value": {"applicationId": "nested"}}) is False
+
+    assert _extract_error_message({"error": " boom "}) == "boom"
+    assert _extract_error_message({"errors": ["a", {"message": "b"}]}) == "a; b"
+    assert _extract_error_message({"errors": "flat error"}) == "flat error"
+    assert _extract_error_message({"message": " soft fail "}) == "soft fail"
+    assert _extract_error_message({}) == "linkedin apply rejected the submission"
+    assert _extract_error_message("nope") == "linkedin apply rejected the submission"
