@@ -2,7 +2,7 @@
 
 The SPA already sets these via nginx (XCT-16 / FRO-11). The API is a separate
 origin behind the ALB, so it needs its own middleware — nothing else adds
-HSTS/nosniff/framing/referrer hardening on JSON or /docs responses.
+HSTS/nosniff/framing/referrer hardening on JSON responses.
 """
 
 from __future__ import annotations

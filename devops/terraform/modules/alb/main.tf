@@ -1,5 +1,6 @@
 # Application Load Balancer. Default traffic goes to the frontend; anything under
-# /api/* (plus the docs/openapi paths) is routed to the API service.
+# /api/* is routed to the API service. OpenAPI UI paths are not forwarded (AUT-25:
+# docs are disabled outside local/test and would otherwise hit the SPA).
 # When certificate_arn is set, HTTPS terminates on 443 and HTTP redirects.
 
 locals {
@@ -95,7 +96,7 @@ resource "aws_lb_listener_rule" "api_http" {
 
   condition {
     path_pattern {
-      values = ["/api/*", "/docs", "/openapi.json", "/redoc"]
+      values = ["/api/*"]
     }
   }
 }
@@ -128,7 +129,7 @@ resource "aws_lb_listener_rule" "api_https" {
 
   condition {
     path_pattern {
-      values = ["/api/*", "/docs", "/openapi.json", "/redoc"]
+      values = ["/api/*"]
     }
   }
 }

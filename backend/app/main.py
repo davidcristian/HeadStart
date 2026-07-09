@@ -19,6 +19,7 @@ from app.core.exceptions import (
 from app.core.logging import configure_logging
 from app.core.metrics import render_metrics
 from app.core.request_id import RequestIdMiddleware
+from app.core.secret_policy import is_local_environment
 from app.core.security_headers import SecurityHeadersMiddleware
 
 API_PREFIX = "/api/v1"
@@ -26,11 +27,16 @@ API_PREFIX = "/api/v1"
 
 def create_app() -> FastAPI:
     configure_logging()
+    # AUT-25: interactive OpenAPI UI is local/test only — prod must not enumerate routes.
+    docs_enabled = is_local_environment(get_settings().environment)
 
     app = FastAPI(
         title="HeadStart API",
         version=__version__,
         summary="Configure job-site searches and get notified about new postings.",
+        docs_url="/docs" if docs_enabled else None,
+        redoc_url="/redoc" if docs_enabled else None,
+        openapi_url="/openapi.json" if docs_enabled else None,
     )
 
     # Last add_middleware wins as outermost; CORS must wrap the app for preflight.
@@ -50,7 +56,13 @@ def create_app() -> FastAPI:
 
     @app.get("/", include_in_schema=False)
     def root() -> dict[str, str]:
-        return {"name": "HeadStart API", "docs": "/docs", "health": f"{API_PREFIX}/health"}
+        payload: dict[str, str] = {
+            "name": "HeadStart API",
+            "health": f"{API_PREFIX}/health",
+        }
+        if docs_enabled:
+            payload["docs"] = "/docs"
+        return payload
 
     @app.get("/metrics", include_in_schema=False)
     def metrics(request: Request) -> Response:

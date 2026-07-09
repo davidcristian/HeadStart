@@ -266,7 +266,7 @@ This area covers authentication and session management (login, registration, pas
 
 <a id="aut-25"></a>
 ### AUT-25 — Swagger /docs, /redoc and /openapi.json exposed publicly in prod
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: high (3/5 verifiers) · Effort: XS · WS20
+⚪ **LOW** · 🔒 security · Status: ✅ done · Confidence: high (3/5 verifiers) · Effort: XS · WS20
 
 **Locations:** `backend/app/main.py:22` (`create_app`); plus `devops/terraform/modules/alb/main.tf:88`/`:121`.
 
@@ -277,6 +277,8 @@ This area covers authentication and session management (login, registration, pas
 **Suggested fix.** Set `docs_url`/`redoc_url`/`openapi_url` to `None` (or gate on environment) outside local/dev.
 
 **Verification.** Confirmed 3/3 adversarial verifiers. main.py:22 uses default `docs_url`/`openapi_url` with no environment gate, and `alb/main.tf:88,121` explicitly route `/docs,/openapi.json,/redoc` to the API on both listeners; the OpenAPI surface is public in prod — low hardening is fair.
+
+**Fix ([PR](https://github.com/davidcristian/HeadStart/pull/96)).** `create_app()` enables `/docs`/`/redoc`/`/openapi.json` only when `ENVIRONMENT` is `local` or `test` (`is_local_environment`); otherwise all three are `None` and the root payload omits `docs`. ALB listener rules forward only `/api/*` to the API target group. Docs: [`docs/modules/api.md`](../../docs/modules/api.md).
 
 <a id="aut-27"></a>
 ### AUT-27 — Registration returns 409 for existing email, confirming registered addresses

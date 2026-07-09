@@ -244,7 +244,10 @@ curl "http://$(cd devops/terraform/environments/beta && terraform output -raw al
 Open the app URL in a browser (`terraform output app_url`):
 
 - **UI:** `<app-url>/`
-- **API docs:** `<app-url>/docs`
+- **API health:** `<app-url>/api/v1/health`
+
+Interactive OpenAPI docs (`/docs`) are disabled in deployed environments
+(AUT-25); use a local `just dev` stack to browse the schema.
 
 Without a custom domain, use `http://<alb-dns>/` as above.
 

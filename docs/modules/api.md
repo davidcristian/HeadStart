@@ -3,7 +3,9 @@
 **Path:** `backend/app/api/`
 
 FastAPI app exposing CRUD for the configurable entities plus a job feed and
-health. Interactive docs at `/docs`.
+health. Interactive docs at `/docs` (and `/redoc` / `/openapi.json`) are
+enabled only when `ENVIRONMENT` is `local` or `test` (AUT-25); production
+boots set those URLs to `None` so the public surface cannot be enumerated.
 
 ## Layering
 
@@ -129,19 +131,27 @@ task (see [worker.md](worker.md#request-correlation-id-aut-15)).
 ## Security response headers (AUT-23)
 
 `SecurityHeadersMiddleware` stamps every API response (including CORS
-preflight and `/docs`) with:
+preflight) with:
 
 | Header | Value |
 | ------ | ----- |
 | `X-Content-Type-Options` | `nosniff` |
 | `X-Frame-Options` | `DENY` |
 | `Referrer-Policy` | `strict-origin-when-cross-origin` |
-| `Content-Security-Policy` | `frame-ancestors 'none'` (API may still serve HTML docs) |
+| `Content-Security-Policy` | `frame-ancestors 'none'` |
 | `Strict-Transport-Security` | `max-age=31536000; includeSubDomains` outside `local`/`test` |
 
 HSTS is omitted in `local`/`test` so browsers do not pin plain-HTTP localhost.
 The SPA nginx shell sets the same baseline (see [frontend.md](frontend.md));
 the API is a separate origin behind the ALB and needs its own middleware.
+
+## Interactive OpenAPI docs (AUT-25)
+
+`create_app()` enables FastAPI's `/docs`, `/redoc`, and `/openapi.json` only
+when `ENVIRONMENT` is `local` or `test`. Outside those environments the three
+URLs are `None` (404), the root payload omits the `docs` link, and the ALB
+forwards only `/api/*` to the API target group so `/docs` hits the SPA instead
+of exposing the schema.
 
 ## Structured JSON logs (AUT-16)
 
