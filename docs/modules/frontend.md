@@ -156,9 +156,11 @@ the mobile bottom nav. Paid plans and admin accounts see nothing.
 - In the stack: served by unprivileged nginx on container port **8080**
   (`nginxinc/nginx-unprivileged`; see `frontend/Dockerfile`,
   `frontend/nginx.conf`). Compose maps host `:8080` → container `:8080`; ECS
-  / ALB target the same port. Service worker assets (`sw.js`,
-  `manifest.webmanifest`) are served with `Cache-Control: no-cache` so updates
-  propagate.
+  / ALB target the same port. The HTML shell (`location /`), service worker
+  assets (`sw.js`, `manifest.webmanifest`) are served with
+  `Cache-Control: no-cache` so deploys revalidate the shell that references
+  hashed `/assets/` (immutable, 1y). Without that, a cached `index.html` can
+  point at asset hashes nginx no longer has.
 - **Non-root runtime (FRO-08):** the SPA image does not use stock
   `nginx:*-alpine` (master as root on :80). The unprivileged image runs as the
   `nginx` user and binds only to 8080.

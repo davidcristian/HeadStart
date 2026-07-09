@@ -164,7 +164,9 @@ _Merged with FRO-09 — both records describe the same defect: the nginx runtime
 
 <a id="fro-10"></a>
 ### FRO-10 — index.html served with no Cache-Control while assets are immutable
-⚪ **LOW** · 🐞 bug · Status: ☐ open · Confidence: medium (3/5 verifiers) · Effort: XS · WS20
+⚪ **LOW** · 🐞 bug · Status: ✅ done · Confidence: medium (3/5 verifiers) · Effort: XS · WS20
+
+**Update (2026-07-10).** Fixed: `location /` sets `Cache-Control: no-cache` so the SPA HTML shell revalidates after deploy while `/assets/` stay `public, immutable` — [PR](https://github.com/davidcristian/HeadStart/pull/98).
 
 **Locations:** `frontend/nginx.conf:19` (`location /`).
 
