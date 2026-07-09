@@ -65,6 +65,7 @@ def test_export_jobs_uses_chunked_iteration(db_session: Session) -> None:
     user = AuthService(db_session).register(
         RegisterRequest(email="export-jobs@example.com", password="password123")
     )
+    assert user is not None
     _seed_jobs(db_session, user.id, count=5)
     calls: list[int] = []
     real_iter = SeenJobRepository.iter_for_user

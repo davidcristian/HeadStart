@@ -63,7 +63,7 @@ export const api = {
 
   // auth
   register: (email: string, password: string) =>
-    request<User>("/api/v1/auth/register", {
+    request<{ message: string }>("/api/v1/auth/register", {
       method: "POST",
       body: { email, password },
       skipAuth: true,

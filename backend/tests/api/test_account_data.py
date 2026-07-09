@@ -147,6 +147,7 @@ def test_export_includes_applications_artifacts_inbox_and_promos(db_session: Ses
     user = service.register(
         RegisterRequest(email="export-full@example.com", password="password123")
     )
+    assert user is not None
     ProfileService(db_session).save_resume(
         user.id,
         filename="cv.pdf",
@@ -337,6 +338,7 @@ def test_delete_removes_account_and_clears_cookie(client: TestClient) -> None:
 def test_delete_cascades_owned_rows(db_session: Session) -> None:
     service = AuthService(db_session)
     user = service.register(RegisterRequest(email="cascade@example.com", password="password123"))
+    assert user is not None
     source = Source(
         user_id=user.id,
         name="ACME",

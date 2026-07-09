@@ -11,6 +11,7 @@ from app.core.config import settings
 from app.core.email import (
     SmtpNotConfiguredError,
     send_email,
+    send_existing_account_email,
     send_password_reset_email,
     send_verification_email,
 )
@@ -79,6 +80,16 @@ def test_send_verification_email_uses_smtp() -> None:
         send_verification_email(to_email="user@example.com", verify_url="https://app/verify?x=1")
     kwargs = mock_send.call_args.kwargs
     assert "https://app/verify?x=1" in kwargs["body"]
+
+
+def test_send_existing_account_email_uses_smtp(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(settings, "frontend_base_url", "https://app.example")
+    with patch.object(email_module, "send_email") as mock_send:
+        send_existing_account_email(to_email="user@example.com")
+    kwargs = mock_send.call_args.kwargs
+    assert kwargs["to"] == "user@example.com"
+    assert "https://app.example/login" in kwargs["body"]
+    assert "https://app.example/forgot-password" in kwargs["body"]
 
 
 def test_send_or_log_email_falls_back_to_logging_in_local(

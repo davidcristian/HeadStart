@@ -101,13 +101,13 @@ describe("RegisterPage", () => {
   });
 
   it("shows the error message when registration fails", async () => {
-    register.mockRejectedValue(new Error("Email already in use."));
+    register.mockRejectedValue(new Error("Too many requests. Try again later."));
     const fields = renderPage();
 
     fillForm(fields);
     fireEvent.click(screen.getByRole("button", { name: "Create account" }));
 
-    expect(await screen.findByText("Email already in use.")).toBeInTheDocument();
+    expect(await screen.findByText("Too many requests. Try again later.")).toBeInTheDocument();
     expect(navigate).not.toHaveBeenCalled();
   });
 

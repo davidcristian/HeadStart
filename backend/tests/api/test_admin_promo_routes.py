@@ -35,6 +35,17 @@ def _admin_headers(client: TestClient) -> dict[str, str]:
     return register_and_login(client, email="promo-admin@example.com", password="password123")
 
 
+def test_admin_create_duplicate_promo_code_conflicts(client: TestClient) -> None:
+    """ConflictError from promo create must map to HTTP 409 (main handler)."""
+    headers = _admin_headers(client)
+    payload = {"code": "DUP10", "promo_type": "percent_off", "value_int": 10}
+    created = client.post("/api/v1/admin/promo-codes", headers=headers, json=payload)
+    assert created.status_code == 201
+    resp = client.post("/api/v1/admin/promo-codes", headers=headers, json=payload)
+    assert resp.status_code == 409
+    assert "already exists" in resp.json()["detail"]
+
+
 def test_admin_lists_promo_codes(client: TestClient) -> None:
     headers = _admin_headers(client)
     with _client_db() as db:

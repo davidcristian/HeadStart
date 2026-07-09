@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from app.core.auth_events import log_auth_event
 from app.core.config import settings
 from app.core.email import send_verification_email
-from app.core.exceptions import ConflictError, NotFoundError, ValidationError
+from app.core.exceptions import NotFoundError, ValidationError
 from app.core.rate_limit import limit_verification_email_issue
 from app.core.security import (
     TokenError,
@@ -19,7 +19,6 @@ from app.core.security import (
     create_refresh_token,
     decode_token,
     generate_password_reset_token,
-    hash_password,
     hash_password_reset_token,
     verify_password,
 )
@@ -46,6 +45,7 @@ from app.services.auth_password import (
 from app.services.auth_password import (
     reset_password as apply_password_reset,
 )
+from app.services.auth_register import register_account
 
 _VERIFICATION_SENT_MESSAGE = (
     "If your account is not yet verified, a verification link has been sent."
@@ -59,23 +59,19 @@ class AuthService:
         self.reset_tokens = PasswordResetTokenRepository(session)
         self.verification_tokens = EmailVerificationTokenRepository(session)
 
-    def register(self, data: RegisterRequest) -> User:
-        """Create an account. The very first user becomes the admin."""
-        email = data.email.lower()
-        if self.repo.get_by_email(email) is not None:
-            raise ConflictError("An account with this email already exists.")
-        user = User(
-            email=email,
-            password_hash=hash_password(data.password),
-            is_admin=False,
-            is_active=True,
+    def register(
+        self,
+        data: RegisterRequest,
+        *,
+        ip_address: str | None = None,
+    ) -> User | None:
+        """Create an account when the email is free; never reveal whether it was taken."""
+        return register_account(
+            self.session,
+            data,
+            ip_address=ip_address,
+            issue_verification=self._issue_verification_email,
         )
-        user = self.repo.add(user)
-        if self.repo.claim_bootstrap_admin(user.id):
-            user.is_admin = True
-            self.session.flush()
-        self._issue_verification_email(user)
-        return user
 
     def login(self, data: LoginRequest, *, ip_address: str | None = None) -> TokenResponse:
         email = data.email.lower()

@@ -278,19 +278,17 @@ This area covers authentication and session management (login, registration, pas
 
 <a id="aut-27"></a>
 ### AUT-27 — Registration returns 409 for existing email, confirming registered addresses
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: high (3/5 verifiers) · Effort: S · WS19
+⚪ **LOW** · 🔒 security · Status: ✅ done · Confidence: high (3/5 verifiers) · Effort: S · WS19
 
 **Merge note.** Merges the exact duplicate AUT-29 (uid 17) — same registration-enumeration defect.
 
-**Locations:** `backend/app/services/auth.py:59` (`AuthService.register`).
+**Locations:** `backend/app/services/auth.py` / `auth_register.py` (`AuthService.register`).
 
-**Evidence.** `register()` raises `ConflictError('An account with this email already exists.')` → HTTP 409 when `repo.get_by_email` is not `None`, directly disclosing whether an email is registered — in contrast to the deliberately constant messages used on login and forgot-password.
+**Evidence.** `register()` raised `ConflictError('An account with this email already exists.')` → HTTP 409 when `repo.get_by_email` is not `None`, directly disclosing whether an email is registered — in contrast to the deliberately constant messages used on login and forgot-password.
 
 **Failure scenario.** An attacker probes `/auth/register` with candidate emails; a 409-vs-201 response cleanly enumerates registered users for phishing/credential-stuffing, undermining the anti-enumeration effort elsewhere in the same service.
 
-**Suggested fix.** Return a neutral "check your email" response and handle the duplicate internally (send a "you already have an account" email), or accept and explicitly document the tradeoff behind rate limiting.
-
-**Verification.** Confirmed 3/3 adversarial verifiers (merged duplicate 3/3). `register()` raises a 409 on a taken email while login/forgot-password use uniform responses, cleanly enabling email enumeration; no rate-limit or uniform-response guard on `/register`.
+**Fix ([PR](https://github.com/davidcristian/HeadStart/pull/91)).** `register_account` always returns the same client ack (`REGISTER_ACK_MESSAGE`); new emails create the user + verification mail, existing active emails get `send_existing_account_email` (rate-limited), and the SPA no longer auto-logs in after register.
 
 <a id="aut-28"></a>
 ### AUT-28 — Concurrent duplicate registration surfaces IntegrityError as 500 not 409

@@ -13,6 +13,8 @@ logger = get_logger(__name__)
 AuthEvent = Literal[
     "login_success",
     "login_failure",
+    "register_created",
+    "register_duplicate",
     "password_reset_requested",
     "password_reset_completed",
     "session_invalidated",

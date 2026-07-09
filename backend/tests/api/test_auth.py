@@ -29,8 +29,18 @@ def test_register_first_user_is_admin(client: TestClient) -> None:
     )
     assert resp.status_code == 201
     body = resp.json()
-    assert body["email"] == "first@example.com"
-    assert body["is_admin"] is True
+    assert "verification link" in body["message"]
+    assert "email" not in body
+    assert "is_admin" not in body
+
+    login = client.post(
+        "/api/v1/auth/login",
+        json={"email": "first@example.com", "password": "password123"},
+    )
+    headers = {"Authorization": f"Bearer {login.json()['access_token']}"}
+    me = client.get("/api/v1/auth/me", headers=headers)
+    assert me.status_code == 200
+    assert me.json()["is_admin"] is True
 
 
 def test_second_user_is_not_admin(client: TestClient) -> None:
@@ -43,13 +53,36 @@ def test_second_user_is_not_admin(client: TestClient) -> None:
         json={"email": "second@example.com", "password": "password123"},
     )
     assert resp.status_code == 201
-    assert resp.json()["is_admin"] is False
+    assert "verification link" in resp.json()["message"]
+
+    login = client.post(
+        "/api/v1/auth/login",
+        json={"email": "second@example.com", "password": "password123"},
+    )
+    headers = {"Authorization": f"Bearer {login.json()['access_token']}"}
+    me = client.get("/api/v1/auth/me", headers=headers)
+    assert me.json()["is_admin"] is False
 
 
-def test_register_duplicate_email_conflicts(client: TestClient) -> None:
+def test_register_duplicate_email_does_not_enumerate(client: TestClient) -> None:
+    """Duplicate register returns the same 201 ack as a fresh signup (AUT-27)."""
     payload = {"email": "dupe@example.com", "password": "password123"}
-    assert client.post("/api/v1/auth/register", json=payload).status_code == 201
-    assert client.post("/api/v1/auth/register", json=payload).status_code == 409
+    first = client.post("/api/v1/auth/register", json=payload)
+    assert first.status_code == 201
+    second = client.post("/api/v1/auth/register", json=payload)
+    assert second.status_code == 201
+    assert second.json() == first.json()
+    # Original password still works; the duplicate attempt must not overwrite it.
+    login = client.post(
+        "/api/v1/auth/login",
+        json={"email": "dupe@example.com", "password": "password123"},
+    )
+    assert login.status_code == 200
+    wrong = client.post(
+        "/api/v1/auth/login",
+        json={"email": "dupe@example.com", "password": "other-password"},
+    )
+    assert wrong.status_code == 400
 
 
 def test_login_returns_access_token_and_sets_refresh_cookie(client: TestClient) -> None:
@@ -227,7 +260,9 @@ def test_bootstrap_claim_survives_bootstrap_user_deletion(db_session: Session) -
     bootstrap = service.register(
         RegisterRequest(email="bootstrap@example.com", password="password123")
     )
+    assert bootstrap is not None
     peer = service.register(RegisterRequest(email="peer@example.com", password="password123"))
+    assert peer is not None
     peer.is_admin = True
     db_session.flush()
 
@@ -239,6 +274,7 @@ def test_bootstrap_claim_survives_bootstrap_user_deletion(db_session: Session) -
     assert lock.bootstrap_claimed is True
 
     late = service.register(RegisterRequest(email="late@example.com", password="password123"))
+    assert late is not None
     assert late.is_admin is False
     assert UserRepository(db_session).claim_bootstrap_admin(late.id) is False
 
@@ -248,5 +284,6 @@ def test_register_grants_admin_only_to_bootstrap_claimant(db_session: Session) -
     service = AuthService(db_session)
     first = service.register(RegisterRequest(email="first@example.com", password="password123"))
     second = service.register(RegisterRequest(email="second@example.com", password="password123"))
+    assert first is not None and second is not None
     assert first.is_admin is True
     assert second.is_admin is False

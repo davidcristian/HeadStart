@@ -78,7 +78,7 @@ returns `NotFoundError` (404), never another user's data.
 
 | Method | Path        | Auth   | Purpose                                |
 | ------ | ----------- | ------ | -------------------------------------- |
-| POST   | `/register` | none   | Create an account (first = admin)      |
+| POST   | `/register` | none   | Create an account or ack duplicate (first = admin); always same message |
 | POST   | `/login`    | none   | Email+password → access token (body) + refresh cookie |
 | POST   | `/refresh`  | none*  | Refresh cookie → new access token (rotates cookie) |
 | POST   | `/logout`   | none   | Clear the refresh cookie and revoke the session |
@@ -127,6 +127,7 @@ extras when `LOG_FORMAT=json` (default; see [api.md](api.md#structured-json-logs
 | Event | When |
 | ----- | ---- |
 | `login_success` / `login_failure` | Password check outcome (`reason=invalid_credentials` on fail) |
+| `register_created` / `register_duplicate` | Signup outcome (`issued=true` when mail was sent; duplicate may use `reason=inactive`) |
 | `password_reset_requested` | Forgot-password (always; `issued=true` only when mail was sent) |
 | `password_reset_completed` | Successful reset |
 | `session_invalidated` | Logout or reset (`reason=logout` / `password_reset`) |
@@ -163,6 +164,23 @@ Failed logins also increment Prometheus `headstart_auth_login_failures_total`
   cannot delete their account while other users exist — promote another admin
   first.
 
+## Registration
+
+1. User submits email + password on `/register` → `POST /auth/register`.
+2. The API **always** returns **201** with the same ack message whether the email
+   was new or already registered (no email enumeration via status or body;
+   AUT-27). bcrypt runs on both paths so CPU time is similar.
+3. **New email:** create the user (first registrant claims bootstrap admin), store
+   a hashed verification token, and send the verification email.
+4. **Existing active email:** do not create a second row or change the password;
+   send an "existing account" notice with sign-in / forgot-password links
+   (rate-limited per address like forgot-password mail). When the notice cap is
+   hit, mail is skipped but the HTTP ack stays the same (a 429 would re-enumerate).
+   Inactive accounts get the same HTTP ack but no outbound mail.
+5. The SPA does **not** auto-login after register — it sends the user to
+   `/verify-email` so a duplicate signup cannot be inferred from a follow-up
+   login failure. New users verify via the emailed link, then sign in.
+
 ## Password reset
 
 1. User submits their email on `/forgot-password` → `POST /auth/forgot-password`.
@@ -191,8 +209,10 @@ log fallback refuses to emit the token-bearing URL (AUT-01).
 
 ## Email verification
 
-1. On register, a single-use token is stored (hashed) and emailed. Existing
-   accounts created before this feature are grandfathered as verified.
+1. On a successful new registration, a single-use token is stored (hashed) and
+   emailed. Existing accounts created before this feature are grandfathered as
+   verified. Re-registration of an already-known address does not issue a new
+   verification token (see Registration above).
 2. The email link opens `/verify-email?token=...` → `POST /auth/verify-email`
    with the token. The token is claimed (`used_at`) and committed before the
    verify write, same single-use rule as password reset (DAT-18).

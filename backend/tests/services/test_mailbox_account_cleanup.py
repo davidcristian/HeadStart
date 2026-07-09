@@ -65,6 +65,7 @@ def _seed_mailbox(
 
 def _register(db_session: Session, email: str) -> int:
     user = AuthService(db_session).register(RegisterRequest(email=email, password="password123"))
+    assert user is not None
     return user.id
 
 
@@ -174,6 +175,7 @@ def test_delete_account_releases_mailbox_oauth_before_local_delete(
     user = service.register(
         RegisterRequest(email="mailbox-delete@example.com", password="password123")
     )
+    assert user is not None
     service.delete_account(user.id, DeleteAccountRequest(password="password123"))
     mock_stripe.assert_called_once()
     mock_mailbox.assert_called_once()

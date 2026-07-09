@@ -39,9 +39,10 @@ The frontend serves two surfaces from one bundle (see
   `onboarding_completed_at` are redirected to **`/app/onboarding`** (guided
   setup wizard) before they can reach the main shell.
 
-Register sends new accounts to `/verify-email` on success; Login sends users to
-`/app`, where the verification and onboarding guards redirect as needed.
-Already-authenticated
+Register returns a uniform success ack and sends new accounts to `/verify-email`
+without auto-login (so duplicate emails cannot be inferred from a follow-up
+login failure). Login sends users to `/app`, where the verification and
+onboarding guards redirect as needed. Already-authenticated
 visitors to auth screens bounce to `/app`. Legacy top-level paths (`/jobs`,
 `/searches`, …) 301-style redirect to their `/app/*` equivalent so old
 bookmarks and the installed PWA (`start_url: /app/jobs`) keep working. Any

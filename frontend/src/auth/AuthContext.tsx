@@ -81,13 +81,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [queryClient],
   );
 
-  const register = useCallback(
-    async (email: string, password: string) => {
-      await api.register(email, password);
-      await login(email, password);
-    },
-    [login],
-  );
+  const register = useCallback(async (email: string, password: string) => {
+    // Do not auto-login: duplicate emails also return success so existence
+    // cannot be inferred from a follow-up login failure (AUT-27).
+    await api.register(email, password);
+  }, []);
 
   const refreshUser = useCallback(async () => {
     const me = await api.me();

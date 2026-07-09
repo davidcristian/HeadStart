@@ -175,8 +175,90 @@ def test_register_issues_verification_email(db_session: Session) -> None:
             RegisterRequest(email="reg@example.com", password="password123")
         )
 
+    assert user is not None
     assert user.email == "reg@example.com"
     send_mail.assert_called_once()
+
+
+def test_register_duplicate_returns_none_and_notifies(
+    db_session: Session, caplog: pytest.LogCaptureFixture
+) -> None:
+    from app.schemas.auth import RegisterRequest
+
+    with patch("app.services.auth.send_verification_email"):
+        created = AuthService(db_session).register(
+            RegisterRequest(email="dupe@example.com", password="password123")
+        )
+    assert created is not None
+
+    with (
+        patch("app.services.auth_register.send_existing_account_email") as notice,
+        caplog.at_level("INFO", logger="app.core.auth_events"),
+    ):
+        again = AuthService(db_session).register(
+            RegisterRequest(email="dupe@example.com", password="other-password")
+        )
+
+    assert again is None
+    notice.assert_called_once_with(to_email="dupe@example.com")
+    assert any("auth_event=register_duplicate" in r.getMessage() for r in caplog.records)
+    # Password must not be overwritten by the duplicate attempt.
+    assert AuthService(db_session).login(
+        LoginRequest(email="dupe@example.com", password="password123")
+    )
+
+
+def test_register_duplicate_inactive_skips_notice(db_session: Session) -> None:
+    from app.schemas.auth import RegisterRequest
+
+    with patch("app.services.auth.send_verification_email"):
+        created = AuthService(db_session).register(
+            RegisterRequest(email="inactive@example.com", password="password123")
+        )
+    assert created is not None
+    created.is_active = False
+    db_session.flush()
+
+    with patch("app.services.auth_register.send_existing_account_email") as notice:
+        again = AuthService(db_session).register(
+            RegisterRequest(email="inactive@example.com", password="password123")
+        )
+
+    assert again is None
+    notice.assert_not_called()
+
+
+def test_register_duplicate_rate_limit_skips_notice_not_429(
+    db_session: Session, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Per-email notice caps must not surface as HTTP 429 (would re-enumerate)."""
+    from app.core.exceptions import RateLimitError
+    from app.schemas.auth import RegisterRequest
+
+    with patch("app.services.auth.send_verification_email"):
+        created = AuthService(db_session).register(
+            RegisterRequest(email="rl@example.com", password="password123")
+        )
+    assert created is not None
+
+    with (
+        patch(
+            "app.services.auth_register.enforce_rate_limit",
+            side_effect=RateLimitError("Too many requests. Try again later."),
+        ),
+        patch("app.services.auth_register.send_existing_account_email") as notice,
+        caplog.at_level("INFO", logger="app.core.auth_events"),
+    ):
+        again = AuthService(db_session).register(
+            RegisterRequest(email="rl@example.com", password="password123")
+        )
+
+    assert again is None
+    notice.assert_not_called()
+    assert any(
+        "auth_event=register_duplicate" in r.getMessage() and "rate_limited" in r.getMessage()
+        for r in caplog.records
+    )
 
 
 def test_reset_password_success_bumps_token_version(db_session: Session) -> None:

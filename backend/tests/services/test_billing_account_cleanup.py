@@ -156,6 +156,7 @@ def test_delete_account_releases_stripe_before_local_delete(
     user = service.register(
         RegisterRequest(email="stripe-delete@example.com", password="password123")
     )
+    assert user is not None
     UserRepository(db_session).update_billing(
         user,
         stripe_customer_id="cus_del",

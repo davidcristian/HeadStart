@@ -77,6 +77,28 @@ def send_verification_email(*, to_email: str, verify_url: str) -> None:
     )
 
 
+def send_existing_account_email(*, to_email: str) -> None:
+    """Tell an existing user someone tried to register with their address (AUT-27)."""
+    base = settings.frontend_base_url.rstrip("/")
+    login_url = f"{base}/login"
+    forgot_url = f"{base}/forgot-password"
+    subject = "Your HeadStart account"
+    body = (
+        "Someone tried to create a HeadStart account with this email address.\n\n"
+        f"If that was you, sign in here:\n{login_url}\n\n"
+        f"Forgot your password?\n{forgot_url}\n\n"
+        "If you did not try to register, you can ignore this email."
+    )
+
+    _send_or_log_email(
+        to_email=to_email,
+        subject=subject,
+        body=body,
+        log_label="existing-account notice",
+        log_url=login_url,
+    )
+
+
 def _send_or_log_email(
     *,
     to_email: str,

@@ -20,7 +20,9 @@ const apiLogin = vi.fn(async (_email: string, _password: string) => ({
   access_token: "access-token",
   token_type: "bearer",
 }));
-const apiRegister = vi.fn(async (_email: string, _password: string) => user);
+const apiRegister = vi.fn(async (_email: string, _password: string) => ({
+  message: "If this email is available, we created an account and sent a verification link.",
+}));
 const apiLogout = vi.fn(async () => ({ message: "Logged out." }));
 const apiMe = vi.fn(async () => user);
 
@@ -86,7 +88,7 @@ describe("AuthContext (branches)", () => {
     expect(getAccessToken()).toBe("");
   });
 
-  it("registers a new account and then logs in", async () => {
+  it("registers a new account without signing in", async () => {
     const { result } = renderHook(() => useAuth(), { wrapper });
     await waitFor(() => expect(result.current.loading).toBe(false));
 
@@ -95,10 +97,9 @@ describe("AuthContext (branches)", () => {
     });
 
     expect(apiRegister).toHaveBeenCalledWith("x@example.test", "password123");
-    expect(apiLogin).toHaveBeenCalledWith("x@example.test", "password123");
-    expect(result.current.user?.email).toBe("x@example.test");
-    expect(getAccessToken()).toBe("access-token");
-    expect(clearSpy).toHaveBeenCalled();
+    expect(apiLogin).not.toHaveBeenCalled();
+    expect(result.current.user).toBeNull();
+    expect(getAccessToken()).toBe("");
   });
 
   it("refreshUser re-fetches the current user", async () => {

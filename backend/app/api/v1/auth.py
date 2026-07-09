@@ -31,6 +31,7 @@ from app.schemas.auth import (
     VerifyEmailRequest,
 )
 from app.services.auth import AuthService
+from app.services.auth_register import REGISTER_ACK_MESSAGE
 
 router = APIRouter()
 
@@ -63,11 +64,17 @@ def _issue(response: Response, tokens: TokenResponse) -> AccessTokenResponse:
     return AccessTokenResponse(access_token=tokens.access_token)
 
 
-@router.post("/register", response_model=UserRead, status_code=status.HTTP_201_CREATED)
-def register(data: RegisterRequest, request: Request, db: Session = Depends(get_db)) -> UserRead:
-    """Create an account. The first registered user becomes the admin."""
+@router.post("/register", response_model=MessageResponse, status_code=status.HTTP_201_CREATED)
+def register(
+    data: RegisterRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+) -> MessageResponse:
+    """Create an account or acknowledge a duplicate without revealing which (AUT-27)."""
     limit_register(request)
-    return UserRead.model_validate(AuthService(db).register(data))
+    meta = request_meta(request)
+    AuthService(db).register(data, ip_address=meta.ip_address)
+    return MessageResponse(message=REGISTER_ACK_MESSAGE)
 
 
 @router.post("/login", response_model=AccessTokenResponse)
