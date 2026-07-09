@@ -208,6 +208,65 @@ def test_register_duplicate_returns_none_and_notifies(
     )
 
 
+def test_register_integrity_error_follows_duplicate_ack(
+    db_session: Session, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Racing insert that hits the email unique constraint must not 500 (AUT-28)."""
+    from app.schemas.auth import RegisterRequest
+
+    with patch("app.services.auth.send_verification_email"):
+        created = AuthService(db_session).register(
+            RegisterRequest(email="race@example.com", password="password123")
+        )
+    assert created is not None
+
+    with (
+        patch(
+            "app.repositories.users.UserRepository.get_by_email",
+            side_effect=[None, created],
+        ),
+        patch("app.services.auth_register.send_existing_account_email") as notice,
+        caplog.at_level("INFO", logger="app.core.auth_events"),
+    ):
+        again = AuthService(db_session).register(
+            RegisterRequest(email="race@example.com", password="other-password")
+        )
+
+    assert again is None
+    notice.assert_called_once_with(to_email="race@example.com")
+    assert any("auth_event=register_duplicate" in r.getMessage() for r in caplog.records)
+    assert AuthService(db_session).login(
+        LoginRequest(email="race@example.com", password="password123")
+    )
+
+
+def test_register_integrity_error_without_existing_row_returns_none(
+    db_session: Session,
+) -> None:
+    """If the unique conflict cannot be re-resolved, still return None (no 500)."""
+    from app.schemas.auth import RegisterRequest
+
+    with (
+        patch(
+            "app.repositories.users.UserRepository.get_by_email",
+            return_value=None,
+        ),
+        patch(
+            "app.repositories.users.UserRepository.try_add",
+            return_value=None,
+        ),
+        patch("app.services.auth_register.send_existing_account_email") as notice,
+        patch("app.services.auth.send_verification_email") as verify,
+    ):
+        again = AuthService(db_session).register(
+            RegisterRequest(email="ghost@example.com", password="password123")
+        )
+
+    assert again is None
+    notice.assert_not_called()
+    verify.assert_not_called()
+
+
 def test_register_duplicate_inactive_skips_notice(db_session: Session) -> None:
     from app.schemas.auth import RegisterRequest
 

@@ -292,7 +292,7 @@ This area covers authentication and session management (login, registration, pas
 
 <a id="aut-28"></a>
 ### AUT-28 — Concurrent duplicate registration surfaces IntegrityError as 500 not 409
-⚪ **LOW** · 🐞 bug · Status: ☐ open · Confidence: medium (3/5 verifiers) · Effort: S · WS19
+⚪ **LOW** · 🐞 bug · Status: ✅ done · Confidence: medium (3/5 verifiers) · Effort: S · WS19
 
 **Locations:** `backend/app/services/auth.py:59` (`AuthService.register`).
 
@@ -303,6 +303,8 @@ This area covers authentication and session management (login, registration, pas
 **Suggested fix.** Wrap the add/flush in a savepoint and translate `IntegrityError` on the email unique constraint into `ConflictError`, mirroring the promo-redemption idempotency pattern.
 
 **Verification.** Confirmed 3/3 adversarial verifiers. `User.email` has a unique constraint and `register` does check-then-add via `repo.add()` which flushes; two concurrent same-email registrations raise an uncaught `IntegrityError` at flush → 500 instead of 409. Timing-gated and recoverable.
+
+**Fix ([PR](https://github.com/davidcristian/HeadStart/pull/92)).** `UserRepository.try_add` wraps the insert in a SAVEPOINT and returns `None` on `IntegrityError`. `register_account` then re-loads the existing user and follows the AUT-27 non-enumerating duplicate ack (same 201 body / existing-account notice) — not a 409, which would re-enumerate after AUT-27.
 
 <a id="aut-30"></a>
 ### AUT-30 — reset/verify leave token row unconsumed when user inactive/missing

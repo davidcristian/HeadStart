@@ -171,7 +171,9 @@ Failed logins also increment Prometheus `headstart_auth_login_failures_total`
    was new or already registered (no email enumeration via status or body;
    AUT-27). bcrypt runs on both paths so CPU time is similar.
 3. **New email:** create the user (first registrant claims bootstrap admin), store
-   a hashed verification token, and send the verification email.
+   a hashed verification token, and send the verification email. The insert uses a
+   SAVEPOINT so a concurrent same-email race that hits the unique constraint is
+   treated as the duplicate path below instead of surfacing as a 500 (AUT-28).
 4. **Existing active email:** do not create a second row or change the password;
    send an "existing account" notice with sign-in / forgot-password links
    (rate-limited per address like forgot-password mail). When the notice cap is

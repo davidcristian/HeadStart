@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from sqlalchemy import func, select, update
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.models.registration_lock import RegistrationLock
@@ -52,6 +53,21 @@ class UserRepository:
     def add(self, user: User) -> User:
         self.session.add(user)
         self.session.flush()
+        return user
+
+    def try_add(self, user: User) -> User | None:
+        """Insert a user, returning None when the email unique constraint conflicts.
+
+        Contained in a SAVEPOINT so a concurrent duplicate registration rolls
+        back only this insert, leaving the surrounding transaction usable
+        (AUT-28).
+        """
+        try:
+            with self.session.begin_nested():
+                self.session.add(user)
+                self.session.flush()
+        except IntegrityError:
+            return None
         return user
 
     def update_password(self, user: User, password_hash: str) -> User:

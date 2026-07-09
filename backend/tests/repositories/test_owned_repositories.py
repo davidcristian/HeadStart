@@ -52,3 +52,13 @@ def test_get_by_stripe_customer_id(db_session: Session) -> None:
 
     assert repo.get_by_stripe_customer_id("cus_abc").id == user.id
     assert repo.get_by_stripe_customer_id("cus_missing") is None
+
+
+def test_try_add_rejects_duplicate_email(db_session: Session) -> None:
+    """Regression: email unique constraint is caught via SAVEPOINT (AUT-28)."""
+    repo = UserRepository(db_session)
+    first = repo.try_add(User(email="unique@example.test", password_hash="x", is_active=True))
+    assert first is not None
+    second = repo.try_add(User(email="unique@example.test", password_hash="y", is_active=True))
+    assert second is None
+    assert repo.get_by_email("unique@example.test").id == first.id

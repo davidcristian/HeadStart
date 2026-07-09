@@ -53,19 +53,32 @@ def register_account(
         is_admin=False,
         is_active=True,
     )
-    user = users.add(user)
-    if users.claim_bootstrap_admin(user.id):
-        user.is_admin = True
+    # SAVEPOINT + unique email: a racing duplicate must not 500 (AUT-28).
+    # On conflict, follow the same non-enumerating ack path as get_by_email hit
+    # (AUT-27) — never ConflictError/409.
+    created = users.try_add(user)
+    if created is None:
+        existing_after_race = users.get_by_email(email)
+        if existing_after_race is not None:
+            _acknowledge_existing_registration(
+                existing_after_race,
+                email=email,
+                ip_address=ip_address,
+            )
+        return None
+
+    if users.claim_bootstrap_admin(created.id):
+        created.is_admin = True
         session.flush()
-    issue_verification(user)
+    issue_verification(created)
     log_auth_event(
         "register_created",
-        email=user.email,
-        user_id=user.id,
+        email=created.email,
+        user_id=created.id,
         ip_address=ip_address,
         issued=True,
     )
-    return user
+    return created
 
 
 def _acknowledge_existing_registration(
