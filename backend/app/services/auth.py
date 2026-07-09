@@ -19,7 +19,7 @@ from app.core.security import (
     create_refresh_token,
     decode_token,
     generate_password_reset_token,
-    hash_password_reset_token,
+    hash_url_token,
     verify_password,
 )
 from app.models.base import utcnow
@@ -174,7 +174,7 @@ class AuthService:
 
     def verify_email(self, data: VerifyEmailRequest) -> User:
         """Confirm ownership of an email address from a verification link."""
-        token_hash = hash_password_reset_token(data.token)
+        token_hash = hash_url_token(data.token)
         now = utcnow()
         row = self.verification_tokens.claim_valid_by_hash(token_hash, now=now)
         if row is None:
@@ -244,7 +244,7 @@ class AuthService:
         self.verification_tokens.add(
             EmailVerificationToken(
                 user_id=user.id,
-                token_hash=hash_password_reset_token(raw_token),
+                token_hash=hash_url_token(raw_token),
                 expires_at=expires_at,
             )
         )

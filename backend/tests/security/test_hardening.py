@@ -20,7 +20,7 @@ from app.core.outbound_http import apply_outbound_pin
 from app.core.outbound_url import UnsafeOutboundUrlError, pin_outbound_request
 from app.core.security import (
     create_refresh_token,
-    hash_password_reset_token,
+    hash_url_token,
 )
 from app.inbox.gmail_oauth import create_gmail_oauth_state
 from app.inbox.mailbox_oauth_state import verify_mailbox_oauth_nonce
@@ -183,7 +183,7 @@ def test_password_reset_invalidates_feed_token(db_session: Session) -> None:
     PasswordResetTokenRepository(db_session).add(
         PasswordResetToken(
             user_id=user.id,
-            token_hash=hash_password_reset_token(raw),
+            token_hash=hash_url_token(raw),
             expires_at=utcnow() + timedelta(hours=1),
         )
     )

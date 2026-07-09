@@ -15,7 +15,7 @@ from app.core.security import (
     decode_token,
     generate_password_reset_token,
     hash_password,
-    hash_password_reset_token,
+    hash_url_token,
     pseudonymize_email_for_audit,
     verify_password,
 )
@@ -41,11 +41,12 @@ def test_verify_password_on_malformed_hash_returns_false() -> None:
     assert verify_password("anything", "not-a-bcrypt-hash") is False
 
 
-def test_password_reset_token_hash_is_deterministic_sha256() -> None:
+def test_url_token_hash_is_deterministic_sha256() -> None:
+    """Password-reset and email-verification share hash_url_token (AUT-31)."""
     token = generate_password_reset_token()
     assert token and token == token.strip()
-    digest = hash_password_reset_token(token)
-    assert digest == hash_password_reset_token(token)
+    digest = hash_url_token(token)
+    assert digest == hash_url_token(token)
     assert len(digest) == 64  # sha256 hex
     assert generate_password_reset_token() != generate_password_reset_token()
 

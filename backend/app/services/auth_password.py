@@ -16,7 +16,7 @@ from app.core.rate_limit import FORGOT_EMAIL, enforce_rate_limit
 from app.core.security import (
     generate_password_reset_token,
     hash_password,
-    hash_password_reset_token,
+    hash_url_token,
 )
 from app.models.base import utcnow
 from app.models.password_reset_token import PasswordResetToken
@@ -56,7 +56,7 @@ def request_password_reset(
 
     # Burn the same crypto cost on the miss path (mirrors login's placeholder bcrypt).
     raw_token = generate_password_reset_token()
-    token_hash = hash_password_reset_token(raw_token)
+    token_hash = hash_url_token(raw_token)
 
     if user is None or not user.is_active:
         log_auth_event(
@@ -105,7 +105,7 @@ def reset_password(
     """Set a new password from a valid reset token and invalidate sessions."""
     users = UserRepository(session)
     reset_tokens = PasswordResetTokenRepository(session)
-    token_hash = hash_password_reset_token(data.token)
+    token_hash = hash_url_token(data.token)
     now = utcnow()
     row = reset_tokens.claim_valid_by_hash(token_hash, now=now)
     if row is None:

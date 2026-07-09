@@ -13,7 +13,7 @@ from app.core.security import (
     create_access_token,
     create_refresh_token,
     hash_password,
-    hash_password_reset_token,
+    hash_url_token,
 )
 from app.models.base import utcnow
 from app.models.email_verification_token import EmailVerificationToken
@@ -94,7 +94,7 @@ def test_me_missing_user_raises(db_session: Session) -> None:
 def test_reset_password_inactive_user_rejected(db_session: Session) -> None:
     user = _user(db_session, email="rst@example.com")
     raw = "reset-raw-token"
-    token_hash = hash_password_reset_token(raw)
+    token_hash = hash_url_token(raw)
     PasswordResetTokenRepository(db_session).add(
         PasswordResetToken(
             user_id=user.id,
@@ -126,7 +126,7 @@ def test_reset_password_inactive_user_rejected(db_session: Session) -> None:
 def test_verify_email_inactive_user_rejected(db_session: Session) -> None:
     user = _user(db_session, email="vrf@example.com")
     raw = "verify-raw-token"
-    token_hash = hash_password_reset_token(raw)
+    token_hash = hash_url_token(raw)
     EmailVerificationTokenRepository(db_session).add(
         EmailVerificationToken(
             user_id=user.id,
@@ -160,7 +160,7 @@ def test_verify_email_already_verified_is_idempotent(db_session: Session) -> Non
     EmailVerificationTokenRepository(db_session).add(
         EmailVerificationToken(
             user_id=user.id,
-            token_hash=hash_password_reset_token(raw),
+            token_hash=hash_url_token(raw),
             expires_at=utcnow() + timedelta(minutes=30),
         )
     )
@@ -340,7 +340,7 @@ def test_reset_password_success_bumps_token_version(db_session: Session) -> None
     PasswordResetTokenRepository(db_session).add(
         PasswordResetToken(
             user_id=user.id,
-            token_hash=hash_password_reset_token(raw),
+            token_hash=hash_url_token(raw),
             expires_at=utcnow() + timedelta(minutes=30),
         )
     )

@@ -6,7 +6,7 @@ import pytest
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import ValidationError
-from app.core.security import hash_password_reset_token
+from app.core.security import hash_url_token
 from app.models.base import utcnow
 from app.models.email_verification_token import EmailVerificationToken
 from app.models.password_reset_token import PasswordResetToken
@@ -27,7 +27,7 @@ def _user(session: Session, *, email: str) -> User:
 def test_claim_valid_by_hash_marks_password_reset_used(db_session: Session) -> None:
     user = _user(db_session, email="claim-reset@example.com")
     raw = "claim-reset-token"
-    token_hash = hash_password_reset_token(raw)
+    token_hash = hash_url_token(raw)
     repo = PasswordResetTokenRepository(db_session)
     repo.add(
         PasswordResetToken(
@@ -49,7 +49,7 @@ def test_claim_valid_by_hash_marks_password_reset_used(db_session: Session) -> N
 def test_claim_valid_by_hash_marks_email_verification_used(db_session: Session) -> None:
     user = _user(db_session, email="claim-verify@example.com")
     raw = "claim-verify-token"
-    token_hash = hash_password_reset_token(raw)
+    token_hash = hash_url_token(raw)
     repo = EmailVerificationTokenRepository(db_session)
     repo.add(
         EmailVerificationToken(
@@ -74,7 +74,7 @@ def test_reset_password_rejects_replay_after_success(db_session: Session) -> Non
     PasswordResetTokenRepository(db_session).add(
         PasswordResetToken(
             user_id=user.id,
-            token_hash=hash_password_reset_token(raw),
+            token_hash=hash_url_token(raw),
             expires_at=utcnow() + timedelta(minutes=30),
         )
     )
@@ -96,7 +96,7 @@ def test_verify_email_rejects_replay_after_success(db_session: Session) -> None:
     EmailVerificationTokenRepository(db_session).add(
         EmailVerificationToken(
             user_id=user.id,
-            token_hash=hash_password_reset_token(raw),
+            token_hash=hash_url_token(raw),
             expires_at=utcnow() + timedelta(minutes=30),
         )
     )
@@ -111,7 +111,7 @@ def test_verify_email_rejects_replay_after_success(db_session: Session) -> None:
 def test_claim_password_reset_uses_for_update_when_not_sqlite(db_session: Session) -> None:
     """Force the Postgres FOR UPDATE branch (SQLite silently drops the clause)."""
     user = _user(db_session, email="for-update-reset@example.com")
-    token_hash = hash_password_reset_token("for-update-reset")
+    token_hash = hash_url_token("for-update-reset")
     repo = PasswordResetTokenRepository(db_session)
     repo.add(
         PasswordResetToken(
@@ -131,7 +131,7 @@ def test_claim_password_reset_uses_for_update_when_not_sqlite(db_session: Sessio
 def test_claim_email_verification_uses_for_update_when_not_sqlite(db_session: Session) -> None:
     """Force the Postgres FOR UPDATE branch (SQLite silently drops the clause)."""
     user = _user(db_session, email="for-update-verify@example.com")
-    token_hash = hash_password_reset_token("for-update-verify")
+    token_hash = hash_url_token("for-update-verify")
     repo = EmailVerificationTokenRepository(db_session)
     repo.add(
         EmailVerificationToken(

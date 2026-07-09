@@ -6,7 +6,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.core.exceptions import ValidationError
-from app.core.security import hash_password_reset_token
+from app.core.security import hash_url_token
 from app.models.base import utcnow
 from app.models.email_verification_token import EmailVerificationToken
 from app.models.user import User
@@ -101,7 +101,7 @@ def test_verify_email_service_marks_user_verified(db_session) -> None:
     EmailVerificationTokenRepository(db_session).add(
         EmailVerificationToken(
             user_id=user.id,
-            token_hash=hash_password_reset_token("svc-token"),
+            token_hash=hash_url_token("svc-token"),
             expires_at=utcnow().replace(year=2100),
         )
     )
@@ -111,7 +111,7 @@ def test_verify_email_service_marks_user_verified(db_session) -> None:
     assert verified.email_verified_at is not None
     assert (
         EmailVerificationTokenRepository(db_session).get_valid_by_hash(
-            hash_password_reset_token("svc-token"),
+            hash_url_token("svc-token"),
             now=utcnow(),
         )
         is None
@@ -130,7 +130,7 @@ def test_verify_email_rejects_expired_token(db_session) -> None:
     EmailVerificationTokenRepository(db_session).add(
         EmailVerificationToken(
             user_id=user.id,
-            token_hash=hash_password_reset_token("expired-token"),
+            token_hash=hash_url_token("expired-token"),
             expires_at=utcnow().replace(year=2000),
         )
     )

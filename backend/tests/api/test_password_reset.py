@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 
 from app.core.config import settings
 from app.core.exceptions import ValidationError
-from app.core.security import hash_password_reset_token
+from app.core.security import hash_url_token
 from app.models.base import utcnow
 from app.models.password_reset_token import PasswordResetToken
 from app.models.user import User
@@ -152,7 +152,7 @@ def test_reset_password_bumps_token_version(db_session) -> None:
     PasswordResetTokenRepository(db_session).add(
         PasswordResetToken(
             user_id=user.id,
-            token_hash=hash_password_reset_token("ver-token"),
+            token_hash=hash_url_token("ver-token"),
             expires_at=utcnow() + timedelta(hours=1),
         )
     )
@@ -237,7 +237,7 @@ def test_request_password_reset_creates_token(db_session) -> None:
     assert "password reset link" in message.lower()
     mock_email.assert_called_once()
     row = PasswordResetTokenRepository(db_session).get_valid_by_hash(
-        hash_password_reset_token("svc-token"),
+        hash_url_token("svc-token"),
         now=utcnow(),
     )
     assert row is not None
@@ -256,7 +256,7 @@ def test_reset_password_rejects_expired_token(db_session) -> None:
     PasswordResetTokenRepository(db_session).add(
         PasswordResetToken(
             user_id=user.id,
-            token_hash=hash_password_reset_token("expired-token"),
+            token_hash=hash_url_token("expired-token"),
             expires_at=utcnow().replace(year=2000),
         )
     )
@@ -277,7 +277,7 @@ def test_forgot_password_burns_token_crypto_for_unknown_email(db_session) -> Non
             return_value="discarded-token",
         ) as mock_generate,
         patch(
-            "app.services.auth_password.hash_password_reset_token",
+            "app.services.auth_password.hash_url_token",
             return_value="discarded-hash",
         ) as mock_hash,
     ):

@@ -324,7 +324,7 @@ This area covers authentication and session management (login, registration, pas
 
 <a id="aut-31"></a>
 ### AUT-31 — Email-verification tokens hashed via hash_password_reset_token (naming drift)
-⚪ **LOW** · 🔁 consistency · Status: ☐ open · Confidence: high (3/5 verifiers) · Effort: XS · WS19
+⚪ **LOW** · 🔁 consistency · Status: ✅ done · Confidence: high (3/5 verifiers) · Effort: XS · WS19
 
 **Locations:** `backend/app/services/auth.py:153` (`AuthService.verify_email`); plus `backend/app/services/auth.py:217` (`_issue_verification_email`), `backend/app/core/security.py:78`.
 
@@ -333,6 +333,8 @@ This area covers authentication and session management (login, registration, pas
 **Failure scenario.** Not exploitable today (the token families live in separate tables), but a refactor changing reset-token hashing (e.g. adding a reset-specific salt) would silently alter verification-token hashing too, breaking outstanding verification links.
 
 **Suggested fix.** Rename to a neutral `hash_url_token`, or give each token family its own hash helper with a per-purpose domain-separation prefix.
+
+**Fix ([PR](https://github.com/davidcristian/HeadStart/pull/94)).** Renamed `hash_password_reset_token` → `hash_url_token` (same SHA-256 digest). Password-reset and email-verification call sites and tests use the shared neutral helper; docs note the shared contract.
 
 **Verification.** Confirmed 3/3 adversarial verifiers. At security.py:78 and auth.py:153/217, email-verification tokens are hashed with `hash_password_reset_token()`; separate tables so no exploit today, but a real naming/domain-separation drift — low is fair.
 

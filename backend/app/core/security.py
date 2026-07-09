@@ -77,8 +77,13 @@ def decode_feed_token(token: str) -> dict[str, Any]:
     return payload
 
 
-def hash_password_reset_token(token: str) -> str:
-    """One-way hash of a reset token for storage (not bcrypt — token is already random)."""
+def hash_url_token(token: str) -> str:
+    """One-way hash of a URL-borne single-use token for storage (not bcrypt).
+
+    Shared by password-reset and email-verification families (separate tables).
+    Named neutrally so a future reset-only salt change cannot silently retarget
+    verification hashing (AUT-31).
+    """
     return hashlib.sha256(token.encode("utf-8")).hexdigest()
 
 

@@ -63,6 +63,9 @@ data isolation.
   the same required-claim set before checking `type == "feed"`.
 - Passwords: `hash_password` / `verify_password` (bcrypt, input truncated to the
   72-byte bcrypt limit).
+- URL-borne single-use tokens (password reset and email verification) are stored
+  as SHA-256 digests via shared `hash_url_token` — not bcrypt, and not named for
+  one family only (AUT-31). The two families live in separate tables.
 
 ## Enforcement
 
@@ -213,7 +216,8 @@ log fallback refuses to emit the token-bearing URL (AUT-01).
 
 ## Email verification
 
-1. On a successful new registration, a single-use token is stored (hashed) and
+1. On a successful new registration, a single-use token is stored (hashed via
+   shared `hash_url_token`, same helper as password reset — AUT-31) and
    emailed. Existing accounts created before this feature are grandfathered as
    verified. Re-registration of an already-known address does not issue a new
    verification token (see Registration above).
