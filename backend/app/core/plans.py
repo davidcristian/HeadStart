@@ -13,7 +13,8 @@ from typing import Literal
 
 PlanId = Literal["free", "starter", "plus", "pro"]
 
-# Scrapers included on Free (common ATS + generic HTML). Pro unlocks the rest.
+# Scrapers included on Free (common ATS + employer career sites + generic HTML).
+# Plus+ unlocks PREMIUM_SCRAPERS. Every registered scraper must appear in one set.
 FREE_SCRAPERS: frozenset[str] = frozenset(
     {
         "greenhouse",
@@ -27,6 +28,9 @@ FREE_SCRAPERS: frozenset[str] = frozenset(
         "google_careers",
         "meta_careers",
         "microsoft_careers",
+        "shopify_careers",
+        "snowflake_careers",
+        "uber_careers",
     }
 )
 PREMIUM_SCRAPERS: frozenset[str] = frozenset({"indeed", "linkedin", "playwright"})
@@ -106,13 +110,16 @@ def plan_features_for(plan: PlanId) -> PlanFeatures:
 
 
 def scraper_allowed(plan: PlanId, adapter_key: str) -> bool:
-    """Whether a scraper adapter is available on the given plan."""
+    """Whether a scraper adapter is available on the given plan.
+
+    Unknown keys fail closed so a newly registered scraper omitted from
+    ``FREE_SCRAPERS`` / ``PREMIUM_SCRAPERS`` cannot silently unlock on Free.
+    """
     if adapter_key in FREE_SCRAPERS:
         return True
     if adapter_key in PREMIUM_SCRAPERS:
         return plan in ("plus", "pro")
-    # Unknown adapters default to allowed so new scrapers are not accidentally blocked.
-    return True
+    return False
 
 
 def notifier_allowed(plan: PlanId, notifier_type: str) -> bool:

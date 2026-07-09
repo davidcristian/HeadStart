@@ -304,11 +304,17 @@ pricing page) and enforced in `PlanLimitsService` — **services raise
 | Pipeline auto-applies / rolling 24h | 3 | 5 | 10 | 20 |
 | Digest mode | no | yes | yes | yes |
 | Premium scrapers (`indeed`, `linkedin`, `playwright`) | no | no | yes | yes |
+| Other registered scrapers (ATS + employer career sites) | yes | yes | yes | yes |
 | Site credentials | no | no | yes | yes |
 | AI summaries (pipeline) | no | no | no | yes |
 | RSS feed | no | no | no | yes |
 | Webhook notifier | no | no | no | yes |
 | Cross-portal search (`/portals/search`) | no | no | no | yes |
+
+Unknown scraper keys (not listed in `FREE_SCRAPERS` or `PREMIUM_SCRAPERS`) are
+**denied on every plan** so a newly registered adapter omitted from those sets
+cannot silently unlock on Free. A unit test asserts every registered scraper is
+classified into one of the two sets.
 
 **Downgrade behaviour:** existing rows stay; create/update that would exceed a
 cap or use a gated feature is rejected. Admins bypass all limits. At **pipeline

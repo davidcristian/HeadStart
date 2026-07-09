@@ -151,7 +151,9 @@ so a delayed `updated` cannot re-grant a plan after `deleted`, and a late
 Downgrade does **not** delete existing sources/targets. Premium scrapers and
 notifiers are re-checked when the pipeline runs or a digest flushes (see
 [auth.md](auth.md#plan-limits) and [worker.md](worker.md#pipeline-run_search)),
-so paid adapters stop consuming after the plan drops.
+so paid adapters stop consuming after the plan drops. Scraper keys omitted from
+`FREE_SCRAPERS` / `PREMIUM_SCRAPERS` fail closed (denied on every plan) so a new
+adapter cannot silently unlock on Free.
 
 Plan resolution prefers the Stripe Price ID (`billing_prices.plan_for_price_id`);
 subscription metadata `plan` is a fallback. An active subscription whose price and

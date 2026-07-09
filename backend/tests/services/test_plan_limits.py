@@ -93,6 +93,24 @@ def test_premium_scrapers_gated_by_tier() -> None:
     assert scraper_allowed("pro", "indeed") is True
 
 
+def test_unknown_scraper_fails_closed() -> None:
+    """Unclassified adapter keys must not unlock on any plan (BIL-06)."""
+    for plan in ("free", "starter", "plus", "pro"):
+        assert scraper_allowed(plan, "not_a_real_scraper") is False
+
+
+def test_every_registered_scraper_is_plan_classified() -> None:
+    """Registry keys must be listed in FREE_SCRAPERS or PREMIUM_SCRAPERS."""
+    from app.core.plans import FREE_SCRAPERS, PREMIUM_SCRAPERS
+    from app.scrapers import available_scrapers
+
+    classified = FREE_SCRAPERS | PREMIUM_SCRAPERS
+    missing = sorted(set(available_scrapers()) - classified)
+    assert missing == [], f"scrapers missing plan classification: {missing}"
+    overlap = sorted(FREE_SCRAPERS & PREMIUM_SCRAPERS)
+    assert overlap == [], f"scrapers in both free and premium sets: {overlap}"
+
+
 def test_webhook_notifier_pro_only() -> None:
     assert notifier_allowed("free", "ntfy") is True
     assert notifier_allowed("free", "webhook") is False

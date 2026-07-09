@@ -72,7 +72,7 @@ return await service.list_data_requests(limit=min(limit, 500))
 
 <a id="bil-06"></a>
 ### BIL-06 — scraper_allowed defaults unknown adapters to allowed on every plan (fail-open)
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: medium (3/3 verifiers) · Effort: S · WS22
+⚪ **LOW** · 🔒 security · Status: ✅ done · Confidence: medium (3/3 verifiers) · Effort: S · WS22
 
 **Locations:** `backend/app/core/plans.py:112` (`scraper_allowed`).
 

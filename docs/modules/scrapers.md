@@ -67,7 +67,9 @@ everything. The worker resolves a scraper with `get_scraper(adapter_key)`.
 ## Adding one
 
 See [../recipes.md](../recipes.md) → "add a new job-site scraper".
-Tests must use saved fixtures and never hit the network.
+Tests must use saved fixtures and never hit the network. Also add the adapter
+key to `FREE_SCRAPERS` or `PREMIUM_SCRAPERS` in `app/core/plans.py` — unclassified
+keys are denied on every plan.
 
 ## Error handling
 
