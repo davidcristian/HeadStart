@@ -83,8 +83,10 @@ redeemed at checkout.
 | `plan_upgrade` | Bills the `plan_target` price (not the requested plan) with a 100%-off coupon; sets subscription metadata plan |
 
 When billing is enabled, creating a promo code also creates matching Stripe
-Coupon + Promotion Code objects. Validation is rate-limited (10 attempts per
-15 minutes per user). Redemptions are logged in `promo_redemption`.
+Coupon + Promotion Code objects. Promo entry is rate-limited (10 attempts per
+15 minutes per user) on both `POST /promo/validate` and `POST /checkout` (via
+`resolve_for_checkout`), so checkout cannot bypass the validate throttle.
+Redemptions are logged in `promo_redemption`.
 
 ### Data model & code
 

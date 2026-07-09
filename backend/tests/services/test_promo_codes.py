@@ -313,6 +313,30 @@ def test_validate_rate_limited(db_session: Session) -> None:
         PromoCodeService(db_session).validate_for_user(user.id, "SAVE20")
 
 
+def test_resolve_for_checkout_rate_limited(db_session: Session) -> None:
+    """Checkout promo resolution shares the validate attempt throttle (BIL-09)."""
+    user = _user(db_session)
+    _add_promo(db_session)
+    repo = PromoCodeRepository(db_session)
+    for _ in range(10):
+        repo.record_validation_attempt(user.id, "GUESS")
+    db_session.flush()
+    with pytest.raises(ValidationError, match="Too many promo code attempts"):
+        PromoCodeService(db_session).resolve_for_checkout(user.id, "SAVE20")
+
+
+def test_resolve_for_checkout_records_attempt_before_lookup(db_session: Session) -> None:
+    """Invalid checkout codes still count toward the shared rate limit."""
+    user = _user(db_session)
+    service = PromoCodeService(db_session)
+    with pytest.raises(ValidationError, match="Invalid promo code"):
+        service.resolve_for_checkout(user.id, "nope")
+    assert (
+        PromoCodeRepository(db_session).count_recent_validation_attempts(user.id, window_minutes=15)
+        == 1
+    )
+
+
 def test_validate_inactive_promo_rejected(db_session: Session) -> None:
     user = _user(db_session)
     _add_promo(db_session, active=False)

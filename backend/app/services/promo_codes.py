@@ -94,6 +94,17 @@ class PromoCodeService:
 
     def validate_for_user(self, user_id: int, code: str) -> PromoValidateResponse:
         """Check whether a promo code can be redeemed by the user."""
+        _user, promo = self._lookup_redeemable_promo(user_id, code)
+        return self._to_validate_response(promo)
+
+    def resolve_for_checkout(self, user_id: int, code: str) -> PromoCode:
+        """Validate a promo for checkout; reserve its slot when Stripe cannot cap it."""
+        user, promo = self._lookup_redeemable_promo(user_id, code)
+        self._reserve_uncapped_promo(promo, user.id)
+        return promo
+
+    def _lookup_redeemable_promo(self, user_id: int, code: str) -> tuple[User, PromoCode]:
+        """Shared validate/checkout lookup with the same attempt throttle (BIL-09)."""
         user = self._require_user(user_id)
         self._enforce_validation_rate_limit(user_id)
         normalized = normalize_promo_code(code)
@@ -103,17 +114,7 @@ class PromoCodeService:
         if promo is None:
             raise ValidationError("Invalid promo code.")
         self._assert_redeemable(promo, user)
-        return self._to_validate_response(promo)
-
-    def resolve_for_checkout(self, user_id: int, code: str) -> PromoCode:
-        """Validate a promo for checkout; reserve its slot when Stripe cannot cap it."""
-        user = self._require_user(user_id)
-        promo = self.promos.get_by_code(code)
-        if promo is None:
-            raise ValidationError("Invalid promo code.")
-        self._assert_redeemable(promo, user)
-        self._reserve_uncapped_promo(promo, user.id)
-        return promo
+        return user, promo
 
     def record_redemption(
         self,

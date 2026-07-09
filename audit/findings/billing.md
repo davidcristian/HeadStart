@@ -123,7 +123,7 @@ Shipped in [PR #110](https://github.com/davidcristian/HeadStart/pull/110).
 
 <a id="bil-09"></a>
 ### BIL-09 — Promo brute-force rate limit bypassed via /billing/checkout (resolve_for_checkout unthrottled)
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: S · WS22
+⚪ **LOW** · 🔒 security · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/111)) · Confidence: high (3/3 verifiers) · Effort: S · WS22
 
 **Locations:** `backend/app/services/promo_codes.py:108` (`PromoCodeService.resolve_for_checkout`); plus `backend/app/services/promo_codes.py:95`, `backend/app/services/promo_codes.py:209`, `backend/app/services/billing.py:79`. Merged from two records (uid 22 and uid 27) describing the same bypass from the checkout and promo-service sides.
 
