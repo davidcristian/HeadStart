@@ -137,7 +137,7 @@ Shipped in [PR #110](https://github.com/davidcristian/HeadStart/pull/110).
 
 <a id="bil-10"></a>
 ### BIL-10 — Free-trial gate keys on requested plan, not the plan_upgrade target billed
-⚪ **LOW** · 🐞 bug · Status: ☐ open · Confidence: medium (3/3 verifiers) · Effort: XS · WS22
+⚪ **LOW** · 🐞 bug · Status: ✅ done · Confidence: medium (3/3 verifiers) · Effort: XS · WS22
 
 **Locations:** `backend/app/services/billing.py:121` (`create_checkout_session`).
 
@@ -148,6 +148,8 @@ Shipped in [PR #110](https://github.com/davidcristian/HeadStart/pull/110).
 **Suggested fix.** Gate the trial on `checkout_plan` (the plan actually billed/granted) rather than the requested plan.
 
 **Verification.** Confirmed 3/3 adversarial verifiers. Real logic drift; low.
+
+**Resolution.** `create_checkout_session` now gates `STRIPE_TRIAL_DAYS` on `checkout_plan == "pro"` (after `plan_upgrade`), not the client-requested plan. Regression covers upgrade-to-Pro (trial attached) and upgrade-away-from-Pro (no default trial). Shipped in [PR #112](https://github.com/davidcristian/HeadStart/pull/112).
 
 <a id="bil-11"></a>
 ### BIL-11 — snapshot() plan field uses a no-op ternary (both branches identical)

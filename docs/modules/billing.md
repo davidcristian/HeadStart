@@ -67,8 +67,10 @@ is enabled — see [Promo codes](#promo-codes) below.
 | POST | `/portal` | user | Open Stripe customer portal |
 | POST | `/webhook` | Stripe signature | Subscription lifecycle events |
 
-Checkout applies `STRIPE_TRIAL_DAYS` only for **Pro**; Starter and Plus bill from
-day one unless a `free_trial_days` promo overrides the trial length.
+Checkout applies `STRIPE_TRIAL_DAYS` only when the **billed** plan is **Pro**
+(the `checkout_plan` after any `plan_upgrade` promo, not the plan the client
+requested). Starter and Plus bill from day one unless a `free_trial_days` promo
+overrides the trial length.
 
 ## Promo codes
 
@@ -80,7 +82,7 @@ redeemed at checkout.
 | `percent_off` | Stripe coupon (% off subscription) |
 | `fixed_amount` | Stripe coupon (USD cents off) |
 | `free_trial_days` | Overrides checkout `trial_period_days` |
-| `plan_upgrade` | Bills the `plan_target` price (not the requested plan) with a 100%-off coupon; sets subscription metadata plan |
+| `plan_upgrade` | Bills the `plan_target` price (not the requested plan) with a 100%-off coupon; sets subscription metadata plan; Pro trial / non-Pro day-one billing follow `plan_target` |
 
 When billing is enabled, creating a promo code also creates matching Stripe
 Coupon + Promotion Code objects. Promo entry is rate-limited (10 attempts per

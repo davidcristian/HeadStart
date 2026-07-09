@@ -143,6 +143,40 @@ def test_plan_upgrade_promo_bills_target_plan_price(
     assert kwargs["metadata"]["plan"] == "pro"
     assert kwargs["subscription_data"]["metadata"]["plan"] == "pro"
     assert kwargs["discounts"] == [{"promotion_code": "promo_upgrade"}]
+    # BIL-10: Pro trial follows checkout_plan (target), not the requested starter plan.
+    assert kwargs["subscription_data"]["trial_period_days"] == settings.stripe_trial_days
+
+
+@patch("app.services.billing.stripe.checkout.Session.create")
+@patch("app.services.billing.stripe.Customer.create")
+def test_plan_upgrade_to_non_pro_skips_default_trial(
+    mock_customer_create: MagicMock,
+    mock_session_create: MagicMock,
+    db_session: Session,
+    billing_settings: None,
+) -> None:
+    """A plan_upgrade away from Pro must not attach the default Pro trial (BIL-10)."""
+    user = _add_user(db_session)
+    PromoCodeRepository(db_session).add(
+        PromoCode(
+            code="TOSTARTER",
+            promo_type="plan_upgrade",
+            value_int=1,
+            plan_target="starter",
+            stripe_coupon_id="coupon_starter",
+            stripe_promotion_code_id="promo_starter",
+        )
+    )
+    mock_customer_create.return_value = MagicMock(id="cus_to_starter")
+    mock_session_create.return_value = MagicMock(url="https://checkout.test/starter")
+
+    BillingService(db_session).create_checkout_session(
+        user.id, plan="pro", billing_period="monthly", promo_code="TOSTARTER"
+    )
+    kwargs = mock_session_create.call_args.kwargs
+    assert kwargs["line_items"] == [{"price": "price_starter_monthly", "quantity": 1}]
+    assert kwargs["metadata"]["plan"] == "starter"
+    assert "trial_period_days" not in kwargs["subscription_data"]
 
 
 # --- status / plan mapping ------------------------------------------------
