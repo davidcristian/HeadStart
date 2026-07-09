@@ -134,10 +134,11 @@ bucket uses `force_destroy` when deletion protection is off).
 ### Tasks SG from ALB (OPS-14)
 
 The shared ECS tasks security group accepts ingress from the ALB SG only on the
-two target-group ports: **80** (frontend) and **8000** (api). A prior
-`0–65535` rule would also have exposed the worker metrics port (`9090`) to any
-member of the ALB SG. Worker/beat have no ALB targets; scrape them from a
-dedicated Prometheus/CloudWatch agent security group, not via the ALB rule.
+two target-group ports: **8080** (frontend, unprivileged nginx) and **8000**
+(api). A prior `0–65535` rule would also have exposed the worker metrics port
+(`9090`) to any member of the ALB SG. Worker/beat have no ALB targets; scrape
+them from a dedicated Prometheus/CloudWatch agent security group, not via the
+ALB rule.
 
 ## Observability
 

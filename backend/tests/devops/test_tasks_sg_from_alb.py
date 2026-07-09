@@ -10,7 +10,7 @@ _SECURITY_MAIN = _REPO_ROOT / "devops" / "terraform" / "modules" / "security" / 
 
 
 def test_tasks_ingress_from_alb_is_limited_to_target_ports() -> None:
-    """ALB may reach frontend :80 and api :8000 only — not 0–65535 / metrics :9090."""
+    """ALB may reach frontend :8080 and api :8000 only — not 0–65535 / metrics :9090."""
     main = _SECURITY_MAIN.read_text(encoding="utf-8")
     assert 'resource "aws_security_group_rule" "tasks_from_alb"' not in main
     assert "to_port                  = 65535" not in main
@@ -33,5 +33,6 @@ def test_tasks_ingress_from_alb_is_limited_to_target_ports() -> None:
         assert from_m is not None and to_m is not None, body
         alb_sourced.append((int(from_m.group(1)), int(to_m.group(1))))
 
-    assert sorted(alb_sourced) == [(80, 80), (8000, 8000)]
+    assert sorted(alb_sourced) == [(8000, 8000), (8080, 8080)]
     assert not any(lo <= 9090 <= hi for lo, hi in alb_sourced)
+    assert not any(lo <= 80 <= hi for lo, hi in alb_sourced)

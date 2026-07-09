@@ -117,10 +117,11 @@ _Merged with FRO-02 — both records describe the same defect: the module-level 
 
 <a id="fro-08"></a>
 ### FRO-08 — Frontend nginx container runs as root (no USER directive)
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: high (3/5 verifiers) · Effort: M · WS20
+⚪ **LOW** · 🔒 security · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/97)) · Confidence: high (3/5 verifiers) · Effort: M · WS20
 
 _Merged with FRO-09 — both records describe the same defect: the nginx runtime stage sets no `USER`._
 
+**Update (2026-07-10).** Fixed: runtime image is `nginxinc/nginx-unprivileged:1.27-alpine` (non-root `nginx` user), `nginx.conf` listens on **8080**, and compose / ECS / ALB target group / tasks-SG ingress target 8080 instead of privileged :80 — [PR](https://github.com/davidcristian/HeadStart/pull/97).
 **Locations:** `frontend/Dockerfile:15` (runtime stage).
 
 **Evidence.** The runtime stage `FROM nginx:1.27-alpine` sets no `USER`; the stock nginx image starts its master process as root (only workers drop to `nginx`). The backend image carefully creates `appuser` (uid 10001) and runs `USER appuser`, so this is an asymmetric hardening gap.

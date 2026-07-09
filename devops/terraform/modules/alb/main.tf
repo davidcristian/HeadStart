@@ -28,7 +28,8 @@ resource "aws_lb" "this" {
 
 resource "aws_lb_target_group" "frontend" {
   name        = "${var.name}-frontend"
-  port        = 80
+  # FRO-08: unprivileged nginx listens on 8080 inside the task.
+  port        = 8080
   protocol    = "HTTP"
   vpc_id      = var.vpc_id
   target_type = "ip"

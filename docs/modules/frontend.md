@@ -153,9 +153,15 @@ the mobile bottom nav. Paid plans and admin accounts see nothing.
 ## Dev
 
 - Standalone: `npm run dev` (Vite dev server on :5173, proxying to the API).
-- In the stack: served by nginx on :8080 (see `frontend/Dockerfile`,
-  `frontend/nginx.conf`). Service worker assets (`sw.js`, `manifest.webmanifest`)
-  are served with `Cache-Control: no-cache` so updates propagate.
+- In the stack: served by unprivileged nginx on container port **8080**
+  (`nginxinc/nginx-unprivileged`; see `frontend/Dockerfile`,
+  `frontend/nginx.conf`). Compose maps host `:8080` → container `:8080`; ECS
+  / ALB target the same port. Service worker assets (`sw.js`,
+  `manifest.webmanifest`) are served with `Cache-Control: no-cache` so updates
+  propagate.
+- **Non-root runtime (FRO-08):** the SPA image does not use stock
+  `nginx:*-alpine` (master as root on :80). The unprivileged image runs as the
+  `nginx` user and binds only to 8080.
 - **Security headers (production nginx):** the SPA `location /` block sets
   `Content-Security-Policy` (same-origin scripts; Google Fonts; HTTPS
   `connect-src` / partner-ad `frame-src`; `frame-ancestors 'none'`),

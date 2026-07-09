@@ -21,6 +21,7 @@ _REQUIRED_HEADERS = (
 def test_nginx_spa_location_sets_security_headers() -> None:
     """The HTML shell must not ship without CSP / framing / HSTS hardening."""
     conf = _NGINX_CONF.read_text(encoding="utf-8")
+    assert "listen 8080;" in conf
     assert "location / {" in conf
     for header in _REQUIRED_HEADERS:
         assert f"add_header {header}" in conf, f"missing add_header {header}"

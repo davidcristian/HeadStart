@@ -123,7 +123,7 @@ resource "aws_ecs_task_definition" "frontend" {
     name             = "frontend"
     image            = local.frontend_ref
     essential        = true
-    portMappings     = [{ containerPort = 80, protocol = "tcp" }]
+    portMappings     = [{ containerPort = 8080, protocol = "tcp" }]
     logConfiguration = local.log_config
   }])
   tags = var.tags
@@ -170,7 +170,7 @@ resource "aws_ecs_service" "frontend" {
   load_balancer {
     target_group_arn = var.frontend_target_group_arn
     container_name   = "frontend"
-    container_port   = 80
+    container_port   = 8080
   }
 
   lifecycle {

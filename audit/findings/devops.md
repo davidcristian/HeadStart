@@ -177,6 +177,8 @@ SHA pin. `aws-first-deploy.sh` sets `TF_VAR_image_tag` from the short SHA when
 
 **Update (2026-07-10).** Fixed: `tasks_from_alb` replaced with `tasks_http_from_alb` (port 80) and `tasks_api_from_alb` (port 8000), both sourced from the ALB SG — worker metrics `:9090` is no longer reachable via the ALB rule ([PR](https://github.com/davidcristian/HeadStart/pull/77)).
 
+**Update (2026-07-10, FRO-08).** Frontend target port moved from 80 → **8080** (unprivileged nginx); `tasks_http_from_alb` and the ALB/ECS frontend wiring follow that port.
+
 **Locations:** `devops/terraform/modules/security/main.tf:61` (`aws_security_group_rule.tasks_from_alb`).
 
 **Note:** Merged from four records on the same rule: OPS-15 (medium) plus OPS-52 and OPS-53 (low). All flag the same `from_port=0/to_port=65535` ingress from the ALB SG.
