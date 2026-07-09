@@ -187,17 +187,19 @@ revision pinned to `IMAGE_TAG` before rolling (OPS-01).
 All workflows live in `.github/workflows/`. The CI quality gate (`ci.yml`) runs
 on push/PR: backend `just lint` (ruff + black + LOC), `just typecheck`,
 `just test`, and `just test --scripts` (shell syntax); frontend `just lint`
-(eslint + prettier `--check`), `just typecheck`, `just test`, and build. Local
-pre-commit is a **fast subset** of that gate (whitespace/yaml, ruff/black,
-eslint, prettier, LOC, shell validation) — types, tests, and coverage stay in
-`just check` / CI. The `frontend-lint` hook runs `npx eslint . --max-warnings=0`
-(same as `npm run lint`) so ESLint always receives an explicit path — without
-one, ESLint 8 scans zero files and exits 0 (OPS-03). LOC, shell validation, and
-prettier are enforced in both pre-commit and CI (OPS-04). `deploy.yml` (manual
-`workflow_dispatch`) and `terraform.yml`'s credentialed `plan` step are guarded
-on `vars.AWS_ROLE_ARN`, so they stay dormant until AWS is configured; once set,
-`terraform plan` runs on PRs and `deploy` runs `terraform apply` + `just deploy`
-on demand.
+(eslint + prettier `--check`), `just typecheck`, `just test`, build, and
+`just audit-frontend` (`npm audit --audit-level=high`, FRO-12). Dependabot
+opens weekly PRs for `frontend/package-lock.json` bumps
+(`.github/dependabot.yml`). Local pre-commit is a **fast subset** of that gate
+(whitespace/yaml, ruff/black, eslint, prettier, LOC, shell validation) — types,
+tests, coverage, and npm audit stay in `just check` / CI. The `frontend-lint`
+hook runs `npx eslint . --max-warnings=0` (same as `npm run lint`) so ESLint
+always receives an explicit path — without one, ESLint 8 scans zero files and
+exits 0 (OPS-03). LOC, shell validation, and prettier are enforced in both
+pre-commit and CI (OPS-04). `deploy.yml` (manual `workflow_dispatch`) and
+`terraform.yml`'s credentialed `plan` step are guarded on `vars.AWS_ROLE_ARN`,
+so they stay dormant until AWS is configured; once set, `terraform plan` runs
+on PRs and `deploy` runs `terraform apply` + `just deploy` on demand.
 
 ## First-time setup
 

@@ -180,7 +180,9 @@ _Merged with FRO-09 — both records describe the same defect: the nginx runtime
 
 <a id="fro-12"></a>
 ### FRO-12 — vite-plugin-pwa/vite chain locks esbuild 0.21.5 (dev-server SSRF)
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: medium (3/5 verifiers) · Effort: S · WS20
+⚪ **LOW** · 🔒 security · Status: ✅ done · Confidence: medium (3/5 verifiers) · Effort: S · WS20
+
+**Update (2026-07-10).** Fixed: vite ^6.4.3 + `overrides.esbuild: ^0.25.0` (lockfile **0.25.12**), vitest 3.2.7+, CI `just audit-frontend`, and Dependabot for `frontend/` — [PR](https://github.com/davidcristian/HeadStart/pull/99).
 
 **Locations:** `frontend/package.json:39` (`devDependencies.vite-plugin-pwa`).
 

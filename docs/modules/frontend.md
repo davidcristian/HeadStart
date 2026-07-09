@@ -187,6 +187,15 @@ The landing page hero and tabbed product demo use static PNGs in
 
 Commit the updated images when the app chrome changes.
 
+## Toolchain & dependency security
+
+Vite **6.4.3+** (with `overrides.esbuild: ^0.25.0`) keeps the locked esbuild
+past [GHSA-67mh-4wv8-2f99](https://github.com/advisories/GHSA-67mh-4wv8-2f99)
+(dev-server CORS SSRF in esbuild ≤0.24.2). Vitest / `@vitest/coverage-v8` track
+**3.2.7+** so `npm audit --audit-level=high` stays clean. CI runs
+`just audit-frontend` after `npm ci`; Dependabot watches `frontend/package-lock.json`
+weekly (`.github/dependabot.yml`). Backend pip-audit is still tracked as OPS-19.
+
 ## Progressive Web App (mobile)
 
 The frontend is installable as a PWA for a lightweight mobile jobs feed.

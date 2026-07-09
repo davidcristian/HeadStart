@@ -1,0 +1,12 @@
+# Keep the frontend lockfile current so GHSA bumps (e.g. esbuild/vite) surface
+# as PRs instead of silent drift (FRO-12). Backend pip-audit remains OPS-19.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - frontend

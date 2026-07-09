@@ -60,6 +60,10 @@ format:
 typecheck *args:
     ./scripts/typecheck.sh {{ args }}
 
+# Frontend npm audit (high+); also runs in CI after npm ci (FRO-12)
+audit-frontend:
+    ./scripts/audit-frontend.sh
+
 # Run the full quality gate (lint + types + tests)
 check: lint typecheck test
 
