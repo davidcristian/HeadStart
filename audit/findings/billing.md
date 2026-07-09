@@ -167,7 +167,7 @@ Shipped in [PR #110](https://github.com/davidcristian/HeadStart/pull/110).
 
 <a id="bil-13"></a>
 ### BIL-13 — Stripe PromotionCode metadata promo_code_id always empty (set before flush)
-⚪ **LOW** · 🐞 bug · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: S · WS22
+⚪ **LOW** · 🐞 bug · Status: ✅ done · Confidence: high (3/3 verifiers) · Effort: S · WS22
 
 **Locations:** `backend/app/services/promo_codes.py:245` (`_create_stripe_objects`); plus `backend/app/services/promo_codes.py:78`, `backend/app/services/promo_codes.py:82`.
 

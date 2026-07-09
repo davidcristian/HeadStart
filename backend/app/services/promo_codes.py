@@ -70,6 +70,8 @@ class PromoCodeService:
             one_per_user=data.one_per_user,
             eligible_plans=data.eligible_plans,
         )
+        # Flush before Stripe so PromotionCode metadata carries the local id (BIL-13).
+        self.promos.add(promo)
         if settings.billing_enabled and data.promo_type in {
             "percent_off",
             "fixed_amount",
@@ -78,8 +80,8 @@ class PromoCodeService:
             coupon_id, promotion_id = self._create_stripe_objects(promo)
             promo.stripe_coupon_id = coupon_id
             promo.stripe_promotion_code_id = promotion_id
+            self.session.flush()
 
-        self.promos.add(promo)
         return PromoCodeRead.model_validate(promo)
 
     def update_code(self, promo_id: int, data: PromoCodeUpdate) -> PromoCodeRead:
@@ -243,7 +245,7 @@ class PromoCodeService:
         promotion_kwargs: dict[str, Any] = {
             "promotion": {"type": "coupon", "coupon": coupon.id},
             "code": promo.code,
-            "metadata": {"promo_code_id": str(promo.id or "")},
+            "metadata": {"promo_code_id": str(promo.id)},
         }
         if promo.max_redemptions is not None:
             promotion_kwargs["max_redemptions"] = promo.max_redemptions

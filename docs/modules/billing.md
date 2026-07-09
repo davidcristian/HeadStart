@@ -84,11 +84,13 @@ redeemed at checkout.
 | `free_trial_days` | Overrides checkout `trial_period_days` |
 | `plan_upgrade` | Bills the `plan_target` price (not the requested plan) with a 100%-off coupon; sets subscription metadata plan; Pro trial / non-Pro day-one billing follow `plan_target` |
 
-When billing is enabled, creating a promo code also creates matching Stripe
-Coupon + Promotion Code objects. Promo entry is rate-limited (10 attempts per
-15 minutes per user) on both `POST /promo/validate` and `POST /checkout` (via
-`resolve_for_checkout`), so checkout cannot bypass the validate throttle.
-Redemptions are logged in `promo_redemption`.
+When billing is enabled, creating a promo code flushes the local row first, then
+creates matching Stripe Coupon + Promotion Code objects with
+`metadata.promo_code_id` set to that local id (so Stripe→local reconciliation
+works). Promo entry is rate-limited (10 attempts per 15 minutes per user) on both
+`POST /promo/validate` and `POST /checkout` (via `resolve_for_checkout`), so
+checkout cannot bypass the validate throttle. Redemptions are logged in
+`promo_redemption`.
 
 ### Data model & code
 

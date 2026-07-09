@@ -211,6 +211,9 @@ def test_create_code_with_stripe_sync_and_cap(
     assert read.stripe_promotion_code_id == "promo_x"
     # The cap is forwarded to the Stripe promotion code.
     assert mock_promotion.call_args.kwargs["max_redemptions"] == 25
+    # Local promo id is flushed before Stripe create so metadata is not empty (BIL-13).
+    assert read.id is not None
+    assert mock_promotion.call_args.kwargs["metadata"] == {"promo_code_id": str(read.id)}
 
 
 def test_create_code_conflict_raises(db_session: Session) -> None:
