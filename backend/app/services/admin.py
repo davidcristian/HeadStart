@@ -7,6 +7,7 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from app.core.admin_events import log_admin_user_update
+from app.core.billing_prices import subscription_grants_plan
 from app.core.exceptions import NotFoundError, ValidationError
 from app.core.plans import VALID_PLANS
 from app.models.user import User
@@ -41,6 +42,18 @@ class AdminService:
             raise ValidationError("At least one admin account must remain.")
         if data.plan is not None and data.plan not in VALID_PLANS:
             raise ValidationError(f"Unknown plan '{data.plan}'.")
+        # Stripe webhooks own plan while a subscription still grants access
+        # (BIL-08); a local override would be silently reverted on the next event.
+        if (
+            data.plan is not None
+            and data.plan != user.plan
+            and user.subscription_status
+            and subscription_grants_plan(user.subscription_status)
+        ):
+            raise ValidationError(
+                "Cannot change plan while the user has an active Stripe "
+                "subscription. Cancel or change the subscription in Stripe first."
+            )
 
         before = _admin_flags(user)
         # Deactivation must permanently invalidate outstanding JWTs so a later

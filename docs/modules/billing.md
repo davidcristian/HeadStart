@@ -132,6 +132,11 @@ Admin endpoints (prefix `/api/v1/admin`):
 Manual plan overrides via `PATCH /admin/users/{id}` (see [auth.md](auth.md#admin))
 emit a structured `admin_event=user_update` audit log with actor, target, and
 before/after `plan` / privilege flags (JSON extras when `LOG_FORMAT=json`).
+Plan changes are **rejected** while `subscription_status` still grants access
+(`active` / `trialing` / `past_due`) so a local override cannot be silently
+reverted by the next `customer.subscription.updated` webhook (BIL-08). Cancel
+or change the subscription in Stripe (or wait until status no longer grants)
+before editing `plan`. Same-plan no-ops and non-plan flag edits still succeed.
 
 Webhook handler updates `user.stripe_customer_id`, `stripe_subscription_id`,
 `subscription_status`, `plan`, and `stripe_billing_event_at` on:

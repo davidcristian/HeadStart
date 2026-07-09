@@ -102,7 +102,7 @@ return await service.list_data_requests(limit=min(limit, 500))
 
 <a id="bil-08"></a>
 ### BIL-08 — Admin plan change ignores active Stripe subscription; webhook overwrites it
-⚪ **LOW** · 🐞 bug · Status: ☐ open · Confidence: medium (3/3 verifiers) · Effort: M · WS22
+⚪ **LOW** · 🐞 bug · Status: ✅ done · Confidence: medium (3/3 verifiers) · Effort: M · WS22
 
 **Locations:** `backend/app/services/admin.py:38` (`update_user`); plus `backend/app/services/billing.py:202`.
 
@@ -113,6 +113,13 @@ return await service.list_data_requests(limit=min(limit, 500))
 **Suggested fix.** Warn or block plan edits for users with an active Stripe subscription, or reconcile via Stripe (cancel/modify) rather than only mutating `user.plan`.
 
 **Verification.** Confirmed 3/3 adversarial verifiers. Admin-only and recoverable; low is fair.
+
+**Resolution.** `AdminService.update_user` rejects a plan change when
+`subscription_status` still grants access (`active` / `trialing` / `past_due`)
+via `subscription_grants_plan`, matching checkout's "already subscribed" gate.
+Same-plan no-ops and non-plan flag edits remain allowed; canceled (and other
+non-granting) statuses still permit manual overrides.
+Shipped in [PR #110](https://github.com/davidcristian/HeadStart/pull/110).
 
 <a id="bil-09"></a>
 ### BIL-09 — Promo brute-force rate limit bypassed via /billing/checkout (resolve_for_checkout unthrottled)

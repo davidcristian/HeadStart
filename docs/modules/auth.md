@@ -328,13 +328,16 @@ cleared without sending so they do not retry forever.
 feature flags including `portal_search`, allowed scrapers/notifiers) so the UI
 can disable options proactively. `PlanFeaturesRead` mirrors
 `core.plans.PlanFeatures` so snapshot keys are not dropped on serialize.
-`PATCH /admin/users/{id}` accepts `plan` for manual overrides.
+`PATCH /admin/users/{id}` accepts `plan` for manual overrides when the user
+has no Stripe subscription status that still grants access (`active` /
+`trialing` / `past_due`); otherwise the API returns 422 so webhooks remain the
+source of truth for paid plans (BIL-08).
 
 ## Admin
 
 Admins (`is_admin=true`, first registered user by default) can open `/admin` in
 the UI. The page lists all accounts (activate/deactivate, grant/revoke admin,
-change subscription `plan`) and shows global scrape health: search counts, delivery success/failure totals,
+change subscription `plan` when Stripe is not actively granting a plan) and shows global scrape health: search counts, delivery success/failure totals,
 and recent scrape errors across all users. Admins cannot deactivate themselves,
 remove their own admin flag, or demote the last remaining admin account.
 Deactivating an account bumps `token_version` so outstanding sessions stay

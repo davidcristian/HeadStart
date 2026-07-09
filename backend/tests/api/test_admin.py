@@ -206,6 +206,89 @@ def test_update_user_rejects_unknown_plan(db_session: Session) -> None:
         AdminService(db_session).update_user(target.id, actor_id=1, data=data)
 
 
+def test_update_user_rejects_plan_change_with_active_stripe_subscription(
+    db_session: Session,
+) -> None:
+    """Admin plan overrides must not fight Stripe while a sub still grants access (BIL-08)."""
+    from app.core.exceptions import ValidationError
+    from app.schemas.admin import AdminUserUpdate
+
+    admin = User(email="admin@example.com", password_hash="x", is_admin=True, is_active=True)
+    member = User(
+        email="subscriber@example.com",
+        password_hash="x",
+        is_admin=False,
+        is_active=True,
+        plan="pro",
+        stripe_subscription_id="sub_live",
+        subscription_status="active",
+    )
+    db_session.add_all([admin, member])
+    db_session.flush()
+
+    with pytest.raises(ValidationError, match="active Stripe subscription"):
+        AdminService(db_session).update_user(
+            member.id,
+            actor_id=admin.id,
+            data=AdminUserUpdate(plan="free"),
+        )
+    db_session.refresh(member)
+    assert member.plan == "pro"
+
+
+def test_update_user_allows_same_plan_with_active_stripe_subscription(
+    db_session: Session,
+) -> None:
+    """Re-sending the current plan is a no-op and must not trip the Stripe guard."""
+    from app.schemas.admin import AdminUserUpdate
+
+    admin = User(email="admin@example.com", password_hash="x", is_admin=True, is_active=True)
+    member = User(
+        email="subscriber@example.com",
+        password_hash="x",
+        is_admin=False,
+        is_active=True,
+        plan="plus",
+        stripe_subscription_id="sub_live",
+        subscription_status="trialing",
+    )
+    db_session.add_all([admin, member])
+    db_session.flush()
+
+    updated = AdminService(db_session).update_user(
+        member.id,
+        actor_id=admin.id,
+        data=AdminUserUpdate(plan="plus", is_active=True),
+    )
+    assert updated.plan == "plus"
+
+
+def test_update_user_allows_plan_change_after_stripe_canceled(
+    db_session: Session,
+) -> None:
+    """Canceled / non-granting statuses leave plan ownership with admin overrides."""
+    from app.schemas.admin import AdminUserUpdate
+
+    admin = User(email="admin@example.com", password_hash="x", is_admin=True, is_active=True)
+    member = User(
+        email="ex-sub@example.com",
+        password_hash="x",
+        is_admin=False,
+        is_active=True,
+        plan="free",
+        subscription_status="canceled",
+    )
+    db_session.add_all([admin, member])
+    db_session.flush()
+
+    updated = AdminService(db_session).update_user(
+        member.id,
+        actor_id=admin.id,
+        data=AdminUserUpdate(plan="starter"),
+    )
+    assert updated.plan == "starter"
+
+
 def test_update_user_persists_flags(db_session: Session) -> None:
     from app.schemas.admin import AdminUserUpdate
 
