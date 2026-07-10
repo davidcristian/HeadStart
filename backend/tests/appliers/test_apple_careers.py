@@ -157,7 +157,13 @@ def test_live_submit_puts_apply_job_with_resume_upload() -> None:
         if request.url.path.endswith("/questionnaire"):
             return httpx.Response(
                 200,
-                json={"success": True, "data": {"id": "q-1"}},
+                json={
+                    "success": True,
+                    "data": {
+                        "id": "q-1",
+                        "questions": [{"id": "work_authorization"}],
+                    },
+                },
                 headers=_JSON_HEADERS,
             )
         if request.url.path.endswith("/file/uploadFile"):
@@ -200,6 +206,7 @@ def test_live_submit_puts_apply_job_with_resume_upload() -> None:
     apply_body = seen["apply_body"]
     assert apply_body["roles"]["resume"]["fileId"] == "file-9"
     assert apply_body["talent"]["contact"]["preferredEmail"] == "ada@example.com"
+    assert apply_body["questionnaireAnswers"]["answers"] == {"work_authorization": "Yes"}
     assert "categoryId=resume" in str(seen["upload"])
 
 

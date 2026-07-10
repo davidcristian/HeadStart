@@ -62,16 +62,94 @@ def test_questionnaire_answers_guard_clauses() -> None:
     assert questionnaire_answers({"id": "q"}, {}) is None
     assert questionnaire_answers({"noId": "x"}, {"a": "b"}) is None
     assert questionnaire_answers({"id": "q"}, {"a": ""}) is None
+    # No question ids in the questionnaire -> never dump profile.answers verbatim.
+    assert questionnaire_answers({"id": "q"}, {"a": "b"}) is None
 
 
 def test_questionnaire_answers_builds_payload() -> None:
-    result = questionnaire_answers({"questionnaireId": "q9"}, {"work_auth": "Yes", "skip": ""})
+    questionnaire = {
+        "questionnaireId": "q9",
+        "questions": [
+            {"id": "work_auth"},
+            {"questionId": "eeo_gender"},
+            "not-a-dict",
+            {"id": ""},
+        ],
+    }
+    result = questionnaire_answers(
+        questionnaire,
+        {
+            "work_auth": "Yes",
+            "eeo_gender": "Decline",
+            "skip": "",
+            "unrelated_eeo": "leak me",
+        },
+    )
     assert result == {
         "id": "q9",
         "questionnaireId": "q9",
         "questionCategory": "APPLICATION",
-        "answers": {"work_auth": "Yes"},
+        "answers": {"work_auth": "Yes", "eeo_gender": "Decline"},
         "reset": False,
+    }
+
+
+def test_questionnaire_answers_walks_sections_and_follow_ups() -> None:
+    questionnaire = {
+        "id": "q-root",
+        "sections": [
+            {
+                "questions": [
+                    {
+                        "questionId": "parent",
+                        "followUpQuestions": [{"id": "child"}],
+                    }
+                ]
+            }
+        ],
+    }
+    result = questionnaire_answers(
+        questionnaire,
+        {"parent": "A", "child": "B", "noise": "nope"},
+    )
+    assert result is not None
+    assert result["answers"] == {"parent": "A", "child": "B"}
+
+
+def test_questionnaire_answers_covers_walk_edge_cases() -> None:
+    """Exercise duplicate ids, list containers, and non-dict section entries."""
+    questionnaire = {
+        "id": "q-edge",
+        "fields": [
+            # list-of-sections path (walk_container list branch)
+            [
+                {
+                    "questions": [
+                        {"id": "dup"},
+                        {"questionId": "dup"},  # same id again -> seen skip
+                        {"id": "empty_answer"},
+                        {"id": "kept"},
+                    ]
+                },
+                "not-a-section",  # non-dict container entry
+            ]
+        ],
+        "questionSections": [{"questions": [{"id": "from_question_sections"}]}],
+    }
+    result = questionnaire_answers(
+        questionnaire,
+        {
+            "dup": "once",
+            "empty_answer": "",
+            "kept": "yes",
+            "from_question_sections": "qs",
+        },
+    )
+    assert result is not None
+    assert result["answers"] == {
+        "dup": "once",
+        "kept": "yes",
+        "from_question_sections": "qs",
     }
 
 

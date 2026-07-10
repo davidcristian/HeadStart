@@ -204,6 +204,25 @@ def test_build_apply_body_adds_board_id_for_managed_role() -> None:
     assert "questionnaireAnswers" not in body
 
 
+def test_build_apply_body_includes_questionnaire_answers() -> None:
+    detail = _detail()
+    answers = {
+        "id": "q-1",
+        "questionnaireId": "q-1",
+        "questionCategory": "APPLICATION",
+        "answers": {"work_authorization": "Yes"},
+        "reset": False,
+    }
+    body = build_apply_body(
+        detail=detail,
+        talent_id="t1",
+        talent={},
+        roles={},
+        questionnaire_answers=answers,
+    )
+    assert body["questionnaireAnswers"] == answers
+
+
 def test_resolve_post_locations_prefers_configured_dicts() -> None:
     detail = _detail(locations=({"id": "detail-loc"},))
     config = {"post_locations": [{"id": "cfg-1"}, "not-a-dict"]}

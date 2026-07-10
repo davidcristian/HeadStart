@@ -45,13 +45,21 @@ def questionnaire_answers(
     questionnaire: dict[str, Any] | None,
     profile_answers: dict[str, str],
 ) -> dict[str, Any] | None:
-    """Map profile.answers onto a questionnaire payload when ids are known."""
+    """Map profile.answers onto fetched questionnaire question ids only.
+
+    Driven by the questionnaire definition (not a verbatim dump of
+    ``profile.answers``), so unrelated answer keys are never sent to Apple.
+    """
     if not questionnaire or not profile_answers:
         return None
     questionnaire_id = questionnaire.get("id") or questionnaire.get("questionnaireId")
     if not questionnaire_id:
         return None
-    mapped = {key: value for key, value in profile_answers.items() if value}
+    mapped: dict[str, str] = {}
+    for question_id in _questionnaire_question_ids(questionnaire):
+        value = profile_answers.get(question_id)
+        if value:
+            mapped[question_id] = value
     if not mapped:
         return None
     return {
@@ -61,6 +69,50 @@ def questionnaire_answers(
         "answers": mapped,
         "reset": False,
     }
+
+
+def _questionnaire_question_ids(questionnaire: dict[str, Any]) -> list[str]:
+    """Collect question ids from a fetched Apple questionnaire payload."""
+    ids: list[str] = []
+    seen: set[str] = set()
+
+    def add(raw: Any) -> None:
+        if raw is None or raw == "":
+            return
+        key = str(raw)
+        if key not in seen:
+            seen.add(key)
+            ids.append(key)
+
+    def walk_question(question: Any) -> None:
+        if not isinstance(question, dict):
+            return
+        add(question.get("questionId") or question.get("id"))
+        for nested_key in ("questions", "followUpQuestions", "children"):
+            nested = question.get(nested_key)
+            if isinstance(nested, list):
+                for item in nested:
+                    walk_question(item)
+
+    def walk_container(container: Any) -> None:
+        if isinstance(container, list):
+            for item in container:
+                walk_container(item)
+            return
+        if not isinstance(container, dict):
+            return
+        questions = container.get("questions")
+        if isinstance(questions, list):
+            for question in questions:
+                walk_question(question)
+        for section_key in ("sections", "questionSections", "fields"):
+            sections = container.get(section_key)
+            if isinstance(sections, list):
+                for section in sections:
+                    walk_container(section)
+
+    walk_container(questionnaire)
+    return ids
 
 
 def upload_resume(

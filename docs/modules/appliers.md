@@ -502,7 +502,7 @@ Config / credentials:
 | Apple Careers cookies | credential `cookies` | Logged-in candidate session from `jobs.apple.com` |
 | `talent_id` | credential `session` | Apple talent id (`talentId` from the signed-in profile) |
 | `csrf_token` | credential `session` | `X-Apple-CSRF-Token` (from `GET /api/v1/js/CSRFToken`) |
-| Questionnaire keys | profile `answers` | Employer screening questions (best-effort) |
+| Questionnaire keys | profile `answers` | Employer screening questions keyed by the fetched questionnaire's `id` / `questionId` (best-effort) |
 
 **Dry run:** fetches the public job detail page, parses embedded hydration JSON,
 and returns the mapped `talent` + `roles` body that would be sent to `applyJob`.
@@ -510,13 +510,16 @@ No Apple login required.
 
 **Live submit:** requires the candidate's own logged-in Apple Careers session
 cookies, `talent_id`, and CSRF token. Resume files upload via
-`/file/uploadFile` before submit. Retail **PIPE** roles with
-`role_location_selection` need explicit `store_locations` / `post_locations` in
-source config. A 2xx `applyJob` body with `success: false`, a non-empty
-`errors` list, or an `error` value is treated as a failed submit (same
-post-2xx envelope check as Microsoft SmartApply) — not a success with a null
-application id. Treat live auto-apply as best-effort; always preview with dry
-run first.
+`/file/uploadFile` before submit. When the questionnaire endpoint returns a
+definition, `questionnaireAnswers.answers` is driven by that payload: only
+`profile.answers` whose key matches a question `id` / `questionId` (including
+nested section / follow-up questions) are sent, so unrelated answer keys are
+never leaked to Apple. Retail **PIPE** roles with `role_location_selection`
+need explicit `store_locations` / `post_locations` in source config. A 2xx
+`applyJob` body with `success: false`, a non-empty `errors` list, or an
+`error` value is treated as a failed submit (same post-2xx envelope check as
+Microsoft SmartApply) — not a success with a null application id. Treat live
+auto-apply as best-effort; always preview with dry run first.
 
 ### Meta Careers
 

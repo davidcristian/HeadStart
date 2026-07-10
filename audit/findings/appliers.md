@@ -162,7 +162,7 @@ Merged with APL-14 (identical defect and location, `resume.py:59`).
 
 <a id="apl-15"></a>
 ### APL-15 — Apple questionnaireAnswers dumps profile.answers verbatim, not mapped to question ids
-⚪ **LOW** · 🐞 bug · Status: ☐ open · Confidence: medium (3/3 verifiers) · Effort: M · WS24
+⚪ **LOW** · 🐞 bug · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/120)) · Confidence: medium (3/3 verifiers) · Effort: M · WS24
 
 **Locations:** `backend/app/appliers/adapters/apple_careers_live.py:54` (`questionnaire_answers`).
 
