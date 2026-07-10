@@ -81,12 +81,13 @@ def test_match_lookup_item_returns_none_for_empty_value() -> None:
     assert match_lookup_item([{"id": "w1", "descriptor": "Alpha"}], "   ") is None
 
 
-def test_match_lookup_item_by_workday_id_found_and_fallback() -> None:
+def test_match_lookup_item_by_workday_id_found_and_rejects_unknown() -> None:
+    """APL-24: out-of-catalog WIDs must not be trusted as catalog ids."""
     wid = "a1b2c3d4e5f6478990a1b2c3d4e5f678"
     other = "b2c3d4e5f6478990a1b2c3d4e5f67801"
     items = [{"id": wid, "descriptor": "Alpha"}]
     assert match_lookup_item(items, wid) == items[0]
-    assert match_lookup_item(items, other) == {"id": other, "descriptor": other}
+    assert match_lookup_item(items, other) is None
 
 
 def test_match_lookup_item_normalized_match() -> None:
@@ -119,6 +120,13 @@ def test_workday_reference_raises_for_empty() -> None:
         workday_reference("   ", None)
 
 
-def test_workday_reference_uses_id_for_workday_id_value() -> None:
+def test_workday_reference_falls_back_for_unmatched_workday_id() -> None:
+    """APL-24: raw WID without a catalog match becomes a descriptor, not an id."""
     wid = "a1b2c3d4e5f6478990a1b2c3d4e5f678"
-    assert workday_reference(wid, None) == {"id": wid}
+    assert workday_reference(wid, None) == {"descriptor": wid}
+
+
+def test_workday_reference_uses_matched_catalog_id_for_workday_id_value() -> None:
+    wid = "a1b2c3d4e5f6478990a1b2c3d4e5f678"
+    match = {"id": wid, "descriptor": "Alpha"}
+    assert workday_reference(wid, match) == {"id": wid}

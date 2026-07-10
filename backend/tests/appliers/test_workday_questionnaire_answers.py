@@ -189,7 +189,10 @@ def test_answer_entry_multi_choice_by_workday_id_and_label() -> None:
             {
                 "id": "q-multi",
                 "type": {"descriptor": "Multiple Choice"},
-                "possibleAnswers": [{"id": "ans-a", "answerText": "Alpha"}],
+                "possibleAnswers": [
+                    {"id": "ans-a", "answerText": "Alpha"},
+                    {"id": "f1e2d3c4b5a697887766554433221100", "answerText": "Beta"},
+                ],
             }
         ]
     }
@@ -205,6 +208,47 @@ def test_answer_entry_multi_choice_by_workday_id_and_label() -> None:
             "questionMultipleChoiceAnswers": ["ans-a", wid],
         }
     ]
+
+
+def test_answer_entry_rejects_out_of_catalog_workday_id() -> None:
+    """APL-24: a 32-hex token must be a possibleAnswers member, not any WID."""
+    questionnaire = {
+        "questions": [
+            {
+                "id": "q-choice",
+                "required": True,
+                "type": {"descriptor": "Single Choice"},
+                "possibleAnswers": [{"id": "ans-yes", "answerText": "Yes"}],
+            }
+        ]
+    }
+    stale = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    answers, missing = build_questionnaire_answers(
+        questionnaire, ProfileData(answers={"q-choice": stale}), {}
+    )
+    assert answers == []
+    assert missing == ["q-choice"]
+
+    multi = {
+        "questions": [
+            {
+                "id": "q-multi",
+                "required": True,
+                "type": {"descriptor": "Multiple Choice"},
+                "possibleAnswers": [
+                    {"id": "ans-a", "answerText": "Alpha"},
+                    {"id": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "answerText": "Beta"},
+                ],
+            }
+        ]
+    }
+    answers, missing = build_questionnaire_answers(
+        multi,
+        ProfileData(answers={"q-multi": "Alpha, aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}),
+        {},
+    )
+    assert answers == []
+    assert missing == ["q-multi"]
 
 
 def test_build_answers_rejects_partial_multi_choice() -> None:

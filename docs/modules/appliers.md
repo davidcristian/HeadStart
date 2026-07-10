@@ -342,7 +342,8 @@ study are resolved against tenant catalogs via
 `GET …/institutionvalues/degree?searchText=…` and
 `GET …/institutionvalues/fieldOfStudy?searchText=…` when session cookies are
 available (exact or normalized-equal match only, then descriptor fallback —
-prefix/substring catalog hits are not auto-bound). Paste a
+prefix/substring catalog hits are not auto-bound; a 32-hex value that is not in
+the fetched candidate list is also refused and falls back to descriptor). Paste a
 catalog WID directly into the profile degree/field fields or set
 `education_lookup_aliases` to override a label. Use dry run to preview resolved
 `id` values before live apply. Set `skip_education_lookup` to force
@@ -355,7 +356,7 @@ either section.
 experience/education and before questionnaires. Skills are resolved against the
 tenant catalog via `GET …/institutionvalues/skill?searchText=…` when session
 cookies are available (exact or normalized-equal match only, then descriptor
-fallback). Paste a catalog WID directly into the profile skill name or set
+fallback; out-of-catalog hex ids are not trusted as skill WIDs). Paste a catalog WID directly into the profile skill name or set
 `skill_lookup_aliases` to override a label. Languages support optional
 proficiency and a native-language flag. Use dry run to preview `skills` /
 `languages` payloads. Set `skip_skills`, `skip_skill_lookup`, or
@@ -366,10 +367,13 @@ detail CXS response. The adapter fetches each questionnaire definition, maps
 `profile.answers` to `questionnaireAnswers`, and POSTs
 `jobapplication/{id}/questionnaireresponse?type=primary|secondary|supplementary`.
 Required questions without a mapped answer — or with a present value that cannot
-be converted (unmatched choice label, non-int / non-positive numeric, or a
+be converted (unmatched choice label, a 32-hex answer id that is not a member of
+that question's `possibleAnswers`, non-int / non-positive numeric, or a
 multi-choice value where any comma-split token fails to resolve) — fail
 before finalize with a clear error listing the question ids. Multi-select
-answers never submit a truncated subset of matched options.
+answers never submit a truncated subset of matched options. Raw Workday WIDs in
+`profile.answers` are accepted only when they appear in the fetched question's
+`possibleAnswers` (stale/wrong hex ids are treated as unresolvable).
 
 **Still manual / best-effort:** websites, and complex
 branching questionnaires where follow-up questions depend on earlier choices you

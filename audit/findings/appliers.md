@@ -284,7 +284,9 @@ Merged with APL-25 (same defect at `_resolve_choice_ids` line 126; APL-25's `ver
 
 <a id="apl-24"></a>
 ### APL-24 — Any 32-hex value trusted as a valid answer/lookup id without membership check
-⚪ **LOW** · 🐞 bug · Status: ☐ open · Confidence: medium (3/3 verifiers) · Effort: S · WS24
+⚪ **LOW** · 🐞 bug · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/124)) · Confidence: medium (3/3 verifiers) · Effort: S · WS24
+
+**Update (2026-07-11).** Fixed in [PR](https://github.com/davidcristian/HeadStart/pull/124): `_resolve_choice_ids` accepts a 32-hex token only when it is a `possibleAnswers` member; `match_lookup_item` returns `None` for out-of-catalog WIDs; `workday_reference` emits `id` only from a catalog match (otherwise `descriptor`).
 
 **Locations:** `backend/app/appliers/adapters/workday_questionnaire_answers.py:137` (`_resolve_choice_ids`); plus `backend/app/appliers/adapters/workday_lookup.py:42`.
 

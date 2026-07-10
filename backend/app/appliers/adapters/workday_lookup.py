@@ -37,9 +37,11 @@ def parse_lookup_items(data: Any) -> list[dict[str, str]]:
 def match_lookup_item(items: list[dict[str, str]], value: str) -> dict[str, str] | None:
     """Pick the catalog row that exactly (or normalized-equal) matches a profile value.
 
-    Prefix/substring fallbacks are intentionally omitted: short or common labels
-    (e.g. ``BS``, ``Java``) otherwise bind a longer unrelated catalog WID.
-    Callers fall back to a self-reported descriptor when this returns None.
+    A supplied Workday WID is accepted only when it appears in ``items`` (APL-24);
+    out-of-catalog hex ids return None so callers fall back to a self-reported
+    descriptor. Prefix/substring fallbacks are intentionally omitted: short or
+    common labels (e.g. ``BS``, ``Java``) otherwise bind a longer unrelated
+    catalog WID.
     """
     stripped = value.strip()
     if not stripped:
@@ -48,7 +50,7 @@ def match_lookup_item(items: list[dict[str, str]], value: str) -> dict[str, str]
         for item in items:
             if item.get("id", "").lower() == stripped.lower():
                 return item
-        return {"id": stripped, "descriptor": stripped}
+        return None
 
     target = stripped.lower()
     normalized_target = normalize_lookup_text(stripped)
@@ -67,12 +69,14 @@ def match_lookup_item(items: list[dict[str, str]], value: str) -> dict[str, str]
 
 
 def workday_reference(value: str, match: dict[str, str] | None) -> dict[str, str]:
-    """Build the CXS reference object for a degree or field-of-study value."""
+    """Build the CXS reference object for a degree or field-of-study value.
+
+    Catalog membership is required before emitting ``id``: a raw 32-hex string
+    without a matched catalog row falls back to ``descriptor`` (APL-24).
+    """
     stripped = value.strip()
     if not stripped:
         raise ValueError("workday reference value must be non-empty")
-    if is_workday_id(stripped):
-        return {"id": stripped}
     if match and match.get("id"):
         return {"id": match["id"]}
     return {"descriptor": stripped}

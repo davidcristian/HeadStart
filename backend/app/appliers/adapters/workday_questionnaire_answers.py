@@ -132,9 +132,11 @@ def _question_type(question: dict[str, Any]) -> str:
 def _resolve_choice_ids(question: dict[str, Any], raw_value: str, *, multi: bool) -> list[str]:
     """Resolve choice answer ids from a Workday id or human-readable label.
 
-    Multi-choice refuses a partial set: any unresolved comma-split token
-    returns [] so callers treat the answer as unresolvable (APL-23) instead of
-    submitting only the labels that happened to match.
+    A 32-hex token is accepted only when it is a member of ``possibleAnswers``
+    (APL-24); stale/wrong WIDs fall through like an unmatched label. Multi-choice
+    refuses a partial set: any unresolved comma-split token returns [] so
+    callers treat the answer as unresolvable (APL-23) instead of submitting only
+    the labels that happened to match.
     """
     if multi:
         values = [part.strip() for part in raw_value.split(",") if part.strip()]
@@ -146,7 +148,12 @@ def _resolve_choice_ids(question: dict[str, Any], raw_value: str, *, multi: bool
     ]
     for value in values:
         if _WORKDAY_ID_RE.match(value):
-            resolved.append(value)
+            member = _match_answer_id(possible, value)
+            if member is not None:
+                resolved.append(str(member["id"]))
+                continue
+            if multi:
+                return []
             continue
         match = _match_answer_text(possible, value)
         if match:
@@ -155,6 +162,16 @@ def _resolve_choice_ids(question: dict[str, Any], raw_value: str, *, multi: bool
         if multi:
             return []
     return resolved
+
+
+def _match_answer_id(possible: list[dict[str, Any]], value: str) -> dict[str, Any] | None:
+    """Return the possibleAnswers row whose id equals a supplied Workday WID."""
+    target = value.strip().lower()
+    for answer in possible:
+        answer_id = str(answer.get("id") or "").strip().lower()
+        if answer_id and answer_id == target:
+            return answer
+    return None
 
 
 def _match_answer_text(possible: list[dict[str, Any]], value: str) -> dict[str, Any] | None:
