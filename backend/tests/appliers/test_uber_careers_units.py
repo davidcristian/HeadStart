@@ -175,7 +175,6 @@ def test_build_application_payload_includes_cover_letter_preview() -> None:
         job_id=1,
         job_title="Engineer",
         company="Uber",
-        session_token=None,
         additional_questions=[],
         resume_file=None,
         cover_letter="  Dear Uber, hello.  ",
@@ -189,12 +188,25 @@ def test_build_application_payload_omits_blank_cover_letter() -> None:
         job_id=1,
         job_title="Engineer",
         company="Uber",
-        session_token=None,
         additional_questions=[],
         resume_file=None,
         cover_letter="   ",
     )
     assert "cover_letter_preview" not in payload
+
+
+def test_build_application_payload_redacts_session_token() -> None:
+    """Dry-run preview must not persist a live Uber Careers sessionToken (APL-21)."""
+    payload = build_application_payload(
+        _profile(),
+        job_id=1,
+        job_title="Engineer",
+        company="Uber",
+        additional_questions=[],
+        resume_file=None,
+        cover_letter=None,
+    )
+    assert payload["application_form_request"]["sessionToken"] == ""
 
 
 def test_build_phone_number_uses_explicit_answer_fields() -> None:

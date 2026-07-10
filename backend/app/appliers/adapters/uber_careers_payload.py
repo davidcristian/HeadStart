@@ -101,17 +101,19 @@ def build_application_payload(
     job_id: int,
     job_title: str,
     company: str,
-    session_token: str | None,
     additional_questions: list[dict[str, Any]],
     resume_file: ResumeFile | None,
     cover_letter: str | None,
 ) -> dict[str, Any]:
-    """Dry-run preview payload with metadata and redacted resume bytes."""
+    """Dry-run preview payload with metadata and redacted secrets/bytes.
+
+    Never embeds a live ``sessionToken`` — ApplicationLog persists this payload.
+    """
     application_form_request = build_application_form_request(
         profile,
         job_id=job_id,
         job_title=job_title,
-        session_token=session_token,
+        session_token=None,
         additional_questions=additional_questions,
         resume_file=resume_file,
         include_resume_bytes=False,

@@ -85,7 +85,6 @@ class UberCareersApplier(Applier):
                 job_id=job_id,
                 job_title=ctx.job_title,
                 company=ctx.company,
-                session_token=session_token,
                 additional_questions=additional_questions,
                 resume_file=ctx.resume_file,
                 cover_letter=ctx.cover_letter,

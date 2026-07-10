@@ -234,7 +234,9 @@ Merged with APL-18 (the record's own `verify_note` flags it as a duplicate of ui
 
 <a id="apl-21"></a>
 ### APL-21 — Uber dry-run payload embeds live session_token, persisted to ApplicationLog
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: XS · WS24
+⚪ **LOW** · 🔒 security · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/121)) · Confidence: high (3/3 verifiers) · Effort: XS · WS24
+
+**Update (2026-07-11).** Fixed in [PR](https://github.com/davidcristian/HeadStart/pull/121): dry-run `build_application_payload` always builds the preview `applicationFormRequest` with `session_token=None` so a live Careers `sessionToken` is never persisted to `application_log.payload` (resume bytes were already redacted).
 
 **Locations:** `backend/app/appliers/adapters/uber_careers_payload.py:110` (`build_application_payload`).
 

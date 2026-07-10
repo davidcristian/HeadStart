@@ -226,7 +226,8 @@ Config / credentials:
 `attachments` entries (`content` + `name`).
 
 **Dry run:** fetches screening questions, builds the `applicationFormRequest`
-preview (resume bytes redacted), and does not require a session token.
+preview (resume bytes and `sessionToken` redacted — never persisted to
+`application_log.payload`), and does not require a session token.
 
 Only screening questions the API flags **required** gate live submit; optional
 questions without a mapped answer are skipped rather than blocking the apply.
