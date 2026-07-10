@@ -305,7 +305,11 @@ calling Workday. When the profile has an uploaded resume, the preview includes a
 
 **Live submit:** requires cookies from a **logged-in** Workday candidate account
 on the target tenant (create/sign-in on the apply page, then copy session cookies
-from dev tools). The adapter creates the application, posts the legal name, uploads
+from dev tools). Optional credential `headers` are merged as a **base** only —
+computed `Accept` / `Content-Type` / `X-CALYPSO-CSRF-TOKEN` / `X-Cxs-Session-Id` /
+`Referer` always win so a stale stored header cannot clobber a freshly resolved
+CSRF token or content type (APL-22). Multipart resume upload omits `Content-Type`
+entirely (httpx sets the boundary). The adapter creates the application, posts the legal name, uploads
 the resume file to the CXS `attachments` endpoint and registers it on
 `resumeattachments` (when the application profile has a stored file), submits
 mapped **primary / secondary / supplementary questionnaires** (when the job

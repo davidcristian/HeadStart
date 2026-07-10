@@ -4,6 +4,7 @@ import httpx
 
 from app.appliers.adapters.workday_common import (
     CSRF_HEADER,
+    SESSION_HEADER,
     build_application_payload,
     build_http_client,
     fetch_job_posting_info,
@@ -116,3 +117,49 @@ def test_request_headers_omits_cookie_when_empty() -> None:
     assert headers[CSRF_HEADER] == "csrf"
     assert headers["X-H"] == "1"
     assert "Cookie" not in headers
+
+
+def test_request_headers_computed_win_over_stale_credential_headers() -> None:
+    """Stale credential headers must not clobber CSRF / Content-Type / Referer (APL-22)."""
+    target = resolve_target({"tenant": "acme", "site": "AcmeCareers", "region": "wd5"}, "")
+    assert target is not None
+    headers = request_headers(
+        target,
+        "loc/job",
+        csrf_token="fresh-csrf",
+        session_id="fresh-session",
+        credentials={
+            "headers": {
+                CSRF_HEADER: "stale-csrf",
+                SESSION_HEADER: "stale-session",
+                "Content-Type": "text/plain",
+                "Referer": "https://evil.example/stale",
+                "Accept": "text/html",
+                "X-Custom": "keep-me",
+            },
+            "cookies": {"CALYPSO_SESSION": "sess"},
+        },
+    )
+    assert headers[CSRF_HEADER] == "fresh-csrf"
+    assert headers[SESSION_HEADER] == "fresh-session"
+    assert headers["Content-Type"] == "application/json"
+    assert headers["Referer"] == target.apply_referer("loc/job")
+    assert headers["Accept"] == "application/json"
+    assert headers["X-Custom"] == "keep-me"
+    assert headers["Cookie"] == "CALYPSO_SESSION=sess"
+
+
+def test_request_headers_multipart_drops_credential_content_type() -> None:
+    """Multipart uploads must not keep a stored Content-Type (boundary is set by httpx)."""
+    target = resolve_target({"tenant": "acme", "site": "AcmeCareers", "region": "wd5"}, "")
+    assert target is not None
+    headers = request_headers(
+        target,
+        "loc/job",
+        csrf_token="csrf",
+        multipart=True,
+        credentials={"headers": {"Content-Type": "application/json", "X-H": "1"}},
+    )
+    assert "Content-Type" not in headers
+    assert headers["X-H"] == "1"
+    assert headers[CSRF_HEADER] == "csrf"

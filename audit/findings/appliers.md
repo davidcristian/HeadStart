@@ -250,7 +250,9 @@ Merged with APL-18 (the record's own `verify_note` flags it as a duplicate of ui
 
 <a id="apl-22"></a>
 ### APL-22 — request_headers lets stored credential headers overwrite CSRF/Content-Type/Referer
-⚪ **LOW** · 🐞 bug · Status: ☐ open · Confidence: medium (3/3 verifiers) · Effort: S · WS24
+⚪ **LOW** · 🐞 bug · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/122)) · Confidence: medium (3/3 verifiers) · Effort: S · WS24
+
+**Update (2026-07-11).** Fixed in [PR](https://github.com/davidcristian/HeadStart/pull/122): credential `headers` are merged first as a base; computed Accept / Content-Type / CSRF / session / Referer always win. Multipart resume upload pops any stored `Content-Type` so httpx can set the boundary.
 
 **Locations:** `backend/app/appliers/adapters/workday_common.py:145` (`request_headers`).
 

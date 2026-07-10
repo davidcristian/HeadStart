@@ -128,13 +128,24 @@ def request_headers(
     multipart: bool = False,
     credentials: dict[str, dict[str, str]] | None = None,
 ) -> dict[str, str]:
-    """Standard CXS headers for apply requests."""
-    headers = {
-        "Accept": "application/json",
-        "Accept-Language": target.locale,
-        "Referer": target.apply_referer(job_path),
-    }
-    if not multipart:
+    """Standard CXS headers for apply requests.
+
+    Credential ``headers`` are a base layer only; computed Accept / Content-Type /
+    CSRF / session / Referer always win so a stale stored value cannot clobber a
+    freshly resolved token or content type (APL-22).
+    """
+    headers: dict[str, str] = {}
+    if credentials:
+        cred_headers = credentials.get("headers") or {}
+        headers.update(cred_headers)
+
+    headers["Accept"] = "application/json"
+    headers["Accept-Language"] = target.locale
+    headers["Referer"] = target.apply_referer(job_path)
+    if multipart:
+        # httpx sets multipart Content-Type with boundary; drop any stored value.
+        headers.pop("Content-Type", None)
+    else:
         headers["Content-Type"] = "application/json"
     if csrf_token:
         headers[CSRF_HEADER] = csrf_token
@@ -143,8 +154,6 @@ def request_headers(
     if form_definition:
         headers["form-definition"] = "true"
     if credentials:
-        cred_headers = credentials.get("headers") or {}
-        headers.update(cred_headers)
         cookie_header = _cookie_header(credentials.get("cookies") or {})
         if cookie_header:
             headers["Cookie"] = cookie_header
