@@ -366,8 +366,10 @@ detail CXS response. The adapter fetches each questionnaire definition, maps
 `profile.answers` to `questionnaireAnswers`, and POSTs
 `jobapplication/{id}/questionnaireresponse?type=primary|secondary|supplementary`.
 Required questions without a mapped answer — or with a present value that cannot
-be converted (unmatched choice label, non-int / non-positive numeric) — fail
-before finalize with a clear error listing the question ids.
+be converted (unmatched choice label, non-int / non-positive numeric, or a
+multi-choice value where any comma-split token fails to resolve) — fail
+before finalize with a clear error listing the question ids. Multi-select
+answers never submit a truncated subset of matched options.
 
 **Still manual / best-effort:** websites, and complex
 branching questionnaires where follow-up questions depend on earlier choices you

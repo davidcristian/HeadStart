@@ -130,7 +130,12 @@ def _question_type(question: dict[str, Any]) -> str:
 
 
 def _resolve_choice_ids(question: dict[str, Any], raw_value: str, *, multi: bool) -> list[str]:
-    """Resolve choice answer ids from a Workday id or human-readable label."""
+    """Resolve choice answer ids from a Workday id or human-readable label.
+
+    Multi-choice refuses a partial set: any unresolved comma-split token
+    returns [] so callers treat the answer as unresolvable (APL-23) instead of
+    submitting only the labels that happened to match.
+    """
     if multi:
         values = [part.strip() for part in raw_value.split(",") if part.strip()]
     else:
@@ -146,6 +151,9 @@ def _resolve_choice_ids(question: dict[str, Any], raw_value: str, *, multi: bool
         match = _match_answer_text(possible, value)
         if match:
             resolved.append(str(match["id"]))
+            continue
+        if multi:
+            return []
     return resolved
 
 

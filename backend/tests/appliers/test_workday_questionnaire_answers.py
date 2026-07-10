@@ -207,6 +207,43 @@ def test_answer_entry_multi_choice_by_workday_id_and_label() -> None:
     ]
 
 
+def test_build_answers_rejects_partial_multi_choice() -> None:
+    """APL-23: unmatched multi-select tokens must not silently truncate the set."""
+    questionnaire = {
+        "questions": [
+            {
+                "id": "q-multi",
+                "required": True,
+                "type": {"descriptor": "Multiple Choice"},
+                "possibleAnswers": [
+                    {"id": "ans-py", "answerText": "Python"},
+                    {"id": "ans-go", "answerText": "Go"},
+                ],
+            }
+        ]
+    }
+    answers, missing = build_questionnaire_answers(
+        questionnaire, ProfileData(answers={"q-multi": "Python, Rust"}), {}
+    )
+    assert answers == []
+    assert missing == ["q-multi"]
+
+    optional = {
+        "questions": [
+            {
+                "id": "q-opt",
+                "type": {"descriptor": "Multiple Choice"},
+                "possibleAnswers": [{"id": "ans-py", "answerText": "Python"}],
+            }
+        ]
+    }
+    answers, missing = build_questionnaire_answers(
+        optional, ProfileData(answers={"q-opt": "Python, Rust"}), {}
+    )
+    assert answers == []
+    assert missing == []
+
+
 def test_answer_entry_without_question_id_returns_none() -> None:
     assert _answer_entry({"type": {"descriptor": "Text"}}, "value") is None
 

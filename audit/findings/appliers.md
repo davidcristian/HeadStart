@@ -266,7 +266,9 @@ Merged with APL-18 (the record's own `verify_note` flags it as a duplicate of ui
 
 <a id="apl-23"></a>
 ### APL-23 — Multi-choice questionnaire answer silently submits only resolvable selections
-⚪ **LOW** · 🐞 bug · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: S · WS24
+⚪ **LOW** · 🐞 bug · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/123)) · Confidence: high (3/3 verifiers) · Effort: S · WS24
+
+**Update (2026-07-11).** Fixed in [PR](https://github.com/davidcristian/HeadStart/pull/123): `_resolve_choice_ids` refuses a partial multi-select set — any unresolved comma-split token returns `[]`, so required questions surface in `missing_required` (APL-04 path) and optional ones drop the whole answer instead of submitting only the matched labels.
 
 Merged with APL-25 (same defect at `_resolve_choice_ids` line 126; APL-25's `verify_note` explicitly calls it a near-exact duplicate of this record).
 
