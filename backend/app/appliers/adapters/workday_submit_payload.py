@@ -10,6 +10,32 @@ from app.appliers.adapters.workday_questionnaire import QuestionnaireSubmitResul
 from app.appliers.types import ApplyResult
 
 
+def mid_flow_failure(
+    error: str,
+    application_id: str,
+    *,
+    payload: dict[str, Any] | None = None,
+) -> ApplyResult:
+    """Failed result after Workday already created an application (APL-26).
+
+    Candidate CXS has no withdraw/delete for drafts, so a mid-flow failure can
+    leave a partial application on the ATS. Persist the id and flag the payload
+    so ApplicationLog can guide manual cleanup.
+    """
+    body = dict(payload or {})
+    body["partial_application"] = True
+    hint = (
+        f"{error} (partial Workday application {application_id} left on ATS; "
+        "withdraw manually if needed)"
+    )
+    return ApplyResult(
+        status="failed",
+        error=hint,
+        payload=body,
+        external_application_id=application_id,
+    )
+
+
 @dataclass
 class LiveSubmitProgress:
     """Accumulates section results while submitting a live Workday application."""
@@ -36,12 +62,7 @@ class LiveSubmitProgress:
 
     def failure(self, error: str, application_id: str) -> ApplyResult:
         """Build a failed ApplyResult with the progress collected so far."""
-        return ApplyResult(
-            status="failed",
-            error=error,
-            payload=self.as_payload(),
-            external_application_id=application_id,
-        )
+        return mid_flow_failure(error, application_id, payload=self.as_payload())
 
 
 def build_live_payload(

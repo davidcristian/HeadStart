@@ -316,6 +316,15 @@ finalize. Question answers come from `profile.answers` (question WID or label â†
 answer WID or label such as `Yes` / `No`). Use **dry run** to preview
 `questionnaireAnswers` and `resumeAttachments` before enabling live apply.
 
+**Non-atomic create (APL-26):** CXS creates the candidate application on the first
+`jobapplications` POST, then fills sections before `finalize`. Candidate CXS has
+no withdraw/delete for drafts, so a mid-flow failure (name, resume, experience,
+questionnaire, terms, or finalize) can leave a **partial, unfinalized** application
+on the employer's tenant. Failed `ApplyResult`s always set
+`external_application_id` (persisted on `application_log`) and mark
+`payload.partial_application: true`, and the error string includes the id so the
+user can withdraw the draft manually in Workday.
+
 Set `skip_resume_upload: true` in source/search config to omit the resume upload
 steps while still applying other sections.
 

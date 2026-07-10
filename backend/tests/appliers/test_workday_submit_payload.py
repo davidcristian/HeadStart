@@ -6,6 +6,7 @@ from app.appliers.adapters.workday_submit_payload import (
     LiveSubmitProgress,
     build_live_payload,
     extract_error_message,
+    mid_flow_failure,
 )
 
 
@@ -76,6 +77,19 @@ def test_progress_failure_builds_failed_result() -> None:
     progress = LiveSubmitProgress(profile_payload={"jobPostingId": "job-1"})
     result = progress.failure("boom", "app-1")
     assert result.status == "failed"
-    assert result.error == "boom"
+    assert result.error is not None
+    assert result.error.startswith("boom")
+    assert "app-1" in result.error
+    assert "partial Workday application" in result.error
     assert result.external_application_id == "app-1"
-    assert result.payload == {"jobPostingId": "job-1"}
+    assert result.payload == {"jobPostingId": "job-1", "partial_application": True}
+
+
+def test_mid_flow_failure_flags_partial_application() -> None:
+    result = mid_flow_failure("name rejected", "app-xyz", payload={"step": "name"})
+    assert result.status == "failed"
+    assert result.external_application_id == "app-xyz"
+    assert result.payload == {"step": "name", "partial_application": True}
+    assert result.error is not None
+    assert "name rejected" in result.error
+    assert "app-xyz" in result.error

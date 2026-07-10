@@ -17,6 +17,7 @@ from app.appliers.adapters.workday_resume import upload_resume_attachment
 from app.appliers.adapters.workday_submit_payload import (
     LiveSubmitProgress,
     extract_error_message,
+    mid_flow_failure,
 )
 from app.appliers.adapters.workday_submit_sections import (
     submit_profile_sections,
@@ -88,18 +89,12 @@ def submit_live_application(
             headers=name_headers,
         )
     except httpx.HTTPError as exc:
-        return ApplyResult(
-            status="failed",
-            error=str(exc),
-            payload=profile_payload,
-            external_application_id=application_id_str,
-        )
+        return mid_flow_failure(str(exc), application_id_str, payload=profile_payload)
     if isinstance(named, dict) and named.get("errorCode"):
-        return ApplyResult(
-            status="failed",
-            error=extract_error_message(named) or "workday name rejected",
+        return mid_flow_failure(
+            extract_error_message(named) or "workday name rejected",
+            application_id_str,
             payload=profile_payload,
-            external_application_id=application_id_str,
         )
 
     if resume_file is not None and not config.get("skip_resume_upload"):
@@ -115,11 +110,10 @@ def submit_live_application(
                 credentials=credentials,
             )
         except ValueError as exc:
-            return ApplyResult(
-                status="failed",
-                error=str(exc),
+            return mid_flow_failure(
+                str(exc),
+                application_id_str,
                 payload=progress.as_payload(),
-                external_application_id=application_id_str,
             )
 
     if failed := submit_profile_sections(

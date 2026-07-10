@@ -100,8 +100,12 @@ def test_name_error_code_returns_failed_without_finalize() -> None:
 
     result = _submit(handler)
     assert result.status == "failed"
-    assert result.error == "bad legal name"
+    assert result.error is not None
+    assert result.error.startswith("bad legal name")
+    assert "app-abc123" in result.error
     assert result.external_application_id == "app-abc123"
+    assert result.payload is not None
+    assert result.payload.get("partial_application") is True
     assert seen.get("finalize") is not True
 
 
@@ -123,8 +127,11 @@ def test_resume_upload_failure_returns_failed() -> None:
     )
     result = _submit(handler, resume_file=resume)
     assert result.status == "failed"
-    assert result.error == "file too large"
+    assert result.error is not None
+    assert result.error.startswith("file too large")
     assert result.external_application_id == "app-abc123"
+    assert result.payload is not None
+    assert result.payload.get("partial_application") is True
 
 
 def test_skip_resume_upload_config_bypasses_attachments() -> None:
@@ -174,8 +181,11 @@ def test_profile_section_failure_returns_failed() -> None:
     )
     result = _submit(handler, profile=profile)
     assert result.status == "failed"
-    assert result.error == "bad experience"
+    assert result.error is not None
+    assert result.error.startswith("bad experience")
     assert result.external_application_id == "app-abc123"
+    assert result.payload is not None
+    assert result.payload.get("partial_application") is True
 
 
 def test_questionnaire_section_failure_returns_failed() -> None:
@@ -266,8 +276,11 @@ def test_auto_terms_consent_error_code_returns_failed_without_finalize() -> None
 
     result = _submit(handler, config={"skip_questionnaires": True, "auto_terms_consent": True})
     assert result.status == "failed"
-    assert result.error == "consent not recorded"
+    assert result.error is not None
+    assert result.error.startswith("consent not recorded")
     assert result.external_application_id == "app-abc123"
+    assert result.payload is not None
+    assert result.payload.get("partial_application") is True
     assert seen.get("finalize") is not True
 
 
@@ -360,7 +373,30 @@ def test_finalize_error_code_returns_failed() -> None:
 
     result = _submit(handler)
     assert result.status == "failed"
-    assert result.error == "rejected"
+    assert result.error is not None
+    assert result.error.startswith("rejected")
+    assert result.external_application_id == "app-abc123"
+    assert result.payload is not None
+    assert result.payload.get("partial_application") is True
+
+
+def test_mid_flow_name_http_error_flags_partial_application() -> None:
+    """APL-26: post-create failures keep the ATS id and mark partial_application."""
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path.endswith("/jobapplications"):
+            return httpx.Response(200, json=CREATE_OK)
+        if request.url.path.endswith("/name"):
+            return httpx.Response(500, text="boom")
+        raise AssertionError(f"unexpected request: {request.url}")
+
+    result = _submit(handler)
+    assert result.status == "failed"
+    assert result.external_application_id == "app-abc123"
+    assert result.payload is not None
+    assert result.payload.get("partial_application") is True
+    assert result.error is not None
+    assert "partial Workday application app-abc123" in result.error
 
 
 def test_education_and_language_sections_submit() -> None:

@@ -130,8 +130,12 @@ def test_finalize_error_returns_application_id() -> None:
         )
     )
     assert result.status == "failed"
-    assert result.error == "Missing required answers"
+    assert result.error is not None
+    assert result.error.startswith("Missing required answers")
+    assert "app-xyz" in result.error
     assert result.external_application_id == "app-xyz"
+    assert result.payload is not None
+    assert result.payload.get("partial_application") is True
 
 
 def test_apply_fails_when_job_posting_id_cannot_be_determined(monkeypatch) -> None:

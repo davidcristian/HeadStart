@@ -292,7 +292,9 @@ Merged with APL-25 (same defect at `_resolve_choice_ids` line 126; APL-25's `ver
 
 <a id="apl-26"></a>
 ### APL-26 — Live submit failure mid-flow leaves a partial, unfinalized application on the ATS
-⚪ **LOW** · 🐞 bug · Status: ☐ open · Confidence: medium (3/3 verifiers) · Effort: M · WS23
+⚪ **LOW** · 🐞 bug · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/118)) · Confidence: medium (3/3 verifiers) · Effort: M · WS23
+
+**Update (2026-07-11).** Fixed in [PR](https://github.com/davidcristian/HeadStart/pull/118): documented the non-atomic CXS create→finalize flow (candidate CXS has no withdraw/delete). Mid-flow failures go through `mid_flow_failure`, which always persists `external_application_id`, sets `payload.partial_application: true`, and includes the ATS id in the error hint for manual cleanup.
 
 **Locations:** `backend/app/appliers/adapters/workday_submit.py:118` (`submit_live_application`).
 
