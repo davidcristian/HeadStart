@@ -316,7 +316,9 @@ Merged with APL-25 (same defect at `_resolve_choice_ids` line 126; APL-25's `ver
 
 <a id="apl-27"></a>
 ### APL-27 — ApplyContext.dry_run defaults to False (live submit by default)
-⚪ **LOW** · 🐞 bug · Status: ☐ open · Confidence: medium (3/3 verifiers) · Effort: S · WS24
+⚪ **LOW** · 🐞 bug · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/125)) · Confidence: medium (3/3 verifiers) · Effort: S · WS24
+
+**Update (2026-07-11).** Fixed in [PR](https://github.com/davidcristian/HeadStart/pull/125): `ApplyContext.dry_run` defaults to `True`; live submit requires an explicit `dry_run=False`. Regression in `test_apply_context_dry_run_defaults_to_true`.
 
 **Locations:** `backend/app/appliers/types.py:22` (`ApplyContext.dry_run`).
 

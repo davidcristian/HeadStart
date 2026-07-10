@@ -32,7 +32,7 @@ class ApplyContext(BaseModel):
     config: dict          # merged source default_config + search config
     profile: ProfileData    # decrypted application profile (owner only)
     credentials: dict | None  # decrypted site credential payload, if any
-    dry_run: bool = False   # when True, build payload but do not POST
+    dry_run: bool = True    # safe default: preview only; pass False for live POST
 
 class ApplyResult(BaseModel):
     status: str             # "submitted" | "dry_run" | "failed"
@@ -113,9 +113,10 @@ Education rows need a resolvable `school_name_id`, `degree_id`, and
 `discipline_id` (numeric profile values, `education_id_aliases`, or public List
 Schools/Degrees/Disciplines lookup when `skip_education_lookup` is false).
 
-**Dry run:** `ApplyService.apply_to_job(..., dry_run=True)` (or
-`ApplyContext.dry_run=True`) returns the JSON payload without calling Greenhouse.
-Use this to preview applications before consent/audit UI ships.
+**Dry run:** `ApplyContext.dry_run` defaults to `True` (safe-by-default; APL-27).
+`ApplyService.apply_to_job(..., dry_run=True)` (or an omitted/`True` context flag)
+returns the JSON payload without calling Greenhouse. Pass `dry_run=False`
+explicitly for a live POST. Use preview before consent/audit UI ships.
 
 **Resume file:** when the application profile has an uploaded resume (see
 [profile](profile.md)), live submit adds `resume_content` + `resume_content_filename`

@@ -8,7 +8,11 @@ from app.schemas.profile import ProfileData, ResumeFile
 
 
 class ApplyContext(BaseModel):
-    """Everything an applier needs to submit (or preview) one application."""
+    """Everything an applier needs to submit (or preview) one application.
+
+    ``dry_run`` defaults to True so a caller that omits the flag cannot
+    accidentally POST a live application; pass ``dry_run=False`` explicitly.
+    """
 
     job_external_id: str
     job_title: str
@@ -19,7 +23,7 @@ class ApplyContext(BaseModel):
     resume_file: ResumeFile | None = None
     credentials: dict[str, dict[str, str]] | None = None
     cover_letter: str | None = None
-    dry_run: bool = False
+    dry_run: bool = True
 
 
 class ApplyResult(BaseModel):

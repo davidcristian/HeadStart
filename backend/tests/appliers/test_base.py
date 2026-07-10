@@ -60,3 +60,28 @@ def test_applier_defaults_to_real_http_client() -> None:
             return ApplyResult(status="dry_run")
 
     assert _Default().http is not None
+
+
+def test_apply_context_dry_run_defaults_to_true() -> None:
+    """APL-27: omitting dry_run must preview, never live-submit by accident."""
+    from app.schemas.profile import ProfileData
+
+    ctx = ApplyContext(
+        job_external_id="1",
+        job_title="Role",
+        company="Co",
+        job_url="https://example.com/jobs/1",
+        profile=ProfileData(full_name="Ada Lovelace", email="a@b.com"),
+    )
+    assert ctx.dry_run is True
+    assert (
+        ApplyContext(
+            job_external_id="1",
+            job_title="Role",
+            company="Co",
+            job_url="https://example.com/jobs/1",
+            profile=ProfileData(full_name="Ada Lovelace", email="a@b.com"),
+            dry_run=False,
+        ).dry_run
+        is False
+    )
