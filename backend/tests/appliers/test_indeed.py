@@ -203,9 +203,12 @@ def test_hosted_live_submit_posts_to_smartapply() -> None:
         if "viewjob" in url:
             return httpx.Response(200, text=viewjob)
         if "smartapply.indeed.com" in url:
+            # TST-02 / APL-02: authenticated smartapply must carry session cookies
+            # (and CSRF when present) — body-only asserts hide a cookie-drop regression.
             seen["method"] = request.method
             seen["body"] = json.loads(request.content.decode())
             seen["cookie"] = request.headers.get("cookie")
+            seen["csrf"] = request.headers.get("x-indeed-csrf-token")
             return httpx.Response(
                 200,
                 text=apply_success,
@@ -240,6 +243,7 @@ def test_hosted_live_submit_posts_to_smartapply() -> None:
     assert isinstance(cookie, str)
     assert "PPID=test" in cookie
     assert "SOCK=session" in cookie
+    assert seen["csrf"] == "csrf-1"
 
 
 def test_unsupported_external_apply_url_fails_clearly() -> None:
@@ -495,6 +499,15 @@ def test_extract_application_id_and_credential_headers() -> None:
     headers = _credential_headers({"headers": {}, "session": {"csrf_token": "c-1"}})
     assert headers["X-Indeed-Csrf-Token"] == "c-1"
     assert headers["indeed-co"] == "US"
+    # TST-02: Cookie serialization is the authenticated-submit contract (APL-02).
+    cookie_headers = _credential_headers(
+        {
+            "headers": {},
+            "session": {},
+            "cookies": {"PPID": "test", "SOCK": "session"},
+        }
+    )
+    assert cookie_headers["Cookie"] == "PPID=test; SOCK=session"
 
 
 def test_resolve_resume_file_from_profile() -> None:

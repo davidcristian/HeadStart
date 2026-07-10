@@ -26,7 +26,12 @@ This area examines whether the repository's 100%-coverage gate reflects real beh
 
 <a id="tst-02"></a>
 ### TST-02 — Indeed hosted-submit test asserts body but never that the session cookies are sent
-⚪ **LOW** · 🧪 test · Status: ☐ open · Confidence: high · Effort: XS · WS23
+⚪ **LOW** · 🧪 test · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/119)) · Confidence: high · Effort: XS · WS23
+
+**Update (2026-07-11).** Hosted live-submit already asserted PPID/SOCK on the wire
+(from `87c258d` / APL-02); this drain run also asserts CSRF on the smartapply
+request, covers Cookie serialization in `_credential_headers`, and documents the
+regression contract in `docs/modules/appliers.md`.
 
 **Locations:** `backend/tests/appliers/test_indeed.py:196` (`test_hosted_live_submit_posts_to_smartapply`).
 
