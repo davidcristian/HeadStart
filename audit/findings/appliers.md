@@ -192,7 +192,9 @@ Merged with APL-18 (the record's own `verify_note` flags it as a duplicate of ui
 
 <a id="apl-17"></a>
 ### APL-17 — LinkedIn/Indeed live apply hits private APIs with user cookies; no ToS/ban warning
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: M · WS25
+⚪ **LOW** · 🔒 security · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/126)) · Confidence: high (3/3 verifiers) · Effort: M · WS25
+
+**Update (2026-07-11).** Fixed in [PR](https://github.com/davidcristian/HeadStart/pull/126): hosted LinkedIn Voyager / Indeed smartapply live submit and LinkedIn/Indeed auto-apply require `accept_private_api_risk: true`; Sources UI confirms ToS/ban risk; launch-checklist Safety + appliers.md document the private-API exposure.
 
 **Locations:** `backend/app/appliers/adapters/linkedin.py:211` (`LinkedInApplier._apply_hosted`); plus `linkedin_voyager.py:84`, `linkedin_resume_upload.py:25`, `indeed.py:124`, `indeed_easy_apply.py:12`.
 

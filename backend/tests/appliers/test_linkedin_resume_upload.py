@@ -153,7 +153,7 @@ def test_hosted_live_submit_uploads_resume_pdf() -> None:
             job_title="Quantitative Trader",
             company="Example Co",
             job_url="https://www.linkedin.com/jobs/view/quantitative-trader-at-example-co-4434410881",
-            config={},
+            config={"accept_private_api_risk": True},
             profile=profile,
             resume_file=resume,
             credentials=_credentials(),

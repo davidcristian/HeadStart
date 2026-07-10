@@ -223,7 +223,7 @@ def test_hosted_live_submit_posts_to_smartapply() -> None:
             job_title="Customer Support Specialist",
             company="Hosted Co",
             job_url="https://www.indeed.com/viewjob?jk=hostedjobkey001",
-            config={},
+            config={"accept_private_api_risk": True},
             profile=_profile(),
             credentials={
                 "cookies": {"PPID": "test", "SOCK": "session"},
@@ -361,7 +361,7 @@ def test_hosted_live_submit_requires_session_cookies() -> None:
             job_title="Customer Support Specialist",
             company="Hosted Co",
             job_url="https://www.indeed.com/viewjob?jk=hostedjobkey001",
-            config={},
+            config={"accept_private_api_risk": True},
             profile=_profile(),
             credentials={"cookies": {}, "session": {}, "headers": {}},
             dry_run=False,
@@ -369,6 +369,35 @@ def test_hosted_live_submit_requires_session_cookies() -> None:
     )
     assert result.status == "failed"
     assert "session cookies" in (result.error or "")
+
+
+def test_hosted_live_submit_requires_private_api_risk_ack() -> None:
+    """APL-17: hosted smartapply live submit needs explicit ToS/ban-risk consent."""
+    fixture = load_fixture("indeed_viewjob_hosted.html")
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, text=fixture)
+
+    applier = get_applier("indeed", http=make_http_client(handler))
+    result = applier.apply(
+        ApplyContext(
+            job_external_id="hostedjobkey001",
+            job_title="Customer Support Specialist",
+            company="Hosted Co",
+            job_url="https://www.indeed.com/viewjob?jk=hostedjobkey001",
+            config={},
+            profile=_profile(),
+            credentials={
+                "cookies": {"PPID": "test", "SOCK": "session"},
+                "session": {},
+                "headers": {},
+            },
+            dry_run=False,
+        )
+    )
+    assert result.status == "failed"
+    assert "accept_private_api_risk" in (result.error or "")
+    assert "Terms of Service" in (result.error or "")
 
 
 def test_hosted_live_submit_handles_http_error() -> None:
@@ -389,7 +418,7 @@ def test_hosted_live_submit_handles_http_error() -> None:
             job_title="Customer Support Specialist",
             company="Hosted Co",
             job_url="https://www.indeed.com/viewjob?jk=hostedjobkey001",
-            config={},
+            config={"accept_private_api_risk": True},
             profile=_profile(),
             credentials={"cookies": {"PPID": "x"}, "session": {}, "headers": {}},
             dry_run=False,
@@ -422,7 +451,7 @@ def test_hosted_live_submit_fails_on_2xx_error_body() -> None:
             job_title="Customer Support Specialist",
             company="Hosted Co",
             job_url="https://www.indeed.com/viewjob?jk=hostedjobkey001",
-            config={},
+            config={"accept_private_api_risk": True},
             profile=_profile(),
             credentials={"cookies": {"PPID": "x"}, "session": {}, "headers": {}},
             dry_run=False,

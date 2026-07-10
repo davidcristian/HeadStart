@@ -61,7 +61,7 @@ other unknown path redirects to the landing page.
 | Login/Register    | Email + password sign-in / sign-up                               |
 | Verify email      | Confirm address after signup at `/verify-email` (link or resend)   |
 | Onboarding  | First-run wizard at `/app/onboarding`: source → notify → search → run |
-| Sources     | List/create/edit sources (name, adapter, base URL, config); browse curated company portals; test scrape |
+| Sources     | List/create/edit sources (name, adapter, base URL, config); browse curated company portals; test scrape; enabling auto-apply for LinkedIn/Indeed shows a ToS/account-ban confirm and sets `accept_private_api_risk` (APL-17) |
 | Companies   | Pro+ cross-portal search at `/app/portals`: keyword search across curated FAANG/unicorn/AI boards (selection capped at 30 to match the API `portal_ids` max), results preview, one-click alert setup |
 | Searches    | Create a search: pick source + target, query URL + structured filters (keywords, location, workplace, salary) + |
 |             | interval; enable/disable; run now (queues Celery; UI polls `search_run`); view last |

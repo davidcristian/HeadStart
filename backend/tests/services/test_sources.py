@@ -80,7 +80,35 @@ def test_create_auto_apply_with_applier_adapter(db_session: Session) -> None:
     user = _pro_user(db_session)
     source = SourceService(db_session).create(
         user.id,
-        SourceCreate(name="Indeed", adapter_key="indeed", auto_apply_enabled=True),
+        SourceCreate(
+            name="Greenhouse",
+            adapter_key="greenhouse",
+            auto_apply_enabled=True,
+            default_config={"board_token": "acme"},
+        ),
+    )
+    assert source.auto_apply_enabled is True
+
+
+def test_create_indeed_auto_apply_requires_private_api_risk_ack(db_session: Session) -> None:
+    user = _pro_user(db_session)
+    with pytest.raises(ValidationError, match="accept_private_api_risk"):
+        SourceService(db_session).create(
+            user.id,
+            SourceCreate(name="Indeed", adapter_key="indeed", auto_apply_enabled=True),
+        )
+
+
+def test_create_indeed_auto_apply_with_private_api_risk_ack(db_session: Session) -> None:
+    user = _pro_user(db_session)
+    source = SourceService(db_session).create(
+        user.id,
+        SourceCreate(
+            name="Indeed",
+            adapter_key="indeed",
+            auto_apply_enabled=True,
+            default_config={"accept_private_api_risk": True},
+        ),
     )
     assert source.auto_apply_enabled is True
 
@@ -90,7 +118,12 @@ def test_update_adapter_to_non_applier_disables_auto_apply(db_session: Session) 
     service = SourceService(db_session)
     source = service.create(
         user.id,
-        SourceCreate(name="Indeed", adapter_key="indeed", auto_apply_enabled=True),
+        SourceCreate(
+            name="Indeed",
+            adapter_key="indeed",
+            auto_apply_enabled=True,
+            default_config={"accept_private_api_risk": True},
+        ),
     )
 
     updated = service.update(source.id, user.id, SourceUpdate(adapter_key="generic_html"))
@@ -107,12 +140,36 @@ def test_update_enable_auto_apply_on_non_applier_rejected(db_session: Session) -
         service.update(source.id, user.id, SourceUpdate(auto_apply_enabled=True))
 
 
+def test_update_enable_linkedin_auto_apply_requires_risk_ack(db_session: Session) -> None:
+    user = _pro_user(db_session)
+    service = SourceService(db_session)
+    source = service.create(user.id, SourceCreate(name="LinkedIn", adapter_key="linkedin"))
+
+    with pytest.raises(ValidationError, match="accept_private_api_risk"):
+        service.update(source.id, user.id, SourceUpdate(auto_apply_enabled=True))
+
+    updated = service.update(
+        source.id,
+        user.id,
+        SourceUpdate(
+            auto_apply_enabled=True,
+            default_config={"accept_private_api_risk": True},
+        ),
+    )
+    assert updated.auto_apply_enabled is True
+
+
 def test_update_adapter_to_applier_keeps_auto_apply(db_session: Session) -> None:
     user = _pro_user(db_session)
     service = SourceService(db_session)
     source = service.create(
         user.id,
-        SourceCreate(name="Indeed", adapter_key="indeed", auto_apply_enabled=True),
+        SourceCreate(
+            name="Indeed",
+            adapter_key="indeed",
+            auto_apply_enabled=True,
+            default_config={"accept_private_api_risk": True},
+        ),
     )
 
     updated = service.update(source.id, user.id, SourceUpdate(adapter_key="linkedin"))

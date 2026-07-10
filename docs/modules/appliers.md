@@ -588,6 +588,7 @@ Config / credentials:
 | `external_apply_url` | source/search config | Optional override to skip the viewjob fetch (pin a known employer apply URL) |
 | Indeed session cookies | credential `cookies` | Logged-in Indeed account (`PPID`, `SOCK`, …) for **Indeed-hosted** Easy Apply live submit |
 | `csrf_token` | credential `session` | Optional `X-Indeed-Csrf-Token` for smartapply live submit |
+| `accept_private_api_risk` | source/search config | **Required for hosted live submit / auto-apply.** Explicit acknowledgment that smartapply uses private Indeed APIs with session cookies and can risk ToS violations or account bans (APL-17). Dry-run preview and delegated ATS apply do not require it. |
 
 **Dry run:** fetches viewjob (unless `external_apply_url` is set), resolves the
 apply route, and previews either the delegated ATS payload or the Indeed-hosted
@@ -601,7 +602,8 @@ keys, Workday cookies, etc.) — the preview payload includes `indeed_route` and
 does expose an Easy Apply button, posts to
 `smartapply.indeed.com/beta/indeedapply/v2/applications` with the user's Indeed
 session cookies (`Cookie` built from credential `cookies`, plus optional
-`X-Indeed-Csrf-Token`). The hosted live-submit regression
+`X-Indeed-Csrf-Token`). Requires `accept_private_api_risk: true` in source/search
+config (APL-17). The hosted live-submit regression
 (`test_hosted_live_submit_posts_to_smartapply`) asserts those cookies (and CSRF
 when set) are on the wire — body-only checks would miss an APL-02 cookie-drop
 regression (TST-02). A 2xx response whose body reports `success: false`, `error` /
@@ -632,6 +634,7 @@ Config / credentials:
 | `external_apply_url` | source/search config | Optional override to skip the guest page fetch (pin a known employer apply URL) |
 | `li_at` + `JSESSIONID` | credential `cookies` | Logged-in LinkedIn account for Voyager enrichment and **LinkedIn-hosted** Easy Apply live submit |
 | `csrf_token` | credential `session` | Optional CSRF token for Voyager requests (defaults to the `JSESSIONID` cookie value) |
+| `accept_private_api_risk` | source/search config | **Required for hosted live submit / auto-apply.** Explicit acknowledgment that Voyager Easy Apply uses private LinkedIn APIs with session cookies and can risk ToS violations or account bans (APL-17). Dry-run preview and delegated ATS apply do not require it. |
 
 **Dry run:** fetches the guest job-posting page (unless `external_apply_url` is
 set), resolves the apply route, and previews either the delegated ATS payload or
@@ -646,7 +649,8 @@ keys, Workday cookies, etc.) — the preview payload includes `linkedin_route` a
 **Live submit (LinkedIn-hosted Easy Apply):** when the listing exposes an Easy
 Apply button, loads the application form via Voyager GraphQL and posts to
 `/voyager/api/voyagerJobsDashOnsiteApplyApplication?action=submitApplication`
-with the user's LinkedIn session cookies. A 2xx response whose body reports
+with the user's LinkedIn session cookies. Requires `accept_private_api_risk: true`
+in source/search config (APL-17). A 2xx response whose body reports
 `success: false`, `error` / `errors`, or a `message` without an application id
 is treated as failure (same post-2xx guard as Greenhouse / SmartRecruiters) —
 not `submitted`. When the application profile has an
@@ -671,6 +675,17 @@ off; preview (`dry_run`) still works. Enabling auto-apply is the user's consent
 to transmit application-profile PII to that employer's career site; the privacy
 policy discloses the data categories and lawful basis (consent for opt-in
 third-party sends).
+
+**LinkedIn / Indeed private-API risk (APL-17).** Hosted Easy Apply posts to
+LinkedIn Voyager and Indeed smartapply using the candidate's own session
+cookies. Those are private/member APIs; automated traffic can violate site Terms
+and trigger account suspension or bans. Before enabling auto-apply (or any live
+hosted submit) for `linkedin` / `indeed`, source/search config must set
+`accept_private_api_risk: true`. The Sources UI shows a confirm dialog that
+explains the risk and writes that flag into `default_config`. Adapters refuse
+hosted live submit without it; dry-run preview and delegated ATS apply are
+unchanged. See also
+[launch-checklist §7 Safety](../launch-checklist.md#7-auto-apply-optional--know-the-limits).
 
 Every apply attempt (preview or live, success or failure) is recorded in
 `application_log` with baseline tracking metadata (`employer_domain`, `posting`

@@ -220,7 +220,7 @@ def test_hosted_live_submit_posts_to_voyager() -> None:
             job_title="Quantitative Trader",
             company="Example Co",
             job_url="https://www.linkedin.com/jobs/view/quantitative-trader-at-example-co-4434410881",
-            config={},
+            config={"accept_private_api_risk": True},
             profile=_profile(),
             credentials=_linkedin_credentials(),
             dry_run=False,
@@ -233,6 +233,47 @@ def test_hosted_live_submit_posts_to_voyager() -> None:
     assert isinstance(body, dict)
     assert isinstance(body["responses"], list)
     assert len(body["responses"]) == 3
+
+
+def test_hosted_live_submit_requires_private_api_risk_ack() -> None:
+    """APL-17: Voyager live submit needs explicit ToS/ban-risk consent."""
+    viewjob = load_fixture("linkedin_job_easy_apply.html")
+    form = load_fixture("linkedin_easy_apply_form_simple.json")
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        url = str(request.url)
+        if "jobs-guest/jobs/api/jobPosting" in url:
+            return httpx.Response(200, text=viewjob)
+        if "voyager/api/graphql" in url:
+            return httpx.Response(
+                200,
+                text=form,
+                headers={"content-type": "application/json"},
+            )
+        if "voyager/api/jobs/jobPostings" in url:
+            return httpx.Response(
+                200,
+                text="{}",
+                headers={"content-type": "application/json"},
+            )
+        raise AssertionError(f"unexpected network call: {request.method} {url}")
+
+    applier = LinkedInApplier(http=make_http_client(handler))
+    result = applier.apply(
+        ApplyContext(
+            job_external_id="4434410881",
+            job_title="Quantitative Trader",
+            company="Example Co",
+            job_url="https://www.linkedin.com/jobs/view/quantitative-trader-at-example-co-4434410881",
+            config={},
+            profile=_profile(),
+            credentials=_linkedin_credentials(),
+            dry_run=False,
+        )
+    )
+    assert result.status == "failed"
+    assert "accept_private_api_risk" in (result.error or "")
+    assert "Terms of Service" in (result.error or "")
 
 
 def test_hosted_live_submit_fails_on_2xx_error_body() -> None:
@@ -271,7 +312,7 @@ def test_hosted_live_submit_fails_on_2xx_error_body() -> None:
             job_title="Quantitative Trader",
             company="Example Co",
             job_url="https://www.linkedin.com/jobs/view/quantitative-trader-at-example-co-4434410881",
-            config={},
+            config={"accept_private_api_risk": True},
             profile=_profile(),
             credentials=_linkedin_credentials(),
             dry_run=False,

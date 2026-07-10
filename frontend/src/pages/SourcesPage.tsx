@@ -13,7 +13,15 @@ import {
 } from "../hooks/mutations";
 import { canAddResource } from "../lib/plan";
 import { PortalCatalog } from "./sources/PortalCatalog";
-import type { Json } from "../types";
+import type { Json, Source } from "../types";
+
+/** Adapters whose hosted live apply uses private APIs with session cookies (APL-17). */
+const PRIVATE_API_RISK_ADAPTERS = new Set(["linkedin", "indeed"]);
+
+const PRIVATE_API_RISK_CONFIRM =
+  "LinkedIn/Indeed hosted Easy Apply uses private APIs (Voyager / smartapply) with your " +
+  "session cookies. Automated use can violate their Terms of Service and risk account " +
+  "suspension or bans. Enable only if you accept this risk?";
 
 export function SourcesPage() {
   const sources = useSources();
@@ -55,8 +63,26 @@ export function SourcesPage() {
     }
   }
 
-  async function toggleAutoApply(id: number, autoApplyEnabled: boolean) {
-    await updateSource.mutateAsync({ id, data: { auto_apply_enabled: autoApplyEnabled } });
+  async function toggleAutoApply(source: Source, autoApplyEnabled: boolean) {
+    setError(undefined);
+    if (autoApplyEnabled && PRIVATE_API_RISK_ADAPTERS.has(source.adapter_key)) {
+      if (!window.confirm(PRIVATE_API_RISK_CONFIRM)) {
+        return;
+      }
+      const nextConfig: Json = {
+        ...source.default_config,
+        accept_private_api_risk: true,
+      };
+      await updateSource.mutateAsync({
+        id: source.id,
+        data: { auto_apply_enabled: true, default_config: nextConfig },
+      });
+      return;
+    }
+    await updateSource.mutateAsync({
+      id: source.id,
+      data: { auto_apply_enabled: autoApplyEnabled },
+    });
   }
 
   async function remove(id: number) {
@@ -178,7 +204,7 @@ export function SourcesPage() {
                         <input
                           type="checkbox"
                           checked={s.auto_apply_enabled}
-                          onChange={(e) => void toggleAutoApply(s.id, e.target.checked)}
+                          onChange={(e) => void toggleAutoApply(s, e.target.checked)}
                         />
                         <span>{s.auto_apply_enabled ? "Enabled" : "Off"}</span>
                       </label>

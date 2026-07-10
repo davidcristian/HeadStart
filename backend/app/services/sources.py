@@ -2,9 +2,16 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from sqlalchemy.orm import Session
 
 from app.appliers import available_appliers, has_applier
+from app.appliers.private_api_risk import (
+    config_accepts_private_api_risk,
+    private_api_risk_rejection_error,
+    requires_private_api_risk_ack,
+)
 from app.core.exceptions import NotFoundError, ValidationError
 from app.models.source import Source
 from app.repositories.sources import SourceRepository
@@ -42,7 +49,7 @@ class SourceService:
     def create(self, user_id: int, data: SourceCreate) -> Source:
         self._validate_adapter(data.adapter_key)
         if data.auto_apply_enabled:
-            self._validate_auto_apply(data.adapter_key)
+            self._validate_auto_apply(data.adapter_key, data.default_config)
         PlanLimitsService(self.session).require_can_add_source(user_id, data.adapter_key)
         source = Source(
             user_id=user_id,
@@ -67,7 +74,8 @@ class SourceService:
                 source.auto_apply_enabled = False
         if fields.get("auto_apply_enabled") is True:
             adapter_key = fields.get("adapter_key", source.adapter_key)
-            self._validate_auto_apply(adapter_key)
+            config = fields.get("default_config", source.default_config)
+            self._validate_auto_apply(adapter_key, config)
         for key, value in fields.items():
             setattr(source, key, value)
         self.session.flush()
@@ -132,9 +140,13 @@ class SourceService:
             )
 
     @staticmethod
-    def _validate_auto_apply(adapter_key: str) -> None:
+    def _validate_auto_apply(adapter_key: str, config: dict[str, Any] | None = None) -> None:
         if not has_applier(adapter_key):
             raise ValidationError(
                 f"Adapter '{adapter_key}' does not support auto-apply. "
                 f"Available: {available_appliers()}"
             )
+        if requires_private_api_risk_ack(adapter_key) and not config_accepts_private_api_risk(
+            config
+        ):
+            raise ValidationError(private_api_risk_rejection_error())

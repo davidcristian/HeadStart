@@ -1,7 +1,7 @@
 import { mockApi, resetMockApi } from "../test/mockApi";
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { sampleMeta, sampleSource } from "../test/fixtures";
 import { renderWithClient } from "../test/renderWithClient";
 import type { SourceTestResult } from "../types";
@@ -90,6 +90,63 @@ describe("SourcesPage", () => {
         auto_apply_enabled: true,
       }),
     );
+  });
+
+  it("confirms private-API risk before enabling LinkedIn auto-apply", async () => {
+    const linkedInSource = {
+      ...sampleSource,
+      id: 42,
+      name: "LinkedIn Jobs",
+      adapter_key: "linkedin",
+      base_url: "https://www.linkedin.com/jobs",
+      default_config: {},
+    };
+    mockApi.listSources.mockResolvedValue([linkedInSource]);
+    mockApi.meta.mockResolvedValue({
+      ...sampleMeta,
+      appliers: [...sampleMeta.appliers, "linkedin"],
+    });
+    mockApi.updateSource.mockClear();
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
+    renderWithClient(<SourcesPage />);
+
+    await waitFor(() => expect(screen.getByText("LinkedIn Jobs")).toBeInTheDocument());
+    fireEvent.click(screen.getByRole("checkbox"));
+
+    await waitFor(() =>
+      expect(mockApi.updateSource).toHaveBeenCalledWith(42, {
+        auto_apply_enabled: true,
+        default_config: { accept_private_api_risk: true },
+      }),
+    );
+    expect(confirmSpy).toHaveBeenCalled();
+    confirmSpy.mockRestore();
+  });
+
+  it("does not enable LinkedIn auto-apply when the risk dialog is cancelled", async () => {
+    const linkedInSource = {
+      ...sampleSource,
+      id: 43,
+      name: "LinkedIn Jobs",
+      adapter_key: "linkedin",
+      base_url: "https://www.linkedin.com/jobs",
+      default_config: {},
+    };
+    mockApi.listSources.mockResolvedValue([linkedInSource]);
+    mockApi.meta.mockResolvedValue({
+      ...sampleMeta,
+      appliers: [...sampleMeta.appliers, "linkedin"],
+    });
+    mockApi.updateSource.mockClear();
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
+    renderWithClient(<SourcesPage />);
+
+    await waitFor(() => expect(screen.getByText("LinkedIn Jobs")).toBeInTheDocument());
+    fireEvent.click(screen.getByRole("checkbox"));
+
+    await waitFor(() => expect(confirmSpy).toHaveBeenCalled());
+    expect(mockApi.updateSource).not.toHaveBeenCalled();
+    confirmSpy.mockRestore();
   });
 
   it("edits the adapter, base URL, and config fields before creating", async () => {

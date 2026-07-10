@@ -58,7 +58,7 @@ def test_hosted_live_submit_includes_resume_file_bytes() -> None:
             job_title="Customer Support Specialist",
             company="Hosted Co",
             job_url="https://www.indeed.com/viewjob?jk=hostedjobkey001",
-            config={},
+            config={"accept_private_api_risk": True},
             profile=profile,
             resume_file=resume,
             credentials={

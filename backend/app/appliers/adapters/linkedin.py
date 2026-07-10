@@ -44,6 +44,10 @@ from app.appliers.adapters.linkedin_resume_upload import upload_easy_apply_resum
 from app.appliers.adapters.linkedin_route import LinkedInApplyRoute, resolve_apply_route
 from app.appliers.adapters.linkedin_voyager import fetch_application_form, fetch_company_apply_url
 from app.appliers.base import Applier, get_applier, register_applier
+from app.appliers.private_api_risk import (
+    config_accepts_private_api_risk,
+    private_api_risk_rejection_error,
+)
 from app.appliers.types import ApplyContext, ApplyResult
 
 
@@ -133,6 +137,13 @@ class LinkedInApplier(Applier):
 
         if ctx.dry_run:
             return ApplyResult(status="dry_run", payload=payload)
+
+        if not config_accepts_private_api_risk(ctx.config):
+            return ApplyResult(
+                status="failed",
+                error=private_api_risk_rejection_error(),
+                payload=payload,
+            )
 
         if not has_linkedin_session_cookies(ctx.credentials):
             return ApplyResult(
