@@ -314,8 +314,10 @@ After classification, routable labels can be moved into configured IMAP folders
 When `INBOX_AGENT_ENABLED=true`, beat runs `process_inbox_messages` every
 `INBOX_POLL_INTERVAL_SECONDS` (default 300). `InboxOrchestrationService`:
 
-1. Resolves pollable users (enabled `mailbox_credential` rows, plus env-fallback
-   users when `INBOX_USE_ENV_CREDENTIALS=true`).
+1. Resolves pollable users once per tick (enabled `mailbox_credential` rows, plus
+   env-fallback users when `INBOX_USE_ENV_CREDENTIALS=true`), then reuses that
+   `MailboxContext` for fetch so credential/config lookup is not repeated
+   (INB-20).
 2. Fetches inbound mail since `inbox_poll_state.last_polled_uid` (bootstraps from
    the highest persisted classification UID when unset).
 3. Applies `InboxGateService` before classification — only messages tied to active

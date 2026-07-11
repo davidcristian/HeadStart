@@ -200,13 +200,21 @@ class InboxService:
         )
 
     def fetch_messages(
-        self, user_id: int, *, since_uid: int | None = None, limit: int = 50
+        self,
+        user_id: int,
+        *,
+        since_uid: int | None = None,
+        limit: int = 50,
+        ctx: MailboxContext | None = None,
     ) -> FetchResult:
+        """Fetch inbound mail; pass ``ctx`` when the caller already resolved it (INB-20)."""
         self.require_enabled()
-        ctx = self.resolve_context(user_id)
-        if ctx is None:
+        resolved = ctx if ctx is not None else self.resolve_context(user_id)
+        if resolved is None:
             raise ValidationError("No mailbox credentials configured")
-        return get_mailbox(ctx.connector_type).fetch_messages(ctx, since_uid=since_uid, limit=limit)
+        return get_mailbox(resolved.connector_type).fetch_messages(
+            resolved, since_uid=since_uid, limit=limit
+        )
 
     def send_message(self, user_id: int, message: OutboundMessage) -> SendResult:
         self.require_enabled()

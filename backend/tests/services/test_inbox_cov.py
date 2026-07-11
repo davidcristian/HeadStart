@@ -215,6 +215,26 @@ def test_fetch_messages_delegates_to_connector(db_session: Session, monkeypatch)
     assert result.max_uid == 5
 
 
+def test_fetch_messages_reuses_pre_resolved_context(db_session: Session, monkeypatch) -> None:
+    """INB-20: callers that already resolved context must not trigger a second lookup."""
+    monkeypatch.setattr(settings, "inbox_agent_enabled", True)
+    user_id = _user(db_session)
+    svc = InboxService(db_session)
+    svc.upsert(user_id, MailboxCredentialUpsert(config=_sample_config()))
+    ctx = svc.resolve_context(user_id)
+    assert ctx is not None
+    fetched = FetchResult(messages=[], max_uid=9)
+    with (
+        patch.object(svc, "resolve_context") as resolve_mock,
+        patch.object(inbox_module, "get_mailbox") as mock_get,
+    ):
+        mock_get.return_value.fetch_messages.return_value = fetched
+        result = svc.fetch_messages(user_id, since_uid=1, limit=10, ctx=ctx)
+    assert result.max_uid == 9
+    resolve_mock.assert_not_called()
+    mock_get.return_value.fetch_messages.assert_called_once_with(ctx, since_uid=1, limit=10)
+
+
 def test_fetch_messages_no_credentials_raises(db_session: Session, monkeypatch) -> None:
     monkeypatch.setattr(settings, "inbox_agent_enabled", True)
     monkeypatch.setattr(settings, "inbox_use_env_credentials", False)

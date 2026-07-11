@@ -184,7 +184,11 @@ def test_process_due_skips_already_classified_and_advances_cursor(
     with patch.object(service.inbox, "fetch_messages", return_value=fetch_result) as mock_fetch:
         result = service.process_due()
 
-    mock_fetch.assert_called_once_with(user.id, since_uid=5, limit=settings.inbox_poll_batch_size)
+    mock_fetch.assert_called_once()
+    assert mock_fetch.call_args.args == (user.id,)
+    assert mock_fetch.call_args.kwargs["since_uid"] == 5
+    assert mock_fetch.call_args.kwargs["limit"] == settings.inbox_poll_batch_size
+    assert mock_fetch.call_args.kwargs["ctx"] is not None
     assert result.classified == 1
     assert InboxPollStateRepository(db_session).get_last_polled_uid(user.id) == 6
 
@@ -262,4 +266,8 @@ def test_process_due_bootstrap_since_uid_from_classifications(
     with patch.object(service.inbox, "fetch_messages", return_value=fetch_result) as mock_fetch:
         service.process_due()
 
-    mock_fetch.assert_called_once_with(user.id, since_uid=99, limit=settings.inbox_poll_batch_size)
+    mock_fetch.assert_called_once()
+    assert mock_fetch.call_args.args == (user.id,)
+    assert mock_fetch.call_args.kwargs["since_uid"] == 99
+    assert mock_fetch.call_args.kwargs["limit"] == settings.inbox_poll_batch_size
+    assert mock_fetch.call_args.kwargs["ctx"] is not None

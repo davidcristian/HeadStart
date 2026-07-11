@@ -235,7 +235,7 @@ _Merged with INB-15 and INB-16 (all three flag that `prepare_message` sanitizes 
 
 <a id="inb-20"></a>
 ### INB-20 — Inbox poll resolves each user's mailbox context twice per beat tick (N+1)
-⚪ **LOW** · ⚡ perf · Status: ☐ open · Confidence: medium (5/5 verifiers) · Effort: S · WS30
+⚪ **LOW** · ⚡ perf · Status: ✅ done · Confidence: medium (5/5 verifiers) · Effort: S · WS30
 
 **Locations:** `backend/app/services/inbox_orchestration.py:97` (`_list_pollable_user_ids`); plus `backend/app/services/inbox_orchestration.py:104`, `backend/app/services/inbox_orchestration.py:109`.
 

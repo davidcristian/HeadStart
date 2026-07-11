@@ -36,11 +36,12 @@ def test_list_pollable_includes_env_credential_users(db_session: Session, monkey
         pollable = service._list_pollable_user_ids()
 
     assert user.id in pollable
+    ctx_mock.assert_called_once_with(user.id)
 
 
 def test_list_pollable_skips_user_already_enabled(db_session: Session, monkeypatch) -> None:
     # A user with an enabled credential is already collected; the env-fallback loop must
-    # skip them via `continue` rather than re-adding.
+    # skip them via set union rather than resolving twice.
     monkeypatch.setattr(settings, "inbox_agent_enabled", True)
     monkeypatch.setattr(settings, "inbox_use_env_credentials", True)
     user = make_user(db_session, email="orchestrate-dup@example.test")
@@ -114,13 +115,26 @@ def test_list_pollable_skips_env_user_without_context(db_session: Session, monke
     assert pollable == []
 
 
-def test_process_user_skips_when_no_context(db_session: Session, monkeypatch) -> None:
+def test_process_due_skips_when_no_context(db_session: Session, monkeypatch) -> None:
+    """Users without a resolvable mailbox never enter the per-user fetch path."""
     monkeypatch.setattr(settings, "inbox_agent_enabled", True)
-    user = make_user(db_session, email="orchestrate-skipctx@example.test")
+    monkeypatch.setattr(settings, "inbox_use_env_credentials", True)
+    make_user(db_session, email="orchestrate-skipctx@example.test")
     service = InboxOrchestrationService(db_session)
-    with patch.object(service.inbox, "resolve_context", return_value=None):
-        result = service._process_user(user.id)
-    assert result.skipped == 1
+    from app.inbox.types import MailboxConfig
+
+    env_config = MailboxConfig(
+        imap_host="env-imap", imap_user="env@example.com", imap_password="p", smtp_host="env-smtp"
+    )
+    with (
+        patch("app.services.inbox_orchestration.env_mailbox_config", return_value=env_config),
+        patch.object(service.inbox, "resolve_context", return_value=None),
+        patch.object(service.inbox, "fetch_messages") as fetch_mock,
+    ):
+        result = service.process_due()
+
+    assert result.users == 0
+    fetch_mock.assert_not_called()
 
 
 def test_process_user_records_fetch_failure(db_session: Session, monkeypatch) -> None:
@@ -131,10 +145,38 @@ def test_process_user_records_fetch_failure(db_session: Session, monkeypatch) ->
         MailboxCredentialUpsert(connector_type="imap_smtp", config=mailbox_config()),
     )
     service = InboxOrchestrationService(db_session)
+    ctx = service.inbox.resolve_context(user.id)
+    assert ctx is not None
     with patch.object(service.inbox, "fetch_messages", side_effect=RuntimeError("imap down")):
-        result = service._process_user(user.id)
+        result = service._process_user(user.id, ctx)
     assert result.failed == 1
     assert result.fetched == 0
+
+
+def test_process_due_resolves_context_once_per_user(db_session: Session, monkeypatch) -> None:
+    """INB-20: env-mode listing must not re-resolve before fetch."""
+    monkeypatch.setattr(settings, "inbox_agent_enabled", True)
+    monkeypatch.setattr(settings, "inbox_use_env_credentials", True)
+    user = make_user(db_session, email="orchestrate-once@example.test")
+    service = InboxOrchestrationService(db_session)
+    from app.inbox.types import MailboxConfig, MailboxContext
+
+    env_config = MailboxConfig(
+        imap_host="env-imap", imap_user="env@example.com", imap_password="p", smtp_host="env-smtp"
+    )
+    ctx = MailboxContext(connector_type="imap_smtp", config=env_config, user_id=user.id)
+    fetch_result = FetchResult(messages=[], max_uid=1)
+    with (
+        patch("app.services.inbox_orchestration.env_mailbox_config", return_value=env_config),
+        patch.object(service.inbox, "resolve_context", return_value=ctx) as resolve_mock,
+        patch.object(service.inbox, "fetch_messages", return_value=fetch_result) as fetch_mock,
+    ):
+        result = service.process_due()
+
+    assert result.users == 1
+    resolve_mock.assert_called_once_with(user.id)
+    fetch_mock.assert_called_once()
+    assert fetch_mock.call_args.kwargs.get("ctx") is ctx
 
 
 def test_process_due_advances_cursor_on_empty_with_new_max_uid(

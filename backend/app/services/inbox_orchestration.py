@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.logging import get_logger
 from app.inbox.credentials import env_mailbox_config
-from app.inbox.types import FetchResult
+from app.inbox.types import FetchResult, MailboxContext
 from app.repositories.inbox_classifications import InboxClassificationRepository
 from app.repositories.inbox_poll_state import InboxPollStateRepository
 from app.repositories.mailbox_credentials import MailboxCredentialRepository
@@ -62,10 +62,10 @@ class InboxOrchestrationService:
         skipped = 0
         ignored = 0
         failed = 0
-        pollable = self._list_pollable_user_ids()
+        pollable = self._list_pollable_contexts()
 
-        for user_id in pollable:
-            outcome = self._process_user(user_id)
+        for user_id, ctx in pollable:
+            outcome = self._process_user(user_id, ctx)
             fetched += outcome.fetched
             classified += outcome.classified
             skipped += outcome.skipped
@@ -94,29 +94,35 @@ class InboxOrchestrationService:
             failed=failed,
         )
 
-    def _list_pollable_user_ids(self) -> list[int]:
-        """Users with a resolvable mailbox context for polling."""
+    def _candidate_user_ids(self) -> list[int]:
+        """Users that may have a mailbox (enabled creds and/or shared env fallback)."""
         user_ids = {credential.user_id for credential in self.credentials.list_enabled()}
         if settings.inbox_use_env_credentials and env_mailbox_config() is not None:
-            for user in self.users.list_all():
-                if user.id in user_ids:
-                    continue
-                if self.inbox.resolve_context(user.id) is not None:
-                    user_ids.add(user.id)
+            user_ids.update(user.id for user in self.users.list_all())
         return sorted(user_ids)
 
-    def _process_user(self, user_id: int) -> InboxOrchestrationResult:
-        if self.inbox.resolve_context(user_id) is None:
-            return InboxOrchestrationResult(
-                users=0, fetched=0, classified=0, skipped=1, ignored=0, failed=0
-            )
+    def _list_pollable_contexts(self) -> list[tuple[int, MailboxContext]]:
+        """Resolve each candidate mailbox once for this tick (INB-20)."""
+        pollable: list[tuple[int, MailboxContext]] = []
+        for user_id in self._candidate_user_ids():
+            ctx = self.inbox.resolve_context(user_id)
+            if ctx is not None:
+                pollable.append((user_id, ctx))
+        return pollable
 
+    def _list_pollable_user_ids(self) -> list[int]:
+        """Users with a resolvable mailbox context for polling."""
+        return [user_id for user_id, _ in self._list_pollable_contexts()]
+
+    def _process_user(self, user_id: int, ctx: MailboxContext) -> InboxOrchestrationResult:
+        """Fetch and classify for one user using a pre-resolved mailbox context."""
         since_uid = self._resolve_since_uid(user_id)
         try:
             fetch_result = self.inbox.fetch_messages(
                 user_id,
                 since_uid=since_uid,
                 limit=settings.inbox_poll_batch_size,
+                ctx=ctx,
             )
         except Exception as exc:
             logger.warning("inbox fetch failed user=%s: %s", user_id, exc)
