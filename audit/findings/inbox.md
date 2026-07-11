@@ -163,7 +163,7 @@ _Merged with INB-15 and INB-16 (all three flag that `prepare_message` sanitizes 
 
 <a id="inb-12"></a>
 ### INB-12 — OAuth-config class list re-enumerated in 4+ sites instead of a shared constant
-⚪ **LOW** · ♻️ refactor · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: S · WS30
+⚪ **LOW** · ♻️ refactor · Status: ✅ done · [PR](https://github.com/davidcristian/HeadStart/pull/146) · Confidence: high (3/3 verifiers) · Effort: S · WS30
 
 **Locations:** `backend/app/inbox/mailbox_email.py:16` (`mailbox_email_from_context`); plus `backend/app/inbox/mailbox_email.py:39`, `backend/app/inbox/credentials.py:20`, `backend/app/inbox/credentials.py:58`.
 

@@ -79,6 +79,38 @@ class FastmailMailboxConfig(BaseModel):
     api_token: str = Field(min_length=1, max_length=4096)
 
 
+# Single source of truth for OAuth/API mailbox connectors (INB-12).
+# Membership checks and isinstance tuples must import these — do not re-list.
+OAUTH_CONNECTOR_TYPES: frozenset[str] = frozenset({"gmail", "outlook", "yahoo", "fastmail"})
+OAUTH_CONFIG_TYPES: tuple[
+    type[GmailMailboxConfig],
+    type[OutlookMailboxConfig],
+    type[YahooMailboxConfig],
+    type[FastmailMailboxConfig],
+] = (
+    GmailMailboxConfig,
+    OutlookMailboxConfig,
+    YahooMailboxConfig,
+    FastmailMailboxConfig,
+)
+OAUTH_CONFIG_BY_CONNECTOR: dict[
+    str,
+    type[GmailMailboxConfig]
+    | type[OutlookMailboxConfig]
+    | type[YahooMailboxConfig]
+    | type[FastmailMailboxConfig],
+] = {
+    "gmail": GmailMailboxConfig,
+    "outlook": OutlookMailboxConfig,
+    "yahoo": YahooMailboxConfig,
+    "fastmail": FastmailMailboxConfig,
+}
+
+OAuthMailboxConfig = (
+    GmailMailboxConfig | OutlookMailboxConfig | YahooMailboxConfig | FastmailMailboxConfig
+)
+
+
 class MailboxConfig(BaseModel):
     """IMAP + SMTP connection settings for the imap_smtp connector."""
 
@@ -96,17 +128,14 @@ class MailboxConfig(BaseModel):
     smtp_from: str = Field(default="", max_length=320)
 
 
+AnyMailboxConfig = MailboxConfig | OAuthMailboxConfig
+
+
 class MailboxContext(BaseModel):
     """Everything a mailbox connector needs for one user session."""
 
     connector_type: str
-    config: (
-        MailboxConfig
-        | GmailMailboxConfig
-        | OutlookMailboxConfig
-        | YahooMailboxConfig
-        | FastmailMailboxConfig
-    )
+    config: AnyMailboxConfig
     user_id: int | None = None
 
 

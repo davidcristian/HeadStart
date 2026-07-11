@@ -7,6 +7,8 @@ import json
 from app.core.config import settings
 from app.core.crypto import decrypt, encrypt
 from app.inbox.types import (
+    OAUTH_CONFIG_BY_CONNECTOR,
+    AnyMailboxConfig,
     FastmailMailboxConfig,
     GmailMailboxConfig,
     MailboxConfig,
@@ -17,37 +19,16 @@ from app.models.mailbox_credential import MailboxCredential
 from app.schemas.mailbox import MailboxCredentialRead
 
 
-def decode_mailbox_config(
-    credential: MailboxCredential,
-) -> (
-    MailboxConfig
-    | GmailMailboxConfig
-    | OutlookMailboxConfig
-    | YahooMailboxConfig
-    | FastmailMailboxConfig
-):
+def decode_mailbox_config(credential: MailboxCredential) -> AnyMailboxConfig:
     """Decrypt and validate the stored connector config."""
     raw = json.loads(decrypt(credential.secret_ciphertext))
-    if credential.connector_type == "gmail":
-        return GmailMailboxConfig.model_validate(raw)
-    if credential.connector_type == "outlook":
-        return OutlookMailboxConfig.model_validate(raw)
-    if credential.connector_type == "yahoo":
-        return YahooMailboxConfig.model_validate(raw)
-    if credential.connector_type == "fastmail":
-        return FastmailMailboxConfig.model_validate(raw)
+    oauth_cls = OAUTH_CONFIG_BY_CONNECTOR.get(credential.connector_type)
+    if oauth_cls is not None:
+        return oauth_cls.model_validate(raw)
     return MailboxConfig.model_validate(raw)
 
 
-def encode_mailbox_config(
-    config: (
-        MailboxConfig
-        | GmailMailboxConfig
-        | OutlookMailboxConfig
-        | YahooMailboxConfig
-        | FastmailMailboxConfig
-    ),
-) -> str:
+def encode_mailbox_config(config: AnyMailboxConfig) -> str:
     """Encrypt a connector config for persistence."""
     return encrypt(json.dumps(config.model_dump()))
 
@@ -55,20 +36,16 @@ def encode_mailbox_config(
 def mailbox_credential_to_read(credential: MailboxCredential) -> MailboxCredentialRead:
     """Map a credential row to the public read DTO."""
     config = decode_mailbox_config(credential)
-    oauth_configs = (
-        GmailMailboxConfig,
-        OutlookMailboxConfig,
-        YahooMailboxConfig,
-        FastmailMailboxConfig,
-    )
-    if isinstance(config, oauth_configs):
+    if isinstance(config, MailboxConfig):
         return MailboxCredentialRead(
             id=credential.id,
             connector_type=credential.connector_type,
             enabled=credential.enabled,
             created_at=credential.created_at,
             has_config=True,
-            email_address=config.email_address,
+            imap_host=config.imap_host,
+            smtp_host=config.smtp_host,
+            imap_user=config.imap_user,
         )
     return MailboxCredentialRead(
         id=credential.id,
@@ -76,9 +53,7 @@ def mailbox_credential_to_read(credential: MailboxCredential) -> MailboxCredenti
         enabled=credential.enabled,
         created_at=credential.created_at,
         has_config=True,
-        imap_host=config.imap_host,
-        smtp_host=config.smtp_host,
-        imap_user=config.imap_user,
+        email_address=config.email_address,
     )
 
 

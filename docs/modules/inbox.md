@@ -16,9 +16,12 @@ supports interview handoff (all behind `INBOX_AGENT_ENABLED`).
 ```python
 # app/inbox/types.py
 class MailboxContext(BaseModel):
-    connector_type: str      # e.g. "imap_smtp"
-    config: MailboxConfig    # IMAP + SMTP host/user/password
+    connector_type: str      # e.g. "imap_smtp" or an OAuth key
+    config: AnyMailboxConfig # IMAP MailboxConfig or OAuth/API config
     user_id: int | None = None
+
+# Shared OAuth/API connector set (INB-12) — import these; do not re-list:
+# OAUTH_CONNECTOR_TYPES, OAUTH_CONFIG_TYPES, OAUTH_CONFIG_BY_CONNECTOR
 
 # app/inbox/base.py
 class MailboxConnector(ABC):
@@ -197,6 +200,9 @@ generic fallback for providers that expose IMAP.
 
 Per-user encrypted row in `mailbox_credential` (one per account). Passwords are
 write-only — `MailboxCredentialRead` exposes host/user metadata only.
+`decode_mailbox_config` / `mailbox_email_from_*` / credential read mapping use
+`OAUTH_CONNECTOR_TYPES` and `OAUTH_CONFIG_*` from `app/inbox/types.py` so a new
+OAuth connector is registered in one place (INB-12).
 
 **Service:** `InboxService` (`app/services/inbox.py`) encrypts on write, resolves
 `MailboxContext` for fetch/send/test, and raises `InboxNotEnabledError` when
