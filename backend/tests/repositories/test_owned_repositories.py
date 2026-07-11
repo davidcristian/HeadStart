@@ -62,3 +62,34 @@ def test_try_add_rejects_duplicate_email(db_session: Session) -> None:
     second = repo.try_add(User(email="unique@example.test", password_hash="y", is_active=True))
     assert second is None
     assert repo.get_by_email("unique@example.test").id == first.id
+
+
+def test_get_for_update_uses_unlocked_path_on_sqlite(db_session: Session) -> None:
+    user = _user(db_session, email="lock@example.test")
+    repo = UserRepository(db_session)
+
+    locked = repo.get_for_update(user.id)
+
+    assert locked is not None
+    assert locked.id == user.id
+
+
+def test_get_for_update_takes_row_lock_branch_on_non_sqlite(db_session: Session) -> None:
+    """Force the FOR UPDATE branch (SQLite silently drops the clause)."""
+    user = _user(db_session, email="lock-pg@example.test")
+    repo = UserRepository(db_session)
+    repo._is_sqlite = lambda: False  # type: ignore[method-assign]
+
+    locked = repo.get_for_update(user.id)
+
+    assert locked is not None
+    assert locked.id == user.id
+
+
+def test_get_for_update_compiles_for_update_for_postgres() -> None:
+    """Postgres rate-slot reserve must lock the user row (INB-23)."""
+    from sqlalchemy import select
+
+    stmt = select(User).where(User.id == 1).with_for_update()
+    compiled = str(stmt.compile(compile_kwargs={"literal_binds": True}))
+    assert "FOR UPDATE" in compiled.upper()

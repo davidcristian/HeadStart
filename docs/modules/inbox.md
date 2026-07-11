@@ -439,7 +439,10 @@ HTML-unescaped and tag-stripped via `sanitize_message_body` before the scan,
 and classification stores a sanitized excerpt up to
 `EMAIL_CLASSIFY_MAX_BODY_CHARS` (not a raw 500-char slice) so encoded or
 late-in-body sensitive terms still match; per-user hourly/daily caps
-(`INBOX_REPLY_MAX_PER_HOUR`, `INBOX_REPLY_MAX_PER_DAY`); recipient domain must
+(`INBOX_REPLY_MAX_PER_HOUR`, `INBOX_REPLY_MAX_PER_DAY`) are enforced by
+locking the user row and inserting a `reserved` audit slot before SMTP so
+overlapping workers cannot both pass a below-cap read (INB-23; the slot
+finalizes to `sent` on success or is deleted on send failure); recipient domain must
 match the linked application's `employer_domain` (or the job posting URL host)
 before auto-send (`auto_reply_recipient_allowed` in
 `ReplySafeSendService.evaluate_before_send` — outcome `blocked_recipient` when
@@ -467,7 +470,8 @@ optional random jitter (`INBOX_REPLY_DELAY_JITTER_SECONDS`, default 900).
   `FOR UPDATE SKIP LOCKED` on Postgres), commits the lease, then SMTP-sends and
   marks drafts `sent` (or `failed` / `blocked` / `cancelled`). Overlapping ticks
   and `acks_late` redelivery therefore cannot re-select the same row.
-- **Safe-send:** topic blocklist, hourly/daily caps, and audit log via
-  `ReplySafeSendService`; see [Follow-ups (Phase 20d)](#follow-ups-phase-20d).
+- **Safe-send:** topic blocklist, hourly/daily caps (atomic `reserved` rate
+  slot before SMTP — INB-23), and audit log via `ReplySafeSendService`; see
+  [Follow-ups (Phase 20d)](#follow-ups-phase-20d).
 - **API fields:** `ReplyDraftRead.queue_status` and `send_after` expose queue state
   (`pending`, `sending`, `sent`, `failed`, `blocked`, `cancelled`).

@@ -249,7 +249,7 @@ _Merged with INB-15 and INB-16 (all three flag that `prepare_message` sanitizes 
 
 <a id="inb-23"></a>
 ### INB-23 — Auto-reply rate caps are check-then-act with no lock; overlap can exceed the cap
-⚪ **LOW** · 🐞 bug · Status: ☐ open · Confidence: medium (3/3 verifiers) · Effort: M · WS30
+⚪ **LOW** · 🐞 bug · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/148)) · Confidence: medium (3/3 verifiers) · Effort: M · WS30
 
 **Locations:** `backend/app/services/reply_safe_send.py:80` (`ReplySafeSendService.evaluate_before_send`); plus `backend/app/services/pending_replies.py:185`.
 

@@ -22,8 +22,22 @@ class UserRepository:
     def get(self, user_id: int) -> User | None:
         return self.session.get(User, user_id)
 
+    def get_for_update(self, user_id: int) -> User | None:
+        """Fetch a user holding a row lock (Postgres) to serialize per-user work.
+
+        Used so concurrent auto-reply sends cannot both pass the same rate-cap
+        check (INB-23). SQLite (tests) has no row locking; returns the unlocked
+        row.
+        """
+        if self._is_sqlite():
+            return self.get(user_id)
+        return self.session.scalar(select(User).where(User.id == user_id).with_for_update())
+
     def get_by_email(self, email: str) -> User | None:
         return self.session.scalar(select(User).where(User.email == email))
+
+    def _is_sqlite(self) -> bool:
+        return self.session.get_bind().dialect.name == "sqlite"
 
     def bump_feed_token_version(self, user: User) -> User:
         """Invalidate existing RSS feed URLs by incrementing the token version."""

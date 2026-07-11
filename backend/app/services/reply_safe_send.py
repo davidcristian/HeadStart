@@ -17,10 +17,12 @@ from app.models.inbox_pending_reply import InboxPendingReply
 from app.models.inbox_reply_draft import InboxReplyDraft
 from app.models.inbox_reply_send_log import InboxReplySendLog
 from app.repositories.inbox_reply_send_logs import InboxReplySendLogRepository
+from app.repositories.users import UserRepository
 from app.services.inbox import InboxService
 from app.services.inbox_gate import auto_reply_recipient_allowed
 
 SENT_OUTCOME = "sent"
+RESERVED_OUTCOME = "reserved"
 BLOCKED_TOPIC_OUTCOME = "blocked_topic"
 BLOCKED_RATE_HOUR_OUTCOME = "blocked_rate_limit_hour"
 BLOCKED_RATE_DAY_OUTCOME = "blocked_rate_limit_day"
@@ -42,6 +44,7 @@ class ReplySafeSendService:
     def __init__(self, session: Session) -> None:
         self.session = session
         self.logs = InboxReplySendLogRepository(session)
+        self.users = UserRepository(session)
         self.inbox = InboxService(session)
 
     def evaluate_before_queue(
@@ -120,6 +123,54 @@ class ReplySafeSendService:
                 )
 
         return SafeSendDecision(allowed=True, outcome=SENT_OUTCOME, reason="", payload={})
+
+    def reserve_before_send(
+        self,
+        user_id: int,
+        draft: InboxReplyDraft,
+        classification: InboxClassification | None,
+        *,
+        pending: InboxPendingReply | None = None,
+        now: datetime | None = None,
+    ) -> tuple[SafeSendDecision, InboxReplySendLog]:
+        """Lock the user, re-check caps, and insert a rate-slot row before SMTP.
+
+        A ``reserved`` audit row counts toward hourly/daily caps until the send
+        finalizes to ``sent`` or the reservation is released on failure, so
+        overlapping workers cannot both pass the same below-cap read (INB-23).
+        """
+        self.users.get_for_update(user_id)
+        decision = self.evaluate_before_send(user_id, draft, classification, now=now)
+        if not decision.allowed:
+            return decision, self.record(
+                user_id,
+                draft,
+                decision,
+                pending=pending,
+                classification=classification,
+            )
+        reserved = SafeSendDecision(
+            allowed=True,
+            outcome=RESERVED_OUTCOME,
+            reason="",
+            payload=dict(decision.payload),
+        )
+        return decision, self.record(
+            user_id,
+            draft,
+            reserved,
+            pending=pending,
+            classification=classification,
+        )
+
+    def finalize_reservation(self, log: InboxReplySendLog) -> None:
+        """Mark a reserved rate slot as successfully sent."""
+        log.outcome = SENT_OUTCOME
+        self.session.flush()
+
+    def release_reservation(self, log: InboxReplySendLog) -> None:
+        """Drop a reserved rate slot after SMTP failure so the cap is not burned."""
+        self.logs.delete(log)
 
     def record(
         self,

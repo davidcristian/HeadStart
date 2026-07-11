@@ -28,16 +28,18 @@ def _seed_mailbox(session: Session, user_id: int, *, auto_reply: bool = True) ->
     )
 
 
-def _seed_draft(session: Session, user_id: int, *, search=None) -> InboxReplyDraft:
+def _seed_draft(
+    session: Session, user_id: int, *, search=None, message_uid: int = 42
+) -> InboxReplyDraft:
     seen_job_id = None
     if search is not None:
         job = SeenJob(
             search_id=search.id,
-            external_id="ext-42",
-            hash="a" * 64,
+            external_id=f"ext-{message_uid}",
+            hash=f"{message_uid:064x}"[-64:],
             title="Engineer",
             company="ACME",
-            url="https://jobs.acme.com/role",
+            url=f"https://jobs.acme.com/role-{message_uid}",
         )
         session.add(job)
         session.flush()
@@ -55,8 +57,8 @@ def _seed_draft(session: Session, user_id: int, *, search=None) -> InboxReplyDra
     classification = InboxClassification(
         user_id=user_id,
         seen_job_id=seen_job_id,
-        message_uid=42,
-        message_id="<msg-42@acme.com>",
+        message_uid=message_uid,
+        message_id=f"<msg-{message_uid}@acme.com>",
         label="follow_up",
         confidence=0.9,
         reason="test",
@@ -71,7 +73,7 @@ def _seed_draft(session: Session, user_id: int, *, search=None) -> InboxReplyDra
     draft = InboxReplyDraft(
         user_id=user_id,
         inbox_classification_id=classification.id,
-        message_uid=42,
+        message_uid=message_uid,
         subject="Re: Quick question",
         body_text="Thanks for reaching out.",
         provider="heuristic",

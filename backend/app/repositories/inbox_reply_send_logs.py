@@ -7,6 +7,9 @@ from sqlalchemy.orm import Session
 
 from app.models.inbox_reply_send_log import InboxReplySendLog
 
+# Outcomes that consume an hourly/daily auto-reply rate slot (INB-23).
+RATE_SLOT_OUTCOMES = ("sent", "reserved")
+
 
 class InboxReplySendLogRepository:
     def __init__(self, session: Session) -> None:
@@ -18,17 +21,22 @@ class InboxReplySendLogRepository:
         return row
 
     def count_sent_since(self, user_id: int, *, since: datetime) -> int:
-        """Count successful auto-sent replies since a timestamp."""
+        """Count rate-slot rows (sent + in-flight reserved) since a timestamp."""
         count = self.session.scalar(
             select(func.count())
             .select_from(InboxReplySendLog)
             .where(
                 InboxReplySendLog.user_id == user_id,
-                InboxReplySendLog.outcome == "sent",
+                InboxReplySendLog.outcome.in_(RATE_SLOT_OUTCOMES),
                 InboxReplySendLog.created_at >= since,
             )
         )
         return int(count or 0)
+
+    def delete(self, row: InboxReplySendLog) -> None:
+        """Remove a reserved rate-slot row after a failed SMTP send."""
+        self.session.delete(row)
+        self.session.flush()
 
     def list_for_user(self, user_id: int, *, limit: int | None = 50) -> list[InboxReplySendLog]:
         stmt = (

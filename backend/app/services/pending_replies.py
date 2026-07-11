@@ -217,30 +217,28 @@ class PendingReplyService:
             self.session.flush()
             return "failed"
 
-        send_decision = self.safe_send.evaluate_before_send(
+        send_decision, reservation = self.safe_send.reserve_before_send(
             row.user_id,
             draft,
             classification,
+            pending=row,
             now=now,
         )
         if not send_decision.allowed:
             row.status = "blocked"
             row.error = send_decision.reason
             draft.status = "draft"
-            self.safe_send.record(
-                row.user_id,
-                draft,
-                send_decision,
-                pending=row,
-                classification=classification,
-            )
             self.session.flush()
             return "blocked"
+
+        # Publish the reserved rate slot before SMTP so overlapping workers see it.
+        self.session.commit()
 
         try:
             message = build_recruiter_reply_message(draft=draft, classification=classification)
             result = self.inbox.send_message(row.user_id, message)
         except Exception as exc:
+            self.safe_send.release_reservation(reservation)
             row.status = "failed"
             row.error = str(exc)
             draft.status = "failed"
@@ -248,6 +246,7 @@ class PendingReplyService:
             return "failed"
 
         if result.status != "sent":
+            self.safe_send.release_reservation(reservation)
             row.status = "failed"
             row.error = result.error or "send failed"
             draft.status = "failed"
@@ -261,13 +260,7 @@ class PendingReplyService:
         payload = dict(row.payload or {})
         payload["sent_via"] = "auto_reply"
         row.payload = payload
-        self.safe_send.record(
-            row.user_id,
-            draft,
-            send_decision,
-            pending=row,
-            classification=classification,
-        )
+        self.safe_send.finalize_reservation(reservation)
         self.session.flush()
         return "sent"
 

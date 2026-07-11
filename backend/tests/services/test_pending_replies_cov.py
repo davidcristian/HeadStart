@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.inbox.types import SendResult
+from app.models.inbox_reply_send_log import InboxReplySendLog
 from app.schemas.inbox_routing import InboxRoutingConfigUpdate
 from app.services.inbox_routing import InboxRoutingService
 from app.services.pending_replies import PendingReplyService
@@ -287,7 +288,19 @@ def test_process_due_counts_blocked_outcome(db_session: Session, monkeypatch) ->
     row.send_after = now - timedelta(minutes=1)
 
     blocked = SafeSendDecision(allowed=False, outcome="blocked_topic", reason="blocked", payload={})
-    with patch.object(service.safe_send, "evaluate_before_send", return_value=blocked):
+    blocked_log = InboxReplySendLog(
+        user_id=user_id,
+        inbox_reply_draft_id=draft.id,
+        outcome="blocked_topic",
+        reason="blocked",
+        subject=draft.subject,
+        body_excerpt="",
+    )
+    with patch.object(
+        service.safe_send,
+        "reserve_before_send",
+        return_value=(blocked, blocked_log),
+    ):
         result = service.process_due(now=now)
 
     assert result.blocked == 1
