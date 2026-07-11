@@ -58,11 +58,15 @@ SMTP host/port/TLS, credentials, optional `smtp_from`).
   URL; `GET /inbox/gmail/callback` exchanges the code and stores encrypted tokens on
   `mailbox_credential` (`connector_type=gmail`).
 - **Fetch:** `users.messages.list` (INBOX, `after:` narrows the scan past the
-  cursor) + `users.messages.get`. The `uid` poll cursor is derived from each
-  message's `internalDate` (time-ordered), since Gmail ids are not chronological
-  and sorting by id could permanently skip later-arriving mail. The raw Gmail id
-  rides on the message headers so routing needn't reverse it out of the uid. All
-  inbox `uid` columns are `BigInteger`.
+  cursor) + `users.messages.get`. List returns ids only; `internalDate` is
+  probed with `format=minimal` while walking the newest-first listing from the
+  oldest end, stopping once the poll `limit` of unpolled uids is known so a busy
+  inbox does not GET metadata for every listed message (INB-10). The `uid` poll
+  cursor is derived from each message's `internalDate` (time-ordered), since
+  Gmail ids are not chronological and sorting by id could permanently skip
+  later-arriving mail. Kept messages then get a `format=raw` fetch. The raw
+  Gmail id rides on the message headers so routing needn't reverse it out of the
+  uid. All inbox `uid` columns are `BigInteger`.
 - **Send:** `users.messages.send` with a base64url-encoded MIME payload.
 - **Move / route:** `users.labels.create` (when missing) + `users.messages.modify`
   (add label, remove INBOX).

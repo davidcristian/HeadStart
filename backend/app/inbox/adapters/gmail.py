@@ -7,7 +7,6 @@ Label routing uses users.messages.modify and users.labels.create.
 from __future__ import annotations
 
 import base64
-from datetime import datetime
 from email.message import EmailMessage
 from typing import Any
 
@@ -15,7 +14,11 @@ import httpx
 
 from app.core.logging import get_logger
 from app.inbox.base import MailboxConnector, register_mailbox
-from app.inbox.gmail_ids import gmail_message_uid, parse_internal_date, uid_to_min_received_at
+from app.inbox.gmail_list import (
+    GMAIL_API_BASE,
+    INBOX_LABEL_ID,
+    list_unpolled_candidates,
+)
 from app.inbox.parse import parse_rfc822
 from app.inbox.types import (
     ConnectionTestResult,
@@ -29,8 +32,6 @@ from app.inbox.types import (
 
 logger = get_logger(__name__)
 
-GMAIL_API_BASE = "https://gmail.googleapis.com/gmail/v1"
-INBOX_LABEL_ID = "INBOX"
 GMAIL_ID_HEADER = "x-gmail-id"
 
 
@@ -47,7 +48,7 @@ class GmailMailbox(MailboxConnector):
     ) -> FetchResult:
         config = self._config(ctx)
         headers = self._auth_headers(config)
-        candidates = self._list_unpolled_candidates(headers, since_uid=since_uid, limit=limit)
+        candidates = list_unpolled_candidates(headers, since_uid=since_uid, limit=limit)
         messages = []
         max_uid = since_uid
         for uid, gmail_id in candidates:
@@ -165,64 +166,6 @@ class GmailMailbox(MailboxConnector):
     def _auth_headers(config: GmailMailboxConfig) -> dict[str, str]:
         return {"Authorization": f"Bearer {config.access_token}"}
 
-    def _list_unpolled_candidates(
-        self,
-        headers: dict[str, str],
-        *,
-        since_uid: int | None,
-        limit: int,
-    ) -> list[tuple[int, str]]:
-        """Collect the oldest unpolled Gmail messages up to `limit`, ordered by
-        received time. Gmail ids are not chronological, so each uid is derived from
-        the message's internalDate and the server-side scan is narrowed with `after:`."""
-        page_size = max(limit * 3, 100)
-        max_pages = 20
-        query: str | None = None
-        if since_uid is not None:
-            # Coarse server-side lower bound (with slack); the exact `uid <= since_uid`
-            # skip below dedupes the overlap, so a wider window never drops mail.
-            after = int(uid_to_min_received_at(since_uid).timestamp()) - 60
-            query = f"after:{max(after, 0)}"
-        candidates: list[tuple[int, str]] = []
-        seen: set[str] = set()
-        page_token: str | None = None
-        for _ in range(max_pages):
-            params: dict[str, str | int] = {
-                "labelIds": INBOX_LABEL_ID,
-                "maxResults": page_size,
-            }
-            if query is not None:
-                params["q"] = query
-            if page_token is not None:
-                params["pageToken"] = page_token
-            response = httpx.get(
-                f"{GMAIL_API_BASE}/users/me/messages",
-                headers=headers,
-                params=params,
-                timeout=30.0,
-            )
-            response.raise_for_status()
-            payload = response.json()
-            for entry in payload.get("messages") or []:
-                if not isinstance(entry, dict):
-                    continue
-                gmail_id = entry.get("id")
-                if not isinstance(gmail_id, str) or not gmail_id or gmail_id in seen:
-                    continue
-                seen.add(gmail_id)
-                received_at = self._message_received_at(headers, gmail_id)
-                if received_at is None:
-                    continue
-                uid = gmail_message_uid(gmail_id, received_at)
-                if since_uid is not None and uid <= since_uid:
-                    continue
-                candidates.append((uid, gmail_id))
-            page_token = payload.get("nextPageToken")
-            if not isinstance(page_token, str) or not page_token:
-                break
-        candidates.sort(key=lambda row: row[0])
-        return candidates[:limit]
-
     @staticmethod
     def _fetch_raw_message(headers: dict[str, str], gmail_id: str) -> bytes | None:
         response = httpx.get(
@@ -238,19 +181,6 @@ class GmailMailbox(MailboxConnector):
             return None
         padded = raw_data + "=" * (-len(raw_data) % 4)
         return base64.urlsafe_b64decode(padded.encode("ascii"))
-
-    @staticmethod
-    def _message_received_at(headers: dict[str, str], gmail_id: str) -> datetime | None:
-        """Fetch a message's received time (Gmail internalDate) for uid ordering."""
-        response = httpx.get(
-            f"{GMAIL_API_BASE}/users/me/messages/{gmail_id}",
-            headers=headers,
-            params={"format": "metadata", "metadataHeaders": "Date"},
-            timeout=30.0,
-        )
-        if response.status_code >= 400:
-            return None
-        return parse_internal_date(response.json().get("internalDate"))
 
     @staticmethod
     def _ensure_label_id(headers: dict[str, str], label_name: str) -> str | None:

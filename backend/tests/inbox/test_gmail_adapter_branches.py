@@ -79,7 +79,7 @@ def test_fetch_skips_bad_entries_and_missing_dates() -> None:
             },
         )
     )
-    # gid_no_date returns 500 on the metadata probe -> received_at None -> skip.
+    # gid_no_date returns 500 on the minimal date probe -> received_at None -> skip.
     respx.get(f"{BASE}/messages/{gid_no_date}").mock(return_value=Response(500))
     respx.get(f"{BASE}/messages/{gid_ok}").mock(
         return_value=Response(200, json={"internalDate": millis, "raw": _raw_b64()})
@@ -127,7 +127,7 @@ def test_fetch_paginates_then_stops() -> None:
 @respx.mock
 def test_fetch_exhausts_max_pages() -> None:
     # The list endpoint always returns a nextPageToken, so the paging loop exits by
-    # exhausting range(max_pages) rather than via break (branch 189->223).
+    # exhausting range(max_pages) rather than via break.
     received = datetime(2026, 6, 30, tzinfo=UTC)
     millis = str(int(received.timestamp() * 1000))
     counter = {"n": 0}
@@ -156,7 +156,7 @@ def test_fetch_skips_when_raw_unavailable() -> None:
     millis = str(int(received.timestamp() * 1000))
     respx.get(f"{BASE}/messages").mock(return_value=Response(200, json={"messages": [{"id": gid}]}))
 
-    # metadata probe (Date) succeeds, but the raw fetch returns 400 -> None -> skip.
+    # minimal date probe succeeds, but the raw fetch returns 400 -> None -> skip.
     def message_handler(request):
         if request.url.params.get("format") == "raw":
             return Response(400)

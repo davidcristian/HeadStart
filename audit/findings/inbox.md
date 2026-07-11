@@ -133,9 +133,9 @@ _Merged with INB-15 and INB-16 (all three flag that `prepare_message` sanitizes 
 
 <a id="inb-10"></a>
 ### INB-10 — Gmail poll issues a metadata GET for every listed message (up to ~2000/poll)
-⚪ **LOW** · ⚡ perf · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: M · WS30
+⚪ **LOW** · ⚡ perf · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/145)) · Confidence: high (3/3 verifiers) · Effort: M · WS30
 
-**Locations:** `backend/app/inbox/adapters/gmail.py:213` (`GmailMailbox._list_unpolled_candidates`).
+**Locations:** `backend/app/inbox/adapters/gmail.py` / `backend/app/inbox/gmail_list.py` (`list_unpolled_candidates`).
 
 **Evidence.** The loop paginates up to `max_pages=20` with `page_size=max(limit*3, 100)`, calling `_message_received_at` (a separate `messages.get`) for **every** entry to derive the uid before the `[:limit]` slice. Each kept message then triggers a second full `get` via `_fetch_raw_message`.
 
@@ -144,6 +144,8 @@ _Merged with INB-15 and INB-16 (all three flag that `prepare_message` sanitizes 
 **Suggested fix.** Request `internalDate` in the `messages.list` batch, or short-circuit pagination once `limit` earliest candidates are collected, and cache `received_at` with the raw fetch.
 
 **Verification.** Confirmed 3/3 adversarial verifiers. `_list_unpolled_candidates` calls `_message_received_at` for every listed entry before the `[:limit]` slice, then `_fetch_raw_message` per kept message; a real N+1/quota-burn perf issue, low as rated.
+
+**Update (2026-07-11).** Fixed: `messages.list` collects ids only; `internalDate` is probed with `format=minimal` while walking the newest-first listing from the oldest end, stopping once `limit` unpolled uids are known; kept messages still use a separate `format=raw` get.
 
 <a id="inb-11"></a>
 ### INB-11 — OAuth authorization-code flows omit PKCE across all three providers

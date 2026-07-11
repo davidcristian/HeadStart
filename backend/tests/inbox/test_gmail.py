@@ -31,7 +31,7 @@ def _raw_b64() -> str:
 
 
 def _mock_message(gmail_id: str, received_at: datetime) -> None:
-    # The internalDate probe (format=metadata) and the raw fetch (format=raw) both
+    # The internalDate probe (format=minimal) and the raw fetch (format=raw) both
     # GET this URL; one mock serving both fields satisfies each call.
     millis = str(int(received_at.timestamp() * 1000))
     respx.get(f"{BASE}/messages/{gmail_id}").mock(
@@ -71,6 +71,32 @@ def test_fetch_orders_by_received_time_not_hex_id() -> None:
         gmail_message_uid(older_id, older_at),
         gmail_message_uid(newer_id, newer_at),
     ]
+
+
+@respx.mock
+def test_fetch_short_circuits_date_probes_at_limit() -> None:
+    """INB-10: list may return many ids; only probe internalDate for the oldest `limit`."""
+    # Newest-first listing: n0 is newest, n4 is oldest. limit=2 should date-probe
+    # only n4 then n3 (and raw-fetch those two) — not n0/n1/n2.
+    ids_newest_first = [f"n{i}" for i in range(5)]
+    respx.get(f"{BASE}/messages").mock(
+        return_value=Response(200, json={"messages": [{"id": gid} for gid in ids_newest_first]})
+    )
+    routes = {}
+    for i, gid in enumerate(ids_newest_first):
+        # n0 newest (+4 days) … n4 oldest (+0 days)
+        received = datetime(2026, 6, 1 + (4 - i), tzinfo=UTC)
+        millis = str(int(received.timestamp() * 1000))
+        routes[gid] = respx.get(f"{BASE}/messages/{gid}").mock(
+            return_value=Response(200, json={"internalDate": millis, "raw": _raw_b64()})
+        )
+    result = GmailMailbox().fetch_messages(CTX, limit=2)
+    assert [m.raw_headers.get("x-gmail-id") for m in result.messages] == ["n4", "n3"]
+    assert routes["n4"].call_count >= 1  # minimal + raw
+    assert routes["n3"].call_count >= 1
+    assert routes["n0"].call_count == 0
+    assert routes["n1"].call_count == 0
+    assert routes["n2"].call_count == 0
 
 
 @respx.mock
