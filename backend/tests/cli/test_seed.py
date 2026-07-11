@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 from app.cli import seed as seed_module
 from app.cli.seed import main, seed
 from app.core.config import settings
+from app.core.secret_policy import is_guessable_ntfy_topic
 from app.models.notification_target import NotificationTarget
 from app.models.search import Search
 from app.models.source import Source
@@ -48,7 +49,12 @@ def test_seed_creates_demo_account_and_example_data(seed_scope: Session) -> None
     )
     assert target is not None
     assert target.type == "ntfy"
-    assert target.config["topic"] == settings.ntfy_default_topic
+    topic = target.config["topic"]
+    # Guessable NTFY_DEFAULT_TOPIC is replaced with a random high-entropy topic (NTF-06).
+    assert isinstance(topic, str)
+    assert not is_guessable_ntfy_topic(topic)
+    if not is_guessable_ntfy_topic(settings.ntfy_default_topic):
+        assert topic == settings.ntfy_default_topic.strip()
 
     source = seed_scope.scalar(select(Source).where(Source.name == "Example (Greenhouse)"))
     assert source is not None
@@ -57,6 +63,19 @@ def test_seed_creates_demo_account_and_example_data(seed_scope: Session) -> None
     search = seed_scope.scalar(select(Search).where(Search.name == "Example - all jobs"))
     assert search is not None
     assert search.enabled is False
+
+
+def test_seed_uses_configured_unguessable_ntfy_topic(
+    seed_scope: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """When NTFY_DEFAULT_TOPIC is already unguessable, seed keeps it."""
+    monkeypatch.setattr(settings, "ntfy_default_topic", "jobs-configuredtopic01")
+    seed()
+    target = seed_scope.scalar(
+        select(NotificationTarget).where(NotificationTarget.name == "Default ntfy")
+    )
+    assert target is not None
+    assert target.config["topic"] == "jobs-configuredtopic01"
 
 
 def test_seed_is_idempotent(seed_scope: Session) -> None:

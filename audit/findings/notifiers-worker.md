@@ -56,7 +56,9 @@ This area covers the notification adapters (Slack, Discord, Telegram, ntfy, webh
 
 <a id="ntf-06"></a>
 ### NTF-06 — Default ntfy topic 'headstart-change-me' is a guessable public channel with no entropy requirement, leaking PII
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: medium (3/3 verifiers) · Effort: S · WS31
+⚪ **LOW** · 🔒 security · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/149)) · Confidence: medium (3/3 verifiers) · Effort: S · WS31
+
+**Update (2026-07-11).** Fixed: `TargetService` rejects guessable ntfy topics (empty, `headstart-change-me` / `change-me`, length &lt; 16); `just seed` replaces a guessable `NTFY_DEFAULT_TOPIC` with `jobs-<token_hex(8)>`; Targets/onboarding UI pre-fills a high-entropy topic and documents that topics are secrets.
 
 > Merged from NTF-06 (uid 147) and NTF-07 (uid 152): duplicate records for the same seeded default ntfy topic / missing entropy enforcement.
 

@@ -75,7 +75,7 @@ def test_target_test_endpoint_sends_sample(client: TestClient) -> None:
     headers = register_and_login(client, "target-test@example.com")
     target_id = client.post(
         "/api/v1/targets",
-        json={"name": "Phone", "type": "ntfy", "config": {"topic": "abc"}},
+        json={"name": "Phone", "type": "ntfy", "config": {"topic": "jobs-a1b2c3d4e5f67890"}},
         headers=headers,
     ).json()["id"]
 

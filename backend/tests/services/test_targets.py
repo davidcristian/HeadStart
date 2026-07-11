@@ -11,6 +11,8 @@ from app.notifiers.types import DeliveryResult
 from app.schemas.target import TargetCreate, TargetUpdate
 from app.services.targets import TargetService
 
+_SAFE_TOPIC = "jobs-a1b2c3d4e5f67890"
+
 
 def _pro_user(db_session: Session, email: str = "targets@example.com") -> User:
     user = User(email=email, password_hash="x", plan="pro")
@@ -31,7 +33,7 @@ def test_create_lists_and_deletes_target(db_session: Session) -> None:
 
     target = service.create(
         user.id,
-        TargetCreate(name="Ntfy", type="ntfy", config={"topic": "jobs"}),
+        TargetCreate(name="Ntfy", type="ntfy", config={"topic": _SAFE_TOPIC}),
     )
     assert target.id is not None
     assert service.list_all(user.id) == [target]
@@ -50,10 +52,38 @@ def test_create_rejects_unknown_type(db_session: Session) -> None:
         )
 
 
+def test_create_rejects_guessable_ntfy_topic(db_session: Session) -> None:
+    """NTF-06: placeholder / short topics must not become live targets."""
+    user = _pro_user(db_session)
+    service = TargetService(db_session)
+    for topic in ("headstart-change-me", "jobs", "my-topic-change-me", ""):
+        with pytest.raises(ValidationError, match="unguessable"):
+            service.create(
+                user.id,
+                TargetCreate(name="Bad ntfy", type="ntfy", config={"topic": topic}),
+            )
+
+
+def test_update_rejects_guessable_ntfy_topic(db_session: Session) -> None:
+    user = _pro_user(db_session)
+    service = TargetService(db_session)
+    target = service.create(
+        user.id, TargetCreate(name="Ok", type="ntfy", config={"topic": _SAFE_TOPIC})
+    )
+    with pytest.raises(ValidationError, match="unguessable"):
+        service.update(
+            target.id,
+            user.id,
+            TargetUpdate(config={"topic": "headstart-change-me"}),
+        )
+
+
 def test_update_changes_name_only(db_session: Session) -> None:
     user = _pro_user(db_session)
     service = TargetService(db_session)
-    target = service.create(user.id, TargetCreate(name="Old", type="ntfy", config={}))
+    target = service.create(
+        user.id, TargetCreate(name="Old", type="ntfy", config={"topic": _SAFE_TOPIC})
+    )
 
     updated = service.update(target.id, user.id, TargetUpdate(name="New"))
     assert updated.name == "New"
@@ -63,7 +93,9 @@ def test_update_changes_name_only(db_session: Session) -> None:
 def test_update_changes_type_revalidates(db_session: Session) -> None:
     user = _pro_user(db_session)
     service = TargetService(db_session)
-    target = service.create(user.id, TargetCreate(name="Chan", type="ntfy", config={}))
+    target = service.create(
+        user.id, TargetCreate(name="Chan", type="ntfy", config={"topic": _SAFE_TOPIC})
+    )
 
     updated = service.update(target.id, user.id, TargetUpdate(type="slack"))
     assert updated.type == "slack"
@@ -72,7 +104,9 @@ def test_update_changes_type_revalidates(db_session: Session) -> None:
 def test_update_rejects_unknown_type(db_session: Session) -> None:
     user = _pro_user(db_session)
     service = TargetService(db_session)
-    target = service.create(user.id, TargetCreate(name="Chan", type="ntfy", config={}))
+    target = service.create(
+        user.id, TargetCreate(name="Chan", type="ntfy", config={"topic": _SAFE_TOPIC})
+    )
 
     with pytest.raises(ValidationError, match="Unknown target type"):
         service.update(target.id, user.id, TargetUpdate(type="nope"))
@@ -81,7 +115,9 @@ def test_update_rejects_unknown_type(db_session: Session) -> None:
 def test_send_test_uses_notifier(db_session: Session) -> None:
     user = _pro_user(db_session)
     service = TargetService(db_session)
-    target = service.create(user.id, TargetCreate(name="Chan", type="ntfy", config={"topic": "t"}))
+    target = service.create(
+        user.id, TargetCreate(name="Chan", type="ntfy", config={"topic": _SAFE_TOPIC})
+    )
 
     mock_notifier = MagicMock()
     mock_notifier.send.return_value = [DeliveryResult(external_id="test", status="sent")]

@@ -12,7 +12,12 @@ export const STEPS: { key: Step; label: string }[] = [
 ];
 
 export const NOTIFIER_DEFAULTS: Record<string, Json> = {
-  ntfy: { server_url: "https://ntfy.sh", topic: "", priority: "default" },
+  // Pre-fill a high-entropy topic so onboarding never submits a guessable channel (NTF-06).
+  ntfy: {
+    server_url: "https://ntfy.sh",
+    topic: `jobs-${crypto.randomUUID().replaceAll("-", "").slice(0, 16)}`,
+    priority: "default",
+  },
   email: { to: "" },
   slack: { webhook_url: "" },
   discord: { webhook_url: "" },
@@ -21,7 +26,7 @@ export const NOTIFIER_DEFAULTS: Record<string, Json> = {
 };
 
 export const NOTIFIER_HINTS: Record<string, string> = {
-  ntfy: "Subscribe to your topic in the ntfy app, or visit ntfy.sh/your-topic in a browser.",
+  ntfy: "Topic is a secret (≥16 chars). Subscribe in the ntfy app or at ntfy.sh/<topic>; optional auth token recommended.",
   email: "Requires SMTP_* env vars on the server.",
   slack: "Paste an incoming webhook URL from your Slack workspace.",
   discord: "Paste a channel webhook URL from your Discord server.",

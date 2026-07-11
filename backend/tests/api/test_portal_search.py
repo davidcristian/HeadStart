@@ -102,7 +102,7 @@ def test_portal_subscribe_creates_source_and_search(client: TestClient) -> None:
     headers = _pro_user_headers(client, "portal-subscribe@example.com")
     target_id = client.post(
         "/api/v1/targets",
-        json={"name": "Phone", "type": "ntfy", "config": {"topic": "jobs"}},
+        json={"name": "Phone", "type": "ntfy", "config": {"topic": "jobs-a1b2c3d4e5f67890"}},
         headers=headers,
     ).json()["id"]
 
@@ -134,7 +134,7 @@ def test_portal_subscribe_skips_duplicate_search(client: TestClient) -> None:
     headers = _pro_user_headers(client, "portal-dup@example.com")
     target_id = client.post(
         "/api/v1/targets",
-        json={"name": "Phone", "type": "ntfy", "config": {"topic": "jobs"}},
+        json={"name": "Phone", "type": "ntfy", "config": {"topic": "jobs-a1b2c3d4e5f67890"}},
         headers=headers,
     ).json()["id"]
 

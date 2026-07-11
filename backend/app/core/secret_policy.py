@@ -14,6 +14,7 @@ file-length cap while the policy has one obvious home.
 
 from __future__ import annotations
 
+import secrets
 from urllib.parse import urlparse
 
 # Placeholder secrets shipped for local dev convenience. Used as the field
@@ -26,6 +27,11 @@ DEV_NTFY_DEFAULT_TOPIC = "headstart-change-me"
 # yields 44 urlsafe chars; openssl rand -hex 32 yields 64. Short custom strings
 # remain brute-forceable even after scrypt stretching.
 MIN_CREDENTIALS_SECRET_KEY_LEN = 32
+
+# On ntfy.sh the topic name is the capability. Reject placeholders and short
+# topics so a seeded/UI default cannot publish PII to a guessable public channel
+# (NTF-06). 16 hex chars ≈ openssl rand -hex 8 (matches deploy docs).
+MIN_NTFY_TOPIC_LEN = 16
 
 _LOCAL_ENVIRONMENTS = frozenset({"local", "test"})
 
@@ -70,12 +76,39 @@ def assert_smtp_configured_for_environment(environment: str, smtp_host: str) -> 
     )
 
 
+def is_guessable_ntfy_topic(topic: str) -> bool:
+    """True for empty, placeholder, or short topics that are unsafe on public ntfy."""
+    cleaned = topic.strip()
+    if not cleaned:
+        return True
+    if cleaned == DEV_NTFY_DEFAULT_TOPIC:
+        return True
+    if "change-me" in cleaned.lower():
+        return True
+    return len(cleaned) < MIN_NTFY_TOPIC_LEN
+
+
+def assert_ntfy_topic_not_guessable(topic: str) -> None:
+    """Raise ``ValueError`` when a target/seed topic is a placeholder or too short."""
+    if not is_guessable_ntfy_topic(topic):
+        return
+    raise ValueError(
+        "ntfy topic must be an unguessable secret (not empty, not a change-me "
+        f"placeholder, and at least {MIN_NTFY_TOPIC_LEN} characters); "
+        "on ntfy.sh the topic name is the capability — prefer an auth token too."
+    )
+
+
+def generate_ntfy_topic() -> str:
+    """Return a high-entropy topic suitable for public ntfy.sh (NTF-06)."""
+    return f"jobs-{secrets.token_hex(8)}"
+
+
 def assert_ntfy_topic_safe_for_environment(environment: str, ntfy_default_topic: str) -> None:
     """Raise ``ValueError`` if a non-local env keeps the guessable ntfy topic default."""
     if is_local_environment(environment):
         return
-    topic = ntfy_default_topic.strip()
-    if topic and topic != DEV_NTFY_DEFAULT_TOPIC and "change-me" not in topic.lower():
+    if not is_guessable_ntfy_topic(ntfy_default_topic):
         return
     raise ValueError(
         f"NTFY_DEFAULT_TOPIC must be set to an unguessable value when "

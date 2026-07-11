@@ -81,7 +81,7 @@ def test_free_plan_blocks_second_target(client: TestClient) -> None:
     headers = _free_user_headers(client, "limits-targets@example.com")
     first = client.post(
         "/api/v1/targets",
-        json={"name": "Phone", "type": "ntfy", "config": {"topic": "abc"}},
+        json={"name": "Phone", "type": "ntfy", "config": {"topic": "jobs-a1b2c3d4e5f67890"}},
         headers=headers,
     )
     assert first.status_code == 201

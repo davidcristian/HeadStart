@@ -13,7 +13,8 @@ const TYPE_DEFAULTS: Record<string, Json> = {
   email: { to: "you@example.com" },
   ntfy: {
     server_url: "https://ntfy.sh",
-    topic: "headstart-change-me",
+    // High-entropy default so Create never ships the public headstart-change-me topic (NTF-06).
+    topic: `jobs-${crypto.randomUUID().replaceAll("-", "").slice(0, 16)}`,
     priority: "default",
   },
   slack: {
@@ -34,7 +35,7 @@ const TYPE_DEFAULTS: Record<string, Json> = {
 
 const TYPE_HINTS: Record<string, string> = {
   email: "For email: to (recipient address). Requires SMTP_* env vars on the server.",
-  ntfy: "For ntfy: server_url, topic, priority.",
+  ntfy: "For ntfy: server_url, topic (≥16 chars, treat as a secret), optional token (recommended), priority.",
   slack: "For Slack: webhook_url (incoming webhook URL from your Slack workspace).",
   discord: "For Discord: webhook_url (channel webhook URL from your Discord server).",
   telegram: "For Telegram: bot_token (from @BotFather) and chat_id (your user or group id).",

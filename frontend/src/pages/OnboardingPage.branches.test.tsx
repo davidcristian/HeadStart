@@ -96,7 +96,7 @@ describe("OnboardingPage branch coverage", () => {
 
     // Fill the required ntfy topic so the target form can submit.
     fireEvent.change(screen.getByLabelText("ntfy topic", { exact: false }), {
-      target: { value: "my-job-alerts" },
+      target: { value: "jobs-a1b2c3d4e5f67890" },
     });
 
     // Submit target -> Search step (TargetStep onSubmit).

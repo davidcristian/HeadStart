@@ -1,7 +1,8 @@
 """Seed example data for local development.
 
 Idempotent: safe to run repeatedly. Creates a demo account that owns a default
-ntfy target (from settings), one example Greenhouse source, and a disabled
+ntfy target (from settings, or a random high-entropy topic when the configured
+default is guessable — NTF-06), one example Greenhouse source, and a disabled
 example search. The search is left disabled so it never sends surprise
 notifications before you've set your own ntfy topic and reviewed it.
 
@@ -17,6 +18,7 @@ from sqlalchemy import select
 from app.core.config import settings
 from app.core.db import session_scope
 from app.core.logging import configure_logging, get_logger
+from app.core.secret_policy import generate_ntfy_topic, is_guessable_ntfy_topic
 from app.core.security import hash_password
 from app.models.base import utcnow
 from app.models.notification_target import NotificationTarget
@@ -25,6 +27,20 @@ from app.models.source import Source
 from app.models.user import User
 
 logger = get_logger(__name__)
+
+
+def _seed_ntfy_topic() -> str:
+    """Prefer configured topic; replace guessable placeholders with a random one (NTF-06)."""
+    configured = settings.ntfy_default_topic
+    if not is_guessable_ntfy_topic(configured):
+        return configured.strip()
+    topic = generate_ntfy_topic()
+    logger.warning(
+        "NTFY_DEFAULT_TOPIC is guessable (%r); seeding ntfy target with %s instead",
+        configured,
+        topic,
+    )
+    return topic
 
 
 def seed() -> None:
@@ -54,19 +70,20 @@ def seed() -> None:
             .where(NotificationTarget.name == "Default ntfy")
         )
         if target is None:
+            topic = _seed_ntfy_topic()
             target = NotificationTarget(
                 user_id=user.id,
                 name="Default ntfy",
                 type="ntfy",
                 config={
                     "server_url": settings.ntfy_default_server_url,
-                    "topic": settings.ntfy_default_topic,
+                    "topic": topic,
                     "priority": "default",
                 },
             )
             session.add(target)
             session.flush()
-            logger.info("Created default ntfy target (topic=%s)", settings.ntfy_default_topic)
+            logger.info("Created default ntfy target (topic=%s)", topic)
 
         source = session.scalar(
             select(Source)

@@ -109,7 +109,7 @@ def test_search_lifecycle(client: TestClient, auth_headers: dict[str, str]) -> N
     ).json()["id"]
     target_id = client.post(
         "/api/v1/targets",
-        json={"name": "Phone", "type": "ntfy", "config": {"topic": "abc"}},
+        json={"name": "Phone", "type": "ntfy", "config": {"topic": "jobs-a1b2c3d4e5f67890"}},
         headers=auth_headers,
     ).json()["id"]
 

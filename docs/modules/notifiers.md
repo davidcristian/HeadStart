@@ -40,13 +40,17 @@ is unchanged.
 ## ntfy adapter
 
 **Key:** `ntfy`. Config: `{ "server_url": "https://ntfy.sh", "topic": "...",
-"priority": "default" }`.
+"priority": "default", "token": "…" }` (`token` optional).
 
 `NTFY_DEFAULT_TOPIC` (and `NTFY_DEFAULT_SERVER_URL`) seed the demo notification
 target via `just seed`. Outside `local`/`test`, startup rejects the guessable
 `headstart-change-me` placeholder and any topic containing `change-me`; Terraform
 similarly requires an explicit unguessable `ntfy_default_topic` with no default
-(OPS-16). On ntfy.sh the topic name is the capability — treat it like a secret.
+(OPS-16). **NTF-06:** `TargetService` also rejects empty / `change-me` /
+under-16-character topics on create/update, and `just seed` replaces a guessable
+`NTFY_DEFAULT_TOPIC` with a random `jobs-<16 hex>` topic (logged) so the demo
+target never publishes to a public channel. On ntfy.sh the topic name is the
+capability — treat it like a secret and prefer an auth token.
 
 For each new job it POSTs to `{server_url}/{topic}` with headers:
 

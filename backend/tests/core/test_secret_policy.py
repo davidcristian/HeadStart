@@ -63,6 +63,34 @@ def test_assert_ntfy_topic_rejects_change_me_substring() -> None:
         secret_policy.assert_ntfy_topic_safe_for_environment("production", "alerts-CHANGE-ME-now")
 
 
+def test_assert_ntfy_topic_rejects_short_outside_local() -> None:
+    """NTF-06: non-local boots also reject under-length topics."""
+    with pytest.raises(ValueError, match="NTFY_DEFAULT_TOPIC"):
+        secret_policy.assert_ntfy_topic_safe_for_environment("production", "short-topic")
+
+
+def test_is_guessable_ntfy_topic() -> None:
+    assert secret_policy.is_guessable_ntfy_topic("") is True
+    assert secret_policy.is_guessable_ntfy_topic("  ") is True
+    assert secret_policy.is_guessable_ntfy_topic(secret_policy.DEV_NTFY_DEFAULT_TOPIC) is True
+    assert secret_policy.is_guessable_ntfy_topic("my-change-me-topic") is True
+    assert secret_policy.is_guessable_ntfy_topic("too-short") is True
+    assert secret_policy.is_guessable_ntfy_topic("jobs-a1b2c3d4e5f67890") is False
+
+
+def test_assert_ntfy_topic_not_guessable() -> None:
+    secret_policy.assert_ntfy_topic_not_guessable("jobs-a1b2c3d4e5f67890")
+    with pytest.raises(ValueError, match="unguessable"):
+        secret_policy.assert_ntfy_topic_not_guessable("headstart-change-me")
+
+
+def test_generate_ntfy_topic_is_unguessable() -> None:
+    topic = secret_policy.generate_ntfy_topic()
+    assert topic.startswith("jobs-")
+    assert secret_policy.is_guessable_ntfy_topic(topic) is False
+    assert topic != secret_policy.generate_ntfy_topic()
+
+
 def test_assert_boot_safe_runs_all_guards() -> None:
     secret_policy.assert_boot_safe_for_environment(
         "production",

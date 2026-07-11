@@ -96,7 +96,7 @@ def test_users_cannot_see_each_others_targets(client: TestClient) -> None:
 
     target_id = client.post(
         "/api/v1/targets",
-        json={"name": "Phone", "type": "ntfy", "config": {"topic": "abc"}},
+        json={"name": "Phone", "type": "ntfy", "config": {"topic": "jobs-a1b2c3d4e5f67890"}},
         headers=alice,
     ).json()["id"]
 
