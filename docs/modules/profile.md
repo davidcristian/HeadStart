@@ -94,6 +94,10 @@ queues curation + compile on a Celery worker (API-01); poll
 (prefers `tectonic`, falls back to `pdflatex` with `-no-shell-escape` and a
 minimal env that forces `openin_any=p` / `openout_any=p` / `shell_escape=f` so
 host `texmf.cnf` defaults cannot re-enable shell escape or absolute-path reads).
+That env is an allowlist (`PATH`, `HOME`, `TMPDIR`/`TEMP`/`TMP`, `LANG`/`LC_ALL`
+plus the TeX policy vars) — app secrets such as `JWT_SECRET`,
+`CREDENTIALS_SECRET_KEY`, DB passwords, and provider API keys are never
+forwarded to the compiler child (AIA-11).
 On POSIX, the compiler child also gets `RLIMIT_AS` (512 MiB), `RLIMIT_CPU`
 (ceil of the compile timeout), and `RLIMIT_NPROC` (512) via `preexec_fn` so a
 pathological template cannot exhaust worker RAM/CPU/processes for the full

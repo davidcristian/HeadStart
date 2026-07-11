@@ -10,6 +10,7 @@ from app.core.exceptions import ValidationError
 from app.resumes.compile import (
     _COMPILER_RLIMIT_AS_BYTES,
     _COMPILER_RLIMIT_NPROC,
+    _compiler_env,
     _compiler_preexec,
     _run_compiler_workspace,
     _try_set_rlimit,
@@ -117,6 +118,33 @@ def test_compile_latex_workspace_reports_oserror(monkeypatch) -> None:
         compile_latex_workspace({"main.tex": b"tex"}, entrypoint="main.tex", commands=("tectonic",))
 
 
+def test_compiler_env_allowlists_runtime_keys_only(monkeypatch) -> None:
+    """Compiler children must not inherit app secrets (AIA-11)."""
+    monkeypatch.setenv("PATH", "/usr/bin")
+    monkeypatch.setenv("HOME", "/home/headstart")
+    monkeypatch.setenv("TMPDIR", "/tmp")
+    monkeypatch.setenv("LANG", "C.UTF-8")
+    monkeypatch.setenv("JWT_SECRET", "should-not-reach-compiler")
+    monkeypatch.setenv("CREDENTIALS_SECRET_KEY", "should-not-reach-compiler")
+    monkeypatch.setenv("POSTGRES_PASSWORD", "should-not-reach-compiler")
+    monkeypatch.setenv("OPENAI_API_KEY", "should-not-reach-compiler")
+    monkeypatch.setenv("TEXMFHOME", "/should-not-reach-compiler")
+
+    env = _compiler_env()
+    assert env["PATH"] == "/usr/bin"
+    assert env["HOME"] == "/home/headstart"
+    assert env["TMPDIR"] == "/tmp"
+    assert env["LANG"] == "C.UTF-8"
+    assert env["openin_any"] == "p"
+    assert env["openout_any"] == "p"
+    assert env["shell_escape"] == "f"
+    assert "JWT_SECRET" not in env
+    assert "CREDENTIALS_SECRET_KEY" not in env
+    assert "POSTGRES_PASSWORD" not in env
+    assert "OPENAI_API_KEY" not in env
+    assert "TEXMFHOME" not in env
+
+
 def test_run_compiler_workspace_tectonic_success(monkeypatch, tmp_path) -> None:
     captured_env: dict[str, str] = {}
 
@@ -124,10 +152,14 @@ def test_run_compiler_workspace_tectonic_success(monkeypatch, tmp_path) -> None:
         # tectonic invocation: [exe, "--outdir", dir, texpath]
         assert cmd_args[1] == "--outdir"
         captured_env.update(kwargs.get("env", {}))
+        assert "JWT_SECRET" not in captured_env
+        assert "CREDENTIALS_SECRET_KEY" not in captured_env
         out_dir = Path(cmd_args[2])
         (out_dir / "main.pdf").write_bytes(b"%PDF-tectonic")
         return _FakeProc(returncode=0)
 
+    monkeypatch.setenv("JWT_SECRET", "should-not-reach-compiler")
+    monkeypatch.setenv("CREDENTIALS_SECRET_KEY", "should-not-reach-compiler")
     monkeypatch.setattr("app.resumes.compile.subprocess.run", fake_run)
     pdf = _run_compiler_workspace(
         "/usr/bin/tectonic",

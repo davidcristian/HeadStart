@@ -86,7 +86,7 @@ def _pdf_output_name(entrypoint: str) -> str:
 
 
 def _compiler_env() -> dict[str, str]:
-    """Return a minimal environment for LaTeX subprocesses."""
+    """Build an allowlisted env so the compiler cannot read app secrets (AIA-11)."""
     env = {
         key: value
         for key, value in os.environ.items()

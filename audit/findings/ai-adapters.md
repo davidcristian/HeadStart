@@ -143,7 +143,9 @@ See [AIA-03](#aia-03) — this record (uid 240, `backend/app/resumes/compile.py:
 <a id="aia-11"></a>
 ### AIA-11 — LaTeX subprocess inherits the full parent environment, exposing secrets to the compiler
 
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: medium (3/3 verifiers) · Effort: S · WS27
+⚪ **LOW** · 🔒 security · Status: ✅ done · Confidence: medium (3/3 verifiers) · Effort: S · WS27
+
+**Fix.** `_run_compiler_workspace` already passes `env=_compiler_env()` (shipped with AIA-03 in `0135f08`): only `PATH` / `HOME` / `TMPDIR`/`TEMP`/`TMP` / `LANG`/`LC_ALL` are copied from the parent, then TeX policy vars (`openin_any=p`, `openout_any=p`, `shell_escape=f`) are forced. App secrets (`JWT_SECRET`, `CREDENTIALS_SECRET_KEY`, DB/provider keys) and host `TEXMF*` overrides are never forwarded. Tracker close adds a dedicated allowlist regression plus tectonic-path secret assertions and documents the allowlist in `docs/modules/profile.md` — [PR](https://github.com/davidcristian/HeadStart/pull/133).
 
 **Locations:** `backend/app/resumes/compile.py:84` and `:92` (`_run_compiler_workspace`).
 
