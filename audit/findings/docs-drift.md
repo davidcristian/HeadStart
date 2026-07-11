@@ -192,7 +192,9 @@ Merged: DOC-18 (uid 233) reported the same omission and is folded in here.
 
 <a id="doc-03"></a>
 ### DOC-03 — launch-checklist: LinkedIn/Indeed resume upload "not automated" contradicts code
-⚪ **LOW** · 📝 doc · Status: ☐ open · Confidence: certain (3/3 verifiers) · Effort: XS · WS25
+⚪ **LOW** · 📝 doc · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/128)) · Confidence: certain (3/3 verifiers) · Effort: XS · WS25
+
+**Fix.** `docs/launch-checklist.md` §7 now states that Indeed-hosted live submit Base64-embeds `applicant.resume.file` and LinkedIn-hosted Easy Apply uploads via Ambry when a profile resume is stored (`resumeText` / plain text only as fallback). The Resume files row lists both adapters.
 
 Merged: DOC-04 (uid 126) is a near-subset covering only the LinkedIn half and is folded in here.
 
