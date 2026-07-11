@@ -1,5 +1,6 @@
 """Tests for LaTeX PDF compilation helpers."""
 
+import resource
 import subprocess
 from pathlib import Path
 
@@ -7,7 +8,11 @@ import pytest
 
 from app.core.exceptions import ValidationError
 from app.resumes.compile import (
+    _COMPILER_RLIMIT_AS_BYTES,
+    _COMPILER_RLIMIT_NPROC,
+    _compiler_preexec,
     _run_compiler_workspace,
+    _try_set_rlimit,
     compile_latex_to_pdf,
     compile_latex_workspace,
 )
@@ -218,3 +223,120 @@ def test_run_compiler_workspace_returns_none_when_pdf_missing(monkeypatch) -> No
         "/usr/bin/tectonic", "tectonic", {"main.tex": b"x"}, "main.tex", timeout=5.0
     )
     assert result is None
+
+
+def test_run_compiler_workspace_passes_rlimit_preexec_on_posix(monkeypatch) -> None:
+    """Compiler children get AS/CPU/NPROC rlimits via preexec_fn (AIA-10)."""
+    captured: dict[str, object] = {}
+
+    def fake_run(cmd_args, **kwargs):
+        captured["preexec_fn"] = kwargs.get("preexec_fn")
+        out_dir = Path(cmd_args[2])
+        (out_dir / "main.pdf").write_bytes(b"%PDF-rlimit")
+        return _FakeProc(returncode=0)
+
+    monkeypatch.setattr("app.resumes.compile._posix_rlimits_supported", lambda: True)
+    monkeypatch.setattr("app.resumes.compile.subprocess.run", fake_run)
+    pdf = _run_compiler_workspace(
+        "/usr/bin/tectonic", "tectonic", {"main.tex": b"x"}, "main.tex", timeout=7.2
+    )
+    assert pdf == b"%PDF-rlimit"
+    preexec = captured["preexec_fn"]
+    assert callable(preexec)
+
+    calls: list[tuple[int, tuple[int, int]]] = []
+
+    def fake_getrlimit(which: int) -> tuple[int, int]:
+        return (resource.RLIM_INFINITY, resource.RLIM_INFINITY)
+
+    def fake_setrlimit(which: int, limits: tuple[int, int]) -> None:
+        calls.append((which, limits))
+
+    monkeypatch.setattr("app.resumes.compile.resource.getrlimit", fake_getrlimit)
+    monkeypatch.setattr("app.resumes.compile.resource.setrlimit", fake_setrlimit)
+    preexec()
+    by_which = dict(calls)
+    assert by_which[resource.RLIMIT_AS] == (_COMPILER_RLIMIT_AS_BYTES, _COMPILER_RLIMIT_AS_BYTES)
+    assert by_which[resource.RLIMIT_CPU] == (8, 8)  # ceil(7.2)
+    assert by_which[resource.RLIMIT_NPROC] == (_COMPILER_RLIMIT_NPROC, _COMPILER_RLIMIT_NPROC)
+
+
+def test_run_compiler_workspace_omits_preexec_on_non_posix(monkeypatch) -> None:
+    captured: dict[str, object] = {}
+
+    def fake_run(cmd_args, **kwargs):
+        captured["preexec_fn"] = kwargs.get("preexec_fn")
+        out_dir = Path(kwargs["cwd"])
+        (out_dir / "main.pdf").write_bytes(b"%PDF-win")
+        return _FakeProc(returncode=0)
+
+    monkeypatch.setattr("app.resumes.compile._posix_rlimits_supported", lambda: False)
+    monkeypatch.setattr("app.resumes.compile.subprocess.run", fake_run)
+    pdf = _run_compiler_workspace(
+        "/usr/bin/pdflatex", "pdflatex", {"main.tex": b"x"}, "main.tex", timeout=5.0
+    )
+    assert pdf == b"%PDF-win"
+    assert captured["preexec_fn"] is None
+
+
+def test_try_set_rlimit_caps_to_finite_hard(monkeypatch) -> None:
+    calls: list[tuple[int, tuple[int, int]]] = []
+    monkeypatch.setattr(
+        "app.resumes.compile.resource.getrlimit",
+        lambda which: (100, 200),
+    )
+    monkeypatch.setattr(
+        "app.resumes.compile.resource.setrlimit",
+        lambda which, limits: calls.append((which, limits)),
+    )
+    _try_set_rlimit(resource.RLIMIT_CPU, 500)
+    assert calls == [(resource.RLIMIT_CPU, (200, 200))]
+
+
+def test_try_set_rlimit_keeps_ceiling_below_hard(monkeypatch) -> None:
+    calls: list[tuple[int, tuple[int, int]]] = []
+    monkeypatch.setattr(
+        "app.resumes.compile.resource.getrlimit",
+        lambda which: (100, 200),
+    )
+    monkeypatch.setattr(
+        "app.resumes.compile.resource.setrlimit",
+        lambda which, limits: calls.append((which, limits)),
+    )
+    _try_set_rlimit(resource.RLIMIT_CPU, 50)
+    assert calls == [(resource.RLIMIT_CPU, (50, 200))]
+
+
+def test_try_set_rlimit_ignores_getrlimit_errors(monkeypatch) -> None:
+    monkeypatch.setattr(
+        "app.resumes.compile.resource.getrlimit",
+        lambda which: (_ for _ in ()).throw(OSError("unsupported")),
+    )
+    _try_set_rlimit(resource.RLIMIT_AS, 1)  # must not raise
+
+
+def test_try_set_rlimit_ignores_setrlimit_errors(monkeypatch) -> None:
+    monkeypatch.setattr(
+        "app.resumes.compile.resource.getrlimit",
+        lambda which: (resource.RLIM_INFINITY, resource.RLIM_INFINITY),
+    )
+    monkeypatch.setattr(
+        "app.resumes.compile.resource.setrlimit",
+        lambda which, limits: (_ for _ in ()).throw(ValueError("denied")),
+    )
+    _try_set_rlimit(resource.RLIMIT_NPROC, 10)  # must not raise
+
+
+def test_compiler_preexec_cpu_seconds_at_least_one(monkeypatch) -> None:
+    calls: list[tuple[int, tuple[int, int]]] = []
+    monkeypatch.setattr(
+        "app.resumes.compile.resource.getrlimit",
+        lambda which: (resource.RLIM_INFINITY, resource.RLIM_INFINITY),
+    )
+    monkeypatch.setattr(
+        "app.resumes.compile.resource.setrlimit",
+        lambda which, limits: calls.append((which, limits)),
+    )
+    _compiler_preexec(0.1)()
+    cpu = next(lim for which, lim in calls if which == resource.RLIMIT_CPU)
+    assert cpu == (1, 1)

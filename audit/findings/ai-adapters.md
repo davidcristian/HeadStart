@@ -124,7 +124,9 @@ See [AIA-03](#aia-03) — this record (uid 240, `backend/app/resumes/compile.py:
 <a id="aia-10"></a>
 ### AIA-10 — LaTeX subprocess has a wall-clock timeout but no CPU / memory / process limits
 
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: medium (3/3 verifiers) · Effort: M · WS27
+⚪ **LOW** · 🔒 security · Status: ✅ done · Confidence: medium (3/3 verifiers) · Effort: M · WS27
+
+**Fix.** `_run_compiler_workspace` passes a POSIX `preexec_fn` that applies `RLIMIT_AS` (512 MiB), `RLIMIT_CPU` (ceil of the compile timeout), and `RLIMIT_NPROC` (512) before `tectonic`/`pdflatex` exec; wall-clock `timeout` is unchanged. Non-POSIX hosts skip `preexec_fn`.
 
 **Locations:** `backend/app/resumes/compile.py:84` (`_run_compiler_workspace`).
 

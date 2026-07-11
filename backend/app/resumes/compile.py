@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import math
 import os
+import resource
 import shutil
 import subprocess
 import tempfile
+from collections.abc import Callable
 from pathlib import Path
 
 from app.core.exceptions import ValidationError
@@ -15,6 +18,11 @@ _COMPILER_ENV = {
     "openout_any": "p",
     "shell_escape": "f",
 }
+
+# Soft ceilings for the compiler child (AIA-10). NPROC is high enough not to
+# collide with a busy Celery worker UID while still bounding fork bombs.
+_COMPILER_RLIMIT_AS_BYTES = 512 * 1024 * 1024
+_COMPILER_RLIMIT_NPROC = 512
 
 
 def compile_latex_to_pdf(
@@ -88,6 +96,39 @@ def _compiler_env() -> dict[str, str]:
     return env
 
 
+def _posix_rlimits_supported() -> bool:
+    """Whether compiler children can receive preexec_fn rlimits."""
+    return os.name == "posix"
+
+
+def _try_set_rlimit(which: int, ceiling: int) -> None:
+    """Lower a resource soft ceiling for the compiler child when the OS allows it."""
+    try:
+        _soft, hard = resource.getrlimit(which)
+    except (OSError, ValueError):
+        return
+    limit = ceiling
+    if hard != resource.RLIM_INFINITY:
+        limit = min(limit, hard)
+    new_hard = hard if hard != resource.RLIM_INFINITY else limit
+    try:
+        resource.setrlimit(which, (limit, new_hard))
+    except (OSError, ValueError):
+        return
+
+
+def _compiler_preexec(timeout: float) -> Callable[[], None]:
+    """Build a preexec_fn that applies AS/CPU/NPROC rlimits (AIA-10)."""
+    cpu_seconds = max(1, math.ceil(timeout))
+
+    def _apply_compiler_rlimits() -> None:
+        _try_set_rlimit(resource.RLIMIT_AS, _COMPILER_RLIMIT_AS_BYTES)
+        _try_set_rlimit(resource.RLIMIT_CPU, cpu_seconds)
+        _try_set_rlimit(resource.RLIMIT_NPROC, _COMPILER_RLIMIT_NPROC)
+
+    return _apply_compiler_rlimits
+
+
 def _run_compiler_workspace(
     exe: str,
     cmd: str,
@@ -104,6 +145,7 @@ def _run_compiler_workspace(
             out_path.write_bytes(data)
         tex_path = tmp_path / entrypoint
         env = _compiler_env()
+        preexec = _compiler_preexec(timeout) if _posix_rlimits_supported() else None
         if cmd == "tectonic":
             proc = subprocess.run(
                 [exe, "--outdir", str(tex_path.parent), str(tex_path)],
@@ -112,6 +154,7 @@ def _run_compiler_workspace(
                 text=True,
                 check=False,
                 env=env,
+                preexec_fn=preexec,
             )
         else:
             proc = subprocess.run(
@@ -129,6 +172,7 @@ def _run_compiler_workspace(
                 check=False,
                 cwd=tex_path.parent,
                 env=env,
+                preexec_fn=preexec,
             )
         if proc.returncode != 0:
             stderr = (proc.stderr or proc.stdout or "").strip()

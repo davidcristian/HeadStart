@@ -52,7 +52,7 @@ never touch the DB directly (services use repositories). See
 | PATCH  | `/jobs/{id}`          | Update triage status (`seen` / `applied` / `archived`) |
 | POST   | `/jobs/{id}/apply`    | Submit or preview an auto-apply (`dry_run`, optional `cover_letter`, optional `tailored_resume_b64` or `tailored_resume_artifact_id`). Live submit returns `queued` + `application_log_id`; poll `GET /application-logs/{id}`. |
 | POST   | `/jobs/{id}/generate-cover-letter` | Queue a tailored cover letter (`status=queued`). Poll `GET /document-generations/{id}` until `ready`/`failed`; ready `result` has `cover_letter`, `provider`, `fallback`. |
-| POST   | `/jobs/{id}/generate-resume` | Queue a tailored resume PDF (`status=queued`). Poll `GET /document-generations/{id}`; ready `result` has `pdf_b64`, `artifact_id`, `provider`, `fallback`. Compiles in the worker with `tectonic`/`pdflatex` (`-no-shell-escape` + restricted env). |
+| POST   | `/jobs/{id}/generate-resume` | Queue a tailored resume PDF (`status=queued`). Poll `GET /document-generations/{id}`; ready `result` has `pdf_b64`, `artifact_id`, `provider`, `fallback`. Compiles in the worker with `tectonic`/`pdflatex` (`-no-shell-escape` + restricted env + POSIX `RLIMIT_AS`/`CPU`/`NPROC`). |
 | GET    | `/document-generations/{id}` | Poll one queued resume/cover-letter generation until terminal status |
 | GET    | `/application-logs` | List recent auto-apply attempts (`limit`, default 100) |
 | GET    | `/application-logs/{id}` | Poll one queued/live apply log until terminal status |

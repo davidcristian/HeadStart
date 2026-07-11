@@ -94,6 +94,10 @@ queues curation + compile on a Celery worker (API-01); poll
 (prefers `tectonic`, falls back to `pdflatex` with `-no-shell-escape` and a
 minimal env that forces `openin_any=p` / `openout_any=p` / `shell_escape=f` so
 host `texmf.cnf` defaults cannot re-enable shell escape or absolute-path reads).
+On POSIX, the compiler child also gets `RLIMIT_AS` (512 MiB), `RLIMIT_CPU`
+(ceil of the compile timeout), and `RLIMIT_NPROC` (512) via `preexec_fn` so a
+pathological template cannot exhaust worker RAM/CPU/processes for the full
+wall-clock timeout alone (AIA-10).
 The PDF persists in
 `application_artifact` (per-user SHA-256 dedup, Fernet-encrypted). The ready
 `result` includes `artifact_id` for preview/download via
