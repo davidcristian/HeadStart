@@ -210,9 +210,11 @@ Merged: DOC-04 (uid 126) is a near-subset covering only the LinkedIn half and is
 
 <a id="doc-12"></a>
 ### DOC-12 — No ToS/legal-risk disclosure for LinkedIn Voyager & Indeed smartapply automation
-⚪ **LOW** · 📝 doc · Status: ☐ open · Confidence: medium (3/3 verifiers) · Effort: S · WS25
+⚪ **LOW** · 📝 doc · Status: ✅ done · Confidence: medium (3/3 verifiers) · Effort: S · WS25
 
-**Locations:** `docs/modules/appliers.md:607` (`Safety & consent`); plus `docs/launch-checklist.md:108`.
+**Update (2026-07-11).** Closed in [PR](https://github.com/davidcristian/HeadStart/pull/130): `appliers.md` Safety & consent and launch-checklist §7 Safety now state that LinkedIn Voyager / Indeed smartapply cookie automation typically breaches those platforms' User Agreements, is at operator/user own risk, and requires `accept_private_api_risk` (APL-17 gating). Related scrape-side disclosure remains [XCT-19](cross-cutting.md#xct-19).
+
+**Locations:** `docs/modules/appliers.md` (`Safety & consent`); plus `docs/launch-checklist.md` §7 Safety.
 
 **Evidence.** The LinkedIn and Indeed adapters drive private Voyager GraphQL (`linkedin_voyager.py`) and smartapply (`indeed_easy_apply.py:12`) using the user's own session cookies — automated access that both platforms' User Agreements prohibit. The "Safety & consent" section and the launch checklist document only functional limits, never the ToS/legal risk; grep found no ToS/User-Agreement/legal-risk warning in either.
 
