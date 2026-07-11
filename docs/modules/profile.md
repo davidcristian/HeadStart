@@ -78,7 +78,10 @@ metadata is returned on `GET /profile` as `resume_template` (`format`: `single` 
 every `.tex` file in a bundle. `[[experience]]` is substituted verbatim because it
 carries curated `\item`/`\textbf` list markup (the default template wraps it in an
 `itemize`); every other placeholder is a free-text/PII scalar and is LaTeX-escaped
-before substitution. Bundle archives must include `main.tex` or
+before substitution. A regression (`test_default_template_heuristic_render_feeds_compile_workspace`)
+renders the built-in default template with heuristic fields and asserts the compile
+workspace still receives real `\item` rows — service-layer tests that inject a fake
+`compile_fn` cannot catch that over-escape alone (TST-06). Bundle archives must include `main.tex` or
 `resume.tex` (or a single `.tex` file); allowed member types are `.tex`, `.sty`,
 `.cls`, `.bib`, and common image formats. When no template is uploaded, a
 built-in default template is used. Uploaded `.tex` / `.sty` / `.cls` members are

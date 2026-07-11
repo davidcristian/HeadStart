@@ -103,7 +103,7 @@ and documents the no-op contract in `docs/modules/billing.md`.
 
 <a id="tst-06"></a>
 ### TST-06 — Resume tests mock every compile/render path; render→compile contract untested
-⚪ **LOW** · 🧪 test · Status: ☐ open · Confidence: high · Effort: S · WS27
+⚪ **LOW** · 🧪 test · Status: ✅ done · Confidence: high · Effort: S · WS27
 
 **Locations:** `backend/tests/services/test_resumes.py:86` (`test_generate_single_tex_path`); plus `backend/tests/resumes/test_template.py:15`.
 
@@ -112,6 +112,8 @@ and documents the no-op contract in `docs/modules/billing.md`.
 **Failure scenario.** The itemize-breaking regression (`template.py` over-escaping `\item`) ships green because no test renders `default_template_tex` with heuristic experience fields and asserts a valid PDF / surviving `\item`.
 
 **Suggested fix.** Add a test that renders `default_template_tex` with heuristic fields and asserts a real `\item` survives (or an integration compile smoke test when a compiler is present).
+
+**Fix.** AIA-01 already added `test_render_default_template_with_heuristic_fields_keeps_itemize_items`. TST-06 closes the remaining gap with `test_default_template_heuristic_render_feeds_compile_workspace`: real default-template + heuristic render is passed through `compile_latex_to_pdf`, and the mocked compiler workspace asserts surviving `\item` rows (service-layer `compile_fn` fakes cannot hide over-escape).
 
 **Verification.** Confirmed 3/3 adversarial verifiers. `heuristic_fields.experience` contains raw `\item \textbf{...}` which `render_resume_template` passes through `_escape_latex` (escaping backslash/braces), and no test feeds heuristic experience through the default template; the over-escape bug is real and untested — legitimate coverage-theater.
 
