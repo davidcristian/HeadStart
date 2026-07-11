@@ -14,7 +14,7 @@ class JobPosting(BaseModel):
     title: str
     company: str
     location: str = ""
-    url: str
+    url: str              # http(s) only; non-http schemes cleared at ingest (NTF-08)
     posted_at: datetime | None = None
     raw: dict = {}        # original payload, for debugging
 
@@ -23,6 +23,12 @@ class ScrapeContext(BaseModel):
     filters: dict         # arbitrary filters from the search
     config: dict          # merged source default_config + search config
 ```
+
+`JobPosting.url` is validated on construct: empty stays empty; only absolute
+`http`/`https` URLs with a host are kept (`safe_http_job_url` in
+`app/scrapers/url.py`). Non-http schemes (`javascript:`, `data:`, relative
+paths) are cleared to `""` so notifiers never emit poisoned Apply / click
+links from a hostile scraper payload.
 
 ```python
 # app/scrapers/base.py

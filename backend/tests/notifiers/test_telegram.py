@@ -229,6 +229,41 @@ def test_telegram_digest_records_failure() -> None:
     assert "[REDACTED]" in (results[0].error or "")
 
 
+def test_telegram_text_rejects_non_http_apply_url() -> None:
+    # Bypass ingest validation to assert render-side scheme gating (NTF-08).
+    job = JobPosting.model_construct(
+        external_id="1",
+        title="Engineer",
+        company="ACME",
+        location="",
+        url="javascript:alert(1)",
+        summary="",
+        raw={},
+    )
+    text = TelegramNotifier._text(job)
+    assert "Apply" not in text
+    assert "javascript:" not in text
+
+
+def test_telegram_digest_rejects_non_http_apply_url() -> None:
+    job = JobPosting.model_construct(
+        external_id="1",
+        title="Engineer",
+        company="ACME",
+        location="",
+        url="javascript:alert(1)",
+        summary="match",
+        raw={},
+    )
+    payload = TelegramNotifier._digest_payload(
+        "1",
+        NotifyContext(target_type="telegram", config={}, digest=True, search_name="S"),
+        [job],
+    )
+    assert "Apply" not in payload["text"]
+    assert "javascript:" not in payload["text"]
+
+
 def test_telegram_close_behaviour() -> None:
     notifier = TelegramNotifier()
     notifier.close()

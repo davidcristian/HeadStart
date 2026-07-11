@@ -57,7 +57,7 @@ For each new job it POSTs to `{server_url}/{topic}` with headers:
 - `Title`: `"<title> @ <company>"`
 - `Priority`: from config (`min|low|default|high|max`)
 - `Tags`: e.g. `briefcase`
-- `Click`: the job URL (tap-through)
+- `Click`: the job URL when it is absolute http(s) (non-http schemes omitted; NTF-08)
 
 Sends are best-effort per job and recorded in `delivery_log` with status/error.
 In digest mode, one batched push lists every new job in the window. The
@@ -122,9 +122,10 @@ private/loopback addresses (SSRF protection) and POSTs are DNS-pinned via
 Posts one Telegram message per new job via the [Bot API](https://core.telegram.org/bots/api).
 Create a bot with [@BotFather](https://t.me/BotFather), send `/start` to it (or add it to a
 group), then use your numeric chat id in config. Messages use HTML formatting with title,
-company, location, and an Apply link. Digest mode sends one HTML message listing
-all jobs. Outbound Bot API calls are DNS-pinned via `pinned_request` (SSRF
-defense-in-depth even though the host is fixed). On HTTP failure, the bot token is
+company, location, and an Apply link. Apply `href`s are restricted to http(s) (same
+`safe_http_job_url` gate as Slack/Discord) and then HTML-escaped. Digest mode sends one
+HTML message listing all jobs. Outbound Bot API calls are DNS-pinned via `pinned_request`
+(SSRF defense-in-depth even though the host is fixed). On HTTP failure, the bot token is
 redacted from `DeliveryResult.error` and warning logs before persist (the Bot API
 embeds the token in the request URL, which httpx includes in `str(HTTPError)`).
 

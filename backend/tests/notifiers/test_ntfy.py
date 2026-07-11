@@ -111,6 +111,32 @@ def test_ntfy_single_without_url_omits_click() -> None:
     assert captured[0]["message"] == "New job posting"
 
 
+def test_ntfy_rejects_non_http_click_url() -> None:
+    captured: list[dict] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        import json
+
+        captured.append(json.loads(request.content))
+        return httpx.Response(200, json={"id": "abc"})
+
+    notifier = NtfyNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
+    ctx = NotifyContext(target_type="ntfy", config={"topic": "secret"})
+    # Bypass ingest validation to assert render-side scheme gating (NTF-08).
+    job = JobPosting.model_construct(
+        external_id="1",
+        title="Engineer",
+        company="",
+        location="",
+        url="javascript:alert(1)",
+        summary="",
+        raw={},
+    )
+    notifier.send(ctx, [job])
+    assert "click" not in captured[0]
+    assert "javascript:" not in captured[0].get("message", "")
+
+
 def test_ntfy_digest_empty_jobs_returns_empty() -> None:
     notifier = NtfyNotifier(client=httpx.Client())
     ctx = NotifyContext(target_type="ntfy", config={"topic": "secret"}, digest=True)

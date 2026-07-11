@@ -24,6 +24,7 @@ from app.notifiers.base import Notifier, register_notifier
 from app.notifiers.digest_format import digest_plain_body, digest_title
 from app.notifiers.types import DeliveryResult, NotifyContext
 from app.scrapers.types import JobPosting
+from app.scrapers.url import safe_http_job_url
 
 logger = get_logger(__name__)
 
@@ -105,8 +106,9 @@ class NtfyNotifier(Notifier):
             "priority": priority,
             "tags": ["briefcase"],
         }
-        if job.url:
-            payload["click"] = job.url
+        click = safe_http_job_url(job.url) if job.url else None
+        if click:
+            payload["click"] = click
         try:
             resp = pinned_request(self._client, "POST", server_url, json=payload, headers=headers)
             resp.raise_for_status()
@@ -126,7 +128,8 @@ class NtfyNotifier(Notifier):
 
     @staticmethod
     def _message(job: JobPosting) -> str:
-        parts = [p for p in (job.summary, job.location, job.url) if p]
+        url = safe_http_job_url(job.url) if job.url else None
+        parts = [p for p in (job.summary, job.location, url) if p]
         return "\n".join(parts) if parts else "New job posting"
 
     def close(self) -> None:

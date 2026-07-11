@@ -8,7 +8,9 @@ from datetime import datetime
 from hashlib import sha256
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+from app.scrapers.url import safe_http_job_url
 
 
 class JobPosting(BaseModel):
@@ -22,6 +24,14 @@ class JobPosting(BaseModel):
     # app/summarizers/). Not part of the identity hash; purely presentational.
     summary: str = ""
     raw: dict[str, Any] = Field(default_factory=dict)
+
+    @field_validator("url")
+    @classmethod
+    def _http_url_only(cls, value: str) -> str:
+        """Clear non-http(s) apply URLs at ingest so notifiers never see them."""
+        if not value or not str(value).strip():
+            return ""
+        return safe_http_job_url(str(value)) or ""
 
     def content_hash(self) -> str:
         """Stable hash of the identifying fields, used for change detection."""

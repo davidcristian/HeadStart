@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from urllib.parse import urlparse
+from app.scrapers.url import safe_http_job_url
 
 # Slack mrkdwn link form is <url|label>; these break out of the URL segment.
 _SLACK_LINK_BREAKERS = frozenset("<>|")
@@ -33,15 +33,7 @@ def escape_discord_markdown(text: str) -> str:
 
 def safe_http_url(url: str) -> str | None:
     """Return a trimmed http(s) URL with a host, or None if unsafe for links."""
-    stripped = url.strip()
-    if not stripped:
-        return None
-    parsed = urlparse(stripped)
-    if parsed.scheme.lower() not in ("http", "https"):
-        return None
-    if not parsed.netloc:
-        return None
-    return stripped
+    return safe_http_job_url(url)
 
 
 def slack_apply_link(url: str) -> str | None:

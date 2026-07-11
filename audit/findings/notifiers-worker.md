@@ -74,9 +74,11 @@ This area covers the notification adapters (Slack, Discord, Telegram, ntfy, webh
 
 <a id="ntf-08"></a>
 ### NTF-08 — Scraped, unvalidated job URLs embedded unescaped into Slack/Discord markup links
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: medium (5/5 verifiers) · Effort: S · WS31
+⚪ **LOW** · 🔒 security · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/150)) · Confidence: medium (5/5 verifiers) · Effort: S · WS31
 
 > Related to NTF-01: NTF-01 covers escaping of the title/summary/URL text into Slack/Discord markup; this finding narrows in on the absence of `http(s)` scheme validation on `JobPosting.url` itself. Fixing both together (validate at ingest, escape at render) is the intended remediation.
+
+**Update (2026-07-11).** Fixed in [PR](https://github.com/davidcristian/HeadStart/pull/150): `JobPosting.url` clears non-http(s) schemes at ingest via shared `safe_http_job_url`; Slack/Discord already gated Apply links (NTF-01); Telegram Apply `href`s and ntfy `click` use the same helper.
 
 **Locations:** `backend/app/notifiers/adapters/slack.py:118` (`SlackNotifier._text`); plus `backend/app/notifiers/adapters/discord.py:112`, `backend/app/scrapers/types.py:19`.
 

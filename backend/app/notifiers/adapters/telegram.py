@@ -21,6 +21,7 @@ from app.notifiers.base import Notifier, register_notifier
 from app.notifiers.digest_format import digest_blocks, digest_title
 from app.notifiers.types import DeliveryResult, NotifyContext
 from app.scrapers.types import JobPosting
+from app.scrapers.url import safe_http_job_url
 
 logger = get_logger(__name__)
 
@@ -120,8 +121,9 @@ class TelegramNotifier(Notifier):
             lines.append(html.escape(job.summary))
         if job.location:
             lines.append(html.escape(job.location))
-        if job.url:
-            safe_url = html.escape(job.url, quote=True)
+        apply_url = safe_http_job_url(job.url) if job.url else None
+        if apply_url:
+            safe_url = html.escape(apply_url, quote=True)
             lines.append(f'<a href="{safe_url}">Apply</a>')
         return "\n".join(lines)
 
@@ -134,8 +136,9 @@ class TelegramNotifier(Notifier):
             entry = f"• {title}"
             if block.summary:
                 entry = f"{entry}\n  {html.escape(block.summary)}"
-            if block.url:
-                safe_url = html.escape(block.url, quote=True)
+            apply_url = safe_http_job_url(block.url) if block.url else None
+            if apply_url:
+                safe_url = html.escape(apply_url, quote=True)
                 entry = f'{entry}\n  <a href="{safe_url}">Apply</a>'
             lines.append(entry)
         return {
