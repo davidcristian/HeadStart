@@ -34,6 +34,14 @@ const sourceA: Source = {
 
 const sourceB: Source = { ...sourceA, id: 6, name: "Beta Board" };
 
+const linkedInSource: Source = {
+  ...sourceA,
+  id: 7,
+  name: "LinkedIn Jobs",
+  adapter_key: "linkedin",
+  base_url: "https://www.linkedin.com/jobs/search",
+};
+
 const credentialFixture: SiteCredential = {
   id: 30,
   source_id: sourceA.id,
@@ -142,6 +150,43 @@ describe("CredentialsPage", () => {
         expect.objectContaining({ source_id: sourceA.id }),
       ),
     );
+  });
+
+  it("confirms ToS risk before saving LinkedIn credentials", async () => {
+    listSources.mockResolvedValue([linkedInSource]);
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
+    renderPage();
+
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Save credential" })).toBeInTheDocument(),
+    );
+    expect(screen.getByText(/LinkedIn and Indeed/i)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Save credential" }));
+
+    await waitFor(() =>
+      expect(createCredential).toHaveBeenCalledWith(
+        expect.objectContaining({ source_id: linkedInSource.id }),
+      ),
+    );
+    expect(confirmSpy).toHaveBeenCalledWith(expect.stringMatching(/Terms of Service/i));
+    confirmSpy.mockRestore();
+  });
+
+  it("does not save LinkedIn credentials when the risk dialog is cancelled", async () => {
+    listSources.mockResolvedValue([linkedInSource]);
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
+    renderPage();
+
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Save credential" })).toBeInTheDocument(),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Save credential" }));
+
+    await waitFor(() => expect(confirmSpy).toHaveBeenCalled());
+    expect(createCredential).not.toHaveBeenCalled();
+    confirmSpy.mockRestore();
   });
 
   it("disables the save button and surfaces an error when JSON is invalid", async () => {

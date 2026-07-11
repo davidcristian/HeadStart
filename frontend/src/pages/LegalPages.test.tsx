@@ -52,7 +52,10 @@ describe("Legal pages", () => {
     render(renderPublicPage(<TermsOfUsePage />));
 
     expect(screen.getByRole("heading", { name: "Terms of Use" })).toBeInTheDocument();
-    expect(screen.getByText(/Effective June 28, 2026/)).toBeInTheDocument();
+    expect(screen.getByText(/Effective July 11, 2026/)).toBeInTheDocument();
+    expect(screen.getByText(/LinkedIn and Indeed User Agreements/i)).toBeInTheDocument();
+    expect(screen.getByText(/computer-access statutes such as the CFAA/i)).toBeInTheDocument();
+    expect(screen.getByText(/accept_private_api_risk/i)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Privacy" })).toHaveAttribute("href", "/privacy");
     expect(screen.getByRole("link", { name: "Impressum" })).toHaveAttribute("href", "/impressum");
     expect(screen.getByRole("link", { name: "Pricing" })).toHaveAttribute("href", "/pricing");

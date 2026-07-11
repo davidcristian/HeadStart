@@ -9,6 +9,10 @@ import { JsonEditor } from "../components/JsonEditor";
 import { Badge, Banner, Button, Card, EmptyState, Field } from "../components/ui";
 import { useCredentials, useSources } from "../hooks/queries";
 import { useCreateCredential, useDeleteCredential, useUpdateCredential } from "../hooks/mutations";
+import {
+  isPrivateApiRiskAdapter,
+  PRIVATE_API_CREDENTIAL_RISK_CONFIRM,
+} from "../lib/privateApiRisk";
 import type { Json } from "../types";
 
 function asStringMap(value: Json): Record<string, string> {
@@ -46,6 +50,12 @@ export function CredentialsPage() {
       setError("Create a source first.");
       return;
     }
+    const source = sourceList.find((s) => s.id === effectiveSource);
+    if (source && isPrivateApiRiskAdapter(source.adapter_key)) {
+      if (!window.confirm(PRIVATE_API_CREDENTIAL_RISK_CONFIRM)) {
+        return;
+      }
+    }
     try {
       await createCredential.mutateAsync({
         source_id: effectiveSource,
@@ -78,7 +88,9 @@ export function CredentialsPage() {
       <p className="muted">
         Attach cookies or headers from a logged-in browser session to a source. The worker injects
         them into requests for that source, which can bypass bot/captcha walls. Secrets are
-        encrypted at rest and never shown again after saving.
+        encrypted at rest and never shown again after saving. For LinkedIn and Indeed, session
+        cookies enable credentialed scrape (and auto-apply); those platforms typically prohibit
+        automated access — you accept ToS / account-ban risk when you save them.
       </p>
 
       <Card title="Add a credential">

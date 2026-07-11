@@ -56,7 +56,7 @@ other unknown path redirects to the landing page.
 | Pricing     | Public pricing page at `/pricing`: Free / Starter / Plus / Pro tiers (mirrors backend `plans.py`), feature comparison table, monthly vs annual toggle; Free and paid CTAs link to register; signed-in users can self-serve checkout for Starter, Plus, or Pro when billing is configured |
 | Privacy     | Public privacy policy at `/privacy`; discloses AI purposes (summaries, cover letters, resume curation, email classification, reply drafting) and the profile / recruiter-email categories each may send to configured LLM providers; discloses auto-apply transmission of application-profile PII to career sites, lawful basis (consent for opt-in third-party sends), and per-attempt consent stamps on application logs; Retention covers inbox/recruiter-email data (kept while the mailbox is connected, removed on account deletion) and the post-deletion `data_request_log` compliance row (HMAC email pseudonym only — no plaintext email/IP/UA) |
 | Subprocessors | Public Art.28 list at `/subprocessors`; includes AWS, Stripe, OpenAI, Google Gemini, Anthropic, Gmail / Outlook / Yahoo mailbox OAuth, and SMTP — operators may disable unused providers |
-| Terms       | Public terms of use at `/terms` |
+| Terms       | Public terms of use at `/terms`; Acceptable use discloses LinkedIn/Indeed credentialed scrape + auto-apply ToS/CFAA risk and that users acknowledge it in-product (XCT-19) |
 | Impressum   | Public German legal notice at `/impressum`; operators customize content per [launch-checklist.md §4](../launch-checklist.md#4-legal--trust-pages) |
 | Login/Register    | Email + password sign-in / sign-up                               |
 | Verify email      | Confirm address after signup at `/verify-email` (link or resend)   |
@@ -70,7 +70,7 @@ other unknown path redirects to the landing page.
 | Applications | Pipeline view at `/app/applications`: applied jobs with derived stage (`queued`, `awaiting_reply`, `apply_failed`, `closed`, `archived`), attempt timeline, and stage filter; see `GET /applications` |
 | Profile     | Application profile for auto-apply (contact, resume, experience, education, skills); application history table |
 | Targets     | Manage notification targets (e.g. ntfy server/topic); send test  |
-| Credentials | Per-source encrypted cookies/headers for bot-walled sites        |
+| Credentials | Per-source encrypted cookies/headers for bot-walled sites; saving LinkedIn/Indeed credentials confirms ToS/account-ban risk (XCT-19) |
 | Settings    | API base URL, billing (tier-aware upgrade checkout + portal), account export/delete, cookie prefs, ntfy help |
 | Admin       | User management (assign free/starter/plus/pro), promo codes, GDPR audit, global scrape/delivery stats (admin only) |
 

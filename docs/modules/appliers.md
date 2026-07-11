@@ -678,7 +678,7 @@ to transmit application-profile PII to that employer's career site; the privacy
 policy discloses the data categories and lawful basis (consent for opt-in
 third-party sends).
 
-**LinkedIn / Indeed private-API risk (APL-17 / DOC-12).** Hosted Easy Apply posts
+**LinkedIn / Indeed private-API risk (APL-17 / DOC-12 / XCT-19).** Hosted Easy Apply posts
 to LinkedIn Voyager and Indeed smartapply using the candidate's own session
 cookies. Those are private/member APIs; LinkedIn and Indeed User Agreements
 typically prohibit automated access, and anti-bot defenses can suspend or ban
@@ -688,7 +688,11 @@ enabling auto-apply (or any live hosted submit) for `linkedin` / `indeed`,
 source/search config must set `accept_private_api_risk: true`. The Sources UI
 shows a confirm dialog that explains the risk and writes that flag into
 `default_config`. Adapters refuse hosted live submit without it; dry-run
-preview and delegated ATS apply are unchanged. See also
+preview and delegated ATS apply are unchanged. The same session cookies also
+power **credentialed scrape** (auth walls / Cloudflare); the Credentials UI
+confirms ToS risk before saving LinkedIn/Indeed cookies — see
+[scrapers.md](scrapers.md#linkedin--indeed-credentialed-scrape-tos-risk-xct-19).
+See also
 [launch-checklist §7 Safety](../launch-checklist.md#7-auto-apply-optional--know-the-limits).
 
 Every apply attempt (preview or live, success or failure) is recorded in

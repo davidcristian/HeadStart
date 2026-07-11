@@ -228,7 +228,9 @@ the refresh cookie is stored on the documented no-domain deploy —
 
 <a id="xct-19"></a>
 ### XCT-19 — LinkedIn/Indeed credentialed scrape + auto-apply is under-disclosed ToS/CFAA risk
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: medium (2/3 verifiers) · Effort: M · WS25
+⚪ **LOW** · 🔒 security · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/131)) · Confidence: medium (2/3 verifiers) · Effort: M · WS25
+
+**Update (2026-07-11).** Terms of Use Acceptable use names LinkedIn/Indeed credentialed scrape + auto-apply ToS/CFAA risk; `scrapers.md` / `credentials.md` / launch-checklist document scrape-side exposure; Credentials UI confirms before saving LinkedIn/Indeed session cookies. Apply-side gating remains `accept_private_api_risk` (APL-17 / DOC-12).
 
 **Locations:** `backend/app/appliers/adapters/linkedin_common.py:9` (`LinkedIn apply/scrape`); plus `backend/app/scrapers/adapters/linkedin.py:129`, `backend/app/scrapers/adapters/indeed.py:12`, `backend/app/appliers/adapters/linkedin_easy_apply_form.py:1`, `frontend/src/pages/TermsOfUsePage.tsx:53`.
 

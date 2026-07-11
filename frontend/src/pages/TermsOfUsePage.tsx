@@ -2,7 +2,7 @@
 
 import { LegalPageLayout } from "../components/LegalPageLayout";
 
-const EFFECTIVE_DATE = "June 28, 2026";
+const EFFECTIVE_DATE = "July 11, 2026";
 
 export function TermsOfUsePage() {
   return (
@@ -52,7 +52,17 @@ export function TermsOfUsePage() {
         </ul>
         <p>
           Scraping and automated access to third-party sites may be restricted by those sites. You
-          are solely responsible for compliance with applicable site policies and laws.
+          are solely responsible for compliance with applicable site policies and laws (including
+          computer-access statutes such as the CFAA where they apply).
+        </p>
+        <p>
+          In particular, LinkedIn and Indeed User Agreements typically prohibit automated scraping
+          and cookie-driven access to private member APIs. If you store LinkedIn or Indeed session
+          cookies in Site credentials, or enable auto-apply / hosted Easy Apply for those adapters,
+          HeadStart will use those cookies to scrape and (when opted in) submit applications as you.
+          That path is at your own risk: account suspension, bans, takedown demands, or legal
+          exposure may result. You must acknowledge the risk in the product UI before saving those
+          credentials or enabling LinkedIn/Indeed auto-apply.
         </p>
       </section>
 
@@ -84,7 +94,9 @@ export function TermsOfUsePage() {
         <p>
           Features that submit applications on your behalf require explicit opt-in where
           implemented. You are responsible for reviewing materials sent in your name and for
-          outcomes of any automated submission.
+          outcomes of any automated submission. LinkedIn/Indeed hosted Easy Apply additionally
+          requires acknowledging private-API / ToS risk (`accept_private_api_risk`) before live
+          submit or auto-apply.
         </p>
       </section>
 

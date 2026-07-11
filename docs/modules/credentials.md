@@ -69,6 +69,14 @@ For **LinkedIn auto-apply**, store logged-in session cookies (`li_at`,
 CSRF header when Voyager requests fail with CSRF errors. The session is
 candidate-owned, not employer-issued. See [appliers.md](appliers.md).
 
+**LinkedIn / Indeed ToS risk (XCT-19).** Session cookies for `linkedin` /
+`indeed` sources also power credentialed scrape (auth walls / Cloudflare).
+Those platforms' User Agreements typically prohibit automated access; saving
+cookies is at the operator/user's own risk. The Credentials page confirms this
+before create. Apply-side private-API risk is gated separately via
+`accept_private_api_risk` — see [appliers.md](appliers.md) and
+[scrapers.md](scrapers.md#linkedin--indeed-credentialed-scrape-tos-risk-xct-19).
+
 For **SmartRecruiters auto-apply**, store an Application API token in credential
 `session.smart_token` (`X-SmartToken` header) or an OAuth bearer token in
 `session.access_token`. Tokens are partner/employer-issued via the SmartRecruiters

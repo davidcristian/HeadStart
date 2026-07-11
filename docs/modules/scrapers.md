@@ -56,8 +56,8 @@ everything. The worker resolves a scraper with `get_scraper(adapter_key)`.
 | `shopify_careers` | Embedded React Router flight stream in HTML | `shopify.com/careers`; parses `window.__reactRouterContext.streamController.enqueue` loader data (Ashby-backed, no public Postings API); config optional `q` for client-side keyword filter |
 | `uber_careers` | Public `loadSearchJobsResults` JSON API | `uber.com/.../careers/list`; `POST /api/loadSearchJobsResults?localeCode=en`; config optional `q` (client-side), `country` (server-side location filter), `careers_locale_path` (default `us/en`) |
 | `snowflake_careers` | Public Ashby Postings API (Ashby-backed) | `careers.snowflake.com`; `GET api.ashbyhq.com/posting-api/job-board/snowflake`; config optional `q` (client-side), `board` (default `snowflake`), `include_compensation` |
-| `indeed`        | Embedded search JSON in HTML (selectolax fallback) | `*.indeed.com/jobs?...`; parses `mosaic-provider-jobcards`; may need [credentials](credentials.md) for Cloudflare |
-| `linkedin`      | Guest search pagination API (HTML fragments) | Opt-in only (not URL-detected). `linkedin.com/jobs/search?...` → guest `seeMoreJobPostings/search`; may need [credentials](credentials.md) for auth walls |
+| `indeed`        | Embedded search JSON in HTML (selectolax fallback) | `*.indeed.com/jobs?...`; parses `mosaic-provider-jobcards`; may need [credentials](credentials.md) for Cloudflare — **ToS risk** when session cookies are used (see [Safety](#linkedin--indeed-credentialed-scrape-tos-risk-xct-19)) |
+| `linkedin`      | Guest search pagination API (HTML fragments) | Opt-in only (not URL-detected). `linkedin.com/jobs/search?...` → guest `seeMoreJobPostings/search`; may need [credentials](credentials.md) for auth walls — **ToS risk** when session cookies are used (see [Safety](#linkedin--indeed-credentialed-scrape-tos-risk-xct-19)) |
 | `generic_html`  | CSS selectors from config (selectolax)    | For simple static pages; configured in the UI |
 | `playwright`    | Headless browser (base helper)            | For JS-heavy/anti-bot pages (opt-in)   |
 
@@ -183,3 +183,21 @@ and **enabled in production on the worker only**:
 On AWS, the worker ECS task is sized larger than api/beat (default **1024 CPU /
 2048 MiB**) and pulls the `headstart-backend-worker` image. See
 [deployment.md](deployment.md).
+
+## LinkedIn / Indeed credentialed scrape ToS risk (XCT-19)
+
+The `linkedin` and `indeed` scrapers can inject Site credentials (session
+cookies / headers) to pass auth walls or Cloudflare challenges. That is
+**credentialed automated access** using the member's own login session.
+
+LinkedIn and Indeed User Agreements typically prohibit automated scraping and
+similar cookie-driven access. Operators and users who store those cookies accept
+**ToS / account-ban / legal exposure at their own risk** (including computer-access
+statutes such as the CFAA where they apply). The Credentials UI confirms this
+risk before saving LinkedIn/Indeed credentials. Guest/unauthenticated scrape
+(no Site credentials) does not require that acknowledgment.
+
+Hosted Easy Apply / auto-apply for the same adapters has a separate
+`accept_private_api_risk` gate and disclosure — see
+[appliers.md Safety & consent](appliers.md#safety--consent) and
+[launch-checklist §7 Safety](../launch-checklist.md#7-auto-apply-optional--know-the-limits).

@@ -113,14 +113,16 @@ best-effort). There is **no** apply adapter for generic HTML/Playwright sources.
 | **LinkedIn** | Fetches the guest job-posting page and delegates to Greenhouse/Lever/Ashby/Workday/Google/Microsoft/Amazon/Meta when Voyager returns a recognized employer apply URL (offsite listings). LinkedIn-hosted Easy Apply needs logged-in `li_at` + `JSESSIONID` cookies and posts to private Voyager APIs — set `accept_private_api_risk: true` (Sources UI confirms ToS/ban risk) before auto-apply or live submit. Multi-step questionnaires are best-effort — map `profile.answers` when required. When the profile has a stored resume and the form includes a document-upload field, live submit uploads the file to LinkedIn Ambry and includes the asset URN in `fileUploadResponses` (session cookies are omitted on the Ambry PUT; see APL-19). |
 | **Custom questions** | Only fields mapped in the application profile (`answers`, config paths) are sent. Unmapped required questions can cause rejection. |
 | **Coverage** | Treat auto-apply as a **best-effort preview + submit helper**, not unattended bulk applying. Pipeline auto-apply is capped per plan (`max_auto_applies_per_day`). Always use **dry run / preview** first. |
-| **Safety — LinkedIn / Indeed private APIs (DOC-12)** | Hosted Easy Apply drives LinkedIn Voyager and Indeed smartapply with the candidate's own session cookies. LinkedIn and Indeed User Agreements typically prohibit automated access; anti-bot defenses can suspend or ban personal accounts. Operators and users accept this ToS/legal risk themselves — disclose it before launch. Users must acknowledge it (`accept_private_api_risk`) before enabling auto-apply or live submit for those adapters. Prefer dry-run preview and delegated ATS apply when possible. |
+| **Safety — LinkedIn / Indeed private APIs & credentialed scrape (DOC-12 / XCT-19)** | Hosted Easy Apply drives LinkedIn Voyager and Indeed smartapply with the candidate's own session cookies. The same cookies also power credentialed scrape past auth walls / Cloudflare. LinkedIn and Indeed User Agreements typically prohibit automated access; anti-bot defenses can suspend or ban personal accounts. Operators and users accept this ToS/legal risk themselves — disclose it before launch. Users must acknowledge it in the Credentials UI before saving LinkedIn/Indeed session cookies, and set `accept_private_api_risk` before enabling auto-apply or live submit. Prefer dry-run preview and delegated ATS apply when possible. See [scrapers.md](modules/scrapers.md#linkedin--indeed-credentialed-scrape-tos-risk-xct-19). |
 
 Before advertising auto-apply:
 
 - [ ] Test **preview** (`dry_run`) and a live apply on each ATS you support.
 - [ ] Confirm `application_log` rows appear under **Application profile**.
 - [ ] Leave `auto_apply_enabled` off until operators understand the limits above.
-- [ ] For LinkedIn/Indeed sources, confirm operators and users understand the private-API / account-ban risk above before enabling auto-apply.
+- [ ] For LinkedIn/Indeed sources, confirm operators and users understand the
+  credentialed-scrape and private-API / account-ban risk above before saving
+  session cookies or enabling auto-apply.
 
 ---
 
