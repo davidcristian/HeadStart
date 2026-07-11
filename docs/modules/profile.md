@@ -97,8 +97,11 @@ queues curation + compile on a Celery worker (API-01); poll
 in the LLM user prompt (`<<<JOB_POSTING>>>` / `<<<CANDIDATE_PROFILE>>>`), and
 when those fields match the shared `looks_like_prompt_injection` heuristic the
 worker skips the LLM and uses the offline heuristic curator instead
-(`injection_guarded: true` on the ready result; AIA-13). The worker renders
-LaTeX and compiles a tailored PDF
+(`injection_guarded: true` on the ready result; AIA-13). The curation prompt
+sends name, location, skills, experience, education, and a resume excerpt —
+not email or phone (same PII surface as cover-letter prompts; AIA-14). Contact
+fields are merged from the stored profile after the LLM returns, so the PDF
+still shows them. The worker renders LaTeX and compiles a tailored PDF
 (prefers `tectonic`, falls back to `pdflatex` with `-no-shell-escape` and a
 minimal env that forces `openin_any=p` / `openout_any=p` / `shell_escape=f` so
 host `texmf.cnf` defaults cannot re-enable shell escape or absolute-path reads).

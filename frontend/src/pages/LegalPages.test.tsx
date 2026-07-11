@@ -20,7 +20,7 @@ describe("Legal pages", () => {
     render(renderPublicPage(<PrivacyPolicyPage />));
 
     expect(screen.getByRole("heading", { name: "Privacy Policy" })).toBeInTheDocument();
-    expect(screen.getByText(/Effective July 4, 2026/)).toBeInTheDocument();
+    expect(screen.getByText(/Effective July 11, 2026/)).toBeInTheDocument();
     expect(screen.getByText(/one-way pseudonym of the former email address/i)).toBeInTheDocument();
     expect(screen.getByText(/Inbox \/ recruiter email/i)).toBeInTheDocument();
     expect(
@@ -28,6 +28,7 @@ describe("Legal pages", () => {
     ).toBeInTheDocument();
     expect(screen.getByText(/Post-deletion audit log/i)).toBeInTheDocument();
     expect(screen.getByText(/Cover letters and resume curation/i)).toBeInTheDocument();
+    expect(screen.getByText(/not email or phone/i)).toBeInTheDocument();
     expect(screen.getByText(/resume text excerpts/i)).toBeInTheDocument();
     expect(screen.getByText(/inbound recruiter message metadata and body/i)).toBeInTheDocument();
     expect(

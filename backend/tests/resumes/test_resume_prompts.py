@@ -49,7 +49,8 @@ def test_user_prompt_includes_every_populated_field() -> None:
     assert "- Salary: $180k" in prompt
     assert "- Match summary: strong match" in prompt
     assert "- Name: Ada" in prompt
-    assert "- Email: ada@example.com" in prompt
+    assert "- Email:" not in prompt
+    assert "ada@example.com" not in prompt
     assert "- Skills: Python, SQL" in prompt
     assert "- Experience: Engineer at Example" in prompt
     assert "  Description: Built." in prompt

@@ -202,7 +202,9 @@ See [AIA-03](#aia-03) — this record (uid 240, `backend/app/resumes/compile.py:
 <a id="aia-14"></a>
 ### AIA-14 — Resume LLM prompt ships candidate email to the provider while the cover-letter prompt omits it
 
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: medium (3/3 verifiers) · Effort: S · WS28
+⚪ **LOW** · 🔒 security · Status: ✅ done · Confidence: medium (3/3 verifiers) · Effort: S · WS28
+
+**Fix.** Resume curation `user_prompt` no longer emits `- Email:`; contact email/phone stay off the LLM wire (aligned with cover-letter prompts). `parse_curated_json` still merges email from the stored profile into the rendered resume. Privacy policy + `profile.md` / `frontend.md` document the reduced PII surface.
 
 **Locations:** `backend/app/resumes/prompts.py:40` (`user_prompt`); plus `backend/app/cover_letters/prompts.py:34`.
 

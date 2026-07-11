@@ -3,7 +3,7 @@
 import { Link } from "react-router-dom";
 import { LegalPageLayout } from "../components/LegalPageLayout";
 
-const EFFECTIVE_DATE = "July 10, 2026";
+const EFFECTIVE_DATE = "July 11, 2026";
 
 export function PrivacyPolicyPage() {
   return (
@@ -117,8 +117,9 @@ export function PrivacyPolicyPage() {
               </li>
               <li>
                 <strong>Cover letters and resume curation:</strong> job posting context plus
-                application-profile fields such as name, contact details, skills, work history,
-                education, and resume text excerpts.
+                application-profile fields such as name, location, skills, work history, education,
+                and resume text excerpts (not email or phone — those stay local and are merged into
+                the document after generation).
               </li>
               <li>
                 <strong>Email classification:</strong> inbound recruiter message metadata and body
