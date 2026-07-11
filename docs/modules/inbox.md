@@ -215,11 +215,14 @@ All routes require auth and `INBOX_AGENT_ENABLED=true`.
 | GET    | `/yahoo/authorize`| Start Yahoo OAuth (returns consent URL)      |
 | GET    | `/yahoo/callback` | OAuth redirect (stores Yahoo tokens)         |
 
-**OAuth CSRF protection:** each `/authorize` response sets an httpOnly
+**OAuth CSRF + PKCE:** each `/authorize` response sets an httpOnly
 `mailbox_oauth_nonce` cookie alongside the signed JWT `state` (which embeds the
-same nonce). The unauthenticated `/callback` handler rejects the exchange unless
-the cookie matches `state`, so a victim cannot complete an OAuth flow started by
-an attacker and link the victim's mailbox to the attacker's account.
+same nonce and a per-flow PKCE `code_verifier`). The consent URL includes an
+S256 `code_challenge`; the unauthenticated `/callback` handler rejects the
+exchange unless the cookie matches `state`, and the token request sends the
+bound `code_verifier` so a leaked authorization code cannot be redeemed without
+the initiator's state. A victim cannot complete an OAuth flow started by an
+attacker and link the victim's mailbox to the attacker's account.
 
 | POST   | `/test`           | Test IMAP + SMTP (optional inline config)    |
 | GET    | `/messages`       | Fetch inbound messages (`since_uid`, `limit`)|

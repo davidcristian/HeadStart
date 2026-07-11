@@ -147,7 +147,7 @@ _Merged with INB-15 and INB-16 (all three flag that `prepare_message` sanitizes 
 
 <a id="inb-11"></a>
 ### INB-11 — OAuth authorization-code flows omit PKCE across all three providers
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: medium (3/3 verifiers) · Effort: M · WS29
+⚪ **LOW** · 🔒 security · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/140)) · Confidence: medium (3/3 verifiers) · Effort: M · WS29
 
 **Locations:** `backend/app/inbox/gmail_oauth.py:78` (`build_gmail_authorization_url`); plus `backend/app/inbox/outlook_oauth.py:81`, `backend/app/inbox/yahoo_oauth.py:75`.
 

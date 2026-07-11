@@ -11,6 +11,7 @@ from app.core.config import settings
 from app.core.exceptions import ValidationError
 from app.inbox.mailbox_oauth_state import (
     IssuedMailboxOAuthState,
+    code_challenge_s256,
     issue_mailbox_oauth_state,
     parse_mailbox_oauth_state,
 )
@@ -56,8 +57,8 @@ def create_gmail_oauth_state(user_id: int) -> IssuedMailboxOAuthState:
     return issue_mailbox_oauth_state(user_id=user_id, state_type=GMAIL_OAUTH_STATE_TYPE)
 
 
-def decode_gmail_oauth_state(state: str) -> tuple[int, str]:
-    """Validate OAuth state and return the owning user id and bound nonce."""
+def decode_gmail_oauth_state(state: str) -> tuple[int, str, str]:
+    """Validate OAuth state and return user id, nonce, and PKCE code_verifier."""
     try:
         return parse_mailbox_oauth_state(
             state=state,
@@ -68,8 +69,8 @@ def decode_gmail_oauth_state(state: str) -> tuple[int, str]:
         raise GmailOAuthError(str(exc)) from exc
 
 
-def build_gmail_authorization_url(*, state: str) -> str:
-    """Return the Google consent URL for Gmail API access."""
+def build_gmail_authorization_url(*, state: str, code_verifier: str) -> str:
+    """Return the Google consent URL for Gmail API access (with PKCE S256)."""
     require_gmail_oauth_configured()
     params = {
         "client_id": settings.gmail_oauth_client_id,
@@ -79,11 +80,13 @@ def build_gmail_authorization_url(*, state: str) -> str:
         "access_type": "offline",
         "prompt": "consent",
         "state": state,
+        "code_challenge": code_challenge_s256(code_verifier),
+        "code_challenge_method": "S256",
     }
     return f"{GOOGLE_AUTH_URL}?{urlencode(params)}"
 
 
-def exchange_gmail_code(code: str) -> GmailMailboxConfig:
+def exchange_gmail_code(code: str, *, code_verifier: str) -> GmailMailboxConfig:
     """Exchange an authorization code for stored Gmail OAuth credentials."""
     require_gmail_oauth_configured()
     response = httpx.post(
@@ -94,6 +97,7 @@ def exchange_gmail_code(code: str) -> GmailMailboxConfig:
             "client_secret": settings.gmail_oauth_client_secret,
             "redirect_uri": settings.gmail_oauth_redirect_uri,
             "grant_type": "authorization_code",
+            "code_verifier": code_verifier,
         },
         timeout=30.0,
     )

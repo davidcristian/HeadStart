@@ -20,13 +20,14 @@ from app.inbox.mailbox_oauth_state import (
 
 def test_issue_and_parse_mailbox_oauth_state_roundtrip() -> None:
     issued = issue_mailbox_oauth_state(user_id=42, state_type="gmail_oauth")
-    user_id, nonce = parse_mailbox_oauth_state(
+    user_id, nonce, code_verifier = parse_mailbox_oauth_state(
         state=issued.state,
         state_type="gmail_oauth",
         error_message="Invalid or expired Gmail OAuth state.",
     )
     assert user_id == 42
     assert nonce == issued.nonce
+    assert code_verifier == issued.code_verifier
     verify_mailbox_oauth_nonce(issued.nonce, nonce)
 
 
@@ -38,6 +39,36 @@ def test_parse_mailbox_oauth_state_rejects_wrong_type() -> None:
             state_type="outlook_oauth",
             error_message="Invalid or expired Gmail OAuth state.",
         )
+
+
+def test_parse_mailbox_oauth_state_rejects_missing_code_verifier() -> None:
+    import jwt
+
+    from app.core.config import settings
+
+    token = jwt.encode(
+        {
+            "sub": "1",
+            "type": "gmail_oauth",
+            "nonce": "nonce-value",
+            "exp": 9999999999,
+        },
+        settings.jwt_secret,
+        algorithm=settings.jwt_algorithm,
+    )
+    with pytest.raises(ValidationError, match="Invalid or expired Gmail OAuth state"):
+        parse_mailbox_oauth_state(
+            state=token,
+            state_type="gmail_oauth",
+            error_message="Invalid or expired Gmail OAuth state.",
+        )
+
+
+def test_code_challenge_s256_is_deterministic() -> None:
+    from app.inbox.mailbox_oauth_state import code_challenge_s256
+
+    verifier = "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+    assert code_challenge_s256(verifier) == "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM"
 
 
 def test_clear_mailbox_oauth_nonce_cookie_expires_cookie() -> None:

@@ -108,15 +108,15 @@ def test_gmail_exchange_errors(monkeypatch) -> None:
     _configure_gmail(monkeypatch)
     respx.post(GMAIL_TOKEN).mock(return_value=Response(400))
     with pytest.raises(gmail_oauth.GmailOAuthError, match="rejected"):
-        gmail_oauth.exchange_gmail_code("code")
+        gmail_oauth.exchange_gmail_code("code", code_verifier="pkce-verifier")
 
     respx.post(GMAIL_TOKEN).mock(return_value=Response(200, json={"refresh_token": "r"}))
     with pytest.raises(gmail_oauth.GmailOAuthError, match="access token"):
-        gmail_oauth.exchange_gmail_code("code")
+        gmail_oauth.exchange_gmail_code("code", code_verifier="pkce-verifier")
 
     respx.post(GMAIL_TOKEN).mock(return_value=Response(200, json={"access_token": "a"}))
     with pytest.raises(gmail_oauth.GmailOAuthError, match="refresh token"):
-        gmail_oauth.exchange_gmail_code("code")
+        gmail_oauth.exchange_gmail_code("code", code_verifier="pkce-verifier")
 
 
 @respx.mock
@@ -129,14 +129,14 @@ def test_gmail_exchange_no_expiry_and_profile_paths(monkeypatch) -> None:
     )
     respx.get(GMAIL_PROFILE).mock(return_value=Response(500))
     with pytest.raises(gmail_oauth.GmailOAuthError, match="profile"):
-        gmail_oauth.exchange_gmail_code("code")
+        gmail_oauth.exchange_gmail_code("code", code_verifier="pkce-verifier")
 
     respx.get(GMAIL_PROFILE).mock(return_value=Response(200, json={}))
     with pytest.raises(gmail_oauth.GmailOAuthError, match="email address"):
-        gmail_oauth.exchange_gmail_code("code")
+        gmail_oauth.exchange_gmail_code("code", code_verifier="pkce-verifier")
 
     respx.get(GMAIL_PROFILE).mock(return_value=Response(200, json={"emailAddress": "u@gmail.com"}))
-    config = gmail_oauth.exchange_gmail_code("code")
+    config = gmail_oauth.exchange_gmail_code("code", code_verifier="pkce-verifier")
     assert config.token_expiry is None
 
 
@@ -145,15 +145,15 @@ def test_outlook_exchange_errors_and_upn_fallback(monkeypatch) -> None:
     _configure_outlook(monkeypatch)
     respx.post(OUTLOOK_TOKEN).mock(return_value=Response(400))
     with pytest.raises(outlook_oauth.OutlookOAuthError, match="rejected"):
-        outlook_oauth.exchange_outlook_code("code")
+        outlook_oauth.exchange_outlook_code("code", code_verifier="pkce-verifier")
 
     respx.post(OUTLOOK_TOKEN).mock(return_value=Response(200, json={"refresh_token": "r"}))
     with pytest.raises(outlook_oauth.OutlookOAuthError, match="access token"):
-        outlook_oauth.exchange_outlook_code("code")
+        outlook_oauth.exchange_outlook_code("code", code_verifier="pkce-verifier")
 
     respx.post(OUTLOOK_TOKEN).mock(return_value=Response(200, json={"access_token": "a"}))
     with pytest.raises(outlook_oauth.OutlookOAuthError, match="refresh token"):
-        outlook_oauth.exchange_outlook_code("code")
+        outlook_oauth.exchange_outlook_code("code", code_verifier="pkce-verifier")
 
     respx.post(OUTLOOK_TOKEN).mock(
         return_value=Response(
@@ -162,16 +162,16 @@ def test_outlook_exchange_errors_and_upn_fallback(monkeypatch) -> None:
     )
     respx.get(OUTLOOK_ME).mock(return_value=Response(500))
     with pytest.raises(outlook_oauth.OutlookOAuthError, match="profile"):
-        outlook_oauth.exchange_outlook_code("code")
+        outlook_oauth.exchange_outlook_code("code", code_verifier="pkce-verifier")
 
     respx.get(OUTLOOK_ME).mock(return_value=Response(200, json={}))
     with pytest.raises(outlook_oauth.OutlookOAuthError, match="email address"):
-        outlook_oauth.exchange_outlook_code("code")
+        outlook_oauth.exchange_outlook_code("code", code_verifier="pkce-verifier")
 
     respx.get(OUTLOOK_ME).mock(
         return_value=Response(200, json={"userPrincipalName": "u@outlook.test"})
     )
-    config = outlook_oauth.exchange_outlook_code("code")
+    config = outlook_oauth.exchange_outlook_code("code", code_verifier="pkce-verifier")
     assert config.email_address == "u@outlook.test"
     assert config.token_expiry is None
 
@@ -181,15 +181,15 @@ def test_yahoo_exchange_errors_and_no_expiry(monkeypatch) -> None:
     _configure_yahoo(monkeypatch)
     respx.post(YAHOO_TOKEN).mock(return_value=Response(400))
     with pytest.raises(yahoo_oauth.YahooOAuthError, match="rejected"):
-        yahoo_oauth.exchange_yahoo_code("code")
+        yahoo_oauth.exchange_yahoo_code("code", code_verifier="pkce-verifier")
 
     respx.post(YAHOO_TOKEN).mock(return_value=Response(200, json={"refresh_token": "r"}))
     with pytest.raises(yahoo_oauth.YahooOAuthError, match="access token"):
-        yahoo_oauth.exchange_yahoo_code("code")
+        yahoo_oauth.exchange_yahoo_code("code", code_verifier="pkce-verifier")
 
     respx.post(YAHOO_TOKEN).mock(return_value=Response(200, json={"access_token": "a"}))
     with pytest.raises(yahoo_oauth.YahooOAuthError, match="refresh token"):
-        yahoo_oauth.exchange_yahoo_code("code")
+        yahoo_oauth.exchange_yahoo_code("code", code_verifier="pkce-verifier")
 
     respx.post(YAHOO_TOKEN).mock(
         return_value=Response(
@@ -198,12 +198,12 @@ def test_yahoo_exchange_errors_and_no_expiry(monkeypatch) -> None:
     )
     respx.get(YAHOO_USERINFO).mock(return_value=Response(500))
     with pytest.raises(yahoo_oauth.YahooOAuthError, match="profile"):
-        yahoo_oauth.exchange_yahoo_code("code")
+        yahoo_oauth.exchange_yahoo_code("code", code_verifier="pkce-verifier")
 
     respx.get(YAHOO_USERINFO).mock(return_value=Response(200, json={}))
     with pytest.raises(yahoo_oauth.YahooOAuthError, match="email address"):
-        yahoo_oauth.exchange_yahoo_code("code")
+        yahoo_oauth.exchange_yahoo_code("code", code_verifier="pkce-verifier")
 
     respx.get(YAHOO_USERINFO).mock(return_value=Response(200, json={"email": "u@yahoo.test"}))
-    config = yahoo_oauth.exchange_yahoo_code("code")
+    config = yahoo_oauth.exchange_yahoo_code("code", code_verifier="pkce-verifier")
     assert config.token_expiry is None

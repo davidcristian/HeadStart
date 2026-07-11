@@ -11,6 +11,7 @@ from app.core.config import settings
 from app.core.exceptions import ValidationError
 from app.inbox.mailbox_oauth_state import (
     IssuedMailboxOAuthState,
+    code_challenge_s256,
     issue_mailbox_oauth_state,
     parse_mailbox_oauth_state,
 )
@@ -53,8 +54,8 @@ def create_yahoo_oauth_state(user_id: int) -> IssuedMailboxOAuthState:
     return issue_mailbox_oauth_state(user_id=user_id, state_type=YAHOO_OAUTH_STATE_TYPE)
 
 
-def decode_yahoo_oauth_state(state: str) -> tuple[int, str]:
-    """Validate OAuth state and return the owning user id and bound nonce."""
+def decode_yahoo_oauth_state(state: str) -> tuple[int, str, str]:
+    """Validate OAuth state and return user id, nonce, and PKCE code_verifier."""
     try:
         return parse_mailbox_oauth_state(
             state=state,
@@ -65,8 +66,8 @@ def decode_yahoo_oauth_state(state: str) -> tuple[int, str]:
         raise YahooOAuthError(str(exc)) from exc
 
 
-def build_yahoo_authorization_url(*, state: str) -> str:
-    """Return the Yahoo consent URL for Mail API access."""
+def build_yahoo_authorization_url(*, state: str, code_verifier: str) -> str:
+    """Return the Yahoo consent URL for Mail API access (with PKCE S256)."""
     require_yahoo_oauth_configured()
     params = {
         "client_id": settings.yahoo_oauth_client_id,
@@ -74,11 +75,13 @@ def build_yahoo_authorization_url(*, state: str) -> str:
         "response_type": "code",
         "scope": " ".join(YAHOO_SCOPES),
         "state": state,
+        "code_challenge": code_challenge_s256(code_verifier),
+        "code_challenge_method": "S256",
     }
     return f"{YAHOO_AUTH_URL}?{urlencode(params)}"
 
 
-def exchange_yahoo_code(code: str) -> YahooMailboxConfig:
+def exchange_yahoo_code(code: str, *, code_verifier: str) -> YahooMailboxConfig:
     """Exchange an authorization code for stored Yahoo OAuth credentials."""
     require_yahoo_oauth_configured()
     response = httpx.post(
@@ -89,6 +92,7 @@ def exchange_yahoo_code(code: str) -> YahooMailboxConfig:
             "client_secret": settings.yahoo_oauth_client_secret,
             "redirect_uri": settings.yahoo_oauth_redirect_uri,
             "grant_type": "authorization_code",
+            "code_verifier": code_verifier,
         },
         timeout=30.0,
     )

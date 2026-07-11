@@ -11,6 +11,7 @@ from app.core.config import settings
 from app.core.exceptions import ValidationError
 from app.inbox.mailbox_oauth_state import (
     IssuedMailboxOAuthState,
+    code_challenge_s256,
     issue_mailbox_oauth_state,
     parse_mailbox_oauth_state,
 )
@@ -61,8 +62,8 @@ def create_outlook_oauth_state(user_id: int) -> IssuedMailboxOAuthState:
     return issue_mailbox_oauth_state(user_id=user_id, state_type=OUTLOOK_OAUTH_STATE_TYPE)
 
 
-def decode_outlook_oauth_state(state: str) -> tuple[int, str]:
-    """Validate OAuth state and return the owning user id and bound nonce."""
+def decode_outlook_oauth_state(state: str) -> tuple[int, str, str]:
+    """Validate OAuth state and return user id, nonce, and PKCE code_verifier."""
     try:
         return parse_mailbox_oauth_state(
             state=state,
@@ -73,8 +74,8 @@ def decode_outlook_oauth_state(state: str) -> tuple[int, str]:
         raise OutlookOAuthError(str(exc)) from exc
 
 
-def build_outlook_authorization_url(*, state: str) -> str:
-    """Return the Microsoft consent URL for Graph mail access."""
+def build_outlook_authorization_url(*, state: str, code_verifier: str) -> str:
+    """Return the Microsoft consent URL for Graph mail access (with PKCE S256)."""
     require_outlook_oauth_configured()
     params = {
         "client_id": settings.outlook_oauth_client_id,
@@ -83,11 +84,13 @@ def build_outlook_authorization_url(*, state: str) -> str:
         "scope": " ".join(OUTLOOK_SCOPES),
         "response_mode": "query",
         "state": state,
+        "code_challenge": code_challenge_s256(code_verifier),
+        "code_challenge_method": "S256",
     }
     return f"{MICROSOFT_AUTH_URL}?{urlencode(params)}"
 
 
-def exchange_outlook_code(code: str) -> OutlookMailboxConfig:
+def exchange_outlook_code(code: str, *, code_verifier: str) -> OutlookMailboxConfig:
     """Exchange an authorization code for stored Outlook OAuth credentials."""
     require_outlook_oauth_configured()
     response = httpx.post(
@@ -98,6 +101,7 @@ def exchange_outlook_code(code: str) -> OutlookMailboxConfig:
             "client_secret": settings.outlook_oauth_client_secret,
             "redirect_uri": settings.outlook_oauth_redirect_uri,
             "grant_type": "authorization_code",
+            "code_verifier": code_verifier,
         },
         timeout=30.0,
     )

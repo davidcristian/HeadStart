@@ -44,7 +44,11 @@ def gmail_authorize_url(user_id: int) -> tuple[GmailAuthorizeResponse, str]:
     require_gmail_oauth_configured()
     issued = create_gmail_oauth_state(user_id)
     return (
-        GmailAuthorizeResponse(authorization_url=build_gmail_authorization_url(state=issued.state)),
+        GmailAuthorizeResponse(
+            authorization_url=build_gmail_authorization_url(
+                state=issued.state, code_verifier=issued.code_verifier
+            )
+        ),
         issued.nonce,
     )
 
@@ -58,9 +62,9 @@ def complete_gmail_oauth(
     oauth_nonce: str | None,
 ) -> GmailOAuthCallbackResult:
     """Exchange an OAuth callback for encrypted Gmail credentials."""
-    user_id, expected_nonce = decode_gmail_oauth_state(state)
+    user_id, expected_nonce, code_verifier = decode_gmail_oauth_state(state)
     verify_mailbox_oauth_nonce(oauth_nonce, expected_nonce)
-    config = exchange_gmail_code(code)
+    config = exchange_gmail_code(code, code_verifier=code_verifier)
     return persist_oauth_mailbox(
         session,
         repo,
@@ -76,7 +80,9 @@ def outlook_authorize_url(user_id: int) -> tuple[OutlookAuthorizeResponse, str]:
     issued = create_outlook_oauth_state(user_id)
     return (
         OutlookAuthorizeResponse(
-            authorization_url=build_outlook_authorization_url(state=issued.state)
+            authorization_url=build_outlook_authorization_url(
+                state=issued.state, code_verifier=issued.code_verifier
+            )
         ),
         issued.nonce,
     )
@@ -91,9 +97,9 @@ def complete_outlook_oauth(
     oauth_nonce: str | None,
 ) -> GmailOAuthCallbackResult:
     """Exchange an OAuth callback for encrypted Outlook credentials."""
-    user_id, expected_nonce = decode_outlook_oauth_state(state)
+    user_id, expected_nonce, code_verifier = decode_outlook_oauth_state(state)
     verify_mailbox_oauth_nonce(oauth_nonce, expected_nonce)
-    config = exchange_outlook_code(code)
+    config = exchange_outlook_code(code, code_verifier=code_verifier)
     return persist_oauth_mailbox(
         session,
         repo,
@@ -108,7 +114,11 @@ def yahoo_authorize_url(user_id: int) -> tuple[YahooAuthorizeResponse, str]:
     require_yahoo_oauth_configured()
     issued = create_yahoo_oauth_state(user_id)
     return (
-        YahooAuthorizeResponse(authorization_url=build_yahoo_authorization_url(state=issued.state)),
+        YahooAuthorizeResponse(
+            authorization_url=build_yahoo_authorization_url(
+                state=issued.state, code_verifier=issued.code_verifier
+            )
+        ),
         issued.nonce,
     )
 
@@ -122,9 +132,9 @@ def complete_yahoo_oauth(
     oauth_nonce: str | None,
 ) -> GmailOAuthCallbackResult:
     """Exchange an OAuth callback for encrypted Yahoo credentials."""
-    user_id, expected_nonce = decode_yahoo_oauth_state(state)
+    user_id, expected_nonce, code_verifier = decode_yahoo_oauth_state(state)
     verify_mailbox_oauth_nonce(oauth_nonce, expected_nonce)
-    config = exchange_yahoo_code(code)
+    config = exchange_yahoo_code(code, code_verifier=code_verifier)
     return persist_oauth_mailbox(
         session,
         repo,

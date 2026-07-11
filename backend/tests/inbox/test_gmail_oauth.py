@@ -32,16 +32,20 @@ def test_gmail_oauth_configured_requires_all_vars(monkeypatch) -> None:
 
 def test_gmail_oauth_state_round_trip() -> None:
     issued = create_gmail_oauth_state(42)
-    assert decode_gmail_oauth_state(issued.state) == (42, issued.nonce)
+    assert decode_gmail_oauth_state(issued.state) == (42, issued.nonce, issued.code_verifier)
 
 
-def test_build_authorization_url_contains_client_id(monkeypatch) -> None:
+def test_build_authorization_url_contains_client_id_and_pkce(monkeypatch) -> None:
+    from app.inbox.mailbox_oauth_state import code_challenge_s256
+
     monkeypatch.setattr(settings, "gmail_oauth_client_id", "client-id")
     monkeypatch.setattr(settings, "gmail_oauth_client_secret", "secret")
     monkeypatch.setattr(settings, "gmail_oauth_redirect_uri", "http://localhost/callback")
-    url = build_gmail_authorization_url(state="signed-state")
+    url = build_gmail_authorization_url(state="signed-state", code_verifier="verifier-value")
     assert "client_id=client-id" in url
     assert "state=signed-state" in url
+    assert "code_challenge_method=S256" in url
+    assert f"code_challenge={code_challenge_s256('verifier-value')}" in url
 
 
 @respx.mock
@@ -49,7 +53,7 @@ def test_exchange_gmail_code_returns_config(monkeypatch) -> None:
     monkeypatch.setattr(settings, "gmail_oauth_client_id", "client-id")
     monkeypatch.setattr(settings, "gmail_oauth_client_secret", "secret")
     monkeypatch.setattr(settings, "gmail_oauth_redirect_uri", "http://localhost/callback")
-    respx.post("https://oauth2.googleapis.com/token").mock(
+    route = respx.post("https://oauth2.googleapis.com/token").mock(
         return_value=Response(
             200,
             json={
@@ -63,12 +67,13 @@ def test_exchange_gmail_code_returns_config(monkeypatch) -> None:
     respx.get("https://gmail.googleapis.com/gmail/v1/users/me/profile").mock(
         return_value=Response(200, json={"emailAddress": "user@gmail.com"})
     )
-    config = exchange_gmail_code("auth-code")
+    config = exchange_gmail_code("auth-code", code_verifier="pkce-verifier")
     assert isinstance(config, GmailMailboxConfig)
     assert config.email_address == "user@gmail.com"
     assert config.access_token == "access-token"
     assert config.refresh_token == "refresh-token"
     assert config.token_expiry is not None
+    assert b"code_verifier=pkce-verifier" in route.calls.last.request.content
 
 
 def test_decode_rejects_wrong_token_type() -> None:
