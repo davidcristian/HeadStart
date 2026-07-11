@@ -38,6 +38,10 @@ def test_user_prompt_includes_every_populated_field() -> None:
         ),
     )
     prompt = user_prompt(ctx)
+    assert "<<<JOB_POSTING>>>" in prompt
+    assert "<<<END_JOB_POSTING>>>" in prompt
+    assert "<<<CANDIDATE_PROFILE>>>" in prompt
+    assert "<<<END_CANDIDATE_PROFILE>>>" in prompt
     assert "- Title: Senior Engineer" in prompt
     assert "- Company: ACME" in prompt
     assert "- Location: Remote" in prompt
@@ -52,6 +56,15 @@ def test_user_prompt_includes_every_populated_field() -> None:
     assert "- Education: MIT (BSc, CS)" in prompt
     assert "- Education: Solo School" in prompt
     assert "- Resume excerpt: Line one Line two" in prompt
+    assert prompt.index("<<<JOB_POSTING>>>") < prompt.index("- Title: Senior Engineer")
+    assert prompt.index("- Title: Senior Engineer") < prompt.index("<<<END_JOB_POSTING>>>")
+    assert prompt.index("<<<CANDIDATE_PROFILE>>>") < prompt.index("- Name: Ada Lovelace")
+    assert prompt.index("- Name: Ada Lovelace") < prompt.index("<<<END_CANDIDATE_PROFILE>>>")
+
+
+def test_system_prompt_treats_fenced_blocks_as_data() -> None:
+    assert "<<<JOB_POSTING>>>" in SYSTEM_PROMPT
+    assert "untrusted data" in SYSTEM_PROMPT
 
 
 def test_user_prompt_truncates_long_resume_excerpt() -> None:

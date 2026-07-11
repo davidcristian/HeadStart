@@ -12,6 +12,7 @@ from app.core.config import settings as default_settings
 from app.core.exceptions import NotFoundError, ValidationError
 from app.core.logging import get_logger
 from app.cover_letters import CoverLetterContext, CoverLetterGenerator, get_cover_letter_generator
+from app.email_classifiers.sanitize import looks_like_prompt_injection
 from app.models.user import User
 from app.repositories.users import UserRepository
 from app.schemas.profile import ProfileData
@@ -65,6 +66,15 @@ class CoverLetterService:
         )
 
         requested = self._resolve_provider(user)
+        injection = requested != "heuristic" and self._scraped_fields_look_injected(ctx)
+        if injection:
+            logger.warning(
+                "cover letter for job %s: scraped posting fields matched injection "
+                "patterns; forcing heuristic generator",
+                job_id,
+            )
+            requested = "heuristic"
+
         if requested != "heuristic":
             try:
                 text = self._generate_with(requested, user, ctx)
@@ -72,6 +82,7 @@ class CoverLetterService:
                     "cover_letter": self._truncate(text),
                     "provider": requested,
                     "fallback": False,
+                    "injection_guarded": False,
                 }
             except Exception as exc:
                 logger.warning("cover letter provider %s failed: %s", requested, exc)
@@ -80,8 +91,21 @@ class CoverLetterService:
         return {
             "cover_letter": self._truncate(text),
             "provider": "heuristic",
-            "fallback": requested != "heuristic",
+            "fallback": (not injection) and requested != "heuristic",
+            "injection_guarded": injection,
         }
+
+    def _scraped_fields_look_injected(self, ctx: CoverLetterContext) -> bool:
+        """True when untrusted posting/resume text matches instruction-injection patterns."""
+        parts = (
+            ctx.job_title,
+            ctx.company,
+            ctx.location,
+            ctx.salary,
+            ctx.job_summary,
+            ctx.profile.resume_text,
+        )
+        return any(looks_like_prompt_injection(part) for part in parts if part)
 
     def _resolve_provider(self, user: User) -> str:
         if not PlanLimitsService(self.session).allows_summaries(user.id):

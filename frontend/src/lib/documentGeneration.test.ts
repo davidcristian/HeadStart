@@ -116,6 +116,14 @@ describe("status messages", () => {
     expect(
       coverLetterStatusMessage({ cover_letter: "x", provider: "heuristic", fallback: true }),
     ).toMatch(/unavailable/);
+    expect(
+      coverLetterStatusMessage({
+        cover_letter: "x",
+        provider: "heuristic",
+        fallback: false,
+        injection_guarded: true,
+      }),
+    ).toMatch(/unsafe for AI/);
   });
 
   it("describes resume outcomes", () => {

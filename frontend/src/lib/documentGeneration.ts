@@ -28,6 +28,9 @@ export async function awaitResumeGeneration(
 }
 
 export function coverLetterStatusMessage(result: JobCoverLetterResult): string {
+  if (result.injection_guarded) {
+    return "Draft generated from your profile (job text looked unsafe for AI drafting).";
+  }
   if (result.fallback) {
     return "AI generation was unavailable; a draft was created from your profile instead.";
   }

@@ -107,7 +107,9 @@ See [AIA-03](#aia-03) — this record (uid 240, `backend/app/resumes/compile.py:
 <a id="aia-08"></a>
 ### AIA-08 — Cover-letter prompt embeds untrusted scraped fields with no delimiter or injection guard
 
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: medium (3/3 verifiers) · Effort: S · WS28
+⚪ **LOW** · 🔒 security · Status: ✅ done · Confidence: medium (3/3 verifiers) · Effort: S · WS28
+
+**Fix.** Cover-letter LLM prompts fence scraped posting fields and candidate profile data in `<<<JOB_POSTING>>>` / `<<<CANDIDATE_PROFILE>>>` blocks; the system prompt treats those blocks as untrusted data. `CoverLetterService.generate` reuses `looks_like_prompt_injection` on title/company/location/salary/summary/resume_text and forces the offline heuristic when matched (`injection_guarded: true` on the result) — [PR](https://github.com/davidcristian/HeadStart/pull/135).
 
 **Locations:** `backend/app/cover_letters/prompts.py:18` (`user_prompt`) and `:24`; plus `backend/app/services/cover_letters.py:90`.
 

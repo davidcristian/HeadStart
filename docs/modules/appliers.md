@@ -17,8 +17,13 @@ Before submit, the Jobs apply dialog can draft a tailored cover letter via
 `backend/app/cover_letters/` (registry pattern matching summarizers). The offline
 `heuristic` provider is available on every plan; Pro users use the effective
 `SUMMARY_PROVIDER` (`openai`, `gemini`, `anthropic`, or `llamacpp` for local dev).
-LLM failures fall back to heuristic. Env: `COVER_LETTERS_ENABLED`,
-`COVER_LETTER_MAX_CHARS`, `COVER_LETTER_MAX_TOKENS` (see `.env.example`).
+LLM failures fall back to heuristic. Scraped job fields and resume excerpt are
+fenced in the LLM user prompt (`<<<JOB_POSTING>>>` /
+`<<<CANDIDATE_PROFILE>>>`); when those fields match the shared
+`looks_like_prompt_injection` heuristic, generation skips the LLM and uses the
+offline heuristic instead (`injection_guarded: true` on the ready result). Env:
+`COVER_LETTERS_ENABLED`, `COVER_LETTER_MAX_CHARS`, `COVER_LETTER_MAX_TOKENS`
+(see `.env.example`).
 
 ## Contract
 

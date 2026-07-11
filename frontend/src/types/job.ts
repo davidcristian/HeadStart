@@ -30,6 +30,7 @@ export interface JobCoverLetterResult {
   cover_letter: string;
   provider: string;
   fallback: boolean;
+  injection_guarded?: boolean;
 }
 
 export interface JobResumeResult {
