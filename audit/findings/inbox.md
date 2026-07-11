@@ -175,7 +175,7 @@ _Merged with INB-15 and INB-16 (all three flag that `prepare_message` sanitizes 
 
 <a id="inb-13"></a>
 ### INB-13 — extract_body_text returns empty for HTML-only multipart mail (no text/plain part)
-⚪ **LOW** · 🐞 bug · Status: ☐ open · Confidence: medium (5/5 verifiers) · Effort: S · WS29
+⚪ **LOW** · 🐞 bug · Status: ✅ done · [PR](https://github.com/davidcristian/HeadStart/pull/141) · Confidence: medium (5/5 verifiers) · Effort: S · WS29
 
 **Locations:** `backend/app/inbox/parse.py:24` (`extract_body_text`).
 

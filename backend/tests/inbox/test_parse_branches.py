@@ -42,6 +42,51 @@ def test_extract_body_text_multipart_skips_attachment_and_returns_empty() -> Non
     assert extract_body_text(container) == ""
 
 
+def test_extract_body_text_multipart_html_only_strips_tags() -> None:
+    # HTML-only multipart/alternative (no text/plain) must still yield readable text.
+    msg = EmailMessage()
+    msg["From"] = "recruiter@acme.example"
+    msg["To"] = "candidate@example.com"
+    msg["Subject"] = "Interview"
+    msg.make_alternative()
+    html_part = EmailMessage()
+    html_part.set_content(
+        "<p>We&nbsp;have <b>availability</b> next week.</p>",
+        subtype="html",
+    )
+    msg.attach(html_part)
+    assert msg.is_multipart()
+    parsed = parse_rfc822(uid=7, raw_bytes=msg.as_bytes())
+    assert "availability" in parsed.body_text
+    assert "next week" in parsed.body_text
+    assert "<" not in parsed.body_text
+    assert "We" in parsed.body_text
+
+
+def test_extract_body_text_singlepart_html_strips_tags() -> None:
+    raw = (
+        b"Subject: Html only\r\nFrom: a@example.com\r\n"
+        b"Content-Type: text/html; charset=utf-8\r\n\r\n"
+        b"<div>Please reply &amp; confirm</div>\r\n"
+    )
+    parsed = parse_rfc822(uid=8, raw_bytes=raw)
+    assert parsed.body_text == "Please reply & confirm"
+
+
+def test_extract_body_text_multipart_html_non_bytes_skipped() -> None:
+    # text/html part whose decode payload is None is skipped; later HTML wins.
+    container = Message()
+    container["Content-Type"] = "multipart/alternative; boundary=BOUND"
+    empty_html = Message()
+    empty_html["Content-Type"] = "text/html"
+    empty_html.set_payload([Message()])  # multipart -> decode=True is None
+    good_html = Message()
+    good_html["Content-Type"] = "text/html"
+    good_html.set_payload("<p>fallback body</p>")
+    container.set_payload([empty_html, good_html])
+    assert extract_body_text(container) == "fallback body"
+
+
 def test_extract_body_text_multipart_plain_non_bytes_skipped() -> None:
     # The outer text/plain part is itself multipart, so get_payload(decode=True)
     # is None and the `isinstance(payload, bytes)` check fails -> `continue` back to

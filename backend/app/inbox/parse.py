@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import email
+import html
+import re
 from datetime import datetime
 from email.header import decode_header, make_header
 from email.message import Message
@@ -21,25 +23,47 @@ def decode_mime_header(value: str | None) -> str:
         return value
 
 
-def extract_body_text(message: Message) -> str:
-    """Return the best-effort plain-text body from a parsed email."""
-    if message.is_multipart():
-        for part in message.walk():
-            if part.get_content_disposition() == "attachment":
-                continue
-            if part.get_content_type() == "text/plain":
-                payload = part.get_payload(decode=True)
-                if isinstance(payload, bytes):
-                    charset = part.get_content_charset() or "utf-8"
-                    return payload.decode(charset, errors="replace")
-        return ""
-    payload = message.get_payload(decode=True)
+def _decode_part_payload(part: Message) -> str | None:
+    """Decode a MIME part payload to text, or None when not a usable string."""
+    payload = part.get_payload(decode=True)
     if isinstance(payload, bytes):
-        charset = message.get_content_charset() or "utf-8"
+        charset = part.get_content_charset() or "utf-8"
         return payload.decode(charset, errors="replace")
     if isinstance(payload, str):
         return payload
-    return ""
+    return None
+
+
+def _html_to_text(html_body: str) -> str:
+    """Strip tags from an HTML body so classifiers see readable plain text."""
+    text = html.unescape(html_body)
+    text = re.sub(r"<[^>]+>", " ", text)
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def extract_body_text(message: Message) -> str:
+    """Return the best-effort plain-text body from a parsed email."""
+    if message.is_multipart():
+        html_fallback = ""
+        for part in message.walk():
+            if part.get_content_disposition() == "attachment":
+                continue
+            content_type = part.get_content_type()
+            if content_type == "text/plain":
+                decoded = _decode_part_payload(part)
+                if decoded is not None:
+                    return decoded
+            elif content_type == "text/html" and not html_fallback:
+                decoded = _decode_part_payload(part)
+                if decoded is not None:
+                    html_fallback = _html_to_text(decoded)
+        return html_fallback
+    decoded = _decode_part_payload(message)
+    if decoded is None:
+        return ""
+    if message.get_content_type() == "text/html":
+        return _html_to_text(decoded)
+    return decoded
 
 
 def parse_rfc822(uid: int, raw_bytes: bytes) -> InboxMessage:

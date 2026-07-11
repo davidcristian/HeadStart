@@ -38,6 +38,11 @@ Adapters self-register with `@register_mailbox("key")`. Modules are imported in
 
 - **Fetch:** `UID SEARCH` + `UID FETCH (RFC822)` on the configured mailbox
   (default `INBOX`); returns normalized `InboxMessage` rows.
+- **Body text:** `parse_rfc822` / `extract_body_text` prefer a non-attachment
+  `text/plain` part; when the message is HTML-only (`multipart/alternative` or
+  single-part `text/html`), tags are stripped to plain text so classification
+  and reply drafting still see recruiter content (INB-13). Gmail / Outlook /
+  Yahoo raw MIME paths share the same helper.
 - **Send:** plain-text SMTP with optional `In-Reply-To` / `References` for
   threading.
 - **Test:** IMAP `SELECT` + SMTP `NOOP` without reading mail.
