@@ -10,6 +10,10 @@ from app.models.application_log import ApplicationLog
 from app.models.seen_job import SeenJob
 from app.services.applications import latest_live_attempt
 
+# Company substring alone scores +20; require title (+30), domain (+50), thread
+# (+80), or company+title so a bare "Meta"/"Apple" mention cannot link (INB-18).
+CONFIDENT_LINK_MIN_SCORE = 30
+
 
 def email_domain(addr: str) -> str:
     """Return the lowercase domain part of an email address."""
@@ -83,7 +87,7 @@ def link_message_to_job(message: InboxMessage, jobs: list[SeenJob]) -> SeenJob |
         if score > best_score:
             best_score = score
             best_job = job
-    if best_score >= 20:
+    if best_score >= CONFIDENT_LINK_MIN_SCORE:
         return best_job
     return None
 

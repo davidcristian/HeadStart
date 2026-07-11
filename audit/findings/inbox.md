@@ -219,7 +219,7 @@ _Merged with INB-15 and INB-16 (all three flag that `prepare_message` sanitizes 
 
 <a id="inb-18"></a>
 ### INB-18 — Message-to-job linking accepts a bare company-name substring as confident match
-⚪ **LOW** · 🐞 bug · Status: ☐ open · Confidence: medium (3/3 verifiers) · Effort: S · WS29
+⚪ **LOW** · 🐞 bug · Status: ✅ done · Confidence: medium (3/3 verifiers) · Effort: S · WS29
 
 **Locations:** `backend/app/services/inbox_linking.py:71` (`link_message_to_job`); plus `backend/app/services/inbox_linking.py:51`.
 

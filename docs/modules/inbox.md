@@ -271,9 +271,11 @@ Labels: `general`, `rejection`, `follow_up`, `interview_request`,
   items (name ≤256 / value ≤8192). Oversized client payloads return HTTP 422;
   mailbox parsers clip before constructing the model so a huge RFC822/JMAP
   message cannot abort the poll.
-- **Thread linking:** `app/services/inbox_linking.py` scores employer domain,
-  job title/company mentions, and optional `In-Reply-To` against
-  `application_log.payload.outbound_message_ids`. Message-IDs are compared via
+- **Thread linking:** `app/services/inbox_linking.py` scores employer domain
+  (+50), job title (+30) / company (+20) mentions, and optional `In-Reply-To`
+  (+80) against `application_log.payload.outbound_message_ids`. A confident link
+  requires `CONFIDENT_LINK_MIN_SCORE` (30), so a bare company-name substring
+  alone cannot attribute the thread (INB-18). Message-IDs are compared via
   shared `normalize_message_id` (strip) so whitespace around stored or header
   ids still earns the thread boost (same helper the inbox gate uses).
 - **Persistence:** `inbox_classification` table (one row per user + mailbox UID);

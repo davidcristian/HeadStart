@@ -153,6 +153,34 @@ def test_link_message_to_job_returns_none_below_threshold(db_session: Session) -
     assert link_message_to_job(message, [job]) is None
 
 
+def test_link_message_to_job_rejects_company_only_mention(db_session: Session) -> None:
+    """INB-18: a bare company substring (+20) is not a confident link."""
+    job = _seed_applied_job(db_session)
+    message = InboxMessage(
+        uid=5,
+        from_addr="news@unrelated.example",
+        subject="Industry roundup",
+        body_text="Today we cover ACME and other employers hiring remotely.",
+    )
+    assert score_job_match(message, job, job.application_logs[0]) == 20
+    assert link_message_to_job(message, [job]) is None
+
+
+def test_link_message_to_job_accepts_title_and_company(db_session: Session) -> None:
+    """Title (+30) or title+company clears the raised confident-link bar."""
+    job = _seed_applied_job(db_session)
+    message = InboxMessage(
+        uid=6,
+        from_addr="news@unrelated.example",
+        subject="Backend Engineer at ACME",
+        body_text="Following up on your Backend Engineer application.",
+    )
+    assert score_job_match(message, job, job.application_logs[0]) >= 30
+    linked = link_message_to_job(message, [job])
+    assert linked is not None
+    assert linked.id == job.id
+
+
 def test_linked_application_context_falls_back_to_url_hostname(db_session: Session) -> None:
     search = _make_search(db_session)
     job = SeenJob(
