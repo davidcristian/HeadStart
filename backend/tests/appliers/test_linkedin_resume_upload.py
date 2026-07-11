@@ -79,6 +79,7 @@ def test_upload_easy_apply_resume_posts_metadata_then_puts_file() -> None:
         url = str(request.url)
         if "voyagerMediaUploadMetadata" in url:
             seen["metadata"] = True
+            seen["metadata_cookie"] = request.headers.get("cookie", "")
             return httpx.Response(
                 200,
                 text=metadata,
@@ -88,6 +89,7 @@ def test_upload_easy_apply_resume_posts_metadata_then_puts_file() -> None:
             seen["upload_method"] = request.method
             seen["upload_content_type"] = request.headers.get("content-type")
             seen["upload_body"] = request.content
+            seen["upload_cookie"] = request.headers.get("cookie", "")
             return httpx.Response(200, text="")
         raise AssertionError(f"unexpected network call: {request.method} {url}")
 
@@ -98,9 +100,44 @@ def test_upload_easy_apply_resume_posts_metadata_then_puts_file() -> None:
     )
     assert urn == "urn:li:digitalmediaAsset:C4E03AQResumeTest123"
     assert seen["metadata"] is True
+    assert "li_at=test-li-at" in str(seen["metadata_cookie"])
     assert seen["upload_method"] == "PUT"
     assert seen["upload_content_type"] == "application/pdf"
     assert seen["upload_body"] == b"%PDF"
+    # Signed Ambry URL must not receive the Voyager session jar (APL-19).
+    assert seen["upload_cookie"] == ""
+
+
+def test_upload_easy_apply_resume_omits_cookies_on_foreign_upload_host() -> None:
+    """Response-supplied upload hosts must not receive li_at (APL-19)."""
+    seen: dict[str, object] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        url = str(request.url)
+        if "voyagerMediaUploadMetadata" in url:
+            return httpx.Response(
+                200,
+                json={
+                    "value": {
+                        "singleUploadUrl": "https://evil.example/upload?sig=1",
+                        "urn": "urn:li:digitalmediaAsset:C4E03AQForeignHost",
+                    }
+                },
+            )
+        if "evil.example" in url:
+            seen["upload_cookie"] = request.headers.get("cookie", "")
+            seen["upload_method"] = request.method
+            return httpx.Response(200, text="")
+        raise AssertionError(f"unexpected network call: {request.method} {url}")
+
+    urn = upload_easy_apply_resume(
+        make_http_client(handler),
+        _resume(),
+        _credentials(),
+    )
+    assert urn == "urn:li:digitalmediaAsset:C4E03AQForeignHost"
+    assert seen["upload_method"] == "PUT"
+    assert seen["upload_cookie"] == ""
 
 
 def test_hosted_live_submit_uploads_resume_pdf() -> None:
@@ -136,6 +173,7 @@ def test_hosted_live_submit_uploads_resume_pdf() -> None:
             )
         if "ambry" in url:
             seen["ambry_upload"] = request.method
+            seen["ambry_cookie"] = request.headers.get("cookie", "")
             return httpx.Response(200, text="")
         if "voyagerJobsDashOnsiteApplyApplication" in url:
             seen["body"] = json.loads(request.content.decode())
@@ -163,6 +201,7 @@ def test_hosted_live_submit_uploads_resume_pdf() -> None:
     assert result.status == "submitted"
     assert seen.get("upload_meta") is True
     assert seen.get("ambry_upload") == "PUT"
+    assert seen.get("ambry_cookie") == ""
     body = seen["body"]
     assert isinstance(body, dict)
     uploads = body["fileUploadResponses"]

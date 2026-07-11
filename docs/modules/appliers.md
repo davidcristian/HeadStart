@@ -656,10 +656,12 @@ is treated as failure (same post-2xx guard as Greenhouse / SmartRecruiters) —
 not `submitted`. When the application profile has an
 uploaded resume file and the form includes a document-upload field, live submit
 registers the file via `voyagerMediaUploadMetadata`, uploads it to LinkedIn's
-Ambry endpoint, and includes the asset URN in `fileUploadResponses`. Plain
-`resume_text` remains a preview/fallback when no file is stored. Multi-step
-employer questionnaires are best-effort; map answers in `profile.answers` using
-the form element URN or a normalized field label key.
+Ambry endpoint, and includes the asset URN in `fileUploadResponses`. The Ambry
+PUT uses the signed upload URL only (no Voyager session cookies) so a
+response-supplied host cannot receive `li_at` (APL-19). Plain `resume_text`
+remains a preview/fallback when no file is stored. Multi-step employer
+questionnaires are best-effort; map answers in `profile.answers` using the form
+element URN or a normalized field label key.
 
 **Unsupported:** external apply URLs that are not a recognized ATS when Voyager
 enrichment cannot resolve them (add session cookies or `external_apply_url`).

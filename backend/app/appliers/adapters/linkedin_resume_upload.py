@@ -34,11 +34,11 @@ def upload_easy_apply_resume(
     )
     upload_url, asset_urn = _parse_upload_metadata(metadata)
     content_type = resume_file.content_type.strip() or "application/octet-stream"
+    # Ambry signed URLs self-authenticate; never forward li_at to a response-supplied host (APL-19).
     http.put_raw(
         upload_url,
         content=resume_file.data,
         headers={"Content-Type": content_type},
-        cookies=cookies,
     )
     return asset_urn
 

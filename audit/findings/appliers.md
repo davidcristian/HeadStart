@@ -208,7 +208,9 @@ Merged with APL-18 (the record's own `verify_note` flags it as a duplicate of ui
 
 <a id="apl-19"></a>
 ### APL-19 — LinkedIn resume upload forwards session cookies to a response-supplied URL
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: medium (3/3 verifiers) · Effort: S · WS25
+⚪ **LOW** · 🔒 security · Status: ✅ done · Confidence: medium (3/3 verifiers) · Effort: S · WS25
+
+**Update (2026-07-11).** Fixed in [PR](https://github.com/davidcristian/HeadStart/pull/127): Ambry `put_raw` no longer forwards the Voyager session cookie jar; the signed upload URL self-authenticates, so a response-supplied host cannot receive `li_at`.
 
 **Locations:** `backend/app/appliers/adapters/linkedin_resume_upload.py:37` (`upload_easy_apply_resume`).
 
