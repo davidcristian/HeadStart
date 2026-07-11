@@ -11,6 +11,8 @@ from app.schemas.profile import EducationEntry, ProfileData, WorkExperienceEntry
 
 def test_system_prompt_is_exposed() -> None:
     assert "JSON" in SYSTEM_PROMPT
+    assert "<<<JOB_POSTING>>>" in SYSTEM_PROMPT
+    assert "untrusted data" in SYSTEM_PROMPT
 
 
 def test_user_prompt_includes_every_populated_field() -> None:
@@ -37,6 +39,10 @@ def test_user_prompt_includes_every_populated_field() -> None:
         ),
     )
     prompt = user_prompt(ctx)
+    assert "<<<JOB_POSTING>>>" in prompt
+    assert "<<<END_JOB_POSTING>>>" in prompt
+    assert "<<<CANDIDATE_PROFILE>>>" in prompt
+    assert "<<<END_CANDIDATE_PROFILE>>>" in prompt
     assert "- Title: Senior Engineer" in prompt
     assert "- Company: ACME" in prompt
     assert "- Location: Remote" in prompt
@@ -49,6 +55,14 @@ def test_user_prompt_includes_every_populated_field() -> None:
     assert "  Description: Built." in prompt
     assert "- Education: MIT (BSc, CS)" in prompt
     assert "- Resume excerpt: Line one Line two" in prompt
+    job_block = prompt.split("<<<JOB_POSTING>>>")[1].split("<<<END_JOB_POSTING>>>")[0]
+    assert "Match summary: strong match" in job_block
+    assert "Candidate profile:" not in job_block
+    profile_block = prompt.split("<<<CANDIDATE_PROFILE>>>")[1].split("<<<END_CANDIDATE_PROFILE>>>")[
+        0
+    ]
+    assert "Name: Ada" in profile_block
+    assert "Match summary:" not in profile_block
 
 
 def test_user_prompt_experience_without_description_and_education_no_detail() -> None:

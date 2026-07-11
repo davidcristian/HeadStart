@@ -41,6 +41,9 @@ export function coverLetterStatusMessage(result: JobCoverLetterResult): string {
 }
 
 export function resumeStatusMessage(result: JobResumeResult): string {
+  if (result.injection_guarded) {
+    return "Resume built from your profile (job text looked unsafe for AI curation).";
+  }
   if (result.fallback) {
     return "AI curation was unavailable; a resume was built from your profile instead.";
   }

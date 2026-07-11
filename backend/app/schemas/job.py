@@ -85,3 +85,10 @@ class JobResumeResult(BaseModel):
         default=False,
         description="True when an LLM provider failed and heuristic was used instead",
     )
+    injection_guarded: bool = Field(
+        default=False,
+        description=(
+            "True when scraped posting/resume text matched prompt-injection patterns "
+            "and the offline heuristic curator was forced"
+        ),
+    )

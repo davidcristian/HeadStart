@@ -13,6 +13,7 @@ from app.ai.runtime_settings import resolve_ai_settings
 from app.core.config import settings as default_settings
 from app.core.exceptions import NotFoundError, ValidationError
 from app.core.logging import get_logger
+from app.email_classifiers.sanitize import looks_like_prompt_injection
 from app.models.user import User
 from app.repositories.users import UserRepository
 from app.resumes import ResumeCurationContext, ResumeCurator, get_resume_curator
@@ -82,6 +83,15 @@ class ResumeService:
         )
 
         requested = self._resolve_provider(user)
+        injection = requested != "heuristic" and self._scraped_fields_look_injected(ctx)
+        if injection:
+            logger.warning(
+                "resume for job %s: scraped posting fields matched injection "
+                "patterns; forcing heuristic curator",
+                job_id,
+            )
+            requested = "heuristic"
+
         fields, provider, fallback = self._curate_fields(requested, user, ctx)
         if bundle is not None:
             rendered_files = render_template_bundle(bundle, fields)
@@ -109,7 +119,20 @@ class ResumeService:
             "artifact_id": artifact.id,
             "provider": provider,
             "fallback": fallback,
+            "injection_guarded": injection,
         }
+
+    def _scraped_fields_look_injected(self, ctx: ResumeCurationContext) -> bool:
+        """True when untrusted posting/resume text matches instruction-injection patterns."""
+        parts = (
+            ctx.job_title,
+            ctx.company,
+            ctx.location,
+            ctx.salary,
+            ctx.job_summary,
+            ctx.profile.resume_text,
+        )
+        return any(looks_like_prompt_injection(part) for part in parts if part)
 
     def _curate_fields(
         self,

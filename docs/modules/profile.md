@@ -93,7 +93,12 @@ cannot smuggle file-read primitives into the compiler). Relative same-tree
 includes like `\input{section}` remain allowed. `POST /jobs/{id}/generate-resume`
 queues curation + compile on a Celery worker (API-01); poll
 `GET /document-generations/{id}` until `ready`. Pro users use the
-`resume_curation` AI purpose; the worker renders LaTeX and compiles a tailored PDF
+`resume_curation` AI purpose; scraped job fields and resume excerpt are fenced
+in the LLM user prompt (`<<<JOB_POSTING>>>` / `<<<CANDIDATE_PROFILE>>>`), and
+when those fields match the shared `looks_like_prompt_injection` heuristic the
+worker skips the LLM and uses the offline heuristic curator instead
+(`injection_guarded: true` on the ready result; AIA-13). The worker renders
+LaTeX and compiles a tailored PDF
 (prefers `tectonic`, falls back to `pdflatex` with `-no-shell-escape` and a
 minimal env that forces `openin_any=p` / `openout_any=p` / `shell_escape=f` so
 host `texmf.cnf` defaults cannot re-enable shell escape or absolute-path reads).

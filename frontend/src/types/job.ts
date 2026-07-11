@@ -41,6 +41,7 @@ export interface JobResumeResult {
   artifact_id: number;
   provider: string;
   fallback: boolean;
+  injection_guarded?: boolean;
 }
 
 export type DocumentGenerationKind = "resume" | "cover_letter";

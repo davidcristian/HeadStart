@@ -183,7 +183,9 @@ See [AIA-03](#aia-03) — this record (uid 240, `backend/app/resumes/compile.py:
 <a id="aia-13"></a>
 ### AIA-13 — Scraped job match-summary flows into resume/cover-letter LLM prompts without an injection heuristic
 
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: medium (3/3 verifiers) · Effort: S · WS28
+⚪ **LOW** · 🔒 security · Status: ✅ done · Confidence: medium (3/3 verifiers) · Effort: S · WS28
+
+**Fix.** Resume LLM prompts fence scraped posting + profile data (`<<<JOB_POSTING>>>` / `<<<CANDIDATE_PROFILE>>>`); `ResumeService` reuses `looks_like_prompt_injection` and forces the heuristic curator when matched (`injection_guarded` on the ready result). Cover-letter side already closed by AIA-08.
 
 **Locations:** `backend/app/resumes/prompts.py:34` (`user_prompt`); plus `backend/app/cover_letters/prompts.py:28`.
 

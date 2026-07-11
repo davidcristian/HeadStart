@@ -160,5 +160,17 @@ describe("status messages", () => {
         fallback: true,
       }),
     ).toMatch(/unavailable/);
+    expect(
+      resumeStatusMessage({
+        filename: "r.pdf",
+        size_bytes: 1,
+        content_sha256: "x",
+        pdf_b64: "x",
+        artifact_id: 1,
+        provider: "heuristic",
+        fallback: false,
+        injection_guarded: true,
+      }),
+    ).toMatch(/unsafe for AI/);
   });
 });
