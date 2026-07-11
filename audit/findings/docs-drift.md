@@ -10,7 +10,7 @@ After merging near-duplicate records (see the note at the end), 15 distinct find
 
 <a id="doc-05"></a>
 ### DOC-05 — launch-checklist supported-adapters list omits 4 registered appliers
-⚪ **LOW** · 📝 doc · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: XS · WS25
+⚪ **LOW** · 📝 doc · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/129)) · Confidence: high (3/3 verifiers) · Effort: XS · WS25
 
 **Locations:** `docs/launch-checklist.md:90` (`Auto-apply supported adapters`).
 

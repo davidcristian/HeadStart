@@ -90,7 +90,9 @@ Auto-apply is **off by default** per source (`auto_apply_enabled`). Only enable
 after reading [modules/appliers.md](modules/appliers.md).
 
 **Supported adapters (v1):** Greenhouse, Lever, Ashby, Workday, Google Careers,
-**Microsoft Careers**, **Amazon Jobs**, **Apple Careers**, **Meta Careers**, **Indeed** (delegates to those ATS
+**Microsoft Careers**, **Amazon Jobs**, **Apple Careers**, **Meta Careers**,
+**SmartRecruiters**, **Uber Careers**, **Shopify Careers** (delegates to Ashby),
+**Snowflake Careers** (delegates to Ashby), **Indeed** (delegates to those ATS
 adapters when the listing's employer apply URL is recognized), and **LinkedIn**
 (delegates to those ATS adapters when possible; LinkedIn-hosted Easy Apply is
 best-effort). There is **no** apply adapter for generic HTML/Playwright sources.
