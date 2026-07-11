@@ -205,7 +205,7 @@ _Merged with INB-15 and INB-16 (all three flag that `prepare_message` sanitizes 
 
 <a id="inb-17"></a>
 ### INB-17 — score_job_match compares In-Reply-To to outbound ids without normalization
-⚪ **LOW** · 🔁 consistency · Status: ☐ open · Confidence: medium (3/3 verifiers) · Effort: XS · WS29
+⚪ **LOW** · 🔁 consistency · Status: ✅ done · Confidence: medium (3/3 verifiers) · Effort: XS · WS29
 
 **Locations:** `backend/app/services/inbox_linking.py:56` (`score_job_match`); plus `backend/app/services/inbox_gate.py:109`, `backend/app/services/inbox_gate.py:129`.
 

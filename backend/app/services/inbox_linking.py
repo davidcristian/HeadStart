@@ -31,6 +31,21 @@ def employer_domain_from_payload(log: ApplicationLog | None) -> str:
     return str(raw or "").strip().lower()
 
 
+def normalize_message_id(value: str) -> str:
+    """Normalize a Message-ID for comparison."""
+    return value.strip()
+
+
+def outbound_message_ids_from_log(log: ApplicationLog | None) -> set[str]:
+    """Collect stored outbound Message-IDs from an application log payload."""
+    if log is None or not log.payload:
+        return set()
+    raw = log.payload.get("outbound_message_ids") or []
+    if not isinstance(raw, list):
+        return set()
+    return {normalize_message_id(str(item)) for item in raw if str(item).strip()}
+
+
 def score_job_match(message: InboxMessage, job: SeenJob, log: ApplicationLog | None) -> int:
     """Score how likely an email belongs to one application."""
     score = 0
@@ -51,9 +66,9 @@ def score_job_match(message: InboxMessage, job: SeenJob, log: ApplicationLog | N
     if company and len(company) > 2 and company in haystack:
         score += 20
 
-    if message.in_reply_to and log and log.payload:
-        outbound_ids = log.payload.get("outbound_message_ids") or []
-        if isinstance(outbound_ids, list) and message.in_reply_to in outbound_ids:
+    if message.in_reply_to:
+        outbound_ids = outbound_message_ids_from_log(log)
+        if normalize_message_id(message.in_reply_to) in outbound_ids:
             score += 80
 
     return score

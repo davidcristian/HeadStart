@@ -123,6 +123,25 @@ def test_score_job_match_scores_in_reply_to_thread(db_session: Session) -> None:
     assert score >= 80
 
 
+def test_score_job_match_normalizes_in_reply_to_whitespace(db_session: Session) -> None:
+    """INB-17: whitespace around Message-IDs must not drop the thread boost."""
+    job = _seed_applied_job(db_session)
+    log = job.application_logs[0]
+    log.payload = {
+        **log.payload,
+        "outbound_message_ids": ["  <apply-xyz@headstart.local>  "],
+    }
+    db_session.flush()
+    message = InboxMessage(
+        uid=9,
+        from_addr="stranger@unrelated.example",
+        in_reply_to="  <apply-xyz@headstart.local>  ",
+        subject="Re: your note",
+        body_text="Following up.",
+    )
+    assert score_job_match(message, job, log) >= 80
+
+
 def test_link_message_to_job_returns_none_below_threshold(db_session: Session) -> None:
     job = _seed_applied_job(db_session)
     message = InboxMessage(

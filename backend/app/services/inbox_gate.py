@@ -10,7 +10,6 @@ from sqlalchemy.orm import Session
 from app.inbox.ghost_message import is_self_ghost_archive_message
 from app.inbox.routing import merge_routing_config
 from app.inbox.types import InboxMessage
-from app.models.application_log import ApplicationLog
 from app.models.inbox_classification import InboxClassification
 from app.models.seen_job import SeenJob
 from app.repositories.applications import ApplicationPipelineRepository
@@ -18,7 +17,12 @@ from app.repositories.mailbox_credentials import MailboxCredentialRepository
 from app.schemas.application_pipeline import ApplicationPipelineStage
 from app.services.applications import derive_pipeline_stage, latest_live_attempt
 from app.services.inbox import InboxService
-from app.services.inbox_linking import email_domain, employer_domain_from_payload
+from app.services.inbox_linking import (
+    email_domain,
+    employer_domain_from_payload,
+    normalize_message_id,
+    outbound_message_ids_from_log,
+)
 
 GATE_ELIGIBLE_STAGES: frozenset[ApplicationPipelineStage] = frozenset(
     {"awaiting_reply", "interview_pending", "ghosted"}
@@ -98,21 +102,6 @@ def email_domain_from_job_url(job: SeenJob) -> str:
 
     host = urlparse(job.url).hostname or ""
     return host.lower().removeprefix("www.")
-
-
-def outbound_message_ids_from_log(log: ApplicationLog | None) -> set[str]:
-    """Collect stored outbound Message-IDs from an application log payload."""
-    if log is None or not log.payload:
-        return set()
-    raw = log.payload.get("outbound_message_ids") or []
-    if not isinstance(raw, list):
-        return set()
-    return {normalize_message_id(str(item)) for item in raw if str(item).strip()}
-
-
-def normalize_message_id(value: str) -> str:
-    """Normalize a Message-ID for comparison."""
-    return value.strip()
 
 
 def parse_referenced_message_ids(value: str) -> list[str]:

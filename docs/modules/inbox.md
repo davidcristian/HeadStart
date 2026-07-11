@@ -273,7 +273,9 @@ Labels: `general`, `rejection`, `follow_up`, `interview_request`,
   message cannot abort the poll.
 - **Thread linking:** `app/services/inbox_linking.py` scores employer domain,
   job title/company mentions, and optional `In-Reply-To` against
-  `application_log.payload`.
+  `application_log.payload.outbound_message_ids`. Message-IDs are compared via
+  shared `normalize_message_id` (strip) so whitespace around stored or header
+  ids still earns the thread boost (same helper the inbox gate uses).
 - **Persistence:** `inbox_classification` table (one row per user + mailbox UID);
   `EmailClassificationService` orchestrates classify + link + store.
 
