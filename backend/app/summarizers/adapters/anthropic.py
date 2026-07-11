@@ -17,8 +17,8 @@ import httpx
 from app.ai.llm_common import extract_anthropic_content
 from app.core.config import settings as default_settings
 from app.scrapers.types import JobPosting
-from app.summarizers.adapters.openai import _SYSTEM_PROMPT, _user_prompt
 from app.summarizers.base import Summarizer, register_summarizer
+from app.summarizers.prompts import SYSTEM_PROMPT, user_prompt
 from app.summarizers.types import SummaryContext
 
 
@@ -61,9 +61,9 @@ class AnthropicSummarizer(Summarizer):
         payload = {
             "model": model,
             "max_tokens": 80,
-            "system": _SYSTEM_PROMPT,
+            "system": SYSTEM_PROMPT,
             "messages": [
-                {"role": "user", "content": _user_prompt(ctx, job)},
+                {"role": "user", "content": user_prompt(ctx, job)},
             ],
         }
         resp = self._client.post(url, json=payload, headers=headers)

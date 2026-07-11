@@ -18,13 +18,8 @@ from app.ai.llm_common import extract_openai_content
 from app.core.config import settings as default_settings
 from app.scrapers.types import JobPosting
 from app.summarizers.base import Summarizer, register_summarizer
+from app.summarizers.prompts import SYSTEM_PROMPT, user_prompt
 from app.summarizers.types import SummaryContext
-
-_SYSTEM_PROMPT = (
-    "You help a job seeker triage new postings. In ONE short sentence (max 30 "
-    "words), explain why a posting matches their saved search. Be concrete and "
-    "specific; do not use markdown, quotes, or a leading label."
-)
 
 
 @register_summarizer("openai")
@@ -62,8 +57,8 @@ class OpenAISummarizer(Summarizer):
         payload = {
             "model": model,
             "messages": [
-                {"role": "system", "content": _SYSTEM_PROMPT},
-                {"role": "user", "content": _user_prompt(ctx, job)},
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": user_prompt(ctx, job)},
             ],
             "temperature": 0.3,
             "max_tokens": 80,
@@ -75,33 +70,3 @@ class OpenAISummarizer(Summarizer):
     def close(self) -> None:
         if self._owns_client:
             self._client.close()
-
-
-def _user_prompt(ctx: SummaryContext, job: JobPosting) -> str:
-    lines = ["Posting:"]
-    if job.title:
-        lines.append(f"- Title: {job.title}")
-    if job.company:
-        lines.append(f"- Company: {job.company}")
-    if job.location:
-        lines.append(f"- Location: {job.location}")
-    lines.append("")
-    if ctx.search_name:
-        lines.append(f"Saved search: {ctx.search_name}")
-    if ctx.filters:
-        lines.append(f"Search filters: {_describe_filters(ctx.filters)}")
-    lines.append("Explain in one sentence why this posting matches the search.")
-    return "\n".join(lines)
-
-
-def _describe_filters(filters: dict[str, Any]) -> str:
-    parts: list[str] = []
-    for key in ("keywords", "keywords_include", "keywords_exclude", "location", "workplace"):
-        value = filters.get(key)
-        if value:
-            parts.append(f"{key}={value}")
-    min_salary = filters.get("min_salary")
-    if min_salary:
-        currency = filters.get("salary_currency") or "USD"
-        parts.append(f"min_salary={min_salary} {currency}")
-    return "; ".join(parts) if parts else "none"

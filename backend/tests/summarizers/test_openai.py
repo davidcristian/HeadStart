@@ -93,10 +93,14 @@ def test_openai_user_prompt_includes_filters_and_salary() -> None:
     )
     summarizer.summarize(ctx, [_job()])
     user_content = captured[0]["messages"][1]["content"]
+    assert "<<<JOB_POSTING>>>" in user_content
+    assert "<<<END_JOB_POSTING>>>" in user_content
     assert "keywords=python" in user_content
     assert "location=Berlin" in user_content
     assert "min_salary=120000 EUR" in user_content
     assert "Saved search: Backend" in user_content
+    assert captured[0]["messages"][0]["content"].count("<<<JOB_POSTING>>>") == 1
+    assert "untrusted data" in captured[0]["messages"][0]["content"]
 
 
 def test_openai_user_prompt_salary_defaults_currency() -> None:

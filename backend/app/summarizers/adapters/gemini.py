@@ -17,8 +17,8 @@ import httpx
 from app.ai.llm_common import extract_gemini_content, gemini_headers, gemini_url
 from app.core.config import settings as default_settings
 from app.scrapers.types import JobPosting
-from app.summarizers.adapters.openai import _SYSTEM_PROMPT, _user_prompt
 from app.summarizers.base import Summarizer, register_summarizer
+from app.summarizers.prompts import SYSTEM_PROMPT, user_prompt
 from app.summarizers.types import SummaryContext
 
 
@@ -48,11 +48,11 @@ class GeminiSummarizer(Summarizer):
         self, url: str, headers: dict[str, str], ctx: SummaryContext, job: JobPosting
     ) -> str:
         payload = {
-            "systemInstruction": {"parts": [{"text": _SYSTEM_PROMPT}]},
+            "systemInstruction": {"parts": [{"text": SYSTEM_PROMPT}]},
             "contents": [
                 {
                     "role": "user",
-                    "parts": [{"text": _user_prompt(ctx, job)}],
+                    "parts": [{"text": user_prompt(ctx, job)}],
                 }
             ],
             "generationConfig": {

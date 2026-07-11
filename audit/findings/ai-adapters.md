@@ -259,7 +259,9 @@ See [AIA-03](#aia-03) — this record (uid 240, `backend/app/resumes/compile.py:
 <a id="aia-18"></a>
 ### AIA-18 — Summarizer / cover-letter LLM prompts embed scraped fields with no injection guard
 
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: medium (3/3 verifiers) · Effort: M · WS28
+⚪ **LOW** · 🔒 security · Status: ✅ done · Confidence: medium (3/3 verifiers) · Effort: M · WS28
+
+**Fix.** Summarizer LLM prompts fence scraped title/company/location in `<<<JOB_POSTING>>>` / `<<<END_JOB_POSTING>>>`; the system prompt treats that block as untrusted data. `SummaryService.annotate` reuses `looks_like_prompt_injection` on those fields and forces the offline heuristic when any posting in the batch matches. Cover-letter side already closed by AIA-08 — [PR](https://github.com/davidcristian/HeadStart/pull/138).
 
 **Locations:** `backend/app/summarizers/adapters/openai.py:76` (`_user_prompt`); plus `backend/app/cover_letters/prompts.py:15`, `backend/app/services/summaries.py:47`, `backend/app/services/cover_letters.py:58`.
 
@@ -293,7 +295,9 @@ See [AIA-03](#aia-03) — this record (uid 240, `backend/app/resumes/compile.py:
 <a id="aia-20"></a>
 ### AIA-20 — Summarizer feeds scraped title/company into the LLM prompt unsanitized (all provider adapters)
 
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: medium (5/5 verifiers) · Effort: S · WS28
+⚪ **LOW** · 🔒 security · Status: ✅ done · Confidence: medium (5/5 verifiers) · Effort: S · WS28 (same defect as AIA-18)
+
+**Fix.** Closed with AIA-18: shared fenced prompts + `SummaryService` injection guard forcing heuristic — [PR](https://github.com/davidcristian/HeadStart/pull/138).
 
 **Locations:** `backend/app/summarizers/adapters/openai.py:80` (`_user_prompt`); plus the sibling adapters:
 - `backend/app/summarizers/adapters/anthropic.py:64`

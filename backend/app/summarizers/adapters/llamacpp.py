@@ -18,8 +18,8 @@ import httpx
 from app.ai.llm_common import auth_headers, extract_openai_content
 from app.core.config import settings as default_settings
 from app.scrapers.types import JobPosting
-from app.summarizers.adapters.openai import _SYSTEM_PROMPT, _user_prompt
 from app.summarizers.base import Summarizer, register_summarizer
+from app.summarizers.prompts import SYSTEM_PROMPT, user_prompt
 from app.summarizers.types import SummaryContext
 
 
@@ -55,8 +55,8 @@ class LlamaCppSummarizer(Summarizer):
         payload = {
             "model": model,
             "messages": [
-                {"role": "system", "content": _SYSTEM_PROMPT},
-                {"role": "user", "content": _user_prompt(ctx, job)},
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": user_prompt(ctx, job)},
             ],
             "temperature": 0.3,
             "max_tokens": 80,

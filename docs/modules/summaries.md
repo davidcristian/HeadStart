@@ -13,6 +13,15 @@ generates it after dedup/filtering and before notifying, then:
 It is **best-effort and presentational**: a provider failure never blocks a
 notification — the blurb is just left empty.
 
+## Prompt injection hardening
+
+LLM summarizer adapters share `app/summarizers/prompts.py`. Scraped
+title/company/location are fenced in `<<<JOB_POSTING>>>` /
+`<<<END_JOB_POSTING>>>` blocks; the system prompt treats that block as untrusted
+data. `SummaryService.annotate` reuses `looks_like_prompt_injection` on those
+fields and forces the offline `heuristic` provider when any posting in the batch
+matches, so a poisoned board listing cannot steer the hosted model.
+
 ## Contract
 
 ```python

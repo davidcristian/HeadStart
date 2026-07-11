@@ -13,6 +13,7 @@ from typing import Any
 
 from app.core.config import settings as default_settings
 from app.core.logging import get_logger
+from app.email_classifiers.sanitize import looks_like_prompt_injection
 from app.models.user import User
 from app.scrapers.types import JobPosting
 from app.summarizers import SummaryContext, get_summarizer
@@ -21,6 +22,7 @@ from app.summarizers.runtime_settings import resolve_summary_settings
 
 logger = get_logger(__name__)
 
+LLM_PROVIDERS = frozenset({"openai", "gemini", "anthropic", "llamacpp"})
 SummarizerFactory = Callable[[str], Summarizer]
 
 
@@ -48,6 +50,13 @@ class SummaryService:
             return
 
         provider = str(runtime_settings.summary_provider)
+        if provider in LLM_PROVIDERS and self._postings_look_injected(postings):
+            logger.warning(
+                "summary: scraped posting fields matched injection patterns; "
+                "forcing heuristic summarizer"
+            )
+            provider = "heuristic"
+
         ctx = SummaryContext(search_name=search_name, filters=filters or {})
         try:
             summarizer = self._factory(provider, settings=runtime_settings)  # type: ignore[call-arg]
@@ -61,6 +70,15 @@ class SummaryService:
             text = (blurb or "").strip()
             if text:
                 posting.summary = _truncate(text, max_chars)
+
+    @staticmethod
+    def _postings_look_injected(postings: list[JobPosting]) -> bool:
+        """True when any scraped title/company/location matches injection patterns."""
+        for posting in postings:
+            parts = (posting.title, posting.company, posting.location)
+            if any(looks_like_prompt_injection(part) for part in parts if part):
+                return True
+        return False
 
 
 def _truncate(text: str, max_chars: int) -> str:
