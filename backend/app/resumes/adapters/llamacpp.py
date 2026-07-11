@@ -6,7 +6,7 @@ from typing import Any
 
 import httpx
 
-from app.ai.llm_common import auth_headers, extract_openai_content
+from app.ai.llm_common import auth_headers, extract_openai_content, llm_post
 from app.core.config import settings as default_settings
 from app.resumes.base import ResumeCurator, register_resume_curator
 from app.resumes.prompts import SYSTEM_PROMPT, parse_curated_json, user_prompt
@@ -40,7 +40,8 @@ class LlamaCppResumeCurator(ResumeCurator):
             "temperature": 0.3,
             "max_tokens": max_tokens,
         }
-        resp = self._client.post(
+        resp = llm_post(
+            self._client,
             f"{base_url}/chat/completions",
             json=payload,
             headers=auth_headers(str(getattr(self._settings, "llamacpp_api_key", "") or "")),

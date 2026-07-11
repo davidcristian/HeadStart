@@ -11,7 +11,7 @@ from app.summarizers.adapters.openai import OpenAISummarizer
 class _Settings:
     openai_api_key = "sk-test"
     openai_model = "gpt-4o-mini"
-    openai_base_url = "https://api.openai.com/v1"
+    openai_base_url = "https://api.openai.fixture.test/v1"
 
 
 def _job(external_id: str = "1") -> JobPosting:
@@ -29,7 +29,7 @@ def test_openai_posts_chat_completion_and_returns_blurb() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         captured.append(json.loads(request.content))
         assert request.headers["Authorization"] == "Bearer sk-test"
-        assert str(request.url) == "https://api.openai.com/v1/chat/completions"
+        assert str(request.url) == "https://api.openai.fixture.test/v1/chat/completions"
         return httpx.Response(
             200,
             json={"choices": [{"message": {"content": "Strong Python match for your search."}}]},
@@ -52,7 +52,7 @@ def test_openai_requires_api_key() -> None:
     class _NoKey:
         openai_api_key = ""
         openai_model = "gpt-4o-mini"
-        openai_base_url = "https://api.openai.com/v1"
+        openai_base_url = "https://api.openai.fixture.test/v1"
 
     summarizer = OpenAISummarizer(client=httpx.Client(), settings=_NoKey())
     with pytest.raises(ValueError, match="OPENAI_API_KEY"):

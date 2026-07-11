@@ -6,7 +6,7 @@ from typing import Any
 
 import httpx
 
-from app.ai.llm_common import auth_headers, extract_openai_content
+from app.ai.llm_common import auth_headers, extract_openai_content, llm_post
 from app.core.config import settings as default_settings
 from app.cover_letters.base import CoverLetterGenerator, register_cover_letter_generator
 from app.cover_letters.prompts import SYSTEM_PROMPT, user_prompt
@@ -42,7 +42,7 @@ class LlamaCppCoverLetterGenerator(CoverLetterGenerator):
             "temperature": 0.4,
             "max_tokens": max_tokens,
         }
-        resp = self._client.post(url, json=payload, headers=headers)
+        resp = llm_post(self._client, url, json=payload, headers=headers)
         resp.raise_for_status()
         return extract_openai_content(resp.json())
 

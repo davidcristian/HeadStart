@@ -11,7 +11,7 @@ from app.summarizers.adapters.gemini import GeminiSummarizer
 class _Settings:
     gemini_api_key = "gemini-test-key"
     gemini_model = "gemini-2.0-flash"
-    gemini_base_url = "https://generativelanguage.googleapis.com/v1beta"
+    gemini_base_url = "https://generativelanguage.googleapis.fixture.test/v1beta"
 
 
 def _job(external_id: str = "1") -> JobPosting:
@@ -29,7 +29,7 @@ def test_gemini_posts_generate_content_and_returns_blurb() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         captured.append(json.loads(request.content))
         assert str(request.url).startswith(
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+            "https://generativelanguage.googleapis.fixture.test/v1beta/models/gemini-2.0-flash:generateContent"
         )
         assert request.headers["x-goog-api-key"] == "gemini-test-key"
         assert "key=" not in str(request.url)
@@ -65,7 +65,7 @@ def test_gemini_requires_api_key() -> None:
     class _NoKey:
         gemini_api_key = ""
         gemini_model = "gemini-2.0-flash"
-        gemini_base_url = "https://generativelanguage.googleapis.com/v1beta"
+        gemini_base_url = "https://generativelanguage.googleapis.fixture.test/v1beta"
 
     summarizer = GeminiSummarizer(client=httpx.Client(), settings=_NoKey())
     with pytest.raises(ValueError, match="GEMINI_API_KEY"):

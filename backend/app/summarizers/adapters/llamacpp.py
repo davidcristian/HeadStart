@@ -15,7 +15,7 @@ from typing import Any
 
 import httpx
 
-from app.ai.llm_common import auth_headers, extract_openai_content
+from app.ai.llm_common import auth_headers, extract_openai_content, llm_post
 from app.core.config import settings as default_settings
 from app.scrapers.types import JobPosting
 from app.summarizers.base import Summarizer, register_summarizer
@@ -61,7 +61,7 @@ class LlamaCppSummarizer(Summarizer):
             "temperature": 0.3,
             "max_tokens": 80,
         }
-        resp = self._client.post(url, json=payload, headers=headers)
+        resp = llm_post(self._client, url, json=payload, headers=headers)
         resp.raise_for_status()
         return extract_openai_content(resp.json())
 

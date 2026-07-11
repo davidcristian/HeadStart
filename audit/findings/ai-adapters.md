@@ -278,7 +278,9 @@ See [AIA-03](#aia-03) — this record (uid 240, `backend/app/resumes/compile.py:
 <a id="aia-19"></a>
 ### AIA-19 — LLM adapters POST via raw httpx with no SSRF / outbound-URL guard
 
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: medium (2/3 verifiers) · Effort: M · WS28
+⚪ **LOW** · 🔒 security · Status: ✅ done · Confidence: medium (2/3 verifiers) · Effort: M · WS28
+
+**Fix.** Shared `app.ai.llm_common.llm_post` routes every hosted LLM adapter POST through `pinned_request` (same SSRF + DNS-pin policy as scrapers/notifiers). Loopback remains allowed only in `local`/`test` for llama.cpp — [PR](https://github.com/davidcristian/HeadStart/pull/139).
 
 **Locations:** `backend/app/summarizers/adapters/openai.py:52` (`OpenAISummarizer.summarize`); plus `backend/app/cover_letters/adapters/openai.py:38`, `backend/app/email_classifiers/adapters/anthropic.py:41`, `backend/app/reply_drafters/adapters/gemini.py:37`, `backend/app/summarizers/adapters/llamacpp.py:44`.
 

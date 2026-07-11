@@ -14,14 +14,14 @@ from app.cover_letters.types import CoverLetterContext
 class _OpenAISettings:
     openai_api_key = "sk-test"
     openai_model = "gpt-4o-mini"
-    openai_base_url = "https://api.openai.com/v1"
+    openai_base_url = "https://api.openai.fixture.test/v1"
     cover_letter_max_tokens = 900
 
 
 class _AnthropicSettings:
     anthropic_api_key = "sk-ant-test"
     anthropic_model = "claude-3-5-haiku-latest"
-    anthropic_base_url = "https://api.anthropic.com/v1"
+    anthropic_base_url = "https://api.anthropic.fixture.test/v1"
     anthropic_api_version = "2023-06-01"
     cover_letter_max_tokens = 900
 
@@ -51,7 +51,7 @@ def test_openai_posts_and_returns_letter() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         captured.append(json.loads(request.content))
         assert request.headers["Authorization"] == "Bearer sk-test"
-        assert str(request.url) == "https://api.openai.com/v1/chat/completions"
+        assert str(request.url) == "https://api.openai.fixture.test/v1/chat/completions"
         return _openai_response("Dear ACME team, ...")
 
     generator = OpenAICoverLetterGenerator(
@@ -105,7 +105,7 @@ def test_anthropic_posts_and_returns_letter() -> None:
         captured.append(json.loads(request.content))
         assert request.headers["x-api-key"] == "sk-ant-test"
         assert request.headers["anthropic-version"] == "2023-06-01"
-        assert str(request.url) == "https://api.anthropic.com/v1/messages"
+        assert str(request.url) == "https://api.anthropic.fixture.test/v1/messages"
         return _anthropic_response("Dear ACME team, ...")
 
     generator = AnthropicCoverLetterGenerator(

@@ -22,6 +22,15 @@ data. `SummaryService.annotate` reuses `looks_like_prompt_injection` on those
 fields and forces the offline `heuristic` provider when any posting in the batch
 matches, so a poisoned board listing cannot steer the hosted model.
 
+## Outbound HTTP (SSRF)
+
+Hosted LLM adapters (summarizers and the sibling AI families) POST via
+`app.ai.llm_common.llm_post`, which applies the same SSRF + DNS-pin policy as
+scrapers/notifiers (`pinned_request`). A mis-set `*_BASE_URL` cannot send API
+keys to private or metadata hosts. Loopback (`localhost` / `127.0.0.1`) is
+allowed only when `ENVIRONMENT` is `local` or `test`, so llama.cpp on the
+default local URL keeps working.
+
 ## Contract
 
 ```python

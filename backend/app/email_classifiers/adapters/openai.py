@@ -6,7 +6,7 @@ from typing import Any
 
 import httpx
 
-from app.ai.llm_common import extract_openai_content
+from app.ai.llm_common import extract_openai_content, llm_post
 from app.core.config import settings as default_settings
 from app.email_classifiers.base import EmailClassifier, register_email_classifier
 from app.email_classifiers.prompts import SYSTEM_PROMPT, parse_classification_json, user_prompt
@@ -45,7 +45,7 @@ class OpenAIEmailClassifier(EmailClassifier):
             "temperature": 0.1,
             "max_tokens": max_tokens,
         }
-        resp = self._client.post(url, json=payload, headers=headers)
+        resp = llm_post(self._client, url, json=payload, headers=headers)
         resp.raise_for_status()
         return parse_classification_json(extract_openai_content(resp.json()))
 

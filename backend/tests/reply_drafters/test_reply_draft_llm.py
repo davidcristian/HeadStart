@@ -15,14 +15,14 @@ from app.schemas.profile import ProfileData
 class _OpenAISettings:
     openai_api_key = "sk-test"
     openai_model = "gpt-4o-mini"
-    openai_base_url = "https://api.openai.com/v1"
+    openai_base_url = "https://api.openai.fixture.test/v1"
     email_draft_max_tokens = 600
 
 
 class _AnthropicSettings:
     anthropic_api_key = "sk-ant-test"
     anthropic_model = "claude-3-5-haiku-latest"
-    anthropic_base_url = "https://api.anthropic.com/v1"
+    anthropic_base_url = "https://api.anthropic.fixture.test/v1"
     anthropic_api_version = "2023-06-01"
     email_draft_max_tokens = 600
 
@@ -55,7 +55,7 @@ def test_openai_posts_and_parses_reply() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         captured.append(json.loads(request.content))
         assert request.headers["Authorization"] == "Bearer sk-test"
-        assert str(request.url) == "https://api.openai.com/v1/chat/completions"
+        assert str(request.url) == "https://api.openai.fixture.test/v1/chat/completions"
         return _openai_response(_REPLY)
 
     drafter = OpenAIReplyDrafter(
@@ -106,7 +106,7 @@ def test_anthropic_posts_and_parses_reply() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         captured.append(json.loads(request.content))
         assert request.headers["x-api-key"] == "sk-ant-test"
-        assert str(request.url) == "https://api.anthropic.com/v1/messages"
+        assert str(request.url) == "https://api.anthropic.fixture.test/v1/messages"
         return _anthropic_response(_REPLY)
 
     drafter = AnthropicReplyDrafter(

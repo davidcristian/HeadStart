@@ -11,7 +11,7 @@ from app.summarizers.adapters.anthropic import AnthropicSummarizer
 class _Settings:
     anthropic_api_key = "sk-ant-test"
     anthropic_model = "claude-3-5-haiku-latest"
-    anthropic_base_url = "https://api.anthropic.com/v1"
+    anthropic_base_url = "https://api.anthropic.fixture.test/v1"
     anthropic_api_version = "2023-06-01"
 
 
@@ -31,7 +31,7 @@ def test_anthropic_posts_messages_and_returns_blurb() -> None:
         captured.append(json.loads(request.content))
         assert request.headers["x-api-key"] == "sk-ant-test"
         assert request.headers["anthropic-version"] == "2023-06-01"
-        assert str(request.url) == "https://api.anthropic.com/v1/messages"
+        assert str(request.url) == "https://api.anthropic.fixture.test/v1/messages"
         return httpx.Response(
             200,
             json={"content": [{"type": "text", "text": "Strong Python match for your search."}]},
@@ -56,7 +56,7 @@ def test_anthropic_requires_api_key() -> None:
     class _NoKey:
         anthropic_api_key = ""
         anthropic_model = "claude-3-5-haiku-latest"
-        anthropic_base_url = "https://api.anthropic.com/v1"
+        anthropic_base_url = "https://api.anthropic.fixture.test/v1"
         anthropic_api_version = "2023-06-01"
 
     summarizer = AnthropicSummarizer(client=httpx.Client(), settings=_NoKey())

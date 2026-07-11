@@ -9,7 +9,15 @@ live here once rather than being duplicated (or re-exported) per family.
 from __future__ import annotations
 
 from typing import Any
-from urllib.parse import quote
+from urllib.parse import quote, urlparse
+
+import httpx
+
+from app.core.config import get_settings
+from app.core.outbound_http import pinned_request
+
+_LOCAL_ENVIRONMENTS = frozenset({"local", "test"})
+_LOOPBACK_HOSTS = frozenset({"localhost", "127.0.0.1", "::1"})
 
 
 def extract_openai_content(data: dict[str, Any]) -> str:
@@ -59,3 +67,25 @@ def gemini_url(base_url: str, model: str) -> str:
 def gemini_headers(api_key: str) -> dict[str, str]:
     """Gemini auth header. Keeps the key out of the URL (it is loggable there)."""
     return {"x-goog-api-key": api_key.strip()}
+
+
+def llm_post(client: httpx.Client, url: str, **kwargs: Any) -> httpx.Response:
+    """POST to an LLM provider URL under the shared SSRF / DNS-pin policy.
+
+    Provider ``*_BASE_URL`` values are config-only today; routing through
+    ``pinned_request`` still blocks a mis-set base URL from sending API keys to
+    private or metadata hosts (same policy as scrapers/notifiers). Loopback is
+    allowed only in ``local``/``test`` so llama.cpp on localhost keeps working.
+    """
+    if _local_loopback_llm_url(url):
+        return client.request("POST", url, **kwargs)
+    return pinned_request(client, "POST", url, **kwargs)
+
+
+def _local_loopback_llm_url(url: str) -> bool:
+    """True when local/test may reach a loopback LLM server without SSRF pin."""
+    env = get_settings().environment.strip().lower()
+    if env not in _LOCAL_ENVIRONMENTS:
+        return False
+    host = (urlparse(url).hostname or "").lower().rstrip(".")
+    return host in _LOOPBACK_HOSTS

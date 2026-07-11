@@ -249,7 +249,8 @@ Labels: `general`, `rejection`, `follow_up`, `interview_request`,
   and as LLM fallback.
 - **LLM providers:** `openai`, `gemini`, `anthropic`, `llamacpp` — selected via
   `resolve_ai_settings(..., "email_classify")` (Pro users can override per-purpose
-  in Settings → AI models).
+  in Settings → AI models). Provider POSTs go through `llm_post` (shared SSRF /
+  DNS-pin policy; see [summaries.md](summaries.md#outbound-http-ssrf)).
 - **Sanitization:** HTML stripped from body and From/To/Subject headers
   (`sanitize_message_header` preserves angle-addrs); body/headers capped
   (`EMAIL_CLASSIFY_MAX_BODY_CHARS`). Obvious prompt-injection patterns in
@@ -382,7 +383,8 @@ Supported classification labels: `follow_up`, `general`.
   availability) and job context; offline.
 - **LLM providers:** `openai`, `gemini`, `anthropic`, `llamacpp` — selected via
   `resolve_ai_settings(..., "email_draft")` (Pro users can override per-purpose
-  in Settings → AI models).
+  in Settings → AI models). Provider POSTs go through `llm_post` (shared SSRF /
+  DNS-pin policy; see [summaries.md](summaries.md#outbound-http-ssrf)).
 - **Sanitization:** the drafter reuses `email_classifiers/sanitize.py` on the
   stored recruiter **From**, subject, and `body_excerpt` before either reaches an
   LLM (HTML stripped, text capped; From/Subject use `sanitize_message_header` so

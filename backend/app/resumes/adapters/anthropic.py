@@ -6,7 +6,7 @@ from typing import Any
 
 import httpx
 
-from app.ai.llm_common import extract_anthropic_content
+from app.ai.llm_common import extract_anthropic_content, llm_post
 from app.core.config import settings as default_settings
 from app.resumes.base import ResumeCurator, register_resume_curator
 from app.resumes.prompts import SYSTEM_PROMPT, parse_curated_json, user_prompt
@@ -42,7 +42,8 @@ class AnthropicResumeCurator(ResumeCurator):
             "system": SYSTEM_PROMPT,
             "messages": [{"role": "user", "content": user_prompt(ctx)}],
         }
-        resp = self._client.post(
+        resp = llm_post(
+            self._client,
             f"{base_url}/messages",
             json=payload,
             headers={

@@ -15,21 +15,21 @@ from app.resumes.types import ResumeCurationContext
 class _GeminiSettings:
     gemini_api_key = "gemini-test-key"
     gemini_model = "gemini-2.0-flash"
-    gemini_base_url = "https://generativelanguage.googleapis.com/v1beta"
+    gemini_base_url = "https://generativelanguage.googleapis.fixture.test/v1beta"
     resume_curation_max_tokens = 1200
 
 
 class _OpenAISettings:
     openai_api_key = "sk-test"
     openai_model = "gpt-4o-mini"
-    openai_base_url = "https://api.openai.com/v1"
+    openai_base_url = "https://api.openai.fixture.test/v1"
     resume_curation_max_tokens = 1200
 
 
 class _AnthropicSettings:
     anthropic_api_key = "sk-ant-test"
     anthropic_model = "claude-3-5-haiku-latest"
-    anthropic_base_url = "https://api.anthropic.com/v1"
+    anthropic_base_url = "https://api.anthropic.fixture.test/v1"
     anthropic_api_version = "2023-06-01"
     resume_curation_max_tokens = 1200
 
@@ -62,7 +62,7 @@ def test_openai_posts_and_parses_fields() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         captured.append(json.loads(request.content))
         assert request.headers["Authorization"] == "Bearer sk-test"
-        assert str(request.url) == "https://api.openai.com/v1/chat/completions"
+        assert str(request.url) == "https://api.openai.fixture.test/v1/chat/completions"
         return _openai_response(_CURATED)
 
     curator = OpenAIResumeCurator(
@@ -115,7 +115,7 @@ def test_anthropic_posts_and_parses_fields() -> None:
         captured.append(json.loads(request.content))
         assert request.headers["x-api-key"] == "sk-ant-test"
         assert request.headers["content-type"] == "application/json"
-        assert str(request.url) == "https://api.anthropic.com/v1/messages"
+        assert str(request.url) == "https://api.anthropic.fixture.test/v1/messages"
         return _anthropic_response(_CURATED)
 
     curator = AnthropicResumeCurator(

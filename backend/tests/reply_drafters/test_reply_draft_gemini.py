@@ -11,7 +11,7 @@ from app.schemas.profile import ProfileData
 class _Settings:
     gemini_api_key = "gemini-test-key"
     gemini_model = "gemini-2.0-flash"
-    gemini_base_url = "https://generativelanguage.googleapis.com/v1beta"
+    gemini_base_url = "https://generativelanguage.googleapis.fixture.test/v1beta"
     email_draft_max_tokens = 600
 
 

@@ -11,7 +11,7 @@ from app.inbox.types import InboxMessage
 class _Settings:
     gemini_api_key = "gemini-test-key"
     gemini_model = "gemini-2.0-flash"
-    gemini_base_url = "https://generativelanguage.googleapis.com/v1beta"
+    gemini_base_url = "https://generativelanguage.googleapis.fixture.test/v1beta"
     email_classify_max_tokens = 256
 
 

@@ -14,7 +14,7 @@ from typing import Any
 
 import httpx
 
-from app.ai.llm_common import extract_gemini_content, gemini_headers, gemini_url
+from app.ai.llm_common import extract_gemini_content, gemini_headers, gemini_url, llm_post
 from app.core.config import settings as default_settings
 from app.scrapers.types import JobPosting
 from app.summarizers.base import Summarizer, register_summarizer
@@ -60,7 +60,7 @@ class GeminiSummarizer(Summarizer):
                 "maxOutputTokens": 80,
             },
         }
-        resp = self._client.post(url, json=payload, headers=headers)
+        resp = llm_post(self._client, url, json=payload, headers=headers)
         resp.raise_for_status()
         return extract_gemini_content(resp.json())
 

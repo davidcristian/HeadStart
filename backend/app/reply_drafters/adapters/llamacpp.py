@@ -6,7 +6,7 @@ from typing import Any
 
 import httpx
 
-from app.ai.llm_common import auth_headers, extract_openai_content
+from app.ai.llm_common import auth_headers, extract_openai_content, llm_post
 from app.core.config import settings as default_settings
 from app.reply_drafters.base import ReplyDrafter, register_reply_drafter
 from app.reply_drafters.prompts import SYSTEM_PROMPT, parse_reply_json, user_prompt
@@ -42,7 +42,7 @@ class LlamaCppReplyDrafter(ReplyDrafter):
             "temperature": 0.3,
             "max_tokens": max_tokens,
         }
-        resp = self._client.post(url, json=payload, headers=headers)
+        resp = llm_post(self._client, url, json=payload, headers=headers)
         resp.raise_for_status()
         return parse_reply_json(extract_openai_content(resp.json()))
 

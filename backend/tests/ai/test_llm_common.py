@@ -1,3 +1,6 @@
+from types import SimpleNamespace
+
+import httpx
 import pytest
 
 from app.ai.llm_common import (
@@ -7,7 +10,9 @@ from app.ai.llm_common import (
     extract_openai_content,
     gemini_headers,
     gemini_url,
+    llm_post,
 )
+from app.core.outbound_url import UnsafeOutboundUrlError
 
 
 def test_extract_openai_content_happy_and_strips() -> None:
@@ -63,3 +68,48 @@ def test_gemini_url_plain_model() -> None:
 
 def test_gemini_headers_uses_google_header_and_strips() -> None:
     assert gemini_headers("  key-123 ") == {"x-goog-api-key": "key-123"}
+
+
+def test_llm_post_pins_public_fixture_host() -> None:
+    captured: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured.append(request)
+        return httpx.Response(200, json={"ok": True})
+
+    client = httpx.Client(transport=httpx.MockTransport(handler))
+    resp = llm_post(
+        client,
+        "https://api.openai.fixture.test/v1/chat/completions",
+        json={"model": "x"},
+    )
+    assert resp.status_code == 200
+    assert str(captured[0].url) == "https://api.openai.fixture.test/v1/chat/completions"
+    assert captured[0].headers["Host"] == "api.openai.fixture.test"
+
+
+def test_llm_post_rejects_private_host(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        "app.ai.llm_common.get_settings",
+        lambda: SimpleNamespace(environment="production"),
+    )
+    client = httpx.Client(transport=httpx.MockTransport(lambda r: httpx.Response(200)))
+    with pytest.raises(UnsafeOutboundUrlError):
+        llm_post(client, "http://127.0.0.1:8080/v1/chat/completions", json={})
+
+
+def test_llm_post_allows_loopback_in_local(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        "app.ai.llm_common.get_settings",
+        lambda: SimpleNamespace(environment="local"),
+    )
+    captured: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured.append(request)
+        return httpx.Response(200, json={"ok": True})
+
+    client = httpx.Client(transport=httpx.MockTransport(handler))
+    resp = llm_post(client, "http://localhost:8080/v1/chat/completions", json={})
+    assert resp.status_code == 200
+    assert str(captured[0].url) == "http://localhost:8080/v1/chat/completions"

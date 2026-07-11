@@ -14,7 +14,7 @@ from typing import Any
 
 import httpx
 
-from app.ai.llm_common import extract_anthropic_content
+from app.ai.llm_common import extract_anthropic_content, llm_post
 from app.core.config import settings as default_settings
 from app.scrapers.types import JobPosting
 from app.summarizers.base import Summarizer, register_summarizer
@@ -66,7 +66,7 @@ class AnthropicSummarizer(Summarizer):
                 {"role": "user", "content": user_prompt(ctx, job)},
             ],
         }
-        resp = self._client.post(url, json=payload, headers=headers)
+        resp = llm_post(self._client, url, json=payload, headers=headers)
         resp.raise_for_status()
         return extract_anthropic_content(resp.json())
 
