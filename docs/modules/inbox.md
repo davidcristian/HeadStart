@@ -265,6 +265,12 @@ Labels: `general`, `rejection`, `follow_up`, `interview_request`,
   subject, From, To, or body force the offline heuristic (which maps them to
   `out_of_scope`) before any LLM classifier runs — same guard pattern as reply
   drafting (INB-07 / INB-09).
+- **Input bounds (INB-14):** `InboxMessage` (used by `POST /inbox/classify` and
+  mailbox fetch) caps `subject` / message-id fields at 998 chars, addresses at
+  320, `body_text` at 100 000, `to_addrs` at 50 entries, and `raw_headers` at 64
+  items (name ≤256 / value ≤8192). Oversized client payloads return HTTP 422;
+  mailbox parsers clip before constructing the model so a huge RFC822/JMAP
+  message cannot abort the poll.
 - **Thread linking:** `app/services/inbox_linking.py` scores employer domain,
   job title/company mentions, and optional `In-Reply-To` against
   `application_log.payload`.

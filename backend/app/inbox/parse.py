@@ -10,7 +10,17 @@ from email.header import decode_header, make_header
 from email.message import Message
 from email.utils import getaddresses, parsedate_to_datetime
 
-from app.inbox.types import InboxMessage
+from app.inbox.types import (
+    INBOX_ADDR_MAX_LENGTH,
+    INBOX_BODY_MAX_LENGTH,
+    INBOX_MESSAGE_ID_MAX_LENGTH,
+    INBOX_REFERENCES_MAX_LENGTH,
+    INBOX_SUBJECT_MAX_LENGTH,
+    INBOX_TO_ADDRS_MAX_ITEMS,
+    InboxMessage,
+    clip_inbox_headers,
+    clip_inbox_str,
+)
 
 
 def decode_mime_header(value: str | None) -> str:
@@ -83,15 +93,16 @@ def parse_rfc822(uid: int, raw_bytes: bytes) -> InboxMessage:
         for key, value in message.items()
         if isinstance(key, str) and isinstance(value, str)
     }
+    from_addr = from_addrs[0] if from_addrs else ""
     return InboxMessage(
         uid=uid,
-        message_id=message.get("Message-ID"),
-        in_reply_to=message.get("In-Reply-To"),
-        references=message.get("References"),
-        from_addr=from_addrs[0] if from_addrs else "",
-        to_addrs=to_addrs,
-        subject=decode_mime_header(message.get("Subject")),
-        body_text=extract_body_text(message),
+        message_id=clip_inbox_str(message.get("Message-ID"), INBOX_MESSAGE_ID_MAX_LENGTH),
+        in_reply_to=clip_inbox_str(message.get("In-Reply-To"), INBOX_MESSAGE_ID_MAX_LENGTH),
+        references=clip_inbox_str(message.get("References"), INBOX_REFERENCES_MAX_LENGTH),
+        from_addr=from_addr[:INBOX_ADDR_MAX_LENGTH],
+        to_addrs=[addr[:INBOX_ADDR_MAX_LENGTH] for addr in to_addrs[:INBOX_TO_ADDRS_MAX_ITEMS]],
+        subject=(decode_mime_header(message.get("Subject")) or "")[:INBOX_SUBJECT_MAX_LENGTH],
+        body_text=extract_body_text(message)[:INBOX_BODY_MAX_LENGTH],
         received_at=received_at,
-        raw_headers=headers,
+        raw_headers=clip_inbox_headers(headers),
     )

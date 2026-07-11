@@ -76,3 +76,21 @@ def test_classify_by_uid_fetches_from_mailbox(client: TestClient, monkeypatch) -
         resp = client.post("/api/v1/inbox/classify", headers=headers, json={"uid": 55})
     assert resp.status_code == 200
     assert resp.json()["label"] == "rejection"
+
+
+def test_classify_rejects_overlong_body_text(client: TestClient, monkeypatch) -> None:
+    """INB-14: client-supplied InboxMessage body_text is bounded (HTTP 422)."""
+    monkeypatch.setattr(settings, "inbox_agent_enabled", True)
+    headers = register_and_login(client, "classify-bounds@example.com")
+    resp = client.post(
+        "/api/v1/inbox/classify",
+        headers=headers,
+        json={
+            "message": {
+                "uid": 1,
+                "subject": "Hi",
+                "body_text": "x" * 100_001,
+            }
+        },
+    )
+    assert resp.status_code == 422

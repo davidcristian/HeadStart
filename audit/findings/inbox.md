@@ -189,7 +189,7 @@ _Merged with INB-15 and INB-16 (all three flag that `prepare_message` sanitizes 
 
 <a id="inb-14"></a>
 ### INB-14 — Client-supplied InboxMessage fields (subject/body_text/raw_headers) have no bounds
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: medium (3/3 verifiers) · Effort: S · WS29
+⚪ **LOW** · 🔒 security · Status: ✅ done · Confidence: medium (3/3 verifiers) · Effort: S · WS29
 
 **Locations:** `backend/app/inbox/types.py:74` (`InboxMessage`).
 
@@ -200,6 +200,8 @@ _Merged with INB-15 and INB-16 (all three flag that `prepare_message` sanitizes 
 **Suggested fix.** Cap `subject`/`from_addr`/`body_text` `max_length` and `raw_headers`/`to_addrs` item counts on the API-facing `InboxMessage`, matching `OutboundMessage`'s bounded fields.
 
 **Verification.** Confirmed 3/3 adversarial verifiers. `InboxMessage` fields are plain `str` with no `max_length` and its collections have no item caps, unlike `OutboundMessage`; accepted from the client with no upstream bound — a genuine low input-bounds gap.
+
+**Update (2026-07-11).** Fixed in [PR](https://github.com/davidcristian/HeadStart/pull/142): `InboxMessage` Field bounds + validators; RFC822/JMAP parsers clip oversized fields before construct; classify API returns 422 on oversize client payloads.
 
 <a id="inb-17"></a>
 ### INB-17 — score_job_match compares In-Reply-To to outbound ids without normalization

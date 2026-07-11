@@ -3,7 +3,46 @@
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+# Bounds for client-supplied and normalized inbound mail (INB-14).
+# Subject matches OutboundMessage / RFC 5322 line length; body caps multi-MB
+# classify payloads while still fitting typical recruiter threads.
+INBOX_MESSAGE_ID_MAX_LENGTH = 998
+INBOX_SUBJECT_MAX_LENGTH = 998
+INBOX_ADDR_MAX_LENGTH = 320
+INBOX_BODY_MAX_LENGTH = 100_000
+INBOX_REFERENCES_MAX_LENGTH = 8_192
+INBOX_TO_ADDRS_MAX_ITEMS = 50
+INBOX_RAW_HEADERS_MAX_ITEMS = 64
+INBOX_HEADER_NAME_MAX_LENGTH = 256
+INBOX_HEADER_VALUE_MAX_LENGTH = 8_192
+
+
+def clip_inbox_str(value: str | None, max_length: int) -> str | None:
+    """Truncate optional strings so mailbox parsers stay within InboxMessage bounds."""
+    if value is None:
+        return None
+    if len(value) <= max_length:
+        return value
+    return value[:max_length]
+
+
+def clip_inbox_headers(headers: dict[str, str]) -> dict[str, str]:
+    """Keep header maps within InboxMessage item and value caps."""
+    clipped: dict[str, str] = {}
+    for key, value in headers.items():
+        if len(clipped) >= INBOX_RAW_HEADERS_MAX_ITEMS:
+            break
+        name = (
+            key if len(key) <= INBOX_HEADER_NAME_MAX_LENGTH else key[:INBOX_HEADER_NAME_MAX_LENGTH]
+        )
+        clipped[name] = (
+            value
+            if len(value) <= INBOX_HEADER_VALUE_MAX_LENGTH
+            else value[:INBOX_HEADER_VALUE_MAX_LENGTH]
+        )
+    return clipped
 
 
 class GmailMailboxConfig(BaseModel):
@@ -75,15 +114,44 @@ class InboxMessage(BaseModel):
     """Normalized inbound email for triage and classification."""
 
     uid: int
-    message_id: str | None = None
-    in_reply_to: str | None = None
-    references: str | None = None
-    from_addr: str = ""
-    to_addrs: list[str] = Field(default_factory=list)
-    subject: str = ""
-    body_text: str = ""
+    message_id: str | None = Field(default=None, max_length=INBOX_MESSAGE_ID_MAX_LENGTH)
+    in_reply_to: str | None = Field(default=None, max_length=INBOX_MESSAGE_ID_MAX_LENGTH)
+    references: str | None = Field(default=None, max_length=INBOX_REFERENCES_MAX_LENGTH)
+    from_addr: str = Field(default="", max_length=INBOX_ADDR_MAX_LENGTH)
+    to_addrs: list[str] = Field(default_factory=list, max_length=INBOX_TO_ADDRS_MAX_ITEMS)
+    subject: str = Field(default="", max_length=INBOX_SUBJECT_MAX_LENGTH)
+    body_text: str = Field(default="", max_length=INBOX_BODY_MAX_LENGTH)
     received_at: datetime | None = None
-    raw_headers: dict[str, str] = Field(default_factory=dict)
+    raw_headers: dict[str, str] = Field(
+        default_factory=dict, max_length=INBOX_RAW_HEADERS_MAX_ITEMS
+    )
+
+    @field_validator("to_addrs")
+    @classmethod
+    def validate_to_addrs(cls, value: list[str]) -> list[str]:
+        """Reject overlong recipient addresses on the classify API path."""
+        for addr in value:
+            if len(addr) > INBOX_ADDR_MAX_LENGTH:
+                raise ValueError(
+                    f"each to_addrs entry cannot exceed {INBOX_ADDR_MAX_LENGTH} characters"
+                )
+        return value
+
+    @field_validator("raw_headers")
+    @classmethod
+    def validate_raw_headers(cls, value: dict[str, str]) -> dict[str, str]:
+        """Reject overlong header names/values on the classify API path."""
+        for key, header_value in value.items():
+            if len(key) > INBOX_HEADER_NAME_MAX_LENGTH:
+                raise ValueError(
+                    f"each raw_headers key cannot exceed {INBOX_HEADER_NAME_MAX_LENGTH} characters"
+                )
+            if len(header_value) > INBOX_HEADER_VALUE_MAX_LENGTH:
+                raise ValueError(
+                    "each raw_headers value cannot exceed "
+                    f"{INBOX_HEADER_VALUE_MAX_LENGTH} characters"
+                )
+        return value
 
 
 class OutboundMessage(BaseModel):

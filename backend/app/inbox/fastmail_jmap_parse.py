@@ -6,7 +6,17 @@ from datetime import UTC, datetime
 from email.utils import parseaddr
 from typing import Any
 
-from app.inbox.types import InboxMessage
+from app.inbox.types import (
+    INBOX_ADDR_MAX_LENGTH,
+    INBOX_BODY_MAX_LENGTH,
+    INBOX_MESSAGE_ID_MAX_LENGTH,
+    INBOX_REFERENCES_MAX_LENGTH,
+    INBOX_SUBJECT_MAX_LENGTH,
+    INBOX_TO_ADDRS_MAX_ITEMS,
+    InboxMessage,
+    clip_inbox_headers,
+    clip_inbox_str,
+)
 
 JMAP_EMAIL_ID_HEADER = "x-headstart-jmap-id"
 
@@ -15,24 +25,35 @@ def jmap_email_to_inbox_message(email: dict[str, Any], uid: int) -> InboxMessage
     """Convert a JMAP Email/get object into a normalized InboxMessage."""
     email_id = email.get("id")
     headers = _headers_map(email.get("headers"))
-    from_addr = _first_address(email.get("from")) or _header_value(headers, "From")
+    from_addr = _first_address(email.get("from")) or _header_value(headers, "From") or ""
     to_addrs = _address_list(email.get("to")) or _parse_address_header(headers.get("To", ""))
     received_at = _parse_received_at(email.get("receivedAt"))
     references = _references_value(email.get("references")) or _header_value(headers, "References")
+    subject = _decode_subject(email.get("subject")) or _header_value(headers, "Subject") or ""
+    raw_message_id = _header_value(headers, "Message-ID") or email.get("messageId")
+    raw_in_reply_to = email.get("inReplyTo") or _header_value(headers, "In-Reply-To")
     return InboxMessage(
         uid=uid,
-        message_id=_header_value(headers, "Message-ID") or email.get("messageId"),
-        in_reply_to=email.get("inReplyTo") or _header_value(headers, "In-Reply-To"),
-        references=references,
-        from_addr=from_addr,
-        to_addrs=to_addrs,
-        subject=_decode_subject(email.get("subject")) or _header_value(headers, "Subject"),
-        body_text=_extract_body_text(email),
+        message_id=clip_inbox_str(
+            raw_message_id if isinstance(raw_message_id, str) else None,
+            INBOX_MESSAGE_ID_MAX_LENGTH,
+        ),
+        in_reply_to=clip_inbox_str(
+            raw_in_reply_to if isinstance(raw_in_reply_to, str) else None,
+            INBOX_MESSAGE_ID_MAX_LENGTH,
+        ),
+        references=clip_inbox_str(references, INBOX_REFERENCES_MAX_LENGTH),
+        from_addr=from_addr[:INBOX_ADDR_MAX_LENGTH],
+        to_addrs=[addr[:INBOX_ADDR_MAX_LENGTH] for addr in to_addrs[:INBOX_TO_ADDRS_MAX_ITEMS]],
+        subject=subject[:INBOX_SUBJECT_MAX_LENGTH],
+        body_text=_extract_body_text(email)[:INBOX_BODY_MAX_LENGTH],
         received_at=received_at,
-        raw_headers={
-            **headers,
-            JMAP_EMAIL_ID_HEADER: email_id if isinstance(email_id, str) else "",
-        },
+        raw_headers=clip_inbox_headers(
+            {
+                **headers,
+                JMAP_EMAIL_ID_HEADER: email_id if isinstance(email_id, str) else "",
+            }
+        ),
     )
 
 
