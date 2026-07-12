@@ -239,6 +239,11 @@ bound `code_verifier` so a leaked authorization code cannot be redeemed without
 the initiator's state. A victim cannot complete an OAuth flow started by an
 attacker and link the victim's mailbox to the attacker's account.
 
+**OAuth error redirects (API-05):** provider `error` query values (and fixed
+reasons such as `missing_code`) are reflected into the Settings `Location` via
+`urllib.parse.urlencode`, so reserved characters cannot inject extra query
+parameters or fragments into the trusted frontend URL.
+
 | POST   | `/test`           | Test IMAP + SMTP (optional inline config)    |
 | GET    | `/messages`       | Fetch inbound messages (`since_uid`, `limit`)|
 | POST   | `/classify`       | Classify one message (body or mailbox `uid`) |

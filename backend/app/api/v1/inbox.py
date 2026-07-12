@@ -7,10 +7,9 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_db, get_verified_user
 from app.api.v1.inbox_oauth_cookies import (
     MAILBOX_OAUTH_COOKIE_NAME,
-    clear_mailbox_oauth_nonce_cookie,
     set_mailbox_oauth_nonce_cookie,
 )
-from app.core.config import settings
+from app.api.v1.inbox_oauth_redirect import mailbox_oauth_settings_redirect
 from app.core.exceptions import ValidationError
 from app.inbox.types import FetchResult
 from app.models.user import User
@@ -86,22 +85,15 @@ def gmail_oauth_callback(
     db: Session = Depends(get_db),
 ) -> RedirectResponse:
     """OAuth redirect target — stores encrypted Gmail tokens and returns to Settings."""
-    settings_url = f"{settings.frontend_base_url.rstrip('/')}/app/settings"
-    redirect = RedirectResponse(url=settings_url, status_code=status.HTTP_302_FOUND)
-    clear_mailbox_oauth_nonce_cookie(redirect)
     if error:
-        redirect.headers["location"] = f"{settings_url}?mailbox=gmail_error&reason={error}"
-        return redirect
+        return mailbox_oauth_settings_redirect("gmail_error", reason=error)
     if not code or not state:
-        redirect.headers["location"] = f"{settings_url}?mailbox=gmail_error&reason=missing_code"
-        return redirect
+        return mailbox_oauth_settings_redirect("gmail_error", reason="missing_code")
     try:
         InboxService(db).complete_gmail_oauth(code=code, state=state, oauth_nonce=oauth_nonce)
     except ValidationError:
-        redirect.headers["location"] = f"{settings_url}?mailbox=gmail_error"
-        return redirect
-    redirect.headers["location"] = f"{settings_url}?mailbox=gmail_connected"
-    return redirect
+        return mailbox_oauth_settings_redirect("gmail_error")
+    return mailbox_oauth_settings_redirect("gmail_connected")
 
 
 @router.get("/outlook/authorize", response_model=OutlookAuthorizeResponse)
@@ -125,22 +117,15 @@ def outlook_oauth_callback(
     db: Session = Depends(get_db),
 ) -> RedirectResponse:
     """OAuth redirect target — stores encrypted Outlook tokens and returns to Settings."""
-    settings_url = f"{settings.frontend_base_url.rstrip('/')}/app/settings"
-    redirect = RedirectResponse(url=settings_url, status_code=status.HTTP_302_FOUND)
-    clear_mailbox_oauth_nonce_cookie(redirect)
     if error:
-        redirect.headers["location"] = f"{settings_url}?mailbox=outlook_error&reason={error}"
-        return redirect
+        return mailbox_oauth_settings_redirect("outlook_error", reason=error)
     if not code or not state:
-        redirect.headers["location"] = f"{settings_url}?mailbox=outlook_error&reason=missing_code"
-        return redirect
+        return mailbox_oauth_settings_redirect("outlook_error", reason="missing_code")
     try:
         InboxService(db).complete_outlook_oauth(code=code, state=state, oauth_nonce=oauth_nonce)
     except ValidationError:
-        redirect.headers["location"] = f"{settings_url}?mailbox=outlook_error"
-        return redirect
-    redirect.headers["location"] = f"{settings_url}?mailbox=outlook_connected"
-    return redirect
+        return mailbox_oauth_settings_redirect("outlook_error")
+    return mailbox_oauth_settings_redirect("outlook_connected")
 
 
 @router.get("/yahoo/authorize", response_model=YahooAuthorizeResponse)
@@ -164,22 +149,15 @@ def yahoo_oauth_callback(
     db: Session = Depends(get_db),
 ) -> RedirectResponse:
     """OAuth redirect target — stores encrypted Yahoo tokens and returns to Settings."""
-    settings_url = f"{settings.frontend_base_url.rstrip('/')}/app/settings"
-    redirect = RedirectResponse(url=settings_url, status_code=status.HTTP_302_FOUND)
-    clear_mailbox_oauth_nonce_cookie(redirect)
     if error:
-        redirect.headers["location"] = f"{settings_url}?mailbox=yahoo_error&reason={error}"
-        return redirect
+        return mailbox_oauth_settings_redirect("yahoo_error", reason=error)
     if not code or not state:
-        redirect.headers["location"] = f"{settings_url}?mailbox=yahoo_error&reason=missing_code"
-        return redirect
+        return mailbox_oauth_settings_redirect("yahoo_error", reason="missing_code")
     try:
         InboxService(db).complete_yahoo_oauth(code=code, state=state, oauth_nonce=oauth_nonce)
     except ValidationError:
-        redirect.headers["location"] = f"{settings_url}?mailbox=yahoo_error"
-        return redirect
-    redirect.headers["location"] = f"{settings_url}?mailbox=yahoo_connected"
-    return redirect
+        return mailbox_oauth_settings_redirect("yahoo_error")
+    return mailbox_oauth_settings_redirect("yahoo_connected")
 
 
 @router.post("/test", response_model=MailboxTestResponse)

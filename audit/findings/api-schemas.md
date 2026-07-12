@@ -70,7 +70,8 @@ This area covers the FastAPI v1 routers under `backend/app/api/v1/` and the Pyda
 
 <a id="api-05"></a>
 ### API-05 — OAuth callback reflects raw provider error query param unencoded into redirect URL
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: medium (2/3 verifiers) · Effort: XS · WS32
+⚪ **LOW** · 🔒 security · Status: ✅ done · Confidence: medium (2/3 verifiers) · Effort: XS · WS32
+· Fixed in [PR](https://github.com/davidcristian/HeadStart/pull/154).
 
 *(Merged: API-08 reports the identical defect — its verify_note states "Duplicate of uid 47." Both cover the same unencoded `error`-param reflection across the gmail/outlook/yahoo callbacks; combined here.)*
 
