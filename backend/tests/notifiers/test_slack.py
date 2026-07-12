@@ -45,19 +45,23 @@ def test_slack_posts_expected_payload() -> None:
 
 
 def test_slack_records_failure_without_raising() -> None:
+    secret_url = "https://slack.fixture.test/services/T00/B00/secret"
+
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(500, text="boom")
 
     notifier = SlackNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
     ctx = NotifyContext(
         target_type="slack",
-        config={"webhook_url": "https://slack.fixture.test/services/T00/B00/secret"},
+        config={"webhook_url": secret_url},
     )
 
     results = notifier.send(ctx, [_job(), _job("2")])
 
     assert [r.status for r in results] == ["failed", "failed"]
     assert results[0].error
+    assert secret_url not in (results[0].error or "")
+    assert "[REDACTED]" in (results[0].error or "")
 
 
 def test_slack_rejects_unsafe_url() -> None:
@@ -174,18 +178,22 @@ def test_slack_digest_block_without_summary_or_url() -> None:
 
 
 def test_slack_digest_records_failure() -> None:
+    secret_url = "https://slack.fixture.test/services/T00/B00/secret"
+
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(500, text="boom")
 
     notifier = SlackNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
     ctx = NotifyContext(
         target_type="slack",
-        config={"webhook_url": "https://slack.fixture.test/services/T00/B00/secret"},
+        config={"webhook_url": secret_url},
         digest=True,
     )
     results = notifier.send(ctx, [_job(), _job("2")])
     assert [r.status for r in results] == ["failed", "failed"]
     assert results[0].error
+    assert secret_url not in (results[0].error or "")
+    assert "[REDACTED]" in (results[0].error or "")
 
 
 def test_slack_close_behaviour() -> None:

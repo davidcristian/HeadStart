@@ -19,6 +19,7 @@ from app.core.logging import get_logger
 from app.core.outbound_http import pinned_request
 from app.notifiers.base import Notifier, register_notifier
 from app.notifiers.digest_format import digest_blocks, digest_title
+from app.notifiers.http_errors import safe_http_error
 from app.notifiers.types import DeliveryResult, NotifyContext
 from app.scrapers.types import JobPosting
 from app.scrapers.url import safe_http_job_url
@@ -72,7 +73,7 @@ class TelegramNotifier(Notifier):
             resp.raise_for_status()
             return [DeliveryResult(external_id=job.external_id, status="sent") for job in jobs]
         except httpx.HTTPError as exc:
-            safe = self._safe_http_error(exc, bot_token)
+            safe = safe_http_error(exc, bot_token)
             logger.warning("telegram digest send failed: %s", safe)
             return [
                 DeliveryResult(external_id=job.external_id, status="failed", error=safe)
@@ -88,17 +89,9 @@ class TelegramNotifier(Notifier):
             resp.raise_for_status()
             return DeliveryResult(external_id=job.external_id, status="sent")
         except httpx.HTTPError as exc:
-            safe = self._safe_http_error(exc, bot_token)
+            safe = safe_http_error(exc, bot_token)
             logger.warning("telegram send failed for %s: %s", job.external_id, safe)
             return DeliveryResult(external_id=job.external_id, status="failed", error=safe)
-
-    @staticmethod
-    def _safe_http_error(exc: BaseException, bot_token: str) -> str:
-        """Strip the bot token from httpx error text before log/persist."""
-        text = str(exc)
-        if bot_token and bot_token in text:
-            return text.replace(bot_token, "[REDACTED]")
-        return text
 
     @staticmethod
     def _payload(chat_id: str, job: JobPosting) -> dict[str, Any]:

@@ -46,16 +46,23 @@ def test_ntfy_posts_expected_payload() -> None:
 
 
 def test_ntfy_records_failure_without_raising() -> None:
+    secret_server = "https://ntfy.fixture.test/push"
+
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(500, text="boom")
 
     notifier = NtfyNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
-    ctx = NotifyContext(target_type="ntfy", config={"topic": "secret"})
+    ctx = NotifyContext(
+        target_type="ntfy",
+        config={"topic": "my-secret-topic", "server_url": secret_server},
+    )
 
     results = notifier.send(ctx, [_job(), _job("2")])
 
     assert [r.status for r in results] == ["failed", "failed"]
     assert results[0].error
+    assert secret_server not in (results[0].error or "")
+    assert "[REDACTED]" in (results[0].error or "")
 
 
 def test_ntfy_includes_summary_in_message() -> None:
@@ -144,14 +151,22 @@ def test_ntfy_digest_empty_jobs_returns_empty() -> None:
 
 
 def test_ntfy_digest_records_failure() -> None:
+    secret_server = "https://ntfy.fixture.test/push"
+
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(500, text="boom")
 
     notifier = NtfyNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
-    ctx = NotifyContext(target_type="ntfy", config={"topic": "secret"}, digest=True)
+    ctx = NotifyContext(
+        target_type="ntfy",
+        config={"topic": "my-secret-topic", "server_url": secret_server},
+        digest=True,
+    )
     results = notifier.send(ctx, [_job(), _job("2")])
     assert [r.status for r in results] == ["failed", "failed"]
     assert results[0].error
+    assert secret_server not in (results[0].error or "")
+    assert "[REDACTED]" in (results[0].error or "")
 
 
 def test_ntfy_uses_auth_token_header() -> None:

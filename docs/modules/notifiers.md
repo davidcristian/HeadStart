@@ -62,7 +62,9 @@ For each new job it POSTs to `{server_url}/{topic}` with headers:
 Sends are best-effort per job and recorded in `delivery_log` with status/error.
 In digest mode, one batched push lists every new job in the window. The
 `server_url` is validated against private/loopback addresses (SSRF protection)
-and the POST is DNS-pinned (single resolve, connect by IP with Host/SNI).
+and the POST is DNS-pinned (single resolve, connect by IP with Host/SNI). On
+HTTP failure, `server_url` / topic / auth token are redacted from
+`DeliveryResult.error` and warning logs before persist (NTF-10).
 
 ## email adapter
 
@@ -99,7 +101,9 @@ escaped for Slack mrkdwn (`&`, `<`, `>`), and Apply links are emitted only for
 http(s) URLs that cannot break out of `<url|label>` syntax. Digest mode sends
 one message listing all jobs. Outbound webhook URLs are validated against
 private/loopback addresses (SSRF protection) and POSTs are DNS-pinned via
-`pinned_request`.
+`pinned_request`. On HTTP failure, the webhook URL is redacted from
+`DeliveryResult.error` and warning logs before persist (httpx embeds the
+request URL in `str(HTTPError)`).
 
 ## discord adapter
 
@@ -113,7 +117,8 @@ markdown link/emphasis metacharacters cannot inject attacker-controlled links;
 embed and digest Apply URLs are restricted to http(s). Digest mode uses one
 embed with a bullet list. Outbound webhook URLs are validated against
 private/loopback addresses (SSRF protection) and POSTs are DNS-pinned via
-`pinned_request`.
+`pinned_request`. On HTTP failure, the webhook URL is redacted from
+`DeliveryResult.error` and warning logs before persist.
 
 ## telegram adapter
 
@@ -128,6 +133,8 @@ HTML message listing all jobs. Outbound Bot API calls are DNS-pinned via `pinned
 (SSRF defense-in-depth even though the host is fixed). On HTTP failure, the bot token is
 redacted from `DeliveryResult.error` and warning logs before persist (the Bot API
 embeds the token in the request URL, which httpx includes in `str(HTTPError)`).
+Shared helper: `app.notifiers.http_errors.safe_http_error` (also used by
+webhook/slack/discord/ntfy — NTF-10).
 
 ## webhook adapter
 
@@ -152,7 +159,9 @@ When `secret` is set, requests include an `X-HeadStart-Signature` header with
 into the request, but `Content-Type` and `X-HeadStart-Signature` are reserved
 (case-insensitive) so user config cannot override the JSON content type or the
 HMAC signature. Outbound URLs are validated against private/loopback addresses
-(SSRF protection) and POSTs are DNS-pinned via `pinned_request`.
+(SSRF protection) and POSTs are DNS-pinned via `pinned_request`. On HTTP
+failure, the webhook URL is redacted from `DeliveryResult.error` and warning
+logs before persist.
 
 ## Adding a channel
 

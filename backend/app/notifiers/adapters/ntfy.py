@@ -22,6 +22,7 @@ from app.core.outbound_http import pinned_request
 from app.core.outbound_url import UnsafeOutboundUrlError, assert_safe_outbound_url
 from app.notifiers.base import Notifier, register_notifier
 from app.notifiers.digest_format import digest_plain_body, digest_title
+from app.notifiers.http_errors import safe_http_error
 from app.notifiers.types import DeliveryResult, NotifyContext
 from app.scrapers.types import JobPosting
 from app.scrapers.url import safe_http_job_url
@@ -52,14 +53,16 @@ class NtfyNotifier(Notifier):
             raise ValueError(str(exc)) from exc
 
         priority = _PRIORITY_MAP.get(str(cfg.get("priority", "default")), 3)
+        topic_str = str(topic)
+        token = str(cfg["token"]) if cfg.get("token") else ""
         headers = self._auth_headers(cfg)
 
         if ctx.digest:
-            return self._send_digest(server_url, topic, priority, headers, ctx, jobs)
+            return self._send_digest(server_url, topic_str, priority, headers, token, ctx, jobs)
 
         results: list[DeliveryResult] = []
         for job in jobs:
-            results.append(self._send_one(server_url, topic, priority, headers, job))
+            results.append(self._send_one(server_url, topic_str, priority, headers, token, job))
         return results
 
     def _send_digest(
@@ -68,6 +71,7 @@ class NtfyNotifier(Notifier):
         topic: str,
         priority: int,
         headers: dict[str, str],
+        token: str,
         ctx: NotifyContext,
         jobs: list[JobPosting],
     ) -> list[DeliveryResult]:
@@ -85,9 +89,10 @@ class NtfyNotifier(Notifier):
             resp.raise_for_status()
             return [DeliveryResult(external_id=job.external_id, status="sent") for job in jobs]
         except httpx.HTTPError as exc:
-            logger.warning("ntfy digest send failed: %s", exc)
+            safe = safe_http_error(exc, server_url, topic, token)
+            logger.warning("ntfy digest send failed: %s", safe)
             return [
-                DeliveryResult(external_id=job.external_id, status="failed", error=str(exc))
+                DeliveryResult(external_id=job.external_id, status="failed", error=safe)
                 for job in jobs
             ]
 
@@ -97,6 +102,7 @@ class NtfyNotifier(Notifier):
         topic: str,
         priority: int,
         headers: dict[str, str],
+        token: str,
         job: JobPosting,
     ) -> DeliveryResult:
         payload: dict[str, Any] = {
@@ -114,8 +120,9 @@ class NtfyNotifier(Notifier):
             resp.raise_for_status()
             return DeliveryResult(external_id=job.external_id, status="sent")
         except httpx.HTTPError as exc:
-            logger.warning("ntfy send failed for %s: %s", job.external_id, exc)
-            return DeliveryResult(external_id=job.external_id, status="failed", error=str(exc))
+            safe = safe_http_error(exc, server_url, topic, token)
+            logger.warning("ntfy send failed for %s: %s", job.external_id, safe)
+            return DeliveryResult(external_id=job.external_id, status="failed", error=safe)
 
     @staticmethod
     def _auth_headers(cfg: dict[str, Any]) -> dict[str, str]:

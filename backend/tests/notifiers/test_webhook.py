@@ -184,19 +184,23 @@ def test_webhook_digest_posts_batched_payload() -> None:
 
 
 def test_webhook_records_failure_without_raising() -> None:
+    secret_url = "https://hooks.fixture.test/headstart/secret-path"
+
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(500, text="boom")
 
     notifier = WebhookNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
     ctx = NotifyContext(
         target_type="webhook",
-        config={"webhook_url": "https://hooks.fixture.test/headstart"},
+        config={"webhook_url": secret_url},
     )
 
     results = notifier.send(ctx, [_job(), _job("2")])
 
     assert [r.status for r in results] == ["failed", "failed"]
     assert results[0].error
+    assert secret_url not in (results[0].error or "")
+    assert "[REDACTED]" in (results[0].error or "")
 
 
 def test_webhook_requires_webhook_url() -> None:
@@ -229,18 +233,22 @@ def test_webhook_digest_empty_jobs_returns_empty() -> None:
 
 
 def test_webhook_digest_records_failure_without_raising() -> None:
+    secret_url = "https://hooks.fixture.test/headstart/digest-secret"
+
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(500, text="boom")
 
     notifier = WebhookNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
     ctx = NotifyContext(
         target_type="webhook",
-        config={"webhook_url": "https://hooks.fixture.test/headstart"},
+        config={"webhook_url": secret_url},
         digest=True,
     )
     results = notifier.send(ctx, [_job("1"), _job("2")])
     assert [r.status for r in results] == ["failed", "failed"]
     assert results[0].error
+    assert secret_url not in (results[0].error or "")
+    assert "[REDACTED]" in (results[0].error or "")
 
 
 def test_webhook_skips_blank_custom_header_keys_and_values() -> None:

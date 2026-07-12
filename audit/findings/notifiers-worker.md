@@ -106,7 +106,9 @@ This area covers the notification adapters (Slack, Discord, Telegram, ntfy, webh
 
 <a id="ntf-10"></a>
 ### NTF-10 — User webhook/slack/ntfy URLs (may embed secrets) persisted into DeliveryResult.error via str(HTTPError)
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: medium (5/5 verifiers) · Effort: S · WS31
+⚪ **LOW** · 🔒 security · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/152)) · Confidence: medium (5/5 verifiers) · Effort: S · WS31
+
+**Update (2026-07-11).** Fixed in [PR](https://github.com/davidcristian/HeadStart/pull/152): shared `safe_http_error` strips webhook URLs (and ntfy topic/token) from `str(httpx.HTTPError)` before warning logs and `DeliveryResult.error` on webhook/slack/discord/ntfy; telegram reuses the same helper.
 
 > Merged from NTF-10 (uid 252) and NTF-11 (uid 329): both describe `error=str(exc)` on `httpx.HTTPError` embedding the full request URL — NTF-11 is the correct roll-up across all four HTTP notifiers, NTF-10 the webhook/ntfy-specific instance. (Distinct from NTF-02, which is the Telegram bot token specifically and rated medium.)
 

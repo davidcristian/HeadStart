@@ -18,6 +18,7 @@ from app.core.outbound_http import pinned_request
 from app.core.outbound_url import UnsafeOutboundUrlError, assert_safe_outbound_url
 from app.notifiers.base import Notifier, register_notifier
 from app.notifiers.digest_format import digest_blocks, digest_title
+from app.notifiers.http_errors import safe_http_error
 from app.notifiers.markup import (
     discord_markdown_link,
     escape_discord_markdown,
@@ -69,9 +70,10 @@ class DiscordNotifier(Notifier):
             resp.raise_for_status()
             return [DeliveryResult(external_id=job.external_id, status="sent") for job in jobs]
         except httpx.HTTPError as exc:
-            logger.warning("discord digest send failed: %s", exc)
+            safe = safe_http_error(exc, webhook_url)
+            logger.warning("discord digest send failed: %s", safe)
             return [
-                DeliveryResult(external_id=job.external_id, status="failed", error=str(exc))
+                DeliveryResult(external_id=job.external_id, status="failed", error=safe)
                 for job in jobs
             ]
 
@@ -82,8 +84,9 @@ class DiscordNotifier(Notifier):
             resp.raise_for_status()
             return DeliveryResult(external_id=job.external_id, status="sent")
         except httpx.HTTPError as exc:
-            logger.warning("discord send failed for %s: %s", job.external_id, exc)
-            return DeliveryResult(external_id=job.external_id, status="failed", error=str(exc))
+            safe = safe_http_error(exc, webhook_url)
+            logger.warning("discord send failed for %s: %s", job.external_id, safe)
+            return DeliveryResult(external_id=job.external_id, status="failed", error=safe)
 
     @staticmethod
     def _payload(job: JobPosting) -> dict[str, Any]:

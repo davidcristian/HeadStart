@@ -105,18 +105,20 @@ def test_telegram_records_failure_without_raising() -> None:
 
 
 def test_telegram_safe_http_error_redacts_bot_token() -> None:
+    from app.notifiers.http_errors import safe_http_error
+
     secret = "999:LEAK-ME"
     request = httpx.Request("POST", f"https://api.telegram.org/bot{secret}/sendMessage")
     response = httpx.Response(401, request=request)
     with pytest.raises(httpx.HTTPStatusError) as raised:
         response.raise_for_status()
     raw = str(raised.value)
-    safe = TelegramNotifier._safe_http_error(raised.value, secret)
+    safe = safe_http_error(raised.value, secret)
     assert secret in raw
     assert secret not in safe
     assert "[REDACTED]" in safe
-    assert TelegramNotifier._safe_http_error(ValueError("no url"), secret) == "no url"
-    assert TelegramNotifier._safe_http_error(ValueError("plain"), "") == "plain"
+    assert safe_http_error(ValueError("no url"), secret) == "no url"
+    assert safe_http_error(ValueError("plain"), "") == "plain"
 
 
 def test_telegram_requires_bot_token_and_chat_id() -> None:
