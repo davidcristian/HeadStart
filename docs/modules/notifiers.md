@@ -149,7 +149,9 @@ job includes `external_id`, `title`, `company`, `location`, `url`, `summary`
 
 When `secret` is set, requests include an `X-HeadStart-Signature` header with
 `sha256=<hex>` (HMAC-SHA256 of the JSON body). Optional `headers` are merged
-into the request. Outbound URLs are validated against private/loopback addresses
+into the request, but `Content-Type` and `X-HeadStart-Signature` are reserved
+(case-insensitive) so user config cannot override the JSON content type or the
+HMAC signature. Outbound URLs are validated against private/loopback addresses
 (SSRF protection) and POSTs are DNS-pinned via `pinned_request`.
 
 ## Adding a channel

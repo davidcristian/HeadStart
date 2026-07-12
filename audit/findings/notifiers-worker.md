@@ -92,7 +92,7 @@ This area covers the notification adapters (Slack, Discord, Telegram, ntfy, webh
 
 <a id="ntf-09"></a>
 ### NTF-09 — Webhook notifier user headers can override Content-Type / base headers
-⚪ **LOW** · 🐞 bug · Status: ☐ open · Confidence: medium (3/3 verifiers) · Effort: XS · WS31
+⚪ **LOW** · 🐞 bug · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/151)) · Confidence: medium (3/3 verifiers) · Effort: XS · WS31
 
 **Locations:** `backend/app/notifiers/adapters/webhook.py:116` (`_request_headers`).
 

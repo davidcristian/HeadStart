@@ -121,6 +121,41 @@ def test_webhook_merges_custom_headers() -> None:
     assert captured_headers[0]["x-custom"] == "value"
 
 
+def test_webhook_ignores_user_override_of_content_type_and_signature() -> None:
+    """NTF-09: reserved Content-Type / signature headers always win over config."""
+    captured_headers: list[dict[str, str]] = []
+    captured_body: list[bytes] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured_headers.append(dict(request.headers))
+        captured_body.append(request.content)
+        return httpx.Response(200, text="ok")
+
+    notifier = WebhookNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
+    ctx = NotifyContext(
+        target_type="webhook",
+        config={
+            "webhook_url": "https://hooks.fixture.test/headstart",
+            "secret": "signing-key",
+            "headers": {
+                "Content-Type": "text/plain",
+                "content-type": "application/xml",
+                "X-HeadStart-Signature": "sha256=forged",
+                "x-headstart-signature": "sha256=also-forged",
+                "X-Custom": "kept",
+            },
+        },
+    )
+
+    notifier.send(ctx, [_job()])
+
+    headers = captured_headers[0]
+    assert headers["content-type"] == "application/json"
+    expected = hmac.new(b"signing-key", captured_body[0], hashlib.sha256).hexdigest()
+    assert headers["x-headstart-signature"] == f"sha256={expected}"
+    assert headers["x-custom"] == "kept"
+
+
 def test_webhook_digest_posts_batched_payload() -> None:
     captured: list[dict] = []
 

@@ -31,6 +31,8 @@ from app.scrapers.types import JobPosting
 logger = get_logger(__name__)
 
 _SIGNATURE_HEADER = "X-HeadStart-Signature"
+# User `headers` must not override the JSON content type or HMAC signature.
+_RESERVED_HEADER_NAMES = frozenset({"content-type", _SIGNATURE_HEADER.lower()})
 
 
 @register_notifier("webhook")
@@ -115,12 +117,17 @@ def _job_payload(job: JobPosting) -> dict[str, Any]:
 
 
 def _request_headers(ctx: NotifyContext, body: bytes) -> dict[str, str]:
+    """Build POST headers; reserved Content-Type / signature always win over user config."""
     headers = {"Content-Type": "application/json"}
     extra = ctx.config.get("headers")
     if isinstance(extra, dict):
         for key, value in extra.items():
-            if key and value is not None:
-                headers[str(key)] = str(value)
+            if not key or value is None:
+                continue
+            name = str(key)
+            if name.lower() in _RESERVED_HEADER_NAMES:
+                continue
+            headers[name] = str(value)
 
     secret = ctx.config.get("secret")
     if secret and str(secret).strip():
