@@ -114,10 +114,11 @@ decisions in [adr/0004-multi-user-accounts.md](../adr/0004-multi-user-accounts.m
 They expose cross-user data (user list, global stats) intentionally.
 
 **List `limit` / cursor query params** declare FastAPI `Query(ge=…, le=…)` so
-out-of-bounds values return **422** and appear in OpenAPI (jobs/applications/
-logs/feed use `le=500`; inbox list routes `le=200`; `GET /inbox/messages`
-uses `since_uid` ≥1 optional and `limit` 1–100). Do not clamp unbounded ints
-in the handler body.
+out-of-bounds values return **422** and appear in OpenAPI. List resources share
+one cap (`ge=1, le=500`): jobs, applications, application-logs, feed, admin
+data-requests, and inbox classifications / reply-drafts / reply-send-logs.
+`GET /inbox/messages` keeps a tighter live-mailbox fetch cap (`since_uid` ≥1
+optional, `limit` 1–100). Do not clamp unbounded ints in the handler body.
 
 Auth abuse endpoints (`/auth/login`, `/register`, `/forgot-password`,
 `/reset-password`, `/verify-email`, `/resend-verification`, `/refresh`) return

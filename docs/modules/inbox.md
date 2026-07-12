@@ -247,13 +247,13 @@ parameters or fragments into the trusted frontend URL.
 | POST   | `/test`           | Test IMAP + SMTP (optional inline config)    |
 | GET    | `/messages`       | Fetch inbound messages (`since_uid` ≥1 optional, `limit` Query 1–100, default 50) |
 | POST   | `/classify`       | Classify one message (body or mailbox `uid`) |
-| GET    | `/classifications`| List recent classifications (`limit` 1–200)  |
+| GET    | `/classifications`| List recent classifications (`limit` 1–500)  |
 | GET    | `/routing`        | Read label→folder routing settings           |
 | PUT    | `/routing`        | Update label→folder routing settings         |
 | POST   | `/route`          | Move a classified message to its folder      |
 | POST   | `/draft-reply`    | Draft a recruiter follow-up (dry-run preview; may queue auto-send) |
-| GET    | `/reply-drafts`   | List reply drafts (`seen_job_id` ≥1, `limit` 1–200) |
-| GET    | `/reply-send-logs`| List auto-reply audit rows (`limit` 1–200)   |
+| GET    | `/reply-drafts`   | List reply drafts (`seen_job_id` ≥1, `limit` 1–500) |
+| GET    | `/reply-send-logs`| List auto-reply audit rows (`limit` 1–500)   |
 
 `GET /meta` includes `mailboxes` (registered connector keys) and
 `inbox_agent_enabled`.

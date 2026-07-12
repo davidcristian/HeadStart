@@ -101,7 +101,9 @@ This area covers the FastAPI v1 routers under `backend/app/api/v1/` and the Pyda
 
 <a id="api-09"></a>
 ### API-09 — List `limit` bounded via schema/min() not Query(ge,le); OpenAPI shows no bounds
-⚪ **LOW** · 🔁 consistency · Status: ☐ open · Confidence: high (5/5 verifiers) · Effort: S · WS32
+⚪ **LOW** · 🔁 consistency · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/156)) · Confidence: high (5/5 verifiers) · Effort: S · WS32
+
+**Update (2026-07-11).** Inbox list routes already declared `Query(ge,le)` (API-04/API-07); this closes the residual cap divergence by raising classifications / reply-drafts / reply-send-logs from `le=200` to the shared list-resource `le=500` (jobs/applications/logs/feed/admin). OpenAPI exposes `minimum`/`maximum`; live mailbox `GET /inbox/messages` keeps `le=100`. See [PR](https://github.com/davidcristian/HeadStart/pull/156).
 
 **Locations:** `backend/app/api/v1/inbox.py:224` (`list_inbox_classifications`); plus `backend/app/api/v1/inbox.py:202`, `backend/app/api/v1/inbox.py:272`, `backend/app/api/v1/inbox.py:286`, `backend/app/api/v1/admin.py:47`.
 

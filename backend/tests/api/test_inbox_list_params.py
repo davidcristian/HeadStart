@@ -1,16 +1,21 @@
-"""Inbox query-param bounds: API-04 list routes + API-07 /messages."""
+"""Inbox query-param bounds: API-04/API-09 list routes + API-07 /messages."""
 
 from fastapi.testclient import TestClient
 
 from app.core.config import settings
 from tests.conftest import register_and_login
 
+# Shared list-resource cap (jobs/applications/logs/feed/admin + inbox lists).
+_LIST_LIMIT_MAX = 500
+
 
 def test_classifications_limit_out_of_bounds_returns_422(client: TestClient, monkeypatch) -> None:
     monkeypatch.setattr(settings, "inbox_agent_enabled", True)
     headers = register_and_login(client, "list-params-class@example.com")
 
-    too_high = client.get("/api/v1/inbox/classifications?limit=201", headers=headers)
+    too_high = client.get(
+        f"/api/v1/inbox/classifications?limit={_LIST_LIMIT_MAX + 1}", headers=headers
+    )
     assert too_high.status_code == 422
 
     too_low = client.get("/api/v1/inbox/classifications?limit=0", headers=headers)
@@ -29,7 +34,9 @@ def test_reply_drafts_seen_job_id_and_limit_bounds_return_422(
     bad_seen = client.get("/api/v1/inbox/reply-drafts?seen_job_id=0", headers=headers)
     assert bad_seen.status_code == 422
 
-    bad_limit = client.get("/api/v1/inbox/reply-drafts?limit=201", headers=headers)
+    bad_limit = client.get(
+        f"/api/v1/inbox/reply-drafts?limit={_LIST_LIMIT_MAX + 1}", headers=headers
+    )
     assert bad_limit.status_code == 422
 
 
@@ -37,7 +44,9 @@ def test_reply_send_logs_limit_out_of_bounds_returns_422(client: TestClient, mon
     monkeypatch.setattr(settings, "inbox_agent_enabled", True)
     headers = register_and_login(client, "list-params-logs@example.com")
 
-    too_high = client.get("/api/v1/inbox/reply-send-logs?limit=201", headers=headers)
+    too_high = client.get(
+        f"/api/v1/inbox/reply-send-logs?limit={_LIST_LIMIT_MAX + 1}", headers=headers
+    )
     assert too_high.status_code == 422
 
     too_low = client.get("/api/v1/inbox/reply-send-logs?limit=0", headers=headers)
@@ -63,3 +72,22 @@ def test_messages_since_uid_and_limit_bounds_return_422(client: TestClient, monk
 
     negative_limit = client.get("/api/v1/inbox/messages?limit=-1", headers=headers)
     assert negative_limit.status_code == 422
+
+
+def test_list_limit_openapi_exposes_shared_maximum(client: TestClient) -> None:
+    """API-09: list `limit` bounds appear in OpenAPI with the shared le=500 cap."""
+    schema = client.get("/openapi.json").json()
+    paths = (
+        "/api/v1/inbox/classifications",
+        "/api/v1/inbox/reply-drafts",
+        "/api/v1/inbox/reply-send-logs",
+        "/api/v1/jobs",
+        "/api/v1/applications",
+        "/api/v1/application-logs",
+        "/api/v1/admin/data-requests",
+    )
+    for path in paths:
+        params = schema["paths"][path]["get"]["parameters"]
+        limit = next(p for p in params if p["name"] == "limit")
+        assert limit["schema"]["minimum"] == 1
+        assert limit["schema"]["maximum"] == _LIST_LIMIT_MAX

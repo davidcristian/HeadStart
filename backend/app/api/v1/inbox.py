@@ -194,7 +194,7 @@ def classify_inbox_message(
 
 @router.get("/classifications", response_model=list[EmailClassificationRead])
 def list_inbox_classifications(
-    limit: int = Query(default=50, ge=1, le=200),
+    limit: int = Query(default=50, ge=1, le=500),
     db: Session = Depends(get_db),
     user: User = Depends(get_verified_user),
 ) -> list[EmailClassificationRead]:
@@ -243,7 +243,7 @@ def draft_inbox_reply(
 @router.get("/reply-drafts", response_model=list[ReplyDraftRead])
 def list_inbox_reply_drafts(
     seen_job_id: int | None = Query(default=None, ge=1),
-    limit: int = Query(default=50, ge=1, le=200),
+    limit: int = Query(default=50, ge=1, le=500),
     db: Session = Depends(get_db),
     user: User = Depends(get_verified_user),
 ) -> list[ReplyDraftRead]:
@@ -253,7 +253,7 @@ def list_inbox_reply_drafts(
 
 @router.get("/reply-send-logs", response_model=list[ReplySendLogRead])
 def list_inbox_reply_send_logs(
-    limit: int = Query(default=50, ge=1, le=200),
+    limit: int = Query(default=50, ge=1, le=500),
     db: Session = Depends(get_db),
     user: User = Depends(get_verified_user),
 ) -> list[ReplySendLogRead]:
