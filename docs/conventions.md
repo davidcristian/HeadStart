@@ -30,7 +30,11 @@ table in [AGENTS.md](../AGENTS.md) §1.
 ### Errors
 
 - Raise domain exceptions from services (`app/core/exceptions.py`); routers map
-  them to HTTP responses. Never leak raw DB/driver errors to clients.
+  them to HTTP responses via the handlers in `app/main.py` (`NotFoundError`→404,
+  `ValidationError`→400, `ConflictError`→409, `UnauthorizedError`→401,
+  `PlanLimitError`→402 with `code`/`plan`/`limit`, `RateLimitError`→429). Never
+  re-raise `HTTPException` for those cases in a router — that bypasses the shared
+  body shape (see API-03). Never leak raw DB/driver errors to clients.
 - Scrapers and notifiers must not crash the worker: wrap external I/O and surface
   failures as logged, recorded errors.
 

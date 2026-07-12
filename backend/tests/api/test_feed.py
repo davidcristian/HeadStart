@@ -54,6 +54,7 @@ def test_feed_url_and_rss_round_trip(client: TestClient) -> None:
 def test_rss_feed_rejects_invalid_token(client: TestClient) -> None:
     resp = client.get("/api/v1/feed/rss?token=not-a-valid-token")
     assert resp.status_code == 401
+    assert resp.json() == {"detail": "Invalid or expired feed token."}
 
 
 def test_rss_feed_rejects_missing_token(client: TestClient) -> None:

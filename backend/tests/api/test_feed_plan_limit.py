@@ -37,3 +37,8 @@ def test_rss_feed_rejects_plan_without_feed_access(client: TestClient) -> None:
 
     resp = client.get(f"/api/v1/feed/rss?token={token}")
     assert resp.status_code == 402
+    body = resp.json()
+    assert body["detail"]
+    assert body["code"] == "rss_feed"
+    assert body["plan"] == "free"
+    assert "limit" in body

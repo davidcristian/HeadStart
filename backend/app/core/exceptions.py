@@ -20,6 +20,10 @@ class ConflictError(DomainError):
     """The operation conflicts with current state (e.g. duplicate)."""
 
 
+class UnauthorizedError(DomainError):
+    """The caller is missing or has invalid credentials for this resource."""
+
+
 class PlanLimitError(DomainError):
     """The user's plan does not allow this action (cap reached or feature gated)."""
 

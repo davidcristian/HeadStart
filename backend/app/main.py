@@ -14,6 +14,7 @@ from app.core.exceptions import (
     NotFoundError,
     PlanLimitError,
     RateLimitError,
+    UnauthorizedError,
     ValidationError,
 )
 from app.core.logging import configure_logging
@@ -93,6 +94,10 @@ def _register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(ConflictError)
     def _conflict(_: Request, exc: ConflictError) -> JSONResponse:
         return JSONResponse(status_code=409, content={"detail": str(exc)})
+
+    @app.exception_handler(UnauthorizedError)
+    def _unauthorized(_: Request, exc: UnauthorizedError) -> JSONResponse:
+        return JSONResponse(status_code=401, content={"detail": str(exc)})
 
     @app.exception_handler(PlanLimitError)
     def _plan_limit(_: Request, exc: PlanLimitError) -> JSONResponse:

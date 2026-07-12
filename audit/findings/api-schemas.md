@@ -56,7 +56,7 @@ This area covers the FastAPI v1 routers under `backend/app/api/v1/` and the Pyda
 
 <a id="api-03"></a>
 ### API-03 — GET /feed/rss uses local HTTPException, bypassing central error-shape handlers
-⚪ **LOW** · 🔁 consistency · Status: ☐ open · Confidence: high (5/5 verifiers) · Effort: S · WS32
+⚪ **LOW** · 🔁 consistency · Status: ✅ done · Confidence: high (5/5 verifiers) · Effort: S · WS32
 
 **Locations:** `backend/app/api/v1/feed.py:34` (`rss_feed`); plus feed.py:41.
 

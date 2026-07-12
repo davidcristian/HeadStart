@@ -1,10 +1,10 @@
 """RSS feed endpoints."""
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
+from fastapi import APIRouter, Depends, Query, Request, Response
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db, get_verified_user
-from app.core.exceptions import PlanLimitError
+from app.core.exceptions import UnauthorizedError
 from app.models.user import User
 from app.schemas.feed import FeedUrlRead
 from app.schemas.job import JobStatus
@@ -30,10 +30,7 @@ def _resolve_feed_token(
         scheme, _, value = authorization.partition(" ")
         if scheme.lower() == "bearer" and value.strip():
             return value.strip()
-    raise HTTPException(
-        status_code=401,
-        detail="Missing feed token.",
-    )
+    raise UnauthorizedError("Missing feed token.")
 
 
 @router.get("/rss")
@@ -49,14 +46,8 @@ def rss_feed(
     service = FeedService(db)
     user = service.resolve_user(token)
     if user is None:
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid or expired feed token.",
-        )
-    try:
-        PlanLimitsService(db).require_rss_feed(user)
-    except PlanLimitError as exc:
-        raise HTTPException(status_code=402, detail=str(exc)) from exc
+        raise UnauthorizedError("Invalid or expired feed token.")
+    PlanLimitsService(db).require_rss_feed(user)
     feed_url = service.build_feed_url(
         base_url=_api_base_url(request),
         token=token,
