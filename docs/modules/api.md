@@ -113,6 +113,12 @@ decisions in [adr/0004-multi-user-accounts.md](../adr/0004-multi-user-accounts.m
 `/admin/*` routes additionally require `is_admin` and return 403 for non-admins.
 They expose cross-user data (user list, global stats) intentionally.
 
+**List `limit` / cursor query params** declare FastAPI `Query(ge=…, le=…)` so
+out-of-bounds values return **422** and appear in OpenAPI (jobs/applications/
+logs/feed use `le=500`; inbox list routes `le=200`; `GET /inbox/messages`
+uses `since_uid` ≥1 optional and `limit` 1–100). Do not clamp unbounded ints
+in the handler body.
+
 Auth abuse endpoints (`/auth/login`, `/register`, `/forgot-password`,
 `/reset-password`, `/verify-email`, `/resend-verification`, `/refresh`) return
 **429** when their per-IP / per-email / per-user sliding windows are exceeded —

@@ -245,7 +245,7 @@ reasons such as `missing_code`) are reflected into the Settings `Location` via
 parameters or fragments into the trusted frontend URL.
 
 | POST   | `/test`           | Test IMAP + SMTP (optional inline config)    |
-| GET    | `/messages`       | Fetch inbound messages (`since_uid`, `limit`)|
+| GET    | `/messages`       | Fetch inbound messages (`since_uid` ≥1 optional, `limit` Query 1–100, default 50) |
 | POST   | `/classify`       | Classify one message (body or mailbox `uid`) |
 | GET    | `/classifications`| List recent classifications (`limit` 1–200)  |
 | GET    | `/routing`        | Read label→folder routing settings           |

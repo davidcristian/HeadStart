@@ -87,7 +87,7 @@ This area covers the FastAPI v1 routers under `backend/app/api/v1/` and the Pyda
 
 <a id="api-07"></a>
 ### API-07 — Inbox/admin routes use unbounded raw query params instead of Query(ge,le) like siblings
-⚪ **LOW** · 🔁 consistency · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: S · WS32
+⚪ **LOW** · 🔁 consistency · Status: ✅ done · Confidence: high (3/3 verifiers) · Effort: S · WS32
 
 **Locations:** `backend/app/api/v1/inbox.py:198` (`fetch_mailbox_messages`); plus `backend/app/api/v1/inbox.py:202`, `backend/app/api/v1/inbox.py:221`, `backend/app/api/v1/inbox.py:271`, `backend/app/api/v1/admin.py:47`.
 

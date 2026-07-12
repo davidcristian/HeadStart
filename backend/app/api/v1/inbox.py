@@ -173,14 +173,13 @@ def test_mailbox_connection(
 
 @router.get("/messages", response_model=FetchResult)
 def fetch_mailbox_messages(
-    since_uid: int | None = None,
-    limit: int = 50,
+    since_uid: int | None = Query(default=None, ge=1),
+    limit: int = Query(default=50, ge=1, le=100),
     db: Session = Depends(get_db),
     user: User = Depends(get_verified_user),
 ) -> FetchResult:
     """Fetch inbound messages from the configured mailbox."""
-    bounded_limit = min(max(limit, 1), 100)
-    return InboxService(db).fetch_messages(user.id, since_uid=since_uid, limit=bounded_limit)
+    return InboxService(db).fetch_messages(user.id, since_uid=since_uid, limit=limit)
 
 
 @router.post("/classify", response_model=EmailClassificationRead)

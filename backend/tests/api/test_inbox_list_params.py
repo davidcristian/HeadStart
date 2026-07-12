@@ -1,4 +1,4 @@
-"""API-04: inbox list routes return 422 for out-of-bounds query params."""
+"""Inbox query-param bounds: API-04 list routes + API-07 /messages."""
 
 from fastapi.testclient import TestClient
 
@@ -42,3 +42,24 @@ def test_reply_send_logs_limit_out_of_bounds_returns_422(client: TestClient, mon
 
     too_low = client.get("/api/v1/inbox/reply-send-logs?limit=0", headers=headers)
     assert too_low.status_code == 422
+
+
+def test_messages_since_uid_and_limit_bounds_return_422(client: TestClient, monkeypatch) -> None:
+    """API-07: /messages uses Query(ge,le) so bad params 422 before the service."""
+    monkeypatch.setattr(settings, "inbox_agent_enabled", True)
+    headers = register_and_login(client, "list-params-messages@example.com")
+
+    bad_since = client.get("/api/v1/inbox/messages?since_uid=0", headers=headers)
+    assert bad_since.status_code == 422
+
+    negative_since = client.get("/api/v1/inbox/messages?since_uid=-1", headers=headers)
+    assert negative_since.status_code == 422
+
+    too_high = client.get("/api/v1/inbox/messages?limit=101", headers=headers)
+    assert too_high.status_code == 422
+
+    too_low = client.get("/api/v1/inbox/messages?limit=0", headers=headers)
+    assert too_low.status_code == 422
+
+    negative_limit = client.get("/api/v1/inbox/messages?limit=-1", headers=headers)
+    assert negative_limit.status_code == 422
