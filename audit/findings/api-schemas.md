@@ -131,17 +131,17 @@ This area covers the FastAPI v1 routers under `backend/app/api/v1/` and the Pyda
 
 <a id="api-11"></a>
 ### API-11 — DELETE /profile/resume(-template) return 200+body, breaking DELETE=204 convention
-⚪ **LOW** · 🔁 consistency · Status: ☐ open · Confidence: high (5/5 verifiers) · Effort: S · WS32
+⚪ **LOW** · 🔁 consistency · Status: ✅ done · Confidence: high (5/5 verifiers) · Effort: S · WS32
 
-**Locations:** `backend/app/api/v1/profile.py:69` (`delete_resume`); plus `backend/app/api/v1/profile.py:100` (`delete_resume_template`).
+**Locations:** `backend/app/api/v1/profile.py` (`delete_resume` / `delete_resume_template`).
 
-**Evidence.** Every other DELETE in the API returns 204 (sources.py:65, targets.py:48, credentials.py:47, profile.py:108, auth.py:150). But `DELETE /profile/resume` (:69) and `/profile/resume-template` (:100) return a `ProfileRead` body with the default 200. The frontend expects a body here (api/index.ts:284, :290), so it is intentional but inconsistent.
+**Evidence.** Every other DELETE in the API returns 204 (sources.py:65, targets.py:48, credentials.py:47, profile.py full-clear, auth.py:150). But `DELETE /profile/resume` and `/profile/resume-template` return a `ProfileRead` body with HTTP 200. The frontend expects a body here (`api/index.ts`), so it is intentional but inconsistent.
 
 **Failure scenario.** A client generated from OpenAPI, or a developer following the 204-DELETE convention, mishandles the 200+`ProfileRead` body on these two DELETEs; the verb/status contract is non-uniform.
 
-**Suggested fix.** Document these as state-returning DELETEs in `api.md`, or remodel them as POST/PATCH clear-actions to keep DELETE => 204 uniform.
+**Fix.** Keep the state-returning contract (SPA needs `ProfileRead` without a follow-up GET). Document it in `api.md` / `profile.md`, set explicit `status_code=200` + OpenAPI `response_model=ProfileRead`, and lock the contrast vs full-profile `DELETE` 204 in tests. Also closes DOC-08 (resume-template rows added to `api.md`). See [PR](https://github.com/davidcristian/HeadStart/pull/158).
 
-**Verification.** Confirmed 5/5 adversarial verifiers. `delete_resume` (profile.py:69) and `delete_resume_template` (:100) return 200+`ProfileRead` while other DELETEs return 204; a genuine but intentional inconsistency, correctly low.
+**Verification.** Confirmed 5/5 adversarial verifiers. `delete_resume` and `delete_resume_template` return 200+`ProfileRead` while other DELETEs return 204; a genuine but intentional inconsistency, correctly low.
 
 <a id="api-12"></a>
 ### API-12 — PlanFeaturesRead omits portal_search though snapshot() emits it

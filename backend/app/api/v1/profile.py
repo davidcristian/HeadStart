@@ -66,11 +66,19 @@ async def upload_resume(
     )
 
 
-@router.delete("/resume", response_model=ProfileRead)
+@router.delete(
+    "/resume",
+    response_model=ProfileRead,
+    status_code=status.HTTP_200_OK,
+)
 def delete_resume(
     db: Session = Depends(get_db), user: User = Depends(get_verified_user)
 ) -> ProfileRead:
-    """Remove the stored resume file without clearing other profile fields."""
+    """Clear the resume file and return the updated profile (state-returning DELETE).
+
+    Unlike resource DELETEs that return 204, this keeps other profile fields and
+    returns ProfileRead so clients can refresh UI state without a follow-up GET.
+    """
     return ProfileService(db).delete_resume(user.id)
 
 
@@ -97,11 +105,18 @@ async def upload_resume_template(
     )
 
 
-@router.delete("/resume-template", response_model=ProfileRead)
+@router.delete(
+    "/resume-template",
+    response_model=ProfileRead,
+    status_code=status.HTTP_200_OK,
+)
 def delete_resume_template(
     db: Session = Depends(get_db), user: User = Depends(get_verified_user)
 ) -> ProfileRead:
-    """Remove the stored LaTeX template without clearing other profile fields."""
+    """Clear the LaTeX template and return the updated profile (state-returning DELETE).
+
+    Same contract as DELETE /profile/resume: HTTP 200 + ProfileRead, not 204.
+    """
     return ProfileService(db).delete_resume_template(user.id)
 
 

@@ -54,17 +54,17 @@ Merged: DOC-07 (uid 291) and DOC-10 (uid 299) reported the same defect and are f
 
 <a id="doc-08"></a>
 ### DOC-08 — api.md profile section omits PUT/DELETE /profile/resume-template
-⚪ **LOW** · 📝 doc · Status: ☐ open · Confidence: certain (3/3 verifiers) · Effort: XS · WS40
+⚪ **LOW** · 📝 doc · Status: ✅ done · Confidence: certain (3/3 verifiers) · Effort: XS · WS40
 
-**Locations:** `docs/modules/api.md:73` (`profile endpoints`); plus `backend/app/api/v1/profile.py:77`, `backend/app/api/v1/profile.py:100`.
+**Locations:** `docs/modules/api.md` (`profile endpoints`); plus `backend/app/api/v1/profile.py`.
 
-**Evidence.** `profile.py:77` (`PUT /resume-template`) and `profile.py:100` (`DELETE /resume-template`) are live routes, but `api.md` lists only `/profile/resume` (lines 72-73). `profile.md:132-133` documents `resume-template`, so `api.md` alone is out of sync.
+**Evidence.** `PUT /resume-template` and `DELETE /resume-template` are live routes, but `api.md` previously listed only `/profile/resume`. `profile.md` already documented `resume-template`, so `api.md` alone was out of sync.
 
 **Failure scenario.** A reader treating `api.md` as the full API map misses the LaTeX resume-template upload/delete endpoints used by the tailored-resume generation flow.
 
-**Suggested fix.** Add `PUT /profile/resume-template` and `DELETE /profile/resume-template` rows to `api.md` (mirror `profile.md`).
+**Fix.** Add `PUT /profile/resume-template` and `DELETE /profile/resume-template` rows to `api.md` (shipped with API-11 state-returning DELETE docs). See [PR](https://github.com/davidcristian/HeadStart/pull/158).
 
-**Verification.** Confirmed 3/3 adversarial verifiers. profile.py:77/:100 expose PUT/DELETE /resume-template as live routes; api.md lines 72-73 list only /profile/resume — resume-template absent. Doc-drift, low is fair.
+**Verification.** Confirmed 3/3 adversarial verifiers. profile.py exposes PUT/DELETE /resume-template as live routes; api.md previously listed only /profile/resume — resume-template absent. Doc-drift, low is fair.
 
 <a id="doc-09"></a>
 ### DOC-09 — api.md endpoint table omits the entire /inbox/* router (13+ routes)

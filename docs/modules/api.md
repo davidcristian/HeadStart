@@ -74,8 +74,10 @@ never touch the DB directly (services use repositories). See
 | GET    | `/profile`            | Get the application profile (empty defaults if unset) |
 | PUT    | `/profile`            | Create or fully replace the application profile text fields |
 | PUT    | `/profile/resume`     | Upload or replace resume file (multipart `file`) |
-| DELETE | `/profile/resume`     | Remove the stored resume file only |
-| DELETE | `/profile`            | Clear the application profile            |
+| DELETE | `/profile/resume`     | Clear resume file only; HTTP **200** + `ProfileRead` (state-returning; other DELETEs are 204) |
+| PUT    | `/profile/resume-template` | Upload or replace LaTeX resume template (multipart `file`) |
+| DELETE | `/profile/resume-template` | Clear LaTeX template only; HTTP **200** + `ProfileRead` (same state-returning contract) |
+| DELETE | `/profile`            | Clear the application profile (HTTP 204) |
 | GET    | `/admin/users`        | List all users (admin only)              |
 | PATCH  | `/admin/users/{id}`   | Toggle `is_active` / `is_admin` / `plan` (admin; structured `admin_event=user_update` audit log) |
 | GET    | `/admin/stats`        | Global scrape/delivery aggregates (admin)|

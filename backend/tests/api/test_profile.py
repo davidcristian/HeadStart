@@ -17,6 +17,50 @@ def test_profile_requires_auth(client: TestClient) -> None:
     assert client.delete("/api/v1/profile/resume").status_code == 401
 
 
+def test_attachment_deletes_are_state_returning_not_204(
+    client: TestClient, auth_headers: dict[str, str]
+) -> None:
+    """API-11: resume/template DELETEs return 200+ProfileRead; full clear stays 204."""
+    client.put(
+        "/api/v1/profile",
+        json={"full_name": "Ada Lovelace", "email": "ada@example.com"},
+        headers=auth_headers,
+    )
+    client.put(
+        "/api/v1/profile/resume",
+        headers=auth_headers,
+        files={"file": ("resume.pdf", b"%PDF-1.4", "application/pdf")},
+    )
+    client.put(
+        "/api/v1/profile/resume-template",
+        headers=auth_headers,
+        files={
+            "file": (
+                "resume.tex",
+                rb"\documentclass{article}\begin{document}Hi\end{document}",
+                "application/x-tex",
+            )
+        },
+    )
+
+    cleared_resume = client.delete("/api/v1/profile/resume", headers=auth_headers)
+    assert cleared_resume.status_code == 200
+    resume_body = cleared_resume.json()
+    assert resume_body["resume_file"] is None
+    assert resume_body["full_name"] == "Ada Lovelace"
+    assert "exists" in resume_body
+
+    cleared_template = client.delete("/api/v1/profile/resume-template", headers=auth_headers)
+    assert cleared_template.status_code == 200
+    template_body = cleared_template.json()
+    assert template_body["resume_template"] is None
+    assert template_body["full_name"] == "Ada Lovelace"
+
+    full_clear = client.delete("/api/v1/profile", headers=auth_headers)
+    assert full_clear.status_code == 204
+    assert full_clear.content == b""
+
+
 def test_profile_defaults_then_save_and_clear(
     client: TestClient, auth_headers: dict[str, str]
 ) -> None:

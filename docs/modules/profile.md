@@ -164,15 +164,19 @@ users (every route is scoped to `get_current_user`).
 | GET    | ``   | Get the profile (empty defaults if never saved)    |
 | PUT    | ``   | Create or **fully replace** the profile text fields |
 | PUT    | `/resume` | Upload or replace resume file (multipart `file`) |
-| DELETE | `/resume` | Remove the resume file only                     |
-| PUT    | `/resume-template` | Upload or replace LaTeX resume template (`.tex`) |
-| DELETE | `/resume-template` | Remove the LaTeX template only           |
-| DELETE | ``   | Clear the profile (idempotent)                     |
+| DELETE | `/resume` | Clear resume file only; HTTP **200** + `ProfileRead` |
+| PUT    | `/resume-template` | Upload or replace LaTeX resume template (`.tex` / `.zip`) |
+| DELETE | `/resume-template` | Clear LaTeX template only; HTTP **200** + `ProfileRead` |
+| DELETE | ``   | Clear the profile (idempotent; HTTP **204**) |
 
 `PUT` on the root path is a whole-profile replacement for text fields (not a partial
 patch); the UI always sends the complete form. Uploading a resume does **not**
 clear other fields, and saving text fields does **not** remove an uploaded resume.
-All routes require auth and are scoped to the current user.
+`DELETE /resume` and `DELETE /resume-template` are **state-returning** clears
+(API-11): they remove only that attachment and return the updated `ProfileRead`
+so the SPA can refresh without a follow-up `GET`. Full-profile `DELETE /profile`
+stays the usual empty **204**. All routes require auth and are scoped to the
+current user.
 
 ## Scope
 
