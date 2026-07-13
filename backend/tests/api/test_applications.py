@@ -65,7 +65,7 @@ def test_list_applications_shows_queued_apply(client: TestClient) -> None:
 
     with patch.object(apply_to_job_task, "delay"):
         queued = client.post(f"/api/v1/jobs/{job_id}/apply", json={}, headers=headers)
-    assert queued.status_code == 200
+    assert queued.status_code == 202
     assert queued.json()["status"] == "queued"
 
     body = client.get("/api/v1/applications", headers=headers).json()

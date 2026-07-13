@@ -98,7 +98,7 @@ def test_apply_live_queues_and_returns_log_id(client: TestClient) -> None:
             headers=headers,
         )
 
-    assert resp.status_code == 200
+    assert resp.status_code == 202
     body = resp.json()
     assert body["status"] == "queued"
     assert body["application_log_id"] is not None
@@ -163,7 +163,7 @@ def test_apply_live_commits_before_worker_enqueue(client: TestClient) -> None:
             headers=headers,
         )
 
-    assert resp.status_code == 200
+    assert resp.status_code == 202
     assert "delay" in events
     assert events.index("delay") > events.index("commit")
 

@@ -50,7 +50,7 @@ never touch the DB directly (services use repositories). See
 | GET    | `/search-runs/{id}`   | Poll one queued manual search run until terminal status |
 | GET    | `/jobs`               | Feed of seen jobs (filter by `search_id`, `status`) |
 | PATCH  | `/jobs/{id}`          | Update triage status (`seen` / `applied` / `archived`) |
-| POST   | `/jobs/{id}/apply`    | Submit or preview an auto-apply (`dry_run`, optional `cover_letter`, optional `tailored_resume_b64` or `tailored_resume_artifact_id`). Live submit returns `queued` + `application_log_id`; poll `GET /application-logs/{id}`. |
+| POST   | `/jobs/{id}/apply`    | Submit or preview an auto-apply (`dry_run`, optional `cover_letter`, optional `tailored_resume_b64` or `tailored_resume_artifact_id`). Dry-run preview returns HTTP 200; live submit returns HTTP 202 with `status=queued` + `application_log_id` — poll `GET /application-logs/{id}`. |
 | POST   | `/jobs/{id}/generate-cover-letter` | Queue a tailored cover letter (`status=queued`). Poll `GET /document-generations/{id}` until `ready`/`failed`; ready `result` has `cover_letter`, `provider`, `fallback`. |
 | POST   | `/jobs/{id}/generate-resume` | Queue a tailored resume PDF (`status=queued`). Poll `GET /document-generations/{id}`; ready `result` has `pdf_b64`, `artifact_id`, `provider`, `fallback`, `injection_guarded`. Compiles in the worker with `tectonic`/`pdflatex` (`-no-shell-escape` + restricted env + POSIX `RLIMIT_AS`/`CPU`/`NPROC`). |
 | GET    | `/document-generations/{id}` | Poll one queued resume/cover-letter generation until terminal status |

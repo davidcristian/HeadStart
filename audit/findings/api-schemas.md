@@ -117,7 +117,7 @@ This area covers the FastAPI v1 routers under `backend/app/api/v1/` and the Pyda
 
 <a id="api-10"></a>
 ### API-10 — Live apply returns 200 `queued` for an async-accepted request instead of 202
-⚪ **LOW** · 🔁 consistency · Status: ☐ open · Confidence: medium (5/5 verifiers) · Effort: S · WS32
+⚪ **LOW** · 🔁 consistency · Status: ✅ done · Confidence: medium (5/5 verifiers) · Effort: S · WS32
 
 **Locations:** `backend/app/api/v1/jobs.py:89` (`apply_to_job`); plus jobs.py:109-120.
 
@@ -125,7 +125,7 @@ This area covers the FastAPI v1 routers under `backend/app/api/v1/` and the Pyda
 
 **Failure scenario.** Clients cannot distinguish a completed synchronous apply from an accepted-but-pending one via status code; they must parse the body `status` field, weakening the REST contract for the async path.
 
-**Suggested fix.** Return 202 for the enqueue (non-dry-run) path, keep 200 for dry-run, and document the distinction in `api.md`.
+**Fix.** Live enqueue sets `response.status_code = 202`; dry-run remains 200. Documented in `api.md` / `appliers.md`. See [PR](https://github.com/davidcristian/HeadStart/pull/157).
 
 **Verification.** Confirmed 5/5 adversarial verifiers. `apply_to_job` enqueues a Celery task and returns `status='queued'` with default 200 (jobs.py:109-120) rather than 202 for the async path; a real low REST-contract nit.
 

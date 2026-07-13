@@ -1,6 +1,6 @@
 """Job feed endpoints."""
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Response, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db, get_verified_user
@@ -92,14 +92,23 @@ def generate_resume(
     return queued
 
 
-@router.post("/{job_id}/apply", response_model=JobApplyResult)
+@router.post(
+    "/{job_id}/apply",
+    response_model=JobApplyResult,
+    responses={202: {"model": JobApplyResult}},
+)
 def apply_to_job(
     job_id: int,
     data: JobApplyRequest,
+    response: Response,
     db: Session = Depends(get_db),
     user: User = Depends(get_verified_user),
 ) -> JobApplyResult:
-    """Submit or preview an auto-apply for one job."""
+    """Submit or preview an auto-apply for one job.
+
+    Dry-run previews return HTTP 200. Live submit enqueues Celery work and
+    returns HTTP 202 with ``status=queued``; poll ``GET /application-logs/{id}``.
+    """
     service = ApplyService(db)
     if data.dry_run:
         result = service.apply_to_job(
@@ -123,4 +132,5 @@ def apply_to_job(
         data.tailored_resume_b64,
         data.tailored_resume_artifact_id,
     )
+    response.status_code = status.HTTP_202_ACCEPTED
     return JobApplyResult(status="queued", application_log_id=log_id)

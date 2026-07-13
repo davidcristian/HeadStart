@@ -6,8 +6,9 @@ Apply adapters submit (or preview) job applications for a single posting.
 Each supported job site is one self-registering adapter, mirroring the scraper
 and notifier registries. Orchestration lives in `ApplyService`
 (`backend/app/services/apply.py`); the Jobs page **Apply** action calls
-`POST /api/v1/jobs/{id}/apply` (preview via `dry_run: true`). Live submissions
-are queued to Celery and polled via `GET /api/v1/application-logs/{id}`.
+`POST /api/v1/jobs/{id}/apply` (preview via `dry_run: true`, HTTP 200). Live
+submissions enqueue Celery work and return HTTP 202 (`status=queued`); poll
+`GET /api/v1/application-logs/{id}`.
 
 ## Cover letter generation
 
