@@ -174,7 +174,7 @@ This area covers the FastAPI v1 routers under `backend/app/api/v1/` and the Pyda
 **Resolution.** `validate_answers` caps answers at 100 entries with 200-char keys and values ([PR #159](https://github.com/davidcristian/HeadStart/pull/159)).
 
 ### API-14 — NotificationTarget config is free-form dict with no per-type validation
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: medium (5/5 verifiers) · Effort: M · WS32
+⚪ **LOW** · 🔒 security · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/160)) · Confidence: medium (5/5 verifiers) · Effort: M · WS32
 
 **Locations:** `backend/app/schemas/target.py:11` (`TargetBase.config`); plus `backend/app/services/targets.py:31`, `backend/app/services/targets.py:39`.
 

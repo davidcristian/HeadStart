@@ -2,11 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from sqlalchemy.orm import Session
 
-from app.core import secret_policy
 from app.core.exceptions import NotFoundError, ValidationError
 from app.models.notification_target import NotificationTarget
 from app.notifiers import NotifyContext, available_notifiers, get_notifier
@@ -15,6 +12,7 @@ from app.repositories.targets import TargetRepository
 from app.schemas.target import TargetCreate, TargetUpdate
 from app.scrapers.types import JobPosting
 from app.services.plan_limits import PlanLimitsService
+from app.services.target_config import validate_target_config
 
 
 class TargetService:
@@ -33,7 +31,7 @@ class TargetService:
 
     def create(self, user_id: int, data: TargetCreate) -> NotificationTarget:
         self._validate_type(data.type)
-        self._validate_ntfy_config(data.type, data.config)
+        validate_target_config(data.type, data.config)
         PlanLimitsService(self.session).require_can_add_target(user_id, data.type)
         target = NotificationTarget(
             user_id=user_id, name=data.name, type=data.type, config=data.config
@@ -48,7 +46,7 @@ class TargetService:
             PlanLimitsService(self.session).require_can_update_target_type(user_id, fields["type"])
         next_type = str(fields.get("type", target.type))
         next_config = fields.get("config", target.config)
-        self._validate_ntfy_config(next_type, next_config if isinstance(next_config, dict) else {})
+        validate_target_config(next_type, next_config if isinstance(next_config, dict) else {})
         for key, value in fields.items():
             setattr(target, key, value)
         self.session.flush()
@@ -79,14 +77,3 @@ class TargetService:
             raise ValidationError(
                 f"Unknown target type '{target_type}'. Available: {available_notifiers()}"
             )
-
-    @staticmethod
-    def _validate_ntfy_config(target_type: str, config: dict[str, Any]) -> None:
-        """Reject guessable ntfy topics so PII cannot land on a public channel (NTF-06)."""
-        if target_type != "ntfy":
-            return
-        topic = config.get("topic")
-        try:
-            secret_policy.assert_ntfy_topic_not_guessable("" if topic is None else str(topic))
-        except ValueError as exc:
-            raise ValidationError(str(exc)) from exc

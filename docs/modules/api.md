@@ -63,8 +63,8 @@ never touch the DB directly (services use repositories). See
 | POST   | `/feed/rotate`        | Invalidate prior feed URLs and issue a new one       |
 | GET    | `/feed/rss`           | RSS 2.0 job feed (public; `token` query **or** `Authorization: Bearer`). Missing/invalid token → `UnauthorizedError` (401); plan gate raises `PlanLimitError` (402 with `code`/`plan`/`limit`) via the central handlers — not local `HTTPException`. |
 | GET    | `/targets`            | List notification targets                |
-| POST   | `/targets`            | Create a target (e.g. ntfy topic)        |
-| PATCH  | `/targets/{id}`       | Update a target                          |
+| POST   | `/targets`            | Create a target; per-type `config` validated (required keys + SSRF-safe URLs; API-14) |
+| PATCH  | `/targets/{id}`       | Update a target (re-validates effective type+config) |
 | DELETE | `/targets/{id}`       | Delete a target                          |
 | POST   | `/targets/{id}/test`  | Send a test notification                 |
 | GET    | `/credentials`        | List site credentials (metadata only)    |

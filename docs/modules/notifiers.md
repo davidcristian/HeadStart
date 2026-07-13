@@ -28,6 +28,16 @@ Adapters self-register with `@register_notifier("key")`, where `key` matches a
 `NotificationTarget.type`. Modules are imported in
 `app/notifiers/adapters/__init__.py`; resolve with `get_notifier(type)`.
 
+## Write-time config validation (API-14)
+
+`TargetService.create` / `update` call `validate_target_config` so required keys
+and outbound URL safety are checked **before** the row is stored — not only
+inside `adapter.send`. Missing `topic` / `webhook_url` / `to` / `bot_token` /
+`chat_id` raise `ValidationError` (HTTP 422). `webhook_url` and optional ntfy
+`server_url` go through `assert_safe_outbound_url` (SSRF defense-in-depth;
+private/loopback rejected at save). Ntfy topic guessability remains enforced
+(NTF-06). Every registered notifier key must have a validator (unit-tested).
+
 ## Match summaries
 
 When a job carries a `summary` (the "why this matches" blurb — see
@@ -46,8 +56,9 @@ is unchanged.
 target via `just seed`. Outside `local`/`test`, startup rejects the guessable
 `headstart-change-me` placeholder and any topic containing `change-me`; Terraform
 similarly requires an explicit unguessable `ntfy_default_topic` with no default
-(OPS-16). **NTF-06:** `TargetService` also rejects empty / `change-me` /
-under-16-character topics on create/update, and `just seed` replaces a guessable
+(OPS-16). **NTF-06 / API-14:** `TargetService` rejects empty / `change-me` /
+under-16-character topics on create/update (and validates optional `server_url`
+against the outbound SSRF policy), and `just seed` replaces a guessable
 `NTFY_DEFAULT_TOPIC` with a random `jobs-<16 hex>` topic (logged) so the demo
 target never publishes to a public channel. On ntfy.sh the topic name is the
 capability — treat it like a secret and prefer an auth token.

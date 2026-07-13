@@ -97,8 +97,60 @@ def test_update_changes_type_revalidates(db_session: Session) -> None:
         user.id, TargetCreate(name="Chan", type="ntfy", config={"topic": _SAFE_TOPIC})
     )
 
-    updated = service.update(target.id, user.id, TargetUpdate(type="slack"))
+    updated = service.update(
+        target.id,
+        user.id,
+        TargetUpdate(
+            type="slack",
+            config={"webhook_url": "https://hooks.example/services/T00/B00/xxxx"},
+        ),
+    )
     assert updated.type == "slack"
+
+
+def test_update_type_without_matching_config_rejects(db_session: Session) -> None:
+    """API-14: changing type re-validates the existing config against the new type."""
+    user = _pro_user(db_session)
+    service = TargetService(db_session)
+    target = service.create(
+        user.id, TargetCreate(name="Chan", type="ntfy", config={"topic": _SAFE_TOPIC})
+    )
+    with pytest.raises(ValidationError, match="config.webhook_url"):
+        service.update(target.id, user.id, TargetUpdate(type="slack"))
+
+
+def test_create_rejects_private_webhook_url(db_session: Session) -> None:
+    user = _pro_user(db_session)
+    with pytest.raises(ValidationError, match="safe outbound URL"):
+        TargetService(db_session).create(
+            user.id,
+            TargetCreate(
+                name="Hook",
+                type="webhook",
+                config={"webhook_url": "http://127.0.0.1/hook"},
+            ),
+        )
+
+
+def test_create_email_target(db_session: Session) -> None:
+    user = _pro_user(db_session)
+    target = TargetService(db_session).create(
+        user.id, TargetCreate(name="Mail", type="email", config={"to": "a@example.com"})
+    )
+    assert target.type == "email"
+
+
+def test_update_non_dict_config_falls_back_to_empty(db_session: Session) -> None:
+    """Defensive: non-dict stored config is treated as {} for re-validation."""
+    user = _pro_user(db_session)
+    service = TargetService(db_session)
+    target = service.create(
+        user.id, TargetCreate(name="Ok", type="ntfy", config={"topic": _SAFE_TOPIC})
+    )
+    target.config = ["not", "a", "dict"]  # type: ignore[assignment]
+    db_session.flush()
+    with pytest.raises(ValidationError, match="unguessable"):
+        service.update(target.id, user.id, TargetUpdate(name="Still"))
 
 
 def test_update_rejects_unknown_type(db_session: Session) -> None:
