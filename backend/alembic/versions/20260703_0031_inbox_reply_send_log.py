@@ -24,9 +24,11 @@ def upgrade() -> None:
         sa.Column("inbox_reply_draft_id", sa.Integer(), nullable=False),
         sa.Column("inbox_pending_reply_id", sa.Integer(), nullable=True),
         sa.Column("outcome", sa.String(length=32), nullable=False),
-        sa.Column("reason", sa.Text(), nullable=False),
-        sa.Column("subject", sa.String(length=998), nullable=False),
-        sa.Column("body_excerpt", sa.Text(), nullable=False),
+        # Match inbox_classification (0024): ORM default='' is not enough for
+        # raw SQL / tooling INSERTs that omit these NOT NULL text columns.
+        sa.Column("reason", sa.Text(), nullable=False, server_default=""),
+        sa.Column("subject", sa.String(length=998), nullable=False, server_default=""),
+        sa.Column("body_excerpt", sa.Text(), nullable=False, server_default=""),
         sa.Column("payload", sa.JSON(), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.ForeignKeyConstraint(["inbox_pending_reply_id"], ["inbox_pending_reply.id"], ondelete="SET NULL"),

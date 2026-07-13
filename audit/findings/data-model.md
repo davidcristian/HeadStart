@@ -121,7 +121,7 @@ or the lock already points at a user.
 
 <a id="dat-08"></a>
 ### DAT-08 — Migration omits server_default for NOT NULL text cols that models declare default=''
-⚪ **LOW** · 🔁 consistency · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: S · WS33
+⚪ **LOW** · 🔁 consistency · Status: ✅ done · Confidence: high (3/3 verifiers) · Effort: S · WS33
 
 **Locations:** `backend/alembic/versions/20260630_0031_inbox_reply_send_log.py:33` (`inbox_reply_send_log`).
 

@@ -306,3 +306,9 @@ Ephemeral queue row for async manual `POST /searches/{id}/run` (API-02).
 ## Migrations
 
 Change a model, then `just makemigration "..."`, review, `just migrate`.
+
+**Empty-string NOT NULL text columns (DAT-08):** when the ORM uses
+`default=""` on a non-nullable text/string column, the Alembic migration must
+also set `server_default=""` so raw SQL / tooling inserts that omit the column
+succeed. `inbox_classification` (0024) and `inbox_reply_send_log` (0031 +
+0045) follow this; do not leave the default ORM-only.

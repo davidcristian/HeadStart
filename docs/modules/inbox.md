@@ -455,7 +455,10 @@ the inbound `From` is outside that domain, even if the inbox gate admitted the
 message via forged thread headers or an allowlist); audit log at
 `GET /inbox/reply-send-logs` for queue, send, and blocked decisions. Blocked
 sends set `inbox_pending_reply.status=blocked` and leave the draft in `draft`
-for manual review.
+for manual review. `inbox_reply_send_log.reason` / `subject` / `body_excerpt`
+are NOT NULL with `server_default=''` (same convention as
+`inbox_classification`) so non-ORM inserts that omit those columns still
+succeed (DAT-08).
 
 ## Response delay queue (Phase 20d)
 
