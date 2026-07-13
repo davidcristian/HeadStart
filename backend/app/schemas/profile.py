@@ -91,11 +91,25 @@ class ProfileData(BaseModel):
     cover_letter_template: str = Field(default="", max_length=20_000)
     # Free-form answers to recurring application questions, e.g.
     # {"work_authorization": "US citizen", "notice_period": "2 weeks"}.
+    # Capped like skills (API-13): 100 keys, 200 chars per key/value.
     answers: dict[str, str] = Field(default_factory=dict)
     work_experience: list[WorkExperienceEntry] = Field(default_factory=list)
     education: list[EducationEntry] = Field(default_factory=list)
     skills: list[str] = Field(default_factory=list)
     languages: list[LanguageEntry] = Field(default_factory=list)
+
+    @field_validator("answers")
+    @classmethod
+    def validate_answers(cls, value: dict[str, str]) -> dict[str, str]:
+        """Cap answer count and key/value length for storage and apply/LLM payloads."""
+        if len(value) > 100:
+            raise ValueError("answers cannot exceed 100 entries")
+        for key, answer in value.items():
+            if len(key) > 200:
+                raise ValueError("each answers key cannot exceed 200 characters")
+            if len(answer) > 200:
+                raise ValueError("each answers value cannot exceed 200 characters")
+        return value
 
     @field_validator("skills")
     @classmethod

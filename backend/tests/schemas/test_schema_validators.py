@@ -52,6 +52,29 @@ def test_profile_accepts_valid_skills() -> None:
     assert ProfileData(skills=["python", "sql"]).skills == ["python", "sql"]
 
 
+# ---- profile: answers validator (API-13) ----
+
+
+def test_profile_rejects_too_many_answers() -> None:
+    with pytest.raises(ValidationError, match="answers cannot exceed 100 entries"):
+        ProfileData(answers={f"q{i}": "yes" for i in range(101)})
+
+
+def test_profile_rejects_overlong_answers_key() -> None:
+    with pytest.raises(ValidationError, match="each answers key cannot exceed 200 characters"):
+        ProfileData(answers={"k" * 201: "yes"})
+
+
+def test_profile_rejects_overlong_answers_value() -> None:
+    with pytest.raises(ValidationError, match="each answers value cannot exceed 200 characters"):
+        ProfileData(answers={"work_authorization": "x" * 201})
+
+
+def test_profile_accepts_valid_answers() -> None:
+    answers = {"work_authorization": "UK citizen", "notice_period": "2 weeks"}
+    assert ProfileData(answers=answers).answers == answers
+
+
 # ---- profile: ResumeTemplateStored helpers ----
 
 

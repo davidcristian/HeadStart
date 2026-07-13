@@ -123,7 +123,8 @@ The PDF persists in
 instead of the static resume file.
 
 `answers` is a free-form map of recurring application questions to the user's
-canned response.
+canned response (up to 100 entries; each key and value at most 200 characters),
+mirroring the `skills` bounds so apply/LLM payloads cannot bloat unbounded.
 
 `work_experience` and `education` are structured lists used by apply adapters.
 Work experience needs a job title, company, and start month/year; education rows

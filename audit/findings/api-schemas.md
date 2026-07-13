@@ -159,7 +159,7 @@ This area covers the FastAPI v1 routers under `backend/app/api/v1/` and the Pyda
 
 <a id="api-13"></a>
 ### API-13 — ProfileData.answers dict is unbounded unlike the capped skills list
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: medium (3/3 verifiers) · Effort: S · WS32
+⚪ **LOW** · 🔒 security · Status: ✅ done · Confidence: medium (3/3 verifiers) · Effort: S · WS32
 
 **Locations:** `backend/app/schemas/profile.py:94` (`ProfileData.answers`).
 
@@ -171,7 +171,8 @@ This area covers the FastAPI v1 routers under `backend/app/api/v1/` and the Pyda
 
 **Verification.** Confirmed 3/3 adversarial verifiers. `answers: dict[str, str]` has no cap while sibling `skills` and all string fields are `max_length`-bounded, and no global request-size guard exists, so it is genuinely unbounded — though self-inflicted; low input-bounds hardening is fair.
 
-<a id="api-14"></a>
+**Resolution.** `validate_answers` caps answers at 100 entries with 200-char keys and values ([PR #159](https://github.com/davidcristian/HeadStart/pull/159)).
+
 ### API-14 — NotificationTarget config is free-form dict with no per-type validation
 ⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: medium (5/5 verifiers) · Effort: M · WS32
 
