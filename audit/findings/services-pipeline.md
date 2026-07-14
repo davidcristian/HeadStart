@@ -196,7 +196,7 @@ return "awaiting_reply"
 
 <a id="svc-15"></a>
 ### SVC-15 — DigestService.queue inserts and flushes once per seen_job id in a loop
-⚪ **LOW** · ⚡ perf · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: XS · WS33
+⚪ **LOW** · ⚡ perf · Status: ✅ done · Confidence: high (3/3 verifiers) · Effort: XS · WS33
 
 **Locations:** `backend/app/services/digest.py:40` (`queue`); also `backend/app/repositories/digest.py:16`.
 
@@ -207,6 +207,8 @@ return "awaiting_reply"
 **Suggested fix.** Add all `PendingDigest` rows then flush once (`add_all` / single flush), or expose a batch add on the repository.
 
 **Verification.** Confirmed 3/3 adversarial verifiers. `repositories/digest.py` `add()` does `session.add`+`session.flush` per row and `DigestService.queue` loops calling it, so a batch of newly-seen jobs triggers one flush round-trip per job in the hot pipeline path.
+
+**Fix.** `PendingDigestRepository.add_many` inserts with `add_all` + one `flush`; `DigestService.queue` uses it — [PR](https://github.com/davidcristian/HeadStart/pull/168).
 
 <a id="svc-16"></a>
 ### SVC-16 — RSS builder escapes markup but leaves XML-invalid control chars from scraped fields

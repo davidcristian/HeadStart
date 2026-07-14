@@ -96,7 +96,8 @@ flowchart TD
 9. Persist new `seen_job` rows. For immediate mode, **commit** them before
    calling the notifier so an `acks_late` redelivery after a mid-send crash
    dedupes instead of re-notifying the same jobs (XCT-12). Digest mode queues
-   `pending_digest` rows in the open transaction (no external side effect yet).
+   `pending_digest` rows in the open transaction with one flush for the batch
+   (SVC-15; no external side effect yet).
 10. Send remaining new postings via `get_notifier(target.type).send(ctx, new_jobs)`,
     or queue them in `pending_digest` when `notification_mode` is `digest`; write
     `delivery_log` entries (immediate mode); update schedule fields.

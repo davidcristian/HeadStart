@@ -40,11 +40,7 @@ class DigestService:
 
     def queue(self, search_id: int, seen_job_ids: list[int]) -> int:
         """Enqueue seen jobs for a later batched digest notification."""
-        queued = 0
-        for seen_job_id in seen_job_ids:
-            self.pending.add(search_id, seen_job_id)
-            queued += 1
-        return queued
+        return len(self.pending.add_many(search_id, seen_job_ids))
 
     def flush_due(self, now: datetime | None = None) -> int:
         """Send batched digests for searches whose interval has elapsed.

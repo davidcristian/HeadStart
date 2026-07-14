@@ -14,10 +14,20 @@ class PendingDigestRepository:
         self.session = session
 
     def add(self, search_id: int, seen_job_id: int) -> PendingDigest:
-        row = PendingDigest(search_id=search_id, seen_job_id=seen_job_id)
-        self.session.add(row)
+        """Enqueue one seen job (single-row convenience over ``add_many``)."""
+        return self.add_many(search_id, [seen_job_id])[0]
+
+    def add_many(self, search_id: int, seen_job_ids: list[int]) -> list[PendingDigest]:
+        """Enqueue many seen jobs with one flush (SVC-15)."""
+        if not seen_job_ids:
+            return []
+        rows = [
+            PendingDigest(search_id=search_id, seen_job_id=seen_job_id)
+            for seen_job_id in seen_job_ids
+        ]
+        self.session.add_all(rows)
         self.session.flush()
-        return row
+        return rows
 
     def list_for_search(self, search_id: int) -> list[PendingDigest]:
         return list(

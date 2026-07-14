@@ -92,8 +92,9 @@ one email listing all jobs in the batch.
 ## Digest mode
 
 Set a search's `notification_mode` to `digest` and choose
-`digest_interval_seconds` (minimum 60). New jobs queue in `pending_digest`;
-the beat task `flush_due_digests` sends one batched message per search when the
+`digest_interval_seconds` (minimum 60). New jobs queue in `pending_digest` via
+one batched insert/flush per scrape (not one flush per job). The beat task
+`flush_due_digests` sends one batched message per search when the
 interval elapses. Every adapter formats a summary title (e.g. `5 new jobs —
 Google SWE`) and lists each posting. `delivery_log` still records one row per
 job. After send (or when the notifier is not allowed on the current plan), the

@@ -50,6 +50,32 @@ def test_queue_counts_enqueued(db_session: Session) -> None:
     assert queued == 0
 
 
+def test_queue_batches_seen_job_ids(db_session: Session) -> None:
+    """DigestService.queue persists all ids via one repository batch (SVC-15)."""
+    search = _digest_search(db_session)
+    from app.models.seen_job import SeenJob
+
+    jobs = []
+    for eid in ("q1", "q2", "q3"):
+        job = SeenJob(
+            search_id=search.id,
+            external_id=eid,
+            hash=f"hash-{eid}",
+            title=f"Job {eid}",
+            company="Acme",
+            location="Remote",
+            url=f"https://example.test/{eid}",
+            status="new",
+        )
+        db_session.add(job)
+        jobs.append(job)
+    db_session.flush()
+
+    queued = DigestService(db_session).queue(search.id, [j.id for j in jobs])
+    assert queued == 3
+    assert db_session.query(PendingDigest).count() == 3
+
+
 def test_flush_due_sends_when_interval_elapsed(db_session: Session) -> None:
     search = _digest_search(db_session, interval=60)
     notifier = RecordingDigestNotifier()

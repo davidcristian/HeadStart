@@ -180,7 +180,9 @@ dedup is also applied across a user's searches by normalized job URL (see
 ### pending_digest
 
 Jobs waiting to be included in the next batched digest notification for a search.
-After a successful (or plan-skipped) flush, `PendingDigestRepository.delete_for_search`
+Enqueue (`PendingDigestRepository.add_many` / `DigestService.queue`) inserts the
+batch with a single `flush` rather than one flush per job (SVC-15). After a
+successful (or plan-skipped) flush, `PendingDigestRepository.delete_for_search`
 clears the queue with a single bulk `DELETE … WHERE search_id = …` rather than
 re-selecting and deleting ORM rows one-by-one.
 
