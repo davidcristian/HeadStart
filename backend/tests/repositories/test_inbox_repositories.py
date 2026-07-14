@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from app.models.base import utcnow
 from app.models.inbox_classification import InboxClassification
 from app.models.inbox_pending_reply import InboxPendingReply
+from app.models.inbox_poll_state import InboxPollState
 from app.models.inbox_reply_draft import InboxReplyDraft
 from app.models.notification_target import NotificationTarget
 from app.models.search import Search
@@ -17,6 +18,7 @@ from app.models.source import Source
 from app.models.user import User
 from app.repositories.inbox_classifications import InboxClassificationRepository
 from app.repositories.inbox_pending_replies import InboxPendingReplyRepository
+from app.repositories.inbox_poll_state import InboxPollStateRepository
 from app.repositories.inbox_reply_drafts import InboxReplyDraftRepository
 
 
@@ -113,6 +115,66 @@ def _draft(
     session.add(row)
     session.flush()
     return row
+
+
+# ---- InboxPollStateRepository ----
+
+
+def test_poll_state_upsert_inserts_then_updates(db_session: Session) -> None:
+    user = _user(db_session, email="poll-upsert@example.test")
+    repo = InboxPollStateRepository(db_session)
+
+    first = repo.upsert_last_polled_uid(user.id, 10)
+    assert first.last_polled_uid == 10
+    assert repo.get_last_polled_uid(user.id) == 10
+
+    second = repo.upsert_last_polled_uid(user.id, 42)
+    assert second.id == first.id
+    assert second.last_polled_uid == 42
+    assert repo.get_last_polled_uid(user.id) == 42
+
+
+def test_poll_state_upsert_recovers_from_unique_race(db_session: Session) -> None:
+    """DAT-15: concurrent first-poll insert loses unique(user_id) then updates the winner."""
+    user = _user(db_session, email="poll-race@example.test")
+    db_session.add(InboxPollState(user_id=user.id, last_polled_uid=5))
+    db_session.flush()
+    repo = InboxPollStateRepository(db_session)
+    calls = {"n": 0}
+    real_get = repo.get_for_user
+
+    def race_get(user_id: int) -> InboxPollState | None:
+        calls["n"] += 1
+        if calls["n"] == 1:
+            return None
+        return real_get(user_id)
+
+    repo.get_for_user = race_get  # type: ignore[method-assign]
+
+    row = repo.upsert_last_polled_uid(user.id, 99)
+    assert row.last_polled_uid == 99
+    assert InboxPollStateRepository(db_session).get_last_polled_uid(user.id) == 99
+
+
+def test_poll_state_upsert_reraises_when_conflict_row_missing(db_session: Session) -> None:
+    """IntegrityError without a surviving row must not be swallowed."""
+    from sqlalchemy.exc import IntegrityError
+
+    user = _user(db_session, email="poll-missing@example.test")
+    db_session.add(InboxPollState(user_id=user.id, last_polled_uid=1))
+    db_session.flush()
+    repo = InboxPollStateRepository(db_session)
+
+    def always_missing(_user_id: int) -> InboxPollState | None:
+        return None
+
+    repo.get_for_user = always_missing  # type: ignore[method-assign]
+
+    try:
+        repo.upsert_last_polled_uid(user.id, 7)
+        raise AssertionError("expected IntegrityError")
+    except IntegrityError:
+        pass
 
 
 # ---- InboxReplyDraftRepository ----

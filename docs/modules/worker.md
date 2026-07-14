@@ -198,8 +198,9 @@ every `INBOX_POLL_INTERVAL_SECONDS` (default 300). The task calls
    ghost self-mail, optional sender allowlist) — no classifier or DB write.
 3. Classify gated messages via `EmailClassificationService` (link application,
    ghost recovery, interview handoff, folder routing).
-4. Advance the cursor through classified and ignored messages; classify failures
-   retry on the next tick.
+4. Advance the cursor through classified and ignored messages
+   (`upsert_last_polled_uid` SAVEPOINT insert / conflict update — DAT-15);
+   classify failures retry on the next tick.
 
 The task return payload includes `ignored` (mail skipped by the gate).
 

@@ -247,7 +247,7 @@ or the lock already points at a user.
 
 <a id="dat-15"></a>
 ### DAT-15 — InboxPollState upsert is non-atomic get-then-insert; concurrent first poll violates unique
-⚪ **LOW** · 🐞 bug · Status: ☐ open · Confidence: low (3/3 verifiers) · Effort: S · WS33
+⚪ **LOW** · 🐞 bug · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/166)) · Confidence: low (3/3 verifiers) · Effort: S · WS33
 
 **Locations:** `backend/app/repositories/inbox_poll_state.py:20` (`InboxPollStateRepository.upsert_last_polled_uid`); plus `backend/app/models/inbox_poll_state.py:18`, `backend/app/services/inbox_orchestration.py:146`.
 

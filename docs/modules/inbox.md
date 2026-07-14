@@ -331,8 +331,11 @@ When `INBOX_AGENT_ENABLED=true`, beat runs `process_inbox_messages` every
    the poll cursor advances past it without LLM calls or DB writes.
 4. Classifies gated messages in UID order via `EmailClassificationService` (ghost
    recovery, interview handoff, and folder routing run as on manual classify).
-5. Advances the poll cursor through classified and ignored messages; classify
-   failures stop the batch so the failed message retries on the next tick.
+5. Advances the poll cursor through classified and ignored messages via
+   `InboxPollStateRepository.upsert_last_polled_uid` (SAVEPOINT-wrapped insert with
+   update-on-`unique(user_id)` conflict so overlapping first-poll ticks cannot abort
+   on IntegrityError — DAT-15); classify failures stop the batch so the failed
+   message retries on the next tick.
 
 Batch size per user per tick: `INBOX_POLL_BATCH_SIZE` (default 50). See
 [worker.md](worker.md).
