@@ -137,7 +137,7 @@ or the lock already points at a user.
 
 <a id="dat-09"></a>
 ### DAT-09 — ApplicationLog.status comment omits queued/processing states the code stores
-⚪ **LOW** · 📝 doc · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: XS · WS33
+⚪ **LOW** · 📝 doc · Status: ✅ done · Confidence: high (3/3 verifiers) · Effort: XS · WS33 · [PR](https://github.com/davidcristian/HeadStart/pull/162)
 
 **Locations:** `backend/app/models/application_log.py:119` (`ApplicationLog.status`). Note: the comment is actually near line 24.
 

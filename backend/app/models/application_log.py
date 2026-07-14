@@ -12,6 +12,11 @@ if TYPE_CHECKING:
     from app.models.application_artifact import ApplicationArtifact
     from app.models.seen_job import SeenJob
 
+# Canonical persisted status values (DAT-09). Keep in sync with apply enqueue/claim
+# and the in-flight partial unique index predicate below.
+APPLICATION_LOG_STATUSES = frozenset({"queued", "processing", "submitted", "dry_run", "failed"})
+APPLICATION_LOG_IN_FLIGHT_STATUSES = frozenset({"queued", "processing"})
+
 
 class ApplicationLog(Base):
     __tablename__ = "application_log"
@@ -32,7 +37,8 @@ class ApplicationLog(Base):
         ForeignKey("seen_job.id", ondelete="CASCADE"), index=True, nullable=False
     )
 
-    status: Mapped[str] = mapped_column(String(20), nullable=False)  # submitted | dry_run | failed
+    # queued | processing | submitted | dry_run | failed — see APPLICATION_LOG_STATUSES
+    status: Mapped[str] = mapped_column(String(20), nullable=False)
     dry_run: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
     payload: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)

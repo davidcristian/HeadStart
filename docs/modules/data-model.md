@@ -253,7 +253,7 @@ Audit of auto-apply attempts (preview and live).
 | ------------------------ | ----------- | ---------------------------------------- |
 | id                       | int PK      |                                          |
 | seen_job_id              | FK seen_job |                                          |
-| status                   | str         | `queued` / `processing` / `submitted` / `dry_run` / `failed` |
+| status                   | str         | `queued` / `processing` / `submitted` / `dry_run` / `failed` (canonical: `APPLICATION_LOG_STATUSES` in `application_log.py`; DAT-09) |
 | dry_run                  | bool        | True when the attempt was a preview only |
 | error                    | text?       | Present when failed                      |
 | payload                  | JSON?       | Adapter body plus `employer_domain` + `posting` metadata for triage, and a `user_consent` stamp (`basis`, `mechanism`, `live_submission`, `recorded_at`) for each attempt |
