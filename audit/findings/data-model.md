@@ -171,7 +171,7 @@ or the lock already points at a user.
 
 <a id="dat-11"></a>
 ### DAT-11 — seen_job.status has no index despite status-filtered queries in pipeline/ghost/sync paths
-⚪ **LOW** · ⚡ perf · Status: ☐ open · Confidence: high (5/5 verifiers) · Effort: S · WS33
+⚪ **LOW** · ⚡ perf · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/163)) · Confidence: high (5/5 verifiers) · Effort: S · WS33
 
 > Overlaps DAT-03 (medium) and DAT-14 (low) on the missing `seen_job` index theme; kept distinct because it inventories the full set of status-filtered callers and also flags `delivery_log.status`.
 
@@ -182,6 +182,8 @@ or the lock already points at a user.
 **Failure scenario.** As the `seen_job` dedup ledger grows to millions of rows, status-filtered reads (pipeline view, ghost-detection sweep, per-user job list) perform sequential scans, degrading API latency.
 
 **Suggested fix.** Add an index on `seen_job.status` (or composite `(search_id, status)`); consider `delivery_log.status` too, used by admin_stats counts.
+
+**Fix.** Models declare `ix_seen_job_search_id_status` on `(search_id, status)` and `ix_delivery_log_status` on `delivery_log.status`; Alembic revision `0046_status_filter_idx`. Ghost-detection remains covered by DAT-03's partial `(status, applied_at)` index.
 
 **Verification.** Confirmed 5/5 adversarial verifiers. `seen_job.status` (line 36, not 842) is unindexed; most callers scope by indexed `search_id`/`user_id` first, but `ghost_detection.py:24` filters `status == 'applied'` globally with no scoping index, so a periodic full seq scan is real — though "API latency" is overstated, making this low.
 

@@ -164,6 +164,7 @@ dedup is also applied across a user's searches by normalized job URL (see
 | ghosted_at    | datetime?   | Set when ghost-detection leases a stale apply |
 |               |             | **Unique (search_id, external_id)**           |
 |               |             | **Index** `ix_seen_job_status_applied_at_unghosted` on `(status, applied_at)` where `ghosted_at IS NULL` (DAT-03; ghost-detection tick) |
+|               |             | **Index** `ix_seen_job_search_id_status` on `(search_id, status)` (DAT-11; job feed / applications status filters) |
 |               |             | **Index** `ix_seen_job_normalized_url` on `normalized_url` (DAT-05; cross-search URL dedup) |
 
 **`status` lifecycle:**
@@ -239,6 +240,7 @@ Audit of notification attempts.
 | status      | str         | `sent` / `failed`              |
 | error       | str?        | Present when failed            |
 | sent_at     | datetime    |                                |
+|             |             | **Index** `ix_delivery_log_status` on `status` (DAT-11; admin stats / failure counts) |
 
 **Search-status top-N (DAT-04):** `DeliveryLogRepository.recent_failures_for_searches`
 ranks failed rows with `ROW_NUMBER() PARTITION BY seen_job.search_id ORDER BY

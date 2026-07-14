@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, ForeignKey, String, Text
+from sqlalchemy import DateTime, ForeignKey, Index, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, utcnow
@@ -15,6 +15,10 @@ if TYPE_CHECKING:
 
 class DeliveryLog(Base):
     __tablename__ = "delivery_log"
+    __table_args__ = (
+        # Admin stats + search-status failure counts filter by status (DAT-11).
+        Index("ix_delivery_log_status", "status"),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     seen_job_id: Mapped[int] = mapped_column(

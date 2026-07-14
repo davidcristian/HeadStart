@@ -26,6 +26,8 @@ class SeenJob(Base):
             postgresql_where=text("ghosted_at IS NULL"),
             sqlite_where=text("ghosted_at IS NULL"),
         ),
+        # Job feed / applications pipeline filter by search + status (DAT-11).
+        Index("ix_seen_job_search_id_status", "search_id", "status"),
         # Cross-search URL dedup intersects the current batch in SQL (DAT-05).
         Index("ix_seen_job_normalized_url", "normalized_url"),
     )
