@@ -211,7 +211,7 @@ or the lock already points at a user.
 
 <a id="dat-13"></a>
 ### DAT-13 — delete_for_search re-queries then deletes rows one-by-one instead of bulk DELETE
-⚪ **LOW** · ⚡ perf · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: XS · WS33
+⚪ **LOW** · ⚡ perf · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/164)) · Confidence: high (3/3 verifiers) · Effort: XS · WS33
 
 **Locations:** `backend/app/repositories/digest.py:32` (`delete_for_search`); plus `backend/app/services/digest.py:112`.
 

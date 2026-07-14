@@ -106,10 +106,11 @@ flowchart TD
    `application_log` in-flight rows.
 
 A separate beat task `flush_due_digests` sends batched notifications for digest
-searches whose interval has elapsed, then clears the queue and sets
-`last_digest_at`. Flushes are per-search: one bad target cannot abort the tick or
-undo another search's already-sent digest bookkeeping. Flush also re-checks
-`allows_notifier`; a disallowed target clears pending rows without sending.
+searches whose interval has elapsed, then clears the queue with a bulk
+`DELETE` on `pending_digest.search_id` and sets `last_digest_at`. Flushes are
+per-search: one bad target cannot abort the tick or undo another search's
+already-sent digest bookkeeping. Flush also re-checks `allows_notifier`; a
+disallowed target clears pending rows without sending.
 
 Failures at any external step are caught, logged, and recorded; the worker keeps
 running.

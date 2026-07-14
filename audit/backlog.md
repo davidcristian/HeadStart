@@ -321,7 +321,7 @@ _16 item(s): 5 medium, 11 low._
 | ⚪ LOW | 📝 | [DAT-09](findings/data-model.md#dat-09) ApplicationLog.status comment omits queued/processing states the code stores | `backend/app/models/application_log.py:119` | ✅ [PR](https://github.com/davidcristian/HeadStart/pull/162) |
 | ⚪ LOW | ⚡ | [DAT-11](findings/data-model.md#dat-11) seen_job.status has no index despite status-filtered queries in pipeline/ghost/sync paths | `backend/app/models/seen_job.py:842` | ✅ [PR](https://github.com/davidcristian/HeadStart/pull/163) |
 | ⚪ LOW | 🔁 | [DAT-12](findings/data-model.md#dat-12) Three user-owned tables cascade only via DB FK, no ORM relationship on User | `backend/app/models/user.py:63` | ✅ [PR](https://github.com/davidcristian/HeadStart/pull/64) |
-| ⚪ LOW | ⚡ | [DAT-13](findings/data-model.md#dat-13) delete_for_search re-queries then deletes rows one-by-one instead of bulk DELETE | `backend/app/repositories/digest.py:32` | ☐ |
+| ⚪ LOW | ⚡ | [DAT-13](findings/data-model.md#dat-13) delete_for_search re-queries then deletes rows one-by-one instead of bulk DELETE | `backend/app/repositories/digest.py:32` | ✅ [PR](https://github.com/davidcristian/HeadStart/pull/164) |
 | ⚪ LOW | ⚡ | [DAT-14](findings/data-model.md#dat-14) Ghost-detection sweep full-scans seen_job (no index on status/applied_at) | `backend/app/repositories/ghost_detection.py:483` | ☐ |
 | ⚪ LOW | 🐞 | [DAT-15](findings/data-model.md#dat-15) InboxPollState upsert is non-atomic get-then-insert; concurrent first poll violates unique | `backend/app/repositories/inbox_poll_state.py:20` | ☐ |
 | ⚪ LOW | ⚡ | [DAT-16](findings/data-model.md#dat-16) sync_after_scrape materializes every SeenJob row for a search each scrape to diff status | `backend/app/repositories/jobs.py:862` | ☐ |

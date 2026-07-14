@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session, joinedload
 
 from app.models.pending_digest import PendingDigest
@@ -30,8 +30,8 @@ class PendingDigestRepository:
         )
 
     def delete_for_search(self, search_id: int) -> None:
-        for row in self.list_for_search(search_id):
-            self.session.delete(row)
+        """Clear the digest queue for a search in one statement (DAT-13)."""
+        self.session.execute(delete(PendingDigest).where(PendingDigest.search_id == search_id))
 
     def searches_with_pending(self) -> list[Search]:
         """Enabled digest-mode searches that have at least one queued job."""

@@ -96,9 +96,11 @@ Set a search's `notification_mode` to `digest` and choose
 the beat task `flush_due_digests` sends one batched message per search when the
 interval elapses. Every adapter formats a summary title (e.g. `5 new jobs —
 Google SWE`) and lists each posting. `delivery_log` still records one row per
-job. Each due search is flushed independently (errors are logged and skipped;
-successful flushes commit before the next search) so one misconfigured target
-cannot block or duplicate other users' digests.
+job. After send (or when the notifier is not allowed on the current plan), the
+queue for that search is cleared with one bulk `DELETE` on `search_id`. Each
+due search is flushed independently (errors are logged and skipped; successful
+flushes commit before the next search) so one misconfigured target cannot block
+or duplicate other users' digests.
 
 ## slack adapter
 
