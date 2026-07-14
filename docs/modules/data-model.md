@@ -175,7 +175,7 @@ dedup is also applied across a user's searches by normalized job URL (see
 | `seen` | User or pipeline | User acknowledged, or a previously closed listing reappeared |
 | `applied` | User or apply pipeline | User applied, or auto-apply succeeded |
 | `archived` | User | Hidden from active triage; not auto-closed on re-scrape |
-| `closed` | Pipeline | Job no longer appears in scrape results (applied/archived rows are left alone) |
+| `closed` | Pipeline | Job no longer appears in scrape results (applied/archived rows are left alone). `SeenJobRepository.sync_after_scrape` applies this with two set-based `UPDATE`s (close missing `new`/`seen`, reopen matching `closed` → `seen`) rather than loading the full ledger into Python (DAT-16). |
 
 ### pending_digest
 

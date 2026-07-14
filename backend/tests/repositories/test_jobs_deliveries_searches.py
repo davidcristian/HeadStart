@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 
 import pytest
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 from sqlalchemy.orm import Session
 
 from app.models.base import utcnow
@@ -162,6 +162,71 @@ def test_seen_job_add_fills_normalized_url(db_session: Session) -> None:
         )
     )
     assert row.normalized_url == "https://acme.test/role"
+
+
+def test_seen_job_sync_after_scrape_set_based(db_session: Session) -> None:
+    """Close/reopen via UPDATEs; empty scrape closes actives (DAT-16)."""
+    search = _search(db_session)
+    other = _search(db_session)
+    gone = _job(db_session, search.id, "gone", status="new")
+    still = _job(db_session, search.id, "still", status="seen")
+    closed = _job(db_session, search.id, "back", status="closed")
+    applied = _job(db_session, search.id, "applied", status="applied")
+    archived = _job(db_session, search.id, "archived", status="archived")
+    other_new = _job(db_session, other.id, "gone", status="new")
+    repo = SeenJobRepository(db_session)
+
+    closed_n, reopened_n = repo.sync_after_scrape(search.id, {"still", "back"})
+    assert closed_n == 1
+    assert reopened_n == 1
+    for row in (gone, still, closed, applied, archived, other_new):
+        db_session.refresh(row)
+    assert gone.status == "closed"
+    assert still.status == "seen"
+    assert closed.status == "seen"
+    assert applied.status == "applied"
+    assert archived.status == "archived"
+    assert other_new.status == "new"
+
+    closed_all, reopened_empty = repo.sync_after_scrape(search.id, set())
+    assert closed_all == 2  # still + reopened back
+    assert reopened_empty == 0
+    db_session.refresh(still)
+    db_session.refresh(closed)
+    assert still.status == "closed"
+    assert closed.status == "closed"
+
+
+def test_seen_job_sync_after_scrape_uses_update_not_full_select() -> None:
+    """Compiled close/reopen statements must be UPDATEs scoped by search_id (DAT-16)."""
+    from sqlalchemy.dialects import postgresql
+
+    scraped = {"a", "b"}
+    close_stmt = (
+        update(SeenJob)
+        .where(SeenJob.search_id == 1)
+        .where(SeenJob.status.in_(("new", "seen")))
+        .where(SeenJob.external_id.not_in(scraped))
+        .values(status="closed")
+    )
+    reopen_stmt = (
+        update(SeenJob)
+        .where(SeenJob.search_id == 1)
+        .where(SeenJob.status == "closed")
+        .where(SeenJob.external_id.in_(scraped))
+        .values(status="seen")
+    )
+    close_sql = str(
+        close_stmt.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
+    ).upper()
+    reopen_sql = str(
+        reopen_stmt.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
+    ).upper()
+    assert close_sql.startswith("UPDATE")
+    assert "SEARCH_ID" in close_sql
+    assert "NOT IN" in close_sql or "NOT (" in close_sql
+    assert reopen_sql.startswith("UPDATE")
+    assert " IN (" in reopen_sql
 
 
 def test_seen_job_existing_normalized_urls_sql_filters_batch() -> None:

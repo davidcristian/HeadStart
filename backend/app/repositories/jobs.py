@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 from datetime import datetime
 
-from sqlalchemy import and_, or_, select
+from sqlalchemy import and_, or_, select, update
 from sqlalchemy.orm import Session
 
 from app.models.search import Search
@@ -126,16 +126,25 @@ class SeenJobRepository:
         return seen_job
 
     def sync_after_scrape(self, search_id: int, scraped_external_ids: set[str]) -> tuple[int, int]:
-        """Mark active jobs missing from a scrape as closed; reopen reappeared listings."""
-        rows = list(self.session.scalars(select(SeenJob).where(SeenJob.search_id == search_id)))
-        closed = reopened = 0
-        for row in rows:
-            if row.status in ("new", "seen") and row.external_id not in scraped_external_ids:
-                row.status = "closed"
-                closed += 1
-            elif row.status == "closed" and row.external_id in scraped_external_ids:
-                row.status = "seen"
-                reopened += 1
-        if closed or reopened:
-            self.session.flush()
+        """Close missing listings and reopen reappeared ones via set-based UPDATEs (DAT-16)."""
+        close_stmt = (
+            update(SeenJob)
+            .where(SeenJob.search_id == search_id)
+            .where(SeenJob.status.in_(("new", "seen")))
+            .values(status="closed")
+        )
+        if scraped_external_ids:
+            close_stmt = close_stmt.where(SeenJob.external_id.not_in(scraped_external_ids))
+        closed = int(getattr(self.session.execute(close_stmt), "rowcount", 0) or 0)
+
+        reopened = 0
+        if scraped_external_ids:
+            reopen_stmt = (
+                update(SeenJob)
+                .where(SeenJob.search_id == search_id)
+                .where(SeenJob.status == "closed")
+                .where(SeenJob.external_id.in_(scraped_external_ids))
+                .values(status="seen")
+            )
+            reopened = int(getattr(self.session.execute(reopen_stmt), "rowcount", 0) or 0)
         return closed, reopened

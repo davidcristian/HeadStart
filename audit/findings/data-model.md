@@ -263,7 +263,7 @@ or the lock already points at a user.
 
 <a id="dat-16"></a>
 ### DAT-16 — sync_after_scrape materializes every SeenJob row for a search each scrape to diff status
-⚪ **LOW** · ⚡ perf · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: M · WS33
+⚪ **LOW** · ⚡ perf · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/167)) · Confidence: high (3/3 verifiers) · Effort: M · WS33
 
 > Merged with DAT-17 (uid 41, `jobs.py:860`, same symbol, confirmed 3/3) — identical defect. Combined here as one finding.
 

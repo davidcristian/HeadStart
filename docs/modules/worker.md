@@ -83,6 +83,8 @@ flowchart TD
 3. Resolve and run the scraper (`get_scraper(source.adapter_key).fetch(ctx)`).
 4. Sync job lifecycle: mark `new`/`seen` rows missing from the scrape as `closed`;
    reopen `closed` rows that reappear as `seen`. Applied/archived rows are untouched.
+   Implemented as two set-based `UPDATE … WHERE search_id = …` statements keyed on the
+   scraped `external_id` set (DAT-16), not a full `SELECT` of the search ledger.
 5. Apply the search's `filters` JSON to drop non-matching postings.
 6. Dedupe postings against `seen_job` for that search (by `external_id`).
 7. Skip notification when the normalized job URL was already seen in any of the
