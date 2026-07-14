@@ -179,8 +179,12 @@ When `INBOX_AGENT_ENABLED=true`, beat also schedules
 (default 3600). The task **claims** due rows (`ghosted_at` lease under
 `FOR UPDATE SKIP LOCKED`, committed before SMTP) then emails self-summaries
 for applications past `INBOX_GHOST_WINDOW_DAYS` without a recruiter reply
-(XCT-11). Failed sends release the lease for retry. Failures on one job are
-isolated so the rest of the batch continues (SVC-06). See [inbox.md](inbox.md).
+(XCT-11). The claim query filters `status=applied` / `applied_at` /
+`ghosted_at IS NULL` and is backed by partial index
+`ix_seen_job_status_applied_at_unghosted` so the periodic sweep does not
+full-scan `seen_job` (DAT-03 / DAT-14). Failed sends release the lease for
+retry. Failures on one job are isolated so the rest of the batch continues
+(SVC-06). See [inbox.md](inbox.md).
 
 ## Inbox orchestration (dev inbox)
 

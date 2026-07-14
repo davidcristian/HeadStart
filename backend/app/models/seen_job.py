@@ -18,7 +18,8 @@ class SeenJob(Base):
     __tablename__ = "seen_job"
     __table_args__ = (
         UniqueConstraint("search_id", "external_id", name="uq_seen_job_search_external"),
-        # Ghost-detection tick filters status/applied_at over unghosted rows (DAT-03).
+        # Ghost-detection claim filters status/applied_at over unghosted rows
+        # (DAT-03 / DAT-14).
         Index(
             "ix_seen_job_status_applied_at_unghosted",
             "status",

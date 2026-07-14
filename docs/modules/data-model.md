@@ -163,7 +163,7 @@ dedup is also applied across a user's searches by normalized job URL (see
 | applied_at    | datetime    | Set when a live apply succeeds (manual or pipeline) |
 | ghosted_at    | datetime?   | Set when ghost-detection leases a stale apply |
 |               |             | **Unique (search_id, external_id)**           |
-|               |             | **Index** `ix_seen_job_status_applied_at_unghosted` on `(status, applied_at)` where `ghosted_at IS NULL` (DAT-03; ghost-detection tick) |
+|               |             | **Index** `ix_seen_job_status_applied_at_unghosted` on `(status, applied_at)` where `ghosted_at IS NULL` (DAT-03 / DAT-14; ghost-detection claim) |
 |               |             | **Index** `ix_seen_job_search_id_status` on `(search_id, status)` (DAT-11; job feed / applications status filters) |
 |               |             | **Index** `ix_seen_job_normalized_url` on `normalized_url` (DAT-05; cross-search URL dedup) |
 

@@ -227,7 +227,7 @@ or the lock already points at a user.
 
 <a id="dat-14"></a>
 ### DAT-14 — Ghost-detection sweep full-scans seen_job (no index on status/applied_at)
-⚪ **LOW** · ⚡ perf · Status: ☐ open · Confidence: medium (3/3 verifiers) · Effort: S · WS33
+⚪ **LOW** · ⚡ perf · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/165)) · Confidence: medium (3/3 verifiers) · Effort: S · WS33
 
 > Same missing-index root cause as DAT-03 (medium) and DAT-11 (low); kept distinct because it isolates the scheduled ghost-detection predicate.
 
@@ -238,6 +238,8 @@ or the lock already points at a user.
 **Failure scenario.** As `seen_job` grows into the system's largest table, each ghost-detection tick full-scans it, adding periodic DB load that scales with total job history.
 
 **Suggested fix.** Add a composite/partial index matching the sweep predicate, e.g. `(status, applied_at)` or a partial index `WHERE ghosted_at IS NULL`.
+
+**Fix.** Tracker close: DAT-03 already shipped `ix_seen_job_status_applied_at_unghosted` (partial `(status, applied_at)` where `ghosted_at IS NULL`, Alembic `0042`), which matches `GhostDetectionRepository.claim_stale_applications`. Dedicated DAT-14 regression locks claim filters to that index; worker/inbox/data-model docs cite DAT-14 alongside DAT-03 — [PR](https://github.com/davidcristian/HeadStart/pull/165).
 
 **Verification.** Confirmed 3/3 adversarial verifiers. `list_stale_applications` filters `seen_job` on `status`/`applied_at`/`ghosted_at` unscoped across all searches; `seen_job` has only `ix_seen_job_search_id`, so the periodic sweep full-scans — cited line 483 is really ~18 but the defect holds.
 

@@ -381,8 +381,11 @@ ghost recovery and before folder routing.
 When `INBOX_AGENT_ENABLED=true`, beat runs `detect_ghosted_applications` every
 `INBOX_GHOST_CHECK_INTERVAL_SECONDS` (default 3600). `GhostDetectionService`
 finds `seen_job` rows with `status=applied`, no `ghosted_at`, and
-`applied_at` older than `INBOX_GHOST_WINDOW_DAYS` (default 14). For each stale
-application where the user has mailbox credentials:
+`applied_at` older than `INBOX_GHOST_WINDOW_DAYS` (default 14). That claim
+predicate is covered by partial index
+`ix_seen_job_status_applied_at_unghosted` on `(status, applied_at)` where
+`ghosted_at IS NULL` (DAT-03 / DAT-14). For each stale application where the
+user has mailbox credentials:
 
 1. **Claim** eligible rows under `FOR UPDATE SKIP LOCKED`, stamp
    `seen_job.ghosted_at`, and commit the lease before SMTP so overlapping ticks
