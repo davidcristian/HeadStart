@@ -314,6 +314,14 @@ Ephemeral queue row for async manual `POST /searches/{id}/run` (API-02).
 
 Change a model, then `just makemigration "..."`, review, `just migrate`.
 
+Unit tests still build schema via SQLite `create_all` for speed. **Postgres
+compatibility (TST-03)** is gated separately: CI's `migrations` job runs
+`just test-migrations`, which boots disposable Postgres 16, applies
+`alembic upgrade head` from an empty database, then `alembic check` so ORM
+metadata cannot drift from the applied migrations. Irreversible data
+migrations (plan rewrite, GDPR redaction) intentionally no-op `downgrade()`,
+so a full downgrade-to-base round-trip is not part of the gate.
+
 **Empty-string NOT NULL text columns (DAT-08):** when the ORM uses
 `default=""` on a non-nullable text/string column, the Alembic migration must
 also set `server_default=""` so raw SQL / tooling inserts that omit the column

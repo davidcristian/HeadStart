@@ -1,12 +1,16 @@
 #!/usr/bin/env bash
-# Apply every alembic migration from scratch against a real Postgres.
+# Apply every alembic migration from scratch against a real Postgres (TST-03).
 #
-# Backend tests run on in-memory SQLite, so dialect-specific migration SQL
-# (raw UPDATE/DELETE statements, partial indexes, boolean literals, ...) is
+# Backend unit tests build schema via SQLite ``create_all``, so dialect-specific
+# migration SQL (raw UPDATE/DELETE, partial indexes, boolean literals, ...) is
 # never exercised against the production dialect by `just test`. This gate
 # boots a disposable Postgres in docker, runs `alembic upgrade head` on an
-# empty database, and tears everything down. CI runs it on every push/PR;
-# run it locally via `just test-migrations`.
+# empty database, then `alembic check` so ORM metadata cannot drift from the
+# applied migrations. CI runs it on every push/PR; run locally via
+# `just test-migrations`.
+#
+# Full downgrade-to-base is intentionally not gated: irreversible data
+# migrations (e.g. plan slug rewrite, GDPR redaction) no-op their downgrade().
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 have docker || die "docker is required: this gate boots a disposable Postgres container."
@@ -47,8 +51,13 @@ for _ in $(seq 1 60); do
 done
 [[ "${ready}" == 1 ]] || die "Postgres did not become ready within 60s."
 
-log "alembic upgrade head (empty database)"
-DATABASE_URL="postgresql+psycopg://${PG_USER}:${PG_PASSWORD}@127.0.0.1:${port}/${PG_DB}" \
-  venv_tool alembic upgrade head
+export DATABASE_URL="postgresql+psycopg://${PG_USER}:${PG_PASSWORD}@127.0.0.1:${port}/${PG_DB}"
 
-ok "All migrations apply cleanly on Postgres."
+log "alembic upgrade head (empty database)"
+venv_tool alembic upgrade head
+
+# Fail if the live schema diverges from Base.metadata (model/migration drift).
+log "alembic check (metadata vs applied migrations)"
+venv_tool alembic check
+
+ok "All migrations apply cleanly on Postgres and match ORM metadata."

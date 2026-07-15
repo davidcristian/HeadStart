@@ -469,7 +469,8 @@ succeed (DAT-08).
 ## Response delay queue (Phase 20d)
 
 When `auto_reply_enabled` is true on the user's routing config, each new reply
-draft is queued in `inbox_pending_reply` with a `send_after` timestamp. The
+draft is queued in `inbox_pending_reply` with a `send_after` timestamp
+(`ix_inbox_pending_reply_send_after` indexes due-queue scans). The
 delay is `INBOX_REPLY_MIN_DELAY_SECONDS` (default 1800, never below 60) plus
 optional random jitter (`INBOX_REPLY_DELAY_JITTER_SECONDS`, default 900).
 

@@ -30,7 +30,9 @@ class InboxPendingReply(Base):
         ForeignKey("inbox_reply_draft.id", ondelete="CASCADE"), index=True, nullable=False
     )
 
-    send_after: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    send_after: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, index=True
+    )
     status: Mapped[str] = mapped_column(String(16), nullable=False, default="pending")
     sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     error: Mapped[str | None] = mapped_column(Text, nullable=True)

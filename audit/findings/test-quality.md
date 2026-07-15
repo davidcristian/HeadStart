@@ -47,7 +47,7 @@ regression contract in `docs/modules/appliers.md`.
 
 <a id="tst-03"></a>
 ### TST-03 — Alembic migration chain never executed by tests (create_all used), hiding PG-only bugs
-⚪ **LOW** · 🧪 test · Status: ☐ open · Confidence: high · Effort: M · WS33
+⚪ **LOW** · 🧪 test · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/169)) · Confidence: high · Effort: M · WS33
 
 **Locations:** `backend/tests/conftest.py:61` (`db_session`); related `alembic/env.py`.
 
@@ -57,7 +57,9 @@ regression contract in `docs/modules/appliers.md`.
 
 **Suggested fix.** Add a CI job that runs `alembic upgrade head` (plus a downgrade round-trip) against a real Postgres, alongside a metadata-vs-migrations diff check.
 
-**Verification.** Confirmed 3/3 adversarial verifiers. conftest builds the schema via `Base.metadata.create_all` on SQLite; no test or CI (`.github/workflows/ci.yml`) runs `alembic upgrade head`, so Postgres-only migration constructs are never executed. Low severity because no current defect is proven.
+**Fix.** CI already ran `just test-migrations` (`alembic upgrade head` on disposable Postgres 16). This close adds `alembic check` after upgrade so ORM/metadata drift fails the gate, restores `index=True` on `InboxPendingReply.send_after` (migration 0030 already created `ix_inbox_pending_reply_send_after`; the model had drifted), locks CI/script wiring + linear revision-chain integrity in unit tests, and documents the gate. Full downgrade-to-base is intentionally omitted — irreversible data migrations no-op `downgrade()`.
+
+**Verification.** Confirmed 3/3 adversarial verifiers. conftest builds the schema via `Base.metadata.create_all` on SQLite; no test or CI (`.github/workflows/ci.yml`) runs `alembic upgrade head`, so Postgres-only migration constructs are never executed. Low severity because no current defect is proven. (Baseline; gate + check now cover the risk.)
 
 ---
 
