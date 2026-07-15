@@ -258,11 +258,11 @@ dependency audits stay in `just check` / CI. The `frontend-lint` hook runs
 `npx eslint . --max-warnings=0` (same as `npm run lint`) so ESLint always
 receives an explicit path — without one, ESLint 8 scans zero files and exits
 0 (OPS-03). LOC, shell validation, and prettier are enforced in both
-pre-commit and CI (OPS-04). `deploy.yml` (manual `workflow_dispatch`) and
-`terraform.yml`'s credentialed `plan` step are guarded on
-`vars.AWS_ROLE_ARN`, so they stay dormant until AWS is configured; once set,
-`terraform plan` runs on PRs and `deploy` runs `terraform apply` +
-`just deploy` on demand.
+pre-commit and CI (OPS-04). `deploy.yml` (manual `workflow_dispatch`) and `terraform.yml`'s credentialed
+`plan` job are guarded on `vars.AWS_ROLE_ARN` (plus default-branch refs), so
+they stay dormant until AWS is configured. `terraform.yml` still runs
+`fmt`/`validate` on `devops/terraform/**` PRs **without** secrets or OIDC
+(OPS-24); credentialed `terraform plan` is manual-only from `main`/`master`.
 
 **Deploy OIDC hardening (OPS-23).** `deploy.yml` assumes `AWS_ROLE_ARN` only
 when `github.ref` is `refs/heads/main` or `refs/heads/master`, sets OIDC
@@ -274,6 +274,14 @@ trust policy for that role **must** pin
 `repo:<owner>/<repo>:ref:refs/heads/main` (or `master`), not a wildcard
 `repo:…:*`. Protect `main`/`master` with branch protection so only reviewed
 commits are dispatchable from those refs.
+
+**Terraform plan trust (OPS-24).** `terraform.yml` never injects
+`TF_VAR_*` secrets or assumes AWS on `pull_request` checkouts (a same-repo
+branch could otherwise exfiltrate them via plan-time provider/data-source
+code). The credentialed `plan` job is `workflow_dispatch` only, requires
+`refs/heads/main|master`, uses the `beta`/`prod` GitHub Environment, OIDC
+(`audience` + `role-session-name: headstart-tf-plan-<run_id>`), and
+`vars.TF_STATE_BUCKET` for remote-state init (OPS-29 partial backend).
 
 ## First-time setup
 
@@ -287,7 +295,8 @@ Summary:
    OPS-29).
 2. `terraform apply` in `environments/beta` (or `prod`).
 3. `just deploy` with `ECR_REGISTRY` and `ECS_CLUSTER` set.
-4. Optional: activate the deploy/terraform workflows by setting the `AWS_ROLE_ARN`
-   repo variable and the AWS/GitHub secrets (the workflow files are already in
-   place). Pin the IAM OIDC trust `sub` to `main`/`master`, enable Environment
-   reviewers, and keep branch protection (OPS-23).
+4. Optional: activate the deploy/terraform workflows by setting the
+   `AWS_ROLE_ARN` and `TF_STATE_BUCKET` repo variables and the AWS/GitHub
+   secrets (the workflow files are already in place). Pin the IAM OIDC trust
+   `sub` to `main`/`master`, enable Environment reviewers, and keep branch
+   protection (OPS-23 / OPS-24).

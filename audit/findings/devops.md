@@ -321,7 +321,7 @@ SHA pin. `aws-first-deploy.sh` sets `TF_VAR_image_tag` from the short SHA when
 
 <a id="ops-24"></a>
 ### OPS-24 — terraform plan on pull_request injects TF secrets + assumes AWS role on PR code
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: medium (3/3 verifiers) · Effort: M · WS37
+⚪ **LOW** · 🔒 security · Status: ✅ done · Confidence: medium (3/3 verifiers) · Effort: M · WS37
 
 **Locations:** `.github/workflows/terraform.yml:42` (`Plan step`).
 
@@ -332,6 +332,8 @@ SHA pin. `aws-first-deploy.sh` sets `TF_VAR_image_tag` from the short SHA when
 **Suggested fix.** Gate the credentialed plan behind an approved environment/label, scope OIDC trust to protected refs, and never expose deploy secrets on untrusted PR checkouts.
 
 **Verification.** Confirmed 3/3 adversarial verifiers. The workflow is now present in `.github/workflows/` but the credentialed Plan step stays dormant: it is gated on `vars.AWS_ROLE_ARN != ''`, so it runs nothing AWS-touching until that variable/secrets are configured; real only once enabled, so low.
+
+**Resolution.** PR `validate` job runs `fmt`/`init -backend=false`/`validate` only (no `TF_VAR_*`, no OIDC). Credentialed `plan` is a separate `workflow_dispatch` job gated on `AWS_ROLE_ARN` + `refs/heads/main|master`, targets the `beta`/`prod` GitHub Environment, assumes AWS via OIDC (`audience` + `role-session-name: headstart-tf-plan-<run_id>`), and inits remote state with `vars.TF_STATE_BUCKET` (OPS-29). Docs + regression in `test_ops24_terraform_plan_trust.py`. — [PR](https://github.com/davidcristian/HeadStart/pull/203).
 
 ---
 

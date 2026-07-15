@@ -1,18 +1,39 @@
 name: Terraform
 
+# PR path: fmt + validate only (no secrets, no AWS). Credentialed plan is a
+# separate job that never runs on pull_request checkouts (OPS-24).
+#
+# OPS-24 — credentialed terraform plan hardening:
+# 1. Never inject TF_VAR_* secrets or assume AWS on untrusted PR code.
+# 2. Plan job runs only on workflow_dispatch from refs/heads/main|master
+#    (same default-branch gate as deploy.yml / OPS-23).
+# 3. Plan targets the GitHub Environment (`beta` / `prod`): enable required
+#    reviewers in Settings → Environments so a human must approve.
+# 4. IAM trust policy for AWS_ROLE_ARN MUST pin the OIDC `sub` claim to those
+#    refs (and optionally to `environment:beta|prod`). Never use a wildcard
+#    like `repo:OWNER/REPO:*`.
+# 5. Set repo variable `TF_STATE_BUCKET` for remote-state init (OPS-29 partial
+#    backend). Plan stays dormant until `AWS_ROLE_ARN` + secrets + bucket are set.
+
 on:
   pull_request:
     paths:
       - "devops/terraform/**"
       - ".github/workflows/terraform.yml"
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment for credentialed plan
+        type: choice
+        options: [beta, prod]
+        default: beta
 
 permissions:
   contents: read
-  pull-requests: write
 
 jobs:
-  plan:
-    name: Validate & plan (${{ matrix.env }})
+  validate:
+    name: Format & validate (${{ matrix.env }})
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -37,10 +58,49 @@ jobs:
       - name: Validate
         run: terraform validate
 
-      # A real plan needs AWS credentials + remote state. Enable once the
-      # backend bucket exists and OIDC role is configured (see deploy.yml).
+  # Credentialed plan: trusted refs only — never on pull_request (OPS-24).
+  plan:
+    name: Plan ${{ github.event.inputs.environment || 'beta' }}
+    if: ${{ vars.AWS_ROLE_ARN != '' && github.event_name == 'workflow_dispatch' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main') }}
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # for AWS OIDC
+      contents: read
+    environment: ${{ github.event.inputs.environment || 'beta' }}
+    env:
+      TARGET_ENV: ${{ github.event.inputs.environment || 'beta' }}
+      AWS_REGION: ${{ vars.AWS_REGION || 'us-east-2' }}
+    defaults:
+      run:
+        working-directory: devops/terraform/environments/${{ github.event.inputs.environment || 'beta' }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
+        with:
+          terraform_version: "1.9.8"
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # v4.3.1
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          audience: sts.amazonaws.com
+          role-session-name: headstart-tf-plan-${{ github.run_id }}
+
+      - name: Init (remote state)
+        env:
+          TF_STATE_BUCKET: ${{ vars.TF_STATE_BUCKET }}
+        run: |
+          if [ -z "${TF_STATE_BUCKET}" ]; then
+            echo "Set repo variable TF_STATE_BUCKET (OPS-29 partial backend) before plan." >&2
+            exit 1
+          fi
+          terraform init -input=false \
+            -backend-config="bucket=${TF_STATE_BUCKET}" \
+            -backend-config="region=${AWS_REGION}" \
+            -backend-config="dynamodb_table=headstart-tflock"
+
       - name: Plan
-        if: ${{ vars.AWS_ROLE_ARN != '' }}
         env:
           TF_VAR_db_password: ${{ secrets.TF_VAR_DB_PASSWORD }}
           TF_VAR_jwt_secret: ${{ secrets.TF_VAR_JWT_SECRET }}
