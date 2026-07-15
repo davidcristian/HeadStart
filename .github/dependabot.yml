@@ -1,5 +1,6 @@
 # Keep lockfiles current so GHSA bumps surface as PRs instead of silent drift
 # (FRO-12 frontend npm audit; OPS-19 backend pip-audit).
+# OPS-20: also bump pinned GitHub Actions commit SHAs weekly.
 version: 2
 updates:
   - package-ecosystem: npm
@@ -18,3 +19,11 @@ updates:
     labels:
       - dependencies
       - backend
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - ci

@@ -251,7 +251,7 @@ SHA pin. `aws-first-deploy.sh` sets `TF_VAR_image_tag` from the short SHA when
 
 <a id="ops-20"></a>
 ### OPS-20 — All GitHub Actions pinned to floating major-version tags, not commit SHAs
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: S · WS37
+⚪ **LOW** · 🔒 security · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/194)) · Confidence: high (3/3 verifiers) · Effort: S · WS37
 
 **Locations:** `.github/workflows/ci.yml:20` (`uses:`); plus ci.yml:21/45/46, `.github/workflows/deploy.yml:31/34/41`, `.github/workflows/terraform.yml:24/25`.
 
@@ -260,6 +260,8 @@ SHA pin. `aws-first-deploy.sh` sets `TF_VAR_image_tag` from the short SHA when
 **Failure scenario.** An upstream tag re-point or compromise makes the deploy job (`id-token: write`, AWS role, ECR push) run malicious code that exfiltrates AWS credentials or pushes a poisoned image.
 
 **Suggested fix.** Pin every third-party action to a full commit SHA (with a version comment) and add Dependabot to bump the SHAs.
+
+**Resolution.** `ci.yml` / `deploy.yml` / `terraform.yml` now pin every `uses:` to a 40-char commit SHA (version comment retained); `.github/dependabot.yml` watches `github-actions` weekly. Regression: `backend/tests/devops/test_ops20_action_pins.py`.
 
 **Verification.** Confirmed 3/3 adversarial verifiers. All `uses:` are floating tags (a real supply-chain gap). ci.yml is now live under `.github/workflows/`, so its floating action tags execute on push/PR; the deploy.yml/terraform.yml `uses:` are present in `.github/workflows/` but stay dormant behind the `workflow_dispatch`/`vars.AWS_ROLE_ARN` guards.
 
