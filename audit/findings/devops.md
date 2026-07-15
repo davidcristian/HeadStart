@@ -683,7 +683,7 @@ SHA pin. `aws-first-deploy.sh` sets `TF_VAR_image_tag` from the short SHA when
 
 <a id="ops-63"></a>
 ### OPS-63 — check_loc.sh strips REPO_ROOT via unquoted glob pattern in ${file#...}
-⚪ **LOW** · 🐞 bug · Status: ☐ open · Confidence: medium (3/3 verifiers) · Effort: XS · WS37
+⚪ **LOW** · 🐞 bug · Status: ✅ done · Confidence: medium (3/3 verifiers) · Effort: XS · WS37
 
 **Locations:** `scripts/check_loc.sh:20` (`printf offender path`).
 
@@ -692,6 +692,8 @@ SHA pin. `aws-first-deploy.sh` sets `TF_VAR_image_tag` from the short SHA when
 **Failure scenario.** On a checkout whose absolute path contains `[` or `?`, offender paths in the failure report display wrong or absolute, confusing the fix. Cosmetic, not a gate bypass.
 
 **Suggested fix.** Strip the prefix with a non-pattern method (literal substitution or `realpath --relative-to`), or escape the pattern.
+
+**Fix.** Offender paths use a literal prefix check (`[[ "${file}" == "${prefix}"* ]]`) then `${file:${#prefix}}` so glob metacharacters in `REPO_ROOT` cannot mis-strip. Regression covers the anti-pattern and the `[dev]` path case. — [PR](https://github.com/davidcristian/HeadStart/pull/205)
 
 **Verification.** Confirmed 3/3 adversarial verifiers. Line 20 uses `${file#${REPO_ROOT}/}` with `REPO_ROOT` unquoted as a glob pattern; it genuinely mis-strips on paths with `*?[]`, but impact is only cosmetic (path display), so low.
 

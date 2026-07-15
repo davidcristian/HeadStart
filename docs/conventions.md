@@ -68,7 +68,11 @@ table in [AGENTS.md](../AGENTS.md) §1.
 
 - Soft cap of **~300 lines per source file** (see [AGENTS.md](../AGENTS.md) §3).
   `just lint` runs `scripts/check_loc.sh` and fails when any `.py`/`.ts`/`.tsx`
-  file exceeds 300 lines (excluding `alembic/versions/`).
+  file exceeds 300 lines (excluding `alembic/versions/` and test files). Offender
+  paths are printed relative to the repo root via a literal prefix strip
+  (`[[ == ]]` + `${file:${#prefix}}`), not `${file#${REPO_ROOT}/}`, so a
+  checkout path containing glob metacharacters (`*?[]`) cannot garble the
+  report (OPS-63).
 
 ## Configuration
 

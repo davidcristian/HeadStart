@@ -261,7 +261,9 @@ dependency audits stay in `just check` / CI. The `frontend-lint` hook runs
 `npx eslint . --max-warnings=0` (same as `npm run lint`) so ESLint always
 receives an explicit path — without one, ESLint 8 scans zero files and exits
 0 (OPS-03). LOC, shell validation, and prettier are enforced in both
-pre-commit and CI (OPS-04). `deploy.yml` (manual `workflow_dispatch`) and `terraform.yml`'s credentialed
+pre-commit and CI (OPS-04). The LOC gate prints offender paths with a literal
+repo-root strip so glob metacharacters in the checkout path cannot garble the
+report (OPS-63). `deploy.yml` (manual `workflow_dispatch`) and `terraform.yml`'s credentialed
 `plan` job are guarded on `vars.AWS_ROLE_ARN` (plus default-branch refs), so
 they stay dormant until AWS is configured. `terraform.yml` still runs
 `fmt`/`validate` on `devops/terraform/**` PRs **without** secrets or OIDC

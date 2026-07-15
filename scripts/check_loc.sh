@@ -22,7 +22,16 @@ mapfile -t offenders < <(
         esac
         lines=$(wc -l < "${file}")
         if (( lines > MAX_LOC )); then
-          printf "%s\t%s\n" "${lines}" "${file#${REPO_ROOT}/}"
+          # Literal prefix strip (OPS-63): ${var#pattern} treats the pattern as a
+          # glob, so a REPO_ROOT with *?[] would mis-strip. Length-based slice
+          # after a literal [[ == ]] prefix check does not.
+          prefix="${REPO_ROOT}/"
+          if [[ "${file}" == "${prefix}"* ]]; then
+            rel="${file:${#prefix}}"
+          else
+            rel="${file}"
+          fi
+          printf "%s\t%s\n" "${lines}" "${rel}"
         fi
       done \
     | sort -rn
