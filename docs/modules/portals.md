@@ -27,6 +27,11 @@ Apple Careers (1), Google Careers (1), Meta Careers (1), Microsoft Careers (1),
 Shopify Careers (1), Uber Careers (1), and Amazon Jobs (1).
 Meta uses the `meta_careers` scraper (Relay GraphQL search on metacareers.com).
 Apple uses the `apple_careers` scraper (hydration JSON embedded in search HTML).
+Shopify Careers (`shopify_careers`) stores only `company` + `portal_id` in
+`default_config` — the scraper reads those (plus optional `q` / `max_results`);
+it does **not** take an Ashby `board` slug. Auto-apply still defaults
+`board=shopify` inside the applier when delegating to Ashby. Snowflake Careers
+keeps `board` because its Ashby-backed scraper consumes it.
 
 `GET /portals` annotates each row with:
 

@@ -186,7 +186,6 @@ def shopify_careers_preset(
         default_config={
             "company": company,
             "portal_id": portal_id,
-            "board": "shopify",
         },
     )
 

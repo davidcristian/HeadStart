@@ -8,7 +8,7 @@ This area covers the curated employer-portal catalog under `backend/app/portals/
 
 <a id="por-01"></a>
 ### POR-01 — shopify_careers preset ships a dead default_config key `board` the scraper never reads
-⚪ **LOW** · ♻️ refactor · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: XS · WS35
+⚪ **LOW** · ♻️ refactor · Status: ✅ done · Confidence: high (3/3 verifiers) · Effort: XS · WS35
 
 > Merged: POR-01 and POR-02 are the same defect (the inert `board` key in `shopify_careers_preset`), reported once as a refactor and once as a consistency issue. Rendered here as a single finding.
 
