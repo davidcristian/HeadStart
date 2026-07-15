@@ -168,7 +168,8 @@ killed and unread result payloads do not accumulate in Redis.
 
 Every `application_log` row includes baseline tracking metadata in `payload`
 (`employer_domain`, `posting` title/company/url) for downstream inbox triage
-(Phase 20).
+(Phase 20). Adapter bodies are scrubbed of credential-bearing keys before
+merge (SVC-11; see [appliers.md](appliers.md)).
 
 When a scrape uses the `playwright` adapter, the worker reuses a process-scoped
 headless Chromium browser (see [scrapers.md](scrapers.md)). Use the worker Docker

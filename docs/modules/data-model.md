@@ -263,7 +263,7 @@ Audit of auto-apply attempts (preview and live).
 | status                   | str         | `queued` / `processing` / `submitted` / `dry_run` / `failed` (canonical: `APPLICATION_LOG_STATUSES` in `application_log.py`; DAT-09) |
 | dry_run                  | bool        | True when the attempt was a preview only |
 | error                    | text?       | Present when failed                      |
-| payload                  | JSON?       | Adapter body plus `employer_domain` + `posting` metadata for triage, and a `user_consent` stamp (`basis`, `mechanism`, `live_submission`, `recorded_at`) for each attempt |
+| payload                  | JSON?       | Scrubbed adapter body (SVC-11 drops `cookies`/`headers`/`authorization`/`session`/token keys) plus `employer_domain` + `posting` metadata for triage, and a `user_consent` stamp (`basis`, `mechanism`, `live_submission`, `recorded_at`) for each attempt |
 | external_application_id  | str?        | Board-assigned ID on success             |
 | created_at               | datetime    |                                          |
 

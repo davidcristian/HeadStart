@@ -9,6 +9,32 @@ from app.models.base import utcnow
 from app.models.seen_job import SeenJob
 from app.schemas.profile import ResumeFile
 
+# Credential-bearing keys that must never land in plaintext application_log.payload
+# (SVC-11). Matched case-insensitively; covers site_credential shape + common aliases.
+_SENSITIVE_ADAPTER_PAYLOAD_KEYS = frozenset(
+    {
+        "authorization",
+        "cookie",
+        "cookies",
+        "headers",
+        "password",
+        "secret",
+        "session",
+        "session_token",
+        "sessiontoken",
+        "access_token",
+        "accesstoken",
+        "refresh_token",
+        "refreshtoken",
+        "api_token",
+        "apitoken",
+        "api_key",
+        "apikey",
+        "set-cookie",
+        "set_cookie",
+    }
+)
+
 
 def employer_domain_from_url(url: str) -> str:
     """Return a normalized hostname for matching recruiter email threads."""
@@ -49,6 +75,25 @@ def application_tracking_payload(
     return payload
 
 
+def _scrub_payload_value(value: Any) -> Any:
+    """Recursively scrub nested dict/list values."""
+    if isinstance(value, dict):
+        return scrub_adapter_payload(value)
+    if isinstance(value, list):
+        return [_scrub_payload_value(item) for item in value]
+    return value
+
+
+def scrub_adapter_payload(payload: dict[str, Any]) -> dict[str, Any]:
+    """Drop credential-bearing keys from an adapter payload before DB persist."""
+    scrubbed: dict[str, Any] = {}
+    for key, item in payload.items():
+        if str(key).lower() in _SENSITIVE_ADAPTER_PAYLOAD_KEYS:
+            continue
+        scrubbed[str(key)] = _scrub_payload_value(item)
+    return scrubbed
+
+
 def merge_application_log_payload(
     job: SeenJob,
     adapter_payload: dict[str, Any] | None,
@@ -57,7 +102,7 @@ def merge_application_log_payload(
     tailored_resume: ResumeFile | None = None,
     prior_payload: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Merge tracking, adapter body, and preserved queue-time consent into one payload."""
+    """Merge tracking, scrubbed adapter body, and preserved queue-time consent."""
     tracking = application_tracking_payload(job, live_submission=not dry_run)
     consent = tracking["user_consent"]
     if prior_payload is not None and prior_payload.get("user_consent") is not None:
@@ -69,6 +114,6 @@ def merge_application_log_payload(
             "content_type": tailored_resume.content_type,
         }
     if adapter_payload:
-        tracking = {**tracking, **adapter_payload}
+        tracking = {**tracking, **scrub_adapter_payload(adapter_payload)}
     tracking["user_consent"] = consent
     return tracking

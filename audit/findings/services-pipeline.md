@@ -142,9 +142,9 @@ return "awaiting_reply"
 
 <a id="svc-11"></a>
 ### SVC-11 — Adapter payload merged verbatim into stored application_log (no scrub)
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: medium (2/3 verifiers) · Effort: S · WS35
+⚪ **LOW** · 🔒 security · Status: ✅ done · Confidence: medium (2/3 verifiers) · Effort: S · WS35
 
-**Locations:** `backend/app/services/apply.py:238` (`_merge_tracking_payload`); also `backend/app/services/apply.py:215`, `backend/app/services/apply.py:233`, `backend/app/appliers/types.py:20`.
+**Locations:** `backend/app/services/apply_tracking.py` (`scrub_adapter_payload` / `merge_application_log_payload`); also `backend/app/services/apply.py` record/update paths; `backend/app/appliers/types.py` (`ApplyResult.payload`).
 
 **Evidence.** `_merge_tracking_payload` does `{**tracking, **adapter_payload}` and stores the result on `ApplicationLog.payload` (JSON, plaintext). `ApplyContext.credentials` (decrypted cookies/headers) are handed to the adapter, and nothing stops an adapter echoing them into `result.payload`, which is then persisted unencrypted and exposed via the read path.
 
@@ -154,6 +154,7 @@ return "awaiting_reply"
 
 **Verification.** Confirmed 2/3 adversarial verifiers (1 refuted). `_merge_tracking_payload` does `{**tracking, **adapter_payload}` onto the plaintext `ApplicationLog.payload` with no scrub; no current adapter echoes credentials, so the impact is unrealized, but it is a legitimate defense-in-depth low as the finding itself scopes it.
 
+**Fix.** `merge_application_log_payload` now runs adapter bodies through `scrub_adapter_payload`, which recursively drops credential-bearing keys (`cookies`/`headers`/`authorization`/`session`/token aliases) before persist — defense-in-depth for `/application-logs` — [PR](https://github.com/davidcristian/HeadStart/pull/178).
 <a id="svc-12"></a>
 ### SVC-12 — _annualize treats monthly/weekly/daily comp intervals as already-annual
 ⚪ **LOW** · 🐞 bug · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: XS · WS35

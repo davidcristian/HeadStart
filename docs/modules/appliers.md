@@ -708,13 +708,18 @@ Every apply attempt (preview or live, success or failure) is recorded in
 fields) for inbox triage, plus a `user_consent` stamp (`basis`, `mechanism`,
 `live_submission`, `recorded_at`) so each submission has an auditable HeadStart
 opt-in artifact. Queue-time consent is preserved when a queued log is updated
-with the final outcome. List recent rows via `GET /api/v1/application-logs`; fetch one
-queued row via `GET /api/v1/application-logs/{id}` while a live submit runs in
-the worker. At most one in-flight live apply (`queued` or `processing`) per job
-is allowed — enforced by a partial unique index so concurrent enqueue requests
-cannot double-submit. The worker commits the `queued` → `processing` lease
-before the employer POST so `acks_late` redelivery cannot double-submit
-(NTF-03). Successful live applies set `seen_job.applied_at`. When
+with the final outcome. Before persist, `merge_application_log_payload` scrubs
+credential-bearing keys from the adapter body (`cookies` / `headers` /
+`authorization` / `session` / token aliases, nested) so a buggy adapter cannot
+echo decrypted site credentials into plaintext `application_log.payload` or the
+`/application-logs` API (SVC-11). List recent rows via
+`GET /api/v1/application-logs`; fetch one queued row via
+`GET /api/v1/application-logs/{id}` while a live submit runs in the worker. At
+most one in-flight live apply (`queued` or `processing`) per job is allowed —
+enforced by a partial unique index so concurrent enqueue requests cannot
+double-submit. The worker commits the `queued` → `processing` lease before the
+employer POST so `acks_late` redelivery cannot double-submit (NTF-03).
+Successful live applies set `seen_job.applied_at`. When
 `source.auto_apply_enabled` is on, the scrape pipeline queues applies for new
 matches automatically (same Celery path as the Jobs page **Apply** button), up
 to the plan's rolling 24-hour live-apply volume cap (`max_auto_applies_per_day`
