@@ -9,6 +9,9 @@ from typing import Any
 from app.scrapers.types import JobPosting
 
 _ANNUAL_INTERVALS = {"1 YEAR", "YEAR", "ANNUAL", "YEARLY"}
+_MONTHLY_INTERVALS = {"1 MONTH", "MONTH", "MONTHLY"}
+_WEEKLY_INTERVALS = {"1 WEEK", "WEEK", "WEEKLY"}
+_DAILY_INTERVALS = {"1 DAY", "DAY", "DAILY"}
 _HOURLY_INTERVALS = {"1 HOUR", "HOUR", "HOURLY"}
 _CURRENCY_SYMBOLS = {"$": "USD", "€": "EUR", "£": "GBP"}
 _AMOUNT_RE = re.compile(
@@ -210,6 +213,12 @@ def _annualize(value: int | None, interval: str) -> int | None:
         return None
     if interval in _ANNUAL_INTERVALS or not interval:
         return value
+    if interval in _MONTHLY_INTERVALS:
+        return value * 12
+    if interval in _WEEKLY_INTERVALS:
+        return value * 52
+    if interval in _DAILY_INTERVALS:
+        return value * 260
     if interval in _HOURLY_INTERVALS:
         return value * 2080
     return value

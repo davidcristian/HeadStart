@@ -157,7 +157,7 @@ return "awaiting_reply"
 **Fix.** `merge_application_log_payload` now runs adapter bodies through `scrub_adapter_payload`, which recursively drops credential-bearing keys (`cookies`/`headers`/`authorization`/`session`/token aliases) before persist — defense-in-depth for `/application-logs` — [PR](https://github.com/davidcristian/HeadStart/pull/178).
 <a id="svc-12"></a>
 ### SVC-12 — _annualize treats monthly/weekly/daily comp intervals as already-annual
-⚪ **LOW** · 🐞 bug · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: XS · WS35
+⚪ **LOW** · 🐞 bug · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/179)) · Confidence: high (3/3 verifiers) · Effort: XS · WS35
 
 **Locations:** `backend/app/services/compensation.py:208` (`_annualize`).
 

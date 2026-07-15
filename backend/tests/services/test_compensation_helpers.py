@@ -104,11 +104,29 @@ def test_annualize_none_value() -> None:
 
 
 def test_annualize_unknown_interval_returns_value() -> None:
-    assert _annualize(1000, "WEEK") == 1000
+    assert _annualize(1000, "BIWEEKLY") == 1000
 
 
 def test_annualize_hourly() -> None:
     assert _annualize(50, "HOUR") == 50 * 2080
+
+
+def test_annualize_monthly() -> None:
+    assert _annualize(8000, "MONTH") == 96_000
+    assert _annualize(8000, "1 MONTH") == 96_000
+    assert _annualize(8000, "MONTHLY") == 96_000
+
+
+def test_annualize_weekly() -> None:
+    assert _annualize(2000, "WEEK") == 104_000
+    assert _annualize(2000, "1 WEEK") == 104_000
+    assert _annualize(2000, "WEEKLY") == 104_000
+
+
+def test_annualize_daily() -> None:
+    assert _annualize(400, "DAY") == 104_000
+    assert _annualize(400, "1 DAY") == 104_000
+    assert _annualize(400, "DAILY") == 104_000
 
 
 # --- _coerce_int ----------------------------------------------------------

@@ -4,6 +4,7 @@ from app.scrapers.types import JobPosting
 from app.services.compensation import (
     extract_compensation,
     format_compensation_display,
+    meets_min_salary,
 )
 
 
@@ -129,6 +130,30 @@ def test_ashby_hourly_interval_annualizes() -> None:
     assert info is not None
     assert info.min_annual == 50 * 2080
     assert info.max_annual == 60 * 2080
+
+
+def test_ashby_monthly_interval_annualizes() -> None:
+    posting = _posting(
+        raw={
+            "compensation": {
+                "summaryComponents": [
+                    {
+                        "compensationType": "Salary",
+                        "interval": "MONTH",
+                        "currencyCode": "USD",
+                        "minValue": 8000,
+                        "maxValue": 10000,
+                    }
+                ]
+            }
+        }
+    )
+    info = extract_compensation(posting)
+    assert info is not None
+    assert info.min_annual == 96_000
+    assert info.max_annual == 120_000
+    assert meets_min_salary(posting, 80_000, "USD")
+    assert not meets_min_salary(posting, 100_000, "USD")
 
 
 def test_ashby_skips_components_without_values() -> None:

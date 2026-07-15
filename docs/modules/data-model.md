@@ -136,7 +136,7 @@ A saved query against a source, on an interval, delivering to a target.
 | `keywords_exclude` | string or list | Exclude when any term appears in title, company, or location |
 | `location` | string or list | Location field must contain any of the terms |
 | `workplace` | string or list | `remote`, `hybrid`, or `onsite` — matches inferred workplace; unknown workplace passes |
-| `min_salary` | number | Minimum annual salary when compensation is known; unknown or mismatched currency passes |
+| `min_salary` | number | Minimum annual salary when compensation is known; unknown or mismatched currency passes. Structured Ashby components with `MONTH`/`WEEK`/`DAY`/`HOUR` intervals are annualized (×12 / ×52 / ×260 / ×2080) before comparison; unknown intervals pass through unchanged |
 | `salary_currency` | string | ISO currency for `min_salary` (default `USD`) |
 
 ### seen_job
