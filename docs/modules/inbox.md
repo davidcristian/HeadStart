@@ -355,8 +355,9 @@ set) and the label is recruiter signal (`general`, `rejection`, `follow_up`,
    - `rejection` → `rejected` (`recruiter_rejection_at`)
    - `follow_up` / `general` → `awaiting_reply`
 3. Record recovery metadata on `inbox_classification.payload.ghost_recovery`.
-4. Send a high-priority alert via the search's notification target (or all user
-   targets when the search has none). ntfy uses `priority: high`.
+4. Send a high-priority alert via the search's notification target (or, when the
+   search has none / an unresolvable target, the user's first target by id — never
+   a fan-out to every channel). ntfy uses `priority: high`.
 
 `EmailClassificationService.classify` invokes `GhostRecoveryService` after linking
 a job and before folder routing.
@@ -369,8 +370,9 @@ ghosted and not already `interview_pending`:
 
 1. Set `seen_job.interview_pending_at`.
 2. Record `interview_handoff` metadata on `inbox_classification.payload`.
-3. Send a high-priority alert via the search's notification target (or all user
-   targets when the search has none). ntfy uses `priority: high`. Alert copy:
+3. Send a high-priority alert via the search's notification target (or, when the
+   search has none / an unresolvable target, the user's first target by id — never
+   a fan-out to every channel). ntfy uses `priority: high`. Alert copy:
    "Interview to schedule at {company} — take over from here".
 
 Ghosted applications still route through `GhostRecoveryService` first; interview

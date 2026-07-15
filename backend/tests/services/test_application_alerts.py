@@ -142,9 +142,18 @@ def test_alert_handles_notifier_without_close(db_session: Session) -> None:
     assert results[0].status == "sent"
 
 
-def test_alert_falls_back_to_all_targets_when_search_target_missing(db_session: Session) -> None:
+def test_alert_falls_back_to_single_default_when_search_target_missing(
+    db_session: Session,
+) -> None:
+    """SVC-09: missing search target must not fan out to every user channel."""
     user_id, job, target = _seed_job_with_target(db_session)
-    # Drop the search's target link so resolution falls back to list_all.
+    extra = NotificationTarget(
+        user_id=user_id,
+        name="Extra Slack",
+        type="slack",
+        config={"webhook_url": "https://hooks.example.com/slack"},
+    )
+    db_session.add(extra)
     job.search.target_id = None
     db_session.flush()
     service = ApplicationAlertService(db_session)
@@ -157,6 +166,11 @@ def test_alert_falls_back_to_all_targets_when_search_target_missing(db_session: 
         results = service.notify_interview_handoff(user_id, job)
 
     assert results[0].status == "sent"
+    mock_notifier.send.assert_called_once()
+    db_session.flush()
+    logs = db_session.query(DeliveryLog).filter_by(seen_job_id=job.id).all()
+    assert len(logs) == 1
+    assert logs[0].target_id == target.id
 
 
 def test_alert_falls_back_when_search_target_id_unresolvable(db_session: Session) -> None:
@@ -173,8 +187,13 @@ def test_alert_falls_back_when_search_target_id_unresolvable(db_session: Session
     with patch("app.services.application_alerts.get_notifier", return_value=mock_notifier):
         results = service.notify_interview_handoff(user_id, job)
 
-    # Falls through to list_all, which still finds the seeded target.
+    # Falls through to a single default target (lowest id), not every channel.
     assert results[0].status == "sent"
+    mock_notifier.send.assert_called_once()
+    db_session.flush()
+    logs = db_session.query(DeliveryLog).filter_by(seen_job_id=job.id).all()
+    assert len(logs) == 1
+    assert logs[0].target_id == target.id
 
 
 def test_alert_non_ntfy_target_has_no_priority(db_session: Session) -> None:

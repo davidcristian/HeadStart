@@ -115,11 +115,14 @@ class ApplicationAlertService:
         )
 
     def _resolve_targets(self, user_id: int, job: SeenJob) -> list[NotificationTarget]:
+        """Prefer the search target; otherwise one stable default (never fan out)."""
         if job.search is not None and job.search.target_id is not None:
             target = self.targets.get(job.search.target_id, user_id)
             if target is not None:
                 return [target]
-        return self.targets.list_all(user_id)
+        # SVC-09: no-target searches used to broadcast to every channel.
+        fallback = self.targets.list_all(user_id)
+        return fallback[:1]
 
     def _high_priority_config(self, target: NotificationTarget) -> dict[str, Any]:
         config = dict(target.config)

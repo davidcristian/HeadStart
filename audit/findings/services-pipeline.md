@@ -106,7 +106,7 @@ This area covers the backend business-logic layer (`backend/app/services/`): the
 
 <a id="svc-09"></a>
 ### SVC-09 — Alerts broadcast to ALL user targets when search has no target
-⚪ **LOW** · 🐞 bug · Status: ☐ open · Confidence: medium (2/3 verifiers) · Effort: S · WS35
+⚪ **LOW** · 🐞 bug · Status: ✅ done · Confidence: medium (2/3 verifiers) · Effort: S · WS35
 
 **Locations:** `backend/app/services/application_alerts.py:117` (`_resolve_targets`).
 
@@ -117,6 +117,8 @@ This area covers the backend business-logic layer (`backend/app/services/`): the
 **Suggested fix.** Resolve a single default/preferred target for alerts instead of broadcasting to all, or document the broadcast as intended behavior.
 
 **Verification.** Confirmed 2/3 adversarial verifiers. `Search.target_id` is nullable; `_resolve_targets` falls back to `targets.list_all(user_id)`, so ghost/interview alerts for a no-target search fan out one event to every channel — real duplicate delivery, low and recoverable.
+
+**Fix.** `_resolve_targets` now returns the search target when resolvable, otherwise `list_all(user_id)[:1]` (lowest id). Docs updated in `inbox.md` / roadmap. — [PR](https://github.com/davidcristian/HeadStart/pull/176)
 
 <a id="svc-10"></a>
 ### SVC-10 — derive_pipeline_stage final branch is dead code
