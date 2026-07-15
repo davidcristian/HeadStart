@@ -219,7 +219,7 @@ return "awaiting_reply"
 
 <a id="svc-16"></a>
 ### SVC-16 — RSS builder escapes markup but leaves XML-invalid control chars from scraped fields
-⚪ **LOW** · 🐞 bug · Status: ☐ open · Confidence: medium (3/3 verifiers) · Effort: XS · WS35
+⚪ **LOW** · 🐞 bug · Status: ✅ done · Confidence: medium (3/3 verifiers) · Effort: XS · WS35
 
 **Locations:** `backend/app/services/rss.py:37` (`_render_item`); also `backend/app/services/rss.py:28`.
 
@@ -230,3 +230,5 @@ return "awaiting_reply"
 **Suggested fix.** Strip/replace XML-invalid control characters (keeping tab/LF/CR) before escaping each text field in `build_rss_feed`/`_render_item`.
 
 **Verification.** Confirmed 3/3 adversarial verifiers. `escape` only handles `&<>`; scraped title/summary reach `_render_item` with no upstream C0-control-char stripping (grep found no sanitizer), so a control char yields well-formed-invalid XML that strict readers reject.
+
+**Fix.** `_xml_text` strips XML 1.0–invalid C0 controls (keeps tab/LF/CR) then `escape`s; used for channel and item text fields — [PR](https://github.com/davidcristian/HeadStart/pull/182).

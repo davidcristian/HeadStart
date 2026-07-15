@@ -54,3 +54,62 @@ def test_build_rss_feed_escapes_xml_special_characters() -> None:
     assert "<title>Jobs &amp; " in xml
     assert "<description>Test &lt;feed&gt;</description>" in xml
     assert '<guid isPermaLink="false">headstart:1</guid>' in xml
+
+
+def test_build_rss_feed_strips_xml_invalid_control_characters() -> None:
+    """Scraped C0 controls must not break strict RSS readers (SVC-16)."""
+    xml = build_rss_feed(
+        RssChannel(
+            title="HeadStart\x0cjobs",
+            link="http://testserver/feed",
+            description="Channel\x1bdesc",
+            jobs=[
+                _job(
+                    title="Backend\x0cEngineer",
+                    company="AC\x00ME",
+                    location="Rem\x0bote",
+                    summary="Why\x1fmatch",
+                    salary="$100K",
+                )
+            ],
+        )
+    )
+
+    assert "\x00" not in xml
+    assert "\x0b" not in xml
+    assert "\x0c" not in xml
+    assert "\x1b" not in xml
+    assert "\x1f" not in xml
+    assert "<title>HeadStartjobs</title>" in xml
+    assert "<description>Channeldesc</description>" in xml
+    assert "<title>BackendEngineer</title>" in xml
+    assert "Whymatch — ACME · Remote · $100K · new" in xml
+
+
+def test_build_rss_feed_keeps_tab_lf_cr() -> None:
+    xml = build_rss_feed(
+        RssChannel(
+            title="Head\tStart",
+            link="http://testserver/feed",
+            description="line1\nline2\rline3",
+            jobs=[_job(title="A\tB", company="C\nD")],
+        )
+    )
+
+    assert "<title>Head\tStart</title>" in xml
+    assert "<description>line1\nline2\rline3</description>" in xml
+    assert "<title>A\tB</title>" in xml
+    assert "C\nD · Remote · new" in xml
+
+
+def test_build_rss_feed_treats_naive_first_seen_as_utc() -> None:
+    xml = build_rss_feed(
+        RssChannel(
+            title="HeadStart jobs",
+            link="http://testserver/feed",
+            description="Jobs",
+            jobs=[_job(first_seen_at=datetime(2026, 6, 28, 12, 0))],
+        )
+    )
+
+    assert "<pubDate>Sun, 28 Jun 2026 12:00:00 GMT</pubDate>" in xml

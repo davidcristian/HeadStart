@@ -9,6 +9,12 @@ from xml.sax.saxutils import escape
 
 from app.models.seen_job import SeenJob
 
+# XML 1.0 Char production excludes most C0 controls; keep tab/LF/CR only.
+_XML_INVALID_CONTROLS = dict.fromkeys(
+    (*range(0x00, 0x09), 0x0B, 0x0C, *range(0x0E, 0x20)),
+    None,
+)
+
 
 @dataclass(frozen=True)
 class RssChannel:
@@ -25,13 +31,18 @@ def build_rss_feed(channel: RssChannel) -> str:
         '<?xml version="1.0" encoding="UTF-8"?>\n'
         '<rss version="2.0">\n'
         "  <channel>\n"
-        f"    <title>{escape(channel.title)}</title>\n"
-        f"    <link>{escape(channel.link)}</link>\n"
-        f"    <description>{escape(channel.description)}</description>\n"
+        f"    <title>{_xml_text(channel.title)}</title>\n"
+        f"    <link>{_xml_text(channel.link)}</link>\n"
+        f"    <description>{_xml_text(channel.description)}</description>\n"
         f"{items}\n"
         "  </channel>\n"
         "</rss>\n"
     )
+
+
+def _xml_text(value: str) -> str:
+    """Strip XML-invalid C0 controls, then escape markup specials."""
+    return escape(value.translate(_XML_INVALID_CONTROLS))
 
 
 def _render_item(job: SeenJob) -> str:
@@ -49,10 +60,10 @@ def _render_item(job: SeenJob) -> str:
     guid = link or f"headstart:{job.id}"
     return (
         "    <item>\n"
-        f"      <title>{escape(title)}</title>\n"
-        f"      <link>{escape(link)}</link>\n"
-        f"      <description>{escape(description)}</description>\n"
-        f"      <pubDate>{escape(pub_date)}</pubDate>\n"
-        f'      <guid isPermaLink="{"true" if link else "false"}">{escape(guid)}</guid>\n'
+        f"      <title>{_xml_text(title)}</title>\n"
+        f"      <link>{_xml_text(link)}</link>\n"
+        f"      <description>{_xml_text(description)}</description>\n"
+        f"      <pubDate>{_xml_text(pub_date)}</pubDate>\n"
+        f'      <guid isPermaLink="{"true" if link else "false"}">{_xml_text(guid)}</guid>\n'
         "    </item>"
     )
