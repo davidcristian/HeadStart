@@ -67,7 +67,7 @@ other unknown path redirects to the landing page.
 |             | interval; enable/disable; run now (queues Celery; UI polls `search_run`); view last |
 |             | run, scrape errors, and recent delivery failures                 |
 | Jobs        | Feed of seen jobs, filterable by search and status; mark seen/applied/archived; **Apply** on supported sources (preview + submit; generate cover letter / tailored resume via queued `document_generation` poll); salary when scraped; copy RSS feed URL |
-| Applications | Pipeline view at `/app/applications`: applied jobs with derived stage (`queued`, `awaiting_reply`, `apply_failed`, `closed`, `archived`), attempt timeline, and stage filter; see `GET /applications` |
+| Applications | Pipeline view at `/app/applications`: applied jobs with derived stage (`queued`, `awaiting_reply`, `apply_failed`, `closed`, `archived`, plus inbox-driven ghosted/interview/rejected); after those explicit stages, applied/submitted and other fall-throughs are `awaiting_reply` (no distinct post-submit stage — SVC-10). Attempt timeline + stage filter; see `GET /applications` |
 | Profile     | Application profile for auto-apply (contact, resume, experience, education, skills); application history table |
 | Targets     | Manage notification targets (e.g. ntfy server/topic); send test  |
 | Credentials | Per-source encrypted cookies/headers for bot-walled sites; saving LinkedIn/Indeed credentials confirms ToS/account-ban risk (XCT-19) |

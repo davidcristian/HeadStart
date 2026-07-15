@@ -34,6 +34,7 @@ def _seed_job(session: Session) -> tuple[int, SeenJob]:
 
 
 def test_derive_pipeline_stage_awaiting_reply_after_submit(db_session: Session) -> None:
+    """Applied + submitted share the default awaiting_reply fall-through (SVC-10)."""
     _, job = _seed_job(db_session)
     log = ApplicationLog(
         seen_job_id=job.id,
@@ -46,6 +47,24 @@ def test_derive_pipeline_stage_awaiting_reply_after_submit(db_session: Session) 
     db_session.add(log)
     db_session.flush()
 
+    assert derive_pipeline_stage(job, log) == "awaiting_reply"
+
+
+def test_derive_pipeline_stage_submitted_without_applied_status(
+    db_session: Session,
+) -> None:
+    """Live submitted attempt alone still maps to awaiting_reply (no distinct stage)."""
+    _, job = _seed_job(db_session)
+    log = ApplicationLog(
+        seen_job_id=job.id,
+        status="submitted",
+        dry_run=False,
+        external_application_id="ext-2",
+    )
+    db_session.add(log)
+    db_session.flush()
+
+    assert job.status == "new"
     assert derive_pipeline_stage(job, log) == "awaiting_reply"
 
 

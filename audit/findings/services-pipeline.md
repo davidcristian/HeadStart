@@ -122,7 +122,7 @@ This area covers the backend business-logic layer (`backend/app/services/`): the
 
 <a id="svc-10"></a>
 ### SVC-10 — derive_pipeline_stage final branch is dead code
-⚪ **LOW** · ♻️ refactor · Status: ☐ open · Confidence: certain (3/3 verifiers) · Effort: XS · WS35
+⚪ **LOW** · ♻️ refactor · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/177)) · Confidence: certain (3/3 verifiers) · Effort: XS · WS35
 
 **Locations:** `backend/app/services/applications.py:51` (`derive_pipeline_stage`).
 

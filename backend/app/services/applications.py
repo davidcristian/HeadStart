@@ -33,7 +33,13 @@ def latest_live_attempt(logs: list[ApplicationLog]) -> ApplicationLog | None:
 
 
 def derive_pipeline_stage(job: SeenJob, latest: ApplicationLog | None) -> ApplicationPipelineStage:
-    """Map job + latest live attempt to a pipeline stage for the UI."""
+    """Map job + latest live attempt to a pipeline stage for the UI.
+
+    Explicit stages cover archived/closed/rejected/interview_pending/ghosted/
+    queued/apply_failed. Everything else (applied/submitted, recovered ghosts,
+    or no live attempt yet) is ``awaiting_reply`` — there is no distinct
+    post-submit stage.
+    """
     if job.status == "archived":
         return "archived"
     if job.status == "closed":
@@ -48,8 +54,6 @@ def derive_pipeline_stage(job: SeenJob, latest: ApplicationLog | None) -> Applic
         return "queued"
     if latest is not None and latest.status == "failed":
         return "apply_failed"
-    if job.status == "applied" or (latest is not None and latest.status == "submitted"):
-        return "awaiting_reply"
     return "awaiting_reply"
 
 
