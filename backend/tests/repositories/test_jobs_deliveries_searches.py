@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import Any
+from unittest.mock import patch
 
 import pytest
 from sqlalchemy import func, select, update
+from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import Session
 
 from app.models.base import utcnow
@@ -18,6 +21,13 @@ from app.models.user import User
 from app.repositories.deliveries import DeliveryLogRepository
 from app.repositories.jobs import SeenJobRepository
 from app.repositories.searches import SearchRepository
+
+
+def _compile_postgres(statement: Any) -> str:
+    """Compile a SQLAlchemy statement as Postgres so lock clauses stay visible."""
+    return str(
+        statement.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
+    )
 
 
 def _search(session: Session, *, interval: int = 300, next_run_at=None) -> Search:
@@ -341,55 +351,52 @@ def test_search_delete(db_session: Session) -> None:
 
 
 def test_claim_due_takes_row_lock_branch_on_non_sqlite(db_session: Session) -> None:
-    """Force the FOR UPDATE SKIP LOCKED branch (SQLite silently drops the clause)."""
+    """Non-sqlite claim_due must run a statement that compiles FOR UPDATE SKIP LOCKED (TST-04).
+
+    SQLite silently drops the lock clause at execute time, so capturing the
+    repository statement and compiling it as Postgres is what proves the branch
+    actually attaches SKIP LOCKED (not merely that a row id comes back).
+    """
     now = utcnow()
     search = _search(db_session, interval=300, next_run_at=now - timedelta(seconds=5))
     repo = SearchRepository(db_session)
     repo._is_sqlite = lambda: False  # type: ignore[method-assign]
 
-    assert repo.claim_due(now) == [search.id]
+    captured: list[Any] = []
+    real_scalars = db_session.scalars
 
+    def capture_scalars(statement: Any, *args: Any, **kwargs: Any) -> Any:
+        captured.append(statement)
+        return real_scalars(statement, *args, **kwargs)
 
-def test_claim_due_compiles_skip_locked_for_postgres() -> None:
-    """Postgres claim SQL must include SKIP LOCKED so overlapping ticks cannot double-enqueue."""
-    from sqlalchemy import select
-    from sqlalchemy.dialects import postgresql
+    with patch.object(db_session, "scalars", side_effect=capture_scalars):
+        assert repo.claim_due(now) == [search.id]
 
-    from app.models.search import Search
-
-    now = utcnow()
-    stmt = (
-        select(Search)
-        .where(Search.enabled.is_(True))
-        .where(Search.next_run_at <= now)
-        .order_by(Search.next_run_at)
-        .with_for_update(skip_locked=True)
-    )
-    compiled = str(
-        stmt.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
-    )
-    assert "FOR UPDATE SKIP LOCKED" in compiled.upper()
+    assert len(captured) == 1
+    compiled = _compile_postgres(captured[0]).upper()
+    assert "FOR UPDATE" in compiled
+    assert "SKIP LOCKED" in compiled
 
 
 def test_get_for_update_takes_lock_branch_on_non_sqlite(db_session: Session) -> None:
+    """Non-sqlite get_for_update must compile FOR UPDATE SKIP LOCKED (TST-04)."""
     search = _search(db_session)
     repo = SearchRepository(db_session)
     repo._is_sqlite = lambda: False  # type: ignore[method-assign]
 
-    row = repo.get_for_update(search.id, skip_locked=True)
+    captured: list[Any] = []
+    real_scalar = db_session.scalar
+
+    def capture_scalar(statement: Any, *args: Any, **kwargs: Any) -> Any:
+        captured.append(statement)
+        return real_scalar(statement, *args, **kwargs)
+
+    with patch.object(db_session, "scalar", side_effect=capture_scalar):
+        row = repo.get_for_update(search.id, skip_locked=True)
+
     assert row is not None
     assert row.id == search.id
-
-
-def test_get_for_update_compiles_skip_locked_for_postgres() -> None:
-    """Digest flush and other exclusive paths must compile row locks for Postgres."""
-    from sqlalchemy import select
-    from sqlalchemy.dialects import postgresql
-
-    from app.models.search import Search
-
-    stmt = select(Search).where(Search.id == 1).with_for_update(skip_locked=True)
-    compiled = str(
-        stmt.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
-    )
-    assert "FOR UPDATE SKIP LOCKED" in compiled.upper()
+    assert len(captured) == 1
+    compiled = _compile_postgres(captured[0]).upper()
+    assert "FOR UPDATE" in compiled
+    assert "SKIP LOCKED" in compiled

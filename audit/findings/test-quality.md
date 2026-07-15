@@ -65,7 +65,15 @@ regression contract in `docs/modules/appliers.md`.
 
 <a id="tst-04"></a>
 ### TST-04 — Lock-branch tests monkeypatch _is_sqlite=False on SQLite, asserting nothing about locking
-⚪ **LOW** · 🧪 test · Status: ☐ open · Confidence: high · Effort: M · WS33
+⚪ **LOW** · 🧪 test · Status: ✅ done · Confidence: high · Effort: M · WS33
+
+**Update (2026-07-11).** `test_claim_due_takes_row_lock_branch_on_non_sqlite` and
+`test_get_for_update_takes_lock_branch_on_non_sqlite` still force the non-SQLite
+branch on the in-memory engine, but now capture the statement the repository
+passes to `scalars`/`scalar` and compile it with the Postgres dialect so
+`FOR UPDATE` / `SKIP LOCKED` must be present. Hand-built mirror statements that
+never went through the repository were removed as coverage-theater —
+[PR](https://github.com/davidcristian/HeadStart/pull/170).
 
 **Locations:** `backend/tests/repositories/test_jobs_deliveries_searches.py:117` (`test_claim_due_takes_row_lock_branch_on_non_sqlite`); plus `backend/tests/repositories/test_jobs_deliveries_searches.py:127`.
 

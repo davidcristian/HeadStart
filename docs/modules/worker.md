@@ -37,9 +37,13 @@ Beat runs every `SCHEDULER_TICK_SECONDS`. On each tick (and once on startup) it:
    advancing their `next_run_at` in the same transaction (`FOR UPDATE SKIP LOCKED`
    on Postgres), then enqueues `run_search` for each claimed id. The claim acts as a
    lease: a scrape slower than the tick interval, or an overlapping tick, cannot
-   re-enqueue the same search and double-notify.
+   re-enqueue the same search and double-notify. Unit tests force the non-SQLite
+   branch and compile the repository statement as Postgres so `FOR UPDATE` /
+   `SKIP LOCKED` cannot regress without failing (TST-04); SQLite drops the clause
+   at execute time and cannot validate locking by itself.
 2. Flushes digest queues whose `digest_interval_seconds` has elapsed (each search is
-   locked while flushing, so overlapping ticks don't double-send a digest). A notifier
+   locked with `get_for_update(..., skip_locked=True)` while flushing — same TST-04
+   compile assertion — so overlapping ticks don't double-send a digest). A notifier
    failure on one search is isolated: the tick logs it and continues, and each
    successful flush commits before the next search so a later failure cannot roll
    back already-delivered digests.
