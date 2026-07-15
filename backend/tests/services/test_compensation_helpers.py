@@ -183,3 +183,18 @@ def test_format_amount_millions_and_small() -> None:
     assert _format_amount(999) == "999"
     assert _format_amount(120_000) == "120K"
     assert _format_amount(125_500) == "125.5K"
+
+
+# --- _format_currency_prefix (SVC-14) -------------------------------------
+
+
+def test_format_currency_prefix_known_and_fallback() -> None:
+    from app.services.compensation import _format_currency_prefix
+
+    assert _format_currency_prefix("USD") == "$"
+    assert _format_currency_prefix("EUR") == "€"
+    assert _format_currency_prefix("GBP") == "£"
+    assert _format_currency_prefix("CHF") == "CHF "
+    assert _format_currency_prefix("sek") == "SEK "
+    assert _format_currency_prefix(None) == ""
+    assert _format_currency_prefix("  ") == ""

@@ -187,7 +187,7 @@ return "awaiting_reply"
 
 <a id="svc-14"></a>
 ### SVC-14 — Compensation display currency prefix silently falls back to '$' for unknown currencies
-⚪ **LOW** · 🐞 bug · Status: ☐ open · Confidence: medium (3/3 verifiers) · Effort: XS · WS35
+⚪ **LOW** · 🐞 bug · Status: ✅ done · Confidence: medium (3/3 verifiers) · Effort: XS · WS35
 
 **Locations:** `backend/app/services/compensation.py:242` (`_format_currency_prefix`).
 
@@ -198,6 +198,8 @@ return "awaiting_reply"
 **Suggested fix.** Use the ISO code as prefix/suffix when no symbol is known instead of defaulting to `'$'`, or expand the symbol map.
 
 **Verification.** Confirmed 3/3 adversarial verifiers. `_format_currency_prefix` returns `'$'` for anything not EUR/GBP (CHF/SEK/NOK/None), and `_CURRENCY_SYMBOLS`/`_CODE_RE` only cover USD/EUR/GBP, so unmapped currencies are mislabeled with a dollar sign; no guard restricts currency to those three.
+
+**Fix.** `_format_currency_prefix` maps USD/EUR/GBP to `$`/`€`/`£`, uses the ISO code (e.g. `CHF `) for other currencies, and omits a symbol when currency is unknown — never defaults unknown to `$`. — [PR](https://github.com/davidcristian/HeadStart/pull/181).
 
 <a id="svc-15"></a>
 ### SVC-15 — DigestService.queue inserts and flushes once per seen_job id in a loop

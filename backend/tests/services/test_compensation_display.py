@@ -107,6 +107,62 @@ def test_format_display_range_from_structured_without_display() -> None:
     assert format_compensation_display(posting) == "$120K – $180K"
 
 
+def test_format_display_uses_iso_code_for_unmapped_currency() -> None:
+    """SVC-14: CHF/SEK must not be mislabeled with a USD dollar sign."""
+    posting = _posting(
+        raw={
+            "compensation": {
+                "summaryComponents": [
+                    {
+                        "compensationType": "Salary",
+                        "interval": "1 YEAR",
+                        "currencyCode": "CHF",
+                        "minValue": 120000,
+                        "maxValue": 150000,
+                    }
+                ]
+            }
+        }
+    )
+    assert format_compensation_display(posting) == "CHF 120K – CHF 150K"
+
+
+def test_format_display_omits_prefix_when_currency_unknown() -> None:
+    posting = _posting(
+        raw={
+            "compensation": {
+                "summaryComponents": [
+                    {
+                        "compensationType": "Salary",
+                        "interval": "1 YEAR",
+                        "minValue": 90000,
+                    }
+                ]
+            }
+        }
+    )
+    assert format_compensation_display(posting) == "90K+"
+
+
+def test_format_display_normalizes_currency_code_case() -> None:
+    posting = _posting(
+        raw={
+            "compensation": {
+                "summaryComponents": [
+                    {
+                        "compensationType": "Salary",
+                        "interval": "1 YEAR",
+                        "currencyCode": "eur",
+                        "minValue": 80000,
+                        "maxValue": 80000,
+                    }
+                ]
+            }
+        }
+    )
+    assert format_compensation_display(posting) == "€80K"
+
+
 # --- ashby structured extraction edge cases -------------------------------
 
 

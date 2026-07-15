@@ -154,7 +154,7 @@ dedup is also applied across a user's searches by normalized job URL (see
 | title         | str         |                                               |
 | company       | str         |                                               |
 | location      | str         |                                               |
-| salary        | str         | Formatted compensation when scraped (optional) |
+| salary        | str         | Formatted compensation when scraped (optional). Display uses `$`/`€`/`£` for USD/EUR/GBP; other ISO codes (e.g. CHF) are shown as the code prefix, and unknown currency omits a symbol rather than defaulting to `$` (SVC-14) |
 | url           | str         |                                               |
 | normalized_url| str         | Canonical form of `url` for cross-search dedup (DAT-05); written at insert |
 | summary       | str         | "Why this matches" blurb (optional); see [summaries.md](summaries.md) |

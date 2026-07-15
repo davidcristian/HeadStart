@@ -18,6 +18,7 @@ _WEEKLY_INTERVALS = {"1 WEEK", "WEEK", "WEEKLY"}
 _DAILY_INTERVALS = {"1 DAY", "DAY", "DAILY"}
 _HOURLY_INTERVALS = {"1 HOUR", "HOUR", "HOURLY"}
 _CURRENCY_SYMBOLS = {"$": "USD", "€": "EUR", "£": "GBP"}
+_DISPLAY_PREFIX = {"USD": "$", "EUR": "€", "GBP": "£"}
 _CODE_RE = re.compile(r"\b(USD|EUR|GBP)\b", re.IGNORECASE)
 
 
@@ -227,11 +228,14 @@ def _first_non_empty_str(*values: Any) -> str | None:
 
 
 def _format_currency_prefix(currency: str | None) -> str:
-    if currency == "EUR":
-        return "€"
-    if currency == "GBP":
-        return "£"
-    return "$"
+    """Prefer a known symbol; otherwise the ISO code so we never mislabel as USD."""
+    if currency is None or not str(currency).strip():
+        return ""
+    code = str(currency).strip().upper()
+    symbol = _DISPLAY_PREFIX.get(code)
+    if symbol is not None:
+        return symbol
+    return f"{code} "
 
 
 def _format_amount(value: int) -> str:
