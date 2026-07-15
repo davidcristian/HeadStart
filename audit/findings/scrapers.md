@@ -78,7 +78,7 @@ This area covers the pluggable scraper adapters under `backend/app/scrapers/` �
 
 <a id="scr-07"></a>
 ### SCR-07 — Ashby detector matches any host when path contains 'posting-api/job-board'
-⚪ **LOW** · 🐞 bug · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: XS · WS34
+⚪ **LOW** · 🐞 bug · Status: ✅ done · Confidence: high (3/3 verifiers) · Effort: XS · WS34
 
 **Locations:** `backend/app/scrapers/url_detect.py:110` (`_detect_ashby`).
 
@@ -89,6 +89,8 @@ This area covers the pluggable scraper adapters under `backend/app/scrapers/` �
 **Suggested fix.** Gate the API-path branch to Ashby-owned hosts (e.g. `host.endswith(".ashbyhq.com")`) before extracting the board slug.
 
 **Verification.** Confirmed 3/3 adversarial verifiers. `_detect_ashby` accepts any host whose path contains `posting-api/job-board` with no host allowlist; reachable via `/sources/detect`, mislabels arbitrary hosts as Ashby; no upstream guard.
+
+**Fix.** `_detect_ashby` requires `jobs.ashbyhq.com` or an `*.ashbyhq.com` host with `posting-api/job-board` in the path — [PR](https://github.com/davidcristian/HeadStart/pull/173).
 
 <a id="scr-08"></a>
 ### SCR-08 — Microsoft careers host match uses suffix endswith without dot boundary (over-broad)

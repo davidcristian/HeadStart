@@ -332,14 +332,21 @@ def test_detect_lever_no_site_returns_none() -> None:
 
 
 def test_detect_ashby_posting_api_path() -> None:
-    result = detect_source_from_url("https://example.com/posting-api/job-board/notion/jobs")
+    result = detect_source_from_url("https://api.ashbyhq.com/posting-api/job-board/notion/jobs")
     assert result is not None
     assert result.adapter_key == "ashby"
     assert result.default_config["board"] == "notion"
 
 
 def test_detect_ashby_posting_api_missing_board_returns_none() -> None:
-    assert detect_source_from_url("https://example.com/posting-api/job-board") is None
+    assert detect_source_from_url("https://api.ashbyhq.com/posting-api/job-board") is None
+
+
+def test_detect_ashby_rejects_non_ashby_host_with_api_path() -> None:
+    """SCR-07: path substring alone must not label arbitrary hosts as Ashby."""
+    assert detect_source_from_url("https://evil.example.com/posting-api/job-board/acme") is None
+    assert detect_source_from_url("https://example.com/posting-api/job-board/notion/jobs") is None
+    assert detect_source_from_url("https://evilashbyhq.com/posting-api/job-board/acme") is None
 
 
 def test_detect_ashby_no_board_returns_none() -> None:

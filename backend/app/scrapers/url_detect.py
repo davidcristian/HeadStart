@@ -107,11 +107,15 @@ def _detect_lever(parsed: Any, host: str, page_title: str | None) -> SourceDetec
 
 
 def _detect_ashby(parsed: Any, host: str, page_title: str | None) -> SourceDetection | None:
-    if host != "jobs.ashbyhq.com" and "posting-api/job-board" not in parsed.path:
+    # Jobs board host, or Ashby-owned API host with the posting-api path
+    # (never match arbitrary hosts that merely contain that path substring).
+    is_jobs_host = host == "jobs.ashbyhq.com"
+    is_api_path = host.endswith(".ashbyhq.com") and "posting-api/job-board" in parsed.path
+    if not is_jobs_host and not is_api_path:
         return None
 
     board = ""
-    if host == "jobs.ashbyhq.com":
+    if is_jobs_host:
         parts = [part for part in parsed.path.split("/") if part]
         board = parts[0] if parts else ""
     else:
