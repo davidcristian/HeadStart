@@ -2,9 +2,21 @@ name: Deploy
 
 # Builds + pushes images to ECR, runs DB migrations, and rolls the ECS services.
 # Manual-only: this workflow never runs on push. Trigger it from the Actions tab
-# ("Run workflow", choose beta/prod; GitHub Environment protection can require an
-# approval). The deploy job is additionally guarded on the `AWS_ROLE_ARN` repo
-# variable, so it no-ops until the AWS OIDC role is configured.
+# ("Run workflow", choose beta/prod). The deploy job is guarded on
+# `vars.AWS_ROLE_ARN`, so it no-ops until the AWS OIDC role is configured.
+#
+# OPS-23 — OIDC / deploy hardening (defense in depth):
+# 1. In-workflow ref scope: job `if` allows only refs/heads/main|master.
+# 2. GitHub Environment (`beta` / `prod`): enable required reviewers in
+#    Settings → Environments so a human must approve before credentials run.
+# 3. IAM trust policy for AWS_ROLE_ARN MUST pin the OIDC `sub` claim to those
+#    refs (and optionally to `environment:beta|prod`). Never use a wildcard
+#    like `repo:OWNER/REPO:*` — that lets any branch/workflow assume the role.
+#    Example Condition StringEquals:
+#      token.actions.githubusercontent.com:aud: sts.amazonaws.com
+#      token.actions.githubusercontent.com:sub: repo:OWNER/REPO:ref:refs/heads/main
+# 4. Branch protection on main/master is assumed so only reviewed code is
+#    dispatchable from those refs.
 
 on:
   workflow_dispatch:
@@ -22,8 +34,8 @@ permissions:
 jobs:
   deploy:
     name: Deploy ${{ github.event.inputs.environment || 'beta' }}
-    # Skips cleanly (no failure) until the AWS OIDC role variable is configured.
-    if: ${{ vars.AWS_ROLE_ARN != '' }}
+    # Skips cleanly until AWS OIDC is configured; OPS-23 also refuses non-default refs.
+    if: ${{ vars.AWS_ROLE_ARN != '' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main') }}
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment || 'beta' }}
     env:
@@ -38,6 +50,9 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
+          audience: sts.amazonaws.com
+          # CloudTrail-friendly session id (OPS-23); pairs with IAM sub/aud pins above.
+          role-session-name: headstart-deploy-${{ github.run_id }}
 
       - name: Login to Amazon ECR
         id: ecr

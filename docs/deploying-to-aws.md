@@ -389,12 +389,22 @@ bumps those SHAs weekly alongside frontend npm and backend pip. Local
 pre-commit is a fast subset (formatters, eslint, prettier, LOC, shell).
 **`deploy.yml`** is
 manual-only (`workflow_dispatch`) and its job is guarded by
-`if: vars.AWS_ROLE_ARN != ''`, so it stays dormant until you set that repo
-variable; **`terraform.yml`** runs `fmt`/`validate` on `devops/terraform/**` PRs
+`vars.AWS_ROLE_ARN != ''` **and** `github.ref` being `refs/heads/main` or
+`refs/heads/master` (OPS-23), so it stays dormant until you set that repo
+variable and only assumes the role from protected default-branch refs;
+**`terraform.yml`** runs `fmt`/`validate` on `devops/terraform/**` PRs
 and its credentialed `plan` step is gated on the same variable. Configure the AWS
 OIDC role (`AWS_ROLE_ARN`) plus the application secrets (`JWT_SECRET`,
 `CREDENTIALS_SECRET_KEY`, and the `TF_VAR_*` secrets) to activate them — no files
 need to move.
+
+When creating the deploy IAM role trust policy, pin the GitHub OIDC `sub` (and
+`aud`) claims — for example
+`repo:<owner>/<repo>:ref:refs/heads/main` with audience `sts.amazonaws.com`.
+Do not use `repo:<owner>/<repo>:*`. Enable required reviewers on the `beta`
+and `prod` GitHub Environments, and keep branch protection on `main`/`master`.
+The workflow sets `role-session-name: headstart-deploy-<run_id>` so CloudTrail
+rows identify the Actions run.
 
 ---
 

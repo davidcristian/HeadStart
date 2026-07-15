@@ -264,6 +264,17 @@ pre-commit and CI (OPS-04). `deploy.yml` (manual `workflow_dispatch`) and
 `terraform plan` runs on PRs and `deploy` runs `terraform apply` +
 `just deploy` on demand.
 
+**Deploy OIDC hardening (OPS-23).** `deploy.yml` assumes `AWS_ROLE_ARN` only
+when `github.ref` is `refs/heads/main` or `refs/heads/master`, sets OIDC
+`audience: sts.amazonaws.com` and a `role-session-name` of
+`headstart-deploy-<run_id>`, and targets the GitHub Environment named by the
+workflow input (`beta` / `prod` — enable required reviewers there). The IAM
+trust policy for that role **must** pin
+`token.actions.githubusercontent.com:sub` to
+`repo:<owner>/<repo>:ref:refs/heads/main` (or `master`), not a wildcard
+`repo:…:*`. Protect `main`/`master` with branch protection so only reviewed
+commits are dispatchable from those refs.
+
 ## First-time setup
 
 See **[deploying-to-aws.md](../deploying-to-aws.md)** for the full walkthrough
@@ -277,4 +288,6 @@ Summary:
 2. `terraform apply` in `environments/beta` (or `prod`).
 3. `just deploy` with `ECR_REGISTRY` and `ECS_CLUSTER` set.
 4. Optional: activate the deploy/terraform workflows by setting the `AWS_ROLE_ARN`
-   repo variable and the AWS/GitHub secrets (the workflow files are already in place).
+   repo variable and the AWS/GitHub secrets (the workflow files are already in
+   place). Pin the IAM OIDC trust `sub` to `main`/`master`, enable Environment
+   reviewers, and keep branch protection (OPS-23).

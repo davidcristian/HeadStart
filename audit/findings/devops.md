@@ -303,7 +303,7 @@ SHA pin. `aws-first-deploy.sh` sets `TF_VAR_image_tag` from the short SHA when
 
 <a id="ops-23"></a>
 ### OPS-23 — Deploy assumes AWS OIDC role with no in-workflow ref scoping or branch-protection note
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: medium (3/3 verifiers) · Effort: S · WS37
+⚪ **LOW** · 🔒 security · Status: ✅ done · [PR](https://github.com/davidcristian/HeadStart/pull/202) · Confidence: medium (3/3 verifiers) · Effort: S · WS37
 
 **Locations:** `.github/workflows/deploy.yml:33` (`Configure AWS credentials (OIDC)`).
 
@@ -314,6 +314,8 @@ SHA pin. `aws-first-deploy.sh` sets `TF_VAR_image_tag` from the short SHA when
 **Suggested fix.** Add `role-session-name`/audience, document the required trust-policy `sub` scoping, and require an approving environment for the dev push path too.
 
 **Verification.** Confirmed 3/3 adversarial verifiers. The workflow is now present in `.github/workflows/` but stays dormant (manual `workflow_dispatch` only, gated on `vars.AWS_ROLE_ARN`); once enabled it uses environment protection but has no in-workflow ref scoping and no documented trust-policy sub pinning — a legitimate hardening/doc nit, low.
+
+**Resolution.** `deploy.yml` job `if` requires `refs/heads/main|master` in addition to `AWS_ROLE_ARN`; OIDC step sets `audience: sts.amazonaws.com` and `role-session-name: headstart-deploy-<run_id>`; workflow header + deployment docs document IAM `sub` pinning, Environment reviewers, and branch protection. Regression: `backend/tests/devops/test_ops23_deploy_oidc.py`.
 
 ---
 
