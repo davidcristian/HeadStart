@@ -11,6 +11,7 @@ from app.services.compensation import (
     _parse_amount,
     format_compensation_display,
 )
+from app.services.compensation_amounts import normalize_amount_digits as _normalize_amount_digits
 
 
 def _posting(
@@ -56,11 +57,12 @@ def test_from_text_range_both_unparseable_returns_none(monkeypatch) -> None:
     assert _from_text("$100k - $150k") is None
 
 
-def test_from_text_single_amount() -> None:
-    info = _from_text("$88,500")
+def test_from_text_eu_salary_range() -> None:
+    info = _from_text("€50.000 - €70.000")
     assert info is not None
-    assert info.min_annual == 88_500
-    assert info.max_annual == 88_500
+    assert info.min_annual == 50_000
+    assert info.max_annual == 70_000
+    assert info.currency == "EUR"
 
 
 def test_from_text_returns_none_when_amount_unparseable() -> None:
@@ -79,13 +81,43 @@ def test_parse_amount_million_suffix() -> None:
     assert _parse_amount("2M") == 2_000_000
 
 
+def test_parse_amount_eu_thousands_dot() -> None:
+    # German-style grouping: dot = thousands, not a US decimal.
+    assert _parse_amount("€55.000") == 55_000
+    assert _parse_amount("55.000 €") == 55_000
+
+
+def test_parse_amount_eu_decimal_comma() -> None:
+    assert _parse_amount("1.234,56") == 1235  # rounds
+    assert _parse_amount("€1,5k") == 1_500
+
+
+def test_parse_amount_us_formats_still_work() -> None:
+    assert _parse_amount("$88,500") == 88_500
+    assert _parse_amount("$1,234.56") == 1_235
+    assert _parse_amount("$1.5M") == 1_500_000
+
+
+def test_parse_amount_rejects_malformed_multi_dot() -> None:
+    assert _parse_amount("1.23.45") is None
+
+
+def test_normalize_amount_digits_edge_cases() -> None:
+    assert _normalize_amount_digits("") is None
+    assert _normalize_amount_digits(".5") is None
+    assert _normalize_amount_digits("12a34") is None
+    assert _normalize_amount_digits("1.234.567") == "1234567"
+    assert _normalize_amount_digits("55,5") == "55.5"
+    assert _normalize_amount_digits("100.") == "100"
+
+
 def test_parse_amount_invalid_float_returns_none(monkeypatch) -> None:
     # Force the float() conversion to fail to exercise the except branch.
     class _BadFloat:
         def __init__(self, *_a, **_k) -> None:
             raise ValueError("boom")
 
-    monkeypatch.setattr("app.services.compensation.float", _BadFloat, raising=False)
+    monkeypatch.setattr("app.services.compensation_amounts.float", _BadFloat, raising=False)
     assert _parse_amount("$100") is None
 
 

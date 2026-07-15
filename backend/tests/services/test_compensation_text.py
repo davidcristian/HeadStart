@@ -28,6 +28,15 @@ def _posting(
 # --- _from_text ------------------------------------------------------------
 
 
+def test_from_text_eu_thousands_via_salary_field() -> None:
+    posting = _posting(raw={"salary": "€55.000"})
+    info = extract_compensation(posting)
+    assert info is not None
+    assert info.min_annual == 55_000
+    assert info.max_annual == 55_000
+    assert info.currency == "EUR"
+
+
 def test_from_text_single_amount_via_pay_field() -> None:
     posting = _posting(raw={"pay": "€75k"})
     info = extract_compensation(posting)

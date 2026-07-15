@@ -7,6 +7,10 @@ from dataclasses import dataclass
 from typing import Any
 
 from app.scrapers.types import JobPosting
+from app.services.compensation_amounts import RANGE_RE, parse_amount
+
+_RANGE_RE = RANGE_RE
+_parse_amount = parse_amount
 
 _ANNUAL_INTERVALS = {"1 YEAR", "YEAR", "ANNUAL", "YEARLY"}
 _MONTHLY_INTERVALS = {"1 MONTH", "MONTH", "MONTHLY"}
@@ -14,16 +18,6 @@ _WEEKLY_INTERVALS = {"1 WEEK", "WEEK", "WEEKLY"}
 _DAILY_INTERVALS = {"1 DAY", "DAY", "DAILY"}
 _HOURLY_INTERVALS = {"1 HOUR", "HOUR", "HOURLY"}
 _CURRENCY_SYMBOLS = {"$": "USD", "€": "EUR", "£": "GBP"}
-_AMOUNT_RE = re.compile(
-    r"(?P<symbol>[$€£])?\s*(?P<amount>\d[\d,]*(?:\.\d+)?)\s*(?P<suffix>[kKmM])?",
-    re.IGNORECASE,
-)
-_RANGE_RE = re.compile(
-    r"(?P<left>[$€£]?\s*\d[\d,]*(?:\.\d+)?\s*[kKmM]?)"
-    r"\s*(?:-|–|—|to)\s*"
-    r"(?P<right>[$€£]?\s*\d[\d,]*(?:\.\d+)?\s*[kKmM]?)",
-    re.IGNORECASE,
-)
 _CODE_RE = re.compile(r"\b(USD|EUR|GBP)\b", re.IGNORECASE)
 
 
@@ -180,22 +174,6 @@ def _from_text(text: str) -> CompensationInfo | None:
         currency=currency,
         display=cleaned,
     )
-
-
-def _parse_amount(fragment: str) -> int | None:
-    match = _AMOUNT_RE.search(fragment)
-    if not match:
-        return None
-    digits = match.group("amount").replace(",", "")
-    try:
-        value = float(digits)
-    except ValueError:
-        return None
-    suffix = (match.group("suffix") or "").lower()
-    if suffix in {"k", "m"}:
-        multiplier = 1_000 if suffix == "k" else 1_000_000
-        value *= multiplier
-    return int(round(value))
 
 
 def _currency_from_text(text: str) -> str | None:

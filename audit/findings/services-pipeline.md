@@ -171,7 +171,7 @@ return "awaiting_reply"
 
 <a id="svc-13"></a>
 ### SVC-13 — Compensation parser assumes US number grouping, misreads EU-formatted salaries
-⚪ **LOW** · 🐞 bug · Status: ☐ open · Confidence: medium (3/3 verifiers) · Effort: S · WS35
+⚪ **LOW** · 🐞 bug · Status: ✅ done · Confidence: medium (3/3 verifiers) · Effort: S · WS35
 
 **Locations:** `backend/app/services/compensation.py:186` (`_parse_amount`); also `backend/app/services/compensation.py:14`.
 
@@ -182,6 +182,8 @@ return "awaiting_reply"
 **Suggested fix.** Detect locale/currency and handle EU grouping (dot thousands, comma decimal) before coercing amounts.
 
 **Verification.** Confirmed 3/3 adversarial verifiers. `_AMOUNT_RE` treats `'.'` as decimal and strips `','`; `'55.000'` parses via `float('55.000')` → 55; sites like indeed/workday/lever/greenhouse serve EU postings and no upstream locale guard exists, so EUR comma/dot formats are misread.
+
+**Fix.** `normalize_amount_digits` in `compensation_amounts.py` accepts US and EU separators (both present → last is decimal; lone `.` + three digits → EU thousands; lone `,` + 1–2 digits → EU decimal) — [PR](https://github.com/davidcristian/HeadStart/pull/180).
 
 <a id="svc-14"></a>
 ### SVC-14 — Compensation display currency prefix silently falls back to '$' for unknown currencies
