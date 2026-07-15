@@ -413,7 +413,7 @@ SHA pin. `aws-first-deploy.sh` sets `TF_VAR_image_tag` from the short SHA when
 
 <a id="ops-33"></a>
 ### OPS-33 — prod tfvars.example primes inline plaintext secrets in terraform.tfvars
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: medium (3/3 verifiers) · Effort: XS · WS36
+⚪ **LOW** · 🔒 security · Status: ✅ done · Confidence: medium (3/3 verifiers) · Effort: XS · WS36
 
 **Locations:** `devops/terraform/environments/prod/terraform.tfvars.example:9` (`db_password/jwt_secret/credentials_secret_key`); plus `devops/terraform/environments/beta/terraform.tfvars.example:12`.
 

@@ -1,7 +1,11 @@
-# Copy to terraform.tfvars (gitignored) OR provide via environment variables:
-#   export TF_VAR_db_password=...
-#   export TF_VAR_jwt_secret=...
-#   export TF_VAR_credentials_secret_key=...
+# Non-secret knobs may live in a local terraform.tfvars (gitignored).
+# Core secrets MUST stay in the shell as TF_VAR_* — do not paste them into
+# terraform.tfvars (OPS-33). A copied file with real secrets is an easy leak
+# if force-added or backed up outside git.
+#
+#   export TF_VAR_db_password="$(openssl rand -base64 24)"
+#   export TF_VAR_jwt_secret="$(openssl rand -hex 32)"
+#   export TF_VAR_credentials_secret_key="$(openssl rand -hex 32)"
 
 region = "us-east-2"
 # Required: pin the AWS account this env may target (OPS-31). Terraform rejects
@@ -13,10 +17,6 @@ region = "us-east-2"
 # Prefer TF_VAR_image_tag from the shell so the pin matches the just-built image:
 #   export TF_VAR_image_tag="$(git rev-parse --short HEAD)"
 image_tag = "REPLACE_WITH_GIT_SHA"
-
-db_password            = "change-me-strong-password"
-jwt_secret             = "change-me-long-random-jwt-secret"
-credentials_secret_key = "change-me-long-random-credentials-key"
 
 # Strongly recommended in prod: custom domain + HTTPS.
 domain_name     = "jobs.example.com"

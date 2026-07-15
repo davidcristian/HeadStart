@@ -60,7 +60,11 @@ State is remote: S3 bucket + DynamoDB lock table. Each environment's
 encryption); the bucket is supplied at `terraform init` via
 `-backend-config` / `backend.hcl` so a real bucket name is never committed
 (OPS-29). Secrets are stored in Secrets Manager / SSM and injected into ECS
-task definitions — never in Terraform variables committed to git.
+task definitions — never in Terraform variables committed to git. Core apply
+secrets (`db_password`, `jwt_secret`, `credentials_secret_key`) are supplied
+only via `TF_VAR_*` env vars; beta/prod `terraform.tfvars.example` files no
+longer show inline assignments for them so operators are not primed to paste
+real secrets into a local `terraform.tfvars` (OPS-33).
 
 ## HTTPS (optional)
 

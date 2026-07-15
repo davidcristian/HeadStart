@@ -1,7 +1,11 @@
-# Copy to terraform.tfvars (gitignored) OR provide via environment variables:
-#   export TF_VAR_db_password=...
-#   export TF_VAR_jwt_secret=...
-#   export TF_VAR_credentials_secret_key=...
+# Non-secret knobs may live in a local terraform.tfvars (gitignored).
+# Core secrets MUST stay in the shell as TF_VAR_* — do not paste them into
+# terraform.tfvars (OPS-33). A copied file with real secrets is an easy leak
+# if force-added or backed up outside git.
+#
+#   export TF_VAR_db_password="$(openssl rand -base64 24)"
+#   export TF_VAR_jwt_secret="$(openssl rand -hex 32)"
+#   export TF_VAR_credentials_secret_key="$(openssl rand -hex 32)"
 #
 # Do NOT commit real secrets.
 
@@ -12,11 +16,6 @@ image_tag = "latest"
 # non-12-digit values; wrong ambient credentials then fail at provider init:
 #   export TF_VAR_aws_account_id="$(aws sts get-caller-identity --query Account --output text)"
 # aws_account_id = "123456789012"
-
-# Secrets (prefer environment variables over this file).
-db_password            = "change-me-strong-password"
-jwt_secret             = "change-me-long-random-jwt-secret"
-credentials_secret_key = "change-me-long-random-credentials-key"
 
 # Optional: lock CORS to your real domain once you have one.
 # domain_name     = "jobs.example.com"

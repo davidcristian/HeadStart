@@ -156,7 +156,9 @@ terraform apply
 ```
 
 Secrets are written to **AWS Secrets Manager** and injected into ECS tasks at
-runtime. Never commit them to git. You can also use a local `terraform.tfvars`
+runtime. Never commit them to git. Keep `db_password` / `jwt_secret` /
+`credentials_secret_key` in the shell as `TF_VAR_*` (OPS-33) — do not paste them
+into `terraform.tfvars`. Non-secret knobs may use a local `terraform.tfvars`
 (gitignored); see `terraform.tfvars.example` in the same directory.
 
 Note the outputs:
