@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Deploy to AWS: build + push images, then register ECS task defs pinned to the
-# freshly pushed tag and roll services onto those revisions (OPS-01).
+# freshly pushed tag *and* ECR content digest, and roll services onto those
+# revisions (OPS-01 tag pin; OPS-64 digest pin).
 # Migrations must finish successfully before any service roll (OPS-17).
 # Intended to be run by CI (with an assumed AWS role) or locally with creds.
 #
@@ -22,11 +23,40 @@ export IMAGE_TAG="${IMAGE_TAG:-$(git -C "${REPO_ROOT}" rev-parse --short HEAD 2>
 
 have aws || die "aws CLI is required"
 
+# Resolve the ECR content digest for a just-pushed ``IMAGE_TAG`` (OPS-64).
+ecr_image_digest() {
+  local repo="$1"
+  local digest
+  digest="$(
+    aws ecr describe-images \
+      --repository-name "${repo}" \
+      --image-ids "imageTag=${IMAGE_TAG}" \
+      --region "${AWS_REGION}" \
+      --query 'imageDetails[0].imageDigest' \
+      --output text
+  )" || die "failed to describe ECR image ${repo}:${IMAGE_TAG}"
+  [[ -n "${digest}" && "${digest}" != "None" && "${digest}" == sha256:* ]] \
+    || die "ECR returned no sha256 digest for ${repo}:${IMAGE_TAG}"
+  printf '%s\n' "${digest}"
+}
+
+# Map a task family to the digest resolved after push for its ECR repository.
+digest_for_family() {
+  local family="$1"
+  case "${family}" in
+    *-api|*-beat|*-migrate) printf '%s\n' "${DIGEST_BACKEND}" ;;
+    *-worker) printf '%s\n' "${DIGEST_WORKER}" ;;
+    *-frontend) printf '%s\n' "${DIGEST_FRONTEND}" ;;
+    *) die "unknown task family for image digest: ${family}" ;;
+  esac
+}
+
 # Register a new revision of ``family`` with every container image pinned to
-# ``IMAGE_TAG``, then print the new taskDefinitionArn on stdout.
+# ``IMAGE_TAG@sha256:…``, then print the new taskDefinitionArn on stdout.
 register_retargeted_task_def() {
   local family="$1"
-  local described register_payload new_arn
+  local described register_payload new_arn digest
+  digest="$(digest_for_family "${family}")"
   described="$(aws ecs describe-task-definition \
     --task-definition "${family}" \
     --region "${AWS_REGION}" \
@@ -37,7 +67,8 @@ register_retargeted_task_def() {
     printf '%s' "${described}" | py -m app.cli.ecs_task_def retarget \
       --ecr-registry "${ECR_REGISTRY}" \
       --family "${family}" \
-      --image-tag "${IMAGE_TAG}"
+      --image-tag "${IMAGE_TAG}" \
+      --image-digest "${digest}"
   )" || die "failed to retarget task definition ${family}"
 
   new_arn="$(
@@ -113,21 +144,29 @@ log "Deploying tag ${IMAGE_TAG} to environment '${ENVIRONMENT}'"
 # 1) Build + push images.
 "${REPO_ROOT}/scripts/build-images.sh" --push
 
-# 2) Run migrations as a one-off ECS task on a revision pinned to IMAGE_TAG.
+# 2) Resolve ECR content digests for the just-pushed tags so task defs pin the
+#    exact manifest this pipeline built (not only a mutable-or-floating tag).
+log "Resolving ECR image digests for tag ${IMAGE_TAG}"
+DIGEST_BACKEND="$(ecr_image_digest "headstart-backend")"
+DIGEST_WORKER="$(ecr_image_digest "headstart-backend-worker")"
+DIGEST_FRONTEND="$(ecr_image_digest "headstart-frontend")"
+ok "Pinned digests: backend=${DIGEST_BACKEND} worker=${DIGEST_WORKER} frontend=${DIGEST_FRONTEND}"
+
+# 3) Run migrations as a one-off ECS task on a revision pinned to tag@digest.
 #    Wait for completion and require exit 0 before any service roll (OPS-17).
 log "Running database migrations (one-off ECS task)"
 migrate_td="$(register_retargeted_task_def "${SERVICE_PREFIX}-migrate")"
 log "Registered migrate revision: ${migrate_td}"
 run_and_await_migrate_task "${migrate_td}"
 
-# 3) Register a SHA-pinned revision per long-running service, then roll onto it.
+# 4) Register a digest-pinned revision per long-running service, then roll onto it.
 #    Force-new-deployment alone would re-pull the Terraform-pinned tag (often
 #    ``latest``), which build-images.sh never re-pushes — so new code would not
 #    ship. ECS services ignore Terraform task_definition changes after first
-#    apply; deploy owns the image pin at roll time.
+#    apply; deploy owns the image pin at roll time (OPS-01 + OPS-64).
 for svc in api frontend worker beat; do
   family="${SERVICE_PREFIX}-${svc}"
-  log "Registering ${family} pinned to ${IMAGE_TAG}"
+  log "Registering ${family} pinned to ${IMAGE_TAG}@digest"
   new_td="$(register_retargeted_task_def "${family}")"
   log "Updating service ${family} -> ${new_td}"
   aws ecs update-service \
@@ -139,4 +178,4 @@ for svc in api frontend worker beat; do
     || die "failed to update service ${family}"
 done
 
-ok "Deploy triggered for tag ${IMAGE_TAG}. ECS is rolling the services."
+ok "Deploy triggered for tag ${IMAGE_TAG} (digest-pinned). ECS is rolling the services."

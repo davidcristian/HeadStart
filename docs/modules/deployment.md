@@ -208,15 +208,18 @@ bootstrap, `terraform apply`, and `just deploy` — see
    and `headstart-backend-worker` (Playwright + Chromium).
 2. Push to ECR under tag `IMAGE_TAG` (git short SHA by default; CI uses the full
    commit SHA).
-3. Register a new `headstart-migrate` task-definition revision whose container
-   image is pinned to that tag, then run migrations as a one-off ECS task.
-   `deploy.sh` waits for the task to stop and requires every container
-   `exitCode == 0` before continuing — a failed or still-running migration
-   aborts the deploy so new app images never roll against a bad schema
-   (OPS-17).
-4. For each long-running service (`api`, `frontend`, `worker`, `beat`), register
-   a new task-definition revision pinned to the same tag (via
-   `python -m app.cli.ecs_task_def retarget`) and
+3. Resolve each pushed image's ECR content digest (`describe-images` →
+   `imageDigest`) for `headstart-backend`, `headstart-backend-worker`, and
+   `headstart-frontend`.
+4. Register a new `headstart-migrate` task-definition revision whose container
+   image is pinned to `:{IMAGE_TAG}@{sha256:…}` (not tag alone), then run
+   migrations as a one-off ECS task. `deploy.sh` waits for the task to stop and
+   requires every container `exitCode == 0` before continuing — a failed or
+   still-running migration aborts the deploy so new app images never roll
+   against a bad schema (OPS-17).
+5. For each long-running service (`api`, `frontend`, `worker`, `beat`), register
+   a new task-definition revision pinned to the same `tag@digest` (via
+   `python -m app.cli.ecs_task_def retarget --image-digest …`) and
    `update-service --task-definition <new-arn> --force-new-deployment`.
 
 ECS services use `lifecycle { ignore_changes = [task_definition] }` so Terraform
@@ -224,7 +227,10 @@ keeps the initial wiring while `deploy.sh` owns the image pin at roll time.
 Force-new-deployment alone is not enough when the task def still points at a
 tag the build never re-pushes (historically Terraform's `image_tag = "latest"`;
 prod now requires an immutable SHA pin — OPS-07). `deploy.sh` registers a new
-revision pinned to `IMAGE_TAG` before rolling (OPS-01).
+revision pinned to `IMAGE_TAG` before rolling (OPS-01), and further pins that
+revision to the ECR content digest resolved after push (OPS-64) so the rolled
+task cannot pull a different manifest than this pipeline built — even if a tag
+were ever mutable again.
 
 All workflows live in `.github/workflows/`. The CI quality gate (`ci.yml`) runs
 on push/PR: backend `just lint` (ruff + black + LOC), `just typecheck`,

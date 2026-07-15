@@ -687,7 +687,7 @@ SHA pin. `aws-first-deploy.sh` sets `TF_VAR_image_tag` from the short SHA when
 
 <a id="ops-64"></a>
 ### OPS-64 — ECS roll does not pin the just-pushed image digest (build→deploy provenance gap)
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: low (3/3 verifiers) · Effort: M · WS36
+⚪ **LOW** · 🔒 security · Status: ✅ done · Confidence: low (3/3 verifiers) · Effort: M · WS36
 
 **Locations:** `scripts/deploy.sh:33` (`update-service loop`).
 
@@ -696,6 +696,8 @@ SHA pin. `aws-first-deploy.sh` sets `TF_VAR_image_tag` from the short SHA when
 **Failure scenario.** If task defs reference a floating tag, `force-new-deployment` may pull an image other than the one this pipeline built/tested, breaking build→deploy provenance.
 
 **Suggested fix.** Register a new task-def revision pinned to the pushed image digest and roll that revision; add image attestation/provenance.
+
+**Fix.** After `build-images.sh --push`, `deploy.sh` calls `aws ecr describe-images` for `headstart-backend`, `headstart-backend-worker`, and `headstart-frontend`, caches the `sha256:…` digests, and passes `--image-digest` into `ecs_task_def retarget` so every registered revision uses `:{IMAGE_TAG}@{sha256:…}`. Missing/non-sha256 digests abort the deploy. Docs and regressions cover the resolve-before-retarget ordering. — [PR](https://github.com/davidcristian/HeadStart/pull/187)
 
 **Verification.** Confirmed 3/3 adversarial verifiers. deploy.sh:33-40 does `force-new-deployment` without registering a task-def revision pinned to the pushed digest; if task defs use a floating tag, provenance is not guaranteed. A legit low-severity CI/CD hardening gap.
 

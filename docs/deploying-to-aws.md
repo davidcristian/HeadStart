@@ -204,18 +204,23 @@ just deploy
 2. Pushes them to ECR (tag = current git short SHA, or `latest` if not in git).
    ECR tags are immutable (OPS-09), so re-pushing an existing tag fails — use a
    new commit SHA (or a unique `IMAGE_TAG`) for each build.
-3. Registers a new `headstart-migrate` task-definition revision pinned to that
-   tag, then runs DB migrations as a one-off ECS task, waits until the task
-   stops, and aborts the deploy unless every container exits 0 (OPS-17)
-4. Registers a new task-definition revision per long-running service
-   (`headstart-api`, `headstart-frontend`, `headstart-worker`, `headstart-beat`)
-   with the same image tag, then rolls each service onto that revision
+3. Resolves each pushed image's ECR content digest and registers task definitions
+   with `:{IMAGE_TAG}@{sha256:…}` so the roll is pinned to the exact manifest
+   this pipeline pushed (OPS-64), not only the tag string
+4. Registers a new `headstart-migrate` task-definition revision with that
+   digest pin, then runs DB migrations as a one-off ECS task, waits until the
+   task stops, and aborts the deploy unless every container exits 0 (OPS-17)
+5. Registers a new digest-pinned task-definition revision per long-running
+   service (`headstart-api`, `headstart-frontend`, `headstart-worker`,
+   `headstart-beat`), then rolls each service onto that revision
 
 The retarget step matters: if a task definition still pointed at a floating
 tag such as `latest` (which the build does not re-push), a bare
 `--force-new-deployment` would keep serving the old image. Updating the service
 with `--task-definition` (not only `--force-new-deployment`) is what makes the
-deployed image match the just-built tag (OPS-01). Prod Terraform also requires
+deployed image match the just-built tag (OPS-01). Pinning `@sha256:…` closes the
+remaining build→deploy provenance gap if a tag ever pointed at a different
+manifest than the one this run pushed (OPS-64). Prod Terraform also requires
 an immutable `image_tag` (git SHA) up front and rejects `latest` (OPS-07).
 ECR repositories themselves reject tag overwrite (`image_tag_mutability =
 "IMMUTABLE"`, OPS-09), so a compromised or accidental re-push cannot replace

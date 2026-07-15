@@ -1,9 +1,10 @@
 """Rewrite an ECS task-definition JSON so containers pin a freshly pushed image.
 
 ``scripts/deploy.sh`` describes the current family revision, pipes it through
-this helper to swap the image tag, then registers the result. That keeps env,
-secrets, and CPU/memory from Terraform while ensuring the rolled revision
-points at the SHA just pushed to ECR (OPS-01).
+this helper to swap the image (tag and preferably ECR content digest), then
+registers the result. That keeps env, secrets, and CPU/memory from Terraform
+while ensuring the rolled revision points at the exact image just pushed
+(OPS-01 tag pin; OPS-64 digest pin).
 """
 
 from __future__ import annotations
@@ -46,10 +47,29 @@ def image_repo_for_family(family: str) -> str:
         raise ValueError(f"unknown task family for image retarget: {family!r}") from exc
 
 
-def image_uri(ecr_registry: str, family: str, image_tag: str) -> str:
-    """Build ``{registry}/{repo}:{tag}`` for a known task family."""
+def normalize_image_digest(digest: str) -> str:
+    """Require a ``sha256:…`` content digest for ECS ``tag@digest`` pins."""
+    cleaned = digest.strip()
+    if not cleaned.startswith("sha256:"):
+        raise ValueError(f"image digest must start with sha256:, got {cleaned!r}")
+    if len(cleaned) <= len("sha256:"):
+        raise ValueError("image digest is empty after sha256: prefix")
+    return cleaned
+
+
+def image_uri(
+    ecr_registry: str,
+    family: str,
+    image_tag: str,
+    *,
+    digest: str | None = None,
+) -> str:
+    """Build ``{registry}/{repo}:{tag}`` or ``…:{tag}@{sha256:…}`` (OPS-64)."""
     registry = ecr_registry.rstrip("/")
-    return f"{registry}/{image_repo_for_family(family)}:{image_tag}"
+    uri = f"{registry}/{image_repo_for_family(family)}:{image_tag}"
+    if digest is None or not digest.strip():
+        return uri
+    return f"{uri}@{normalize_image_digest(digest)}"
 
 
 def retarget_task_definition(
@@ -114,6 +134,11 @@ def _build_parser() -> argparse.ArgumentParser:
         default="",
         help="Image tag (usually git SHA); used with --ecr-registry/--family.",
     )
+    retarget.add_argument(
+        "--image-digest",
+        default="",
+        help="ECR content digest (sha256:…); pins tag@digest when set with family+tag.",
+    )
     return parser
 
 
@@ -129,7 +154,17 @@ def main(argv: list[str] | None = None) -> int:
             raise SystemExit(
                 "retarget requires --image, or --ecr-registry + --family + --image-tag"
             )
-        image = image_uri(args.ecr_registry, args.family, args.image_tag)
+        try:
+            image = image_uri(
+                args.ecr_registry,
+                args.family,
+                args.image_tag,
+                digest=args.image_digest or None,
+            )
+        except ValueError as exc:
+            raise SystemExit(str(exc)) from exc
+    elif args.image_digest.strip():
+        raise SystemExit("--image-digest cannot be combined with --image")
 
     raw = sys.stdin.read()
     try:

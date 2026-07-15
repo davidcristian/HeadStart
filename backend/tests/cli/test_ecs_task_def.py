@@ -13,6 +13,7 @@ from app.cli.ecs_task_def import (
     image_repo_for_family,
     image_uri,
     main,
+    normalize_image_digest,
     retarget_task_definition,
 )
 
@@ -64,6 +65,27 @@ def test_image_uri_strips_trailing_slash() -> None:
         image_uri("123.dkr.ecr.us-east-2.amazonaws.com/", "headstart-api", "abc1234")
         == "123.dkr.ecr.us-east-2.amazonaws.com/headstart-backend:abc1234"
     )
+
+
+def test_image_uri_appends_sha256_digest() -> None:
+    """OPS-64: tag@digest pins the exact ECR manifest, not only the tag."""
+    digest = "sha256:" + ("ab" * 32)
+    assert (
+        image_uri(
+            "123.dkr.ecr.us-east-2.amazonaws.com",
+            "headstart-worker",
+            "deadbeef",
+            digest=digest,
+        )
+        == f"123.dkr.ecr.us-east-2.amazonaws.com/headstart-backend-worker:deadbeef@{digest}"
+    )
+
+
+def test_normalize_image_digest_rejects_non_sha256() -> None:
+    with pytest.raises(ValueError, match="sha256:"):
+        normalize_image_digest("md5:abc")
+    with pytest.raises(ValueError, match="empty"):
+        normalize_image_digest("sha256:")
 
 
 def test_retarget_replaces_image_and_strips_read_only_fields() -> None:
@@ -146,6 +168,68 @@ def test_main_retarget_from_describe_envelope(monkeypatch: pytest.MonkeyPatch) -
         == "123.dkr.ecr.us-east-2.amazonaws.com/headstart-backend:abc1234"
     )
     assert "revision" not in payload
+
+
+def test_main_retarget_with_image_digest(monkeypatch: pytest.MonkeyPatch) -> None:
+    digest = "sha256:" + ("cd" * 32)
+    monkeypatch.setattr("sys.stdin", StringIO(json.dumps(_sample_task_def())))
+    out = StringIO()
+    monkeypatch.setattr("sys.stdout", out)
+    assert (
+        main(
+            [
+                "retarget",
+                "--ecr-registry",
+                "123.dkr.ecr.us-east-2.amazonaws.com",
+                "--family",
+                "headstart-frontend",
+                "--image-tag",
+                "abc1234",
+                "--image-digest",
+                digest,
+            ]
+        )
+        == 0
+    )
+    payload = json.loads(out.getvalue())
+    assert (
+        payload["containerDefinitions"][0]["image"]
+        == f"123.dkr.ecr.us-east-2.amazonaws.com/headstart-frontend:abc1234@{digest}"
+    )
+
+
+def test_main_rejects_digest_with_explicit_image(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr("sys.stdin", StringIO(json.dumps(_sample_task_def())))
+    with pytest.raises(SystemExit, match="cannot be combined"):
+        main(
+            [
+                "retarget",
+                "--image",
+                "reg/headstart-backend:sha",
+                "--image-digest",
+                "sha256:abc",
+            ]
+        )
+
+
+def test_main_rejects_invalid_digest(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("sys.stdin", StringIO(json.dumps(_sample_task_def())))
+    with pytest.raises(SystemExit, match="sha256:"):
+        main(
+            [
+                "retarget",
+                "--ecr-registry",
+                "123.dkr.ecr.us-east-2.amazonaws.com",
+                "--family",
+                "headstart-api",
+                "--image-tag",
+                "abc1234",
+                "--image-digest",
+                "not-a-digest",
+            ]
+        )
 
 
 def test_main_retarget_with_explicit_image(monkeypatch: pytest.MonkeyPatch) -> None:
