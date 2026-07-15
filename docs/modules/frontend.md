@@ -196,7 +196,8 @@ past [GHSA-67mh-4wv8-2f99](https://github.com/advisories/GHSA-67mh-4wv8-2f99)
 (dev-server CORS SSRF in esbuild ≤0.24.2). Vitest / `@vitest/coverage-v8` track
 **3.2.7+** so `npm audit --audit-level=high` stays clean. CI runs
 `just audit-frontend` after `npm ci`; Dependabot watches `frontend/package-lock.json`
-weekly (`.github/dependabot.yml`). Backend pip-audit is still tracked as OPS-19.
+weekly (`.github/dependabot.yml`). Backend SCA is `just audit-backend`
+(`pip-audit` on the hashed lockfiles; OPS-19) with Dependabot on `/backend`.
 
 ## Progressive Web App (mobile)
 

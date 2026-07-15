@@ -233,7 +233,7 @@ SHA pin. `aws-first-deploy.sh` sets `TF_VAR_image_tag` from the short SHA when
 
 <a id="ops-19"></a>
 ### OPS-19 — No dependency vuln scanning (pip-audit / npm audit / Dependabot) in repo
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: certain (3/3 verifiers) · Effort: S · WS37
+⚪ **LOW** · 🔒 security · Status: ✅ done · Confidence: certain (3/3 verifiers) · Effort: S · WS37
 
 **Locations:** `.github/workflows/ci.yml:1` (`ci`).
 
@@ -244,6 +244,8 @@ SHA pin. `aws-first-deploy.sh` sets `TF_VAR_image_tag` from the short SHA when
 **Suggested fix.** Add `pip-audit` (backend) and `npm audit --audit-level=high` (frontend) as a CI job, plus a Dependabot/Renovate config for automated bump PRs.
 
 **Verification.** Confirmed 3/3 adversarial verifiers. ci.yml is now live under `.github/workflows/` but has no SCA step, there is no `dependabot.yml`/`renovate.json`, and grep for audit/pip-audit/trivy/dependabot/cve returns nothing; low severity is fair.
+
+**Update (2026-07-11).** Fixed: `just audit-backend` runs `pip-audit --disable-pip` on the three hashed lockfiles in CI; Dependabot watches `/backend` pip weekly (frontend npm audit + Dependabot already shipped with FRO-12). — [PR](https://github.com/davidcristian/HeadStart/pull/188).
 
 ---
 

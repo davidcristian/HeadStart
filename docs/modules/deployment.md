@@ -21,6 +21,12 @@ pinned in the lockfiles (and exercised by CI) — for example `celery>=5.6`,
 `redis>=6.0`, `httpx>=0.28`, `cryptography>=49.0`, `stripe>=15.0`. Do not leave
 floors on older majors the suite never runs against.
 
+**Dependency CVE scanning (OPS-19).** CI runs `just audit-backend` after the
+dev install (`pip-audit --disable-pip` against the three hashed lockfiles).
+`pip-audit` is a `[dev]` extra. Dependabot watches `/backend` weekly alongside
+the frontend npm ecosystem. Locally: `just audit-backend` (needs
+`./scripts/install-backend.sh --dev`).
+
 ## AWS topology
 
 ```mermaid
@@ -234,13 +240,14 @@ were ever mutable again.
 
 All workflows live in `.github/workflows/`. The CI quality gate (`ci.yml`) runs
 on push/PR: backend `just lint` (ruff + black + LOC), `just typecheck`,
-`just test`, and `just test --scripts` (shell syntax); frontend `just lint`
+`just test`, `just test --scripts` (shell syntax), and `just audit-backend`
+(`pip-audit` on the hashed lockfiles, OPS-19); frontend `just lint`
 (eslint + prettier `--check`), `just typecheck`, `just test`, build, and
 `just audit-frontend` (`npm audit --audit-level=high`, FRO-12). Dependabot
-opens weekly PRs for `frontend/package-lock.json` bumps
+opens weekly PRs for `frontend/package-lock.json` and backend pip
 (`.github/dependabot.yml`). Local pre-commit is a **fast subset** of that gate
 (whitespace/yaml, ruff/black, eslint, prettier, LOC, shell validation) — types,
-tests, coverage, and npm audit stay in `just check` / CI. The `frontend-lint`
+tests, coverage, and dependency audits stay in `just check` / CI. The `frontend-lint`
 hook runs `npx eslint . --max-warnings=0` (same as `npm run lint`) so ESLint
 always receives an explicit path — without one, ESLint 8 scans zero files and
 exits 0 (OPS-03). LOC, shell validation, and prettier are enforced in both

@@ -38,6 +38,8 @@ dev = [
     "black>=24.8",
     "mypy>=1.11",
     "pre-commit>=3.7",
+    # SCA gate for hashed lockfiles (OPS-19); CI runs `just audit-backend`.
+    "pip-audit>=2.7",
 ]
 # Heavy, opt-in: requires `playwright install` to download browsers.
 playwright = ["playwright>=1.45"]

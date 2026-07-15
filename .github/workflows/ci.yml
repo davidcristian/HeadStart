@@ -26,6 +26,9 @@ jobs:
       - uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4
       - name: Install
         run: ./scripts/install-backend.sh --dev
+      # OPS-19: fail on known CVEs in hashed backend lockfiles (pip-audit).
+      - name: Audit (pip-audit on lockfiles)
+        run: just audit-backend
       # CI runs the same scripts as local dev, through the same just recipes,
       # so the gates cannot drift apart (LOC rides with lint; shell with test).
       - name: Lint (ruff + black + LOC gate)

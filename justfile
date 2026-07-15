@@ -64,6 +64,10 @@ typecheck *args:
 audit-frontend:
     ./scripts/audit-frontend.sh
 
+# Backend pip-audit on hashed lockfiles; also runs in CI after install (OPS-19)
+audit-backend:
+    ./scripts/audit-backend.sh
+
 # Run the full quality gate (lint + types + tests)
 check: lint typecheck test
 
