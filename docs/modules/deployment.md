@@ -92,6 +92,24 @@ with Chromium pre-installed. Default Fargate sizing is **1024 CPU / 2048 MiB**
 (vs **256 / 512** for api, beat, and frontend). Override via stack module vars
 `worker_cpu` and `worker_memory` in `environments/<env>/main.tf`.
 
+## Distinct VPC CIDRs (OPS-30)
+
+Beta and prod must not share the same private address space. Each environment's
+`main.tf` sets `vpc_cidr` / subnet CIDRs explicitly:
+
+| Environment | VPC CIDR | Public subnets | Private subnets |
+| ----------- | -------- | -------------- | --------------- |
+| beta | `10.20.0.0/16` | `10.20.0.0/24`, `10.20.1.0/24` | `10.20.10.0/24`, `10.20.11.0/24` |
+| prod | `10.30.0.0/16` | `10.30.0.0/24`, `10.30.1.0/24` | `10.30.10.0/24`, `10.30.11.0/24` |
+
+Stack module defaults stay on the beta range for backwards-compatible local
+module calls; env wrappers own the real pin. `TRUSTED_PROXY_CIDRS` follows
+`var.vpc_cidr`, so ALB-trusted XFF stays aligned with each env's VPC.
+
+**Existing prod stacks** that already applied the old shared `10.20.0.0/16`
+will see a VPC replacement on the next apply — plan carefully (or leave the
+live CIDR and only use `10.30` for greenfield prod).
+
 ## Prod resilience knobs (OPS-05 / OPS-08 / OPS-10)
 
 `environments/prod/main.tf` raises durability beyond the stack defaults that

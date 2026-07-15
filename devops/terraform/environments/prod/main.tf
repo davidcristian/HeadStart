@@ -20,6 +20,11 @@ module "stack" {
   smtp_from              = var.smtp_from
   smtp_use_tls           = var.smtp_use_tls
 
+  # Distinct from beta's 10.20.0.0/16 so VPC peering / shared routing stays unambiguous (OPS-30).
+  vpc_cidr             = "10.30.0.0/16"
+  public_subnet_cidrs  = ["10.30.0.0/24", "10.30.1.0/24"]
+  private_subnet_cidrs = ["10.30.10.0/24", "10.30.11.0/24"]
+
   # Prod: HA database, longer backups/logs, deletion protection, Redis failover.
   db_instance_class        = "db.t4g.small"
   db_multi_az              = true

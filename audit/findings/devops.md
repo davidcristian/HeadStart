@@ -379,7 +379,9 @@ SHA pin. `aws-first-deploy.sh` sets `TF_VAR_image_tag` from the short SHA when
 
 <a id="ops-30"></a>
 ### OPS-30 — dev and prod share identical VPC CIDR 10.20.0.0/16 (never overridden)
-⚪ **LOW** · 🐞 bug · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: S · WS36
+⚪ **LOW** · 🐞 bug · Status: ✅ done · Confidence: high (3/3 verifiers) · Effort: S · WS36
+
+**Fixed in** [PR #184](https://github.com/davidcristian/HeadStart/pull/184): beta pins `10.20.0.0/16`, prod pins `10.30.0.0/16` with matching subnet CIDRs.
 
 **Locations:** `devops/terraform/environments/prod/main.tf:1` (`module.stack (prod)`); plus `devops/terraform/environments/beta/main.tf:1`, `devops/terraform/modules/stack/variables.tf:8`, `devops/terraform/modules/stack/variables.tf:15`.
 

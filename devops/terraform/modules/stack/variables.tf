@@ -6,19 +6,22 @@ variable "environment" {
 variable "region" { type = string }
 
 variable "vpc_cidr" {
-  type    = string
-  default = "10.20.0.0/16"
+  type        = string
+  default     = "10.20.0.0/16"
+  description = "VPC CIDR. Environments must not share the same range (beta 10.20/16, prod 10.30/16 — OPS-30)."
 }
 variable "azs" {
   type = list(string)
 }
 variable "public_subnet_cidrs" {
-  type    = list(string)
-  default = ["10.20.0.0/24", "10.20.1.0/24"]
+  type        = list(string)
+  default     = ["10.20.0.0/24", "10.20.1.0/24"]
+  description = "Public subnet CIDRs (must sit inside vpc_cidr)."
 }
 variable "private_subnet_cidrs" {
-  type    = list(string)
-  default = ["10.20.10.0/24", "10.20.11.0/24"]
+  type        = list(string)
+  default     = ["10.20.10.0/24", "10.20.11.0/24"]
+  description = "Private subnet CIDRs (must sit inside vpc_cidr)."
 }
 
 variable "image_tag" {

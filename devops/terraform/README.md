@@ -12,7 +12,8 @@ modules/
   network/   security/   ecr/   secrets/   iam/   alb/   rds/   redis/   ecs/
   stack/     # composes all of the above into one environment
 environments/
-  dev/   prod/   # thin wrappers: provider + remote state + module "stack"
+  beta/   prod/   # thin wrappers: provider + remote state + module "stack"
+                  # distinct VPC CIDRs (beta 10.20/16, prod 10.30/16 — OPS-30)
 ```
 
 ## One-time bootstrap (remote state)
@@ -82,6 +83,9 @@ just deploy
   `beta` stays minimal/cheap (7-day backups, 30-day logs, single-primary Redis
   with encryption/AUTH, no Multi-AZ failover). See
   [docs/modules/deployment.md](../../docs/modules/deployment.md#prod-resilience-knobs-ops-05--ops-08--ops-10).
+- Environments pin distinct VPC CIDRs (`beta` `10.20.0.0/16`, `prod`
+  `10.30.0.0/16`) so peering / shared routing cannot collide (OPS-30). See
+  [deployment.md](../../docs/modules/deployment.md#distinct-vpc-cidrs-ops-30).
 - Every environment's ALB drops invalid headers, ships access logs to a private
   S3 bucket, and attaches a regional WAFv2 ACL (AWS Managed Common + Known Bad
   Inputs). See [deployment.md](../../docs/modules/deployment.md#alb-hardening-ops-08).
