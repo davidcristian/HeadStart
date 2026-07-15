@@ -25,6 +25,7 @@ from typing import Any
 from urllib.parse import parse_qs, urlencode, urlparse
 
 from app.scrapers.base import Scraper, register_scraper
+from app.scrapers.numbers import coerce_count
 from app.scrapers.types import JobPosting, ScrapeContext
 
 _ORIGIN = "https://www.amazon.jobs"
@@ -192,7 +193,7 @@ class AmazonJobsScraper(Scraper):
         if not isinstance(jobs, list):
             raise ValueError("amazon_jobs API returned unexpected jobs field (expected array)")
         raw_hits = data.get("hits", len(jobs))
-        count = int(raw_hits) if isinstance(raw_hits, (int, float)) else len(jobs)
+        count = coerce_count(raw_hits, len(jobs))
         return [job for job in jobs if isinstance(job, dict)], count
 
     @staticmethod

@@ -47,7 +47,7 @@ This area covers the pluggable scraper adapters under `backend/app/scrapers/` �
 
 <a id="scr-05"></a>
 ### SCR-05 — int() of untrusted total crashes on JSON Infinity/NaN in 4 adapters
-⚪ **LOW** · 🐞 bug · Status: ☐ open · Confidence: high (5/5 verifiers) · Effort: S · WS34
+⚪ **LOW** · 🐞 bug · Status: ✅ done · Confidence: high (5/5 verifiers) · Effort: S · WS34
 
 **Locations:** `backend/app/scrapers/adapters/apple_careers_parse.py:52` (`parse_search_html`); plus:
 - `backend/app/scrapers/adapters/workday.py:67`

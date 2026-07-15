@@ -76,6 +76,24 @@ def test_parse_total_fallback_and_skips_non_dict() -> None:
     assert [p.external_id for p in postings] == ["1"]
 
 
+@pytest.mark.parametrize("total_records", [float("inf"), float("nan"), float("-inf")])
+def test_parse_nonfinite_total_records_fallback(total_records: float) -> None:
+    """JSON Infinity/NaN totalRecords must not raise on int() (SCR-05)."""
+    data = {
+        "loaderData": {
+            "search": {
+                "searchResults": [
+                    {"reqId": "1", "postingTitle": "A", "transformedPostingTitle": "a"},
+                ],
+                "totalRecords": total_records,
+            }
+        }
+    }
+    postings, total = parse_search_html(_hydration_html(data), company="Apple", locale="en-us")
+    assert total == 1
+    assert [p.external_id for p in postings] == ["1"]
+
+
 def test_to_posting_requires_id() -> None:
     """A job with no usable id raises (line 62)."""
     with pytest.raises(ValueError, match="missing id"):

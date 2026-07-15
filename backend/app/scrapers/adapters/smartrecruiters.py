@@ -13,12 +13,12 @@ Config / context:
 
 from __future__ import annotations
 
-import math
 from typing import Any
 from urllib.parse import urlencode, urlparse
 
 from app.scrapers.base import Scraper, register_scraper
 from app.scrapers.dates import parse_iso8601
+from app.scrapers.numbers import coerce_count
 from app.scrapers.types import JobPosting, ScrapeContext
 
 SMARTRECRUITERS_API = "https://api.smartrecruiters.com/v1/companies/{company_id}/postings"
@@ -50,7 +50,7 @@ class SmartRecruitersScraper(Scraper):
                     "smartrecruiters API returned unexpected content field (expected a JSON array)"
                 )
             if total is None:
-                total = self._coerce_count(data.get("totalFound"), len(content))
+                total = coerce_count(data.get("totalFound"), len(content))
             if not content:
                 break
             for job in content:
@@ -111,21 +111,6 @@ class SmartRecruitersScraper(Scraper):
         if size <= 0:
             raise ValueError("page_size must be a positive integer")
         return min(size, _MAX_PAGE_SIZE)
-
-    @staticmethod
-    def _coerce_count(raw: Any, default: int) -> int:
-        """Coerce an untrusted total into a non-negative int.
-
-        JSON ``Infinity`` / ``NaN`` (accepted by ``json.loads``) would raise on
-        ``int()``; a bad total falls back to the page size so the scrape stops
-        cleanly instead of crashing or looping forever.
-        """
-        if isinstance(raw, bool) or not isinstance(raw, int | float):
-            return default
-        if isinstance(raw, float) and not math.isfinite(raw):
-            return default
-        value = int(raw)
-        return value if value >= 0 else default
 
     @staticmethod
     def _humanize_slug(slug: str) -> str:

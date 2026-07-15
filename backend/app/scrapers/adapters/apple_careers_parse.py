@@ -7,6 +7,7 @@ import re
 from datetime import UTC, datetime
 from typing import Any
 
+from app.scrapers.numbers import coerce_count
 from app.scrapers.types import JobPosting
 
 _ORIGIN = "https://jobs.apple.com"
@@ -49,7 +50,7 @@ def parse_search_html(
     if not isinstance(results, list):
         raise ValueError("apple_careers searchResults must be an array")
     raw_total = search.get("totalRecords", len(results))
-    total = int(raw_total) if isinstance(raw_total, (int, float)) else len(results)
+    total = coerce_count(raw_total, len(results))
     postings = [
         _to_posting(job, company=company, locale=locale) for job in results if isinstance(job, dict)
     ]

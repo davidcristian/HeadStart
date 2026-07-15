@@ -174,6 +174,21 @@ def test_workday_stops_on_empty_job_postings() -> None:
     assert scraper.fetch(ScrapeContext(config=_CONFIG)) == []
 
 
+@pytest.mark.parametrize("total", ["Infinity", "NaN", "-Infinity"])
+def test_workday_nonfinite_total_fallback(total: str) -> None:
+    """JSON Infinity/NaN total must not raise on int() (SCR-05)."""
+    body = (
+        '{"total": ' + total + ', "jobPostings": [{"title": "Eng", "externalPath": "/job/a", '
+        '"bulletFields": ["REQ-1"]}]}'
+    )
+    scraper = _make(
+        lambda r: httpx.Response(200, text=body, headers={"content-type": "application/json"})
+    )
+    postings = scraper.fetch(ScrapeContext(config=_CONFIG))
+    assert len(postings) == 1
+    assert postings[0].title == "Eng"
+
+
 def test_workday_search_text_from_filters_list() -> None:
     seen: dict[str, str] = {}
 

@@ -38,6 +38,14 @@ def test_amazon_jobs_parse_response_hits_fallback_to_len() -> None:
     assert jobs == [{"id": "1"}]
 
 
+@pytest.mark.parametrize("hits", [float("inf"), float("nan"), float("-inf")])
+def test_amazon_jobs_parse_response_nonfinite_hits_fallback(hits: float) -> None:
+    """JSON Infinity/NaN hits must not raise OverflowError/ValueError (SCR-05)."""
+    jobs, count = AmazonJobsScraper._parse_response({"jobs": [{"id": "1"}], "hits": hits})
+    assert count == 1
+    assert jobs == [{"id": "1"}]
+
+
 def test_amazon_jobs_to_posting_requires_id() -> None:
     """A job without an id raises (line 202)."""
     with pytest.raises(ValueError, match="missing id"):

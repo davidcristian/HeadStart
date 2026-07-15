@@ -23,6 +23,7 @@ from urllib.parse import parse_qs, urlencode, urlparse
 
 from app.scrapers.base import Scraper, register_scraper
 from app.scrapers.dates import parse_epoch_seconds
+from app.scrapers.numbers import coerce_count
 from app.scrapers.types import JobPosting, ScrapeContext
 
 _ORIGIN = "https://apply.careers.microsoft.com"
@@ -166,7 +167,7 @@ class MicrosoftCareersScraper(Scraper):
                 "microsoft_careers API returned unexpected positions field (expected array)"
             )
         raw_count = payload.get("count", len(positions))
-        count = int(raw_count) if isinstance(raw_count, (int, float)) else len(positions)
+        count = coerce_count(raw_count, len(positions))
         jobs = [job for job in positions if isinstance(job, dict)]
         return jobs, count
 

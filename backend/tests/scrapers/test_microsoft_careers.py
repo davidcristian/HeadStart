@@ -286,6 +286,20 @@ def test_microsoft_careers_count_falls_back_to_len() -> None:
     assert len(postings) == 1
 
 
+@pytest.mark.parametrize("count", ["Infinity", "NaN", "-Infinity"])
+def test_microsoft_careers_nonfinite_count_fallback(count: str) -> None:
+    """JSON Infinity/NaN count must not raise on int() (SCR-05)."""
+    body = '{"data": {"positions": [{"id": 1, "name": "A"}], "count": ' + count + "}}"
+    scraper = get_scraper(
+        "microsoft_careers",
+        http=make_http_client(
+            lambda r: httpx.Response(200, text=body, headers={"content-type": "application/json"})
+        ),
+    )
+    postings = scraper.fetch(ScrapeContext(config={"company": "Microsoft", "page_size": 5}))
+    assert len(postings) == 1
+
+
 def test_microsoft_careers_location_and_url_fallbacks() -> None:
     payload = {
         "data": {

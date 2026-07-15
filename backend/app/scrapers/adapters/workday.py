@@ -22,6 +22,7 @@ from typing import Any
 from urllib.parse import urlparse
 
 from app.scrapers.base import Scraper, register_scraper
+from app.scrapers.numbers import coerce_count
 from app.scrapers.types import JobPosting, ScrapeContext
 
 _LOCALE_RE = re.compile(r"^[a-z]{2}-[A-Z]{2}$")
@@ -64,7 +65,7 @@ class WorkdayScraper(Scraper):
                 )
             if total is None:
                 raw_total = data.get("total", len(jobs))
-                total = int(raw_total) if isinstance(raw_total, int | float) else len(jobs)
+                total = coerce_count(raw_total, len(jobs))
             if not jobs:
                 break
             postings.extend(self._to_posting(job, target) for job in jobs if isinstance(job, dict))

@@ -89,7 +89,9 @@ the run. Parse defensively — a malformed date becomes `None` (use
 `parse_epoch_seconds` / `parse_epoch_millis` for Unix epochs — both catch
 `OverflowError`/`OSError`/`ValueError` from `fromtimestamp`), a non-list/non-dict
 payload node is skipped, and a non-finite or out-of-range count/index falls back
-to a safe default rather than raising. Aborting is reserved for a payload that
+to a safe default rather than raising (use `app.scrapers.numbers.coerce_count`
+for `total` / `hits` / `count` / `totalFound` / `totalRecords` — bare `int()`
+raises on JSON `Infinity`/`NaN`). Aborting is reserved for a payload that
 isn't recognizable at all (e.g. the expected top-level array/object is missing).
 
 ### HTML parsing (selectolax)
