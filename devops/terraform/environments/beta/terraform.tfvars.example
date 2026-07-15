@@ -8,6 +8,11 @@
 region    = "us-east-2"
 image_tag = "latest"
 
+# Required: pin the AWS account this env may target (OPS-31). Terraform rejects
+# non-12-digit values; wrong ambient credentials then fail at provider init:
+#   export TF_VAR_aws_account_id="$(aws sts get-caller-identity --query Account --output text)"
+# aws_account_id = "123456789012"
+
 # Secrets (prefer environment variables over this file).
 db_password            = "change-me-strong-password"
 jwt_secret             = "change-me-long-random-jwt-secret"

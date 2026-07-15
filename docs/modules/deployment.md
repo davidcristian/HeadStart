@@ -110,6 +110,21 @@ module calls; env wrappers own the real pin. `TRUSTED_PROXY_CIDRS` follows
 will see a VPC replacement on the next apply — plan carefully (or leave the
 live CIDR and only use `10.30` for greenfield prod).
 
+## AWS account pin (OPS-31)
+
+Beta and prod providers set `allowed_account_ids = [var.aws_account_id]`.
+`aws_account_id` is **required** (no default) and must be a 12-digit AWS
+account ID. A plan/apply with ambient credentials for a different account
+fails at provider initialization instead of provisioning into the wrong
+account. Prefer:
+
+```bash
+export TF_VAR_aws_account_id="$(aws sts get-caller-identity --query Account --output text)"
+```
+
+`scripts/aws-first-deploy.sh` resolves the caller account when unset and
+persists it to `.aws-first-deploy-secrets.env` so later runs keep the pin.
+
 ## Prod resilience knobs (OPS-05 / OPS-08 / OPS-10)
 
 `environments/prod/main.tf` raises durability beyond the stack defaults that

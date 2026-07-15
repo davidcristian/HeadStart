@@ -140,6 +140,10 @@ export TF_VAR_db_password="$(openssl rand -base64 24)"
 export TF_VAR_jwt_secret="$(openssl rand -hex 32)"
 export TF_VAR_credentials_secret_key="$(openssl rand -hex 32)"
 
+# Required: pin the AWS account this env may target (OPS-31). Wrong ambient
+# credentials then fail at provider init instead of applying into another account.
+export TF_VAR_aws_account_id="$(aws sts get-caller-identity --query Account --output text)"
+
 # Required: unguessable default ntfy topic (ntfy.sh topics are public by name).
 # Terraform rejects empty / change-me placeholders (OPS-16).
 export TF_VAR_ntfy_default_topic="jobs-$(openssl rand -hex 8)"
@@ -288,7 +292,9 @@ When ready for production:
    state bucket (OPS-29 — do not commit the bucket into `backend.tf`).
 2. `cd environments/prod` and run
    `terraform init -backend-config=backend.hcl && terraform apply` with the
-   same `TF_VAR_*` secrets pattern. Prod also requires an immutable image pin
+   same `TF_VAR_*` secrets pattern. Set `TF_VAR_aws_account_id` to the 12-digit
+   production account (OPS-31 — provider `allowed_account_ids` rejects a wrong
+   ambient credential). Prod also requires an immutable image pin
    (no `"latest"` default; Terraform rejects `latest` — OPS-07):
    `export TF_VAR_image_tag="$(git rev-parse --short HEAD)"`.
 3. Set `TF_VAR_cors_origins` to your real domain(s) — see

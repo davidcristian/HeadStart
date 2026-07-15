@@ -3,6 +3,18 @@ variable "region" {
   default = "us-east-2"
 }
 
+# Required: pin the AWS account this env may target so a wrong ambient
+# credential cannot apply into another account (OPS-31).
+variable "aws_account_id" {
+  type        = string
+  description = "12-digit AWS account ID allowed for this environment's provider."
+
+  validation {
+    condition     = can(regex("^[0-9]{12}$", var.aws_account_id))
+    error_message = "aws_account_id must be a 12-digit AWS account ID."
+  }
+}
+
 variable "azs" {
   type    = list(string)
   default = ["us-east-2a", "us-east-2b"]

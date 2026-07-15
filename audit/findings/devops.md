@@ -397,7 +397,7 @@ SHA pin. `aws-first-deploy.sh` sets `TF_VAR_image_tag` from the short SHA when
 
 <a id="ops-31"></a>
 ### OPS-31 — Prod provider lacks allowed_account_ids guard against wrong-account apply
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: XS · WS36
+⚪ **LOW** · 🔒 security · Status: ✅ done · Confidence: high (3/3 verifiers) · Effort: XS · WS36
 
 **Locations:** `devops/terraform/environments/prod/providers.tf:1` (`provider aws`); plus `devops/terraform/environments/beta/providers.tf:1`.
 

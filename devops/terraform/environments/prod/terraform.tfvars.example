@@ -4,6 +4,11 @@
 #   export TF_VAR_credentials_secret_key=...
 
 region = "us-east-2"
+# Required: pin the AWS account this env may target (OPS-31). Terraform rejects
+# non-12-digit values; wrong ambient credentials then fail at provider init:
+#   export TF_VAR_aws_account_id="$(aws sts get-caller-identity --query Account --output text)"
+# aws_account_id = "123456789012"
+
 # Required: immutable pin (git SHA). Terraform rejects empty / "latest" (OPS-07).
 # Prefer TF_VAR_image_tag from the shell so the pin matches the just-built image:
 #   export TF_VAR_image_tag="$(git rev-parse --short HEAD)"
