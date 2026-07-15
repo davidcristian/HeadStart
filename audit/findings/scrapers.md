@@ -64,7 +64,7 @@ This area covers the pluggable scraper adapters under `backend/app/scrapers/` �
 
 <a id="scr-06"></a>
 ### SCR-06 — Shopify flight-stream resolver recurses with no depth bound (RecursionError DoS)
-⚪ **LOW** · 🐞 bug · Status: ☐ open · Confidence: medium (5/5 verifiers) · Effort: S · WS34
+⚪ **LOW** · 🐞 bug · Status: ✅ done · Confidence: medium (5/5 verifiers) · Effort: S · WS34
 
 **Locations:** `backend/app/scrapers/adapters/shopify_careers_parse.py:61` (`_resolve_node`).
 

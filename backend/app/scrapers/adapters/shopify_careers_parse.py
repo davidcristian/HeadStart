@@ -15,6 +15,9 @@ _STREAM_RE = re.compile(
     r'"(?P<payload>(?:\\.|[^"\\])*)"\)',
 )
 _CAREERS_ROUTE = "($locale)/careers"
+# Cap flight-graph recursion so a long non-cyclic reference chain cannot
+# exhaust Python's recursion limit (SCR-06). Real careers payloads nest shallowly.
+_MAX_RESOLVE_DEPTH = 64
 
 
 def parse_careers_html(html: str, *, company: str) -> list[JobPosting]:
@@ -58,20 +61,32 @@ def _decode_stream(html: str) -> list[Any]:
     return data
 
 
-def _resolve_node(index: int, stream: list[Any], stack: set[int] | None = None) -> Any:
+def _resolve_node(
+    index: int,
+    stream: list[Any],
+    stack: set[int] | None = None,
+    *,
+    depth: int = 0,
+) -> Any:
     """Resolve a React Router flight reference graph."""
     if stack is None:
         stack = set()
-    if index < 0:
+    if index < 0 or depth > _MAX_RESOLVE_DEPTH:
         return None
     if index in stack:
         return None
     stack = set(stack)
     stack.add(index)
     value = stream[index]
+    child_depth = depth + 1
     if isinstance(value, list):
         return [
-            _resolve_node(item, stream, stack) if isinstance(item, int) else item for item in value
+            (
+                _resolve_node(item, stream, stack, depth=child_depth)
+                if isinstance(item, int)
+                else item
+            )
+            for item in value
         ]
     if isinstance(value, dict):
         if value and all(str(key).startswith("_") for key in value):
@@ -84,13 +99,17 @@ def _resolve_node(index: int, stream: list[Any], stack: set[int] | None = None) 
                 else:
                     key = stream[key_index] if 0 <= key_index < len(stream) else ref_key
                 resolved[str(key)] = (
-                    _resolve_node(ref_index, stream, stack)
+                    _resolve_node(ref_index, stream, stack, depth=child_depth)
                     if isinstance(ref_index, int)
                     else ref_index
                 )
             return resolved
         return {
-            key: _resolve_node(item, stream, stack) if isinstance(item, int) else item
+            key: (
+                _resolve_node(item, stream, stack, depth=child_depth)
+                if isinstance(item, int)
+                else item
+            )
             for key, item in value.items()
         }
     return value

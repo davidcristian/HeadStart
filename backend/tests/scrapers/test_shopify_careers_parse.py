@@ -34,6 +34,42 @@ def test_resolve_node_resolves_list_of_references() -> None:
     assert _resolve_node(0, [[1, "literal"], "resolved"]) == ["resolved", "literal"]
 
 
+def test_resolve_node_caps_depth_on_long_noncyclic_chain(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A deep non-cyclic ref chain degrades to None instead of RecursionError (SCR-06)."""
+    monkeypatch.setattr(
+        "app.scrapers.adapters.shopify_careers_parse._MAX_RESOLVE_DEPTH",
+        3,
+    )
+    # 0→1→2→3→4→"leaf": depth 0..3 resolve; the hop to 4 is past the cap.
+    stream: list = [[1], [2], [3], [4], "leaf"]
+    assert _resolve_node(0, stream) == [[[[None]]]]
+
+
+def test_resolve_node_caps_depth_on_dict_reference_chain(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Dict-value reference chains honor the same max-depth bound (SCR-06)."""
+    monkeypatch.setattr(
+        "app.scrapers.adapters.shopify_careers_parse._MAX_RESOLVE_DEPTH",
+        2,
+    )
+    stream: list = [{"next": 1}, {"next": 2}, {"next": 3}, "leaf"]
+    assert _resolve_node(0, stream) == {"next": {"next": {"next": None}}}
+
+
+def test_resolve_node_rejects_entry_past_max_depth(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Callers that already exceed the depth cap get None without indexing."""
+    monkeypatch.setattr(
+        "app.scrapers.adapters.shopify_careers_parse._MAX_RESOLVE_DEPTH",
+        1,
+    )
+    assert _resolve_node(0, ["unused"], depth=2) is None
+
+
 def _make_shopify_html(stream: list) -> str:
     payload = json.dumps(stream, separators=(",", ":"))
     escaped = payload.replace("\\", "\\\\").replace('"', '\\"')

@@ -91,8 +91,11 @@ the run. Parse defensively — a malformed date becomes `None` (use
 payload node is skipped, and a non-finite or out-of-range count/index falls back
 to a safe default rather than raising (use `app.scrapers.numbers.coerce_count`
 for `total` / `hits` / `count` / `totalFound` / `totalRecords` — bare `int()`
-raises on JSON `Infinity`/`NaN`). Aborting is reserved for a payload that
-isn't recognizable at all (e.g. the expected top-level array/object is missing).
+raises on JSON `Infinity`/`NaN`). Shopify Careers' React Router flight-stream
+resolver (`_resolve_node`) also caps reference-graph depth (default 64) so a long
+non-cyclic chain cannot raise `RecursionError`. Aborting is reserved for a
+payload that isn't recognizable at all (e.g. the expected top-level
+array/object is missing).
 
 ### HTML parsing (selectolax)
 
