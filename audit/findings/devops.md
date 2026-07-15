@@ -665,7 +665,7 @@ SHA pin. `aws-first-deploy.sh` sets `TF_VAR_image_tag` from the short SHA when
 
 <a id="ops-62"></a>
 ### OPS-62 — aws-deploy-env.sh emits terraform/aws outputs into eval'd exports without safe quoting
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: low (3/3 verifiers) · Effort: S · WS37
+⚪ **LOW** · 🔒 security · Status: ✅ done · Confidence: low (3/3 verifiers) · Effort: S · WS37
 
 **Locations:** `scripts/aws-deploy-env.sh:23` (`heredoc exports`); plus `scripts/aws-first-deploy.sh:194`.
 
@@ -674,6 +674,8 @@ SHA pin. `aws-first-deploy.sh` sets `TF_VAR_image_tag` from the short SHA when
 **Failure scenario.** If a terraform output (e.g. `app_url`/domain) ever contains a `'`, the eval'd string breaks, mis-setting env or running an unintended fragment. Low, because the outputs are IaC/operator-controlled.
 
 **Suggested fix.** Avoid `eval`: write exports to a file and `source` it, or `printf %q` the values before emitting.
+
+**Fix.** `aws-deploy-env.sh` emits each export with `printf %q` (no single-quoted heredoc). `eval "$(just aws-deploy-env)"` / `aws-first-deploy` keep working; a terraform/aws value containing `'` round-trips. Docs note the quoting. — [PR](https://github.com/davidcristian/HeadStart/pull/204)
 
 **Verification.** Confirmed 3/3 adversarial verifiers. `export X='${VAL}'` heredoc is eval'd at aws-first-deploy.sh:194; a single quote breaks quoting, but values are IaC/operator-controlled (numeric account, fixed region, derived names), so exploitability is minimal.
 

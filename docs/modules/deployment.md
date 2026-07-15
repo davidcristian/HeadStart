@@ -204,7 +204,10 @@ see OPS-14 above) and scrape with Prometheus or the CloudWatch agent.
 
 `just deploy` (→ `scripts/deploy.sh`). Load deploy env vars with
 `eval "$(just aws-deploy-env)"` (reads Terraform outputs for `ECR_REGISTRY`,
-`ECS_CLUSTER`, `APP_URL`, etc.).
+`ECS_CLUSTER`, `APP_URL`, etc.). `aws-deploy-env.sh` emits each value with
+`printf %q` so a terraform/aws output containing a single quote or other
+shell metacharacters cannot break the `eval`'d string (OPS-62; previously a
+single-quoted heredoc).
 
 **First-time deploy:** `just aws-first-deploy PREFIX=yourname` chains state
 bootstrap, `terraform apply`, and `just deploy` — see

@@ -4,6 +4,9 @@
 # Usage:
 #   eval "$(./scripts/aws-deploy-env.sh beta)"
 #   just deploy
+#
+# Values are emitted with printf %q so a terraform/aws output containing a
+# single quote (or other metacharacters) cannot break the eval'd string (OPS-62).
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 ENVIRONMENT="${1:-beta}"
@@ -20,10 +23,8 @@ ACCOUNT="$(aws sts get-caller-identity --query Account --output text)"
 ECS_CLUSTER="$(terraform -chdir="${TF_DIR}" output -raw ecs_cluster_name)"
 APP_URL="$(terraform -chdir="${TF_DIR}" output -raw app_url 2>/dev/null || echo "http://$(terraform -chdir="${TF_DIR}" output -raw alb_dns_name)")"
 
-cat <<EOF
-export AWS_REGION='${REGION}'
-export ENVIRONMENT='${ENVIRONMENT}'
-export ECR_REGISTRY='${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com'
-export ECS_CLUSTER='${ECS_CLUSTER}'
-export APP_URL='${APP_URL}'
-EOF
+printf "export AWS_REGION=%q\n" "${REGION}"
+printf "export ENVIRONMENT=%q\n" "${ENVIRONMENT}"
+printf "export ECR_REGISTRY=%q\n" "${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com"
+printf "export ECS_CLUSTER=%q\n" "${ECS_CLUSTER}"
+printf "export APP_URL=%q\n" "${APP_URL}"

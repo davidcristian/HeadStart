@@ -184,8 +184,10 @@ eval "$(just aws-deploy-env)"
 just deploy
 ```
 
-`just aws-deploy-env` reads Terraform outputs and prints `AWS_REGION`, `ECR_REGISTRY`,
-`ECS_CLUSTER`, and `ENVIRONMENT`. For production use `eval "$(just aws-deploy-env ENVIRONMENT=prod)"`.
+`just aws-deploy-env` reads Terraform outputs and prints shell-safe
+`export` lines (`printf %q`, OPS-62) for `AWS_REGION`, `ECR_REGISTRY`,
+`ECS_CLUSTER`, `APP_URL`, and `ENVIRONMENT`. For production use
+`eval "$(just aws-deploy-env ENVIRONMENT=prod)"`.
 
 Or set the variables manually:
 
