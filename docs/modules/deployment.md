@@ -55,8 +55,11 @@ devops/terraform/
     └── prod/
 ```
 
-State is remote: S3 bucket + DynamoDB lock table (configured per environment in
-`backend.tf`). Secrets are stored in Secrets Manager / SSM and injected into ECS
+State is remote: S3 bucket + DynamoDB lock table. Each environment's
+`backend.tf` is a **partial** config (state `key`, region, lock table,
+encryption); the bucket is supplied at `terraform init` via
+`-backend-config` / `backend.hcl` so a real bucket name is never committed
+(OPS-29). Secrets are stored in Secrets Manager / SSM and injected into ECS
 task definitions — never in Terraform variables committed to git.
 
 ## HTTPS (optional)
@@ -210,8 +213,10 @@ See **[deploying-to-aws.md](../deploying-to-aws.md)** for the full walkthrough
 
 Summary:
 
-1. Bootstrap S3 state + DynamoDB lock (`environments/<env>/backend.tf`).
-2. `terraform init && terraform apply` in `environments/beta` (or `prod`).
+1. Bootstrap S3 state + DynamoDB lock, then
+   `terraform init -backend-config=…` (bucket not in committed `backend.tf`;
+   OPS-29).
+2. `terraform apply` in `environments/beta` (or `prod`).
 3. `just deploy` with `ECR_REGISTRY` and `ECS_CLUSTER` set.
 4. Optional: activate the deploy/terraform workflows by setting the `AWS_ROLE_ARN`
    repo variable and the AWS/GitHub secrets (the workflow files are already in place).

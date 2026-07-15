@@ -4,8 +4,9 @@
 # Usage:
 #   ./scripts/terraform-bootstrap-state.sh YOURNAME us-east-2
 #
-# Then replace CHANGEME in devops/terraform/environments/*/backend.tf with
-# YOURNAME-headstart-tfstate.
+# Then pass the bucket at init time (do not commit it into backend.tf — OPS-29):
+#   terraform init -backend-config="bucket=YOURNAME-headstart-tfstate"
+# or copy environments/<env>/backend.hcl.example → backend.hcl and edit the bucket.
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 PREFIX="${1:-}"
@@ -54,7 +55,11 @@ fi
 ok "Remote state bootstrap complete."
 echo
 echo "Next steps:"
-echo "  1. Set bucket name in devops/terraform/environments/beta/backend.tf:"
-echo "       bucket = \"${BUCKET}\""
-echo "  2. Repeat for environments/prod/backend.tf when you add production."
-echo "  3. cd devops/terraform/environments/beta && terraform init && terraform apply"
+echo "  1. Pass the bucket at terraform init (OPS-29 — do not commit it into backend.tf):"
+echo "       cd devops/terraform/environments/beta"
+echo "       cp backend.hcl.example backend.hcl"
+echo "       # edit backend.hcl: bucket = \"${BUCKET}\""
+echo "       terraform init -backend-config=backend.hcl"
+echo "  2. Repeat for environments/prod when you add production."
+echo "  3. Or use: just aws-first-deploy PREFIX=${PREFIX} AWS_REGION=${REGION}"
+echo "  4. terraform apply (with TF_VAR_* secrets set — see docs/deploying-to-aws.md)"

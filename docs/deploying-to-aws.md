@@ -26,8 +26,8 @@ This single command:
 1. Creates the remote Terraform state bucket + DynamoDB lock table (if missing)
 2. Generates application secrets and saves them to `.aws-first-deploy-secrets.env`
    (gitignored — back them up)
-3. Runs `terraform init` (with `-backend-config` so you do not need to edit
-   `backend.tf`) and `terraform apply`
+3. Runs `terraform init` (with `-backend-config` for the state bucket — OPS-29)
+   and `terraform apply`
 4. Builds container images, pushes to ECR, runs migrations, and rolls ECS services
 
 Add `YES=1` to skip the terraform confirmation prompt (useful in automation).
@@ -119,12 +119,14 @@ just terraform-bootstrap PREFIX=YOURNAME
 
 Or run the underlying script directly: `./scripts/terraform-bootstrap-state.sh YOURNAME us-east-2`.
 
-Edit `devops/terraform/environments/beta/backend.tf` and replace
-`CHANGEME-headstart-tfstate` with your bucket name (`YOURNAME-headstart-tfstate`).
-Do the same in `environments/prod/backend.tf` when you add production.
+Committed `backend.tf` files omit the state bucket (OPS-29). After bootstrap,
+pass it at init — copy `backend.hcl.example` → `backend.hcl` (gitignored) and
+set `bucket = "YOURNAME-headstart-tfstate"`, then
+`terraform init -backend-config=backend.hcl`. Repeat for `environments/prod`
+when you add production.
 
 > **Tip:** `just aws-first-deploy` passes the bucket via `terraform init
-> -backend-config`, so you can skip editing `backend.tf` on a first deploy.
+> -backend-config`, so you can skip creating `backend.hcl` on a first deploy.
 
 ---
 
@@ -142,7 +144,9 @@ export TF_VAR_credentials_secret_key="$(openssl rand -hex 32)"
 # Terraform rejects empty / change-me placeholders (OPS-16).
 export TF_VAR_ntfy_default_topic="jobs-$(openssl rand -hex 8)"
 
-terraform init
+cp backend.hcl.example backend.hcl
+# edit: bucket = "YOURNAME-headstart-tfstate"
+terraform init -backend-config=backend.hcl
 terraform plan
 terraform apply
 ```
@@ -280,8 +284,10 @@ Migrations run automatically on each deploy.
 
 When ready for production:
 
-1. Update `devops/terraform/environments/prod/backend.tf` with your state bucket.
-2. `cd environments/prod` and run `terraform init && terraform apply` with the
+1. Copy `environments/prod/backend.hcl.example` → `backend.hcl` and set your
+   state bucket (OPS-29 — do not commit the bucket into `backend.tf`).
+2. `cd environments/prod` and run
+   `terraform init -backend-config=backend.hcl && terraform apply` with the
    same `TF_VAR_*` secrets pattern. Prod also requires an immutable image pin
    (no `"latest"` default; Terraform rejects `latest` — OPS-07):
    `export TF_VAR_image_tag="$(git rev-parse --short HEAD)"`.

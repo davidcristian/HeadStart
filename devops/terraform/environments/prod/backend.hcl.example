@@ -1,0 +1,5 @@
+# Copy to backend.hcl (gitignored) after `just terraform-bootstrap`, then:
+#   terraform init -backend-config=backend.hcl
+#
+# `just aws-first-deploy` passes the same values via -backend-config flags.
+bucket = "YOURNAME-headstart-tfstate"

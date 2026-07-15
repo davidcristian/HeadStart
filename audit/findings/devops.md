@@ -361,7 +361,7 @@ SHA pin. `aws-first-deploy.sh` sets `TF_VAR_image_tag` from the short SHA when
 
 <a id="ops-29"></a>
 ### OPS-29 — State backend bucket is unresolved CHANGEME placeholder committed for both envs
-⚪ **LOW** · 🔁 consistency · Status: ☐ open · Confidence: medium (2/3 verifiers) · Effort: XS · WS36
+⚪ **LOW** · 🔁 consistency · Status: ✅ done · Confidence: medium (2/3 verifiers) · Effort: XS · WS36
 
 **Locations:** `devops/terraform/environments/prod/backend.tf:6` (`backend s3`); plus `devops/terraform/environments/beta/backend.tf:6`.
 
@@ -372,6 +372,8 @@ SHA pin. `aws-first-deploy.sh` sets `TF_VAR_image_tag` from the short SHA when
 **Suggested fix.** Keep the bucket out of the committed `backend.tf` (partial config) and document the required `-backend-config` file, or template it per env.
 
 **Verification.** Confirmed 2/3 adversarial verifiers (1 refuted). Both `backend.tf` files hardcode `bucket = "CHANGEME-headstart-tfstate"`; init fails fast (safe failure) and `-backend-config` is documented, so a minor consistency/UX issue at low.
+
+**Resolution.** Committed `backend.tf` files are partial S3 backends (no `bucket`); operators pass the bucket via `-backend-config` / gitignored `backend.hcl` from `backend.hcl.example`. Docs + bootstrap script updated; regression in `test_terraform_backend_partial.py`. — [PR](https://github.com/davidcristian/HeadStart/pull/183).
 
 ---
 

@@ -1,7 +1,11 @@
 # Remote state in S3 with DynamoDB locking. See devops/terraform/README.md.
+# The state bucket is not committed (OPS-29) — pass it at init time:
+#   terraform init -backend-config=backend.hcl
+# or:
+#   terraform init -backend-config="bucket=YOURNAME-headstart-tfstate"
+# Copy backend.hcl.example → backend.hcl (gitignored) after bootstrap.
 terraform {
   backend "s3" {
-    bucket         = "CHANGEME-headstart-tfstate"
     key            = "prod/terraform.tfstate"
     region         = "us-east-2"
     dynamodb_table = "headstart-tflock"

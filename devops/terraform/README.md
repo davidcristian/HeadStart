@@ -20,18 +20,27 @@ environments/
 State lives in S3 with a DynamoDB lock table. Create them once from the repo root:
 
 ```bash
-make terraform-bootstrap PREFIX=YOURNAME AWS_REGION=us-east-2
+just terraform-bootstrap PREFIX=YOURNAME AWS_REGION=us-east-2
 ```
 
-Then set the bucket name in `environments/<env>/backend.tf` (replace `CHANGEME`),
-or use `make aws-first-deploy` which passes the bucket via `-backend-config`.
+Committed `backend.tf` files are a **partial** S3 config: they set the state
+`key`, default `region`, lock table, and encryption, but **omit the bucket**
+(OPS-29) so a real bucket name is never committed. Pass the bucket at init:
+
+```bash
+cd environments/beta
+cp backend.hcl.example backend.hcl   # gitignored; edit YOURNAME-headstart-tfstate
+terraform init -backend-config=backend.hcl
+```
+
+Or use `just aws-first-deploy`, which passes `-backend-config=bucket=…` for you.
 
 ## First-time deploy (one command)
 
 From the repo root (AWS creds + Terraform + Docker required):
 
 ```bash
-make aws-first-deploy PREFIX=YOURNAME AWS_REGION=us-east-2
+just aws-first-deploy PREFIX=YOURNAME AWS_REGION=us-east-2
 ```
 
 See [../../docs/deploying-to-aws.md](../../docs/deploying-to-aws.md#quick-start-one-command).
@@ -43,7 +52,8 @@ cd environments/beta
 export TF_VAR_db_password="$(openssl rand -base64 24)"
 export TF_VAR_jwt_secret="$(openssl rand -hex 32)"
 export TF_VAR_credentials_secret_key="$(openssl rand -hex 32)"
-terraform init
+cp backend.hcl.example backend.hcl   # set bucket = "YOURNAME-headstart-tfstate"
+terraform init -backend-config=backend.hcl
 terraform plan
 terraform apply
 ```
@@ -55,8 +65,8 @@ Outputs include `app_url`, `alb_dns_name`, and `ecr_repository_urls`.
 The ECS services need images in ECR before they can run. From the repo root:
 
 ```bash
-eval "$(make aws-deploy-env)"
-make deploy
+eval "$(just aws-deploy-env)"
+just deploy
 ```
 
 ## Conventions
