@@ -269,17 +269,19 @@ SHA pin. `aws-first-deploy.sh` sets `TF_VAR_image_tag` from the short SHA when
 
 <a id="ops-21"></a>
 ### OPS-21 — CI Slack-failure notify guarded by env var never set at that scope, never fires
-⚪ **LOW** · 🐞 bug · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: XS · WS37
+⚪ **LOW** · 🐞 bug · Status: ✅ done · Confidence: high (3/3 verifiers) · Effort: XS · WS37
 
-**Locations:** `.github/workflows/ci.yml:69` (`notify job`).
+**Locations:** `.github/workflows/ci.yml` (`notify job`).
 
-**Evidence.** The step's `if: ${{ env.SLACK_WEBHOOK_URL != '' }}` (line 69) is evaluated before the step-level `env:` (lines 70-71) applies, and no job- or workflow-level env sets it. `env.SLACK_WEBHOOK_URL` is therefore always `''` at the `if`, so the Slack alert is silently skipped on every failure.
+**Evidence.** The step's `if: ${{ env.SLACK_WEBHOOK_URL != '' }}` was evaluated before the step-level `env:` applied, and no job- or workflow-level env set it. `env.SLACK_WEBHOOK_URL` was therefore always `''` at the `if`, so the Slack alert was silently skipped on every failure.
 
 **Failure scenario.** CI fails on a push to main and no Slack alert is ever sent, because the guard sees an empty env var — giving false confidence that failures are surfaced.
 
 **Suggested fix.** Reference the secret directly in the guard (`if: secrets.SLACK_WEBHOOK_URL != ''`) or set `SLACK_WEBHOOK_URL` at job level.
 
-**Verification.** Confirmed 3/3 adversarial verifiers. Per GitHub docs, step-level env is not available in that same step's `if`, so `env.SLACK_WEBHOOK_URL` is always `''` at line 69 and the notify step never fires.
+**Resolution.** `notify` maps `SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}` at **job** level (visible to step `if`); the step no longer relies on step-scoped env for the guard. Regression: `backend/tests/devops/test_ops21_ci_slack_notify.py`.
+
+**Verification.** Confirmed 3/3 adversarial verifiers. Per GitHub docs, step-level env is not available in that same step's `if`, so `env.SLACK_WEBHOOK_URL` is always `''` when only set under the step.
 
 ---
 

@@ -94,11 +94,12 @@ jobs:
     needs: [backend, frontend, migrations]
     if: failure() && github.event_name == 'push'
     runs-on: ubuntu-latest
+    # OPS-21: job-level env is visible to step `if`; step-level env is not.
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
     steps:
       - name: Notify Slack
         if: ${{ env.SLACK_WEBHOOK_URL != '' }}
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
           curl -sf -X POST -H 'Content-type: application/json' \
             --data "{\"text\":\":x: CI failed on \`${GITHUB_REF_NAME}\` (${GITHUB_SHA::7}) - ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}\"}" \

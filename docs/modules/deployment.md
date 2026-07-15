@@ -247,17 +247,21 @@ on push/PR: backend `just lint` (ruff + black + LOC), `just typecheck`,
 third-party `uses:` is pinned to a full commit SHA with a version comment
 (OPS-20) so a re-pointed `@vN` tag cannot silently change the job; Dependabot
 opens weekly PRs for those SHAs, for `frontend/package-lock.json`, and for
-backend pip (`.github/dependabot.yml`). Local pre-commit is a **fast subset**
-of that gate (whitespace/yaml, ruff/black, eslint, prettier, LOC, shell
-validation) — types, tests, coverage, and dependency audits stay in
-`just check` / CI. The `frontend-lint` hook runs `npx eslint . --max-warnings=0`
-(same as `npm run lint`) so ESLint always receives an explicit path — without
-one, ESLint 8 scans zero files and exits 0 (OPS-03). LOC, shell validation,
-and prettier are enforced in both pre-commit and CI (OPS-04). `deploy.yml`
-(manual `workflow_dispatch`) and `terraform.yml`'s credentialed `plan` step
-are guarded on `vars.AWS_ROLE_ARN`, so they stay dormant until AWS is
-configured; once set, `terraform plan` runs on PRs and `deploy` runs
-`terraform apply` + `just deploy` on demand.
+backend pip (`.github/dependabot.yml`). On push failures, a `notify` job posts
+to Slack when `secrets.SLACK_WEBHOOK_URL` is set — the webhook is mapped at
+**job** level so the step `if: env.SLACK_WEBHOOK_URL != ''` can see it
+(OPS-21; step-level `env` is not available to that same step's `if`). Local
+pre-commit is a **fast subset** of that gate (whitespace/yaml, ruff/black,
+eslint, prettier, LOC, shell validation) — types, tests, coverage, and
+dependency audits stay in `just check` / CI. The `frontend-lint` hook runs
+`npx eslint . --max-warnings=0` (same as `npm run lint`) so ESLint always
+receives an explicit path — without one, ESLint 8 scans zero files and exits
+0 (OPS-03). LOC, shell validation, and prettier are enforced in both
+pre-commit and CI (OPS-04). `deploy.yml` (manual `workflow_dispatch`) and
+`terraform.yml`'s credentialed `plan` step are guarded on
+`vars.AWS_ROLE_ARN`, so they stay dormant until AWS is configured; once set,
+`terraform plan` runs on PRs and `deploy` runs `terraform apply` +
+`just deploy` on demand.
 
 ## First-time setup
 
