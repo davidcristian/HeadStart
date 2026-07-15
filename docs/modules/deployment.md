@@ -239,11 +239,12 @@ task cannot pull a different manifest than this pipeline built — even if a tag
 were ever mutable again.
 
 All workflows live in `.github/workflows/`. The CI quality gate (`ci.yml`) runs
-on push/PR: backend `just lint` (ruff + black + LOC), `just typecheck`,
-`just test`, `just test --scripts` (shell syntax), and `just audit-backend`
-(`pip-audit` on the hashed lockfiles, OPS-19); frontend `just lint`
-(eslint + prettier `--check`), `just typecheck`, `just test`, build, and
-`just audit-frontend` (`npm audit --audit-level=high`, FRO-12). Every
+on push/PR via the same `scripts/check.sh` entrypoint as local `just check`
+(OPS-22): backend `just check --backend` (ruff + black + LOC, mypy, pytest) and
+`just check --scripts` (shell syntax); frontend `just check --frontend`
+(eslint + prettier `--check`, tsc, vitest) plus `just build-frontend`. Audits
+stay adjacent: `just audit-backend` (`pip-audit` on hashed lockfiles, OPS-19)
+and `just audit-frontend` (`npm audit --audit-level=high`, FRO-12). Every
 third-party `uses:` is pinned to a full commit SHA with a version comment
 (OPS-20) so a re-pointed `@vN` tag cannot silently change the job; Dependabot
 opens weekly PRs for those SHAs, for `frontend/package-lock.json`, and for

@@ -35,9 +35,11 @@ def test_lint_sh_runs_prettier_check_for_frontend() -> None:
 
 
 def test_ci_runs_loc_shell_and_prettier_via_just() -> None:
-    """ci.yml must invoke the just recipes that enforce LOC, shell, prettier."""
+    """ci.yml must invoke just check recipes that enforce LOC, shell, prettier."""
     text = _CI_YML.read_text(encoding="utf-8")
-    assert "just lint --backend" in text
-    assert "just lint --frontend" in text
-    assert "just test --scripts" in text
-    assert "prettier" in text.lower()
+    assert "just check --backend" in text
+    assert "just check --frontend" in text
+    assert "just check --scripts" in text
+    # Prettier still rides with lint.sh inside `just check --frontend` (OPS-04).
+    lint_sh = _LINT_SH.read_text(encoding="utf-8")
+    assert "format:check" in lint_sh

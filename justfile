@@ -68,8 +68,13 @@ audit-frontend:
 audit-backend:
     ./scripts/audit-backend.sh
 
-# Run the full quality gate (lint + types + tests)
-check: lint typecheck test
+# Run the full quality gate (lint + types + tests); scope with --backend | --frontend | --scripts
+check *args:
+    ./scripts/check.sh {{ args }}
+
+# Frontend SPA production build (tsc + vite); CI uses this (OPS-22)
+build-frontend:
+    ./scripts/build-frontend.sh
 
 # Apply database migrations
 migrate:

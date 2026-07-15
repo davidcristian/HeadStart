@@ -30,16 +30,12 @@ jobs:
       # OPS-19: fail on known CVEs in hashed backend lockfiles (pip-audit).
       - name: Audit (pip-audit on lockfiles)
         run: just audit-backend
-      # CI runs the same scripts as local dev, through the same just recipes,
-      # so the gates cannot drift apart (LOC rides with lint; shell with test).
-      - name: Lint (ruff + black + LOC gate)
-        run: just lint --backend
-      - name: Type-check (mypy)
-        run: just typecheck --backend
-      - name: Tests (pytest)
-        run: just test --backend
+      # OPS-22: same scripts/check.sh entrypoint as local `just check` (no
+      # hand-rolled ruff/black/mypy/pytest). Shell rides with --scripts.
+      - name: Check (lint + types + tests)
+        run: just check --backend
       - name: Shell script validation
-        run: just test --scripts
+        run: just check --scripts
 
   migrations:
     name: Migrations (alembic on Postgres)
@@ -78,16 +74,12 @@ jobs:
       # FRO-12: fail on high/critical advisories (esbuild SSRF class + peers).
       - name: Audit (npm audit --audit-level=high)
         run: just audit-frontend
-      # `just lint --frontend` runs eslint + prettier --check (OPS-04).
-      - name: Lint (eslint + prettier)
-        run: just lint --frontend
-      - name: Type-check (tsc)
-        run: just typecheck --frontend
-      - name: Tests (vitest)
-        run: just test --frontend
+      # OPS-22: same scripts/check.sh entrypoint as local `just check`
+      # (eslint + prettier + tsc + vitest via lint/typecheck/test scripts).
+      - name: Check (lint + types + tests)
+        run: just check --frontend
       - name: Build
-        run: npm run build
-        working-directory: frontend
+        run: just build-frontend
 
   notify:
     name: Slack notify on failure

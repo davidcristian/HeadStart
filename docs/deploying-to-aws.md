@@ -380,12 +380,13 @@ curl "$(terraform output -raw app_url)/api/v1/health"
 ## CI/CD (CI active; deploy/terraform dormant)
 
 All workflows live in `.github/workflows/`. The **CI** quality gate (`ci.yml`)
-runs on every push and pull request — backend lint (including the LOC cap) /
+runs on every push and pull request via the same `just check` / `scripts/check.sh`
+entrypoints used locally (OPS-22) — backend lint (including the LOC cap) /
 type / tests, shell-script validation, and frontend lint (eslint + prettier
-`--check`) / type / tests / build, both coverage-gated at 100%. Third-party
-GitHub Actions are pinned to full commit SHAs (OPS-20); Dependabot bumps those
-SHAs weekly alongside frontend npm and backend pip. Local pre-commit is a fast
-subset (formatters, eslint, prettier, LOC, shell).
+`--check`) / type / tests / `just build-frontend`, both coverage-gated at 100%.
+Third-party GitHub Actions are pinned to full commit SHAs (OPS-20); Dependabot
+bumps those SHAs weekly alongside frontend npm and backend pip. Local
+pre-commit is a fast subset (formatters, eslint, prettier, LOC, shell).
 **`deploy.yml`** is
 manual-only (`workflow_dispatch`) and its job is guarded by
 `if: vars.AWS_ROLE_ARN != ''`, so it stays dormant until you set that repo

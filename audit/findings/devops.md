@@ -287,15 +287,15 @@ SHA pin. `aws-first-deploy.sh` sets `TF_VAR_image_tag` from the short SHA when
 
 <a id="ops-22"></a>
 ### OPS-22 — CI reimplements gate steps inline instead of make check, risking drift
-⚪ **LOW** · 🔁 consistency · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: S · WS37
+⚪ **LOW** · 🔁 consistency · Status: ✅ done · Confidence: high (3/3 verifiers) · Effort: S · WS37
 
-**Locations:** `.github/workflows/ci.yml:29` (`backend/frontend steps`).
+**Locations:** `.github/workflows/ci.yml` (`backend` / `frontend` jobs); `scripts/check.sh`; `justfile` `check` / `build-frontend`.
 
-**Evidence.** AGENTS.md §4 mandates running "always via `scripts/`" / one `make check`, but CI hand-rolls ruff/black/mypy/`pytest -q` and npm lint/typecheck/test/build. `pytest -q` still inherits `--cov`/`fail_under=100` today, but any change to the make targets or scripts silently diverges from CI.
+**Evidence.** AGENTS.md §4 mandates running "always via `scripts/`" / one `just check`, but CI previously listed separate lint/typecheck/test/`npm run build` steps. Those already called just recipes after OPS-04, but a future edit could reintroduce hand-rolled `ruff`/`pytest`/`npm` gates that diverge from `scripts/`.
 
-**Failure scenario.** A future edit to `scripts/` or the Makefile (e.g. adding a check or changing coverage flags) does not run in CI, so a change that fails `make check` locally can pass CI or vice-versa.
+**Failure scenario.** A future edit to `scripts/` or the justfile (e.g. adding a check or changing coverage flags) does not run in CI, so a change that fails `just check` locally can pass CI or vice-versa.
 
-**Suggested fix.** Have CI call the same make/scripts entrypoints (`make check`) used locally, per AGENTS.md §4.
+**Fix.** `scripts/check.sh` composes `lint.sh` + `typecheck.sh` + `test.sh` (scoped `--backend` / `--frontend` / `--scripts`). `just check` delegates to it. CI runs `just check --backend`, `just check --scripts`, `just check --frontend`, and `just build-frontend` (`scripts/build-frontend.sh`) — no hand-rolled tool steps. Regression tests lock the wiring.
 
 **Verification.** Confirmed 3/3 adversarial verifiers. CI hand-rolls ruff/black/mypy/pytest and npm steps rather than calling `make check`; a real drift risk, correctly rated low consistency.
 
