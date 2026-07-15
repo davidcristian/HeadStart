@@ -12,7 +12,8 @@ def detect_microsoft_careers(
     parsed: Any, host: str, page_title: str | None
 ) -> SourceDetection | None:
     """Return adapter defaults when the URL matches Microsoft Careers."""
-    if not host.endswith("careers.microsoft.com"):
+    # Dot-boundary suffix (or exact host) so evilcareers.microsoft.com cannot match.
+    if host != "careers.microsoft.com" and not host.endswith(".careers.microsoft.com"):
         return None
 
     base_url = "https://apply.careers.microsoft.com/careers"

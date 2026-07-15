@@ -94,7 +94,7 @@ This area covers the pluggable scraper adapters under `backend/app/scrapers/` �
 
 <a id="scr-08"></a>
 ### SCR-08 — Microsoft careers host match uses suffix endswith without dot boundary (over-broad)
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: XS · WS34
+⚪ **LOW** · 🔒 security · Status: ✅ done · Confidence: high (3/3 verifiers) · Effort: XS · WS34
 
 **Locations:** `backend/app/scrapers/url_detect_microsoft.py:15` (`detect_microsoft_careers`).
 

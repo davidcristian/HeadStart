@@ -7,6 +7,18 @@ def test_detect_microsoft_non_matching_host_returns_none() -> None:
     assert detect_source_from_url("https://careers.example.com/careers") is None
 
 
+def test_detect_microsoft_rejects_lookalike_host_without_dot_boundary() -> None:
+    """SCR-08: suffix match must require a dot before careers.microsoft.com."""
+    assert detect_source_from_url("https://evilcareers.microsoft.com/careers") is None
+    assert detect_source_from_url("https://xcareers.microsoft.com/api/pcsx/search") is None
+
+
+def test_detect_microsoft_exact_careers_host_still_matches() -> None:
+    result = detect_source_from_url("https://careers.microsoft.com/careers")
+    assert result is not None
+    assert result.adapter_key == "microsoft_careers"
+
+
 def test_detect_microsoft_no_query_uses_fallback_name() -> None:
     result = detect_source_from_url("https://apply.careers.microsoft.com/careers")
     assert result is not None
