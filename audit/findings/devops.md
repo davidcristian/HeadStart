@@ -499,7 +499,9 @@ now ships `versions.tf` with `required_version >= 1.5.0` and
 
 <a id="ops-41"></a>
 ### OPS-41 — VPC has no flow logs enabled
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: S · WS38
+⚪ **LOW** · 🔒 security · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/212)) · Confidence: high (3/3 verifiers) · Effort: S · WS38
+
+**Update (2026-07-11).** Network module publishes VPC flow logs (`traffic_type=ALL`) to CloudWatch `/vpc/{name}/flow-logs` with retention from stack `log_retention_days`; dedicated IAM role for `vpc-flow-logs.amazonaws.com`.
 
 **Locations:** `devops/terraform/modules/network/main.tf:8` (`aws_vpc.this`).
 

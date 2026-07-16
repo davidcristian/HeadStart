@@ -66,13 +66,14 @@ check "prod_requires_https" {
 }
 
 module "network" {
-  source               = "../network"
-  name                 = local.name
-  cidr                 = var.vpc_cidr
-  azs                  = var.azs
-  public_subnet_cidrs  = var.public_subnet_cidrs
-  private_subnet_cidrs = var.private_subnet_cidrs
-  tags                 = local.tags
+  source                   = "../network"
+  name                     = local.name
+  cidr                     = var.vpc_cidr
+  azs                      = var.azs
+  public_subnet_cidrs      = var.public_subnet_cidrs
+  private_subnet_cidrs     = var.private_subnet_cidrs
+  flow_log_retention_days  = var.log_retention_days
+  tags                     = local.tags
 }
 
 module "security" {

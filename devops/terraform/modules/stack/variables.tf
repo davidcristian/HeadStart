@@ -159,7 +159,7 @@ variable "db_backup_retention_days" {
 variable "log_retention_days" {
   type        = number
   default     = 30
-  description = "CloudWatch log group retention for ECS tasks (days)."
+  description = "CloudWatch log group retention for ECS tasks and VPC flow logs (days)."
 }
 variable "redis_node_type" {
   type    = string

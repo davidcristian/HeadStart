@@ -58,7 +58,7 @@ control or need to troubleshoot.
 
 Terraform (`devops/terraform/`) provisions:
 
-- VPC, subnets, security groups
+- VPC, subnets, security groups, VPC flow logs → CloudWatch (OPS-41)
 - Application Load Balancer (public entrypoint; HTTP allowed on **beta**,
   **prod** requires HTTPS — OPS-36)
 - ECS Fargate cluster with services: `api`, `frontend`, `worker`, `beat`
@@ -72,7 +72,7 @@ Terraform (`devops/terraform/`) provisions:
 Default region is **`us-east-2`**. Use the **`beta`** environment first (cheaper);
 **`prod`** adds Multi-AZ RDS and deletion protection on RDS and the ALB. Both
 environments enable ALB access logs, `drop_invalid_header_fields`, and a
-regional WAFv2 ACL (OPS-08).
+regional WAFv2 ACL (OPS-08), plus VPC flow logs to CloudWatch (OPS-41).
 
 > **Cost:** even `beta` runs an ALB, four Fargate tasks, RDS, and Redis — expect
 > ongoing monthly charges, not a free-tier-only stack.

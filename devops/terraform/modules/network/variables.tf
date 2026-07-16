@@ -29,3 +29,9 @@ variable "tags" {
   description = "Common tags."
   default     = {}
 }
+
+variable "flow_log_retention_days" {
+  type        = number
+  description = "CloudWatch retention for VPC flow logs (days)."
+  default     = 30
+}

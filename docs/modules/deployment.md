@@ -50,7 +50,7 @@ flowchart LR
 ```
 devops/terraform/
 ├── modules/
-│   ├── network/   # VPC, subnets, security groups
+│   ├── network/   # VPC, subnets, NAT, VPC flow logs → CloudWatch
 │   ├── ecr/       # image repositories
 │   ├── rds/       # Postgres
 │   ├── redis/     # ElastiCache
@@ -191,11 +191,11 @@ persists it to `.aws-first-deploy-secrets.env` so later runs keep the pin.
 | `db_multi_az` / `db_deletion_protection` | false | true |
 | `alb_deletion_protection` | false | true |
 | `db_backup_retention_days` | 7 | 30 |
-| `log_retention_days` (ECS CloudWatch) | 30 | 90 |
+| `log_retention_days` (ECS + VPC flow logs) | 30 | 90 |
 | `redis_automatic_failover` | false (1-node replication group) | true (Multi-AZ, 2 nodes) |
 
 `backup_retention_days` and `log_retention_days` are plumbed through the stack
-module into `rds` / `ecs`. Redis is always an
+module into `rds` / `ecs` / `network` (VPC flow logs). Redis is always an
 `aws_elasticache_replication_group` (required for in-transit encryption) with
 `transit_encryption_enabled`, `at_rest_encryption_enabled` (AWS-managed KMS by
 default; optional `kms_key_id`), and an AUTH token from `random_password` stored
@@ -209,6 +209,14 @@ rejects `latest` so a task recycle cannot silently pull a different build
 (OPS-07). ECR repositories set `image_tag_mutability = "IMMUTABLE"` so a
 re-push cannot overwrite a tag that task definitions still reference (OPS-09).
 Ongoing rolls still retarget task defs via `deploy.sh` / `IMAGE_TAG`.
+
+### VPC flow logs (OPS-41)
+
+Every environment's VPC publishes **ALL** traffic flow logs to CloudWatch Logs
+(`/vpc/{name}/flow-logs`) via a dedicated IAM role assumed by
+`vpc-flow-logs.amazonaws.com`. Retention follows `log_retention_days` (30 on
+beta, 90 on prod) so accepted/rejected ENI traffic to tasks/RDS/Redis is
+available for incident response without changing the data plane.
 
 ### ALB hardening (OPS-08)
 
