@@ -477,11 +477,15 @@ SHA pin. `aws-first-deploy.sh` sets `TF_VAR_image_tag` from the short SHA when
 
 <a id="ops-40"></a>
 ### OPS-40 — Reusable modules declare no required_providers version constraints
-⚪ **LOW** · 🔁 consistency · Status: ☐ open · Confidence: medium (3/3 verifiers) · Effort: S · WS38
+⚪ **LOW** · 🔁 consistency · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/211)) · Confidence: medium (3/3 verifiers) · Effort: S · WS38
 
 **Locations:** `devops/terraform/modules/network/main.tf:1`; plus `devops/terraform/modules/rds/main.tf:1`, `devops/terraform/modules/redis/main.tf:1`, `devops/terraform/modules/ecs/main.tf:1`, `devops/terraform/modules/security/main.tf:1`.
 
 **Note:** Merged with OPS-45 (same defect, "no required_providers pinning" across rds/redis/ecs/security modules).
+
+**Update (2026-07-11).** Every reusable module under `devops/terraform/modules/*`
+now ships `versions.tf` with `required_version >= 1.5.0` and
+`hashicorp/aws >= 5.60` (`stack` also pins `hashicorp/random >= 3.6`).
 
 **Evidence.** No `modules/**/versions.tf` or `required_providers`/`required_version` block exists in any module; a grep finds `terraform{}` pins only under `environments/`. Reusable modules should declare `required_providers` so a caller cannot bind an incompatible aws provider.
 

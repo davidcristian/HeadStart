@@ -64,6 +64,13 @@ devops/terraform/
     └── prod/
 ```
 
+**Module provider floors (OPS-40).** Every reusable module under `modules/*`
+ships a `versions.tf` with `required_version >= 1.5.0` and
+`required_providers` for `hashicorp/aws >= 5.60` (the stack module also pins
+`hashicorp/random >= 3.6` for `random_password`). Environment roots still own
+the exact `~>` constraint; modules declare the compatibility floor so a caller
+without a pin fails fast instead of binding an incompatible provider.
+
 State is remote: S3 bucket + DynamoDB lock table. Each environment's
 `backend.tf` is a **partial** config (state `key`, region, lock table,
 encryption); the bucket is supplied at `terraform init` via
