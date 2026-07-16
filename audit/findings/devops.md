@@ -671,7 +671,7 @@ execution role gets `kms:Decrypt`/`kms:DescribeKey` on that CMK —
 
 <a id="ops-58"></a>
 ### OPS-58 — Postgres (and Redis) published to host with weak default creds in compose
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: S · WS38
+⚪ **LOW** · 🔒 security · Status: ✅ done · Confidence: high (3/3 verifiers) · Effort: S · WS38
 
 **Locations:** `docker-compose.yml:19` (`db service`); plus `docker-compose.yml:30` (redis).
 
@@ -682,6 +682,8 @@ execution role gets `kms:Decrypt`/`kms:DescribeKey` on that CMK —
 **Failure scenario.** A developer running `make up` on a shared/office network exposes Postgres (headstart/headstart) and unauthenticated Redis on all interfaces, allowing data theft or cache poisoning from the LAN.
 
 **Suggested fix.** Bind published ports to `127.0.0.1` (e.g. `127.0.0.1:5432:5432`) or gate them behind a dev profile, and require an explicit `POSTGRES_PASSWORD` rather than a defaulted one.
+
+**Fix.** `db` and `redis` publish `127.0.0.1:${PORT}:…` only. Compose requires `${POSTGRES_PASSWORD:?…}` (no `:-headstart` default); `.env.example` documents the requirement. Regressions lock the bind + required-password contract. — [PR](https://github.com/davidcristian/HeadStart/pull/219)
 
 **Verification.** Confirmed 3/3 adversarial verifiers. `5432:5432` and `6379:6379` are published on `0.0.0.0` with `POSTGRES_PASSWORD` defaulting to `headstart` and Redis unauthenticated; this is the dev-only compose (prod is ECS), so low is fair.
 

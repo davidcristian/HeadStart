@@ -19,6 +19,13 @@ aligned with the ECS container probes: api `GET /api/v1/health`, worker
 does not start until uvicorn is serving (not merely when the api container is
 created).
 
+**Compose db/redis publish (OPS-58).** `db` and `redis` publish only on
+`127.0.0.1` (not `0.0.0.0`), so a laptop on a shared LAN does not expose
+Postgres or unauthenticated Redis to peers. Compose requires an explicit
+`POSTGRES_PASSWORD` from `.env` (no `${…:-headstart}` default); copy
+`.env.example` before `just up`. Reach the DB from the host via
+`localhost:$POSTGRES_PORT` or `docker compose exec db psql …`.
+
 ## Backend dependency lockfiles
 
 Runtime (and optional `dev` / `playwright`) dependencies are pinned with hashes

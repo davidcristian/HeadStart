@@ -12,12 +12,14 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-headstart}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-headstart}
+      # Require an explicit password from .env (OPS-58); no weak compose default.
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env (see .env.example)}
       POSTGRES_DB: ${POSTGRES_DB:-headstart}
     volumes:
       - pgdata:/var/lib/postgresql/data
+    # Loopback only so LAN peers cannot reach Postgres (OPS-58 / OPS-59).
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-headstart}"]
       interval: 5s
@@ -27,8 +29,9 @@ services:
   redis:
     image: redis:7-alpine
     restart: unless-stopped
+    # Loopback only: local Redis has no AUTH (OPS-58 / OPS-59).
     ports:
-      - "${REDIS_PORT:-6379}:6379"
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
