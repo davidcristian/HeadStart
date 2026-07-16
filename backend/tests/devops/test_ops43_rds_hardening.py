@@ -28,7 +28,7 @@ def test_rds_enables_iam_auth_pi_logs_and_monitoring() -> None:
     assert "monitoring_interval = var.monitoring_interval" in main
     assert "aws_iam_role.monitoring.arn" in main
     assert "var.monitoring_interval > 0" in main
-    assert "apply_immediately       = var.apply_immediately" in main
+    assert "apply_immediately         = var.apply_immediately" in main
 
     monitoring = (_RDS / "monitoring.tf").read_text(encoding="utf-8")
     assert 'resource "aws_iam_role" "monitoring"' in monitoring

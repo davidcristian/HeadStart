@@ -143,8 +143,14 @@ variable "db_multi_az" {
   default = false
 }
 variable "db_deletion_protection" {
-  type    = bool
-  default = false
+  type        = bool
+  default     = false
+  description = "Block accidental RDS destroy. Prod must set true (OPS-48)."
+}
+variable "db_skip_final_snapshot" {
+  type        = bool
+  default     = false
+  description = "Skip RDS final snapshot on destroy. Prefer false; beta may set true (OPS-48)."
 }
 variable "alb_deletion_protection" {
   type        = bool

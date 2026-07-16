@@ -65,6 +65,18 @@ check "prod_requires_https" {
   }
 }
 
+# OPS-48: prod must keep RDS deletion protection on and never skip the final
+# snapshot, so a fat-finger destroy cannot drop the datastore with no copy.
+check "prod_requires_db_deletion_protection" {
+  assert {
+    condition = (
+      var.environment != "prod"
+      || (var.db_deletion_protection && !var.db_skip_final_snapshot)
+    )
+    error_message = "Production requires db_deletion_protection=true and db_skip_final_snapshot=false so RDS destroy cannot drop data without a final snapshot (OPS-48)."
+  }
+}
+
 module "network" {
   source                   = "../network"
   name                     = local.name
@@ -146,6 +158,7 @@ module "rds" {
   instance_class        = var.db_instance_class
   multi_az              = var.db_multi_az
   deletion_protection   = var.db_deletion_protection
+  skip_final_snapshot   = var.db_skip_final_snapshot
   backup_retention_days = var.db_backup_retention_days
   db_name               = var.db_name
   username              = var.db_username

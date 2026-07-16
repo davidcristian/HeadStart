@@ -25,9 +25,10 @@ module "stack" {
   public_subnet_cidrs  = ["10.20.0.0/24", "10.20.1.0/24"]
   private_subnet_cidrs = ["10.20.10.0/24", "10.20.11.0/24"]
 
-  # Beta: small + cheap, no deletion protection.
-  db_instance_class      = "db.t4g.micro"
-  db_multi_az            = false
-  db_deletion_protection = false
-  redis_node_type        = "cache.t4g.micro"
+  # Beta: small + cheap; allow teardown without a final snapshot (OPS-48).
+  db_instance_class        = "db.t4g.micro"
+  db_multi_az              = false
+  db_deletion_protection   = false
+  db_skip_final_snapshot   = true
+  redis_node_type          = "cache.t4g.micro"
 }

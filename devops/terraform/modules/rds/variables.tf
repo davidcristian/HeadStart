@@ -39,8 +39,17 @@ variable "backup_retention_days" {
   default = 7
 }
 variable "deletion_protection" {
-  type    = bool
-  default = false
+  type        = bool
+  default     = false
+  description = "Block terraform destroy / accidental RDS delete. Prod must set true (OPS-48)."
+}
+
+# OPS-48: independent of deletion_protection so a forgotten protection
+# override still takes a final snapshot on destroy (beta may skip).
+variable "skip_final_snapshot" {
+  type        = bool
+  default     = false
+  description = "Skip the final DB snapshot on destroy. Prefer false; beta throwaway stacks may set true."
 }
 
 # OPS-43: default false so parameter/engine changes wait for the next

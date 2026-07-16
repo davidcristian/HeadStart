@@ -31,8 +31,11 @@ resource "aws_db_instance" "this" {
   multi_az                = var.multi_az
   backup_retention_period = var.backup_retention_days
   deletion_protection     = var.deletion_protection
-  skip_final_snapshot     = !var.deletion_protection
-  apply_immediately       = var.apply_immediately
+  # OPS-48: final snapshot is independent of deletion_protection so a
+  # forgotten protection override cannot destroy without a recoverable copy.
+  skip_final_snapshot       = var.skip_final_snapshot
+  final_snapshot_identifier = var.skip_final_snapshot ? null : "${var.name}-final"
+  apply_immediately         = var.apply_immediately
 
   iam_database_authentication_enabled = true
 

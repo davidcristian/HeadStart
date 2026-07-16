@@ -539,7 +539,9 @@ now ships `versions.tf` with `required_version >= 1.5.0` and
 
 <a id="ops-48"></a>
 ### OPS-48 — RDS module: no validation; deletion_protection/final-snapshot default unsafe
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: low (3/3 verifiers) · Effort: S · WS38
+⚪ **LOW** · 🔒 security · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/214)) · Confidence: low (3/3 verifiers) · Effort: S · WS38
+
+**Update (2026-07-11).** Fixed: `skip_final_snapshot` is an independent RDS/stack variable (default `false`, `{name}-final` identifier when kept); stack `check "prod_requires_db_deletion_protection"` fails prod plan/apply unless deletion protection is on and final snapshot is not skipped; beta sets `db_skip_final_snapshot = true` for throwaway teardown.
 
 **Locations:** `devops/terraform/modules/rds/variables.tf:41` (`deletion_protection`); plus `devops/terraform/modules/rds/variables.tf:37`, `devops/terraform/modules/rds/main.tf:31`.
 

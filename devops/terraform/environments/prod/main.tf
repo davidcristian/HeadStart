@@ -25,7 +25,8 @@ module "stack" {
   public_subnet_cidrs  = ["10.30.0.0/24", "10.30.1.0/24"]
   private_subnet_cidrs = ["10.30.10.0/24", "10.30.11.0/24"]
 
-  # Prod: HA database, longer backups/logs, deletion protection, Redis failover.
+  # Prod: HA database, longer backups/logs, deletion protection + final
+  # snapshot required (OPS-48), Redis failover.
   db_instance_class        = "db.t4g.small"
   db_multi_az              = true
   db_deletion_protection   = true

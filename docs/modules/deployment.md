@@ -189,6 +189,7 @@ persists it to `.aws-first-deploy-secrets.env` so later runs keep the pin.
 | Knob | Stack default (beta) | Prod |
 | ---- | -------------------- | ---- |
 | `db_multi_az` / `db_deletion_protection` | false | true |
+| `db_skip_final_snapshot` | true (beta only) / false (stack default) | false (enforced) |
 | `alb_deletion_protection` | false | true |
 | `db_backup_retention_days` | 7 | 30 |
 | `log_retention_days` (ECS + VPC flow logs) | 30 | 90 |
@@ -232,6 +233,17 @@ Every environment's Postgres instance:
 - Exports `postgresql` + `upgrade` logs to CloudWatch Logs
 - Defaults `apply_immediately = false` so engine/parameter changes wait for the
   maintenance window instead of rebooting mid-apply
+
+### RDS destroy safety (OPS-48)
+
+`skip_final_snapshot` is a **separate** knob from `deletion_protection` (it used
+to be `!deletion_protection`, so a forgotten protection override also skipped
+the final snapshot). The RDS module defaults `skip_final_snapshot = false` and
+sets `final_snapshot_identifier = "{name}-final"` when a snapshot is kept.
+Beta opt-in sets `db_skip_final_snapshot = true` for throwaway teardown; prod
+keeps the default. Stack `check "prod_requires_db_deletion_protection"` fails
+plan/apply unless `environment=prod` has `db_deletion_protection=true` **and**
+`db_skip_final_snapshot=false`.
 
 **Existing stacks** that already applied AWS-managed storage encryption will
 see an RDS replacement when adopting the CMK — plan a snapshot / restore
