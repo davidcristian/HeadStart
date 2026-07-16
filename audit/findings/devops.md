@@ -459,7 +459,7 @@ SHA pin. `aws-first-deploy.sh` sets `TF_VAR_image_tag` from the short SHA when
 
 <a id="ops-38"></a>
 ### OPS-38 — ECS container definitions lack healthCheck, read-only root filesystem, and non-root user
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: medium (3/3 verifiers) · Effort: M · WS38
+⚪ **LOW** · 🔒 security · Status: ✅ done · Confidence: medium (3/3 verifiers) · Effort: M · WS38
 
 **Locations:** `devops/terraform/modules/ecs/main.tf:40` (`backend_container / worker_container`).
 

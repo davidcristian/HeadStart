@@ -2,6 +2,10 @@
 #   api, worker, beat  -> backend image (role chosen via container command)
 #   frontend           -> frontend image
 # Plus a one-off `migrate` task definition invoked by scripts/deploy.sh.
+#
+# OPS-38: every long-running container runs non-root, with a read-only root
+# filesystem (+ /tmp tmpfs), container healthCheck, and CapabilityBoundingSet
+# drop-all. Worker keeps OPS-27 RuntimeDefault seccomp around Chromium.
 
 locals {
   backend_ref        = "${var.backend_image}:${var.image_tag}"
@@ -11,6 +15,11 @@ locals {
   env_list     = [for k, v in var.environment : { name = k, value = v }]
   secrets_list = [for k, v in var.secrets : { name = k, valueFrom = v }]
 
+  # Images already USER appuser (uid 10001) / nginx (uid 101); pin in the task
+  # def so a rebuilt image cannot silently revert to root (OPS-38 / OPS-39).
+  backend_user  = "10001:10001"
+  frontend_user = "101:101"
+
   log_config = {
     logDriver = "awslogs"
     options = {
@@ -18,6 +27,82 @@ locals {
       "awslogs-region"        = var.region
       "awslogs-stream-prefix" = "headstart"
     }
+  }
+
+  # Scratch for Celery beat schedule, Playwright/Chromium, uvicorn, nginx temps.
+  tmp_tmpfs = {
+    containerPath = "/tmp"
+    size          = 256
+    mountOptions  = ["rw", "nosuid", "nodev", "noexec"]
+  }
+  worker_tmp_tmpfs = {
+    containerPath = "/tmp"
+    size          = 512
+    mountOptions  = ["rw", "nosuid", "nodev", "noexec"]
+  }
+  frontend_tmpfs = [
+    {
+      containerPath = "/tmp"
+      size          = 64
+      mountOptions  = ["rw", "nosuid", "nodev", "noexec"]
+    },
+    {
+      containerPath = "/var/cache/nginx"
+      size          = 64
+      mountOptions  = ["rw", "nosuid", "nodev", "noexec"]
+    },
+    {
+      containerPath = "/var/run"
+      size          = 16
+      mountOptions  = ["rw", "nosuid", "nodev", "noexec"]
+    },
+  ]
+
+  # Shared linux hardening; worker adds larger /tmp for Chromium scratch.
+  base_linux_parameters = {
+    initProcessEnabled = true
+    capabilities = {
+      drop = ["ALL"]
+    }
+    seccompProfile = {
+      type = "RuntimeDefault"
+    }
+  }
+
+  api_health_check = {
+    command     = ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health', timeout=2)\""]
+    interval    = 30
+    timeout     = 5
+    retries     = 3
+    startPeriod = 60
+  }
+  # METRICS_TOKEN is always set on AWS (OPS-54); 401 still proves the scrape port is up.
+  worker_health_check = {
+    command = [
+      "CMD-SHELL",
+      "python -c \"import urllib.error,urllib.request\\ntry:\\n urllib.request.urlopen('http://127.0.0.1:9090/metrics', timeout=2)\\nexcept urllib.error.HTTPError as e:\\n assert e.code in (401, 403)\"",
+    ]
+    interval    = 30
+    timeout     = 5
+    retries     = 3
+    startPeriod = 90
+  }
+  beat_health_check = {
+    command = [
+      "CMD-SHELL",
+      "python -c \"from pathlib import Path; assert any(b'beat' in Path(f'/proc/{p.name}/cmdline').read_bytes() for p in Path('/proc').iterdir() if p.name.isdigit())\"",
+    ]
+    interval    = 30
+    timeout     = 5
+    retries     = 3
+    startPeriod = 60
+  }
+  frontend_health_check = {
+    command     = ["CMD-SHELL", "wget -qO /dev/null http://127.0.0.1:8080/ || exit 1"]
+    interval    = 30
+    timeout     = 5
+    retries     = 3
+    startPeriod = 30
   }
 }
 
@@ -38,37 +123,52 @@ resource "aws_cloudwatch_log_group" "this" {
 
 # Helper to build a backend container definition for a given role/command.
 locals {
-  backend_container = { for role in ["api", "beat", "migrate"] :
-    role => jsonencode([{
-      name             = role
-      image            = local.backend_ref
-      command          = [role]
-      essential        = true
-      portMappings     = role == "api" ? [{ containerPort = 8000, protocol = "tcp" }] : []
-      environment      = local.env_list
-      secrets          = local.secrets_list
-      logConfiguration = local.log_config
-    }])
+  backend_health_by_role = {
+    api  = local.api_health_check
+    beat = local.beat_health_check
   }
-  # OPS-27: RuntimeDefault seccomp + drop all caps around Chromium scrapes.
+  backend_container_objects = { for role in ["api", "beat", "migrate"] :
+    role => merge(
+      {
+        name                   = role
+        image                  = local.backend_ref
+        command                = [role]
+        essential              = true
+        user                   = local.backend_user
+        readonlyRootFilesystem = true
+        portMappings           = role == "api" ? [{ containerPort = 8000, protocol = "tcp" }] : []
+        environment            = local.env_list
+        secrets                = local.secrets_list
+        logConfiguration       = local.log_config
+        linuxParameters = merge(local.base_linux_parameters, {
+          tmpfs = [local.tmp_tmpfs]
+        })
+      },
+      # One-off migrate has no long-lived probe; api/beat get healthCheck (OPS-38).
+      contains(keys(local.backend_health_by_role), role) ? {
+        healthCheck = local.backend_health_by_role[role]
+      } : {},
+    )
+  }
+  backend_container = {
+    for role, obj in local.backend_container_objects : role => jsonencode([obj])
+  }
+  # OPS-27 seccomp + OPS-38 readonly/non-root/healthCheck around Chromium scrapes.
   worker_container = jsonencode([{
-    name             = "worker"
-    image            = local.worker_backend_ref
-    command          = ["worker"]
-    essential        = true
-    portMappings     = [{ containerPort = 9090, protocol = "tcp" }]
-    environment      = local.env_list
-    secrets          = local.secrets_list
-    logConfiguration = local.log_config
-    linuxParameters = {
-      initProcessEnabled = true
-      capabilities = {
-        drop = ["ALL"]
-      }
-      seccompProfile = {
-        type = "RuntimeDefault"
-      }
-    }
+    name                   = "worker"
+    image                  = local.worker_backend_ref
+    command                = ["worker"]
+    essential              = true
+    user                   = local.backend_user
+    readonlyRootFilesystem = true
+    portMappings           = [{ containerPort = 9090, protocol = "tcp" }]
+    environment            = local.env_list
+    secrets                = local.secrets_list
+    logConfiguration       = local.log_config
+    healthCheck            = local.worker_health_check
+    linuxParameters = merge(local.base_linux_parameters, {
+      tmpfs = [local.worker_tmp_tmpfs]
+    })
   }])
 }
 
@@ -130,11 +230,17 @@ resource "aws_ecs_task_definition" "frontend" {
   execution_role_arn       = var.execution_role_arn
   task_role_arn            = var.task_role_arn
   container_definitions = jsonencode([{
-    name             = "frontend"
-    image            = local.frontend_ref
-    essential        = true
-    portMappings     = [{ containerPort = 8080, protocol = "tcp" }]
-    logConfiguration = local.log_config
+    name                   = "frontend"
+    image                  = local.frontend_ref
+    essential              = true
+    user                   = local.frontend_user
+    readonlyRootFilesystem = true
+    portMappings           = [{ containerPort = 8080, protocol = "tcp" }]
+    logConfiguration       = local.log_config
+    healthCheck            = local.frontend_health_check
+    linuxParameters = merge(local.base_linux_parameters, {
+      tmpfs = local.frontend_tmpfs
+    })
   }])
   tags = var.tags
 }

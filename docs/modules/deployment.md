@@ -122,6 +122,25 @@ The worker scrapes untrusted employer sites inside Chromium. Hardening:
 - **Image:** `backend/Dockerfile` target `worker` installs Playwright/Chromium
   as root (system deps), then runs as `appuser`.
 
+### Container hardening (OPS-38)
+
+Every ECS task definition (api, worker, beat, frontend, and the one-off
+migrate) pins defense-in-depth beyond the image `USER`:
+
+- **Non-root `user`:** backend roles `10001:10001` (`appuser`), frontend
+  `101:101` (nginx-unprivileged).
+- **`readonlyRootFilesystem = true`** with `linuxParameters.tmpfs` on `/tmp`
+  (worker gets 512 MiB for Chromium scratch; frontend also mounts
+  `/var/cache/nginx` and `/var/run`). Beat writes
+  `--schedule=/tmp/celerybeat-schedule` so the schedule file is not on `/app`.
+- **Container `healthCheck`:** api probes `/api/v1/health`; worker accepts
+  `/metrics` 200 or 401 (token always set — OPS-54); beat checks a live
+  `celery … beat` cmdline under `/proc`; frontend `wget`s `:8080/`. Migrate
+  omits a probe (one-shot).
+- **`linuxParameters`:** all roles use `RuntimeDefault` seccomp, drop all
+  capabilities, and enable container init (worker already did this for
+  OPS-27).
+
 ## Distinct VPC CIDRs (OPS-30)
 
 Beta and prod must not share the same private address space. Each environment's
