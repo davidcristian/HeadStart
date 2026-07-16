@@ -357,7 +357,7 @@ SHA pin. `aws-first-deploy.sh` sets `TF_VAR_image_tag` from the short SHA when
 
 <a id="ops-28"></a>
 ### OPS-28 — Backend Dockerfile copies app source before pip install, breaking dep caching
-⚪ **LOW** · ⚡ perf · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: S · WS38
+⚪ **LOW** · ⚡ perf · Status: ✅ done · Confidence: high (3/3 verifiers) · Effort: S · WS38
 
 **Locations:** `backend/Dockerfile:17` (`base`).
 
@@ -368,6 +368,8 @@ SHA pin. `aws-first-deploy.sh` sets `TF_VAR_image_tag` from the short SHA when
 **Suggested fix.** Install dependencies from `pyproject.toml` before copying app source (or split the install) so source edits do not bust the deps layer.
 
 **Verification.** Confirmed 3/3 adversarial verifiers. Dockerfile L17-19 copies app source before `pip install .`, so any source change busts the deps layer, contradicting the L15 comment; a real caching defect.
+
+**Resolution.** Already fixed by XCT-14 ([PR #20](https://github.com/davidcristian/HeadStart/pull/20)): hashed `requirements.txt` installs before `COPY app`, then `pip install --no-deps .`. Tracker close adds an OPS-28 regression on layer order plus deployment.md / Dockerfile comments so the caching contract cannot regress silently. — [PR #208](https://github.com/davidcristian/HeadStart/pull/208).
 
 ---
 

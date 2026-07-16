@@ -12,8 +12,11 @@ in `backend/requirements.txt`, `requirements-dev.txt`, and
 `requirements-playwright.txt` (pip-tools; see
 [ADR-0012](../adr/0012-backend-dependency-lockfiles.md)). The Dockerfile and CI
 install with `pip install --require-hashes -r …`, then install the local package
-with `--no-deps`. Regenerate via `just lock-backend` after editing
-`backend/pyproject.toml` dependency floors.
+with `--no-deps`. **Layer order (OPS-28):** `backend/Dockerfile` copies only
+`pyproject.toml` + `requirements.txt` for the hashed deps `RUN`, then
+`COPY app` and `pip install --no-deps .`, so application source edits do not
+bust the third-party dependency layer. Regenerate via `just lock-backend`
+after editing `backend/pyproject.toml` dependency floors.
 
 **Floors must match tested majors (XCT-23).** `pyproject.toml` `>=` floors are
 the human-readable support contract. Keep them aligned with the majors already

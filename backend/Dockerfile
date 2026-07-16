@@ -12,8 +12,10 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR /app
 
-# Install locked runtime deps first (hashed; better layer caching). psycopg[binary]
-# and selectolax ship wheels, so no compiler/system libs are required.
+# Install locked runtime deps first (hashed; better layer caching — OPS-28).
+# Copy app/ only after the deps layer so source-only edits do not reinstall
+# third-party wheels. psycopg[binary] and selectolax ship wheels, so no
+# compiler/system libs are required.
 COPY pyproject.toml requirements.txt ./
 RUN pip install --upgrade pip \
     && pip install --require-hashes -r requirements.txt
