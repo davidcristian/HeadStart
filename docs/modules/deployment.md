@@ -5,6 +5,13 @@
 The same container images run locally (Docker Compose) and on AWS (ECS Fargate).
 Local development never depends on anything in `devops/`.
 
+**Compose image pins (OPS-56).** `docker-compose.yml` tags locally built app
+images as `headstart/backend:local`, `headstart/backend-worker:local`, and
+`headstart/frontend:local` (not registry `:latest`). The optional offline-profile
+ntfy service pins a concrete version **and** multi-arch index digest
+(`binwiederhier/ntfy:v2.25.0@sha256:…`) so `docker compose pull` cannot float an
+unaudited upstream. Bump the ntfy pin deliberately when upgrading.
+
 ## Backend dependency lockfiles
 
 Runtime (and optional `dev` / `playwright`) dependencies are pinned with hashes

@@ -40,7 +40,8 @@ services:
       context: ./backend
       dockerfile: Dockerfile
       target: api
-    image: headstart/backend:latest
+    # :local is the compose build tag (not registry :latest) — OPS-56.
+    image: headstart/backend:local
     restart: unless-stopped
     command: ["api"]
     env_file: .env
@@ -56,7 +57,7 @@ services:
         condition: service_healthy
 
   worker:
-    image: headstart/backend-worker:latest
+    image: headstart/backend-worker:local
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -76,7 +77,7 @@ services:
       - "${METRICS_PORT:-9090}:${METRICS_PORT:-9090}"
 
   beat:
-    image: headstart/backend:latest
+    image: headstart/backend:local
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -99,7 +100,7 @@ services:
       dockerfile: Dockerfile
       args:
         VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8000}
-    image: headstart/frontend:latest
+    image: headstart/frontend:local
     restart: unless-stopped
     ports:
       - "8080:8080"
@@ -107,8 +108,9 @@ services:
       - api
 
   # Optional fully-offline notifications. Enable with: --profile offline
+  # Pin version + multi-arch index digest so `compose pull` cannot float (OPS-56).
   ntfy:
-    image: binwiederhier/ntfy:latest
+    image: binwiederhier/ntfy:v2.25.0@sha256:cfbbb1bac9196cb711e29ef0ac4adaeb033be6235f1df857705dc39c14384a1d
     profiles: ["offline"]
     command: ["serve"]
     restart: unless-stopped

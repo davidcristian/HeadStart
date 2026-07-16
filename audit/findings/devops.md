@@ -633,7 +633,7 @@ execution role gets `kms:Decrypt`/`kms:DescribeKey` on that CMK —
 
 <a id="ops-56"></a>
 ### OPS-56 — Compose pins local images and ntfy to mutable :latest tags
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: XS · WS38
+⚪ **LOW** · 🔒 security · Status: ✅ done · Confidence: high (3/3 verifiers) · Effort: XS · WS38
 
 **Locations:** `docker-compose.yml:111` (`ntfy service`); plus `docker-compose.yml:43` (api.image), `docker-compose.yml:59` (backend-worker), `docker-compose.yml:102` (frontend).
 
