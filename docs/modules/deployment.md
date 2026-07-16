@@ -12,6 +12,13 @@ ntfy service pins a concrete version **and** multi-arch index digest
 (`binwiederhier/ntfy:v2.25.0@sha256:…`) so `docker compose pull` cannot float an
 unaudited upstream. Bump the ntfy pin deliberately when upgrading.
 
+**Compose healthchecks (OPS-57).** `api`, `worker`, and `beat` define healthchecks
+aligned with the ECS container probes: api `GET /api/v1/health`, worker
+`/metrics` accepting 200 or 401, beat a live `celery … beat` cmdline under
+`/proc`. `frontend.depends_on.api` uses `condition: service_healthy` so the SPA
+does not start until uvicorn is serving (not merely when the api container is
+created).
+
 ## Backend dependency lockfiles
 
 Runtime (and optional `dev` / `playwright`) dependencies are pinned with hashes

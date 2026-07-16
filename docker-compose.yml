@@ -55,6 +55,17 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    # Match ECS api healthCheck (OPS-57): wait until uvicorn serves /api/v1/health.
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health', timeout=2)\"",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
 
   worker:
     image: headstart/backend-worker:local
@@ -75,6 +86,17 @@ services:
         condition: service_healthy
     ports:
       - "${METRICS_PORT:-9090}:${METRICS_PORT:-9090}"
+    # Match ECS worker healthCheck (OPS-57): /metrics 200 or 401 proves the port is up.
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import os,urllib.error,urllib.request; p=os.environ.get('METRICS_PORT','9090');\ntry:\n urllib.request.urlopen(f'http://127.0.0.1:{p}/metrics', timeout=2)\nexcept urllib.error.HTTPError as e:\n assert e.code in (401, 403)\"",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
 
   beat:
     image: headstart/backend:local
@@ -93,6 +115,17 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    # Match ECS beat healthCheck (OPS-57): a live celery beat cmdline under /proc.
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"from pathlib import Path; assert any(b'beat' in Path(f'/proc/{p.name}/cmdline').read_bytes() for p in Path('/proc').iterdir() if p.name.isdigit())\"",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
 
   frontend:
     build:
@@ -105,7 +138,8 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - api
+      api:
+        condition: service_healthy
 
   # Optional fully-offline notifications. Enable with: --profile offline
   # Pin version + multi-arch index digest so `compose pull` cannot float (OPS-56).

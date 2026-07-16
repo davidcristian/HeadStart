@@ -651,7 +651,7 @@ execution role gets `kms:Decrypt`/`kms:DescribeKey` on that CMK —
 
 <a id="ops-57"></a>
 ### OPS-57 — api/worker/beat services define no healthcheck; frontend waits on api start not health
-⚪ **LOW** · 🐞 bug · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: S · WS38
+⚪ **LOW** · 🐞 bug · Status: ✅ done · Confidence: high (3/3 verifiers) · Effort: S · WS38
 
 **Locations:** `docker-compose.yml:38` (`api/worker/beat/frontend`).
 
@@ -662,6 +662,8 @@ execution role gets `kms:Decrypt`/`kms:DescribeKey` on that CMK —
 **Failure scenario.** On `make up`, the frontend (and any orchestrator readiness gate) sees api as "up" before it accepts connections, so early requests during boot fail; there is no self-heal signal for a wedged worker/beat, and compose diverges from the ECS/ALB `/api/v1/health` check.
 
 **Suggested fix.** Add an HTTP healthcheck to api (`GET /api/v1/health`), gate `frontend` on `condition: service_healthy`, and add liveness probes for worker/beat.
+
+**Fix.** Compose healthchecks for api (`GET /api/v1/health`), worker (`/metrics` 200 or 401), and beat (live `celery … beat` cmdline under `/proc`), matching the ECS probes; `frontend.depends_on.api` uses `condition: service_healthy`. Docs and regression tests lock the contract. — [PR](https://github.com/davidcristian/HeadStart/pull/218)
 
 **Verification.** Confirmed 3/3 adversarial verifiers. api/worker/beat have no healthcheck and `frontend` uses short-form `depends_on: - api` with no `service_healthy` condition despite the image exposing `/api/v1/health`; a real readiness gap for a dev compose, low.
 
