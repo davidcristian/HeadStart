@@ -15,6 +15,7 @@ docker compose version >/dev/null 2>&1 \
              || warn "'docker compose' plugin not found — needed for 'just up'."
 have python3 || warn "'python3' not found — install it: sudo apt install -y python3 python3-venv"
 have npm     || warn "'npm' not found — install Node.js 20+ (nodesource or nvm)."
+have shellcheck || warn "'shellcheck' not found — needed for 'just check --scripts': sudo apt install -y shellcheck."
 # Deploy-only tools (safe to skip for local development):
 have terraform || warn "'terraform' not found — only required for 'just deploy' (AWS)."
 have aws       || warn "'aws' (AWS CLI v2) not found — only required for 'just deploy' (AWS)."

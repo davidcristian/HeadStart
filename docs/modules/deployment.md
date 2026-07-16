@@ -244,7 +244,7 @@ were ever mutable again.
 All workflows live in `.github/workflows/`. The CI quality gate (`ci.yml`) runs
 on push/PR via the same `scripts/check.sh` entrypoint as local `just check`
 (OPS-22): backend `just check --backend` (ruff + black + LOC, mypy, pytest) and
-`just check --scripts` (shell syntax); frontend `just check --frontend`
+`just check --scripts` (shell syntax + shellcheck `-S warning`, OPS-65); frontend `just check --frontend`
 (eslint + prettier `--check`, tsc, vitest) plus `just build-frontend`. Audits
 stay adjacent: `just audit-backend` (`pip-audit` on hashed lockfiles, OPS-19)
 and `just audit-frontend` (`npm audit --audit-level=high`, FRO-12). Every
@@ -261,7 +261,9 @@ dependency audits stay in `just check` / CI. The `frontend-lint` hook runs
 `npx eslint . --max-warnings=0` (same as `npm run lint`) so ESLint always
 receives an explicit path — without one, ESLint 8 scans zero files and exits
 0 (OPS-03). LOC, shell validation, and prettier are enforced in both
-pre-commit and CI (OPS-04). The LOC gate prints offender paths with a literal
+pre-commit and CI (OPS-04). Shell validation runs `bash -n` then `shellcheck
+-x -S warning` on every `scripts/*.sh` (OPS-65; CI installs `shellcheck` before
+that step). The LOC gate prints offender paths with a literal
 repo-root strip so glob metacharacters in the checkout path cannot garble the
 report (OPS-63). `deploy.yml` (manual `workflow_dispatch`) and `terraform.yml`'s credentialed
 `plan` job are guarded on `vars.AWS_ROLE_ARN` (plus default-branch refs), so

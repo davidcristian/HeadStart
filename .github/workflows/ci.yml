@@ -35,7 +35,10 @@ jobs:
       - name: Check (lint + types + tests)
         run: just check --backend
       - name: Shell script validation
-        run: just check --scripts
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq shellcheck
+          just check --scripts
 
   migrations:
     name: Migrations (alembic on Postgres)

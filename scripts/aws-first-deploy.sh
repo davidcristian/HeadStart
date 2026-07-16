@@ -111,27 +111,32 @@ ensure_tf_secrets() {
   local generated=0
 
   if [[ -z "${TF_VAR_db_password:-}" ]]; then
-    export TF_VAR_db_password="$(openssl rand -base64 24)"
+    TF_VAR_db_password="$(openssl rand -base64 24)"
+    export TF_VAR_db_password
     generated=1
   fi
   if [[ -z "${TF_VAR_jwt_secret:-}" ]]; then
-    export TF_VAR_jwt_secret="$(openssl rand -hex 32)"
+    TF_VAR_jwt_secret="$(openssl rand -hex 32)"
+    export TF_VAR_jwt_secret
     generated=1
   fi
   if [[ -z "${TF_VAR_credentials_secret_key:-}" ]]; then
-    export TF_VAR_credentials_secret_key="$(openssl rand -hex 32)"
+    TF_VAR_credentials_secret_key="$(openssl rand -hex 32)"
+    export TF_VAR_credentials_secret_key
     generated=1
   fi
   if [[ -z "${TF_VAR_ntfy_default_topic:-}" || "${TF_VAR_ntfy_default_topic}" == "headstart-change-me" ]]; then
-    export TF_VAR_ntfy_default_topic="jobs-$(openssl rand -hex 4)"
+    TF_VAR_ntfy_default_topic="jobs-$(openssl rand -hex 4)"
+    export TF_VAR_ntfy_default_topic
     generated=1
   fi
   # Pin the provider to the caller's account so a later wrong credential fails
   # fast (OPS-31). Operators may pre-set TF_VAR_aws_account_id to a fixed ID.
   if [[ -z "${TF_VAR_aws_account_id:-}" ]]; then
-    export TF_VAR_aws_account_id="$(
+    TF_VAR_aws_account_id="$(
       aws sts get-caller-identity --region "${AWS_REGION}" --query Account --output text 2>/dev/null || true
     )"
+    export TF_VAR_aws_account_id
     [[ "${TF_VAR_aws_account_id}" =~ ^[0-9]{12}$ ]] \
       || die "Could not resolve a 12-digit AWS account ID. Set TF_VAR_aws_account_id explicitly."
     generated=1
@@ -141,7 +146,8 @@ ensure_tf_secrets() {
   # Prod Terraform requires an immutable image_tag (rejects empty / latest; OPS-07).
   if [[ "${ENVIRONMENT}" == "prod" ]]; then
     if [[ -z "${TF_VAR_image_tag:-}" || "${TF_VAR_image_tag}" == "latest" ]]; then
-      export TF_VAR_image_tag="$(git -C "${REPO_ROOT}" rev-parse --short HEAD 2>/dev/null || true)"
+      TF_VAR_image_tag="$(git -C "${REPO_ROOT}" rev-parse --short HEAD 2>/dev/null || true)"
+      export TF_VAR_image_tag
       [[ -n "${TF_VAR_image_tag}" && "${TF_VAR_image_tag}" != "latest" ]] \
         || die "Prod requires TF_VAR_image_tag set to an immutable git SHA (not latest)."
       generated=1
@@ -282,7 +288,6 @@ prompt_prefix
 validate_prefix "${PREFIX}"
 
 BUCKET="${PREFIX}-headstart-tfstate"
-TF_DIR="${REPO_ROOT}/devops/terraform/environments/${ENVIRONMENT}"
 
 log "First-time deploy: environment=${ENVIRONMENT} region=${AWS_REGION} bucket=${BUCKET}"
 

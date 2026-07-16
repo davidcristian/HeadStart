@@ -719,7 +719,7 @@ SHA pin. `aws-first-deploy.sh` sets `TF_VAR_image_tag` from the short SHA when
 
 <a id="ops-65"></a>
 ### OPS-65 — Shell validation is bash -n syntax-only (no shellcheck)
-⚪ **LOW** · 🧪 test · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: S · WS37
+⚪ **LOW** · 🧪 test · Status: ✅ done · Confidence: high (3/3 verifiers) · Effort: S · WS37
 
 **Locations:** `scripts/validate-shell-scripts.sh:6` (`validate loop`).
 
@@ -732,6 +732,8 @@ SHA pin. `aws-first-deploy.sh` sets `TF_VAR_image_tag` from the short SHA when
 **Suggested fix.** Add `shellcheck` to the loop (and a pre-commit hook) with an agreed severity threshold, so SC2086-class bugs are caught in `make check` rather than production.
 
 **Verification.** Confirmed 3/3 adversarial verifiers. `validate-shell-scripts.sh` runs only `bash -n` plus one `--help`; grep confirms `shellcheck` is never invoked despite scripts carrying `# shellcheck` directives — a real defense-in-depth gap, low.
+
+**Fix.** `validate-shell-scripts.sh` now requires `shellcheck` and runs `shellcheck -x -S warning` on every `scripts/*.sh` after `bash -n` (pre-commit already calls this script). CI installs `shellcheck` before `just check --scripts`. Cleared the warnings it surfaced (SC2155 declare-then-export in `aws-first-deploy.sh`, unused `TF_DIR`, `cd || exit` in `lock-backend.sh`). `just setup` warns when shellcheck is missing; runbook + deployment.md document the host tool and gate.
 
 ---
 

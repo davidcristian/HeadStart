@@ -20,7 +20,7 @@ compile() {
   local out="$1"
   shift
   (
-    cd "${BACKEND_DIR}"
+    cd "${BACKEND_DIR}" || exit
     "${python_bin}" -m piptools compile \
       --generate-hashes \
       --allow-unsafe \
