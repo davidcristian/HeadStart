@@ -3,6 +3,9 @@
 A headless Chromium instance is expensive to launch; workers keep one browser
 open per child process and reuse it across scrapes. Browsers are created lazily
 on first use and closed on worker shutdown.
+
+Chromium keeps its process sandbox by default (OPS-27). ``--no-sandbox`` is
+only added when ``PLAYWRIGHT_NO_SANDBOX=true`` in local/test.
 """
 
 from __future__ import annotations
@@ -11,11 +14,28 @@ import logging
 import threading
 from typing import Any
 
+from app.core.config import settings
+
 logger = logging.getLogger(__name__)
 
 _lock = threading.Lock()
 _browser: Any | None = None
 _playwright_cm: Any | None = None
+
+# Container-friendly flags that do not disable Chromium's process sandbox.
+_BASE_CHROMIUM_ARGS = (
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+)
+
+
+def chromium_launch_args(*, no_sandbox: bool | None = None) -> list[str]:
+    """Build Chromium launch args; sandbox stays on unless explicitly disabled."""
+    disable_sandbox = settings.playwright_no_sandbox if no_sandbox is None else no_sandbox
+    args = list(_BASE_CHROMIUM_ARGS)
+    if disable_sandbox:
+        args.append("--no-sandbox")
+    return args
 
 
 def get_browser() -> Any:
@@ -36,11 +56,7 @@ def get_browser() -> Any:
         playwright = _playwright_cm.__enter__()
         _browser = playwright.chromium.launch(
             headless=True,
-            args=[
-                "--no-sandbox",
-                "--disable-dev-shm-usage",
-                "--disable-gpu",
-            ],
+            args=chromium_launch_args(),
         )
         logger.info("playwright browser started")
         return _browser

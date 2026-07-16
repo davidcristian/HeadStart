@@ -339,7 +339,7 @@ SHA pin. `aws-first-deploy.sh` sets `TF_VAR_image_tag` from the short SHA when
 
 <a id="ops-27"></a>
 ### OPS-27 — Worker image installs playwright system deps as root but retains them at runtime
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: medium (2/3 verifiers) · Effort: M · WS38
+⚪ **LOW** · 🔒 security · Status: ✅ done · Confidence: medium (2/3 verifiers) · Effort: M · WS38
 
 **Locations:** `backend/Dockerfile:29` (`worker stage`).
 
@@ -350,6 +350,8 @@ SHA pin. `aws-first-deploy.sh` sets `TF_VAR_image_tag` from the short SHA when
 **Suggested fix.** Document/enforce Chromium sandbox flags and a seccomp profile for the worker; consider a minimal browser base image. Low-priority hardening.
 
 **Verification.** Confirmed 2/3 adversarial verifiers (1 refuted). The worker stage does ship Chromium + apt deps (Dockerfile L33-34) for untrusted-site scraping; it is intentional design and runs as `appuser`, so this is speculative defense-in-depth, correctly rated low.
+
+**Resolution.** Chromium launch drops `--no-sandbox` by default (`PLAYWRIGHT_NO_SANDBOX` local/test-only, rejected elsewhere); ECS worker applies RuntimeDefault seccomp + capability drop + init. See [PR #207](https://github.com/davidcristian/HeadStart/pull/207).
 
 ---
 

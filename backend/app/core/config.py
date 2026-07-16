@@ -102,6 +102,8 @@ class Settings(BaseSettings):
     # ---- playwright (worker / opt-in scraper) ----
     playwright_navigation_timeout_ms: int = 30_000
     playwright_max_retries: int = 1  # retries after first attempt; 0 = none
+    # OPS-27: keep Chromium's process sandbox; local/test-only escape hatch.
+    playwright_no_sandbox: bool = False
     scraper_max_response_bytes: int = 5_242_880  # SCR-04 HTTP body cap
 
     # ---- metrics (Prometheus) ----
@@ -215,6 +217,13 @@ class Settings(BaseSettings):
             auth_cookie_samesite=self.auth_cookie_samesite,
             frontend_base_url=self.frontend_base_url,
         )
+        # OPS-27: Chromium must keep its process sandbox outside local/test.
+        if self.playwright_no_sandbox and not secret_policy.is_local_environment(self.environment):
+            raise ValueError(
+                f"PLAYWRIGHT_NO_SANDBOX must be false when ENVIRONMENT="
+                f"'{self.environment}'; Chromium scrapes untrusted sites and "
+                "must keep its process sandbox."
+            )
         return self
 
     @computed_field  # type: ignore[prop-decorator]

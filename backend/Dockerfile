@@ -31,7 +31,9 @@ RUN chmod +x /usr/local/bin/entrypoint.sh \
 
 FROM base AS worker
 
-# Playwright + Chromium for JS-heavy scrapes. Needs root for system deps.
+# Playwright + Chromium for JS-heavy scrapes. Needs root for system deps;
+# runtime stays as appuser with Chromium's process sandbox enabled (OPS-27).
+# Do not pass --no-sandbox in production (see playwright_browser.py).
 # requirements-playwright.txt is a full hashed lock (runtime + playwright).
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 COPY requirements-playwright.txt ./

@@ -50,6 +50,7 @@ locals {
       logConfiguration = local.log_config
     }])
   }
+  # OPS-27: RuntimeDefault seccomp + drop all caps around Chromium scrapes.
   worker_container = jsonencode([{
     name             = "worker"
     image            = local.worker_backend_ref
@@ -59,6 +60,15 @@ locals {
     environment      = local.env_list
     secrets          = local.secrets_list
     logConfiguration = local.log_config
+    linuxParameters = {
+      initProcessEnabled = true
+      capabilities = {
+        drop = ["ALL"]
+      }
+      seccompProfile = {
+        type = "RuntimeDefault"
+      }
+    }
   }])
 }
 

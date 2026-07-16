@@ -173,7 +173,8 @@ merge (SVC-11; see [appliers.md](appliers.md)).
 
 When a scrape uses the `playwright` adapter, the worker reuses a process-scoped
 headless Chromium browser (see [scrapers.md](scrapers.md)). Use the worker Docker
-target / `headstart-backend-worker` image in production.
+target / `headstart-backend-worker` image in production (Chromium keeps its
+process sandbox; ECS applies RuntimeDefault seccomp — OPS-27).
 
 Prometheus metrics for scrape latency, pipeline outcomes, and notification
 delivery are recorded here — see [metrics.md](metrics.md). Prefork children all

@@ -172,10 +172,13 @@ The `playwright` adapter is optional locally (`pip install -e ".[playwright]"`)
 and **enabled in production on the worker only**:
 
 - **Docker:** `backend/Dockerfile` target `worker` installs Chromium; the lean
-  `api` / `beat` images omit Playwright.
+  `api` / `beat` images omit Playwright. Runtime stays as `appuser`; Chromium
+  keeps its process sandbox (no `--no-sandbox` unless `PLAYWRIGHT_NO_SANDBOX`
+  in local/test — OPS-27).
 - **Browser pool:** each Celery worker child process reuses one headless Chromium
   instance across scrapes (`app/scrapers/playwright_browser.py`). The browser
-  is closed on worker shutdown.
+  is closed on worker shutdown. Launch args keep `--disable-dev-shm-usage` /
+  `--disable-gpu` for containers without disabling the sandbox.
 - **Timeouts / retries:** env vars `PLAYWRIGHT_NAVIGATION_TIMEOUT_MS` (default
   `30000`) and `PLAYWRIGHT_MAX_RETRIES` (default `1`). Per-source overrides in
   `default_config` / `config`:

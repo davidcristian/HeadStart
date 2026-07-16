@@ -102,6 +102,19 @@ with Chromium pre-installed. Default Fargate sizing is **1024 CPU / 2048 MiB**
 (vs **256 / 512** for api, beat, and frontend). Override via stack module vars
 `worker_cpu` and `worker_memory` in `environments/<env>/main.tf`.
 
+### Chromium sandbox & seccomp (OPS-27)
+
+The worker scrapes untrusted employer sites inside Chromium. Hardening:
+
+- **Process sandbox:** `playwright_browser` launches Chromium **without**
+  `--no-sandbox` by default. `PLAYWRIGHT_NO_SANDBOX=true` is a local/test-only
+  escape hatch and is rejected at boot outside those environments.
+- **ECS:** the worker task definition sets `linuxParameters.seccompProfile.type
+  = RuntimeDefault`, drops all Linux capabilities, and enables the container
+  init process so orphaned Chromium children are reaped.
+- **Image:** `backend/Dockerfile` target `worker` installs Playwright/Chromium
+  as root (system deps), then runs as `appuser`.
+
 ## Distinct VPC CIDRs (OPS-30)
 
 Beta and prod must not share the same private address space. Each environment's
