@@ -110,10 +110,11 @@ module "secrets" {
 }
 
 module "iam" {
-  source      = "../iam"
-  name        = local.name
-  secret_arns = values(module.secrets.secret_arns)
-  tags        = local.tags
+  source               = "../iam"
+  name                 = local.name
+  secret_arns          = values(module.secrets.secret_arns)
+  secrets_kms_key_arn  = module.secrets.kms_key_arn
+  tags                 = local.tags
 }
 
 module "acm" {

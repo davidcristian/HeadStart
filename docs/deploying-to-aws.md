@@ -68,7 +68,8 @@ Terraform (`devops/terraform/`) provisions:
   (tags are **immutable** — re-pushing the same tag fails; use a new git SHA —
   OPS-09)
 - Secrets Manager entries for `POSTGRES_PASSWORD`, `JWT_SECRET`,
-  `CREDENTIALS_SECRET_KEY`
+  `CREDENTIALS_SECRET_KEY` (and Redis / metrics / optional SMTP) encrypted with
+  a customer-managed KMS key and an explicit recovery window (OPS-51)
 
 Default region is **`us-east-2`**. Use the **`beta`** environment first (cheaper);
 **`prod`** adds Multi-AZ RDS and deletion protection on RDS and the ALB. Both

@@ -58,7 +58,7 @@ devops/terraform/
 │   ├── alb/       # load balancer, listeners, target groups, access logs, WAF
 │   ├── ecs/       # cluster, task defs + services (api, frontend, worker, beat)
 │   ├── iam/       # task execution + task roles
-│   └── secrets/   # Secrets Manager / SSM params
+│   └── secrets/   # Secrets Manager (CMK + recovery window — OPS-51)
 └── environments/
     ├── beta/
     └── prod/
@@ -247,8 +247,23 @@ plan/apply unless `environment=prod` has `db_deletion_protection=true` **and**
 
 **Existing stacks** that already applied AWS-managed storage encryption will
 see an RDS replacement when adopting the CMK — plan a snapshot / restore
-window before apply. Secrets Manager CMK isolation and secret rotation remain
-[OPS-51](../../audit/findings/devops.md#ops-51).
+window before apply.
+
+### Secrets Manager CMK + recovery window (OPS-51)
+
+Application secrets (`JWT_SECRET`, `CREDENTIALS_SECRET_KEY`,
+`POSTGRES_PASSWORD`, `REDIS_PASSWORD`, `METRICS_TOKEN`, optional
+`SMTP_PASSWORD`) are encrypted with a **customer-managed KMS key**
+(`alias/{name}-secrets`) that has annual key rotation enabled — not the shared
+`aws/secretsmanager` key. The key policy allows use only via Secrets Manager
+(`kms:ViaService`) for principals in the account. Each secret sets an explicit
+`recovery_window_in_days` (default **30**). The ECS task execution role is
+granted `kms:Decrypt` / `kms:DescribeKey` on that CMK alongside
+`secretsmanager:GetSecretValue`.
+
+Adopting the CMK on an existing stack re-encrypts secret material in place (no
+secret replacement); schedule the apply during a quiet window and confirm tasks
+still pull secrets after the roll.
 
 ### ALB hardening (OPS-08)
 

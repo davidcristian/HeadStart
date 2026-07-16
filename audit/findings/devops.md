@@ -575,9 +575,15 @@ now ships `versions.tf` with `required_version >= 1.5.0` and
 
 <a id="ops-51"></a>
 ### OPS-51 — Secrets Manager secrets use default KMS key and no recovery window set
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: medium (3/3 verifiers) · Effort: S · WS38
+⚪ **LOW** · 🔒 security · Status: ✅ done · Confidence: medium (3/3 verifiers) · Effort: S · WS38
 
 **Locations:** `devops/terraform/modules/secrets/main.tf:9` (`aws_secretsmanager_secret.this`).
+
+**Update (2026-07-11).** Fixed: secrets module provisions `aws_kms_key.secrets`
+(`alias/{name}-secrets`, annual rotation) with a ViaService key policy; each
+secret sets `kms_key_id` + explicit `recovery_window_in_days` (default 30); ECS
+execution role gets `kms:Decrypt`/`kms:DescribeKey` on that CMK —
+[PR](https://github.com/davidcristian/HeadStart/pull/215).
 
 **Evidence.** `aws_secretsmanager_secret` sets only name/tags: no `kms_key_id` (so `JWT_SECRET`, `CREDENTIALS_SECRET_KEY`, and `POSTGRES_PASSWORD` are encrypted under the shared `aws/secretsmanager` key) and no `recovery_window_in_days`, so deletes fall back to the 30-day default with no explicit policy.
 

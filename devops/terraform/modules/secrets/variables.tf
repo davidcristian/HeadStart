@@ -14,6 +14,17 @@ variable "secret_values" {
   sensitive   = true
 }
 
+variable "recovery_window_in_days" {
+  type        = number
+  description = "Days Secrets Manager retains a deleted secret before purge (7–30, or 0 for immediate)."
+  default     = 30
+
+  validation {
+    condition     = var.recovery_window_in_days == 0 || (var.recovery_window_in_days >= 7 && var.recovery_window_in_days <= 30)
+    error_message = "recovery_window_in_days must be 0 (force delete) or between 7 and 30."
+  }
+}
+
 variable "tags" {
   type    = map(string)
   default = {}

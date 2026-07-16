@@ -22,12 +22,20 @@ resource "aws_iam_role_policy_attachment" "execution_managed" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
-# Allow the execution role to read the app's secrets.
+# Allow the execution role to read the app's secrets (and decrypt the CMK).
 data "aws_iam_policy_document" "secrets" {
   count = length(var.secret_arns) > 0 ? 1 : 0
   statement {
     actions   = ["secretsmanager:GetSecretValue"]
     resources = var.secret_arns
+  }
+
+  dynamic "statement" {
+    for_each = var.secrets_kms_key_arn == "" ? [] : [var.secrets_kms_key_arn]
+    content {
+      actions   = ["kms:Decrypt", "kms:DescribeKey"]
+      resources = [statement.value]
+    }
   }
 }
 
