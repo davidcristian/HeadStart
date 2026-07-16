@@ -1,4 +1,6 @@
 # Managed Postgres for the application.
+# OPS-43: CMK encryption, IAM DB auth, Performance Insights, Postgres log
+# exports, enhanced monitoring, and non-disruptive apply by default.
 
 resource "aws_db_subnet_group" "this" {
   name       = "${var.name}-db"
@@ -16,6 +18,7 @@ resource "aws_db_instance" "this" {
   max_allocated_storage = var.max_allocated_storage
   storage_type          = "gp3"
   storage_encrypted     = true
+  kms_key_id            = aws_kms_key.rds.arn
 
   db_name  = var.db_name
   username = var.username
@@ -29,7 +32,18 @@ resource "aws_db_instance" "this" {
   backup_retention_period = var.backup_retention_days
   deletion_protection     = var.deletion_protection
   skip_final_snapshot     = !var.deletion_protection
-  apply_immediately       = true
+  apply_immediately       = var.apply_immediately
+
+  iam_database_authentication_enabled = true
+
+  performance_insights_enabled          = true
+  performance_insights_kms_key_id       = aws_kms_key.rds.arn
+  performance_insights_retention_period = var.performance_insights_retention_days
+
+  enabled_cloudwatch_logs_exports = ["postgresql", "upgrade"]
+
+  monitoring_interval = var.monitoring_interval
+  monitoring_role_arn = var.monitoring_interval > 0 ? aws_iam_role.monitoring.arn : null
 
   tags = var.tags
 }

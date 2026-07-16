@@ -9,3 +9,13 @@ output "port" {
 output "db_name" {
   value = aws_db_instance.this.db_name
 }
+
+output "kms_key_arn" {
+  value       = aws_kms_key.rds.arn
+  description = "CMK used for RDS storage and Performance Insights (OPS-43)."
+}
+
+output "monitoring_role_arn" {
+  value       = aws_iam_role.monitoring.arn
+  description = "IAM role ARN for RDS Enhanced Monitoring (OPS-43)."
+}

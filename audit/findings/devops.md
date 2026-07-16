@@ -519,7 +519,9 @@ now ships `versions.tf` with `required_version >= 1.5.0` and
 
 <a id="ops-43"></a>
 ### OPS-43 — RDS uses AWS-managed KMS key with no IAM auth, Performance Insights, log exports, or CMK rotation
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: medium (3/3 verifiers) · Effort: M · WS38
+⚪ **LOW** · 🔒 security · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/213)) · Confidence: medium (3/3 verifiers) · Effort: M · WS38
+
+**Update (2026-07-11).** RDS module provisions a rotating CMK (`alias/{name}-rds`) for storage + Performance Insights, enables IAM DB auth, PI (7-day default), Enhanced Monitoring (60s), CloudWatch `postgresql`/`upgrade` log exports, and defaults `apply_immediately` to false. Secrets Manager CMK/rotation remains OPS-51.
 
 **Locations:** `devops/terraform/modules/rds/main.tf:9` (`aws_db_instance.this`); plus `devops/terraform/modules/secrets/main.tf:9`.
 

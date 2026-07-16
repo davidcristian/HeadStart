@@ -62,7 +62,8 @@ Terraform (`devops/terraform/`) provisions:
 - Application Load Balancer (public entrypoint; HTTP allowed on **beta**,
   **prod** requires HTTPS — OPS-36)
 - ECS Fargate cluster with services: `api`, `frontend`, `worker`, `beat`
-- RDS Postgres + ElastiCache Redis
+- RDS Postgres (CMK encryption, IAM DB auth, Performance Insights, Postgres
+  log exports, Enhanced Monitoring — OPS-43) + ElastiCache Redis
 - ECR repositories for backend, backend-worker (Playwright), and frontend images
   (tags are **immutable** — re-pushing the same tag fails; use a new git SHA —
   OPS-09)
@@ -72,7 +73,8 @@ Terraform (`devops/terraform/`) provisions:
 Default region is **`us-east-2`**. Use the **`beta`** environment first (cheaper);
 **`prod`** adds Multi-AZ RDS and deletion protection on RDS and the ALB. Both
 environments enable ALB access logs, `drop_invalid_header_fields`, and a
-regional WAFv2 ACL (OPS-08), plus VPC flow logs to CloudWatch (OPS-41).
+regional WAFv2 ACL (OPS-08), VPC flow logs to CloudWatch (OPS-41), and the
+RDS datastore hardening above (OPS-43).
 
 > **Cost:** even `beta` runs an ALB, four Fargate tasks, RDS, and Redis — expect
 > ongoing monthly charges, not a free-tier-only stack.

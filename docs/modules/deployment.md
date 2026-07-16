@@ -52,7 +52,7 @@ devops/terraform/
 ├── modules/
 │   ├── network/   # VPC, subnets, NAT, VPC flow logs → CloudWatch
 │   ├── ecr/       # image repositories
-│   ├── rds/       # Postgres
+│   ├── rds/       # Postgres (CMK, IAM auth, PI, log exports, EM — OPS-43)
 │   ├── redis/     # ElastiCache
 │   ├── acm/       # DNS-validated TLS certificates (optional)
 │   ├── alb/       # load balancer, listeners, target groups, access logs, WAF
@@ -217,6 +217,26 @@ Every environment's VPC publishes **ALL** traffic flow logs to CloudWatch Logs
 `vpc-flow-logs.amazonaws.com`. Retention follows `log_retention_days` (30 on
 beta, 90 on prod) so accepted/rejected ENI traffic to tasks/RDS/Redis is
 available for incident response without changing the data plane.
+
+### RDS datastore hardening (OPS-43)
+
+Every environment's Postgres instance:
+
+- Encrypts storage (and Performance Insights) with a **customer-managed KMS
+  key** (`alias/{name}-rds`) that has annual key rotation enabled — not the
+  shared `aws/rds` key
+- Enables **IAM database authentication** (password auth still works; operators
+  can add IAM-mapped DB users as a second factor)
+- Turns on **Performance Insights** (7-day retention by default) and
+  **Enhanced Monitoring** (60s interval via a dedicated IAM role)
+- Exports `postgresql` + `upgrade` logs to CloudWatch Logs
+- Defaults `apply_immediately = false` so engine/parameter changes wait for the
+  maintenance window instead of rebooting mid-apply
+
+**Existing stacks** that already applied AWS-managed storage encryption will
+see an RDS replacement when adopting the CMK — plan a snapshot / restore
+window before apply. Secrets Manager CMK isolation and secret rotation remain
+[OPS-51](../../audit/findings/devops.md#ops-51).
 
 ### ALB hardening (OPS-08)
 

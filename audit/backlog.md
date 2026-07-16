@@ -405,7 +405,7 @@ _18 item(s): 4 medium, 14 low._
 | ⚪ LOW | 🔒 | [OPS-38](findings/devops.md#ops-38) ECS container definitions lack healthCheck, read-only root filesystem, and non-root user | `devops/terraform/modules/ecs/main.tf:40` | ✅ [PR](https://github.com/davidcristian/HeadStart/pull/210) |
 | ⚪ LOW | 🔁 | [OPS-40](findings/devops.md#ops-40) Reusable modules declare no required_providers version constraints | `devops/terraform/modules/network/main.tf:1` | ✅ [PR](https://github.com/davidcristian/HeadStart/pull/211) |
 | ⚪ LOW | 🔒 | [OPS-41](findings/devops.md#ops-41) VPC has no flow logs enabled | `devops/terraform/modules/network/main.tf:8` | ✅ [PR](https://github.com/davidcristian/HeadStart/pull/212) |
-| ⚪ LOW | 🔒 | [OPS-43](findings/devops.md#ops-43) RDS uses AWS-managed KMS key with no IAM auth, Performance Insights, log exports, or CMK rotation | `devops/terraform/modules/rds/main.tf:9` | ☐ |
+| ⚪ LOW | 🔒 | [OPS-43](findings/devops.md#ops-43) RDS uses AWS-managed KMS key with no IAM auth, Performance Insights, log exports, or CMK rotation | `devops/terraform/modules/rds/main.tf:9` | ✅ [PR](https://github.com/davidcristian/HeadStart/pull/213) |
 | ⚪ LOW | 🔒 | [OPS-48](findings/devops.md#ops-48) RDS module: no validation; deletion_protection/final-snapshot default unsafe | `devops/terraform/modules/rds/variables.tf:41` | ☐ |
 | ⚪ LOW | 🐞 | [OPS-49](findings/devops.md#ops-49) Redis cluster is single-node with no failover (Celery broker SPOF) | `devops/terraform/modules/redis/main.tf:9` | ✅ [PR](https://github.com/davidcristian/HeadStart/pull/67) |
 | ⚪ LOW | 🔒 | [OPS-51](findings/devops.md#ops-51) Secrets Manager secrets use default KMS key and no recovery window set | `devops/terraform/modules/secrets/main.tf:9` | ☐ |
