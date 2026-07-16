@@ -615,7 +615,9 @@ execution role gets `kms:Decrypt`/`kms:DescribeKey` on that CMK —
 
 <a id="ops-55"></a>
 ### OPS-55 — LOG_LEVEL hardcoded to INFO in Terraform with no variable override
-⚪ **LOW** · 🔁 consistency · Status: ☐ open · Confidence: certain (3/3 verifiers) · Effort: XS · WS38
+⚪ **LOW** · 🔁 consistency · Status: ✅ done · Confidence: certain (3/3 verifiers) · Effort: XS · WS38
+
+**Resolution.** Stack `log_level` (default `INFO`, validated) injects ECS `LOG_LEVEL`; beta/prod forward tfvars / `TF_VAR_log_level`. — [PR](https://github.com/davidcristian/HeadStart/pull/216).
 
 **Locations:** `devops/terraform/modules/stack/main.tf:153` (`ecs_environment`).
 

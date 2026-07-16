@@ -32,3 +32,7 @@ image_tag = "latest"
 # replace with your own unguessable value (terraform rejects change-me placeholders):
 #   export TF_VAR_ntfy_default_topic="jobs-$(openssl rand -hex 8)"
 # ntfy_default_topic = "jobs-a1b2c3d4e5f67890"
+
+# Optional: ECS LOG_LEVEL (default INFO). Raise for incident diagnosis (OPS-55):
+# log_level = "DEBUG"
+#   # or: export TF_VAR_log_level=DEBUG

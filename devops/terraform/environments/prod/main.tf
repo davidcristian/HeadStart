@@ -19,6 +19,7 @@ module "stack" {
   smtp_password          = var.smtp_password
   smtp_from              = var.smtp_from
   smtp_use_tls           = var.smtp_use_tls
+  log_level              = var.log_level
 
   # Distinct from beta's 10.20.0.0/16 so VPC peering / shared routing stays unambiguous (OPS-30).
   vpc_cidr             = "10.30.0.0/16"

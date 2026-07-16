@@ -123,3 +123,10 @@ variable "smtp_use_tls" {
   type    = bool
   default = true
 }
+
+# Optional: raise to DEBUG during incidents without editing the stack module (OPS-55).
+variable "log_level" {
+  type        = string
+  default     = "INFO"
+  description = "LOG_LEVEL for ECS api/worker/beat tasks (DEBUG, INFO, WARNING, ERROR, CRITICAL)."
+}

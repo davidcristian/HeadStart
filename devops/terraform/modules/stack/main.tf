@@ -193,7 +193,8 @@ locals {
   ecs_environment = merge(
     {
       ENVIRONMENT   = var.environment
-      LOG_LEVEL     = "INFO"
+      # OPS-55: tunable via var.log_level (tfvars / TF_VAR_log_level).
+      LOG_LEVEL     = upper(trimspace(var.log_level))
       POSTGRES_HOST = module.rds.address
       POSTGRES_PORT = tostring(module.rds.port)
       POSTGRES_DB   = module.rds.db_name

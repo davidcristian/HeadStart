@@ -167,6 +167,22 @@ variable "log_retention_days" {
   default     = 30
   description = "CloudWatch log group retention for ECS tasks and VPC flow logs (days)."
 }
+
+# App process log verbosity (Python logging / Celery --loglevel). Override via
+# tfvars or TF_VAR_log_level during incidents without patching module source (OPS-55).
+variable "log_level" {
+  type        = string
+  default     = "INFO"
+  description = "LOG_LEVEL injected into ECS tasks (DEBUG, INFO, WARNING, ERROR, CRITICAL)."
+
+  validation {
+    condition = contains(
+      ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+      upper(trimspace(var.log_level)),
+    )
+    error_message = "log_level must be one of DEBUG, INFO, WARNING, ERROR, CRITICAL."
+  }
+}
 variable "redis_node_type" {
   type    = string
   default = "cache.t4g.micro"

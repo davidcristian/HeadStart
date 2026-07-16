@@ -265,6 +265,14 @@ Adopting the CMK on an existing stack re-encrypts secret material in place (no
 secret replacement); schedule the apply during a quiet window and confirm tasks
 still pull secrets after the roll.
 
+### Tunable ECS LOG_LEVEL (OPS-55)
+
+`ecs_environment` injects `LOG_LEVEL` from stack `var.log_level` (default
+`INFO`, validated as `DEBUG` / `INFO` / `WARNING` / `ERROR` / `CRITICAL`). Beta
+and prod wrappers pass the same knob through so operators can raise verbosity
+during an incident via tfvars or `TF_VAR_log_level=DEBUG` without patching
+module source. Celery worker/beat entrypoints already honor `LOG_LEVEL`.
+
 ### ALB hardening (OPS-08)
 
 Every environment's ALB (beta and prod) enables:
