@@ -9,7 +9,8 @@ complements [deploying-to-aws.md](deploying-to-aws.md) (infrastructure) and
 ## 1. Domain & HTTPS
 
 - [ ] **Custom domain configured** — set `domain_name` + `route53_zone_id` (or
-  `acm_certificate_arn`) in Terraform. See
+  `acm_certificate_arn`) in Terraform. **Prod requires this** — plan/apply fails
+  without HTTPS (`prod_requires_https`, OPS-36). See
   [deploying-to-aws.md#custom-domain--https](deploying-to-aws.md#custom-domain--https).
 - [ ] **`terraform output https_enabled`** is `true` and
   **`terraform output app_url`** shows `https://…`.

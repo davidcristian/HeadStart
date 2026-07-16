@@ -75,10 +75,14 @@ only via `TF_VAR_*` env vars; beta/prod `terraform.tfvars.example` files no
 longer show inline assignments for them so operators are not primed to paste
 real secrets into a local `terraform.tfvars` (OPS-33).
 
-## HTTPS (optional)
+## HTTPS (required in prod)
 
-By default the ALB serves HTTP on port 80 using its AWS-assigned DNS name. To
-terminate TLS:
+**Beta** may serve HTTP on port 80 using the ALB's AWS-assigned DNS name (useful
+for throwaway stacks). **Prod** refuses that path: the stack `check
+"prod_requires_https"` fails plan/apply unless TLS is configured, so auth and
+site-credential API traffic cannot ride cleartext on the public ALB (OPS-36).
+
+To terminate TLS:
 
 - Set `domain_name` + `route53_zone_id` in the environment module to provision
   ACM (DNS validation), an HTTPS listener on 443, HTTP→HTTPS redirect, and a
@@ -87,8 +91,8 @@ terminate TLS:
 
 `app_url`, `CORS_ORIGINS`, and `FRONTEND_BASE_URL` default to `https://<domain>`
 when HTTPS is enabled. `AUTH_COOKIE_SECURE` is derived the same way (`true` when
-`https_enabled`, otherwise `false`) so the refresh cookie is not dropped on the
-default HTTP ALB. Outside `local`/`test`, the API also refuses to boot when
+`https_enabled`, otherwise `false`) so the refresh cookie is not dropped on a
+beta HTTP ALB. Outside `local`/`test`, the API also refuses to boot when
 `AUTH_COOKIE_SECURE=true` is paired with a non-`https` `FRONTEND_BASE_URL`, or
 when `AUTH_COOKIE_SAMESITE=none` is set without Secure (AUT-13). Optional
 `smtp_*` variables configure transactional email (`SMTP_PASSWORD` in Secrets

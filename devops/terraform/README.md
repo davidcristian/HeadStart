@@ -94,6 +94,10 @@ just deploy
 - Prod `image_tag` is required and must not be `latest` (immutable git SHA pin;
   OPS-07). Beta may still default to `latest` for throwaway stacks; `deploy.sh`
   retargets task defs to `IMAGE_TAG` on every roll either way.
+- Prod requires HTTPS (`domain_name` + `route53_zone_id`, or
+  `acm_certificate_arn`); the stack check `prod_requires_https` fails
+  plan/apply if the ALB would forward auth traffic over plaintext HTTP
+  (OPS-36). Beta may still use the HTTP ALB DNS name.
 - ECS service + task family names are stable (`headstart-api`, etc.) so the
   same `deploy.sh` works against any environment's cluster. `deploy.sh`
   registers a new task-definition revision per family pinned to the just-pushed

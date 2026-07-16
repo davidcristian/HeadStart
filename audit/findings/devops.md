@@ -443,7 +443,7 @@ SHA pin. `aws-first-deploy.sh` sets `TF_VAR_image_tag` from the short SHA when
 
 <a id="ops-36"></a>
 ### OPS-36 — ALB serves API/frontend over plaintext HTTP when no ACM certificate is configured
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: medium (3/3 verifiers) · Effort: M · WS38
+⚪ **LOW** · 🔒 security · Status: ✅ done · Confidence: medium (3/3 verifiers) · Effort: M · WS38
 
 **Locations:** `devops/terraform/modules/alb/main.tf:54` (`aws_lb_listener.http`).
 

@@ -63,7 +63,7 @@ variable "cors_origins" {
 variable "domain_name" {
   type        = string
   default     = ""
-  description = "Optional custom hostname (e.g. jobs.example.com). Enables HTTPS when combined with route53_zone_id or acm_certificate_arn."
+  description = "Custom hostname (e.g. jobs.example.com). Enables HTTPS with route53_zone_id or acm_certificate_arn. Required for environment=prod (OPS-36) unless acm_certificate_arn is set."
 }
 
 variable "route53_zone_id" {

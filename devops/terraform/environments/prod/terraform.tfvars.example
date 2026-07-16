@@ -18,9 +18,12 @@ region = "us-east-2"
 #   export TF_VAR_image_tag="$(git rev-parse --short HEAD)"
 image_tag = "REPLACE_WITH_GIT_SHA"
 
-# Strongly recommended in prod: custom domain + HTTPS.
+# Required in prod: HTTPS so the ALB does not serve auth traffic over
+# plaintext HTTP (OPS-36). Either domain_name + route53_zone_id (auto ACM)
+# or set acm_certificate_arn instead.
 domain_name     = "jobs.example.com"
 route53_zone_id = "Z0123456789ABCDEFGHIJ"
+# acm_certificate_arn = "arn:aws:acm:us-east-2:123456789012:certificate/..."
 # cors_origins defaults to https://jobs.example.com when domain_name is set.
 # cors_origins = ["https://jobs.example.com"]
 

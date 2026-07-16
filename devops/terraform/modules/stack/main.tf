@@ -56,6 +56,15 @@ locals {
   secret_values      = merge(local.base_secret_values, local.smtp_secret_values)
 }
 
+# OPS-36: prod must terminate TLS on the ALB. Without a cert, the port-80
+# listener forwards auth/credential API traffic in cleartext.
+check "prod_requires_https" {
+  assert {
+    condition     = var.environment != "prod" || local.https_enabled
+    error_message = "Production requires HTTPS so the ALB does not serve auth traffic over plaintext HTTP (OPS-36). Set domain_name + route53_zone_id (auto ACM) or acm_certificate_arn."
+  }
+}
+
 module "network" {
   source               = "../network"
   name                 = local.name

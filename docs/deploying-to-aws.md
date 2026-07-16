@@ -33,7 +33,8 @@ This single command:
 Add `YES=1` to skip the terraform confirmation prompt (useful in automation).
 Add `SKIP_DEPLOY=1` to provision infrastructure only (no Docker image push).
 
-Optional HTTPS during first deploy (Route53 hosted zone required):
+Optional HTTPS on **beta** during first deploy (Route53 hosted zone required).
+**Prod** always needs these (or `ACM_CERTIFICATE_ARN`) — OPS-36:
 
 ```bash
 just aws-first-deploy PREFIX=yourname \
@@ -58,7 +59,8 @@ control or need to troubleshoot.
 Terraform (`devops/terraform/`) provisions:
 
 - VPC, subnets, security groups
-- Application Load Balancer (public entrypoint; HTTP by default, optional HTTPS)
+- Application Load Balancer (public entrypoint; HTTP allowed on **beta**,
+  **prod** requires HTTPS — OPS-36)
 - ECS Fargate cluster with services: `api`, `frontend`, `worker`, `beat`
 - RDS Postgres + ElastiCache Redis
 - ECR repositories for backend, backend-worker (Playwright), and frontend images
@@ -75,10 +77,12 @@ regional WAFv2 ACL (OPS-08).
 > **Cost:** even `beta` runs an ALB, four Fargate tasks, RDS, and Redis — expect
 > ongoing monthly charges, not a free-tier-only stack.
 
-> **HTTPS:** without a custom domain the ALB serves **HTTP on port 80** at
-> `http://<alb-dns-name>`. To enable TLS, set `domain_name` and `route53_zone_id`
-> (or bring your own `acm_certificate_arn`) — see [Custom domain & HTTPS](#custom-domain--https) below.
-> On HTTP-only deploys Terraform sets `AUTH_COOKIE_SECURE=false` (derived from
+> **HTTPS:** **beta** without a custom domain serves **HTTP on port 80** at
+> `http://<alb-dns-name>`. **Prod** requires TLS: set `domain_name` and
+> `route53_zone_id` (or `acm_certificate_arn`) or Terraform plan/apply fails
+> (`check "prod_requires_https"`, OPS-36) — see
+> [Custom domain & HTTPS](#custom-domain--https) below.
+> On HTTP-only beta deploys Terraform sets `AUTH_COOKIE_SECURE=false` (derived from
 > `https_enabled`) so the httpOnly refresh cookie is stored; with HTTPS it stays
 > `true`. Do not override that coupling unless you terminate TLS elsewhere.
 
@@ -318,7 +322,10 @@ database and ALB. ALB access logs + WAF apply in beta and prod (OPS-08).
 ## Custom domain & HTTPS
 
 ACM cannot issue a certificate for the default `*.elb.amazonaws.com` hostname, so
-HTTPS requires a domain you control.
+HTTPS requires a domain you control. **Prod requires HTTPS** — without
+`domain_name` + `route53_zone_id` (or `acm_certificate_arn`), the stack check
+`prod_requires_https` fails plan/apply so the ALB cannot forward auth traffic
+over plaintext HTTP (OPS-36). Beta may still use the HTTP ALB DNS name.
 
 **Recommended (Route53 + auto ACM):** add to `terraform.tfvars` or `TF_VAR_*`:
 

@@ -56,21 +56,24 @@ variable "cors_origins" {
   default     = []
 }
 
+# Required for prod HTTPS (OPS-36): either domain_name + route53_zone_id
+# (auto ACM) or acm_certificate_arn. Stack check fails plan/apply if neither
+# path enables TLS — the ALB must not forward auth traffic on plaintext HTTP.
 variable "domain_name" {
   type        = string
-  description = "Custom hostname for HTTPS (e.g. jobs.example.com)."
+  description = "Custom hostname for HTTPS (e.g. jobs.example.com). Required for prod unless acm_certificate_arn is set (OPS-36)."
   default     = ""
 }
 
 variable "route53_zone_id" {
   type        = string
-  description = "Route53 zone for domain_name (ACM validation + ALB alias)."
+  description = "Route53 zone for domain_name (ACM validation + ALB alias). Required with domain_name when not bringing your own cert (OPS-36)."
   default     = ""
 }
 
 variable "acm_certificate_arn" {
   type        = string
-  description = "Optional pre-validated ACM cert ARN instead of auto-provisioning."
+  description = "Pre-validated ACM cert ARN instead of auto-provisioning. Alternative to domain_name + route53_zone_id (OPS-36)."
   default     = ""
 }
 
