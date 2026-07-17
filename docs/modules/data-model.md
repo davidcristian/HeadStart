@@ -42,15 +42,20 @@ admin cannot re-open self-service admin creation (see [auth.md](auth.md)).
 | email         | str      | Unique, indexed                    |
 | password_hash | str      | bcrypt                             |
 | is_admin      | bool     | First registered user = true       |
-| feed_token_version | int | Incremented to revoke RSS feed URLs |
 | is_active     | bool     | Disabled accounts cannot log in    |
+| feed_token_version | int | Incremented to revoke RSS feed URLs |
+| token_version | int      | Incremented to revoke access/refresh JWTs (password reset, logout, admin deactivate) |
+| onboarding_completed_at | datetime? | Set when the first-run wizard is finished or skipped |
+| email_verified_at | datetime? | Set when the user confirms their email address |
 | plan                  | str      | Subscription tier: `free`, `starter`, `plus`, or `pro` (default `free`) |
 | stripe_customer_id    | str?     | Stripe customer ID (set on first checkout) |
 | stripe_subscription_id | str?  | Active Stripe subscription ID |
 | subscription_status   | str?     | Last known Stripe status (`active`, `trialing`, `canceled`, …) |
 | stripe_billing_event_at | int?   | Unix `created` of last applied subscription webhook (stale-event guard) |
-| onboarding_completed_at | datetime? | Set when the first-run wizard is finished or skipped |
-| email_verified_at | datetime? | Set when the user confirms their email address |
+| summary_provider | str?  | Optional override for `SUMMARY_PROVIDER`; null uses the server default |
+| summary_api_key_ciphertext | str? | Fernet-encrypted API key for the selected hosted provider |
+| ai_purpose_providers | JSON? | Optional per-purpose provider overrides (`cover_letter`, `resume_curation`, …) |
+| ai_purpose_models | JSON? | Optional per-purpose model overrides keyed by purpose id |
 | created_at    | datetime |                                    |
 
 ### registration_lock

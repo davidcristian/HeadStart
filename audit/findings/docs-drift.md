@@ -110,7 +110,7 @@ Merged: DOC-14 (uid 294) reported the same truncation and is folded in here.
 
 <a id="doc-17"></a>
 ### DOC-17 — data-model.md user table omits token_version + 4 AI-preference columns
-⚪ **LOW** · 📝 doc · Status: ☐ open · Confidence: certain (3/3 verifiers) · Effort: S · WS40
+⚪ **LOW** · 📝 doc · Status: ✅ done · Confidence: certain (3/3 verifiers) · Effort: S · WS40
 
 Merged: DOC-18 (uid 233) reported the same omission and is folded in here.
 
