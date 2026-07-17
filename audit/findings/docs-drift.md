@@ -140,7 +140,9 @@ Merged: DOC-18 (uid 233) reported the same omission and is folded in here.
 
 <a id="doc-20"></a>
 ### DOC-20 — frontend.md says PWA opens on /jobs but start_url is /app/jobs
-⚪ **LOW** · 📝 doc · Status: ☐ open · Confidence: certain (3/3 verifiers) · Effort: XS · WS40
+⚪ **LOW** · 📝 doc · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/229)) · Confidence: certain (3/3 verifiers) · Effort: XS · WS40
+
+**Fix.** `docs/modules/frontend.md` Progressive Web App Install bullet now says the installed app opens on `/app/jobs`, matching `vite.config.ts` `start_url` and the routing section. Regression `test_doc20_frontend_pwa_start_url.py` locks both.
 
 **Locations:** `docs/modules/frontend.md:166` (`Progressive Web App`).
 
