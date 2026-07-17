@@ -188,7 +188,9 @@ Merged: DOC-18 (uid 233) reported the same omission and is folded in here.
 
 <a id="doc-23"></a>
 ### DOC-23 — notifiers.md says ntfy uses URL-path + headers, but adapter POSTs JSON to server root
-⚪ **LOW** · 📝 doc · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: XS · WS40
+⚪ **LOW** · 📝 doc · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/231)) · Confidence: high (3/3 verifiers) · Effort: XS · WS40
+
+**Fix.** `docs/modules/notifiers.md` ntfy adapter section now describes JSON-body publish to `server_url` (topic/title/message/priority/tags/click fields) and optional `Authorization: Bearer` token auth, matching `ntfy.py`. Regression: `backend/tests/api/test_doc23_notifiers_ntfy_json.py`.
 
 **Locations:** `docs/modules/notifiers.md:45` (`ntfy adapter section`).
 

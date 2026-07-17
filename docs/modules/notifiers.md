@@ -63,19 +63,26 @@ against the outbound SSRF policy), and `just seed` replaces a guessable
 target never publishes to a public channel. On ntfy.sh the topic name is the
 capability — treat it like a secret and prefer an auth token.
 
-For each new job it POSTs to `{server_url}/{topic}` with headers:
+For each new job it POSTs JSON to the **server root** (`server_url`) using
+ntfy's [JSON publish API](https://docs.ntfy.sh/publish/#publish-as-json)
+so non-ASCII titles/messages avoid HTTP-header encoding pitfalls (topic is a
+JSON field, not a URL path segment). The body includes:
 
-- `Title`: `"<title> @ <company>"`
-- `Priority`: from config (`min|low|default|high|max`)
-- `Tags`: e.g. `briefcase`
-- `Click`: the job URL when it is absolute http(s) (non-http schemes omitted; NTF-08)
+- `topic`: from config (required)
+- `title`: `"<title> @ <company>"`
+- `message`: summary / location / apply URL lines (when present)
+- `priority`: numeric map of config `min|low|default|high|max` → 1–5
+- `tags`: e.g. `["briefcase"]`
+- `click`: the job URL when it is absolute http(s) (non-http schemes omitted; NTF-08)
 
-Sends are best-effort per job and recorded in `delivery_log` with status/error.
-In digest mode, one batched push lists every new job in the window. The
-`server_url` is validated against private/loopback addresses (SSRF protection)
-and the POST is DNS-pinned (single resolve, connect by IP with Host/SNI). On
-HTTP failure, `server_url` / topic / auth token are redacted from
-`DeliveryResult.error` and warning logs before persist (NTF-10).
+When `token` is set, the request also sends `Authorization: Bearer <token>` for
+protected topics. Sends are best-effort per job and recorded in `delivery_log`
+with status/error. In digest mode, one batched push lists every new job in the
+window (same JSON shape; `click` omitted). The `server_url` is validated against
+private/loopback addresses (SSRF protection) and the POST is DNS-pinned (single
+resolve, connect by IP with Host/SNI). On HTTP failure, `server_url` / topic /
+auth token are redacted from `DeliveryResult.error` and warning logs before
+persist (NTF-10).
 
 ## email adapter
 
