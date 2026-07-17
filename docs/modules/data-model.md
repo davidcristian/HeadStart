@@ -13,12 +13,18 @@ erDiagram
   USER ||--o{ NOTIFICATION_TARGET : owns
   USER ||--o{ SITE_CREDENTIAL : owns
   USER ||--o| APPLICATION_PROFILE : has
+  USER ||--o{ APPLICATION_ARTIFACT : owns
+  USER ||--o{ PROMO_REDEMPTION : redeems
+  USER ||--o{ PROMO_VALIDATION_ATTEMPT : attempts
+  USER ||--o{ DATA_REQUEST_LOG : audits
+  PROMO_CODE ||--o{ PROMO_REDEMPTION : has
   SOURCE ||--o{ SEARCH : has
   SOURCE ||--o{ SITE_CREDENTIAL : "secured by"
   NOTIFICATION_TARGET ||--o{ SEARCH : used_by
   SEARCH ||--o{ SEEN_JOB : produces
   SEEN_JOB ||--o{ DELIVERY_LOG : triggers
   NOTIFICATION_TARGET ||--o{ DELIVERY_LOG : via
+  APPLICATION_ARTIFACT ||--o{ APPLICATION_LOG : "tailored resume"
 ```
 
 **Ownership:** `source`, `search`, `notification_target`, `site_credential`,
@@ -28,7 +34,14 @@ erDiagram
 `cascade="all, delete-orphan"` so account erasure does not rely on the DB FK
 alone (DAT-07 / DAT-12). `seen_job`, `delivery_log`, and `application_log` have
 no `user_id`; they are scoped transitively through their parent `search`.
-All API queries filter by the authenticated user — see [auth.md](auth.md).
+`data_request_log.user_id` is nullable (`ON DELETE SET NULL`) so a post-erasure
+compliance row can survive without a live user FK. All API queries filter by
+the authenticated user — see [auth.md](auth.md).
+
+**Inbox / mailbox tables** (`mailbox_credential`, `inbox_poll_state`,
+`inbox_classification`, `inbox_reply_draft`, `inbox_pending_reply`,
+`inbox_reply_send_log`) live in [inbox.md](inbox.md); this doc covers the
+core job-pipeline schema plus billing/GDPR/artifact tables below (DOC-19).
 
 ### user
 
@@ -238,6 +251,24 @@ Encrypted, per-user candidate profile for auto-apply (singleton per user). See
 | created_at      | datetime  |                                                |
 | updated_at      | datetime  | Bumped on each save                            |
 
+### application_artifact
+
+Encrypted generated documents (e.g. tailored resume PDFs) owned by the user.
+Deduped per user by content hash. See [profile.md](profile.md).
+
+| Column           | Type      | Notes                                              |
+| ---------------- | --------- | -------------------------------------------------- |
+| id               | int PK    |                                                    |
+| user_id          | FK user   | Owner; cascade delete                              |
+| artifact_type    | str       | e.g. tailored resume                               |
+| content_sha256   | str       | SHA-256 of plaintext bytes                         |
+| filename         | str       | Download filename                                  |
+| content_type     | str       | MIME type                                          |
+| size_bytes       | int       | Plaintext size                                     |
+| data_ciphertext  | text      | Fernet-encrypted file bytes                        |
+| created_at       | datetime  |                                                    |
+|                  |           | **Unique (user_id, content_sha256)**               |
+
 ### delivery_log
 
 Audit of notification attempts.
@@ -270,6 +301,7 @@ Audit of auto-apply attempts (preview and live).
 | error                    | text?       | Present when failed                      |
 | payload                  | JSON?       | Scrubbed adapter body (SVC-11 drops `cookies`/`headers`/`authorization`/`session`/token keys) plus `employer_domain` + `posting` metadata for triage, and a `user_consent` stamp (`basis`, `mechanism`, `live_submission`, `recorded_at`) for each attempt |
 | external_application_id  | str?        | Board-assigned ID on success             |
+| tailored_resume_artifact_id | int? FK → application_artifact | Optional tailored PDF attached to the attempt (`ON DELETE SET NULL`) |
 | created_at               | datetime    |                                          |
 
 **Indexes (DAT-03):** `ix_application_log_dry_run_seen_job_id` on
@@ -283,6 +315,66 @@ that lists jobs with live (non–dry-run) apply activity.
 treats `IntegrityError` as “already in progress”, so concurrent
 `POST /jobs/{id}/apply` or pipeline auto-apply cannot queue two Celery live
 submits for the same job.
+
+### promo_code
+
+Admin-managed discount / trial / plan-upgrade offers redeemable at Stripe
+checkout. Full lifecycle in [billing.md](billing.md).
+
+| Column                   | Type      | Notes                                              |
+| ------------------------ | --------- | -------------------------------------------------- |
+| id                       | int PK    |                                                    |
+| code                     | str       | Unique, indexed redemption code                    |
+| promo_type               | str       | `percent_off` / `fixed_amount` / `free_trial_days` / `plan_upgrade` |
+| value_int                | int       | Percent, cents, trial days, or unused for plan_upgrade |
+| plan_target              | str?      | Target plan when `promo_type` is `plan_upgrade`    |
+| max_redemptions          | int?      | Global cap; null = unlimited                       |
+| redemption_count         | int       | Successful redemptions so far                      |
+| expires_at               | datetime? |                                                    |
+| active                   | bool      |                                                    |
+| one_per_user             | bool      | Default true                                       |
+| eligible_plans           | JSON?     | When set, only users on these plans may redeem     |
+| stripe_coupon_id         | str?      | Linked Stripe coupon                               |
+| stripe_promotion_code_id | str?      | Linked Stripe promotion code                       |
+| created_at               | datetime  |                                                    |
+
+### promo_redemption
+
+Audit trail when a user redeems a promo (one row per user per promo).
+
+| Column                      | Type      | Notes                                          |
+| --------------------------- | --------- | ---------------------------------------------- |
+| id                          | int PK    |                                                |
+| promo_code_id               | FK promo_code | Cascade delete                              |
+| user_id                     | FK user   | Owner; cascade delete                          |
+| stripe_checkout_session_id  | str?      | Checkout session that recorded the redemption  |
+| created_at                  | datetime  |                                                |
+|                             |           | **Unique (promo_code_id, user_id)**            |
+
+### promo_validation_attempt
+
+Rate-limit ledger for promo validate / checkout resolution attempts (BIL-09).
+
+| Column       | Type      | Notes                              |
+| ------------ | --------- | ---------------------------------- |
+| id           | int PK    |                                    |
+| user_id      | FK user   | Owner; cascade delete              |
+| code_entered | str       | Code string the user submitted     |
+| created_at   | datetime  | Indexed; sliding-window throttle   |
+
+### data_request_log
+
+GDPR export / account-deletion audit. See [auth.md](auth.md).
+
+| Column       | Type      | Notes                                                              |
+| ------------ | --------- | ------------------------------------------------------------------ |
+| id           | int PK    |                                                                    |
+| user_id      | FK user?  | Nullable; `ON DELETE SET NULL` so compliance rows survive erasure |
+| user_email   | str       | Live email while account exists; post-deletion HMAC pseudonym (`erased:<hex>`) only (DAT-02) |
+| request_type | str       | `export` or `delete`                                               |
+| ip_address   | str?      | Cleared on deletion redaction                                      |
+| user_agent   | text?     | Cleared on deletion redaction                                      |
+| created_at   | datetime  | Indexed                                                            |
 
 ### document_generation
 

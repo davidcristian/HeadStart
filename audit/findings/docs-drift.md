@@ -126,7 +126,7 @@ Merged: DOC-18 (uid 233) reported the same omission and is folded in here.
 
 <a id="doc-19"></a>
 ### DOC-19 — data-model.md omits real tables (application_artifact, promo_*, data_request_log)
-⚪ **LOW** · 📝 doc · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: S · WS40
+⚪ **LOW** · 📝 doc · Status: ✅ done · Confidence: high (3/3 verifiers) · Effort: S · WS40
 
 **Locations:** `docs/modules/data-model.md:7` (`Entities`); plus `backend/app/models/application_artifact.py:22`, `backend/app/models/promo_redemption.py`, `backend/app/models/data_request_log.py`, `backend/app/models/application_log.py:30`.
 
