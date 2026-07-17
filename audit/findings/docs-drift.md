@@ -24,7 +24,7 @@ After merging near-duplicate records (see the note at the end), 15 distinct find
 
 <a id="doc-11"></a>
 ### DOC-11 — api.md omits non-default success statuses (201 create, 204 webhook)
-⚪ **LOW** · 📝 doc · Status: ☐ open · Confidence: medium (5/5 verifiers) · Effort: S · WS40
+⚪ **LOW** · 📝 doc · Status: ✅ done · Confidence: medium (5/5 verifiers) · Effort: S · WS40
 
 **Locations:** `docs/modules/api.md:84` (`status codes`).
 
@@ -33,6 +33,8 @@ After merging near-duplicate records (see the note at the end), 15 distinct find
 **Failure scenario.** A client author assuming 200 for creates/webhook from the doc fails strict status assertions against the real 201/204 responses.
 
 **Suggested fix.** Add a status-code note or column for create (201) and no-content (204) routes in `api.md`.
+
+**Fix.** Annotate create rows and `POST /billing/webhook` with HTTP **201** / **204** in the v1 endpoint table, add a **Success status codes (DOC-11)** section covering 201/202/204 (and the profile resume DELETE 200 exceptions), and lock it with `test_doc11_success_statuses_api_md.py`. See [PR](https://github.com/davidcristian/HeadStart/pull/225).
 
 **Verification.** Confirmed 5/5 adversarial verifiers. Verified code returns 201 for POST creates (sources/searches/targets/credentials/auth/admin) and 204 for delete/webhook, and docs/modules/api.md's route table has no status column — genuine minor doc drift.
 

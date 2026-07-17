@@ -19,7 +19,7 @@ never touch the DB directly (services use repositories). See
 | ------ | --------------------- | ---------------------------------------- |
 | GET    | `/health`             | Liveness/readiness (public)              |
 | GET    | `/meta`               | Plan limits, usage, allowed scrapers/notifiers |
-| POST   | `/auth/register`      | Create an account (first = admin)        |
+| POST   | `/auth/register`      | Create an account (first = admin); HTTP **201** |
 | POST   | `/auth/login`         | Exchange email+password for JWTs         |
 | POST   | `/auth/refresh`       | Exchange a refresh token for new JWTs    |
 | POST   | `/auth/logout`        | Clear the refresh cookie                 |
@@ -32,7 +32,7 @@ never touch the DB directly (services use repositories). See
 | GET    | `/auth/me/export`     | Export all owned data as JSON            |
 | DELETE | `/auth/me`            | Permanently delete account (password)    |
 | GET    | `/sources`            | List sources                             |
-| POST   | `/sources`            | Create a source (site + adapter_key)     |
+| POST   | `/sources`            | Create a source (site + adapter_key); HTTP **201** |
 | POST   | `/sources/detect`     | Infer adapter + defaults from a careers URL |
 | GET    | `/sources/{id}`       | Get a source                             |
 | PATCH  | `/sources/{id}`       | Update a source                          |
@@ -42,7 +42,7 @@ never touch the DB directly (services use repositories). See
 | POST   | `/portals/search`     | Cross-portal job search (Pro+; `portal_search` feature) |
 | POST   | `/portals/subscribe`  | Bulk create sources + searches for curated portals (Pro+) |
 | GET    | `/searches`           | List searches                            |
-| POST   | `/searches`           | Create a search (url, filters, interval, target) |
+| POST   | `/searches`           | Create a search (url, filters, interval, target); HTTP **201** |
 | GET    | `/searches/{id}`      | Get a search                             |
 | PATCH  | `/searches/{id}`      | Update a search (enable/disable, retune) |
 | DELETE | `/searches/{id}`      | Delete a search                          |
@@ -63,12 +63,12 @@ never touch the DB directly (services use repositories). See
 | POST   | `/feed/rotate`        | Invalidate prior feed URLs and issue a new one       |
 | GET    | `/feed/rss`           | RSS 2.0 job feed (public; `token` query **or** `Authorization: Bearer`). Missing/invalid token → `UnauthorizedError` (401); plan gate raises `PlanLimitError` (402 with `code`/`plan`/`limit`) via the central handlers — not local `HTTPException`. Text fields strip XML 1.0–invalid C0 controls (keeping tab/LF/CR) before markup escape so a hostile scraped title cannot invalidate the whole feed (SVC-16). |
 | GET    | `/targets`            | List notification targets                |
-| POST   | `/targets`            | Create a target; per-type `config` validated (required keys + SSRF-safe URLs; API-14) |
+| POST   | `/targets`            | Create a target; HTTP **201**; per-type `config` validated (required keys + SSRF-safe URLs; API-14) |
 | PATCH  | `/targets/{id}`       | Update a target (re-validates effective type+config) |
 | DELETE | `/targets/{id}`       | Delete a target                          |
 | POST   | `/targets/{id}/test`  | Send a test notification                 |
 | GET    | `/credentials`        | List site credentials (metadata only)    |
-| POST   | `/credentials`        | Create encrypted site credentials        |
+| POST   | `/credentials`        | Create encrypted site credentials; HTTP **201** |
 | PATCH  | `/credentials/{id}`   | Update credential                        |
 | DELETE | `/credentials/{id}`   | Delete credential                        |
 | GET    | `/profile`            | Get the application profile (empty defaults if unset) |
@@ -104,14 +104,28 @@ never touch the DB directly (services use repositories). See
 | GET    | `/admin/stats`        | Global scrape/delivery aggregates (admin)|
 | GET    | `/admin/data-requests` | Recent GDPR export/deletion audit rows (admin; `limit` Query `ge=1,le=500`, default 100; deletion rows are email-pseudonymized) |
 | GET    | `/admin/promo-codes`  | List promo codes (admin)                 |
-| POST   | `/admin/promo-codes`  | Create a promo code (admin)              |
+| POST   | `/admin/promo-codes`  | Create a promo code (admin); HTTP **201** |
 | PATCH  | `/admin/promo-codes/{id}` | Update a promo code (admin)          |
 | GET    | `/admin/promo-codes/{id}/redemptions` | List redemptions for a code (admin) |
 | GET    | `/billing/status`     | Billing capabilities + subscription state |
 | POST   | `/billing/checkout`   | Start Stripe Checkout for a paid plan    |
 | POST   | `/billing/promo/validate` | Validate a promo code for checkout |
 | POST   | `/billing/portal`     | Open Stripe customer portal              |
-| POST   | `/billing/webhook`    | Stripe subscription webhooks (signed)    |
+| POST   | `/billing/webhook`    | Stripe subscription webhooks (signed); HTTP **204** (no body) |
+
+### Success status codes (DOC-11)
+
+Unless a row above says otherwise, successful responses use **200**. Non-default
+success statuses used by the v1 API:
+
+| Status | When |
+| ------ | ---- |
+| **201** | Resource creates: `POST /auth/register`, `/sources`, `/searches`, `/targets`, `/credentials`, `/admin/promo-codes` |
+| **202** | Accepted async work (search run, live apply enqueue, document generation) — poll the linked status URL |
+| **204** | No-content deletes (`DELETE` on sources/searches/targets/credentials/profile/auth/me/inbox credentials) and `POST /billing/webhook` |
+
+Exceptions already called out in the table: `DELETE /profile/resume` and
+`DELETE /profile/resume-template` return **200** + `ProfileRead` (state-returning).
 
 `SearchRead` includes scrape health: `last_run_at`, `last_error` (most recent
 scrape failure), and `recent_delivery_failures` (up to five recent failed
