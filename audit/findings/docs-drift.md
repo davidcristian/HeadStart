@@ -68,7 +68,7 @@ Merged: DOC-07 (uid 291) and DOC-10 (uid 299) reported the same defect and are f
 
 <a id="doc-09"></a>
 ### DOC-09 — api.md endpoint table omits the entire /inbox/* router (13+ routes)
-⚪ **LOW** · 📝 doc · Status: ☐ open · Confidence: certain (3/3 verifiers) · Effort: S · WS40
+⚪ **LOW** · 📝 doc · Status: ✅ done · Confidence: certain (3/3 verifiers) · Effort: S · WS40
 
 **Locations:** `docs/modules/api.md:87` (`Endpoints table`).
 
@@ -77,6 +77,8 @@ Merged: DOC-07 (uid 291) and DOC-10 (uid 299) reported the same defect and are f
 **Failure scenario.** A developer reading the canonical API module doc has no reference for any inbox-automation route and must read source; the doc claims to enumerate v1 endpoints but is materially incomplete.
 
 **Suggested fix.** Add an inbox section to the `api.md` endpoint table (or explicitly link `inbox.md`'s table as source of truth) and note dev-only gating.
+
+**Fix.** Add `/inbox/*` rows to the `api.md` v1 endpoint table (credentials, OAuth authorize/callback, test/messages/classify/routing/reply routes), note `INBOX_AGENT_ENABLED`, and link [inbox.md](../../docs/modules/inbox.md) as the detailed source of truth; regression in `test_doc09_inbox_routes_api_md.py`. See [PR](https://github.com/davidcristian/HeadStart/pull/224).
 
 **Verification.** Confirmed 3/3 adversarial verifiers. inbox.py registers 18+ /inbox/* routes; grep of api.md finds no inbox reference. Materially incomplete endpoint table, low fair.
 

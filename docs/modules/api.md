@@ -80,6 +80,25 @@ never touch the DB directly (services use repositories). See
 | DELETE | `/profile`            | Clear the application profile (HTTP 204) |
 | GET    | `/summary-preferences` | Per-user AI provider/model preferences (global + per-purpose); see [summaries.md](summaries.md) |
 | PATCH  | `/summary-preferences` | Update global `provider` / optional `api_key` and `purpose_preferences` (Pro; `402` for free) |
+| GET    | `/inbox/credentials`  | Mailbox credential metadata (dev-only; requires `INBOX_AGENT_ENABLED`) — full inbox API in [inbox.md](inbox.md) |
+| PUT    | `/inbox/credentials`  | Upsert encrypted IMAP/SMTP or Fastmail mailbox credentials |
+| DELETE | `/inbox/credentials`  | Remove saved mailbox credentials |
+| GET    | `/inbox/gmail/authorize` | Start Gmail OAuth (consent URL + PKCE cookie) |
+| GET    | `/inbox/gmail/callback` | Gmail OAuth redirect (stores tokens; unauthenticated) |
+| GET    | `/inbox/outlook/authorize` | Start Outlook OAuth (consent URL + PKCE cookie) |
+| GET    | `/inbox/outlook/callback` | Outlook OAuth redirect (stores tokens; unauthenticated) |
+| GET    | `/inbox/yahoo/authorize` | Start Yahoo OAuth (consent URL + PKCE cookie) |
+| GET    | `/inbox/yahoo/callback` | Yahoo OAuth redirect (stores tokens; unauthenticated) |
+| POST   | `/inbox/test`         | Test mailbox connector (optional inline config) |
+| GET    | `/inbox/messages`     | Fetch inbound messages (`since_uid` ≥1 optional, `limit` 1–100) |
+| POST   | `/inbox/classify`     | Classify one message (body or mailbox `uid`) |
+| GET    | `/inbox/classifications` | List recent classifications (`limit` 1–500) |
+| GET    | `/inbox/routing`      | Read label→folder routing settings |
+| PUT    | `/inbox/routing`      | Update label→folder routing settings |
+| POST   | `/inbox/route`        | Move a classified message to its folder |
+| POST   | `/inbox/draft-reply`  | Draft a recruiter follow-up (may queue auto-send) |
+| GET    | `/inbox/reply-drafts` | List reply drafts (`seen_job_id` ≥1, `limit` 1–500) |
+| GET    | `/inbox/reply-send-logs` | List auto-reply audit rows (`limit` 1–500) |
 | GET    | `/admin/users`        | List all users (admin only)              |
 | PATCH  | `/admin/users/{id}`   | Toggle `is_active` / `is_admin` / `plan` (admin; structured `admin_event=user_update` audit log) |
 | GET    | `/admin/stats`        | Global scrape/delivery aggregates (admin)|
