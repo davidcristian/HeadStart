@@ -22,8 +22,9 @@ in production).
 The frontend serves two surfaces from one bundle (see
 [App.tsx](../../frontend/src/App.tsx)):
 
-- **Public** (no auth, no app shell): `/` landing page, `/pricing`, `/privacy`, `/terms`, `/impressum`, plus the auth screens
-  `/login`, `/register`, `/forgot-password`, `/reset-password`.
+- **Public** (no auth, no app shell): `/` landing page, `/pricing`, `/privacy`, `/terms`,
+  `/subprocessors`, `/impressum`, plus the auth screens `/login`, `/register`,
+  `/forgot-password`, `/reset-password`.
 - **Cookie consent:** a fixed bottom banner (`CookieConsentProvider` in `main.tsx`)
   asks for **Essential only** vs **Accept all** on first visit. The choice is stored in
   `localStorage` (`headstart.cookieConsent`), not a cookie. Visitors can reopen the banner

@@ -156,7 +156,9 @@ Merged: DOC-18 (uid 233) reported the same omission and is folded in here.
 
 <a id="doc-21"></a>
 ### DOC-21 — frontend.md public-routes list omits the shipped /subprocessors route
-⚪ **LOW** · 📝 doc · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: XS · WS40
+⚪ **LOW** · 📝 doc · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/230)) · Confidence: high (3/3 verifiers) · Effort: XS · WS40
+
+**Update (2026-07-11).** `frontend.md` Routing public-routes bullet now includes `/subprocessors` alongside the other legal pages; regression locks the wording to `App.tsx`.
 
 **Locations:** `docs/modules/frontend.md:25` (`Routing: public site`).
 
