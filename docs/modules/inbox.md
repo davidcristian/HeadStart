@@ -317,7 +317,8 @@ After classification, routable labels can be moved into configured IMAP folders
 ## Beat orchestration loop (Phase 20f)
 
 When `INBOX_AGENT_ENABLED=true`, beat runs `process_inbox_messages` every
-`INBOX_POLL_INTERVAL_SECONDS` (default 300). `InboxOrchestrationService`:
+`INBOX_POLL_INTERVAL_SECONDS` (default 300; `Settings.inbox_poll_interval_seconds`
+— beat poll cadence for new message classification). `InboxOrchestrationService`:
 
 1. Resolves pollable users once per tick (enabled `mailbox_credential` rows, plus
    env-fallback users when `INBOX_USE_ENV_CREDENTIALS=true`), then reuses that

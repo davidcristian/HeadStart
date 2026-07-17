@@ -181,6 +181,7 @@ class Settings(BaseSettings):
     yahoo_oauth_redirect_uri: str = ""
     inbox_ghost_window_days: int = 14
     inbox_ghost_check_interval_seconds: int = 3600
+    # How often beat polls mailboxes for new message classification (seconds).
     inbox_poll_interval_seconds: int = 300
     inbox_poll_batch_size: int = 50
     inbox_reply_min_delay_seconds: int = 1800

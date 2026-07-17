@@ -317,3 +317,14 @@ def test_parse_csv_list_and_validate_trusted_proxy_cidrs() -> None:
     assert validate_trusted_proxy_cidrs(["10.0.0.0/8"]) == ["10.0.0.0/8"]
     with pytest.raises(ValueError, match="TRUSTED_PROXY_CIDRS"):
         validate_trusted_proxy_cidrs(["nope"])
+
+
+def test_inbox_poll_interval_comment_has_no_edit_artifact() -> None:
+    """AUT-11: Settings comment must say 'new message classification', not an Edit leftover."""
+    from pathlib import Path
+
+    source = Path(__file__).resolve().parents[2] / "app" / "core" / "config.py"
+    text = source.read_text(encoding="utf-8")
+    assert "new_string" not in text
+    assert "old_string" not in text
+    assert "# How often beat polls mailboxes for new message classification (seconds)." in text

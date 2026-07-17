@@ -142,7 +142,7 @@ This area covers authentication and session management (login, registration, pas
 
 <a id="aut-11"></a>
 ### AUT-11 — config.py inbox_poll comment has botched edit artifact 'new_string classification'
-⚪ **LOW** · 📝 doc · Status: ☐ open · Confidence: certain (3/5 verifiers) · Effort: XS · WS40
+⚪ **LOW** · 📝 doc · Status: ✅ done · [PR](https://github.com/davidcristian/HeadStart/pull/222) · Confidence: certain (3/5 verifiers) · Effort: XS · WS40
 
 **Merge note.** Merges the exact duplicate AUT-12 (uid 232) — same artifact at the same line.
 
