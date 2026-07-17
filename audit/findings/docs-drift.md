@@ -38,7 +38,7 @@ After merging near-duplicate records (see the note at the end), 15 distinct find
 
 <a id="doc-06"></a>
 ### DOC-06 — api.md endpoint table omits GET/PATCH /summary-preferences
-⚪ **LOW** · 📝 doc · Status: ☐ open · Confidence: certain (3/3 verifiers) · Effort: XS · WS40
+⚪ **LOW** · 📝 doc · Status: ✅ done · Confidence: certain (3/3 verifiers) · Effort: XS · WS40
 
 Merged: DOC-07 (uid 291) and DOC-10 (uid 299) reported the same defect and are folded in here.
 
@@ -48,7 +48,7 @@ Merged: DOC-07 (uid 291) and DOC-10 (uid 299) reported the same defect and are f
 
 **Failure scenario.** `api.md`, presented as the full v1 endpoint reference, is incomplete — a client author or agent using it as the index misses the per-user AI-preferences API and may re-add or mis-wire per-user AI provider config.
 
-**Suggested fix.** Add `GET /summary-preferences` and `PATCH /summary-preferences` rows to the `api.md` endpoint table (mirror `summaries.md`).
+**Fix.** Add `GET /summary-preferences` and `PATCH /summary-preferences` rows to the `api.md` endpoint table (mirroring `summaries.md`). See [PR](https://github.com/davidcristian/HeadStart/pull/223).
 
 **Verification.** Confirmed 3/3 adversarial verifiers. v1/__init__.py mounts summary_preferences at /summary-preferences (GET+PATCH); api.md endpoint table has zero references. Confirmed omission (three independent records converged on this).
 

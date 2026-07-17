@@ -78,6 +78,8 @@ never touch the DB directly (services use repositories). See
 | PUT    | `/profile/resume-template` | Upload or replace LaTeX resume template (multipart `file`) |
 | DELETE | `/profile/resume-template` | Clear LaTeX template only; HTTP **200** + `ProfileRead` (same state-returning contract) |
 | DELETE | `/profile`            | Clear the application profile (HTTP 204) |
+| GET    | `/summary-preferences` | Per-user AI provider/model preferences (global + per-purpose); see [summaries.md](summaries.md) |
+| PATCH  | `/summary-preferences` | Update global `provider` / optional `api_key` and `purpose_preferences` (Pro; `402` for free) |
 | GET    | `/admin/users`        | List all users (admin only)              |
 | PATCH  | `/admin/users/{id}`   | Toggle `is_active` / `is_admin` / `plan` (admin; structured `admin_event=user_update` audit log) |
 | GET    | `/admin/stats`        | Global scrape/delivery aggregates (admin)|
