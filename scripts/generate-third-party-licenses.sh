@@ -139,6 +139,29 @@ EOF
   echo '```'
   cat <<'EOF'
 
+## LGPL-3.0 notice (`psycopg` / `psycopg-binary`)
+
+The backend images include **psycopg** and **psycopg-binary** under
+**LGPL-3.0-only** (see the runtime table above). HeadStart does **not** vendor
+or modify these packages: they are installed unmodified from PyPI via the
+hashed lockfile (`psycopg[binary]` in `backend/pyproject.toml`).
+
+LGPL-3.0 §4 expects recipients of a conveyed Combined Work to be able to obtain
+the LGPL library's corresponding source and to relink with a modified version.
+Because psycopg remains a normal pip dependency (not statically vendored into
+HeadStart), that obligation is met for self-hosters by:
+
+1. **Corresponding source** — download the same versions from PyPI
+   (`pip download psycopg==<version> psycopg-binary==<version>`) or from the
+   upstream project at https://psycopg.org / the repository URL listed in the
+   table above.
+2. **Relink** — replace the installed wheels in your image or venv with a
+   rebuilt `psycopg` / `psycopg-binary` of your choice and restart the process;
+   no HeadStart rebuild of a vendored copy is required.
+
+Operators who redistribute modified HeadStart images that still bundle these
+wheels should keep this notice (and the inventory above) with their conveyance.
+
 ---
 
 This file is copied into backend and frontend container images at

@@ -51,8 +51,8 @@ dev install (`pip-audit --disable-pip` against the three hashed lockfiles).
 the frontend npm ecosystem. Locally: `just audit-backend` (needs
 `./scripts/install-backend.sh --dev`).
 
-**Third-party attribution (XCT-24).** Conveyed backend and frontend images
-ship a `THIRD_PARTY_LICENSES.md` inventory of bundled upstream packages
+**Third-party attribution (XCT-24 / XCT-25).** Conveyed backend and frontend
+images ship a `THIRD_PARTY_LICENSES.md` inventory of bundled upstream packages
 (MIT/BSD/Apache/LGPL and similar). The canonical file lives at the repo root;
 copies are kept in `backend/` (Docker `COPY` → `/app/THIRD_PARTY_LICENSES.md`)
 and `frontend/public/` (SPA serves `/THIRD_PARTY_LICENSES.md`). Both
@@ -60,7 +60,10 @@ and `frontend/public/` (SPA serves `/THIRD_PARTY_LICENSES.md`). Both
 `!public/THIRD_PARTY_LICENSES.md`) so the generic `*.md` exclude cannot drop
 it from the build context. Regenerate after lockfile or `package.json` bumps
 with `just generate-third-party-licenses` (`pip-licenses` in an isolated venv
-+ `license-checker --production`).
++ `license-checker --production`). The manifest includes an **LGPL-3.0 notice**
+for `psycopg` / `psycopg-binary`: they stay unmodified PyPI deps (not vendored),
+so self-hosters satisfy §4 corresponding-source / relink by downloading those
+wheels from PyPI (or upstream) and swapping them in the image/venv.
 
 ## AWS topology
 

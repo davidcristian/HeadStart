@@ -327,7 +327,9 @@ regression tests assert floors and lock pins stay aligned.
 
 <a id="xct-25"></a>
 ### XCT-25 — Bundled LGPL-3.0 psycopg relink/source obligation not documented for self-host
-⚪ **LOW** · 📝 doc · Status: ☐ open · Confidence: medium (2/3 verifiers) · Effort: XS · WS39
+⚪ **LOW** · 📝 doc · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/221)) · Confidence: medium (2/3 verifiers) · Effort: XS · WS39
+
+**Update (2026-07-11).** `THIRD_PARTY_LICENSES.md` (and its generator) now include an **LGPL-3.0 notice** for `psycopg` / `psycopg-binary`: unmodified PyPI deps, corresponding-source via `pip download` / upstream, and relink by swapping wheels in the image/venv. README + `deployment.md` point operators at that notice.
 
 **Locations:** `backend/pyproject.toml:16` (`psycopg[binary]`); plus `frontend/package.json:17`.
 
