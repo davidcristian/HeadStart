@@ -8,3 +8,4 @@ tests/
 .coverage
 htmlcov/
 *.md
+!THIRD_PARTY_LICENSES.md

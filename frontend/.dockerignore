@@ -3,3 +3,4 @@ dist/
 .vite/
 coverage/
 *.md
+!public/THIRD_PARTY_LICENSES.md

@@ -26,6 +26,7 @@ RUN pip install --no-deps .
 # Migrations + entrypoint.
 COPY alembic ./alembic
 COPY alembic.ini ./
+COPY THIRD_PARTY_LICENSES.md ./
 COPY docker-entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh \
     && useradd --create-home --uid 10001 appuser \

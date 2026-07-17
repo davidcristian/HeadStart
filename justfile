@@ -68,6 +68,10 @@ audit-frontend:
 audit-backend:
     ./scripts/audit-backend.sh
 
+# Regenerate THIRD_PARTY_LICENSES.md (root + image contexts) after dep bumps (XCT-24)
+generate-third-party-licenses:
+    ./scripts/generate-third-party-licenses.sh
+
 # Run the full quality gate (lint + types + tests); scope with --backend | --frontend | --scripts
 check *args:
     ./scripts/check.sh {{ args }}

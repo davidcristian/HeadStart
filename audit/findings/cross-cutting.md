@@ -311,7 +311,9 @@ regression tests assert floors and lock pins stay aligned.
 
 <a id="xct-24"></a>
 ### XCT-24 — No third-party dependency license inventory or NOTICE/attribution bundle
-⚪ **LOW** · 📝 doc · Status: ☐ open · Confidence: high (3/5 verifiers) · Effort: S · WS39
+⚪ **LOW** · 📝 doc · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/220)) · Confidence: high (3/5 verifiers) · Effort: S · WS39
+
+**Update (2026-07-11).** Added committed `THIRD_PARTY_LICENSES.md` (repo root + `backend/` + `frontend/public/`), regenerated via `just generate-third-party-licenses` (`pip-licenses` on isolated runtime/Playwright locks + `license-checker --production`). Backend Dockerfile copies the file; both `.dockerignore` files un-ignore it so `*.md` cannot drop it from the image context.
 
 **Locations:** `backend/pyproject.toml:10` (`dependencies`); plus `frontend/package.json:17`, `LICENSE:1`.
 
