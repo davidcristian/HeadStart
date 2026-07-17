@@ -4,9 +4,10 @@
 `backend/app/core/billing_prices.py`, `frontend/src/components/settings/SettingsBillingCard.tsx`,
 `frontend/src/pages/SettingsPage.tsx`, `frontend/src/pages/PricingPage.tsx`
 
-Stripe-powered subscriptions for the four public tiers (Starter, Plus, Pro).
+Stripe-powered subscriptions for the three paid tiers (Starter, Plus, Pro).
 Billing is **optional** — when `STRIPE_*` env vars are unset the API reports
-`configured: false` and checkout buttons are hidden.
+`configured: false` and checkout buttons are hidden. Free accounts have no
+Stripe checkout; see [Plans](#plans) for the full four-tier matrix.
 
 ## Plans
 

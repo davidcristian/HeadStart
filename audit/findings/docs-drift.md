@@ -94,7 +94,7 @@ Merged: DOC-14 (uid 294) reported the same truncation and is folded in here.
 
 <a id="doc-16"></a>
 ### DOC-16 — billing.md says "four public tiers" then lists only Starter, Plus, Pro
-⚪ **LOW** · 📝 doc · Status: ☐ open · Confidence: high (3/3 verifiers) · Effort: XS · WS40
+⚪ **LOW** · 📝 doc · Status: ✅ done · Confidence: high (3/3 verifiers) · Effort: XS · WS40
 
 **Locations:** `docs/modules/billing.md:7` (`intro`).
 
@@ -103,6 +103,8 @@ Merged: DOC-14 (uid 294) reported the same truncation and is folded in here.
 **Failure scenario.** A reader is confused whether there are three paid tiers or four; the number and the enumeration disagree in the billing doc's opening line.
 
 **Suggested fix.** Reword to "the three paid tiers (Starter, Plus, Pro)" or "four tiers (Free, Starter, Plus, Pro)".
+
+**Fix.** Intro now says "three paid tiers (Starter, Plus, Pro)" and points at the Plans table for the full Free/Starter/Plus/Pro matrix. Regression: `backend/tests/api/test_doc16_billing_tier_wording.py`. [PR](https://github.com/davidcristian/HeadStart/pull/226).
 
 **Verification.** Confirmed 3/3 adversarial verifiers. billing.md:7 says "four public tiers (Starter, Plus, Pro)" — count says four, enumeration lists three; user.py confirms four plans. Internally inconsistent.
 
