@@ -48,8 +48,27 @@ describe("JsonEditor", () => {
     fireEvent.change(screen.getByRole("textbox"), { target: { value: "{ not json" } });
 
     expect(onChange).toHaveBeenLastCalledWith(value, false);
-    expect(screen.getByText(/Invalid JSON:/)).toBeInTheDocument();
-    expect(screen.getByRole("textbox")).toHaveClass("invalid");
+    const alert = screen.getByRole("alert");
+    expect(alert).toHaveTextContent(/Invalid JSON:/);
+    expect(alert).toHaveAttribute("aria-live", "assertive");
+    const textarea = screen.getByRole("textbox");
+    expect(textarea).toHaveClass("invalid");
+    expect(textarea).toHaveAttribute("aria-invalid", "true");
+    expect(textarea).toHaveAttribute("aria-describedby", alert.id);
+  });
+
+  it("clears invalid ARIA state once JSON becomes valid again", () => {
+    render(<JsonEditor value={{}} onChange={vi.fn()} />);
+    const textarea = screen.getByRole("textbox");
+
+    fireEvent.change(textarea, { target: { value: "broken" } });
+    expect(textarea).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+
+    fireEvent.change(textarea, { target: { value: '{"ok":true}' } });
+    expect(textarea).not.toHaveAttribute("aria-invalid");
+    expect(textarea).not.toHaveAttribute("aria-describedby");
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
   it("re-syncs the text when the parent value changes", () => {

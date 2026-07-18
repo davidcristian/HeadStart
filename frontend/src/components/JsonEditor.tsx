@@ -1,6 +1,6 @@
 /** Textarea that edits a JSON object and reports parse validity to the parent. */
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import type { Json } from "../types";
 
 interface Props {
@@ -12,6 +12,7 @@ interface Props {
 export function JsonEditor({ value, onChange, rows = 4 }: Props) {
   const [text, setText] = useState(() => JSON.stringify(value, null, 2));
   const [error, setError] = useState<string>();
+  const errorId = useId();
 
   // Re-sync when the parent resets the value (e.g. after a successful save).
   useEffect(() => {
@@ -44,9 +45,15 @@ export function JsonEditor({ value, onChange, rows = 4 }: Props) {
         rows={rows}
         value={text}
         spellCheck={false}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={error ? errorId : undefined}
         onChange={(e) => handle(e.target.value)}
       />
-      {error && <span className="field-hint error-text">Invalid JSON: {error}</span>}
+      {error && (
+        <span id={errorId} className="field-hint error-text" role="alert" aria-live="assertive">
+          Invalid JSON: {error}
+        </span>
+      )}
     </div>
   );
 }

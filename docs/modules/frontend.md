@@ -241,3 +241,7 @@ The frontend is installable as a PWA for a lightweight mobile jobs feed.
   dialog container (`tabIndex={-1}`) instead of the header Close button.
   Status `Banner`s announce via live regions (`alert`/`assertive` for errors,
   `status`/`polite` for info/success — FRO-29).
+- **JsonEditor a11y (FRO-21)** — Parse errors render with `role="alert"` /
+  `aria-live="assertive"`, and the textarea sets `aria-invalid` plus
+  `aria-describedby` pointing at the error span so screen readers get the
+  invalid JSON feedback.

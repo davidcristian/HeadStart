@@ -285,7 +285,7 @@ _Merged with FRO-15 — both records describe the same defect: no single-flight 
 
 <a id="fro-21"></a>
 ### FRO-21 — JsonEditor parse-error message is not an ARIA live region
-⚪ **LOW** · 🐞 bug · Status: ☐ open · Confidence: medium (3/5 verifiers) · Effort: XS · WS41
+⚪ **LOW** · 🐞 bug · Status: ✅ done · Confidence: medium (3/5 verifiers) · Effort: XS · WS41
 
 **Locations:** `frontend/src/components/JsonEditor.tsx:49` (`JsonEditor`).
 
