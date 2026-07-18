@@ -257,7 +257,7 @@ _Merged with FRO-15 — both records describe the same defect: no single-flight 
 
 <a id="fro-18"></a>
 ### FRO-18 — Verify/Onboarding guards omit loading and !user checks, relying implicitly on nesting
-⚪ **LOW** · 🔁 consistency · Status: ☐ open · Confidence: high (3/5 verifiers) · Effort: XS · WS41
+⚪ **LOW** · 🔁 consistency · Status: ✅ done · Confidence: high (3/5 verifiers) · Effort: XS · WS41
 
 **Locations:** `frontend/src/auth/EmailVerificationGuard.tsx:9` (`EmailVerificationGuard`); plus `frontend/src/auth/OnboardingGuard.tsx:9`.
 

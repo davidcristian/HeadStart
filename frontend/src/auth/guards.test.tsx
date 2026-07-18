@@ -53,6 +53,20 @@ function renderGuard(guard: ReactElement): ReturnType<typeof render> {
 }
 
 describe("EmailVerificationGuard", () => {
+  it("shows a loading state while auth is resolving", () => {
+    mockUseAuth.mockReturnValue(authState({ user: null, loading: true }));
+    renderGuard(<EmailVerificationGuard />);
+    expect(screen.getByText("Loading...")).toBeInTheDocument();
+    expect(screen.queryByText("protected content")).not.toBeInTheDocument();
+  });
+
+  it("redirects unauthenticated visitors to /login", () => {
+    mockUseAuth.mockReturnValue(authState({ user: null }));
+    renderGuard(<EmailVerificationGuard />);
+    expect(screen.getByText("login screen")).toBeInTheDocument();
+    expect(screen.queryByText("protected content")).not.toBeInTheDocument();
+  });
+
   it("redirects unverified accounts to /verify-email", () => {
     mockUseAuth.mockReturnValue(authState({ user: { ...baseUser, email_verified_at: null } }));
     renderGuard(<EmailVerificationGuard />);
@@ -68,6 +82,20 @@ describe("EmailVerificationGuard", () => {
 });
 
 describe("OnboardingGuard", () => {
+  it("shows a loading state while auth is resolving", () => {
+    mockUseAuth.mockReturnValue(authState({ user: null, loading: true }));
+    renderGuard(<OnboardingGuard />);
+    expect(screen.getByText("Loading...")).toBeInTheDocument();
+    expect(screen.queryByText("protected content")).not.toBeInTheDocument();
+  });
+
+  it("redirects unauthenticated visitors to /login", () => {
+    mockUseAuth.mockReturnValue(authState({ user: null }));
+    renderGuard(<OnboardingGuard />);
+    expect(screen.getByText("login screen")).toBeInTheDocument();
+    expect(screen.queryByText("protected content")).not.toBeInTheDocument();
+  });
+
   it("redirects accounts that have not finished onboarding to /app/onboarding", () => {
     mockUseAuth.mockReturnValue(
       authState({ user: { ...baseUser, onboarding_completed_at: null } }),

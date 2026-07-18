@@ -4,9 +4,15 @@ import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "./AuthContext";
 
 export function OnboardingGuard() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
 
-  if (user && !user.onboarding_completed_at) {
+  if (loading) {
+    return <div className="auth-screen auth-loading">Loading...</div>;
+  }
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+  if (!user.onboarding_completed_at) {
     return <Navigate to="/app/onboarding" replace />;
   }
 

@@ -151,10 +151,12 @@ Failed logins also increment Prometheus `headstart_auth_login_failures_total`
 - `frontend/src/auth/AuthContext.tsx` holds the current user. On load it calls
   `refreshSession()` to mint an access token from the cookie, then `/auth/me`;
   `logout()` calls `/auth/logout` to clear the cookie. `ProtectedRoute` gates
-  the app and   redirects to `/login`. `OnboardingGuard` sends new accounts to
-  `/app/onboarding` until `onboarding_completed_at` is set.
-  `EmailVerificationGuard` sends unverified accounts to `/verify-email` before
-  onboarding or the main app shell.
+  the app and redirects to `/login`. `OnboardingGuard` and
+  `EmailVerificationGuard` also wait for auth to finish and redirect
+  unauthenticated visitors to `/login` before their own checks (FRO-18).
+  `OnboardingGuard` sends new accounts to `/app/onboarding` until
+  `onboarding_completed_at` is set. `EmailVerificationGuard` sends unverified
+  accounts to `/verify-email` before onboarding or the main app shell.
 - `/forgot-password` and `/reset-password?token=...` handle the reset flow.
 - `/verify-email` and `/verify-email?token=...` handle email verification after
   signup. Unverified users can sign in but product routes return **403** until

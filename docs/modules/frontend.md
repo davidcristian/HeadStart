@@ -38,7 +38,10 @@ The frontend serves two surfaces from one bundle (see
   `/app` redirects to `/app/searches`. Unverified accounts are redirected to
   `/verify-email` by `EmailVerificationGuard`. New accounts without
   `onboarding_completed_at` are redirected to **`/app/onboarding`** (guided
-  setup wizard) before they can reach the main shell.
+  setup wizard) before they can reach the main shell. Both guards also handle
+  `loading` and `!user` themselves (same Loading… / `/login` paths as
+  `ProtectedRoute` / `AdminRoute`) so reuse outside that nesting stays safe
+  (FRO-18).
 
 Register returns a uniform success ack and sends new accounts to `/verify-email`
 without auto-login (so duplicate emails cannot be inferred from a follow-up
@@ -95,7 +98,10 @@ other unknown path redirects to the landing page.
   `SyntaxError` (FRO-14). `requestBlob` already normalized non-JSON error bodies
   the same way.
 - `AuthProvider` (in `main.tsx`) resolves the current user; `ProtectedRoute`
-  gates all app routes and redirects to `/login`. See [auth.md](auth.md).
+  gates all app routes and redirects to `/login`. `EmailVerificationGuard` and
+  `OnboardingGuard` independently wait for auth to finish and redirect
+  unauthenticated visitors to `/login` before applying their
+  verify/onboarding checks (FRO-18). See [auth.md](auth.md).
 
 ## Data fetching (React Query)
 
