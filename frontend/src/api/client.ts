@@ -57,7 +57,7 @@ let refreshInFlight: Promise<boolean> | null = null;
 /** Exchange the httpOnly refresh cookie for a fresh access token. */
 export async function refreshSession(): Promise<boolean> {
   if (refreshInFlight) return refreshInFlight;
-  refreshInFlight = (async () => {
+  refreshInFlight = (async (): Promise<boolean> => {
     try {
       const resp = await fetch(`${getApiBaseUrl()}/api/v1/auth/refresh`, {
         method: "POST",
@@ -67,10 +67,14 @@ export async function refreshSession(): Promise<boolean> {
       const data = (await resp.json()) as { access_token: string };
       setAccessToken(data.access_token);
       return true;
-    } finally {
-      refreshInFlight = null;
+    } catch {
+      // Network/CORS reject or non-JSON 2xx body must not throw past callers'
+      // clear-session path (FRO-16).
+      return false;
     }
-  })();
+  })().finally(() => {
+    refreshInFlight = null;
+  });
   return refreshInFlight;
 }
 

@@ -229,7 +229,7 @@ _Merged with FRO-15 — both records describe the same defect: no single-flight 
 
 <a id="fro-16"></a>
 ### FRO-16 — refreshSession does not guard resp.json()/network errors, bypassing graceful 401->login
-⚪ **LOW** · 🐞 bug · Status: ☐ open · Confidence: medium (3/5 verifiers) · Effort: XS · WS41
+⚪ **LOW** · 🐞 bug · Status: ✅ done · Confidence: medium (3/5 verifiers) · Effort: XS · WS41
 
 **Locations:** `frontend/src/api/client.ts:61` (`refreshSession`).
 

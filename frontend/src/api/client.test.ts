@@ -217,6 +217,36 @@ describe("refreshSession", () => {
     expect(await refreshSession()).toBe(false);
   });
 
+  it("returns false on network failure instead of throwing (FRO-16)", async () => {
+    fetchMock.mockRejectedValueOnce(new TypeError("Failed to fetch"));
+    expect(await refreshSession()).toBe(false);
+    expect(settings.accessToken).toBe("access-1");
+  });
+
+  it("returns false when a 2xx refresh body is not JSON (FRO-16)", async () => {
+    fetchMock.mockResolvedValueOnce({
+      status: 200,
+      ok: true,
+      statusText: "OK",
+      json: async () => {
+        throw new SyntaxError("Unexpected token <");
+      },
+    } as unknown as Response);
+    expect(await refreshSession()).toBe(false);
+    expect(settings.accessToken).toBe("access-1");
+  });
+
+  it("clears the session when a 401 refresh fails with a network error (FRO-16)", async () => {
+    const onUnauthorized = vi.fn();
+    setUnauthorizedHandler(onUnauthorized);
+    fetchMock
+      .mockResolvedValueOnce(jsonResponse(401, { detail: "expired" }))
+      .mockRejectedValueOnce(new TypeError("Failed to fetch"));
+    await expect(request("/thing")).rejects.toMatchObject({ status: 401 });
+    expect(settings.cleared).toBe(true);
+    expect(onUnauthorized).toHaveBeenCalledTimes(1);
+  });
+
   it("dedupes concurrent callers onto one POST /auth/refresh (FRO-13)", async () => {
     let resolveRefresh: ((value: Response) => void) | undefined;
     const refreshPending = new Promise<Response>((resolve) => {

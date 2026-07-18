@@ -87,6 +87,9 @@ other unknown path redirects to the landing page.
   access token, and on a 401 calls `refreshSession()` (cookie-based) once before
   clearing the session. Concurrent 401s share a single in-flight refresh
   promise so only one `POST /auth/refresh` runs (FRO-13).
+  `refreshSession` catches network rejects and non-JSON 2xx bodies and returns
+  `false`, so callers still clear the session and redirect to login instead of
+  surfacing an unhandled rejection (FRO-16).
   JSON bodies go through a shared `parse` helper: non-JSON responses (even 2xx
   HTML from a proxy) throw `ApiError` with the status and raw text, not a raw
   `SyntaxError` (FRO-14). `requestBlob` already normalized non-JSON error bodies
