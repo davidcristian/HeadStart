@@ -57,7 +57,7 @@ export function ApplyJobDialog({
   const [resumeMessage, setResumeMessage] = useState<string | null>(null);
   const [busyAction, setBusyAction] = useState<"preview" | "submit" | null>(null);
 
-  useFocusTrap(open, dialogRef, onClose);
+  useFocusTrap(open, dialogRef, onClose, { focusContainer: true });
 
   useEffect(() => {
     if (!open) return;
@@ -77,6 +77,8 @@ export function ApplyJobDialog({
   }, [open, job.id, initialCoverLetter, reset, resetGenerateCoverLetter, resetGenerateResume]);
 
   if (!open) return null;
+
+  const descriptionId = step === "success" ? "apply-dialog-success" : "apply-dialog-description";
 
   async function runGenerateCoverLetter() {
     setError(null);
@@ -152,6 +154,8 @@ export function ApplyJobDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby="apply-dialog-title"
+        aria-describedby={descriptionId}
+        tabIndex={-1}
         onClick={(event) => event.stopPropagation()}
       >
         <header className="apply-dialog-header">
@@ -185,7 +189,9 @@ export function ApplyJobDialog({
         {step === "success" ? (
           <div className="apply-dialog-body">
             <Banner kind="success">
-              Application submitted for {job.title} at {job.company || "this company"}.
+              <span id="apply-dialog-success">
+                Application submitted for {job.title} at {job.company || "this company"}.
+              </span>
             </Banner>
             <div className="row-actions">
               <Button onClick={onClose}>Done</Button>
@@ -193,7 +199,7 @@ export function ApplyJobDialog({
           </div>
         ) : (
           <div className="apply-dialog-body">
-            <p className="muted">
+            <p id="apply-dialog-description" className="muted">
               Review the cover letter below. Generate drafts a tailored letter and resume from your
               profile; preview shows the payload that will be sent.
             </p>

@@ -163,6 +163,27 @@ describe("ApplyJobDialog", () => {
     expect(onClose).toHaveBeenCalled();
   });
 
+  it("describes the dialog and focuses the container, not Close (FRO-19)", () => {
+    renderDialog();
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toHaveAttribute("aria-describedby", "apply-dialog-description");
+    expect(dialog).toHaveFocus();
+    expect(screen.getByRole("button", { name: "Close" })).not.toHaveFocus();
+    expect(document.getElementById("apply-dialog-description")).toHaveTextContent(
+      /Review the cover letter/,
+    );
+  });
+
+  it("announces apply errors via an assertive live region (FRO-19)", async () => {
+    applyToJobMock.mockRejectedValue(new Error("Boom"));
+    renderDialog();
+    fireEvent.click(screen.getByRole("button", { name: "Submit application" }));
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveAttribute("aria-live", "assertive");
+    expect(alert).toHaveClass("banner-error");
+    expect(alert).toHaveTextContent("Boom");
+  });
+
   it("closes when the backdrop is clicked but not when the dialog is clicked", () => {
     const onClose = vi.fn();
     const { container } = renderDialog({ onClose });

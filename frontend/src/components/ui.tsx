@@ -63,7 +63,16 @@ export function Banner({
   kind: "error" | "info" | "success";
   children: ReactNode;
 }) {
-  return <div className={`banner banner-${kind}`}>{children}</div>;
+  // Async error/success sinks (login, apply, settings, …) must announce to AT (FRO-29).
+  const live =
+    kind === "error"
+      ? ({ role: "alert", "aria-live": "assertive" } as const)
+      : ({ role: "status", "aria-live": "polite" } as const);
+  return (
+    <div className={`banner banner-${kind}`} {...live}>
+      {children}
+    </div>
+  );
 }
 
 export function EmptyState({ children }: { children: ReactNode }) {

@@ -271,7 +271,7 @@ _Merged with FRO-15 — both records describe the same defect: no single-flight 
 
 <a id="fro-19"></a>
 ### FRO-19 — Apply dialog init-focuses Close and lacks aria-describedby / live status
-⚪ **LOW** · 🐞 bug · Status: ☐ open · Confidence: medium (3/5 verifiers) · Effort: S · WS41
+⚪ **LOW** · 🐞 bug · Status: ✅ done · Confidence: medium (3/5 verifiers) · Effort: S · WS41
 
 **Locations:** `frontend/src/components/ApplyJobDialog.tsx:159` (`ApplyJobDialog`).
 
@@ -467,7 +467,7 @@ _Merged with FRO-15 — both records describe the same defect: no single-flight 
 
 <a id="fro-29"></a>
 ### FRO-29 — Shared Banner has no ARIA live-region role; async errors/success never announced
-⚪ **LOW** · 🐞 bug · Status: ☐ open · Confidence: high (3/5 verifiers) · Effort: S · WS41
+⚪ **LOW** · 🐞 bug · Status: ✅ done · Confidence: high (3/5 verifiers) · Effort: S · WS41
 
 **Locations:** `frontend/src/components/ui.tsx:59` (`Banner`); plus `frontend/src/components/ApplyJobDialog.tsx:262`, `:197`, `frontend/src/pages/LoginPage.tsx:44`, `frontend/src/pages/OnboardingPage.tsx:44`, `frontend/src/pages/SettingsPage.tsx:141`, `frontend/src/pages/sources/PortalCatalog.tsx:105`.
 

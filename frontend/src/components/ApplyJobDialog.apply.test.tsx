@@ -296,6 +296,10 @@ describe("ApplyJobDialog apply flow", () => {
       ).toBeInTheDocument(),
     );
     expect(pollApplicationLog).not.toHaveBeenCalled();
+    const success = screen.getByText("Application submitted for Software Engineer at ACME.");
+    expect(success.closest(".banner")).toHaveAttribute("role", "status");
+    expect(success.closest(".banner")).toHaveAttribute("aria-live", "polite");
+    expect(screen.getByRole("dialog")).toHaveAttribute("aria-describedby", "apply-dialog-success");
   });
 
   it("shows the company fallback in the success banner", async () => {

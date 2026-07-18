@@ -64,10 +64,41 @@ function ThreeButtonDialog({ onClose }: { onClose: () => void }) {
   );
 }
 
+function FocusContainerDialog({ onClose }: { onClose: () => void }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useFocusTrap(true, ref, onClose, { focusContainer: true });
+  return (
+    <div ref={ref} role="dialog" tabIndex={-1}>
+      <button>Close</button>
+      <button>Submit</button>
+    </div>
+  );
+}
+
 describe("useFocusTrap", () => {
   it("moves focus to the first focusable element when activated", () => {
     render(<Dialog onClose={() => {}} />);
     expect(screen.getByText("first")).toHaveFocus();
+  });
+
+  it("moves focus to the container when focusContainer is set", () => {
+    render(<FocusContainerDialog onClose={() => {}} />);
+    expect(screen.getByRole("dialog")).toHaveFocus();
+    expect(screen.getByText("Close")).not.toHaveFocus();
+  });
+
+  it("Tabs from a focused container into the first focusable child", () => {
+    render(<FocusContainerDialog onClose={() => {}} />);
+    expect(screen.getByRole("dialog")).toHaveFocus();
+    fireEvent.keyDown(document, { key: "Tab" });
+    expect(screen.getByText("Close")).toHaveFocus();
+  });
+
+  it("Shift+Tabs from a focused container to the last focusable child", () => {
+    render(<FocusContainerDialog onClose={() => {}} />);
+    expect(screen.getByRole("dialog")).toHaveFocus();
+    fireEvent.keyDown(document, { key: "Tab", shiftKey: true });
+    expect(screen.getByText("Submit")).toHaveFocus();
   });
 
   it("calls onClose when Escape is pressed", () => {
