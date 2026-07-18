@@ -49,6 +49,9 @@ export function Layout() {
 
   return (
     <div className="layout">
+      <a className="skip-to-content" href="#main-content">
+        Skip to main content
+      </a>
       <aside className="sidebar">
         <Brand to="/app/jobs" />
         <nav>
@@ -94,7 +97,7 @@ export function Layout() {
       </aside>
 
       <div className="app-main">
-        <main className="content">
+        <main id="main-content" className="content" tabIndex={-1}>
           <Outlet />
         </main>
 

@@ -235,6 +235,10 @@ The frontend is installable as a PWA for a lightweight mobile jobs feed.
   aria-modal="true"` and uses `useFocusTrap` (`src/hooks/useFocusTrap.ts`):
   opening moves focus into the sheet, Tab/Shift+Tab cycle within it, Escape
   closes it, and focus returns to the trigger on close.
+- **Skip to content (FRO-22)** — `Layout` places a visually-hidden "Skip to
+  main content" link as the first focusable control; on focus it becomes
+  visible and jumps to `#main-content` (`<main tabIndex={-1}>`) so keyboard
+  users need not tab through the full desktop sidebar on every route.
 - **Apply dialog a11y (FRO-19)** — `ApplyJobDialog` is `role="dialog"` with
   `aria-labelledby` / `aria-describedby` (intro copy, or the success message
   after submit). `useFocusTrap(..., { focusContainer: true })` focuses the

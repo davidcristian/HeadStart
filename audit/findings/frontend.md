@@ -299,7 +299,7 @@ _Merged with FRO-15 — both records describe the same defect: no single-flight 
 
 <a id="fro-22"></a>
 ### FRO-22 — App shell has no skip-to-content link before the sidebar navigation
-⚪ **LOW** · 🐞 bug · Status: ☐ open · Confidence: medium (3/5 verifiers) · Effort: XS · WS41
+⚪ **LOW** · 🐞 bug · Status: ✅ done · Confidence: medium (3/5 verifiers) · Effort: XS · WS41
 
 **Locations:** `frontend/src/components/Layout.tsx:96` (`Layout`).
 
@@ -310,6 +310,8 @@ _Merged with FRO-15 — both records describe the same defect: no single-flight 
 **Suggested fix.** Add a visually-hidden "Skip to main content" anchor targeting the `<main>` region at the top of `Layout`.
 
 **Verification.** Confirmed 3/3 adversarial verifiers. Bypass-blocks gap, low.
+
+**Resolution.** Fixed in [PR](https://github.com/davidcristian/HeadStart/pull/239): `Layout` renders a `.skip-to-content` link as the first focusable control; on focus it becomes visible and targets `#main-content` (`<main tabIndex={-1}>`).
 
 <a id="fro-33"></a>
 ### FRO-33 — CSS uses undefined vars --surface/--accent/--bg-muted with no fallback

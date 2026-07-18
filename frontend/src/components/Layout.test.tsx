@@ -60,6 +60,16 @@ beforeEach(() => {
 });
 
 describe("Layout", () => {
+  it("offers a skip-to-content link before the sidebar that targets main", () => {
+    renderLayout();
+
+    const skip = screen.getByRole("link", { name: "Skip to main content" });
+    expect(skip).toHaveAttribute("href", "#main-content");
+    expect(document.getElementById("main-content")).toBeInstanceOf(HTMLElement);
+    // First focusable control in the shell so keyboard users need not tab the nav.
+    expect(document.querySelector(".layout a, .layout button")).toBe(skip);
+  });
+
   it("renders desktop nav, user box, and API-unreachable status for a non-admin user", () => {
     renderLayout();
 
