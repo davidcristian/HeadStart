@@ -85,7 +85,8 @@ other unknown path redirects to the landing page.
   Unverified users can sign in but product routes return **403** until verified.
 - `src/api/client.ts` sends `credentials: "include"`, attaches the in-memory
   access token, and on a 401 calls `refreshSession()` (cookie-based) once before
-  clearing the session.
+  clearing the session. Concurrent 401s share a single in-flight refresh
+  promise so only one `POST /auth/refresh` runs (FRO-13).
 - `AuthProvider` (in `main.tsx`) resolves the current user; `ProtectedRoute`
   gates all app routes and redirects to `/login`. See [auth.md](auth.md).
 

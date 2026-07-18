@@ -198,10 +198,11 @@ _Merged with FRO-09 — both records describe the same defect: the nginx runtime
 
 <a id="fro-13"></a>
 ### FRO-13 — 401 refresh has no in-flight dedup: concurrent requests fire N parallel refresh POSTs
-⚪ **LOW** · 🐞 bug · Status: ☐ open · Confidence: high (3/5 verifiers) · Effort: S · WS41
+⚪ **LOW** · 🐞 bug · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/232)) · Confidence: high (3/5 verifiers) · Effort: S · WS41
 
 _Merged with FRO-15 — both records describe the same defect: no single-flight guard on the 401 refresh path._
 
+**Update.** Fixed: `refreshSession` holds one module-level in-flight promise so concurrent 401s from `request` / `requestForm` / `requestBlob` await a single `POST /auth/refresh`, then all retry — [PR](https://github.com/davidcristian/HeadStart/pull/232).
 **Locations:** `frontend/src/api/client.ts:55` (`refreshSession`); plus the three callers `frontend/src/api/client.ts:100` (`request`), `:121` (`requestForm`), `:147` (`requestBlob`).
 
 **Evidence.** `request`/`requestForm`/`requestBlob` each call `refreshSession()` independently on a 401 with no shared in-flight promise. On token expiry, every simultaneous query triggers its own `POST /auth/refresh`. The backend rotates the cookie each time (`auth.py:79`) without single-use revocation and does not bump `token_version`, so all succeed but race.

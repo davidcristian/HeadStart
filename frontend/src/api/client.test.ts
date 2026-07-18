@@ -140,6 +140,40 @@ describe("request", () => {
     await expect(request("/thing")).rejects.toMatchObject({ status: 401 });
     expect(settings.cleared).toBe(true);
   });
+
+  it("shares one refresh across concurrent 401s from request helpers (FRO-13)", async () => {
+    let resolveRefresh: ((value: Response) => void) | undefined;
+    const refreshPending = new Promise<Response>((resolve) => {
+      resolveRefresh = resolve;
+    });
+    const body = new FormData();
+    let phase: "expire" | "ok" = "expire";
+    fetchMock.mockImplementation((url: string) => {
+      if (String(url).endsWith("/api/v1/auth/refresh")) return refreshPending;
+      if (phase === "expire") {
+        return Promise.resolve(jsonResponse(401, { detail: "expired" }));
+      }
+      return Promise.resolve(jsonResponse(200, { ok: true }));
+    });
+
+    const pending = Promise.all([
+      request<{ ok: boolean }>("/a"),
+      requestForm<{ ok: boolean }>("/b", { body }),
+      requestBlob("/c").then(() => ({ ok: true })),
+    ]);
+    await vi.waitFor(() => {
+      expect(
+        fetchMock.mock.calls.filter(([u]) => String(u).endsWith("/api/v1/auth/refresh")),
+      ).toHaveLength(1);
+    });
+
+    phase = "ok";
+    resolveRefresh!(jsonResponse(200, { access_token: "access-2" }));
+    expect(await pending).toEqual([{ ok: true }, { ok: true }, { ok: true }]);
+    expect(
+      fetchMock.mock.calls.filter(([u]) => String(u).endsWith("/api/v1/auth/refresh")),
+    ).toHaveLength(1);
+  });
 });
 
 describe("refreshSession", () => {
@@ -152,6 +186,34 @@ describe("refreshSession", () => {
   it("returns false when the refresh endpoint rejects", async () => {
     fetchMock.mockResolvedValueOnce(jsonResponse(401, {}));
     expect(await refreshSession()).toBe(false);
+  });
+
+  it("dedupes concurrent callers onto one POST /auth/refresh (FRO-13)", async () => {
+    let resolveRefresh: ((value: Response) => void) | undefined;
+    const refreshPending = new Promise<Response>((resolve) => {
+      resolveRefresh = resolve;
+    });
+    fetchMock.mockImplementationOnce(() => refreshPending);
+
+    const first = refreshSession();
+    const second = refreshSession();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0][0]).toBe("http://api.test/api/v1/auth/refresh");
+
+    resolveRefresh!(jsonResponse(200, { access_token: "shared" }));
+    expect(await Promise.all([first, second])).toEqual([true, true]);
+    expect(settings.accessToken).toBe("shared");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("allows a new refresh after the previous in-flight one settles", async () => {
+    fetchMock
+      .mockResolvedValueOnce(jsonResponse(200, { access_token: "first" }))
+      .mockResolvedValueOnce(jsonResponse(200, { access_token: "second" }));
+    expect(await refreshSession()).toBe(true);
+    expect(await refreshSession()).toBe(true);
+    expect(settings.accessToken).toBe("second");
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 });
 

@@ -51,16 +51,27 @@ async function rawFetch(
   });
 }
 
+/** In-flight refresh promise so concurrent 401s share one POST /auth/refresh (FRO-13). */
+let refreshInFlight: Promise<boolean> | null = null;
+
 /** Exchange the httpOnly refresh cookie for a fresh access token. */
 export async function refreshSession(): Promise<boolean> {
-  const resp = await fetch(`${getApiBaseUrl()}/api/v1/auth/refresh`, {
-    method: "POST",
-    credentials: "include",
-  });
-  if (!resp.ok) return false;
-  const data = (await resp.json()) as { access_token: string };
-  setAccessToken(data.access_token);
-  return true;
+  if (refreshInFlight) return refreshInFlight;
+  refreshInFlight = (async () => {
+    try {
+      const resp = await fetch(`${getApiBaseUrl()}/api/v1/auth/refresh`, {
+        method: "POST",
+        credentials: "include",
+      });
+      if (!resp.ok) return false;
+      const data = (await resp.json()) as { access_token: string };
+      setAccessToken(data.access_token);
+      return true;
+    } finally {
+      refreshInFlight = null;
+    }
+  })();
+  return refreshInFlight;
 }
 
 async function parse<T>(resp: Response): Promise<T> {
