@@ -23,6 +23,16 @@ describe("inboxApi", () => {
     expect(request).toHaveBeenCalledWith("/api/v1/inbox/reply-drafts?seen_job_id=42");
   });
 
+  it("lists reply drafts with a limit", async () => {
+    await inboxApi.listReplyDrafts(undefined, 25);
+    expect(request).toHaveBeenCalledWith("/api/v1/inbox/reply-drafts?limit=25");
+  });
+
+  it("lists reply drafts with job id and limit", async () => {
+    await inboxApi.listReplyDrafts(7, 10);
+    expect(request).toHaveBeenCalledWith("/api/v1/inbox/reply-drafts?seen_job_id=7&limit=10");
+  });
+
   it("lists all reply drafts when no job id is given", async () => {
     await inboxApi.listReplyDrafts();
     expect(request).toHaveBeenCalledWith("/api/v1/inbox/reply-drafts");

@@ -124,6 +124,11 @@ Server state is managed by **TanStack Query** (`@tanstack/react-query`). The
 - All network calls go through `src/api/` (wrapped by the React Query hooks in
   `src/hooks/`) using `VITE_API_BASE_URL`. Components do not call `api.*`
   directly.
+- Inbox client (`src/api/inbox.ts`): `listReplyDrafts(seenJobId?, limit?)`
+  forwards both query params to `GET /inbox/reply-drafts` (backend `limit`
+  1–500). Gmail / Outlook / Yahoo authorize helpers use distinct result types
+  mirroring the backend schemas (FRO-17), even when the wire shape is identical
+  today.
 - The API client attaches the bearer token to every request automatically; pages
   never handle tokens directly.
 - **Scraped / untrusted URLs:** never put a job or portal URL into `href`

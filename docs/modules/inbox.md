@@ -442,7 +442,8 @@ Supported classification labels: `follow_up`, `general`.
 - **Persistence:** `inbox_reply_draft` table (one row per user + classification);
   `ReplyDraftService` orchestrates draft + store.
 - **API:** `POST /inbox/draft-reply` (`classification_id` or `message_uid`,
-  optional `regenerate`); `GET /inbox/reply-drafts` (`seen_job_id` filter).
+  optional `regenerate`); `GET /inbox/reply-drafts` (`seen_job_id` filter,
+  `limit` 1–500 — the SPA client forwards both).
 - **Applications UI:** `/app/applications` shows the latest draft per job and a
   **Draft reply** button when a draftable classification exists.
 

@@ -6,18 +6,26 @@ import type {
   MailboxConfig,
   MailboxCredential,
   MailboxTestResult,
+  OutlookAuthorizeResult,
   ReplyDraftResult,
+  YahooAuthorizeResult,
 } from "../types";
 import { request } from "./client";
+
+function replyDraftsQuery(seenJobId?: number, limit?: number): string {
+  const params = new URLSearchParams();
+  if (seenJobId !== undefined) params.set("seen_job_id", String(seenJobId));
+  if (limit !== undefined) params.set("limit", String(limit));
+  const query = params.toString();
+  return query ? `?${query}` : "";
+}
 
 export const inboxApi = {
   draftReply: (data: { classification_id?: number; message_uid?: number; regenerate?: boolean }) =>
     request<ReplyDraftResult>("/api/v1/inbox/draft-reply", { method: "POST", body: data }),
 
-  listReplyDrafts: (seenJobId?: number) => {
-    const query = seenJobId !== undefined ? `?seen_job_id=${seenJobId}` : "";
-    return request<ReplyDraftResult[]>(`/api/v1/inbox/reply-drafts${query}`);
-  },
+  listReplyDrafts: (seenJobId?: number, limit?: number) =>
+    request<ReplyDraftResult[]>(`/api/v1/inbox/reply-drafts${replyDraftsQuery(seenJobId, limit)}`),
 
   getMailboxCredentials: () => request<MailboxCredential>("/api/v1/inbox/credentials"),
 
@@ -37,7 +45,7 @@ export const inboxApi = {
 
   gmailAuthorize: () => request<GmailAuthorizeResult>("/api/v1/inbox/gmail/authorize"),
 
-  outlookAuthorize: () => request<GmailAuthorizeResult>("/api/v1/inbox/outlook/authorize"),
+  outlookAuthorize: () => request<OutlookAuthorizeResult>("/api/v1/inbox/outlook/authorize"),
 
-  yahooAuthorize: () => request<GmailAuthorizeResult>("/api/v1/inbox/yahoo/authorize"),
+  yahooAuthorize: () => request<YahooAuthorizeResult>("/api/v1/inbox/yahoo/authorize"),
 };

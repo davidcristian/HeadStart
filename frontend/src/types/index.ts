@@ -85,4 +85,6 @@ export type {
   MailboxCredential,
   MailboxTestResult,
   GmailAuthorizeResult,
+  OutlookAuthorizeResult,
+  YahooAuthorizeResult,
 } from "./mailbox";

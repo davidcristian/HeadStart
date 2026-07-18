@@ -39,3 +39,13 @@ export interface MailboxTestResult {
 export interface GmailAuthorizeResult {
   authorization_url: string;
 }
+
+/** Mirrors backend `OutlookAuthorizeResponse` (same shape today; kept distinct for drift). */
+export interface OutlookAuthorizeResult {
+  authorization_url: string;
+}
+
+/** Mirrors backend `YahooAuthorizeResponse` (same shape today; kept distinct for drift). */
+export interface YahooAuthorizeResult {
+  authorization_url: string;
+}

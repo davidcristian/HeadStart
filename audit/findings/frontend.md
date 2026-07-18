@@ -243,7 +243,7 @@ _Merged with FRO-15 — both records describe the same defect: no single-flight 
 
 <a id="fro-17"></a>
 ### FRO-17 — Frontend inbox client drops backend `limit` and reuses Gmail type for Outlook/Yahoo
-⚪ **LOW** · 🔁 consistency · Status: ☐ open · Confidence: medium (3/5 verifiers) · Effort: S · WS41
+⚪ **LOW** · 🔁 consistency · Status: ✅ done · Confidence: medium (3/5 verifiers) · Effort: S · WS41
 
 **Locations:** `frontend/src/api/inbox.ts:17` (`listReplyDrafts`).
 
