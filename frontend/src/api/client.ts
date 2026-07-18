@@ -77,7 +77,17 @@ export async function refreshSession(): Promise<boolean> {
 async function parse<T>(resp: Response): Promise<T> {
   if (resp.status === 204) return undefined as T;
   const text = await resp.text();
-  const data = text ? JSON.parse(text) : undefined;
+  let data: { detail?: string } | undefined;
+  if (!text) {
+    data = undefined;
+  } else {
+    try {
+      // Non-JSON bodies (proxy HTML, truncated payload) -> ApiError, not SyntaxError (FRO-14).
+      data = JSON.parse(text) as { detail?: string };
+    } catch {
+      throw new ApiError(resp.status, text);
+    }
+  }
   if (!resp.ok) {
     const detail = (data && (data.detail as string)) || resp.statusText;
     throw new ApiError(resp.status, detail);

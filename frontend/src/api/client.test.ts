@@ -111,6 +111,35 @@ describe("request", () => {
     await expect(request("/thing")).rejects.toMatchObject({ message: "Server Error" });
   });
 
+  it("throws ApiError instead of SyntaxError on malformed JSON 2xx body (FRO-14)", async () => {
+    fetchMock.mockResolvedValueOnce({
+      status: 200,
+      ok: true,
+      statusText: "OK",
+      text: async () => "<html>gateway</html>",
+    } as unknown as Response);
+    await expect(request("/thing")).rejects.toMatchObject({
+      name: "ApiError",
+      status: 200,
+      message: "<html>gateway</html>",
+    });
+  });
+
+  it("throws ApiError on malformed JSON error bodies for requestForm too (FRO-14)", async () => {
+    const body = new FormData();
+    fetchMock.mockResolvedValueOnce({
+      status: 502,
+      ok: false,
+      statusText: "Bad Gateway",
+      text: async () => "<html>bad gateway</html>",
+    } as unknown as Response);
+    await expect(requestForm("/upload", { body })).rejects.toMatchObject({
+      name: "ApiError",
+      status: 502,
+      message: "<html>bad gateway</html>",
+    });
+  });
+
   it("refreshes once on 401 then retries with the new token", async () => {
     fetchMock
       .mockResolvedValueOnce(jsonResponse(401, { detail: "expired" }))

@@ -215,7 +215,7 @@ _Merged with FRO-15 — both records describe the same defect: no single-flight 
 
 <a id="fro-14"></a>
 ### FRO-14 — parse() throws raw SyntaxError on malformed 2xx body instead of ApiError
-⚪ **LOW** · 🐞 bug · Status: ☐ open · Confidence: medium (3/5 verifiers) · Effort: XS · WS41
+⚪ **LOW** · 🐞 bug · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/233)) · Confidence: medium (3/5 verifiers) · Effort: XS · WS41
 
 **Locations:** `frontend/src/api/client.ts:69` (`parse`).
 
