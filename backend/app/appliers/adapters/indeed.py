@@ -11,6 +11,7 @@ still require manual answers in `profile.answers`).
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 import httpx
@@ -38,6 +39,10 @@ from app.appliers.private_api_risk import (
 )
 from app.appliers.types import ApplyContext, ApplyResult
 from app.schemas.profile import ResumeFile
+
+# Cookie names/values must not carry CTL / separators that break Cookie headers
+# (APL-29 self header-injection via credential paste).
+_COOKIE_UNSAFE = re.compile(r"[\x00-\x1f\x7f;]")
 
 
 @register_applier("indeed")
@@ -136,10 +141,15 @@ class IndeedApplier(Applier):
         body = build_submit_body(payload, resume_file=_resolve_resume_file(ctx))
         headers = _credential_headers(ctx.credentials)
         try:
+            cookies = _credential_cookies(ctx.credentials)
+        except ValueError as exc:
+            return ApplyResult(status="failed", error=str(exc), payload=payload)
+        try:
             response = self.http.post_json(
                 SMARTAPPLY_SUBMIT_URL,
                 json=body,
                 headers=headers,
+                cookies=cookies,
             )
         except httpx.HTTPError as exc:
             return ApplyResult(status="failed", error=str(exc), payload=payload)
@@ -183,6 +193,11 @@ def _detail_from_override(ctx: ApplyContext, external_apply_url: str) -> IndeedJ
 
 
 def _credential_headers(credentials: dict[str, dict[str, str]] | None) -> dict[str, str]:
+    """Non-Cookie headers for smartapply (CSRF + optional stored headers).
+
+    Session cookies are passed via ``cookies=`` on the HTTP client (APL-29) so
+    httpx builds/validates morsels instead of a raw ``Cookie`` string join.
+    """
     if not credentials:
         return {}
     headers = dict(credentials.get("headers") or {})
@@ -190,10 +205,25 @@ def _credential_headers(credentials: dict[str, dict[str, str]] | None) -> dict[s
     if csrf:
         headers.setdefault("indeed-co", "US")
         headers["X-Indeed-Csrf-Token"] = str(csrf)
-    cookies = credentials.get("cookies") or {}
-    if cookies:
-        headers["Cookie"] = "; ".join(f"{key}={value}" for key, value in cookies.items())
     return headers
+
+
+def _credential_cookies(credentials: dict[str, dict[str, str]] | None) -> dict[str, str]:
+    """Cookie jar for smartapply; reject CTL/`;` so values cannot splice headers."""
+    if not credentials:
+        return {}
+    cookies = credentials.get("cookies") or {}
+    cleaned: dict[str, str] = {}
+    for key, value in cookies.items():
+        name = str(key)
+        morsel = str(value)
+        if _COOKIE_UNSAFE.search(name) or _COOKIE_UNSAFE.search(morsel):
+            raise ValueError(
+                "indeed credential cookies contain characters that cannot be "
+                "safely sent in a Cookie header"
+            )
+        cleaned[name] = morsel
+    return cleaned
 
 
 def _extract_application_id(response: Any) -> str | None:

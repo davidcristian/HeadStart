@@ -609,9 +609,11 @@ keys, Workday cookies, etc.) — the preview payload includes `indeed_route` and
 **Live submit (Indeed-hosted):** when the listing has no external ATS URL but
 does expose an Easy Apply button, posts to
 `smartapply.indeed.com/beta/indeedapply/v2/applications` with the user's Indeed
-session cookies (`Cookie` built from credential `cookies`, plus optional
-`X-Indeed-Csrf-Token`). Requires `accept_private_api_risk: true` in source/search
-config (APL-17). The hosted live-submit regression
+session cookies passed via httpx `cookies=` (not a raw `Cookie` string join),
+plus optional `X-Indeed-Csrf-Token`. Cookie names/values that contain CTL bytes
+or `;` are rejected before the POST so a pasted credential cannot splice extra
+request headers (APL-29). Requires `accept_private_api_risk: true` in
+source/search config (APL-17). The hosted live-submit regression
 (`test_hosted_live_submit_posts_to_smartapply`) asserts those cookies (and CSRF
 when set) are on the wire — body-only checks would miss an APL-02 cookie-drop
 regression (TST-02). A 2xx response whose body reports `success: false`, `error` /

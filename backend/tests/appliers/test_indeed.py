@@ -528,7 +528,7 @@ def test_extract_application_id_and_credential_headers() -> None:
     headers = _credential_headers({"headers": {}, "session": {"csrf_token": "c-1"}})
     assert headers["X-Indeed-Csrf-Token"] == "c-1"
     assert headers["indeed-co"] == "US"
-    # TST-02: Cookie serialization is the authenticated-submit contract (APL-02).
+    # APL-29: cookies travel via cookies=, not a raw Cookie header join.
     cookie_headers = _credential_headers(
         {
             "headers": {},
@@ -536,7 +536,57 @@ def test_extract_application_id_and_credential_headers() -> None:
             "cookies": {"PPID": "test", "SOCK": "session"},
         }
     )
-    assert cookie_headers["Cookie"] == "PPID=test; SOCK=session"
+    assert "Cookie" not in cookie_headers
+    assert "cookie" not in {k.lower() for k in cookie_headers}
+
+
+def test_credential_cookies_jar_and_rejects_header_injection() -> None:
+    """APL-29: cookies= jar + reject CTL/semicolon self-injection."""
+    import pytest
+
+    from app.appliers.adapters.indeed import _credential_cookies
+
+    assert _credential_cookies(None) == {}
+    assert _credential_cookies({"cookies": {"PPID": "test", "SOCK": "session"}}) == {
+        "PPID": "test",
+        "SOCK": "session",
+    }
+    with pytest.raises(ValueError, match="cannot be safely sent"):
+        _credential_cookies({"cookies": {"PPID": "ok\r\nX-Evil: 1"}})
+    with pytest.raises(ValueError, match="cannot be safely sent"):
+        _credential_cookies({"cookies": {"bad;name": "x"}})
+
+
+def test_hosted_live_submit_rejects_injected_cookie_value() -> None:
+    """CRLF in a stored cookie must fail closed before the smartapply POST."""
+    viewjob = load_fixture("indeed_viewjob_hosted.html")
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        url = str(request.url)
+        if "viewjob" in url:
+            return httpx.Response(200, text=viewjob)
+        raise AssertionError(f"smartapply must not be called: {request.method} {url}")
+
+    applier = IndeedApplier(http=make_http_client(handler))
+    result = applier.apply(
+        ApplyContext(
+            job_external_id="hostedjobkey001",
+            job_title="Customer Support Specialist",
+            company="Hosted Co",
+            job_url="https://www.indeed.com/viewjob?jk=hostedjobkey001",
+            config={"accept_private_api_risk": True},
+            profile=_profile(),
+            credentials={
+                "cookies": {"PPID": "test\r\nX-Injected: 1", "SOCK": "session"},
+                "session": {},
+                "headers": {},
+            },
+            dry_run=False,
+        )
+    )
+    assert result.status == "failed"
+    assert result.error is not None
+    assert "cannot be safely sent" in result.error
 
 
 def test_resolve_resume_file_from_profile() -> None:

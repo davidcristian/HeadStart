@@ -28,6 +28,8 @@ This area covers `backend/app/appliers/` — the pluggable adapters that autonom
 
 **Update (2026-07-03).** Fixed: `_credential_headers` now serializes `credentials["cookies"]` into a `Cookie` header that reaches the smartapply submit (a test asserts the cookies on the wire). The manual string-join serialization (vs httpx `cookies=`) is a hardening residual tracked as [APL-29](#apl-29).
 
+**Update (2026-07-12).** APL-29 fixed: hosted live submit passes credential cookies via httpx `cookies=` (matching LinkedIn) and rejects CTL/`;` in cookie names or values before the POST.
+
 **Locations:** `backend/app/appliers/adapters/indeed.py:124` (`IndeedApplier._apply_hosted`).
 
 **Evidence.** After passing `has_indeed_session_cookies(ctx.credentials)`, the live POST is `self.http.post_json(SMARTAPPLY_SUBMIT_URL, json=body, headers=headers)` — with no `cookies=`. `_credential_headers` forwards only `credentials['headers']` plus CSRF, never a `Cookie` header. The sibling LinkedIn adapter (`linkedin.py:211`) correctly threads `cookies=cookies`.
@@ -358,7 +360,7 @@ Residual of the APL-01/APL-03 fix (commit `a294e81`): the Apple and Microsoft er
 
 <a id="apl-29"></a>
 ### APL-29 — Indeed Cookie header built by manual join of unvalidated credential values (self header-injection)
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: high (delta audit) · Effort: S · WS42
+⚪ **LOW** · 🔒 security · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/257)) · Confidence: high (delta audit) · Effort: S · WS42
 
 Residual of the APL-02 fix: the cookies are now correctly sent, but via a raw header join rather than the safer `cookies=` path.
 
@@ -369,5 +371,7 @@ Residual of the APL-02 fix: the cookies are now correctly sent, but via a raw he
 **Failure scenario.** A user stores an Indeed cookie whose value contains CRLF or a semicolon; the live smartapply POST carries `Cookie: PPID=<value-with-\r\n>`, splicing an extra request header or forging additional cookie morsels into the user's own outbound request. Bounded to self-injection (own credential, fixed URL, multi-user isolation intact) — defense-in-depth, not a cross-tenant exploit.
 
 **Suggested fix.** Pass `cookies=credentials["cookies"]` to `post_json` and let httpx build/validate the morsels, mirroring LinkedIn.
+
+**Fix.** Hosted live submit passes credential cookies via httpx `cookies=` (matching LinkedIn). `_credential_headers` no longer builds a raw `Cookie` string. Cookie names/values containing CTL bytes or `;` raise before the POST so pasted credentials cannot splice headers even though httpx itself still serializes CRLF morsels. Regressions cover the jar helper, header-injection rejection, and fail-closed hosted submit.
 
 **Verification.** Confirmed (delta audit, 2026-07-03). Does not reopen APL-02 — the cookies are correctly sent to the submit request now (a test asserts them on the wire); this is the serialization-hardening residual.
