@@ -17,21 +17,22 @@ helpers). Each `PortalPreset` carries:
 | `id` | Stable slug used in API and `default_config.portal_id` |
 | `company_name` | Display name in the UI |
 | `category` | `big_tech`, `unicorn`, or `ai` |
-| `adapter_key` | Scraper key (`greenhouse`, `lever`, `ashby`, `workday`, `smartrecruiters`, `apple_careers`, `google_careers`, `microsoft_careers`, `shopify_careers`, `snowflake_careers`, `uber_careers`) |
+| `adapter_key` | Scraper key (`greenhouse`, `lever`, `ashby`, `workday`, `smartrecruiters`, `apple_careers`, `google_careers`, `microsoft_careers`, `shopify_careers`, `snowflake_careers`, `uber_careers`, `icims`) |
 | `base_url` | Careers board URL passed to the scraper |
 | `default_config` | Adapter-specific config merged into new sources (always includes `portal_id`) |
 
-As of the current catalog: **115 employers** — 51 big tech, 53 unicorn, 11 AI —
+As of the current catalog: **116 employers** — 51 big tech, 54 unicorn, 11 AI —
 across Greenhouse (65), Ashby (12), Workday (13), SmartRecruiters (13), Lever (4),
 Apple Careers (1), Google Careers (1), Meta Careers (1), Microsoft Careers (1),
-Shopify Careers (1), Uber Careers (1), and Amazon Jobs (1).
+Shopify Careers (1), Uber Careers (1), Amazon Jobs (1), and iCIMS/Jibe (1).
 Meta uses the `meta_careers` scraper (Relay GraphQL search on metacareers.com).
 Apple uses the `apple_careers` scraper (hydration JSON embedded in search HTML).
 Shopify Careers (`shopify_careers`) stores only `company` + `portal_id` in
 `default_config` — the scraper reads those (plus optional `q` / `max_results`);
 it does **not** take an Ashby `board` slug. Auto-apply still defaults
 `board=shopify` inside the applier when delegating to Ashby. Snowflake Careers
-keeps `board` because its Ashby-backed scraper consumes it.
+keeps `board` because its Ashby-backed scraper consumes it. Rivian uses the
+`icims` scraper (`careers_base_url` + public `/api/jobs`).
 
 `GET /portals` annotates each row with:
 

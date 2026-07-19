@@ -1,0 +1,52 @@
+{
+  "totalCount": 3,
+  "count": 3,
+  "jobs": [
+    {
+      "data": {
+        "slug": "31370",
+        "req_id": "31370",
+        "title": "Sr. Supplier Development Engineer, Exteriors",
+        "hiring_organization": "Rivian",
+        "full_location": "Normal, Illinois",
+        "short_location": "Normal, Illinois",
+        "city": "Normal",
+        "state": "Illinois",
+        "country": "United States",
+        "posted_date": "2026-06-12T14:10:00+0000",
+        "apply_url": "https://us-careers-rivian.icims.com/jobs/31370/login",
+        "description": "<p>Sample</p>",
+        "categories": [
+          {
+            "name": "Manufacturing"
+          }
+        ],
+        "employment_type": "FULL_TIME",
+        "ats_code": "icims"
+      }
+    },
+    {
+      "data": {
+        "slug": "30142",
+        "req_id": "30142",
+        "title": "Senior Full Stack Software Engineer, Communications Platform",
+        "hiring_organization": "Rivian",
+        "full_location": "Belgrade, Serbia",
+        "short_location": "Belgrade, Serbia",
+        "city": "Belgrade",
+        "state": null,
+        "country": "Serbia",
+        "posted_date": "2026-07-06T10:59:00+0000",
+        "apply_url": "https://sb-careers-rivian.icims.com/jobs/30142/login",
+        "description": "<p>Sample</p>",
+        "categories": [
+          {
+            "name": "Software Engineering"
+          }
+        ],
+        "employment_type": "FULL_TIME",
+        "ats_code": "icims"
+      }
+    }
+  ]
+}

@@ -252,3 +252,26 @@ def microsoft_careers_preset(
             "portal_id": portal_id,
         },
     )
+
+
+def icims_preset(
+    *,
+    portal_id: str,
+    company: str,
+    careers_base_url: str,
+    category: PortalCategory = "unicorn",
+) -> PortalPreset:
+    """Build a preset for an iCIMS/Jibe Attract careers site with public ``/api/jobs``."""
+    base = careers_base_url.rstrip("/")
+    return PortalPreset(
+        id=portal_id,
+        company_name=company,
+        category=category,
+        adapter_key="icims",
+        base_url=base,
+        default_config={
+            "company": company,
+            "careers_base_url": base,
+            "portal_id": portal_id,
+        },
+    )

@@ -1,0 +1,29 @@
+{
+  "totalCount": 3,
+  "count": 3,
+  "jobs": [
+    {
+      "data": {
+        "slug": "31774",
+        "req_id": "31774",
+        "title": "Sr. Product Manager, Global Financial Systems",
+        "hiring_organization": "Rivian",
+        "full_location": "Atlanta, Georgia",
+        "short_location": "Atlanta, Georgia",
+        "city": "Atlanta",
+        "state": "Georgia",
+        "country": "United States",
+        "posted_date": "2026-06-24T13:15:00+0000",
+        "apply_url": "https://us-careers-rivian.icims.com/jobs/31774/login",
+        "description": "<p>Sample</p>",
+        "categories": [
+          {
+            "name": "Information Technology"
+          }
+        ],
+        "employment_type": "FULL_TIME",
+        "ats_code": "icims"
+      }
+    }
+  ]
+}

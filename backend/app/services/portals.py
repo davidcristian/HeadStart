@@ -98,6 +98,7 @@ def _config_keys_match(preset: PortalPreset, source: Source) -> bool:
         "shopify_careers",
         "snowflake_careers",
         "uber_careers",
+        "icims",
     }:
         return cfg.get("portal_id") == pcfg.get("portal_id")
     return False

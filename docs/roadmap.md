@@ -6,7 +6,8 @@ priorities shift or a milestone ships.
 **Current baseline (2026-07):** Phases 1–23 shipped (four-tier pricing, per-user AI
 summary preferences, curated employer portal catalog through batch 5, SmartRecruiters adapter, custom career-site
 adapters for Shopify, Uber, and Snowflake, the dev-only local application agent, and inbox OAuth
-providers for Gmail, Outlook, Yahoo, and Fastmail). See
+providers for Gmail, Outlook, Yahoo, and Fastmail). Phase 24 adds the reusable iCIMS/Jibe
+Attract scraper and Rivian catalog preset. See
 [architecture.md](architecture.md) for the system design.
 
 ---
@@ -755,16 +756,36 @@ new custom scraper if the careers site uses a proprietary stack.
 | Rippling | Ashby (`rippling`) or custom | `unicorn` | Still blocked — Ashby Postings API 404; careers site is proprietary Rippling ATS |
 | HashiCorp | Greenhouse or SmartRecruiters | `unicorn` | Still blocked — no public Greenhouse/SR/Ashby/Lever board; IBM careers (post-acquisition) |
 | Splunk | Greenhouse, SmartRecruiters, or Workday | `big_tech` | Still blocked — careers redirect to Cisco Phenom (`careers.cisco.com/.../splunk`); Cisco Workday is not Splunk-scoped |
-| Rivian | Greenhouse, Lever, SmartRecruiters, or Workday | `unicorn` | Still blocked — `careers.rivian.com` is iCIMS; Workday CXS unauthorized/404 for probed sites |
+| Rivian | Greenhouse, Lever, SmartRecruiters, or Workday | `unicorn` | **Shipped (Phase 24):** iCIMS/Jibe Attract via `@register_scraper("icims")` on `careers.rivian.com/api/jobs` |
 | Grammarly | Greenhouse, Ashby, or SmartRecruiters | `unicorn` | Still blocked — careers redirect to Superhuman; Greenhouse `grammarly`/`superhuman` 404; Ashby board empty/404 |
 | Snyk | Greenhouse, Ashby, or SmartRecruiters | `unicorn` | Still blocked — Ashby board returns 0 jobs; Greenhouse/Lever/SR tokens failed |
 
 **Shipped:** 4 presets in `presets/` (CrowdStrike, Zillow, Palo Alto Networks, SentinelOne);
-catalog count **115**.
+catalog count **115**. Rivian shipped later via [Phase 24](#phase-24--icimsjibe-attract-adapter).
 
 **Done when:** at least three employers from this list ship as verified presets (or
 new scrapers + presets where needed); skipped rows document why the public API
 still fails. **Met.**
+
+---
+
+## Phase 24 — iCIMS / Jibe Attract adapter
+
+Goal: unlock employers on iCIMS-backed Jibe Attract careers sites (vanity domains
+with a public `GET /api/jobs` JSON feed). Starts with Rivian from the Phase 23
+blocked list and leaves a reusable adapter for further catalog growth.
+
+| Item | Why | Notes |
+| ---- | --- | ----- |
+| ~~`icims` scraper~~ | ~~Reusable ATS gap after Greenhouse / Lever / Ashby / Workday / SmartRecruiters~~ | **Shipped:** `@register_scraper("icims")`; paginated `GET {careers_base_url}/api/jobs`; config `careers_base_url` + optional `company` / `keywords` / `page_size` / `max_results` |
+| ~~Fixture + tests~~ | ~~CI safety~~ | **Shipped:** sample JSON under `tests/fixtures/icims_jobs_page*.json`; no live network |
+| ~~URL detection~~ | ~~Paste-friendly source setup~~ | **Shipped:** known vanity host `careers.rivian.com`, `*.jibeapply.com`, and explicit `/api/jobs` paths |
+| ~~Scraper docs~~ | ~~Operator discoverability~~ | **Shipped:** row in [modules/scrapers.md](modules/scrapers.md) |
+| ~~`icims_preset` + Rivian~~ | ~~Catalog growth~~ | **Shipped:** helper in `catalog_helpers.py`; Rivian preset; catalog count **116** |
+
+**Done when:** Rivian appears in the curated catalog with working scrape against
+fixtures, and at least one live smoke of `careers.rivian.com/api/jobs` succeeds
+outside CI.
 
 ---
 

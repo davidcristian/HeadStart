@@ -27,6 +27,7 @@ ADAPTER_DEFAULTS: dict[str, float] = {
     "shopify_careers": 3.0,
     "snowflake_careers": 1.0,
     "uber_careers": 2.5,
+    "icims": 1.5,
     "indeed": 5.0,
     "linkedin": 7.5,
     "generic_html": 2.0,
