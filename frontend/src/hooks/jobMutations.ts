@@ -41,15 +41,15 @@ export function useApplyToJob() {
         tailored_resume_b64,
         tailored_resume_artifact_id,
       }),
-    onSuccess: (result, variables) => {
+    onSuccess: (_result, variables) => {
       invalidate(qc, queryKeys.applicationLogs);
       // A live apply moves the job into the pipeline (queued / apply_failed / …), so
-      // refetch every stage-filtered applications cache. Dry-run previews don't.
+      // refetch applications and jobs. Live enqueue returns status=queued (API-10);
+      // do not gate jobs refresh on unreachable "submitted" (FRO-31 / XCT-27).
+      // Dry-run previews don't.
       if (!variables.dry_run) {
         invalidate(qc, ["applications"]);
-      }
-      if (result.status === "submitted") {
-        qc.invalidateQueries({ queryKey: ["jobs"] });
+        invalidate(qc, ["jobs"]);
       }
     },
   });

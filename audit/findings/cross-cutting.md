@@ -359,7 +359,7 @@ regression tests assert floors and lock pins stay aligned.
 
 <a id="xct-27"></a>
 ### XCT-27 — useApplyToJob 'submitted' jobs-cache invalidation branch is unreachable (dead code)
-⚪ **LOW** · 🐞 bug · Status: ☐ open · Confidence: high (3/5 verifiers) · Effort: S · WS41
+⚪ **LOW** · 🐞 bug · Status: ✅ done · Confidence: high (3/5 verifiers) · Effort: S · WS41
 
 **Locations:** `frontend/src/hooks/jobMutations.ts:46` (`useApplyToJob`); plus `backend/app/api/v1/jobs.py:120`, `frontend/src/components/ApplyJobDialog.tsx:139`, `frontend/src/hooks/jobMutations.test.tsx:79`.
 
@@ -368,5 +368,7 @@ regression tests assert floors and lock pins stay aligned.
 **Failure scenario.** A live apply completes async in the worker; the jobs cache only refreshes because `ApplyJobDialog` invalidates `['jobs']` post-poll. The hook's own refresh never fires, so any non-dialog caller leaves the jobs list stale.
 
 **Suggested fix.** Drop the unreachable `'submitted'` branch (rely on the post-poll invalidation), or move the jobs invalidation into the poll-completion path so all callers benefit.
+
+**Fix.** Same change as FRO-31: live apply invalidates `["jobs"]` on enqueue; the `submitted`-only branch is removed.
 
 **Verification.** Confirmed 3/3 adversarial verifiers. The live apply path always returns `status='queued'` (`jobs.py:120`); dry-run returns adapter `'dry_run'` status; adapters emit `'submitted'` only for synchronous non-dry applies which this endpoint never does, so the hook's `'submitted'` branch is dead.

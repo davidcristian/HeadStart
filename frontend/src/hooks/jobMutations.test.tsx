@@ -76,7 +76,7 @@ describe("useUpdateJob", () => {
 });
 
 describe("useApplyToJob", () => {
-  it("live apply invalidates logs and the applications pipeline", async () => {
+  it("queued live apply invalidates logs, applications, and jobs caches", async () => {
     const { result } = renderHook(() => useApplyToJob(), { wrapper });
     await act(async () => {
       await result.current.mutateAsync({ id: 1 });
@@ -90,9 +90,10 @@ describe("useApplyToJob", () => {
     const keys = invalidatedKeys();
     expect(keys).toContainEqual(["application-logs"]);
     expect(keys).toContainEqual(["applications"]);
+    expect(keys).toContainEqual(["jobs"]);
   });
 
-  it("dry-run apply does not touch the applications pipeline", async () => {
+  it("dry-run apply does not touch the applications or jobs caches", async () => {
     const { result } = renderHook(() => useApplyToJob(), { wrapper });
     await act(async () => {
       await result.current.mutateAsync({ id: 1, dry_run: true });
@@ -100,17 +101,6 @@ describe("useApplyToJob", () => {
     const keys = invalidatedKeys();
     expect(keys).toContainEqual(["application-logs"]);
     expect(keys).not.toContainEqual(["applications"]);
-    expect(keys).not.toContainEqual(["jobs"]);
-  });
-
-  it("a queued live apply does not invalidate the jobs cache", async () => {
-    const { result } = renderHook(() => useApplyToJob(), { wrapper });
-    await act(async () => {
-      await result.current.mutateAsync({ id: 1 });
-    });
-    const keys = invalidatedKeys();
-    expect(keys).toContainEqual(["application-logs"]);
-    expect(keys).toContainEqual(["applications"]);
     expect(keys).not.toContainEqual(["jobs"]);
   });
 });

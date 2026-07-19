@@ -131,7 +131,7 @@ and documents the no-op contract in `docs/modules/billing.md`.
 
 <a id="tst-07"></a>
 ### TST-07 — Test asserts 'submitted' apply-result behavior the API never produces (coverage-theater)
-⚪ **LOW** · 🧪 test · Status: ☐ open · Confidence: high · Effort: S · WS41
+⚪ **LOW** · 🧪 test · Status: ✅ done · Confidence: high · Effort: S · WS41
 
 **Locations:** `frontend/src/hooks/jobMutations.test.tsx:79` (`'a submitted result also invalidates the jobs cache'`).
 
@@ -140,6 +140,8 @@ and documents the no-op contract in `docs/modules/billing.md`.
 **Failure scenario.** It gives false confidence that a live apply refreshes jobs via the hook. If the real async flow or the dialog's post-poll invalidation regresses, this test stays green because it exercises an impossible status.
 
 **Suggested fix.** Test the actual `'queued'` path and its post-poll invalidation instead of a synthetic `'submitted'` return; remove or rewrite the branch it covers.
+
+**Fix.** Same change as FRO-31: hook tests assert the real `queued` live-apply path invalidates `["jobs"]` (and that dry-run does not).
 
 **Verification.** Confirmed 5/5 adversarial verifiers. `jobs.py:120` always returns `status='queued'` for a live apply; the hook's `result.status==='submitted'` branch (`jobMutations.ts:46`) is unreachable from the endpoint, so the test fabricates an impossible status.
 

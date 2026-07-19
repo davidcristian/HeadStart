@@ -118,6 +118,11 @@ Server state is managed by **TanStack Query** (`@tanstack/react-query`). The
   Job status updates via `useUpdateJob` invalidate both `["jobs"]` and
   `["applications"]` so the pipeline stage on `/app/applications` stays in
   sync when a job is marked applied/archived from the jobs feed (FRO-30).
+  Live `useApplyToJob` (non-dry-run) invalidates `["application-logs"]`,
+  `["applications"]`, and `["jobs"]` on enqueue (`status=queued`) so callers
+  need not replicate post-poll jobs refresh for the feed to leave the
+  un-applied state (FRO-31; unreachable `submitted` jobs-only branch removed —
+  XCT-27 / TST-07).
 - The hooks still call `src/api/` under the hood — React Query only adds
   caching, background revalidation, and dedupe on top of the typed client.
 - **Session isolation:** `AuthProvider` calls `queryClient.clear()` on

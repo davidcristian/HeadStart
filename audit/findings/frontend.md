@@ -343,7 +343,7 @@ _Merged with FRO-15 — both records describe the same defect: no single-flight 
 
 <a id="fro-31"></a>
 ### FRO-31 — useApplyToJob invalidates ["jobs"] only on sync submitted, not the async queued path
-⚪ **LOW** · 🐞 bug · Status: ☐ open · Confidence: medium (3/5 verifiers) · Effort: S · WS41
+⚪ **LOW** · 🐞 bug · Status: ✅ done · Confidence: medium (3/5 verifiers) · Effort: S · WS41
 
 **Locations:** `frontend/src/hooks/jobMutations.ts:46` (`useApplyToJob`).
 
@@ -352,6 +352,8 @@ _Merged with FRO-15 — both records describe the same defect: no single-flight 
 **Failure scenario.** Any future caller of `useApplyToJob` not replicating `ApplyJobDialog`'s post-poll invalidation leaves the Jobs feed showing the job as un-applied after a successful live apply.
 
 **Suggested fix.** Document the polling contract on the hook, or invalidate `["jobs"]` on the queued path too so the hook is self-sufficient.
+
+**Fix.** Live (non-dry-run) `useApplyToJob` success invalidates `["jobs"]` alongside applications/logs; the unreachable `status === "submitted"` gate is gone (same defect as XCT-27 / TST-07).
 
 **Verification.** Confirmed 3/3 adversarial verifiers. Latent low-severity contract gap; the hook is not self-sufficient.
 
