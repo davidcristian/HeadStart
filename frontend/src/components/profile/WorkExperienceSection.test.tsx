@@ -109,6 +109,16 @@ describe("WorkExperienceSection", () => {
     ]);
   });
 
+  it("does not nest the current-role checkbox label inside a Field label (FRO-26)", () => {
+    render(<WorkExperienceSection workExperience={[makeRow()]} onWorkExperienceChange={vi.fn()} />);
+
+    const checkbox = screen.getByRole("checkbox", { name: "I currently work here" });
+    const checkboxLabel = checkbox.closest("label");
+    expect(checkboxLabel).not.toBeNull();
+    expect(checkboxLabel?.parentElement?.closest("label")).toBeNull();
+    expect(screen.getByText("Current role").tagName).toBe("SPAN");
+  });
+
   it("labels each role by its 1-based index", () => {
     const rows = [makeRow(), makeRow()];
     render(<WorkExperienceSection workExperience={rows} onWorkExperienceChange={vi.fn()} />);

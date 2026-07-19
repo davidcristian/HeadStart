@@ -117,7 +117,9 @@ export function WorkExperienceSection({
                 }
               />
             </Field>
-            <Field label="Current role">
+            {/* Field is a <label>; nest only one label around the checkbox (FRO-26). */}
+            <div className="field">
+              <span className="field-label">Current role</span>
               <label className="checkbox-row">
                 <input
                   type="checkbox"
@@ -134,7 +136,7 @@ export function WorkExperienceSection({
                 />
                 I currently work here
               </label>
-            </Field>
+            </div>
           </div>
           {!row.is_current && (
             <div className="form-grid">

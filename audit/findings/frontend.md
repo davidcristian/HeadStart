@@ -513,7 +513,7 @@ _Merged with FRO-15 — both records describe the same defect: no single-flight 
 
 <a id="fro-26"></a>
 ### FRO-26 — Checkbox rows nest a <label> inside the Field <label> (invalid HTML, ambiguous a11y)
-⚪ **LOW** · 🐞 bug · Status: ☐ open · Confidence: high (3/5 verifiers) · Effort: S · WS41
+⚪ **LOW** · 🐞 bug · Status: ✅ done · Confidence: high (3/5 verifiers) · Effort: S · WS41
 
 **Locations:** `frontend/src/components/profile/WorkExperienceSection.tsx:120` (`WorkExperienceSection`); plus `frontend/src/components/profile/SkillsLanguagesForm.tsx:109`, `frontend/src/components/ui.tsx:46`.
 

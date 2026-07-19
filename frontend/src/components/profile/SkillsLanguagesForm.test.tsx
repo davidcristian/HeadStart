@@ -78,6 +78,16 @@ describe("SkillsLanguagesForm", () => {
     expect(onLanguagesChange).toHaveBeenLastCalledWith([makeLang({ is_native: true })]);
   });
 
+  it("does not nest the native-language checkbox label inside a Field label (FRO-26)", () => {
+    renderForm({ languages: [makeLang()] });
+
+    const checkbox = screen.getByRole("checkbox", { name: "This is my native language" });
+    const checkboxLabel = checkbox.closest("label");
+    expect(checkboxLabel).not.toBeNull();
+    expect(checkboxLabel?.parentElement?.closest("label")).toBeNull();
+    expect(screen.getByText("Native language").tagName).toBe("SPAN");
+  });
+
   it("removes the language at the clicked index", () => {
     const { onLanguagesChange } = renderForm({
       languages: [makeLang({ language: "English" }), makeLang({ language: "French" })],

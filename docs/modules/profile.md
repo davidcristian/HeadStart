@@ -131,10 +131,13 @@ mirroring the `skills` bounds so apply/LLM payloads cannot bloat unbounded.
 
 `work_experience` and `education` are structured lists used by apply adapters.
 Work experience needs a job title, company, and start month/year; education rows
-need at least a school name. Greenhouse also needs resolvable degree and field of
-study catalog ids (or `default_degree_id` / `default_discipline_id` in source
-config). Ashby uses these rows when `education_history_path` is configured;
-Lever includes a formatted summary in `comments`.
+need at least a school name. The profile UI's "current role" and "native
+language" checkboxes use a single `<label>` each (not nested inside `Field`'s
+`<label>`) so assistive tech gets one unambiguous name (FRO-26). Greenhouse also
+needs resolvable degree and field of study catalog ids (or `default_degree_id` /
+`default_discipline_id` in source config). Ashby uses these rows when
+`education_history_path` is configured; Lever includes a formatted summary in
+`comments`.
 
 `skills` is a list of skill names (up to 100 entries, 200 characters each).
 `languages` is a structured list with language name, optional proficiency label,
