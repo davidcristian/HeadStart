@@ -63,13 +63,15 @@ beforeEach(() => {
 });
 
 describe("useUpdateJob", () => {
-  it("updates the job and invalidates the jobs cache", async () => {
+  it("updates the job and invalidates jobs and applications caches", async () => {
     const { result } = renderHook(() => useUpdateJob(), { wrapper });
     await act(async () => {
       await result.current.mutateAsync({ id: 1, status: "applied" });
     });
     expect(api.updateJob).toHaveBeenCalledWith(1, { status: "applied" });
-    expect(invalidatedKeys()).toContainEqual(["jobs"]);
+    const keys = invalidatedKeys();
+    expect(keys).toContainEqual(["jobs"]);
+    expect(keys).toContainEqual(["applications"]);
   });
 });
 

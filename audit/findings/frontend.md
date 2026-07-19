@@ -329,7 +329,7 @@ _Merged with FRO-15 — both records describe the same defect: no single-flight 
 
 <a id="fro-30"></a>
 ### FRO-30 — useUpdateJob invalidates only ["jobs"], leaving the applications pipeline stale
-⚪ **LOW** · 🐞 bug · Status: ☐ open · Confidence: high (3/5 verifiers) · Effort: XS · WS41
+⚪ **LOW** · 🐞 bug · Status: ✅ done · Confidence: high (3/5 verifiers) · Effort: XS · WS41
 
 **Locations:** `frontend/src/hooks/jobMutations.ts:13` (`useUpdateJob`).
 

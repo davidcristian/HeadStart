@@ -115,6 +115,9 @@ Server state is managed by **TanStack Query** (`@tanstack/react-query`). The
   `useDeleteXxx` hooks. Each calls the typed API client and invalidates the
   query keys it affects, so lists re-fetch authoritative data instead of pages
   hand-mutating local state. Components call `mutation.mutateAsync(...)`.
+  Job status updates via `useUpdateJob` invalidate both `["jobs"]` and
+  `["applications"]` so the pipeline stage on `/app/applications` stays in
+  sync when a job is marked applied/archived from the jobs feed (FRO-30).
 - The hooks still call `src/api/` under the hood — React Query only adds
   caching, background revalidation, and dedupe on top of the typed client.
 - **Session isolation:** `AuthProvider` calls `queryClient.clear()` on

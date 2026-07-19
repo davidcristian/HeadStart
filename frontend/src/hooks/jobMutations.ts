@@ -10,7 +10,12 @@ export function useUpdateJob() {
   return useMutation({
     mutationFn: ({ id, status }: { id: number; status: "seen" | "applied" | "archived" }) =>
       api.updateJob(id, { status }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["jobs"] }),
+    onSuccess: () => {
+      // Status changes (applied/archived/seen) also drive pipeline stage on
+      // /app/applications — keep both caches fresh (FRO-30).
+      invalidate(qc, ["jobs"]);
+      invalidate(qc, ["applications"]);
+    },
   });
 }
 
