@@ -24,21 +24,21 @@ export function OnboardingPage() {
         <Brand to="/app/onboarding" />
 
         <ol className="onboarding-steps" aria-label="Setup progress">
-          {STEPS.map((item, index) => (
-            <li
-              key={item.key}
-              className={
-                index < wizard.stepIndex
-                  ? "done"
-                  : index === wizard.stepIndex
-                    ? "current"
-                    : undefined
-              }
-            >
-              <span className="onboarding-step-num">{index + 1}</span>
-              <span className="onboarding-step-label">{item.label}</span>
-            </li>
-          ))}
+          {STEPS.map((item, index) => {
+            const isCurrent = index === wizard.stepIndex;
+            const isDone = index < wizard.stepIndex;
+            return (
+              <li
+                key={item.key}
+                className={isDone ? "done" : isCurrent ? "current" : undefined}
+                aria-current={isCurrent ? "step" : undefined}
+              >
+                <span className="onboarding-step-num">{index + 1}</span>
+                <span className="onboarding-step-label">{item.label}</span>
+                {isDone && <span className="visually-hidden"> (completed)</span>}
+              </li>
+            );
+          })}
         </ol>
 
         {wizard.error && <Banner kind="error">{wizard.error}</Banner>}

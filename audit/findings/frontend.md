@@ -445,7 +445,7 @@ _Merged with FRO-15 — both records describe the same defect: no single-flight 
 
 <a id="fro-39"></a>
 ### FRO-39 — Onboarding progress steps convey current step only via CSS class, not aria-current
-⚪ **LOW** · 🐞 bug · Status: ☐ open · Confidence: high (3/5 verifiers) · Effort: XS · WS41
+⚪ **LOW** · 🐞 bug · Status: ✅ done · Confidence: high (3/5 verifiers) · Effort: XS · WS41 · [PR](https://github.com/davidcristian/HeadStart/pull/254)
 
 **Locations:** `frontend/src/pages/OnboardingPage.tsx:28` (OnboardingPage steps).
 
@@ -454,6 +454,8 @@ _Merged with FRO-15 — both records describe the same defect: no single-flight 
 **Failure scenario.** A screen-reader user in the onboarding wizard cannot perceive which numbered step is active or completed; progress is conveyed by color/weight alone.
 
 **Suggested fix.** Add `aria-current="step"` to the active `<li>` (and/or visually-hidden "completed"/"current" text).
+
+**Fix.** Active step sets `aria-current="step"`; completed steps append visually-hidden `(completed)`. — [PR](https://github.com/davidcristian/HeadStart/pull/254)
 
 **Verification.** Confirmed 3/3 adversarial verifiers. State conveyed visually only — confirmed low a11y.
 

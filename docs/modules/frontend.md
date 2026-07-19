@@ -70,7 +70,7 @@ other unknown path redirects to the landing page.
 | Impressum   | Public German legal notice at `/impressum`; `LegalPageLayout` uses German `Stand` + long date (e.g. `19. Juli 2026`) — not English `Effective` (FRO-37); operators customize content per [launch-checklist.md §4](../launch-checklist.md#4-legal--trust-pages) |
 | Login/Register    | Email + password sign-in / sign-up                               |
 | Verify email      | Confirm address after signup at `/verify-email` (link or resend)   |
-| Onboarding  | First-run wizard at `/app/onboarding`: source → notify → search → run |
+| Onboarding  | First-run wizard at `/app/onboarding`: source → notify → search → run; setup progress list marks the active step with `aria-current="step"` and appends visually-hidden "(completed)" on finished steps (FRO-39) |
 | Sources     | List/create/edit sources (name, adapter, base URL, config); browse curated company portals; test scrape; enabling auto-apply for LinkedIn/Indeed shows a ToS/account-ban confirm and sets `accept_private_api_risk` (APL-17) |
 | Companies   | Pro+ cross-portal search at `/app/portals`: keyword search across curated FAANG/unicorn/AI boards (selection capped at 30 to match the API `portal_ids` max), results preview, one-click alert setup |
 | Searches    | Create a search: pick source + target, query URL + structured filters (keywords, location, workplace, salary) + |

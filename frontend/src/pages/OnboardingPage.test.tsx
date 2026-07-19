@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import { mockApi, resetMockApi } from "../test/mockApi";
@@ -71,6 +71,23 @@ describe("OnboardingPage", () => {
 
     await waitFor(() => expect(mockApi.createSource).toHaveBeenCalled());
     expect(screen.getByRole("heading", { name: "Where should alerts go?" })).toBeInTheDocument();
+  });
+
+  it("marks the active setup step with aria-current and completed steps for AT", async () => {
+    renderPage();
+
+    const progress = screen.getByRole("list", { name: "Setup progress" });
+    const welcome = within(progress).getByText("Welcome").closest("li");
+    expect(welcome).toHaveAttribute("aria-current", "step");
+    expect(within(progress).queryByText("(completed)")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Get started" }));
+
+    const source = within(progress).getByText("Source").closest("li");
+    expect(source).toHaveAttribute("aria-current", "step");
+    expect(welcome).not.toHaveAttribute("aria-current");
+    expect(within(progress).getByText("(completed)")).toBeInTheDocument();
+    await waitFor(() => expect(mockApi.meta).toHaveBeenCalled());
   });
 
   it("skips setup and marks onboarding complete", async () => {
