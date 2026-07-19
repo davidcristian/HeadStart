@@ -499,7 +499,7 @@ _Merged with FRO-15 — both records describe the same defect: no single-flight 
 
 <a id="fro-25"></a>
 ### FRO-25 — SkillsLanguagesForm redefines updateRow instead of importing profileFormUtils
-⚪ **LOW** · 🔁 consistency · Status: ☐ open · Confidence: certain (3/5 verifiers) · Effort: XS · WS41
+⚪ **LOW** · 🔁 consistency · Status: ✅ done · Confidence: certain (3/5 verifiers) · Effort: XS · WS41 · [PR](https://github.com/davidcristian/HeadStart/pull/241)
 
 **Locations:** `frontend/src/components/profile/SkillsLanguagesForm.tsx:19` (`updateRow`).
 

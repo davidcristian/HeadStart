@@ -2,6 +2,7 @@
 
 import { Button, Field } from "../ui";
 import type { LanguageEntry } from "../../types";
+import { updateRow } from "./profileFormUtils";
 
 export const EMPTY_LANGUAGE: LanguageEntry = {
   language: "",
@@ -14,10 +15,6 @@ interface SkillsLanguagesFormProps {
   languages: LanguageEntry[];
   onSkillsChange: (skills: string[]) => void;
   onLanguagesChange: (rows: LanguageEntry[]) => void;
-}
-
-function updateRow<T>(rows: T[], index: number, patch: Partial<T>): T[] {
-  return rows.map((row, i) => (i === index ? { ...row, ...patch } : row));
 }
 
 export function SkillsLanguagesForm({
