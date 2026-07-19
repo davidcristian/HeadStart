@@ -783,7 +783,7 @@ execution role gets `kms:Decrypt`/`kms:DescribeKey` on that CMK —
 
 <a id="ops-68"></a>
 ### OPS-68 — loc-cap exemption keys on the `tests/` path segment, not on being a test
-⚪ **LOW** · 🔒 security · Status: ☐ open · Confidence: medium (delta audit) · Effort: S · WS42
+⚪ **LOW** · 🔒 security · Status: ✅ done · Confidence: medium (delta audit) · Effort: S · WS42
 
 **Locations:** `scripts/check_loc.sh:20`.
 
@@ -794,6 +794,8 @@ execution role gets `kms:Decrypt`/`kms:DescribeKey` on that CMK —
 **Suggested fix.** Tighten to the known test roots (`backend/tests/`, `frontend/src/**/*.test.*`, `frontend/src/test/`) rather than any `*/tests/*`.
 
 **Verification.** Confirmed (delta audit, 2026-07-03). Convention-reliance / defense-in-depth note, no active defect.
+
+**Fix.** `scripts/check_loc.sh` now skips `*/backend/tests/*` (not bare `*/tests/*`), plus `*/src/test/*` and `*.test.ts(x)`. AGENTS.md §3, `docs/conventions.md`, and `docs/modules/deployment.md` document the known-root contract; `backend/tests/devops/test_ops68_check_loc_test_roots.py` locks the case matching.
 
 ---
 

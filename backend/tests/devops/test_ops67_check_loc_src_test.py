@@ -27,7 +27,7 @@ def test_src_test_case_matches_frontend_helpers_not_product_src(
                 "set -euo pipefail",
                 "match() {",
                 '  case "$1" in',
-                "    */tests/*) echo tests ;;",
+                "    */backend/tests/*) echo backend_tests ;;",
                 "    */src/test/*) echo src_test ;;",
                 "    *.test.ts | *.test.tsx) echo test_suffix ;;",
                 "    *) echo capped ;;",
@@ -48,6 +48,6 @@ def test_src_test_case_matches_frontend_helpers_not_product_src(
         "src_test",
         "src_test",
         "capped",
-        "tests",
+        "backend_tests",
         "test_suffix",
     ]

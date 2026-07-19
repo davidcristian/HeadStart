@@ -409,7 +409,9 @@ pre-commit and CI (OPS-04). Shell validation runs `bash -n` then `shellcheck
 -x -S warning` on every `scripts/*.sh` (OPS-65; CI installs `shellcheck` before
 that step). The LOC gate prints offender paths with a literal
 repo-root strip so glob metacharacters in the checkout path cannot garble the
-report (OPS-63). `deploy.yml` (manual `workflow_dispatch`) and `terraform.yml`'s credentialed
+report (OPS-63). Test exemptions are only `backend/tests/`,
+`frontend/src/test/`, and `*.test.ts(x)` — not every path segment named
+`tests/` (OPS-68). `deploy.yml` (manual `workflow_dispatch`) and `terraform.yml`'s credentialed
 `plan` job are guarded on `vars.AWS_ROLE_ARN` (plus default-branch refs), so
 they stay dormant until AWS is configured. `terraform.yml` still runs
 `fmt`/`validate` on `devops/terraform/**` PRs **without** secrets or OIDC
