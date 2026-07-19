@@ -46,6 +46,15 @@ describe("AdminPage branch coverage", () => {
     mockApi.listAdminDataRequests.mockResolvedValue([]);
   });
 
+  it("shows loading placeholders while stats and users are pending", () => {
+    mockApi.getAdminStats.mockReturnValue(new Promise(() => {}));
+    mockApi.listAdminUsers.mockReturnValue(new Promise(() => {}));
+    renderWithClient(<AdminPage />);
+
+    expect(screen.getAllByText("Loading stats...")).toHaveLength(2);
+    expect(screen.getByText("Loading users...")).toBeInTheDocument();
+  });
+
   it("shows loading and empty states when stats/users are absent", async () => {
     mockApi.listAdminUsers.mockResolvedValue([]);
     renderWithClient(<AdminPage />);

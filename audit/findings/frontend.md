@@ -403,7 +403,7 @@ _Merged with FRO-15 — both records describe the same defect: no single-flight 
 
 <a id="fro-36"></a>
 ### FRO-36 — Admin scrape-errors and Users cards render blank while loading
-⚪ **LOW** · 🔁 consistency · Status: ☐ open · Confidence: high (3/5 verifiers) · Effort: XS · WS41
+⚪ **LOW** · 🔁 consistency · Status: ✅ done · Confidence: high (3/5 verifiers) · Effort: XS · WS41
 
 **Locations:** `frontend/src/pages/AdminPage.tsx:124` (`AdminPage`); plus `frontend/src/pages/AdminPage.tsx:163`.
 

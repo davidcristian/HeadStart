@@ -82,7 +82,7 @@ other unknown path redirects to the landing page.
 | Targets     | Manage notification targets (e.g. ntfy server/topic); send test  |
 | Credentials | Per-source encrypted cookies/headers for bot-walled sites; saving LinkedIn/Indeed credentials confirms ToS/account-ban risk (XCT-19) |
 | Settings    | API base URL, billing (tier-aware upgrade checkout + portal), account export/delete, cookie prefs, ntfy help; Inbox IMAP form shows the same "Write-only; not shown after save." hint on SMTP password as on IMAP password (FRO-28) |
-| Admin       | User management (assign free/starter/plus/pro), promo codes, GDPR audit, global scrape/delivery stats (admin only) |
+| Admin       | User management (assign free/starter/plus/pro), promo codes, GDPR audit, global scrape/delivery stats (admin only); scrape-errors and Users cards show the same loading EmptyState as System overview until data arrives (FRO-36) |
 
 ## Auth flow
 

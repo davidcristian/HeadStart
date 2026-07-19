@@ -122,33 +122,33 @@ export function AdminPage() {
       </Card>
 
       <Card title="Recent scrape errors">
-        {s && s.recent_errors.length === 0 ? (
+        {!s ? (
+          <EmptyState>Loading stats...</EmptyState>
+        ) : s.recent_errors.length === 0 ? (
           <EmptyState>No scrape errors recorded.</EmptyState>
         ) : (
-          s && (
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>Search</th>
-                  <th>User</th>
-                  <th>Last run</th>
-                  <th>Error</th>
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Search</th>
+                <th>User</th>
+                <th>Last run</th>
+                <th>Error</th>
+              </tr>
+            </thead>
+            <tbody>
+              {s.recent_errors.map((row) => (
+                <tr key={row.search_id}>
+                  <td>{row.search_name}</td>
+                  <td>{row.user_email}</td>
+                  <td className="muted">
+                    {row.last_run_at ? formatDateTime(row.last_run_at) : "-"}
+                  </td>
+                  <td className="error-text">{row.last_error}</td>
                 </tr>
-              </thead>
-              <tbody>
-                {s.recent_errors.map((row) => (
-                  <tr key={row.search_id}>
-                    <td>{row.search_name}</td>
-                    <td>{row.user_email}</td>
-                    <td className="muted">
-                      {row.last_run_at ? formatDateTime(row.last_run_at) : "-"}
-                    </td>
-                    <td className="error-text">{row.last_error}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )
+              ))}
+            </tbody>
+          </table>
         )}
       </Card>
 
@@ -161,33 +161,33 @@ export function AdminPage() {
           Change a member&apos;s plan here until Stripe billing is live. Admins are not capped by
           plan limits.
         </p>
-        {users.data && users.data.length === 0 ? (
+        {!users.data ? (
+          <EmptyState>Loading users...</EmptyState>
+        ) : users.data.length === 0 ? (
           <EmptyState>No users yet.</EmptyState>
         ) : (
-          users.data && (
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>Email</th>
-                  <th>Status</th>
-                  <th>Role</th>
-                  <th>Plan</th>
-                  <th>Joined</th>
-                  <th />
-                </tr>
-              </thead>
-              <tbody>
-                {users.data.map((user) => (
-                  <UserRow
-                    key={user.id}
-                    user={user}
-                    selfId={me.data?.id ?? -1}
-                    onUpdate={updateUser}
-                  />
-                ))}
-              </tbody>
-            </table>
-          )
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Email</th>
+                <th>Status</th>
+                <th>Role</th>
+                <th>Plan</th>
+                <th>Joined</th>
+                <th />
+              </tr>
+            </thead>
+            <tbody>
+              {users.data.map((user) => (
+                <UserRow
+                  key={user.id}
+                  user={user}
+                  selfId={me.data?.id ?? -1}
+                  onUpdate={updateUser}
+                />
+              ))}
+            </tbody>
+          </table>
         )}
       </Card>
     </>
