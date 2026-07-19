@@ -3,10 +3,14 @@
   --bg: light-dark(#fafafa, #09090b);
   --bg-elev: light-dark(#ffffff, #131316);
   --bg-elev-2: light-dark(#f4f4f5, #1c1c21);
+  /* Semantic aliases used by cookie-consent / portal cards (FRO-33). */
+  --surface: var(--bg-elev);
+  --bg-muted: var(--bg-elev-2);
   --border: light-dark(#e4e4e7, #2a2a31);
   --text: light-dark(#18181b, #f4f4f5);
   --muted: light-dark(#71717a, #a1a1aa);
   --brand: light-dark(#047857, #34d399);
+  --accent: var(--brand);
   --brand-hover: light-dark(#065f46, #10b981);
   --brand-glow: light-dark(rgba(4, 120, 87, 0.2), rgba(52, 211, 153, 0.3));
   --primary: light-dark(#047857, #34d399);

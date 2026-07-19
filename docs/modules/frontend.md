@@ -16,6 +16,12 @@ in production).
 | `src/hooks/`        | React Query data hooks (`queries.ts`/`mutations.ts`) + UI state hooks |
 | `src/components/`   | Reusable presentational components (`Brand`, `Layout`, …) |
 | `src/pages/`        | Route-level screens                                 |
+| `src/index.css`     | Global theme tokens + layout styles                 |
+
+`:root` defines the palette (`--bg`, `--bg-elev`, `--bg-elev-2`, `--brand`, …)
+plus semantic aliases `--surface` → `--bg-elev`, `--bg-muted` → `--bg-elev-2`,
+and `--accent` → `--brand` so cookie-consent, portal cards/tabs, and reply-draft
+surfaces resolve to real colors (FRO-33).
 
 ## Routing: public site vs. authenticated app
 

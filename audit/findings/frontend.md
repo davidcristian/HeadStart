@@ -315,7 +315,7 @@ _Merged with FRO-15 — both records describe the same defect: no single-flight 
 
 <a id="fro-33"></a>
 ### FRO-33 — CSS uses undefined vars --surface/--accent/--bg-muted with no fallback
-⚪ **LOW** · 🐞 bug · Status: ☐ open · Confidence: high (3/5 verifiers) · Effort: XS · WS41
+⚪ **LOW** · 🐞 bug · Status: ✅ done · Confidence: high (3/5 verifiers) · Effort: XS · WS41 · [PR](https://github.com/davidcristian/HeadStart/pull/248)
 
 **Locations:** `frontend/src/index.css:1523` (`.cookie-consent`); plus `:764`, `:1553`, `:1834`, `:1979`, `:1989`, `:2009`, `:2029`, `:2063`.
 
@@ -324,6 +324,8 @@ _Merged with FRO-15 — both records describe the same defect: no single-flight 
 **Failure scenario.** The cookie-consent banner (1523) renders transparent; portal cards/tabs (1979/1989/2063) and the reply-draft body (764) lose their surface color and accent borders — broken-looking UI on those views.
 
 **Suggested fix.** Define `--surface`, `--accent`, `--bg-muted` in `:root` (or replace with the existing `--bg-elev`/`--brand` tokens), matching the intended palette.
+
+**Fix.** `:root` aliases `--surface` → `--bg-elev`, `--bg-muted` → `--bg-elev-2`, and `--accent` → `--brand` so those call sites resolve to the existing palette.
 
 **Verification.** Confirmed 3/3 adversarial verifiers. 11 sites use these vars but they are never defined; with no fallback they resolve invalid — a real low visual bug.
 
