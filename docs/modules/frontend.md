@@ -242,7 +242,10 @@ The frontend is installable as a PWA for a lightweight mobile jobs feed.
 - **"More" sheet a11y** — The bottom-sheet dialog is `role="dialog"
   aria-modal="true"` and uses `useFocusTrap` (`src/hooks/useFocusTrap.ts`):
   opening moves focus into the sheet, Tab/Shift+Tab cycle within it, Escape
-  closes it, and focus returns to the trigger on close.
+  closes it, and focus returns to the trigger on close. The trap keeps
+  `onClose` in a ref so a new callback identity (e.g. inline
+  `() => setOpen(false)` on parent re-render) does not re-run the effect
+  mid-open — that would steal focus and overwrite the restore target (FRO-32).
 - **Skip to content (FRO-22)** — `Layout` places a visually-hidden "Skip to
   main content" link as the first focusable control; on focus it becomes
   visible and jumps to `#main-content` (`<main tabIndex={-1}>`) so keyboard

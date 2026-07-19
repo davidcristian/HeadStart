@@ -75,6 +75,21 @@ function FocusContainerDialog({ onClose }: { onClose: () => void }) {
   );
 }
 
+/** New onClose identity each render — mirrors ApplyJobDialog / JobsPage. */
+function UnstableOnCloseDialog({ tick }: { tick: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useFocusTrap(true, ref, () => {
+    void tick;
+  });
+  return (
+    <div ref={ref} role="dialog">
+      <button>first</button>
+      <button>last</button>
+      <span data-testid="tick">{tick}</span>
+    </div>
+  );
+}
+
 describe("useFocusTrap", () => {
   it("moves focus to the first focusable element when activated", () => {
     render(<Dialog onClose={() => {}} />);
@@ -220,5 +235,40 @@ describe("useFocusTrap", () => {
 
     fireEvent.keyDown(document, { key: "Tab", shiftKey: true });
     expect(middle).toHaveFocus();
+  });
+
+  it("does not steal focus when onClose identity changes while open (FRO-32)", () => {
+    const { rerender } = render(<UnstableOnCloseDialog tick={0} />);
+    expect(screen.getByText("first")).toHaveFocus();
+
+    const last = screen.getByText("last");
+    last.focus();
+    expect(last).toHaveFocus();
+
+    rerender(<UnstableOnCloseDialog tick={1} />);
+    expect(screen.getByTestId("tick")).toHaveTextContent("1");
+    // Re-running the trap would jump focus back to "first".
+    expect(last).toHaveFocus();
+  });
+
+  it("uses the latest onClose after identity changes (FRO-32)", () => {
+    const firstClose = vi.fn();
+    const secondClose = vi.fn();
+
+    function SwappableClose({ onClose }: { onClose: () => void }) {
+      const ref = useRef<HTMLDivElement>(null);
+      useFocusTrap(true, ref, onClose);
+      return (
+        <div ref={ref} role="dialog">
+          <button>first</button>
+        </div>
+      );
+    }
+
+    const { rerender } = render(<SwappableClose onClose={firstClose} />);
+    rerender(<SwappableClose onClose={secondClose} />);
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(firstClose).not.toHaveBeenCalled();
+    expect(secondClose).toHaveBeenCalledTimes(1);
   });
 });

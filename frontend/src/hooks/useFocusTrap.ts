@@ -8,9 +8,14 @@
  * Pass `{ focusContainer: true }` when the first focusable child is a dismiss
  * control (e.g. Close) so initial focus lands on the dialog itself (needs
  * `tabIndex={-1}` on the container) rather than announcing only that button.
+ *
+ * `onClose` is kept in a ref so a new callback identity (common for inline
+ * `() => setOpen(false)` props) does not re-run the effect mid-open — that
+ * would steal focus back to the first control and overwrite the restore target
+ * (FRO-32).
  */
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import type { RefObject } from "react";
 
 const FOCUSABLE_SELECTOR = [
@@ -34,6 +39,8 @@ export function useFocusTrap(
   options?: FocusTrapOptions,
 ): void {
   const focusContainer = options?.focusContainer === true;
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   useEffect(() => {
     if (!active) return;
@@ -54,7 +61,7 @@ export function useFocusTrap(
     function onKeyDown(event: KeyboardEvent): void {
       if (event.key === "Escape") {
         event.preventDefault();
-        onClose();
+        onCloseRef.current();
         return;
       }
       if (event.key !== "Tab") return;
@@ -87,5 +94,5 @@ export function useFocusTrap(
       document.removeEventListener("keydown", onKeyDown);
       previouslyFocused?.focus?.();
     };
-  }, [active, containerRef, onClose, focusContainer]);
+  }, [active, containerRef, focusContainer]);
 }

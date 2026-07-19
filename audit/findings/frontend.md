@@ -359,7 +359,7 @@ _Merged with FRO-15 — both records describe the same defect: no single-flight 
 
 <a id="fro-32"></a>
 ### FRO-32 — useFocusTrap re-runs on onClose identity change, stealing focus and breaking restore
-⚪ **LOW** · 🐞 bug · Status: ☐ open · Confidence: high (3/5 verifiers) · Effort: S · WS41
+⚪ **LOW** · 🐞 bug · Status: ✅ done · Confidence: high (3/5 verifiers) · Effort: S · WS41 · [PR](https://github.com/davidcristian/HeadStart/pull/247)
 
 **Locations:** `frontend/src/hooks/useFocusTrap.ts:68` (`useFocusTrap`); plus `frontend/src/components/ApplyJobDialog.tsx:54`, `frontend/src/pages/JobsPage.tsx:193`.
 
