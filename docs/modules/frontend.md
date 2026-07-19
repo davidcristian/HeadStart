@@ -177,6 +177,9 @@ Server state is managed by **TanStack Query** (`@tanstack/react-query`). The
   `src/api/` via `src/test/mockApi.ts` and shared fixtures in `src/test/fixtures.ts`.
   Pages are rendered with `renderWithClient` (`src/test/renderWithClient.tsx`),
   which wraps them in a fresh React Query client per test.
+- `src/test/mockApiSamples.test.ts` asserts the mock record builders' override-merge
+  contract (`newSourceRecord`, `updatedSearchRecord`, …) so those helpers stay
+  correct even though `src/test/**` is excluded from the coverage gate (TST-08).
 - Covered pages: Sources, Searches, Targets, Jobs, Applications, Admin (render, empty state, list data,
   and primary actions like create/delete/test/run).
 - `FreeTierAd.test.tsx` covers free vs paid gating and optional-cookie gating for partner slots.

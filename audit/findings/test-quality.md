@@ -149,7 +149,7 @@ and documents the no-op contract in `docs/modules/billing.md`.
 
 <a id="tst-08"></a>
 ### TST-08 — `src/test/**` gate exclusion + deletion of `mockApiSamples.test.ts` left the mock builders unasserted
-⚪ **LOW** · 🧪 test · Status: ☐ open · Confidence: high (delta audit) · Effort: S · WS42
+⚪ **LOW** · 🧪 test · Status: ✅ done · Confidence: high (delta audit) · Effort: S · WS42
 
 **Locations:** `frontend/src/test/mockApiSamples.ts` (builder functions).
 
