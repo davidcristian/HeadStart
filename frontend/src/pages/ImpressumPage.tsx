@@ -3,11 +3,11 @@
 import { Link } from "react-router-dom";
 import { LegalPageLayout } from "../components/LegalPageLayout";
 
-const EFFECTIVE_DATE = "June 29, 2026";
+const EFFECTIVE_DATE = "19. Juli 2026";
 
 export function ImpressumPage() {
   return (
-    <LegalPageLayout title="Impressum" effectiveDate={EFFECTIVE_DATE}>
+    <LegalPageLayout title="Impressum" effectiveDate={EFFECTIVE_DATE} effectiveLabel="Stand">
       <p>
         Angaben gemäß § 5 TMG und § 18 Abs. 2 MStV. Die folgenden Platzhalter müssen vom Betreiber
         dieser HeadStart-Instanz durch die tatsächlichen Unternehmens- und Kontaktdaten ersetzt

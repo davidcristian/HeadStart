@@ -417,7 +417,7 @@ _Merged with FRO-15 — both records describe the same defect: no single-flight 
 
 <a id="fro-37"></a>
 ### FRO-37 — German legal pages display effective dates in US English long format
-⚪ **LOW** · 🔁 consistency · Status: ☐ open · Confidence: high (5/5 verifiers) · Effort: XS · WS41
+⚪ **LOW** · 🔁 consistency · Status: ✅ done · Confidence: high (5/5 verifiers) · Effort: XS · WS41
 
 **Locations:** `frontend/src/pages/ImpressumPage.tsx:6` (`EFFECTIVE_DATE`); plus `frontend/src/components/LegalPageLayout.tsx:26`, `frontend/src/pages/PrivacyPolicyPage.tsx:6`, `frontend/src/pages/TermsOfUsePage.tsx:5`, `frontend/src/pages/SubprocessorsPage.tsx:6`.
 

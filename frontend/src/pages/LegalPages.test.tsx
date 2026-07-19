@@ -66,7 +66,7 @@ describe("Legal pages", () => {
     render(renderPublicPage(<ImpressumPage />));
 
     expect(screen.getByRole("heading", { name: "Impressum" })).toBeInTheDocument();
-    expect(screen.getByText(/Effective June 29, 2026/)).toBeInTheDocument();
+    expect(screen.getByText(/Stand 19\. Juli 2026/)).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Diensteanbieter" })).toBeInTheDocument();
     expect(screen.getByText(/\[Firmenname \/ Name des Betreibers\]/)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Privacy" })).toHaveAttribute("href", "/privacy");
