@@ -431,7 +431,7 @@ _Merged with FRO-15 — both records describe the same defect: no single-flight 
 
 <a id="fro-38"></a>
 ### FRO-38 — Jobs filter <select>s wrapped in <Field label=""> have an empty accessible name
-⚪ **LOW** · 🐞 bug · Status: ☐ open · Confidence: high (3/5 verifiers) · Effort: XS · WS41
+⚪ **LOW** · 🐞 bug · Status: ✅ done · Confidence: high (3/5 verifiers) · Effort: XS · WS41
 
 **Locations:** `frontend/src/pages/JobsPage.tsx:148` (Discovered jobs filters); plus `frontend/src/pages/JobsPage.tsx:157`.
 

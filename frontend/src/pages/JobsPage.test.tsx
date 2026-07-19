@@ -79,8 +79,7 @@ describe("JobsPage", () => {
     await waitFor(() => expect(screen.getByText("Software Engineer")).toBeInTheDocument());
     expect(mockApi.listJobs).toHaveBeenCalledWith(undefined, undefined);
 
-    const selects = screen.getAllByRole("combobox");
-    fireEvent.change(selects[1], {
+    fireEvent.change(screen.getByRole("combobox", { name: "Search" }), {
       target: { value: String(sampleSearch.id) },
     });
 
@@ -93,11 +92,21 @@ describe("JobsPage", () => {
 
     await waitFor(() => expect(screen.getByText("Applied")).toBeInTheDocument());
 
-    fireEvent.change(screen.getAllByRole("combobox")[0], {
+    fireEvent.change(screen.getByRole("combobox", { name: "Status" }), {
       target: { value: "applied" },
     });
 
     await waitFor(() => expect(mockApi.listJobs).toHaveBeenCalledWith(undefined, "applied"));
+  });
+
+  it("names the Jobs filter selects for assistive tech (FRO-38)", async () => {
+    mockApi.listSearches.mockResolvedValue([sampleSearch]);
+    mockApi.listJobs.mockResolvedValue([sampleJob]);
+    renderJobsPage();
+
+    await waitFor(() => expect(screen.getByText("Software Engineer")).toBeInTheDocument());
+    expect(screen.getByRole("combobox", { name: "Status" })).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: "Search" })).toBeInTheDocument();
   });
 
   it("updates job status from row actions", async () => {
@@ -261,8 +270,10 @@ describe("JobsPage", () => {
     expect(selectSpy).toHaveBeenCalled();
 
     // Apply both filters so the copied URL includes the query params.
-    fireEvent.change(screen.getAllByRole("combobox")[0], { target: { value: "new" } });
-    fireEvent.change(screen.getAllByRole("combobox")[1], {
+    fireEvent.change(screen.getByRole("combobox", { name: "Status" }), {
+      target: { value: "new" },
+    });
+    fireEvent.change(screen.getByRole("combobox", { name: "Search" }), {
       target: { value: String(sampleSearch.id) },
     });
 
@@ -298,7 +309,7 @@ describe("JobsPage", () => {
     renderJobsPage();
 
     await waitFor(() => expect(screen.getByText("Software Engineer")).toBeInTheDocument());
-    const searchSelect = screen.getAllByRole("combobox")[1];
+    const searchSelect = screen.getByRole("combobox", { name: "Search" });
 
     fireEvent.change(searchSelect, { target: { value: String(sampleSearch.id) } });
     await waitFor(() => expect(mockApi.listJobs).toHaveBeenCalledWith(sampleSearch.id, undefined));

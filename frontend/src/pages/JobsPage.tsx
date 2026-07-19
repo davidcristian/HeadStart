@@ -149,7 +149,7 @@ export function JobsPage() {
         title="Discovered jobs"
         actions={
           <div className="card-actions job-filters">
-            <Field label="">
+            <Field label="Status">
               <select value={status} onChange={(e) => setStatus(e.target.value as "" | JobStatus)}>
                 {STATUS_FILTERS.map((option) => (
                   <option key={option.label} value={option.value}>
@@ -158,7 +158,7 @@ export function JobsPage() {
                 ))}
               </select>
             </Field>
-            <Field label="">
+            <Field label="Search">
               <select
                 value={searchId}
                 onChange={(e) => setSearchId(e.target.value === "" ? "" : Number(e.target.value))}
