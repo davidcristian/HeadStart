@@ -541,7 +541,7 @@ _Merged with FRO-15 — both records describe the same defect: no single-flight 
 
 <a id="fro-28"></a>
 ### FRO-28 — SMTP password field lacks the 'write-only' hint its IMAP-password sibling carries
-⚪ **LOW** · 🔁 consistency · Status: ☐ open · Confidence: certain (3/5 verifiers) · Effort: XS · WS41
+⚪ **LOW** · 🔁 consistency · Status: ✅ done · Confidence: certain (3/5 verifiers) · Effort: XS · WS41
 
 **Locations:** `frontend/src/components/settings/SettingsInboxImapForm.tsx:54` (`SettingsInboxImapForm`).
 

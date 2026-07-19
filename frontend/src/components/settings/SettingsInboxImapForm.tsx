@@ -51,7 +51,7 @@ export function SettingsInboxImapForm({
           onChange={(e) => onChange({ ...imapConfig, smtp_host: e.target.value })}
         />
       </Field>
-      <Field label="SMTP password">
+      <Field label="SMTP password" hint="Write-only; not shown after save.">
         <input
           type="password"
           autoComplete="off"

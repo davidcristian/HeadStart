@@ -45,6 +45,11 @@ describe("SettingsInboxImapForm", () => {
     expect(screen.getByText("SMTP password")).toBeInTheDocument();
   });
 
+  it("shows the write-only hint on both IMAP and SMTP password fields (FRO-28)", () => {
+    renderForm();
+    expect(screen.getAllByText("Write-only; not shown after save.")).toHaveLength(2);
+  });
+
   it("emits updates for each editable field", () => {
     const { onChange } = renderForm();
 

@@ -199,7 +199,10 @@ generic fallback for providers that expose IMAP.
 ## Credential storage
 
 Per-user encrypted row in `mailbox_credential` (one per account). Passwords are
-write-only — `MailboxCredentialRead` exposes host/user metadata only.
+write-only — `MailboxCredentialRead` exposes host/user metadata only. The
+Settings → Inbox IMAP form labels both the IMAP and SMTP password fields with
+"Write-only; not shown after save." so a blank field after reload is not
+mistaken for a lost credential (FRO-28).
 `decode_mailbox_config` / `mailbox_email_from_*` / credential read mapping use
 `OAUTH_CONNECTOR_TYPES` and `OAUTH_CONFIG_*` from `app/inbox/types.py` so a new
 OAuth connector is registered in one place (INB-12).

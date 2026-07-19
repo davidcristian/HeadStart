@@ -75,7 +75,7 @@ other unknown path redirects to the landing page.
 | Profile     | Application profile for auto-apply (contact, resume, experience, education, skills); resume/template file pickers pre-check size + extension against the documented caps before upload (FRO-24); skills/languages/education/work-experience row edits share `profileFormUtils.updateRow` (FRO-25); work-experience "current role" and language "native" checkboxes use a single `<label>` (not nested inside `Field`'s `<label>`) so AT naming stays unambiguous (FRO-26); year/month fields parse via `parseOptionalInt` with trunc + min/max clamp (months 1–12, years 1900–2100) so HTML `min`/`max` hints cannot be bypassed (FRO-27); application history table |
 | Targets     | Manage notification targets (e.g. ntfy server/topic); send test  |
 | Credentials | Per-source encrypted cookies/headers for bot-walled sites; saving LinkedIn/Indeed credentials confirms ToS/account-ban risk (XCT-19) |
-| Settings    | API base URL, billing (tier-aware upgrade checkout + portal), account export/delete, cookie prefs, ntfy help |
+| Settings    | API base URL, billing (tier-aware upgrade checkout + portal), account export/delete, cookie prefs, ntfy help; Inbox IMAP form shows the same "Write-only; not shown after save." hint on SMTP password as on IMAP password (FRO-28) |
 | Admin       | User management (assign free/starter/plus/pro), promo codes, GDPR audit, global scrape/delivery stats (admin only) |
 
 ## Auth flow
