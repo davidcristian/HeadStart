@@ -32,6 +32,18 @@ _CODE_PATTERN = re.compile(r"^[A-Z0-9][A-Z0-9-]*[A-Z0-9]$|^[A-Z0-9]$")
 _VALIDATION_WINDOW_MINUTES = 15
 _MAX_VALIDATION_ATTEMPTS = 10
 
+_CURRENCY_PREFIX: dict[str, str] = {"eur": "€", "usd": "$", "gbp": "£"}
+
+
+def _format_billing_amount(amount: float) -> str:
+    """Format a major-unit amount for promo copy using BILLING_CURRENCY."""
+    currency = settings.billing_currency
+    prefix = _CURRENCY_PREFIX.get(currency)
+    body = str(int(amount)) if amount == int(amount) else f"{amount:.2f}"
+    if prefix is not None:
+        return f"{prefix}{body}"
+    return f"{currency.upper()} {body}"
+
 
 class PromoCodeService:
     def __init__(self, session: Session) -> None:
@@ -168,10 +180,7 @@ class PromoCodeService:
         if promo.promo_type == "percent_off":
             return f"{promo.value_int}% off"
         if promo.promo_type == "fixed_amount":
-            dollars = promo.value_int / 100
-            if dollars == int(dollars):
-                return f"${int(dollars)} off"
-            return f"${dollars:.2f} off"
+            return f"{_format_billing_amount(promo.value_int / 100)} off"
         if promo.promo_type == "free_trial_days":
             return f"{promo.value_int}-day free trial"
         if promo.promo_type == "plan_upgrade" and promo.plan_target:
@@ -262,7 +271,7 @@ class PromoCodeService:
         if promo.promo_type == "fixed_amount":
             return {
                 "amount_off": promo.value_int,
-                "currency": "usd",
+                "currency": settings.billing_currency,
                 "duration": "forever",
                 "name": f"HeadStart {promo.code}",
             }

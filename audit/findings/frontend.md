@@ -389,7 +389,7 @@ _Merged with FRO-15 — both records describe the same defect: no single-flight 
 
 <a id="fro-35"></a>
 ### FRO-35 — Billing and pricing are USD-only while the product legally targets the German market
-⚪ **LOW** · 🔁 consistency · Status: ☐ open · Confidence: high (2/3 verifiers) · Effort: M · WS41
+⚪ **LOW** · 🔁 consistency · Status: ✅ done · Confidence: high (2/3 verifiers) · Effort: M · WS41
 
 **Locations:** `frontend/src/lib/pricing.ts:176` (`formatUsd`); plus `frontend/src/pages/PricingPage.tsx:141`, `backend/app/services/promo_codes.py:262`, `frontend/src/pages/ImpressumPage.tsx:8`.
 

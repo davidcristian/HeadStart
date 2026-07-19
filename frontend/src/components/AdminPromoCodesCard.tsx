@@ -4,12 +4,12 @@ import { useState } from "react";
 import { Banner, Button, Card, EmptyState, Field } from "./ui";
 import { api } from "../api";
 import { ADMIN_PLAN_OPTIONS, planLabel } from "../lib/plan";
-import type { PaidPlanId } from "../lib/pricing";
+import { formatPrice, type PaidPlanId } from "../lib/pricing";
 import type { PlanId, PromoCode, PromoType } from "../types";
 
 const PROMO_TYPES: { value: PromoType; label: string }[] = [
   { value: "percent_off", label: "Percent off" },
-  { value: "fixed_amount", label: "Fixed amount (cents)" },
+  { value: "fixed_amount", label: "Fixed amount (minor units)" },
   { value: "free_trial_days", label: "Free trial days" },
   { value: "plan_upgrade", label: "Plan upgrade (100% off)" },
 ];
@@ -20,7 +20,7 @@ const PAID_PLAN_OPTIONS = ADMIN_PLAN_OPTIONS.filter(
 
 function promoSummary(code: PromoCode): string {
   if (code.promo_type === "percent_off") return `${code.value_int}% off`;
-  if (code.promo_type === "fixed_amount") return `$${(code.value_int / 100).toFixed(2)} off`;
+  if (code.promo_type === "fixed_amount") return `${formatPrice(code.value_int / 100)} off`;
   if (code.promo_type === "free_trial_days") return `${code.value_int}-day trial`;
   if (code.promo_type === "plan_upgrade")
     return `Upgrade to ${planLabel(code.plan_target ?? "free")}`;
@@ -131,7 +131,7 @@ export function AdminPromoCodesCard() {
             ))}
           </select>
         </Field>
-        <Field label={promoType === "fixed_amount" ? "Amount (cents)" : "Value"}>
+        <Field label={promoType === "fixed_amount" ? "Amount (minor units)" : "Value"}>
           <input
             type="number"
             min={1}

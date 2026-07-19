@@ -32,15 +32,18 @@ describe("PricingPage", () => {
       "href",
       "/register",
     );
+    expect(
+      screen.getByText(/All prices are in EUR and include VAT where applicable/i),
+    ).toBeInTheDocument();
   });
 
   it("switches displayed prices when toggling annual billing", () => {
     renderPricing();
 
-    expect(screen.getByText("$9.99")).toBeInTheDocument();
+    expect(screen.getByText(/9,99\s*€/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /Annual/i }));
-    expect(screen.getByText("$8.29")).toBeInTheDocument();
-    expect(screen.getByText("Billed annually ($99.48/yr)")).toBeInTheDocument();
+    expect(screen.getByText(/8,29\s*€/)).toBeInTheDocument();
+    expect(screen.getByText(/Billed annually \(99,48\s*€\/yr\)/)).toBeInTheDocument();
   });
 
   it("links to the app when signed in", () => {

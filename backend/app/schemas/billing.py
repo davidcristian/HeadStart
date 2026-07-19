@@ -29,3 +29,4 @@ class BillingStatusRead(BaseModel):
     can_checkout: bool
     can_manage: bool
     trial_days: int = Field(default=14, ge=0)
+    currency: str = Field(default="eur", min_length=3, max_length=3)

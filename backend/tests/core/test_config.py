@@ -328,3 +328,24 @@ def test_inbox_poll_interval_comment_has_no_edit_artifact() -> None:
     assert "new_string" not in text
     assert "old_string" not in text
     assert "# How often beat polls mailboxes for new message classification (seconds)." in text
+
+
+def test_billing_currency_defaults_to_eur() -> None:
+    settings = Settings(_env_file=None)  # type: ignore[call-arg]
+    assert settings.billing_currency == "eur"
+
+
+def test_billing_currency_normalizes_case(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("BILLING_CURRENCY", " USD ")
+    assert Settings(_env_file=None).billing_currency == "usd"  # type: ignore[call-arg]
+
+
+def test_billing_currency_rejects_invalid(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("BILLING_CURRENCY", "euro")
+    with pytest.raises(ValidationError, match="BILLING_CURRENCY"):
+        Settings(_env_file=None)  # type: ignore[call-arg]
+
+
+def test_normalize_billing_currency_passes_non_string() -> None:
+    assert Settings._normalize_billing_currency(None) is None
+    assert Settings._normalize_billing_currency(12) == 12

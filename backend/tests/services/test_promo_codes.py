@@ -416,11 +416,11 @@ def test_describe_variants(db_session: Session) -> None:
     )
     assert (
         service.describe(PromoCode(code="B", promo_type="fixed_amount", value_int=1000))
-        == "$10 off"
+        == "€10 off"
     )
     assert (
         service.describe(PromoCode(code="C", promo_type="fixed_amount", value_int=1550))
-        == "$15.50 off"
+        == "€15.50 off"
     )
     assert (
         service.describe(PromoCode(code="D", promo_type="free_trial_days", value_int=14))
@@ -437,6 +437,27 @@ def test_describe_variants(db_session: Session) -> None:
         service.describe(PromoCode(code="F", promo_type="plan_upgrade", value_int=1))
         == "Promotional offer"
     )
+
+
+def test_describe_fixed_amount_respects_billing_currency(
+    db_session: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """FRO-35: promo copy and Stripe coupons follow BILLING_CURRENCY."""
+    service = PromoCodeService(db_session)
+    promo = PromoCode(code="USD10", promo_type="fixed_amount", value_int=1000)
+
+    monkeypatch.setattr(settings, "billing_currency", "usd")
+    assert service.describe(promo) == "$10 off"
+
+    monkeypatch.setattr(settings, "billing_currency", "gbp")
+    assert service.describe(promo) == "£10 off"
+
+    monkeypatch.setattr(settings, "billing_currency", "chf")
+    assert service.describe(promo) == "CHF 10 off"
+
+    monkeypatch.setattr(settings, "billing_currency", "eur")
+    half = PromoCode(code="HALFEUR", promo_type="fixed_amount", value_int=1550)
+    assert service.describe(half) == "€15.50 off"
 
 
 # --- Stripe coupon params -------------------------------------------------
@@ -457,7 +478,7 @@ def test_create_fixed_amount_stripe_coupon_params(
     )
     params = mock_coupon.call_args.kwargs
     assert params["amount_off"] == 1000
-    assert params["currency"] == "usd"
+    assert params["currency"] == "eur"
 
 
 @patch("app.services.promo_codes.stripe.PromotionCode.create")

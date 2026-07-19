@@ -39,10 +39,10 @@ describe("PricingPage checkout branches", () => {
 
     // Start on monthly, switch to annual, then back to monthly.
     fireEvent.click(screen.getByRole("button", { name: /Annual/i }));
-    expect(screen.getByText("$8.29")).toBeInTheDocument();
+    expect(screen.getByText(/8,29\s*€/)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Monthly" }));
-    expect(screen.getByText("$9.99")).toBeInTheDocument();
+    expect(screen.getByText(/9,99\s*€/)).toBeInTheDocument();
     expect(screen.getAllByText("Billed monthly").length).toBeGreaterThan(0);
   });
 

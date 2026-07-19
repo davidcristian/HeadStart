@@ -73,6 +73,7 @@ def test_status_for_free_user(db_session: Session, billing_settings: None) -> No
     assert status.configured is True
     assert status.plan == "free"
     assert status.can_checkout is True
+    assert status.currency == "eur"
 
 
 @patch("app.services.billing.stripe.checkout.Session.create")

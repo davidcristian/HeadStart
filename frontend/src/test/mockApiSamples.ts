@@ -115,6 +115,7 @@ export const sampleBillingStatus = {
   can_checkout: false,
   can_manage: false,
   trial_days: 14,
+  currency: "eur",
 };
 
 export const sampleRunSearchResult = {

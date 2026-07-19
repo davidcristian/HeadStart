@@ -200,6 +200,19 @@ class Settings(BaseSettings):
     stripe_price_pro_monthly: str = ""
     stripe_price_pro_annual: str = ""
     stripe_trial_days: int = 14
+    # ISO 4217 lowercase; Stripe fixed-amount coupons + pricing display (FRO-35).
+    # Default eur matches the DE Impressum / EU VAT-inclusive product surface.
+    billing_currency: str = "eur"
+
+    @field_validator("billing_currency", mode="before")
+    @classmethod
+    def _normalize_billing_currency(cls, value: object) -> object:
+        if not isinstance(value, str):
+            return value
+        normalized = value.strip().lower()
+        if len(normalized) != 3 or not normalized.isalpha():
+            raise ValueError("BILLING_CURRENCY must be a 3-letter ISO 4217 code (e.g. eur, usd).")
+        return normalized
 
     # ---- seed (local demo account) ----
     seed_user_email: str = "demo@example.com"

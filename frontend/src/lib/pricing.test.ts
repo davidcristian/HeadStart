@@ -1,11 +1,19 @@
 import { describe, expect, it } from "vitest";
-import { annualBilledTotal, formatUsd, planDisplayPrice, PLANS } from "./pricing";
+import {
+  annualBilledTotal,
+  BILLING_CURRENCY,
+  formatPrice,
+  planDisplayPrice,
+  PLANS,
+  PRICING_FAQ,
+} from "./pricing";
 
 describe("pricing", () => {
-  it("formats zero and paid prices", () => {
-    expect(formatUsd(0)).toBe("$0");
-    expect(formatUsd(9.99)).toBe("$9.99");
-    expect(formatUsd(10)).toBe("$10");
+  it("formats prices in EUR with de-DE locale (FRO-35)", () => {
+    expect(BILLING_CURRENCY).toBe("EUR");
+    expect(formatPrice(0)).toBe("0,00\u00a0€");
+    expect(formatPrice(9.99)).toBe("9,99\u00a0€");
+    expect(formatPrice(10)).toBe("10,00\u00a0€");
   });
 
   it("returns monthly or annual per-month price", () => {
@@ -26,5 +34,9 @@ describe("pricing", () => {
       "plus",
       "pro",
     ]);
+  });
+
+  it("documents EUR VAT-inclusive pricing in the FAQ", () => {
+    expect(PRICING_FAQ.some((item) => /VAT/i.test(item.q) && /EUR/i.test(item.a))).toBe(true);
   });
 });

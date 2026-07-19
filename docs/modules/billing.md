@@ -38,6 +38,7 @@ Set all of the following to enable checkout:
 | `STRIPE_PRICE_PRO_MONTHLY` | Recurring price ID for monthly Pro |
 | `STRIPE_PRICE_PRO_ANNUAL` | Recurring price ID for annual Pro |
 | `STRIPE_TRIAL_DAYS` | Optional Pro trial length (default `14`; `0` disables) |
+| `BILLING_CURRENCY` | ISO 4217 lowercase for pricing display + Stripe fixed-amount coupons (default `eur` for the DE/EU instance; set `usd` / other when deploying elsewhere) |
 
 `FRONTEND_BASE_URL` is used for Checkout success/cancel and portal return URLs.
 
@@ -45,7 +46,8 @@ Set all of the following to enable checkout:
 
 1. Create three Products (Starter, Plus, Pro) — or one product with three prices
    per billing interval.
-2. For each paid tier, create **monthly** and **annual** recurring Prices in USD.
+2. For each paid tier, create **monthly** and **annual** recurring Prices in the
+   same currency as `BILLING_CURRENCY` (default **EUR** for German/EU instances).
 3. Copy each Price ID (`price_…`) into the matching env var above.
 4. Configure the Customer Portal (Settings → Billing → Customer portal) so
    subscribers can change plans or cancel.
@@ -56,13 +58,14 @@ Set all of the following to enable checkout:
 6. Paste the webhook signing secret into `STRIPE_WEBHOOK_SECRET`.
 
 Promo codes (optional) create Stripe Coupon + Promotion Code objects when billing
-is enabled — see [Promo codes](#promo-codes) below.
+is enabled — see [Promo codes](#promo-codes) below. Fixed-amount coupons use
+`BILLING_CURRENCY` (not a hardcoded USD).
 
 ## Endpoints (prefix `/api/v1/billing`)
 
 | Method | Path | Auth | Purpose |
 | ------ | ---- | ---- | ------- |
-| GET | `/status` | user | Billing capabilities + subscription state |
+| GET | `/status` | user | Billing capabilities + subscription state (includes `currency`) |
 | POST | `/checkout` | user | Start Stripe Checkout (`plan: starter \| plus \| pro`, `billing_period`, optional `promo_code`) |
 | POST | `/promo/validate` | user | Validate a promo code for the signed-in user |
 | POST | `/portal` | user | Open Stripe customer portal |
@@ -81,7 +84,7 @@ redeemed at checkout.
 | Type | Effect |
 | ---- | ------ |
 | `percent_off` | Stripe coupon (% off subscription) |
-| `fixed_amount` | Stripe coupon (USD cents off) |
+| `fixed_amount` | Stripe coupon (minor units off in `BILLING_CURRENCY`) |
 | `free_trial_days` | Overrides checkout `trial_period_days` |
 | `plan_upgrade` | Bills the `plan_target` price (not the requested plan) with a 100%-off coupon; sets subscription metadata plan; Pro trial / non-Pro day-one billing follow `plan_target` |
 
@@ -203,6 +206,8 @@ On `user`:
 
 - **Pricing** (`/pricing`): signed-in users start Starter, Plus, or Pro checkout
   with optional promo code; billing-period toggle applies to all paid tiers.
+  Listed amounts use EUR (`formatPrice` / `de-DE`) and disclose VAT-inclusive
+  pricing (FRO-35); Stripe Prices must match `BILLING_CURRENCY`.
 - **Settings** (`/app/settings`): upgrade to Pro with optional promo code, manage
   subscription, success/cancel banners. Other tiers link to `/pricing`.
 - **Admin** (`/app/admin`): create and retire promo codes.

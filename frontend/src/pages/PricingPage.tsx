@@ -16,7 +16,7 @@ import {
   type BillingPeriod,
   type PaidPlanId,
   annualBilledTotal,
-  formatUsd,
+  formatPrice,
   planDisplayPrice,
 } from "../lib/pricing";
 
@@ -138,12 +138,12 @@ export function PricingPage() {
                   <h2>{plan.name}</h2>
                   <p className="pricing-card-desc">{plan.description}</p>
                   <div className="pricing-card-price">
-                    <span className="pricing-card-amount">{formatUsd(price)}</span>
+                    <span className="pricing-card-amount">{formatPrice(price)}</span>
                     <span className="pricing-card-period">/ month</span>
                   </div>
                   {!isFree && billingPeriod === "annual" ? (
                     <p className="pricing-card-billed">
-                      Billed annually ({formatUsd(annualBilledTotal(plan))}/yr)
+                      Billed annually ({formatPrice(annualBilledTotal(plan))}/yr)
                     </p>
                   ) : null}
                   {!isFree && billingPeriod === "monthly" ? (
@@ -192,8 +192,9 @@ export function PricingPage() {
         </section>
 
         <p className="pricing-billing-note">
-          Pro includes a 14-day free trial when billing is enabled on the server. Starter and Plus
-          are billed from day one. Create a free account to explore before upgrading.
+          All prices are in EUR and include VAT where applicable. Pro includes a 14-day free trial
+          when billing is enabled on the server. Starter and Plus are billed from day one. Create a
+          free account to explore before upgrading.
         </p>
 
         <section className="pricing-compare" aria-labelledby="compare-title">

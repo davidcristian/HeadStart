@@ -49,6 +49,7 @@ def test_billing_status_unconfigured(client: TestClient, auth_headers: dict[str,
     assert body["configured"] is False
     assert body["plan"] == "free"
     assert body["can_checkout"] is False
+    assert body["currency"] == "eur"
 
 
 def test_billing_status_configured(
@@ -60,6 +61,7 @@ def test_billing_status_configured(
     assert body["configured"] is True
     assert body["can_checkout"] is True
     assert body["trial_days"] == 14
+    assert body["currency"] == "eur"
 
 
 @patch("app.services.billing.stripe.checkout.Session.create")

@@ -117,7 +117,7 @@ describe("AdminPromoCodesCard", () => {
     fireEvent.click(screen.getByRole("button", { name: "Load promo codes" }));
 
     await waitFor(() => expect(screen.getByText("25% off")).toBeInTheDocument());
-    expect(screen.getByText("$5.00 off")).toBeInTheDocument();
+    expect(screen.getByText(/5,00\s*€ off/)).toBeInTheDocument();
     expect(screen.getByText("30-day trial")).toBeInTheDocument();
     expect(screen.getByText("Upgrade to Pro")).toBeInTheDocument();
     expect(screen.getByText("Upgrade to Free")).toBeInTheDocument();
@@ -209,7 +209,7 @@ describe("AdminPromoCodesCard", () => {
       target: { value: "fixed_amount" },
     });
     fireEvent.change(screen.getByLabelText("Promo value"), { target: { value: "999" } });
-    expect(screen.getByText("Amount (cents)")).toBeInTheDocument();
+    expect(screen.getByText("Amount (minor units)")).toBeInTheDocument();
     expect(screen.queryByLabelText("Target plan")).not.toBeInTheDocument();
   });
 

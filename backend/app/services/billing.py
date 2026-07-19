@@ -51,6 +51,7 @@ class BillingService:
             can_checkout=configured and not active_subscription,
             can_manage=configured and bool(user.stripe_customer_id),
             trial_days=settings.stripe_trial_days,
+            currency=settings.billing_currency,
         )
 
     def create_checkout_session(

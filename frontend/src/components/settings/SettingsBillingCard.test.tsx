@@ -17,6 +17,7 @@ function billing(overrides: Partial<BillingStatus> = {}): BillingStatusResolved 
     can_checkout: true,
     can_manage: false,
     trial_days: 14,
+    currency: "eur",
     ...overrides,
   };
   return status as BillingStatusResolved;

@@ -132,6 +132,7 @@ describe("SettingsPage", () => {
       can_checkout: true,
       can_manage: false,
       trial_days: 14,
+      currency: "eur",
     });
 
     renderSettings();

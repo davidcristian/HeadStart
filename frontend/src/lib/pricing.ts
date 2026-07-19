@@ -1,5 +1,7 @@
 /** Plan definitions for the public pricing page (enforced server-side via `user.plan`). */
 
+import { APP_DATE_LOCALE } from "./format";
+
 export type BillingPeriod = "monthly" | "annual";
 
 export type PlanId = "free" | "starter" | "plus" | "pro";
@@ -165,19 +167,28 @@ export const PRICING_FAQ = [
     q: "Do you offer refunds?",
     a: "Annual subscriptions will be refundable within 14 days of purchase. Monthly plans can be cancelled any time; access continues through the paid period.",
   },
+  {
+    q: "Are prices in EUR and do they include VAT?",
+    a: "Yes. Listed prices are in euros (EUR) and include VAT where applicable for the German/EU instance. Operators set BILLING_CURRENCY when deploying elsewhere.",
+  },
 ];
+
+/** Display/billing currency for this instance (matches backend BILLING_CURRENCY). */
+export const BILLING_CURRENCY = "EUR";
+
+const priceFormatter = new Intl.NumberFormat(APP_DATE_LOCALE, {
+  style: "currency",
+  currency: BILLING_CURRENCY,
+});
 
 /** Display price for a plan in the selected billing period. */
 export function planDisplayPrice(plan: Plan, period: BillingPeriod): number {
   return period === "annual" ? plan.annualPricePerMonth : plan.monthlyPrice;
 }
 
-/** Format a USD price for display. */
-export function formatUsd(amount: number): string {
-  if (amount === 0) {
-    return "$0";
-  }
-  return Number.isInteger(amount) ? `$${amount}` : `$${amount.toFixed(2)}`;
+/** Format a plan price for display (EUR / de-DE by default — FRO-35). */
+export function formatPrice(amount: number): string {
+  return priceFormatter.format(amount);
 }
 
 /** Annual total billed for a paid plan. */
