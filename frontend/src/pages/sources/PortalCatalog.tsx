@@ -1,6 +1,7 @@
 /** Browse curated employer portals and add them as sources in one click. */
 
 import { useMemo, useState } from "react";
+import { PortalCategoryFilters } from "../../components/PortalCategoryFilters";
 import { Banner, Button, Card, EmptyState, Field } from "../../components/ui";
 import { useMeta, usePortals } from "../../hooks/queries";
 import { useCreateSource } from "../../hooks/mutations";
@@ -68,29 +69,11 @@ export function PortalCatalog({ onAdded, onError }: PortalCatalogProps) {
         preset uses a verified public job-board API.
       </p>
       <div className="portal-catalog-toolbar">
-        <div className="portal-category-tabs" role="tablist" aria-label="Portal categories">
-          <button
-            type="button"
-            role="tab"
-            className={category === "" ? "portal-tab active" : "portal-tab"}
-            aria-selected={category === ""}
-            onClick={() => setCategory("")}
-          >
-            All
-          </button>
-          {(portals.data?.categories ?? []).map((key) => (
-            <button
-              key={key}
-              type="button"
-              role="tab"
-              className={category === key ? "portal-tab active" : "portal-tab"}
-              aria-selected={category === key}
-              onClick={() => setCategory(key)}
-            >
-              {PORTAL_CATEGORY_LABELS[key]}
-            </button>
-          ))}
-        </div>
+        <PortalCategoryFilters
+          category={category}
+          categories={portals.data?.categories ?? []}
+          onChange={setCategory}
+        />
         <Field label="Search">
           <input
             value={search}

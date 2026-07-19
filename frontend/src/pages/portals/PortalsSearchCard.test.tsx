@@ -46,15 +46,17 @@ function renderCard(overrides: Partial<Props> = {}) {
 }
 
 describe("PortalsSearchCard", () => {
-  it("renders the catalog, toolbar counts, and category tabs", () => {
+  it("renders the catalog, toolbar counts, and category filter buttons", () => {
     const { props } = renderCard();
 
     expect(screen.getByText("1 of 2 selected")).toBeInTheDocument();
+    expect(screen.getByRole("group", { name: "Portal categories" })).toBeInTheDocument();
+    expect(screen.queryByRole("tablist")).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("tab", { name: "All" }));
+    fireEvent.click(screen.getByRole("button", { name: "All" }));
     expect(props.setCategory).toHaveBeenCalledWith("");
 
-    fireEvent.click(screen.getByRole("tab", { name: "Big tech" }));
+    fireEvent.click(screen.getByRole("button", { name: "Big tech" }));
     expect(props.setCategory).toHaveBeenCalledWith("big_tech");
   });
 
@@ -111,10 +113,12 @@ describe("PortalsSearchCard", () => {
     expect(props.onSearch).toHaveBeenCalledTimes(1);
   });
 
-  it("reflects the active category tab styling", () => {
+  it("reflects the active category filter styling", () => {
     renderCard({ category: "ai" });
-    expect(screen.getByRole("tab", { name: "AI" })).toHaveClass("active");
-    expect(screen.getByRole("tab", { name: "All" })).not.toHaveClass("active");
+    expect(screen.getByRole("button", { name: "AI" })).toHaveClass("active");
+    expect(screen.getByRole("button", { name: "AI" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "All" })).not.toHaveClass("active");
+    expect(screen.getByRole("button", { name: "All" })).toHaveAttribute("aria-pressed", "false");
   });
 
   it("shows the loading state while portals are pending", () => {

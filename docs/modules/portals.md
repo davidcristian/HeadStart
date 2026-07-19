@@ -80,8 +80,8 @@ are hit.
 
 | Surface | Path | Purpose |
 | ------- | ---- | ------- |
-| Sources catalog | `/app/sources` | Browse/filter presets; **Add source** pre-fills adapter + config |
-| Companies search | `/app/portals` | Pro+ keyword search across the catalog (max 30 portals per request); preview results; one-click alert setup |
+| Sources catalog | `/app/sources` | Browse/filter presets (category filters: labelled button group with `aria-pressed`, not a bare tablist — FRO-41); **Add source** pre-fills adapter + config |
+| Companies search | `/app/portals` | Pro+ keyword search across the catalog (same category button group; max 30 portals per request); preview results; one-click alert setup |
 
 Free users see the catalog on Sources but cannot open `/app/portals` (upgrade
 prompt). The Portals page reads `plan.features.portal_search` from `GET /meta`

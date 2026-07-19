@@ -160,15 +160,15 @@ describe("PortalCatalog", () => {
     expect(screen.getByText("greenhouse")).toBeInTheDocument();
   });
 
-  it("filters by category tab and search input", () => {
+  it("filters by category button and search input", () => {
     renderCatalog();
 
-    fireEvent.click(screen.getByRole("tab", { name: "Unicorns" }));
+    fireEvent.click(screen.getByRole("button", { name: "Unicorns" }));
     expect((portalsState.value as { lastArgs?: { category?: string } }).lastArgs?.category).toBe(
       "unicorn",
     );
 
-    fireEvent.click(screen.getByRole("tab", { name: "All" }));
+    fireEvent.click(screen.getByRole("button", { name: "All" }));
     expect(
       (portalsState.value as { lastArgs?: { category?: string } }).lastArgs?.category,
     ).toBeUndefined();
@@ -177,6 +177,13 @@ describe("PortalCatalog", () => {
       target: { value: "strip" },
     });
     expect((portalsState.value as { lastArgs?: { query?: string } }).lastArgs?.query).toBe("strip");
+  });
+
+  it("exposes category filters as a button group, not a tablist", () => {
+    renderCatalog();
+    expect(screen.getByRole("group", { name: "Portal categories" })).toBeInTheDocument();
+    expect(screen.queryByRole("tablist")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "All" })).toHaveAttribute("aria-pressed", "true");
   });
 
   it("disables the add button while a create is pending", () => {

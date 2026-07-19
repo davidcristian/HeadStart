@@ -1,5 +1,6 @@
+import { PortalCategoryFilters } from "../../components/PortalCategoryFilters";
 import { Banner, Button, Card, EmptyState, Field } from "../../components/ui";
-import { MAX_PORTAL_SELECTION, PORTAL_CATEGORY_LABELS } from "../../lib/portals";
+import { MAX_PORTAL_SELECTION } from "../../lib/portals";
 import type { Portal, PortalCategory } from "../../types";
 import { PortalSelectCard } from "./PortalSelectCard";
 
@@ -47,29 +48,7 @@ export function PortalsSearchCard({
   return (
     <Card title="Search">
       <div className="portal-catalog-toolbar">
-        <div className="portal-category-tabs" role="tablist" aria-label="Portal categories">
-          <button
-            type="button"
-            role="tab"
-            className={category === "" ? "portal-tab active" : "portal-tab"}
-            aria-selected={category === ""}
-            onClick={() => setCategory("")}
-          >
-            All
-          </button>
-          {categories.map((key) => (
-            <button
-              key={key}
-              type="button"
-              role="tab"
-              className={category === key ? "portal-tab active" : "portal-tab"}
-              aria-selected={category === key}
-              onClick={() => setCategory(key)}
-            >
-              {PORTAL_CATEGORY_LABELS[key]}
-            </button>
-          ))}
-        </div>
+        <PortalCategoryFilters category={category} categories={categories} onChange={setCategory} />
         <div className="form-grid">
           <Field label="Keywords" hint="Matched against job title, company, and location.">
             <input

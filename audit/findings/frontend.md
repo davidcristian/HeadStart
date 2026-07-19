@@ -461,7 +461,7 @@ _Merged with FRO-15 — both records describe the same defect: no single-flight 
 
 <a id="fro-41"></a>
 ### FRO-41 — Category tablists have role=tab but no linked tabpanel or roving tabindex
-⚪ **LOW** · 🐞 bug · Status: ☐ open · Confidence: medium (5/5 verifiers) · Effort: S · WS41
+⚪ **LOW** · 🐞 bug · Status: ✅ done · Confidence: medium (5/5 verifiers) · Effort: S · WS41 · [PR](https://github.com/davidcristian/HeadStart/pull/255)
 
 **Locations:** `frontend/src/pages/sources/PortalCatalog.tsx:71` (`portal-category-tabs`); plus `frontend/src/pages/portals/PortalsSearchCard.tsx:48`.
 
@@ -470,6 +470,8 @@ _Merged with FRO-15 — both records describe the same defect: no single-flight 
 **Failure scenario.** A screen-reader user hears "tab, selected" with no associated panel; keyboard users get no ARIA-authoring-practices arrow-key navigation between category tabs.
 
 **Suggested fix.** Either link tabs to a `role=tabpanel` via `aria-controls` with roving tabindex, or drop the tab roles and expose the category filter as a labelled button group.
+
+**Fix.** Shared `PortalCategoryFilters` uses `role="group"` + `aria-pressed` toggle buttons (no tablist/tab roles) on Sources catalog and Companies search. — [PR](https://github.com/davidcristian/HeadStart/pull/255)
 
 **Verification.** Confirmed 5/5 adversarial verifiers. Real ARIA gap, low.
 

@@ -71,8 +71,8 @@ other unknown path redirects to the landing page.
 | Login/Register    | Email + password sign-in / sign-up                               |
 | Verify email      | Confirm address after signup at `/verify-email` (link or resend)   |
 | Onboarding  | First-run wizard at `/app/onboarding`: source → notify → search → run; setup progress list marks the active step with `aria-current="step"` and appends visually-hidden "(completed)" on finished steps (FRO-39) |
-| Sources     | List/create/edit sources (name, adapter, base URL, config); browse curated company portals; test scrape; enabling auto-apply for LinkedIn/Indeed shows a ToS/account-ban confirm and sets `accept_private_api_risk` (APL-17) |
-| Companies   | Pro+ cross-portal search at `/app/portals`: keyword search across curated FAANG/unicorn/AI boards (selection capped at 30 to match the API `portal_ids` max), results preview, one-click alert setup |
+| Sources     | List/create/edit sources (name, adapter, base URL, config); browse curated company portals (category filters are a labelled `role="group"` with `aria-pressed` toggle buttons — not a tablist without tabpanels; FRO-41); test scrape; enabling auto-apply for LinkedIn/Indeed shows a ToS/account-ban confirm and sets `accept_private_api_risk` (APL-17) |
+| Companies   | Pro+ cross-portal search at `/app/portals`: keyword search across curated FAANG/unicorn/AI boards (same category button-group filter as Sources; FRO-41; selection capped at 30 to match the API `portal_ids` max), results preview, one-click alert setup |
 | Searches    | Create a search: pick source + target, query URL + structured filters (keywords, location, workplace, salary) + |
 |             | interval; enable/disable; run now (queues Celery; UI polls `search_run`); view last |
 |             | run, scrape errors, and recent delivery failures                 |
