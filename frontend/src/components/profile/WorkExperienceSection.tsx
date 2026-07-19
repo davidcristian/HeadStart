@@ -96,7 +96,7 @@ export function WorkExperienceSection({
                 onChange={(e) =>
                   onWorkExperienceChange(
                     updateRow(workExperience, index, {
-                      start_month: parseOptionalInt(e.target.value),
+                      start_month: parseOptionalInt(e.target.value, 1, 12),
                     }),
                   )
                 }
@@ -111,7 +111,7 @@ export function WorkExperienceSection({
                 onChange={(e) =>
                   onWorkExperienceChange(
                     updateRow(workExperience, index, {
-                      start_year: parseOptionalInt(e.target.value),
+                      start_year: parseOptionalInt(e.target.value, 1900, 2100),
                     }),
                   )
                 }
@@ -149,7 +149,7 @@ export function WorkExperienceSection({
                   onChange={(e) =>
                     onWorkExperienceChange(
                       updateRow(workExperience, index, {
-                        end_month: parseOptionalInt(e.target.value),
+                        end_month: parseOptionalInt(e.target.value, 1, 12),
                       }),
                     )
                   }
@@ -164,7 +164,7 @@ export function WorkExperienceSection({
                   onChange={(e) =>
                     onWorkExperienceChange(
                       updateRow(workExperience, index, {
-                        end_year: parseOptionalInt(e.target.value),
+                        end_year: parseOptionalInt(e.target.value, 1900, 2100),
                       }),
                     )
                   }

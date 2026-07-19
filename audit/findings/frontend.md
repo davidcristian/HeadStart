@@ -527,7 +527,7 @@ _Merged with FRO-15 — both records describe the same defect: no single-flight 
 
 <a id="fro-27"></a>
 ### FRO-27 — parseOptionalInt accepts negative/decimal years and months (min/max not enforced)
-⚪ **LOW** · 🐞 bug · Status: ☐ open · Confidence: medium (2/3 verifiers) · Effort: S · WS41
+⚪ **LOW** · 🐞 bug · Status: ✅ done · Confidence: medium (2/3 verifiers) · Effort: S · WS41
 
 **Locations:** `frontend/src/components/profile/profileFormUtils.ts:3` (`parseOptionalInt`); plus `frontend/src/components/profile/WorkExperienceSection.tsx:95`, `frontend/src/components/profile/EducationSection.tsx:81`.
 

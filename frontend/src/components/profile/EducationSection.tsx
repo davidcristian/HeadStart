@@ -81,7 +81,9 @@ export function EducationSection({ education, onEducationChange }: EducationSect
                 value={row.start_year ?? ""}
                 onChange={(e) =>
                   onEducationChange(
-                    updateRow(education, index, { start_year: parseOptionalInt(e.target.value) }),
+                    updateRow(education, index, {
+                      start_year: parseOptionalInt(e.target.value, 1900, 2100),
+                    }),
                   )
                 }
               />
@@ -94,7 +96,9 @@ export function EducationSection({ education, onEducationChange }: EducationSect
                 value={row.end_year ?? ""}
                 onChange={(e) =>
                   onEducationChange(
-                    updateRow(education, index, { end_year: parseOptionalInt(e.target.value) }),
+                    updateRow(education, index, {
+                      end_year: parseOptionalInt(e.target.value, 1900, 2100),
+                    }),
                   )
                 }
               />
