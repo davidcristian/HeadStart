@@ -264,7 +264,7 @@ Merged: DOC-04 (uid 126) is a near-subset covering only the LinkedIn half and is
 
 <a id="doc-25"></a>
 ### DOC-25 — README lists `ntfy` in the `make up` service set, but `make up` never starts it
-⚪ **LOW** · 📝 doc · Status: ☐ open · Confidence: high (delta audit) · Effort: S · WS42
+⚪ **LOW** · 📝 doc · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/262)) · Confidence: high (delta audit) · Effort: S · WS42
 
 **Locations:** `README.md:93` (quick-start `make up` comment).
 

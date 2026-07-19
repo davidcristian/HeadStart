@@ -10,7 +10,10 @@ images as `headstart/backend:local`, `headstart/backend-worker:local`, and
 `headstart/frontend:local` (not registry `:latest`). The optional offline-profile
 ntfy service pins a concrete version **and** multi-arch index digest
 (`binwiederhier/ntfy:v2.25.0@sha256:…`) so `docker compose pull` cannot float an
-unaudited upstream. Bump the ntfy pin deliberately when upgrading.
+unaudited upstream. Bump the ntfy pin deliberately when upgrading. `just up`
+starts the default profile only (api, worker, beat, db, redis, frontend) —
+self-hosted ntfy stays opt-in via `docker compose --profile offline up -d ntfy`
+(DOC-25).
 
 **Compose healthchecks (OPS-57).** `api`, `worker`, and `beat` define healthchecks
 aligned with the ECS container probes: api `GET /api/v1/health`, worker
