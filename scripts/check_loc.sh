@@ -16,8 +16,11 @@ mapfile -t offenders < <(
           */alembic/versions/*) continue ;;
           # The ~300-line cap targets source modules (low-context, one
           # responsibility). Test files map to one module and grow with the
-          # number of cases, so they are exempt.
+          # number of cases, so they are exempt. Frontend vitest helpers live
+          # under src/test/ (singular) and are coverage-excluded the same way
+          # (OPS-67) — */tests/* alone does not match that path.
           */tests/*) continue ;;
+          */src/test/*) continue ;;
           *.test.ts | *.test.tsx) continue ;;
         esac
         lines=$(wc -l < "${file}")

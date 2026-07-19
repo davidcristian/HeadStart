@@ -765,7 +765,7 @@ execution role gets `kms:Decrypt`/`kms:DescribeKey` on that CMK —
 
 <a id="ops-67"></a>
 ### OPS-67 — loc-cap exempts `*/tests/*` but frontend test-infra (`src/test/`) stays capped, disagreeing with the coverage-gate exclusion
-⚪ **LOW** · 🔁 consistency · Status: ☐ open · Confidence: high (delta audit) · Effort: S · WS42
+⚪ **LOW** · 🔁 consistency · Status: ✅ done · Confidence: high (delta audit) · Effort: S · WS42
 
 **Locations:** `scripts/check_loc.sh:20`.
 
@@ -776,6 +776,8 @@ execution role gets `kms:Decrypt`/`kms:DescribeKey` on that CMK —
 **Suggested fix.** Add `*/src/test/*` to the loc-cap exemption `case` so the two mechanisms agree.
 
 **Verification.** Confirmed (delta audit, 2026-07-03). `case ./frontend/src/test/utils.ts in */tests/*` does not match; no failure today (largest is 268 lines) but the mechanisms are inconsistent.
+
+**Fix.** `scripts/check_loc.sh` now also skips `*/src/test/*` (alongside `*/tests/*` and `*.test.ts(x)`), matching the vitest coverage exclusion of `frontend/src/test/**`. AGENTS.md §3 and `docs/conventions.md` document the exemption; `backend/tests/devops/test_ops67_check_loc_src_test.py` locks the case matching.
 
 ---
 
