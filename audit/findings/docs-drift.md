@@ -246,7 +246,7 @@ Merged: DOC-04 (uid 126) is a near-subset covering only the LinkedIn half and is
 
 <a id="doc-24"></a>
 ### DOC-24 — AGENTS.md §6 understates the frontend coverage exclusions (self-declared DoD violation)
-⚪ **LOW** · 📝 doc · Status: ☐ open · Confidence: high (delta audit) · Effort: S · WS42
+⚪ **LOW** · 📝 doc · Status: ✅ done · Confidence: high (delta audit) · Effort: S · WS42
 
 **Locations:** `AGENTS.md` §6 (Quality bars — frontend).
 
@@ -255,6 +255,8 @@ Merged: DOC-04 (uid 126) is a near-subset covering only the LinkedIn half and is
 **Failure scenario.** A reader trusts §6 and assumes new `main.tsx` logic or a new `src/test/**` helper is gate-enforced; it is not. No product code lost coverage today (`main.tsx` is branchless bootstrap; `src/test/**` has no product importer), so impact is false assurance only.
 
 **Suggested fix.** Update §6 to list the five actual exclusions (the config comment at `vite.config.ts:64-66` is already accurate).
+
+**Fix.** `AGENTS.md` §6 and `docs/modules/frontend.md` Tests now list all five `coverage.exclude` patterns — [PR](https://github.com/davidcristian/HeadStart/pull/261).
 
 **Verification.** Confirmed 3/3 verifiers (delta audit, 2026-07-03); all voted low severity — genuine doc drift, no gate-integrity loss.
 

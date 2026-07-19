@@ -170,6 +170,9 @@ Server state is managed by **TanStack Query** (`@tanstack/react-query`). The
 ## Tests
 
 - Vitest + React Testing Library + jsdom (`npm run test` / `just test --frontend`).
+- Coverage is gated at 100% (`test.coverage.thresholds` in `vite.config.ts`).
+  Excluded from the gate: `src/types/**`, `**/*.d.ts`, `**/*.test.{ts,tsx}`,
+  `src/main.tsx`, and `src/test/**` (DOC-24).
 - Page smoke tests live next to each page under `src/pages/*.test.tsx`; they mock
   `src/api/` via `src/test/mockApi.ts` and shared fixtures in `src/test/fixtures.ts`.
   Pages are rendered with `renderWithClient` (`src/test/renderWithClient.tsx`),
