@@ -14,6 +14,7 @@ from app.portals.presets.carta import PORTAL as carta
 from app.portals.presets.checkr import PORTAL as checkr
 from app.portals.presets.chime import PORTAL as chime
 from app.portals.presets.confluent import PORTAL as confluent
+from app.portals.presets.crowdstrike import PORTAL as crowdstrike
 from app.portals.presets.docusign import PORTAL as docusign
 from app.portals.presets.endava import PORTAL as endava
 from app.portals.presets.ericsson import PORTAL as ericsson
@@ -30,6 +31,7 @@ from app.portals.presets.microstrategy import PORTAL as microstrategy
 from app.portals.presets.n26 import PORTAL as n26
 from app.portals.presets.nuro import PORTAL as nuro
 from app.portals.presets.pagerduty import PORTAL as pagerduty
+from app.portals.presets.paloaltonetworks import PORTAL as paloaltonetworks
 from app.portals.presets.purestorage import PORTAL as purestorage
 from app.portals.presets.riotgames import PORTAL as riotgames
 from app.portals.presets.roblox import PORTAL as roblox
@@ -37,11 +39,13 @@ from app.portals.presets.roku import PORTAL as roku
 from app.portals.presets.rubrik import PORTAL as rubrik
 from app.portals.presets.samsara import PORTAL as samsara
 from app.portals.presets.samsung import PORTAL as samsung
+from app.portals.presets.sentinelone import PORTAL as sentinelone
 from app.portals.presets.servicenow import PORTAL as servicenow
 from app.portals.presets.squarespace import PORTAL as squarespace
 from app.portals.presets.unity3d import PORTAL as unity3d
 from app.portals.presets.westerndigital import PORTAL as westerndigital
 from app.portals.presets.wiz import PORTAL as wiz
+from app.portals.presets.zillow import PORTAL as zillow
 from app.portals.presets.zoom import PORTAL as zoom
 
 PORTALS: tuple[PortalPreset, ...] = (
@@ -85,4 +89,8 @@ PORTALS: tuple[PortalPreset, ...] = (
     confluent,
     airtable,
     marqeta,
+    crowdstrike,
+    zillow,
+    paloaltonetworks,
+    sentinelone,
 )

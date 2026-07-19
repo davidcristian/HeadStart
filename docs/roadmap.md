@@ -3,8 +3,8 @@
 Living plan for HeadStart — what to build next and why. Update this doc when
 priorities shift or a milestone ships.
 
-**Current baseline (2026-07):** Phases 1–21 shipped (four-tier pricing, per-user AI
-summary preferences, curated employer portal catalog, SmartRecruiters adapter, custom career-site
+**Current baseline (2026-07):** Phases 1–23 shipped (four-tier pricing, per-user AI
+summary preferences, curated employer portal catalog through batch 5, SmartRecruiters adapter, custom career-site
 adapters for Shopify, Uber, and Snowflake, the dev-only local application agent, and inbox OAuth
 providers for Gmail, Outlook, Yahoo, and Fastmail). See
 [architecture.md](architecture.md) for the system design.
@@ -746,22 +746,25 @@ Goal: add high-value employers that failed public API verification during
 live smoke test before merge — either a working preset on an existing adapter or a
 new custom scraper if the careers site uses a proprietary stack.
 
-| Employer | Likely adapter | Category | Notes |
-| -------- | -------------- | -------- | ----- |
-| Rippling | Ashby (`rippling`) or custom | `unicorn` | Ashby Postings API returned 403 at Phase 22 verification; Greenhouse and SmartRecruiters tokens also failed |
-| CrowdStrike | Greenhouse or SmartRecruiters | `big_tech` | No working public board at `crowdstrike` / `CrowdStrike` tokens checked in Phase 22 |
-| HashiCorp | Greenhouse or SmartRecruiters | `unicorn` | No working public API at verification time (IBM acquisition may have moved apply flow) |
-| Splunk | Greenhouse, SmartRecruiters, or Workday | `big_tech` | No working public API at verification time (Cisco subsidiary; may need custom careers endpoint) |
-| Rivian | Greenhouse, Lever, SmartRecruiters, or Workday | `unicorn` | No working public API at `rivian` / `Rivian` tokens checked in Phase 22 |
-| Palo Alto Networks | Greenhouse or SmartRecruiters | `big_tech` | No working public board at `paloaltonetworks` / `PaloAltoNetworks` tokens checked in Phase 22 |
-| Grammarly | Greenhouse, Ashby, or SmartRecruiters | `unicorn` | No working public API at verification time |
-| Zillow | Greenhouse, SmartRecruiters, or Workday | `big_tech` | No working public board at `zillow` / `Zillow` tokens checked in Phase 22 |
-| SentinelOne | Greenhouse or Ashby | `unicorn` | No working public API at verification time |
-| Snyk | Greenhouse, Ashby, or SmartRecruiters | `unicorn` | No working public API at verification time |
+| Employer | Likely adapter | Category | Status |
+| -------- | -------------- | -------- | ------ |
+| ~~CrowdStrike~~ | ~~Workday (`crowdstrike` / `crowdstrikecareers` / `wd5`)~~ | ~~`big_tech`~~ | **Shipped** |
+| ~~Zillow~~ | ~~Workday (`zillow` / `Zillow_Group_External` / `wd5`)~~ | ~~`big_tech`~~ | **Shipped** |
+| ~~Palo Alto Networks~~ | ~~Workday (`paloaltonetworks` / `panwexternalcareers` / `wd5`)~~ | ~~`big_tech`~~ | **Shipped** |
+| ~~SentinelOne~~ | ~~Greenhouse (`sentinellabs`)~~ | ~~`unicorn`~~ | **Shipped** — `portal_id` `sentinelone`, board token `sentinellabs` |
+| Rippling | Ashby (`rippling`) or custom | `unicorn` | Still blocked — Ashby Postings API 404; careers site is proprietary Rippling ATS |
+| HashiCorp | Greenhouse or SmartRecruiters | `unicorn` | Still blocked — no public Greenhouse/SR/Ashby/Lever board; IBM careers (post-acquisition) |
+| Splunk | Greenhouse, SmartRecruiters, or Workday | `big_tech` | Still blocked — careers redirect to Cisco Phenom (`careers.cisco.com/.../splunk`); Cisco Workday is not Splunk-scoped |
+| Rivian | Greenhouse, Lever, SmartRecruiters, or Workday | `unicorn` | Still blocked — `careers.rivian.com` is iCIMS; Workday CXS unauthorized/404 for probed sites |
+| Grammarly | Greenhouse, Ashby, or SmartRecruiters | `unicorn` | Still blocked — careers redirect to Superhuman; Greenhouse `grammarly`/`superhuman` 404; Ashby board empty/404 |
+| Snyk | Greenhouse, Ashby, or SmartRecruiters | `unicorn` | Still blocked — Ashby board returns 0 jobs; Greenhouse/Lever/SR tokens failed |
+
+**Shipped:** 4 presets in `presets/` (CrowdStrike, Zillow, Palo Alto Networks, SentinelOne);
+catalog count **115**.
 
 **Done when:** at least three employers from this list ship as verified presets (or
 new scrapers + presets where needed); skipped rows document why the public API
-still fails.
+still fails. **Met.**
 
 ---
 

@@ -20,7 +20,7 @@ def test_list_portal_presets_filters_query() -> None:
 def test_curated_portal_catalog_size() -> None:
     from app.portals.catalog import CURATED_PORTALS
 
-    assert len(CURATED_PORTALS) == 111
+    assert len(CURATED_PORTALS) == 115
 
 
 def test_curated_portal_apple_preset() -> None:
@@ -185,6 +185,45 @@ def test_curated_portal_wiz_board_token() -> None:
     preset = next(p for p in CURATED_PORTALS if p.id == "wiz")
     assert preset.adapter_key == "greenhouse"
     assert preset.default_config["board_token"] == "wizinc"
+
+
+def test_curated_portal_crowdstrike_workday_preset() -> None:
+    from app.portals.catalog import CURATED_PORTALS
+
+    preset = next(p for p in CURATED_PORTALS if p.id == "crowdstrike")
+    assert preset.adapter_key == "workday"
+    assert preset.default_config["tenant"] == "crowdstrike"
+    assert preset.default_config["site"] == "crowdstrikecareers"
+    assert preset.default_config["region"] == "wd5"
+
+
+def test_curated_portal_zillow_workday_preset() -> None:
+    from app.portals.catalog import CURATED_PORTALS
+
+    preset = next(p for p in CURATED_PORTALS if p.id == "zillow")
+    assert preset.adapter_key == "workday"
+    assert preset.default_config["tenant"] == "zillow"
+    assert preset.default_config["site"] == "Zillow_Group_External"
+    assert preset.default_config["region"] == "wd5"
+
+
+def test_curated_portal_paloaltonetworks_workday_preset() -> None:
+    from app.portals.catalog import CURATED_PORTALS
+
+    preset = next(p for p in CURATED_PORTALS if p.id == "paloaltonetworks")
+    assert preset.adapter_key == "workday"
+    assert preset.default_config["tenant"] == "paloaltonetworks"
+    assert preset.default_config["site"] == "panwexternalcareers"
+    assert preset.default_config["region"] == "wd5"
+
+
+def test_curated_portal_sentinelone_greenhouse_preset() -> None:
+    from app.portals.catalog import CURATED_PORTALS
+
+    preset = next(p for p in CURATED_PORTALS if p.id == "sentinelone")
+    assert preset.adapter_key == "greenhouse"
+    assert preset.default_config["board_token"] == "sentinellabs"
+    assert preset.default_config["portal_id"] == "sentinelone"
 
 
 def test_curated_portal_confluent_ashby_preset() -> None:
