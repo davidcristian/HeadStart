@@ -194,12 +194,51 @@ def test_icims_rejects_bad_page_size() -> None:
         )
 
 
+def test_icims_rejects_non_numeric_page_size() -> None:
+    scraper = get_scraper("icims", http=make_http_client(lambda _: httpx.Response(200)))
+    with pytest.raises(ValueError, match="page_size"):
+        scraper.fetch(
+            ScrapeContext(query_url="https://careers.rivian.com/", config={"page_size": "10"})
+        )
+
+
 def test_icims_rejects_bad_max_results() -> None:
     scraper = get_scraper("icims", http=make_http_client(lambda _: httpx.Response(200)))
     with pytest.raises(ValueError, match="max_results"):
         scraper.fetch(
             ScrapeContext(query_url="https://careers.rivian.com/", config={"max_results": True})
         )
+
+
+def test_icims_rejects_non_positive_max_results() -> None:
+    scraper = get_scraper("icims", http=make_http_client(lambda _: httpx.Response(200)))
+    with pytest.raises(ValueError, match="max_results"):
+        scraper.fetch(
+            ScrapeContext(query_url="https://careers.rivian.com/", config={"max_results": 0})
+        )
+
+
+def test_icims_accepts_flat_job_rows_without_data_wrapper() -> None:
+    payload = """
+    {
+      "totalCount": 1,
+      "jobs": [{
+        "slug": "42",
+        "title": "Flat Role",
+        "hiring_organization": "Acme",
+        "full_location": "Remote"
+      }]
+    }
+    """
+
+    def handler(_: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, text=payload)
+
+    scraper = get_scraper("icims", http=make_http_client(handler))
+    postings = scraper.fetch(ScrapeContext(query_url="https://careers.rivian.com/"))
+    assert len(postings) == 1
+    assert postings[0].external_id == "42"
+    assert postings[0].title == "Flat Role"
 
 
 def test_icims_builds_location_from_parts_and_tolerates_bad_date() -> None:
