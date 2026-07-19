@@ -6,6 +6,7 @@ import { Button } from "./ui";
 import { useMediaQuery } from "../hooks/useMediaQuery";
 import { useDraftInboxReply } from "../hooks/mutations";
 import { downloadApplicationArtifact } from "../lib/applicationArtifacts";
+import { formatDateTime } from "../lib/format";
 import { safeHref } from "../lib/safeHref";
 import type { ApplicationPipelineItem } from "../types";
 
@@ -175,7 +176,7 @@ function AttemptTimeline({ attempts }: { attempts: ApplicationPipelineItem["atte
       {attempts.map((attempt) => (
         <li key={attempt.id} className="application-timeline-item">
           <span className="application-timeline-time muted">
-            {new Date(attempt.created_at).toLocaleString()}
+            {formatDateTime(attempt.created_at)}
           </span>
           <span className="application-timeline-status">
             {ATTEMPT_LABELS[attempt.status] ?? attempt.status}
@@ -205,7 +206,7 @@ function AttemptTimeline({ attempts }: { attempts: ApplicationPipelineItem["atte
 
 function formatAppliedAt(value: string | null): string {
   if (!value) return "—";
-  return new Date(value).toLocaleString();
+  return formatDateTime(value);
 }
 
 function formatLatestAttempt(item: ApplicationPipelineItem): string {

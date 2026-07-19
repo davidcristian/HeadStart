@@ -1,6 +1,7 @@
 /** Application history audit log for the profile page. */
 
 import { EmptyState } from "../ui";
+import { formatDateTime } from "../../lib/format";
 import { safeHref } from "../../lib/safeHref";
 import type { ApplicationLog } from "../../types";
 
@@ -30,7 +31,7 @@ export function ApplicationHistoryTable({ entries, isPending }: ApplicationHisto
           const jobHref = safeHref(entry.job_url);
           return (
             <tr key={entry.id}>
-              <td className="muted">{new Date(entry.created_at).toLocaleString()}</td>
+              <td className="muted">{formatDateTime(entry.created_at)}</td>
               <td>
                 <strong>{entry.job_title}</strong>
                 <div className="muted">{entry.job_company}</div>

@@ -157,6 +157,12 @@ Server state is managed by **TanStack Query** (`@tanstack/react-query`). The
   other schemes — callers render plain text instead of an anchor. Used by
   `JobList`, `ApplicationPipelineList`, `SearchHealth`,
   `ApplicationHistoryTable`, and `PortalsResultsCard`.
+- **Absolute timestamps:** use `formatDateTime` / `formatDate` from
+  `src/lib/format.ts` (fixed `de-DE` locale + `Europe/Berlin` timezone, with a
+  short zone name on date-times). Do not call `toLocaleString` /
+  `toLocaleDateString` with the browser defaults — Jobs, Applications, Admin,
+  Profile, and Search health all go through these helpers (FRO-34). Relative
+  labels still use `formatRelativeTime`.
 
 ## Tests
 

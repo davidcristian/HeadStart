@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { formatDateTime, formatRelativeTime } from "./format";
+import { formatDate, formatDateTime, formatRelativeTime } from "./format";
 
 describe("formatRelativeTime", () => {
   beforeEach(() => {
@@ -29,8 +29,19 @@ describe("formatRelativeTime", () => {
 });
 
 describe("formatDateTime", () => {
-  it("delegates to Date.toLocaleString", () => {
-    const iso = "2026-07-01T12:00:00Z";
-    expect(formatDateTime(iso)).toBe(new Date(iso).toLocaleString());
+  it("formats with fixed de-DE locale and Europe/Berlin zone", () => {
+    // 12:00 UTC in July is 14:00 MESZ (CEST).
+    expect(formatDateTime("2026-07-01T12:00:00Z")).toBe("01.07.2026, 14:00 MESZ");
+  });
+
+  it("uses winter offset (MEZ) when Berlin is on standard time", () => {
+    expect(formatDateTime("2026-01-15T12:00:00Z")).toBe("15.01.2026, 13:00 MEZ");
+  });
+});
+
+describe("formatDate", () => {
+  it("formats a calendar date in de-DE / Europe/Berlin", () => {
+    // Late-evening UTC can still be the next calendar day in Berlin.
+    expect(formatDate("2026-07-01T22:30:00Z")).toBe("02.07.2026");
   });
 });

@@ -3,6 +3,7 @@
 import { JobStatusBadge } from "./JobStatusBadge";
 import { Button } from "./ui";
 import { useMediaQuery } from "../hooks/useMediaQuery";
+import { formatDateTime } from "../lib/format";
 import { safeHref } from "../lib/safeHref";
 import type { Job } from "../types";
 
@@ -88,7 +89,7 @@ function JobTableRow({
       <td>
         <JobStatusBadge status={job.status} />
       </td>
-      <td className="muted">{formatSeenAt(job.first_seen_at)}</td>
+      <td className="muted">{formatDateTime(job.first_seen_at)}</td>
       <td>
         <JobActions
           job={job}
@@ -123,7 +124,7 @@ function JobCard({
       </p>
       {job.summary && <p className="job-summary muted">{job.summary}</p>}
       {job.salary && <p className="job-card-salary muted">{job.salary}</p>}
-      <p className="job-card-seen muted">First seen {formatSeenAt(job.first_seen_at)}</p>
+      <p className="job-card-seen muted">First seen {formatDateTime(job.first_seen_at)}</p>
       <JobActions job={job} onStatusChange={onStatusChange} canApply={canApply} onApply={onApply} />
     </article>
   );
@@ -170,8 +171,4 @@ function JobActions({
       )}
     </div>
   );
-}
-
-function formatSeenAt(value: string): string {
-  return new Date(value).toLocaleString();
 }

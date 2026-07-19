@@ -2,6 +2,7 @@
 
 import { JsonEditor } from "../JsonEditor";
 import { Banner, Button, Field } from "../ui";
+import { formatDateTime } from "../../lib/format";
 import type { Json, Profile } from "../../types";
 
 export const EMPTY_PROFILE_FORM = {
@@ -226,7 +227,7 @@ export function ProfileDetailsForm({
         )}
       </div>
       {existing?.updated_at && (
-        <p className="muted">Last updated {new Date(existing.updated_at).toLocaleString()}.</p>
+        <p className="muted">Last updated {formatDateTime(existing.updated_at)}.</p>
       )}
     </>
   );

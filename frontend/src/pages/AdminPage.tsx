@@ -6,6 +6,7 @@ import { AdminDataRequestsCard } from "../components/AdminDataRequestsCard";
 import { AdminPromoCodesCard } from "../components/AdminPromoCodesCard";
 import { useAdminStats, useAdminUsers, useMe } from "../hooks/queries";
 import { useUpdateAdminUser } from "../hooks/mutations";
+import { formatDate, formatDateTime } from "../lib/format";
 import { ADMIN_PLAN_OPTIONS } from "../lib/plan";
 import type { AdminUser, PlanId } from "../types";
 
@@ -55,7 +56,7 @@ function UserRow({
           ))}
         </select>
       </td>
-      <td className="muted">{new Date(user.created_at).toLocaleDateString()}</td>
+      <td className="muted">{formatDate(user.created_at)}</td>
       <td className="row-actions">
         <Button
           variant="ghost"
@@ -140,7 +141,7 @@ export function AdminPage() {
                     <td>{row.search_name}</td>
                     <td>{row.user_email}</td>
                     <td className="muted">
-                      {row.last_run_at ? new Date(row.last_run_at).toLocaleString() : "-"}
+                      {row.last_run_at ? formatDateTime(row.last_run_at) : "-"}
                     </td>
                     <td className="error-text">{row.last_error}</td>
                   </tr>

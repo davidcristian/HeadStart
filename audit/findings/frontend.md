@@ -375,7 +375,7 @@ _Merged with FRO-15 — both records describe the same defect: no single-flight 
 
 <a id="fro-34"></a>
 ### FRO-34 — Date/time rendered in the browser's implicit locale and timezone with no fixed formatting
-⚪ **LOW** · 🔁 consistency · Status: ☐ open · Confidence: high (5/5 verifiers) · Effort: S · WS41
+⚪ **LOW** · 🔁 consistency · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/249)) · Confidence: high (5/5 verifiers) · Effort: S · WS41
 
 **Locations:** `frontend/src/lib/format.ts:16` (`formatDateTime`); plus `frontend/src/components/AdminDataRequestsCard.tsx:36`, `frontend/src/components/profile/ApplicationHistoryTable.tsx:30`, `frontend/src/components/ApplicationPipelineList.tsx:176`, `frontend/src/components/JobList.tsx:174`, `frontend/src/pages/AdminPage.tsx:58`, `frontend/src/pages/AdminPage.tsx:143`, `frontend/src/components/profile/ProfileDetailsForm.tsx:229`.
 

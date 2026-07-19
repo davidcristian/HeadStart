@@ -2,6 +2,7 @@
 
 import { Card, EmptyState } from "./ui";
 import { useAdminDataRequests } from "../hooks/queries";
+import { formatDateTime } from "../lib/format";
 import type { DataRequestLog } from "../types";
 
 function formatRequestType(type: DataRequestLog["request_type"]): string {
@@ -33,7 +34,7 @@ export function AdminDataRequestsCard() {
             <tbody>
               {requests.data.map((row) => (
                 <tr key={row.id}>
-                  <td className="muted">{new Date(row.created_at).toLocaleString()}</td>
+                  <td className="muted">{formatDateTime(row.created_at)}</td>
                   <td>{row.user_email}</td>
                   <td>{formatRequestType(row.request_type)}</td>
                   <td className="muted">{row.ip_address ?? "—"}</td>
