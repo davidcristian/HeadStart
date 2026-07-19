@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactElement } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { must } from "../test/must";
 import type { SiteCredential, Source } from "../types";
 import { CredentialsPage } from "./CredentialsPage";
 
@@ -114,7 +115,10 @@ describe("CredentialsPage", () => {
       target: { value: "Prod cookies" },
     });
 
-    const [cookies, headers, session] = container.querySelectorAll("textarea");
+    const textareas = [...container.querySelectorAll("textarea")];
+    const cookies = must(textareas[0]);
+    const headers = must(textareas[1]);
+    const session = must(textareas[2]);
     fireEvent.change(cookies, { target: { value: '{"sessionid": "abc"}' } });
     fireEvent.change(headers, { target: { value: '{"Authorization": "Bearer x"}' } });
     fireEvent.change(session, { target: { value: "" } });
@@ -197,7 +201,7 @@ describe("CredentialsPage", () => {
       expect(screen.getByRole("button", { name: "Save credential" })).toBeInTheDocument(),
     );
 
-    const [cookies] = container.querySelectorAll("textarea");
+    const cookies = must([...container.querySelectorAll("textarea")][0]);
     fireEvent.change(cookies, { target: { value: "{not json" } });
 
     expect(screen.getByRole("button", { name: "Save credential" })).toBeDisabled();

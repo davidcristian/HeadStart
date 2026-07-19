@@ -139,8 +139,11 @@ Server state is managed by **TanStack Query** (`@tanstack/react-query`). The
 
 ## Conventions
 
-- Strict TypeScript; prettier + eslint. `just lint --frontend` runs both
-  `eslint` and `prettier --check` (CI uses the same recipe).
+- Strict TypeScript (`strict`, `noUncheckedIndexedAccess`, unused locals /
+  parameters, no fallthrough); prettier + eslint. `just lint --frontend` runs
+  both `eslint` and `prettier --check` (CI uses the same recipe). Indexed and
+  record access may be `undefined` at compile time (FRO-42) — guard or narrow
+  before use (tests use `must()` from `src/test/must.ts`).
 - All network calls go through `src/api/` (wrapped by the React Query hooks in
   `src/hooks/`) using `VITE_API_BASE_URL`. Components do not call `api.*`
   directly.

@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { must } from "../../test/must";
 import type { LanguageEntry } from "../../types";
 import { EMPTY_LANGUAGE, SkillsLanguagesForm } from "./SkillsLanguagesForm";
 
@@ -40,7 +41,9 @@ describe("SkillsLanguagesForm", () => {
   it("edits a skill value", () => {
     const { onSkillsChange } = renderForm({ skills: ["Python", "Go"] });
 
-    fireEvent.change(screen.getAllByPlaceholderText("Python")[1], { target: { value: "Rust" } });
+    fireEvent.change(must(screen.getAllByPlaceholderText("Python")[1]), {
+      target: { value: "Rust" },
+    });
 
     expect(onSkillsChange).toHaveBeenCalledWith(["Python", "Rust"]);
   });
@@ -49,7 +52,7 @@ describe("SkillsLanguagesForm", () => {
     const { onSkillsChange } = renderForm({ skills: ["Python", "Go"] });
 
     const removeButtons = screen.getAllByRole("button", { name: "Remove" });
-    fireEvent.click(removeButtons[0]);
+    fireEvent.click(must(removeButtons[0]));
 
     expect(onSkillsChange).toHaveBeenCalledWith(["Go"]);
   });
@@ -94,7 +97,7 @@ describe("SkillsLanguagesForm", () => {
     });
 
     const removeButtons = screen.getAllByRole("button", { name: "Remove" });
-    fireEvent.click(removeButtons[1]);
+    fireEvent.click(must(removeButtons[1]));
 
     expect(onLanguagesChange).toHaveBeenCalledWith([makeLang({ language: "English" })]);
   });
@@ -103,7 +106,7 @@ describe("SkillsLanguagesForm", () => {
     const rows = [makeLang({ language: "English" }), makeLang({ language: "French" })];
     const { onLanguagesChange } = renderForm({ languages: rows });
 
-    fireEvent.change(screen.getAllByPlaceholderText("English")[1], {
+    fireEvent.change(must(screen.getAllByPlaceholderText("English")[1]), {
       target: { value: "Français" },
     });
 

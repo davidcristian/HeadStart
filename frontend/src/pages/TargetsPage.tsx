@@ -65,7 +65,8 @@ export function TargetsPage() {
 
   useEffect(() => {
     if (!meta.data?.notifiers.length || type) return;
-    const initial = meta.data.notifiers[0];
+    // Length checked above; indexed access is definite for the initial type.
+    const initial = meta.data.notifiers[0]!;
     setType(initial);
     setConfig(TYPE_DEFAULTS[initial] ?? {});
   }, [meta.data, type]);

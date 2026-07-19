@@ -55,7 +55,8 @@ export function useOnboardingWizard() {
 
   useEffect(() => {
     if (!meta.data?.notifiers.length || notifierType) return;
-    const initial = meta.data.notifiers.includes("ntfy") ? "ntfy" : meta.data.notifiers[0];
+    // Length checked above; prefer ntfy when present, else the first adapter key.
+    const initial = meta.data.notifiers.includes("ntfy") ? "ntfy" : meta.data.notifiers[0]!;
     setNotifierType(initial);
     setNotifierConfig(NOTIFIER_DEFAULTS[initial] ?? {});
   }, [meta.data, notifierType]);

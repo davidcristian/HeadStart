@@ -1,5 +1,6 @@
 import { fireEvent, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { must } from "../../test/must";
 import type { Portal } from "../../types";
 import { renderWithClient } from "../../test/renderWithClient";
 import { PortalsSearchCard } from "./PortalsSearchCard";
@@ -106,7 +107,7 @@ describe("PortalsSearchCard", () => {
     const { props } = renderCard();
 
     const checkboxes = screen.getAllByRole("checkbox");
-    fireEvent.click(checkboxes[1]);
+    fireEvent.click(must(checkboxes[1]));
     expect(props.togglePortal).toHaveBeenCalledWith("meta");
 
     fireEvent.click(screen.getByRole("button", { name: "Search jobs" }));

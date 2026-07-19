@@ -1,6 +1,7 @@
 import { mockApi, resetMockApi } from "../test/mockApi";
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
+import { must } from "../test/must";
 import type { Mock } from "vitest";
 import { renderWithClient } from "../test/renderWithClient";
 import type { PromoCode, PromoType } from "../types";
@@ -267,7 +268,7 @@ describe("AdminPromoCodesCard", () => {
     await waitFor(() => expect(screen.getByText("TOGGLE")).toBeInTheDocument());
     updatePromoCodeMock.mockResolvedValueOnce(promo({ id: 3, code: "TOGGLE", active: false }));
     // Retire the first row; the second row's ternary hits the untouched branch.
-    fireEvent.click(screen.getAllByRole("button", { name: "Retire" })[0]);
+    fireEvent.click(must(screen.getAllByRole("button", { name: "Retire" })[0]));
 
     await waitFor(() =>
       expect(mockApi.updateAdminPromoCode).toHaveBeenCalledWith(3, { active: false }),

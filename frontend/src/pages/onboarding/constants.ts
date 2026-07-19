@@ -25,11 +25,13 @@ export const NOTIFIER_DEFAULTS: Record<string, Json> = {
   webhook: { webhook_url: "" },
 };
 
-export const NOTIFIER_HINTS: Record<string, string> = {
+// Concrete keys (not Record) so known-channel hints stay definite under
+// noUncheckedIndexedAccess (FRO-42); dynamic lookup still needs a fallback.
+export const NOTIFIER_HINTS = {
   ntfy: "Topic is a secret (≥16 chars). Subscribe in the ntfy app or at ntfy.sh/<topic>; optional auth token recommended.",
   email: "Requires SMTP_* env vars on the server.",
   slack: "Paste an incoming webhook URL from your Slack workspace.",
   discord: "Paste a channel webhook URL from your Discord server.",
   telegram: "Use a bot token from @BotFather and your chat id.",
   webhook: "HTTPS endpoint that receives a JSON payload per job.",
-};
+} as const;

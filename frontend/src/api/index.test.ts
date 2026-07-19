@@ -43,9 +43,13 @@ beforeEach(() => {
   requestForm.mockClear();
 });
 
-/** Helper: assert the last request() call matches path (+ optional options). */
-function lastCall() {
-  return request.mock.calls[request.mock.calls.length - 1];
+/** Helper: last request() call as a definite tuple (FRO-42). */
+function lastCall(): [string, RequestOptions?] {
+  const call = request.mock.calls[request.mock.calls.length - 1];
+  if (call === undefined) {
+    throw new Error("expected request() to have been called");
+  }
+  return call as [string, RequestOptions?];
 }
 
 describe("api meta + auth", () => {
@@ -320,7 +324,7 @@ describe("api profile", () => {
       "/api/v1/profile/resume",
       expect.objectContaining({ method: "PUT", body: expect.any(FormData) }),
     );
-    expect((requestForm.mock.calls[0][1] as { body: FormData }).body.get("file")).toBe(file);
+    expect((requestForm.mock.calls[0]![1] as { body: FormData }).body.get("file")).toBe(file);
     await api.deleteResume();
     expect(lastCall()).toEqual(["/api/v1/profile/resume", { method: "DELETE" }]);
     await api.uploadResumeTemplate(file);
@@ -328,7 +332,7 @@ describe("api profile", () => {
       "/api/v1/profile/resume-template",
       expect.objectContaining({ method: "PUT", body: expect.any(FormData) }),
     );
-    expect((requestForm.mock.calls[1][1] as { body: FormData }).body.get("file")).toBe(file);
+    expect((requestForm.mock.calls[1]![1] as { body: FormData }).body.get("file")).toBe(file);
     await api.deleteResumeTemplate();
     expect(lastCall()).toEqual(["/api/v1/profile/resume-template", { method: "DELETE" }]);
   });

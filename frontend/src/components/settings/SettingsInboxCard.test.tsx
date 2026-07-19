@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { must } from "../../test/must";
 import { SettingsInboxCard } from "./SettingsInboxCard";
 import type { MailboxCredential } from "../../types";
 
@@ -256,7 +257,7 @@ describe("SettingsInboxCard", () => {
     fireEvent.click(screen.getByRole("button", { name: "Save IMAP credentials" }));
 
     await waitFor(() => expect(mockApi.upsertMailboxCredentials).toHaveBeenCalled());
-    const payload = mockApi.upsertMailboxCredentials.mock.calls[0][0] as {
+    const payload = must(mockApi.upsertMailboxCredentials.mock.calls[0])[0] as {
       config: { smtp_user?: string; smtp_from?: string };
     };
     expect(payload.config.smtp_user).toBe("user@example.com");
@@ -294,7 +295,9 @@ describe("SettingsInboxCard", () => {
 
     await waitFor(() => expect(mockApi.testMailbox).toHaveBeenCalled());
     // No credential -> passes the manual config through.
-    expect(mockApi.testMailbox.mock.calls[0][0]).toMatchObject({ connector_type: "imap_smtp" });
+    expect(must(mockApi.testMailbox.mock.calls[0])[0]).toMatchObject({
+      connector_type: "imap_smtp",
+    });
     expect(await screen.findByText("Mailbox connection succeeded.")).toBeInTheDocument();
   });
 

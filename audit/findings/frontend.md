@@ -577,7 +577,7 @@ _Merged with FRO-15 — both records describe the same defect: no single-flight 
 
 <a id="fro-42"></a>
 ### FRO-42 — tsconfig omits noUncheckedIndexedAccess for a hand-typed API client
-⚪ **LOW** · ♻️ refactor · Status: ☐ open · Confidence: medium (3/5 verifiers) · Effort: M · WS41
+⚪ **LOW** · ♻️ refactor · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/256)) · Confidence: medium (3/5 verifiers) · Effort: M · WS41
 
 **Locations:** `frontend/tsconfig.json:14` (`compilerOptions`).
 
@@ -586,5 +586,7 @@ _Merged with FRO-15 — both records describe the same defect: no single-flight 
 **Failure scenario.** Array/record index access (e.g. `features[key]`, `list[i]`) is typed as non-undefined; a missing key returns `undefined` at runtime with no compile error, masking exactly the optional/drift mismatch this hand-typed layer is prone to.
 
 **Suggested fix.** Enable `noUncheckedIndexedAccess` (and consider `exactOptionalPropertyTypes`) and fix the resulting spots; this strengthens the sync-by-convention type layer.
+
+**Update (2026-07-12).** Fixed: `noUncheckedIndexedAccess` enabled; focus-trap / Targets / onboarding init narrow after length checks; `NOTIFIER_HINTS` is `as const`; tests use `must()` — [PR](https://github.com/davidcristian/HeadStart/pull/256). `exactOptionalPropertyTypes` left for a later pass.
 
 **Verification.** Confirmed 3/3 adversarial verifiers. Genuine hardening for the hand-typed API layer, low.

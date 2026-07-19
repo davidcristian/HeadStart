@@ -46,7 +46,10 @@ export function NotifierFields({ notifierType, config, onChange }: NotifierField
   }
   if (notifierType === "slack" || notifierType === "discord") {
     return (
-      <Field label="Webhook URL" hint={NOTIFIER_HINTS[notifierType]}>
+      <Field
+        label="Webhook URL"
+        hint={notifierType === "slack" ? NOTIFIER_HINTS.slack : NOTIFIER_HINTS.discord}
+      >
         <input
           value={String(config.webhook_url ?? "")}
           onChange={(e) => onChange({ ...config, webhook_url: e.target.value })}

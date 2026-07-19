@@ -1,6 +1,7 @@
 import { mockApi } from "../../test/mockApi";
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import type { MockedFunction } from "vitest";
+import { must } from "../../test/must";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithClient } from "../../test/renderWithClient";
 import { SettingsSummaryCard } from "./SettingsSummaryCard";
@@ -121,7 +122,7 @@ describe("SettingsSummaryCard (save)", () => {
     fireEvent.click(screen.getByRole("button", { name: "Save AI settings" }));
 
     await vi.waitFor(() => expect(updateSummaryPreferences).toHaveBeenCalled());
-    const payload = updateSummaryPreferences.mock.calls[0][0] as {
+    const payload = must(updateSummaryPreferences.mock.calls[0])[0] as {
       provider: string | null;
       api_key?: string;
       purpose_preferences?: Record<string, { provider?: string | null; model?: string | null }>;
@@ -166,14 +167,14 @@ describe("SettingsSummaryCard (save)", () => {
 
     // Remove the saved global API key (first checkbox in the API key field).
     const [apiKeyRemove, modelRemove] = screen.getAllByRole("checkbox");
-    fireEvent.click(apiKeyRemove);
+    fireEvent.click(must(apiKeyRemove));
     // Remove the saved per-task model override (second checkbox, in the purpose block).
-    fireEvent.click(modelRemove);
+    fireEvent.click(must(modelRemove));
 
     fireEvent.click(screen.getByRole("button", { name: "Save AI settings" }));
 
     await waitFor(() => expect(updateSummaryPreferences).toHaveBeenCalled());
-    const payload = updateSummaryPreferences.mock.calls[0][0] as {
+    const payload = must(updateSummaryPreferences.mock.calls[0])[0] as {
       api_key?: string;
       purpose_preferences?: Record<string, { model?: string | null }>;
     };
@@ -205,7 +206,7 @@ describe("SettingsSummaryCard (save)", () => {
     await screen.findByRole("button", { name: "Save AI settings" });
     fireEvent.click(screen.getByRole("button", { name: "Save AI settings" }));
     await waitFor(() => expect(updateSummaryPreferences).toHaveBeenCalled());
-    const payload = updateSummaryPreferences.mock.calls[0][0] as { provider: string | null };
+    const payload = must(updateSummaryPreferences.mock.calls[0])[0] as { provider: string | null };
     expect(payload.provider).toBeNull();
   });
 

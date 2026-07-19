@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { must } from "../../test/must";
 import { NotifierFields } from "./NotifierFields";
 import { NOTIFIER_HINTS } from "./constants";
 import type { Json } from "../../types";
@@ -93,7 +94,8 @@ describe("NotifierFields", () => {
     expect(screen.getByText(NOTIFIER_HINTS.telegram)).toBeInTheDocument();
 
     const inputs = screen.getAllByRole("textbox") as HTMLInputElement[];
-    const [botToken, chatId] = inputs;
+    const botToken = must(inputs[0]);
+    const chatId = must(inputs[1]);
     expect(botToken.value).toBe("");
     expect(chatId.value).toBe("");
 

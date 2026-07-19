@@ -1,6 +1,7 @@
 import { mockApi, resetMockApi } from "../test/mockApi";
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { must } from "../test/must";
 import { MemoryRouter } from "react-router-dom";
 import { sampleJob, sampleMeta, sampleProfile, sampleSearch, sampleSource } from "../test/fixtures";
 import { sampleFeedUrl, sampleRotatedFeedUrl } from "../test/mockApiSamples";
@@ -281,7 +282,7 @@ describe("JobsPage", () => {
 
     await waitFor(() => expect(writeText).toHaveBeenCalledTimes(1));
     expect(writeText).toHaveBeenCalledWith(expect.stringContaining(`search_id=${sampleSearch.id}`));
-    expect(writeText.mock.calls[0][0]).toContain("status=new");
+    expect(must(writeText.mock.calls[0])[0]).toContain("status=new");
     await waitFor(() =>
       expect(screen.getByText("RSS feed URL copied to clipboard.")).toBeInTheDocument(),
     );

@@ -72,8 +72,9 @@ export function useFocusTrap(
         event.preventDefault();
         return;
       }
-      const first = items[0];
-      const last = items[items.length - 1];
+      // Length checked above; indexed access is definite for the trap cycle.
+      const first = items[0]!;
+      const last = items[items.length - 1]!;
       const current = document.activeElement;
       // tabIndex=-1 containers are focusable but excluded from FOCUSABLE_SELECTOR.
       const onContainer = current === container;

@@ -52,6 +52,22 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
+type FetchInit = {
+  method?: string;
+  body?: unknown;
+  credentials?: string;
+  headers: Record<string, string>;
+};
+
+/** First (or nth) fetch call args as a definite tuple (FRO-42). */
+function fetchCall(index = 0): [unknown, FetchInit] {
+  const call = fetchMock.mock.calls[index];
+  if (call === undefined) {
+    throw new Error(`expected fetch to have been called (index ${index})`);
+  }
+  return call as [unknown, FetchInit];
+}
+
 describe("ApiError", () => {
   it("carries status and name", () => {
     const err = new ApiError(404, "nope");
@@ -66,7 +82,7 @@ describe("request", () => {
     fetchMock.mockResolvedValueOnce(jsonResponse(200, { ok: true }));
     const data = await request<{ ok: boolean }>("/thing", { method: "POST", body: { a: 1 } });
     expect(data).toEqual({ ok: true });
-    const [url, init] = fetchMock.mock.calls[0];
+    const [url, init] = fetchCall();
     expect(url).toBe("http://api.test/thing");
     expect(init.method).toBe("POST");
     expect(init.headers["Authorization"]).toBe("Bearer access-1");
@@ -77,13 +93,13 @@ describe("request", () => {
   it("omits the body when undefined", async () => {
     fetchMock.mockResolvedValueOnce(jsonResponse(200, {}));
     await request("/thing");
-    expect(fetchMock.mock.calls[0][1].body).toBeUndefined();
+    expect(fetchCall(0)[1].body).toBeUndefined();
   });
 
   it("skips auth for public endpoints (no Authorization header)", async () => {
     fetchMock.mockResolvedValueOnce(jsonResponse(200, {}));
     await request("/public", { skipAuth: true });
-    expect(fetchMock.mock.calls[0][1].headers["Authorization"]).toBeUndefined();
+    expect(fetchCall(0)[1].headers["Authorization"]).toBeUndefined();
   });
 
   it("returns undefined on 204", async () => {
@@ -147,7 +163,7 @@ describe("request", () => {
       .mockResolvedValueOnce(jsonResponse(200, { ok: true }));
     const data = await request<{ ok: boolean }>("/thing");
     expect(data).toEqual({ ok: true });
-    expect(fetchMock.mock.calls[2][1].headers["Authorization"]).toBe("Bearer access-2");
+    expect(fetchCall(2)[1].headers["Authorization"]).toBe("Bearer access-2");
   });
 
   it("clears the session and notifies the handler when refresh fails", async () => {
@@ -257,7 +273,7 @@ describe("refreshSession", () => {
     const first = refreshSession();
     const second = refreshSession();
     expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(fetchMock.mock.calls[0][0]).toBe("http://api.test/api/v1/auth/refresh");
+    expect(fetchCall(0)[0]).toBe("http://api.test/api/v1/auth/refresh");
 
     resolveRefresh!(jsonResponse(200, { access_token: "shared" }));
     expect(await Promise.all([first, second])).toEqual([true, true]);
@@ -282,7 +298,7 @@ describe("requestForm", () => {
   it("posts multipart with the bearer token and no Content-Type", async () => {
     fetchMock.mockResolvedValueOnce(jsonResponse(200, { ok: true }));
     await requestForm("/upload", { body });
-    const init = fetchMock.mock.calls[0][1];
+    const init = fetchCall(0)[1];
     expect(init.method).toBe("POST");
     expect(init.headers["Authorization"]).toBe("Bearer access-1");
     expect(init.headers["Content-Type"]).toBeUndefined();
@@ -292,13 +308,13 @@ describe("requestForm", () => {
   it("skips auth when requested", async () => {
     fetchMock.mockResolvedValueOnce(jsonResponse(200, {}));
     await requestForm("/upload", { body, skipAuth: true });
-    expect(fetchMock.mock.calls[0][1].headers["Authorization"]).toBeUndefined();
+    expect(fetchCall(0)[1].headers["Authorization"]).toBeUndefined();
   });
 
   it("uses an explicit method override", async () => {
     fetchMock.mockResolvedValueOnce(jsonResponse(200, {}));
     await requestForm("/upload", { body, method: "PUT" });
-    expect(fetchMock.mock.calls[0][1].method).toBe("PUT");
+    expect(fetchCall(0)[1].method).toBe("PUT");
   });
 
   it("refreshes on 401 and retries", async () => {
@@ -325,7 +341,7 @@ describe("requestBlob", () => {
     fetchMock.mockResolvedValueOnce(jsonResponse(200, { pdf: true }));
     const blob = await requestBlob("/artifacts/1/download");
     expect(blob).toBeInstanceOf(Blob);
-    expect(fetchMock.mock.calls[0][1].headers["Authorization"]).toBe("Bearer access-1");
+    expect(fetchCall(0)[1].headers["Authorization"]).toBe("Bearer access-1");
   });
 
   it("refreshes on 401 and retries", async () => {

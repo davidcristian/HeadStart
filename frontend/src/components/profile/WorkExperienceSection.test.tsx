@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { must } from "../../test/must";
 import type { WorkExperienceEntry } from "../../types";
 import { EMPTY_WORK_EXPERIENCE, WorkExperienceSection } from "./WorkExperienceSection";
 
@@ -30,7 +31,7 @@ describe("WorkExperienceSection", () => {
     const rows = [makeRow({ job_title: "First" }), makeRow({ job_title: "Second" })];
     render(<WorkExperienceSection workExperience={rows} onWorkExperienceChange={onChange} />);
 
-    fireEvent.click(screen.getAllByRole("button", { name: "Remove" })[0]);
+    fireEvent.click(must(screen.getAllByRole("button", { name: "Remove" })[0]));
 
     expect(onChange).toHaveBeenCalledWith([rows[1]]);
   });
@@ -124,7 +125,9 @@ describe("WorkExperienceSection", () => {
     render(<WorkExperienceSection workExperience={rows} onWorkExperienceChange={vi.fn()} />);
 
     const cards = screen.getAllByText(/^Role \d$/);
-    expect(within(cards[0].parentElement as HTMLElement).getByText("Role 1")).toBeInTheDocument();
+    expect(
+      within(must(cards[0]).parentElement as HTMLElement).getByText("Role 1"),
+    ).toBeInTheDocument();
     expect(screen.getByText("Role 2")).toBeInTheDocument();
   });
 });

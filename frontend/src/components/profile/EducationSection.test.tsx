@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { must } from "../../test/must";
 import type { EducationEntry } from "../../types";
 import { EducationSection, EMPTY_EDUCATION } from "./EducationSection";
 
@@ -30,7 +31,7 @@ describe("EducationSection", () => {
     const rows = [makeRow({ school: "First" }), makeRow({ school: "Second" })];
     render(<EducationSection education={rows} onEducationChange={onChange} />);
 
-    fireEvent.click(screen.getAllByRole("button", { name: "Remove" })[1]);
+    fireEvent.click(must(screen.getAllByRole("button", { name: "Remove" })[1]));
 
     expect(onChange).toHaveBeenCalledWith([rows[0]]);
   });
