@@ -97,8 +97,11 @@ class SlackNotifier(Notifier):
 
     @staticmethod
     def _digest_payload(ctx: NotifyContext, jobs: list[JobPosting]) -> dict[str, Any]:
-        lines = [escape_slack_mrkdwn(digest_title(len(jobs), ctx.search_name)), ""]
-        for block in digest_blocks(jobs):
+        lines = [
+            escape_slack_mrkdwn(digest_title(len(jobs), ctx.search_name, locale=ctx.locale)),
+            "",
+        ]
+        for block in digest_blocks(jobs, locale=ctx.locale):
             lines.append(f"• {escape_slack_mrkdwn(block.headline)}")
             if block.summary:
                 lines.append(f"  {escape_slack_mrkdwn(block.summary)}")

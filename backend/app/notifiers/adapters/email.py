@@ -12,6 +12,7 @@ Target config:
 import smtplib
 
 from app.core.email import SmtpNotConfiguredError, send_email
+from app.core.i18n import t
 from app.core.logging import get_logger
 from app.notifiers.base import Notifier, register_notifier
 from app.notifiers.digest_format import digest_plain_body, digest_title
@@ -36,7 +37,7 @@ class EmailNotifier(Notifier):
 
         results: list[DeliveryResult] = []
         for job in jobs:
-            results.append(self._send_one(recipient, job))
+            results.append(self._send_one(recipient, job, locale=ctx.locale))
         return results
 
     def _send_digest(
@@ -44,8 +45,8 @@ class EmailNotifier(Notifier):
     ) -> list[DeliveryResult]:
         if not jobs:
             return []
-        subject = digest_title(len(jobs), ctx.search_name)
-        body = digest_plain_body(jobs)
+        subject = digest_title(len(jobs), ctx.search_name, locale=ctx.locale)
+        body = digest_plain_body(jobs, locale=ctx.locale)
         try:
             send_email(to=recipient, subject=subject, body=body)
             return [DeliveryResult(external_id=job.external_id, status="sent") for job in jobs]
@@ -62,9 +63,9 @@ class EmailNotifier(Notifier):
                 for job in jobs
             ]
 
-    def _send_one(self, recipient: str, job: JobPosting) -> DeliveryResult:
+    def _send_one(self, recipient: str, job: JobPosting, *, locale: str | None) -> DeliveryResult:
         subject = self._subject(job)
-        body = self._body(job)
+        body = self._body(job, locale=locale)
         try:
             send_email(to=recipient, subject=subject, body=body)
             return DeliveryResult(external_id=job.external_id, status="sent")
@@ -80,14 +81,14 @@ class EmailNotifier(Notifier):
         return f"{job.title} @ {job.company}" if job.company else job.title
 
     @staticmethod
-    def _body(job: JobPosting) -> str:
+    def _body(job: JobPosting, *, locale: str | None) -> str:
         lines = [job.title]
         if job.summary:
-            lines.append(f"Why this matches: {job.summary}")
+            lines.append(t("email.why_matches", locale, summary=job.summary))
         if job.company:
-            lines.append(f"Company: {job.company}")
+            lines.append(t("email.company", locale, company=job.company))
         if job.location:
-            lines.append(f"Location: {job.location}")
+            lines.append(t("email.location", locale, location=job.location))
         if job.url:
-            lines.append(f"Apply: {job.url}")
+            lines.append(t("email.apply", locale, url=job.url))
         return "\n".join(lines)

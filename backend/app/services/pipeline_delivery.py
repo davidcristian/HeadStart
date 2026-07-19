@@ -10,6 +10,7 @@ from app.core.logging import get_logger
 from app.core.metrics import record_notification
 from app.models.delivery_log import DeliveryLog
 from app.models.seen_job import SeenJob
+from app.models.user import User
 from app.notifiers import NotifyContext
 from app.notifiers.base import Notifier
 from app.repositories.jobs import SeenJobRepository
@@ -80,7 +81,15 @@ def notify_immediate(
         )
         return 0, 0
     notifier = notifier_factory(target.type)
-    results = notifier.send(NotifyContext(target_type=target.type, config=target.config), postings)
+    owner = session.get(User, search.user_id)  # type: ignore[attr-defined]
+    results = notifier.send(
+        NotifyContext(
+            target_type=target.type,
+            config=target.config,
+            locale=owner.locale if owner is not None else None,
+        ),
+        postings,
+    )
     sent = failed = 0
     for res in results:
         row = seen_rows.get(res.external_id)

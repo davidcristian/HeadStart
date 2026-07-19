@@ -210,7 +210,7 @@ def test_register_duplicate_returns_none_and_notifies(
         )
 
     assert again is None
-    notice.assert_called_once_with(to_email="dupe@example.com")
+    notice.assert_called_once_with(to_email="dupe@example.com", locale=None)
     assert any("auth_event=register_duplicate" in r.getMessage() for r in caplog.records)
     # Password must not be overwritten by the duplicate attempt.
     assert AuthService(db_session).login(
@@ -243,7 +243,7 @@ def test_register_integrity_error_follows_duplicate_ack(
         )
 
     assert again is None
-    notice.assert_called_once_with(to_email="race@example.com")
+    notice.assert_called_once_with(to_email="race@example.com", locale=None)
     assert any("auth_event=register_duplicate" in r.getMessage() for r in caplog.records)
     assert AuthService(db_session).login(
         LoginRequest(email="race@example.com", password="password123")

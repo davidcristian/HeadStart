@@ -203,6 +203,9 @@ class Settings(BaseSettings):
     # ISO 4217 lowercase; Stripe fixed-amount coupons + pricing display (FRO-35).
     # Default eur matches the DE Impressum / EU VAT-inclusive product surface.
     billing_currency: str = "eur"
+    # Instance default for notification/auth email copy when user.locale is unset (NTF-12).
+    # Supported: en, de (and BCP-47 prefixes like en-US / de-DE).
+    default_locale: str = "en"
 
     @field_validator("billing_currency", mode="before")
     @classmethod
@@ -213,6 +216,18 @@ class Settings(BaseSettings):
         if len(normalized) != 3 or not normalized.isalpha():
             raise ValueError("BILLING_CURRENCY must be a 3-letter ISO 4217 code (e.g. eur, usd).")
         return normalized
+
+    @field_validator("default_locale", mode="before")
+    @classmethod
+    def _normalize_default_locale(cls, value: object) -> object:
+        if not isinstance(value, str):
+            return value
+        key = value.strip().lower().replace("_", "-")
+        if key == "de" or key.startswith("de-"):
+            return "de"
+        if key == "en" or key.startswith("en-"):
+            return "en"
+        raise ValueError("DEFAULT_LOCALE must be en or de (or a matching BCP-47 prefix).")
 
     # ---- seed (local demo account) ----
     seed_user_email: str = "demo@example.com"

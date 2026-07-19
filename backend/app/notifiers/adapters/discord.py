@@ -117,7 +117,7 @@ class DiscordNotifier(Notifier):
     @staticmethod
     def _digest_payload(ctx: NotifyContext, jobs: list[JobPosting]) -> dict[str, Any]:
         description_parts: list[str] = []
-        for block in digest_blocks(jobs):
+        for block in digest_blocks(jobs, locale=ctx.locale):
             link = discord_markdown_link(block.headline, block.url) if block.url else None
             if link:
                 description_parts.append(f"• {link}")
@@ -126,7 +126,9 @@ class DiscordNotifier(Notifier):
             if block.summary:
                 description_parts.append(f"  {escape_discord_markdown(block.summary)}")
         embed: dict[str, Any] = {
-            "title": escape_discord_markdown(digest_title(len(jobs), ctx.search_name)),
+            "title": escape_discord_markdown(
+                digest_title(len(jobs), ctx.search_name, locale=ctx.locale)
+            ),
             "description": "\n".join(description_parts),
             "color": _EMBED_COLOR,
         }

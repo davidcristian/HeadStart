@@ -79,8 +79,8 @@ class NtfyNotifier(Notifier):
             return []
         payload: dict[str, Any] = {
             "topic": topic,
-            "title": digest_title(len(jobs), ctx.search_name),
-            "message": digest_plain_body(jobs),
+            "title": digest_title(len(jobs), ctx.search_name, locale=ctx.locale),
+            "message": digest_plain_body(jobs, locale=ctx.locale),
             "priority": priority,
             "tags": ["briefcase"],
         }

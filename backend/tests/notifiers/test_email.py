@@ -50,6 +50,22 @@ def test_email_includes_summary_line(mock_send) -> None:
 
 
 @patch("app.notifiers.adapters.email.send_email")
+def test_email_localizes_field_labels(mock_send) -> None:
+    notifier = EmailNotifier()
+    ctx = NotifyContext(target_type="email", config={"to": "me@example.com"}, locale="de")
+    job = _job()
+    job.summary = "Passt gut."
+
+    notifier.send(ctx, [job])
+
+    body = mock_send.call_args.kwargs["body"]
+    assert "Warum das passt: Passt gut." in body
+    assert "Unternehmen: Google" in body
+    assert "Ort: Amsterdam" in body
+    assert "Bewerben: https://careers.example/jobs/1" in body
+
+
+@patch("app.notifiers.adapters.email.send_email")
 def test_email_records_smtp_failure_without_raising(mock_send) -> None:
     import smtplib
 

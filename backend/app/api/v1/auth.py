@@ -26,6 +26,7 @@ from app.schemas.auth import (
     RegisterRequest,
     ResetPasswordRequest,
     TokenResponse,
+    UpdateMeRequest,
     UserDataExport,
     UserRead,
     VerifyEmailRequest,
@@ -172,6 +173,16 @@ def resend_verification(
 @router.get("/me", response_model=UserRead)
 def me(user: User = Depends(get_current_user)) -> UserRead:
     return UserRead.model_validate(user)
+
+
+@router.patch("/me", response_model=UserRead)
+def update_me(
+    data: UpdateMeRequest,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> UserRead:
+    """Update self-service account fields (notification/auth locale)."""
+    return UserRead.model_validate(AuthService(db).update_me(user.id, data))
 
 
 @router.post("/me/complete-onboarding", response_model=UserRead)

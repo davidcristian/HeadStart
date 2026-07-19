@@ -15,12 +15,23 @@ class NotifyContext(BaseModel):
     config: dict          # channel config from the NotificationTarget
     digest: bool = False  # when True, send one batched summary message
     search_name: str | None = None
+    locale: str | None = None  # en|de preference; None → DEFAULT_LOCALE (NTF-12)
 
 # app/notifiers/base.py
 class Notifier(ABC):
     @abstractmethod
     def send(self, ctx: NotifyContext, jobs: list[JobPosting]) -> None: ...
 ```
+
+## Localization (NTF-12)
+
+User-facing digest titles and email field labels come from
+`app/core/i18n.py` (English + German catalogs). Resolution order:
+`NotifyContext.locale` (from `user.locale`) → `DEFAULT_LOCALE` → `en`.
+Pipeline, digest flush, test-send, and application alerts pass the owner's
+locale. Auth emails (`reset` / `verify` / existing-account) use the same
+catalog via an optional `locale=` argument. Users set preference with
+`PATCH /auth/me` `{ "locale": "en"|"de"|null }`.
 
 ## Registry
 
@@ -42,10 +53,10 @@ private/loopback rejected at save). Ntfy topic guessability remains enforced
 
 When a job carries a `summary` (the "why this matches" blurb — see
 [summaries.md](summaries.md)), every adapter includes it in the message: an
-extra line in `ntfy`/`slack`/`telegram`, a `Why this matches:` line in `email`,
-the embed description in `discord`, and a `summary` field in the `webhook` JSON.
-This applies to both immediate and digest sends. When the blurb is empty, output
-is unchanged.
+extra line in `ntfy`/`slack`/`telegram`, a localized `Why this matches:` /
+`Warum das passt:` line in `email`, the embed description in `discord`, and a
+`summary` field in the `webhook` JSON. This applies to both immediate and
+digest sends. When the blurb is empty, output is unchanged.
 
 ## ntfy adapter
 

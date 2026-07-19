@@ -14,6 +14,7 @@ from app.models.delivery_log import DeliveryLog
 from app.models.pending_digest import PendingDigest
 from app.models.search import Search
 from app.models.seen_job import SeenJob
+from app.models.user import User
 from app.notifiers import NotifyContext, get_notifier
 from app.notifiers.base import Notifier
 from app.repositories.digest import PendingDigestRepository
@@ -104,6 +105,7 @@ class DigestService:
         seen_rows: list[SeenJob] = [row.seen_job for row in pending]
         postings = [_seen_job_to_posting(row) for row in seen_rows]
         notifier = self._notifier_factory(target.type)
+        owner = self.session.get(User, search.user_id)
         try:
             results = notifier.send(
                 NotifyContext(
@@ -111,6 +113,7 @@ class DigestService:
                     config=target.config,
                     digest=True,
                     search_name=search.name,
+                    locale=owner.locale if owner is not None else None,
                 ),
                 postings,
             )

@@ -10,6 +10,7 @@ from app.core.logging import get_logger
 from app.models.delivery_log import DeliveryLog
 from app.models.notification_target import NotificationTarget
 from app.models.seen_job import SeenJob
+from app.models.user import User
 from app.notifiers import NotifyContext, get_notifier
 from app.notifiers.types import DeliveryResult
 from app.repositories.targets import TargetRepository
@@ -73,12 +74,18 @@ class ApplicationAlertService:
             return []
 
         results: list[DeliveryResult] = []
+        owner = self.session.get(User, user_id)
+        locale = owner.locale if owner is not None else None
         for target in targets:
             notifier = get_notifier(target.type)
             try:
                 config = self._high_priority_config(target)
                 sent = notifier.send(
-                    NotifyContext(target_type=target.type, config=config),
+                    NotifyContext(
+                        target_type=target.type,
+                        config=config,
+                        locale=locale,
+                    ),
                     [posting],
                 )
                 for res in sent:

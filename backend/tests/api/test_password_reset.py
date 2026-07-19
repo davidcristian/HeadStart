@@ -336,6 +336,7 @@ def test_forgot_password_defers_email_via_scheduler(db_session) -> None:
     mock_email.assert_called_once_with(
         to_email="defer@example.com",
         reset_url=kwargs["reset_url"],
+        locale=None,
     )
 
 

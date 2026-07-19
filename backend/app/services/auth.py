@@ -35,6 +35,7 @@ from app.schemas.auth import (
     RegisterRequest,
     ResetPasswordRequest,
     TokenResponse,
+    UpdateMeRequest,
     UserDataExport,
     VerifyEmailRequest,
 )
@@ -153,6 +154,15 @@ class AuthService:
             self.session.flush()
         return user
 
+    def update_me(self, user_id: int, data: UpdateMeRequest) -> User:
+        """Apply self-service account fields (locale preference for NTF-12)."""
+        user = self.me(user_id)
+        fields = data.model_dump(exclude_unset=True)
+        if "locale" in fields:
+            user.locale = fields["locale"]
+            self.session.flush()
+        return user
+
     def request_password_reset(
         self,
         data: ForgotPasswordRequest,
@@ -249,7 +259,7 @@ class AuthService:
             )
         )
         verify_url = f"{settings.frontend_base_url.rstrip('/')}/verify-email?token={raw_token}"
-        send_verification_email(to_email=user.email, verify_url=verify_url)
+        send_verification_email(to_email=user.email, verify_url=verify_url, locale=user.locale)
 
     @staticmethod
     def _issue_tokens(user: User) -> TokenResponse:

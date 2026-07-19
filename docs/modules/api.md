@@ -28,6 +28,7 @@ never touch the DB directly (services use repositories). See
 | POST   | `/auth/verify-email`  | Confirm email from verification link     |
 | POST   | `/auth/resend-verification` | Send another verification email (bearer) |
 | GET    | `/auth/me`            | Current user                             |
+| PATCH  | `/auth/me`            | Update self-service fields (`locale`)    |
 | POST   | `/auth/me/complete-onboarding` | Mark the first-run wizard finished |
 | GET    | `/auth/me/export`     | Export all owned data as JSON            |
 | DELETE | `/auth/me`            | Permanently delete account (password)    |

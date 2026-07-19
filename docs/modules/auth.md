@@ -11,8 +11,10 @@ data isolation.
 
 - `user` table: `email` (unique), `password_hash` (bcrypt), `is_admin`,
   `is_active`, `plan` (`free` / `starter` / `plus` / `pro`, default `free`),
-  `email_verified_at` (null until the user confirms their address). See
-  [data-model.md](data-model.md).
+  `email_verified_at` (null until the user confirms their address),
+  `locale` (`en` / `de` / null → `DEFAULT_LOCALE` for notification and auth
+  email copy; NTF-12). See [data-model.md](data-model.md).
+  `PATCH /auth/me` updates `locale`.
 - The **first** registered user becomes admin (`AuthService.register`). A
   `registration_lock` singleton row is claimed atomically
   (`bootstrap_claimed=True` plus `bootstrap_user_id`) so concurrent bootstrap

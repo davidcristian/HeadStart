@@ -69,6 +69,7 @@ admin cannot re-open self-service admin creation (see [auth.md](auth.md)).
 | summary_api_key_ciphertext | str? | Fernet-encrypted API key for the selected hosted provider |
 | ai_purpose_providers | JSON? | Optional per-purpose provider overrides (`cover_letter`, `resume_curation`, …) |
 | ai_purpose_models | JSON? | Optional per-purpose model overrides keyed by purpose id |
+| locale | str? | Preferred notification/auth email locale (`en` / `de`); null inherits `DEFAULT_LOCALE` (NTF-12) |
 | created_at    | datetime |                                    |
 
 ### registration_lock

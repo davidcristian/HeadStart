@@ -7,6 +7,7 @@ from email.message import EmailMessage
 
 from app.core import secret_policy
 from app.core.config import settings
+from app.core.i18n import t
 from app.core.logging import get_logger
 
 logger = get_logger(__name__)
@@ -37,15 +38,14 @@ def send_email(*, to: str, subject: str, body: str, from_addr: str | None = None
     logger.info("Email sent to %s", to)
 
 
-def send_password_reset_email(*, to_email: str, reset_url: str) -> None:
+def send_password_reset_email(*, to_email: str, reset_url: str, locale: str | None = None) -> None:
     """Deliver a password-reset link. Logs the URL only in local/test without SMTP."""
-    subject = "Reset your HeadStart password"
-    body = (
-        "You requested a password reset for your HeadStart account.\n\n"
-        f"Open this link to choose a new password (valid for "
-        f"{settings.password_reset_expire_minutes} minutes):\n\n"
-        f"{reset_url}\n\n"
-        "If you did not request this, you can ignore this email."
+    subject = t("auth.reset_subject", locale)
+    body = t(
+        "auth.reset_body",
+        locale,
+        minutes=settings.password_reset_expire_minutes,
+        url=reset_url,
     )
 
     _send_or_log_email(
@@ -57,15 +57,14 @@ def send_password_reset_email(*, to_email: str, reset_url: str) -> None:
     )
 
 
-def send_verification_email(*, to_email: str, verify_url: str) -> None:
+def send_verification_email(*, to_email: str, verify_url: str, locale: str | None = None) -> None:
     """Deliver an email-verification link. Logs the URL only in local/test without SMTP."""
-    subject = "Verify your HeadStart email"
-    body = (
-        "Thanks for creating a HeadStart account.\n\n"
-        f"Open this link to verify your email address (valid for "
-        f"{settings.email_verification_expire_minutes // 60} hours):\n\n"
-        f"{verify_url}\n\n"
-        "If you did not create this account, you can ignore this email."
+    subject = t("auth.verify_subject", locale)
+    body = t(
+        "auth.verify_body",
+        locale,
+        hours=settings.email_verification_expire_minutes // 60,
+        url=verify_url,
     )
 
     _send_or_log_email(
@@ -77,17 +76,17 @@ def send_verification_email(*, to_email: str, verify_url: str) -> None:
     )
 
 
-def send_existing_account_email(*, to_email: str) -> None:
+def send_existing_account_email(*, to_email: str, locale: str | None = None) -> None:
     """Tell an existing user someone tried to register with their address (AUT-27)."""
     base = settings.frontend_base_url.rstrip("/")
     login_url = f"{base}/login"
     forgot_url = f"{base}/forgot-password"
-    subject = "Your HeadStart account"
-    body = (
-        "Someone tried to create a HeadStart account with this email address.\n\n"
-        f"If that was you, sign in here:\n{login_url}\n\n"
-        f"Forgot your password?\n{forgot_url}\n\n"
-        "If you did not try to register, you can ignore this email."
+    subject = t("auth.existing_subject", locale)
+    body = t(
+        "auth.existing_body",
+        locale,
+        login_url=login_url,
+        forgot_url=forgot_url,
     )
 
     _send_or_log_email(

@@ -112,7 +112,7 @@ def _acknowledge_existing_registration(
             reason="rate_limited",
         )
         return
-    send_existing_account_email(to_email=user.email)
+    send_existing_account_email(to_email=user.email, locale=user.locale)
     log_auth_event(
         "register_duplicate",
         email=user.email,

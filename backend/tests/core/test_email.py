@@ -72,14 +72,40 @@ def test_send_password_reset_email_uses_smtp(monkeypatch: pytest.MonkeyPatch) ->
     mock_send.assert_called_once()
     kwargs = mock_send.call_args.kwargs
     assert kwargs["to"] == "user@example.com"
+    assert kwargs["subject"] == "Reset your HeadStart password"
     assert "https://app/reset?x=1" in kwargs["body"]
+
+
+def test_send_password_reset_email_localizes_german() -> None:
+    with patch.object(email_module, "send_email") as mock_send:
+        send_password_reset_email(
+            to_email="user@example.com",
+            reset_url="https://app/reset?x=1",
+            locale="de",
+        )
+    kwargs = mock_send.call_args.kwargs
+    assert kwargs["subject"] == "HeadStart-Passwort zurücksetzen"
+    assert "Passwort" in kwargs["body"]
 
 
 def test_send_verification_email_uses_smtp() -> None:
     with patch.object(email_module, "send_email") as mock_send:
         send_verification_email(to_email="user@example.com", verify_url="https://app/verify?x=1")
     kwargs = mock_send.call_args.kwargs
+    assert kwargs["subject"] == "Verify your HeadStart email"
     assert "https://app/verify?x=1" in kwargs["body"]
+
+
+def test_send_verification_email_localizes_german() -> None:
+    with patch.object(email_module, "send_email") as mock_send:
+        send_verification_email(
+            to_email="user@example.com",
+            verify_url="https://app/verify?x=1",
+            locale="de",
+        )
+    kwargs = mock_send.call_args.kwargs
+    assert kwargs["subject"] == "HeadStart-E-Mail bestätigen"
+    assert "bestätigen" in kwargs["body"]
 
 
 def test_send_existing_account_email_uses_smtp(monkeypatch: pytest.MonkeyPatch) -> None:

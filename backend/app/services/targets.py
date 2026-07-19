@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.core.exceptions import NotFoundError, ValidationError
 from app.models.notification_target import NotificationTarget
+from app.models.user import User
 from app.notifiers import NotifyContext, available_notifiers, get_notifier
 from app.notifiers.types import DeliveryResult
 from app.repositories.targets import TargetRepository
@@ -66,8 +67,14 @@ class TargetService:
             location="",
             url="https://github.com/",
         )
+        owner = self.session.get(User, user_id)
         results = notifier.send(
-            NotifyContext(target_type=target.type, config=target.config), [sample]
+            NotifyContext(
+                target_type=target.type,
+                config=target.config,
+                locale=owner.locale if owner is not None else None,
+            ),
+            [sample],
         )
         return results[0]
 

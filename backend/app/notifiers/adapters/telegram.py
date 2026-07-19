@@ -122,9 +122,9 @@ class TelegramNotifier(Notifier):
 
     @staticmethod
     def _digest_payload(chat_id: str, ctx: NotifyContext, jobs: list[JobPosting]) -> dict[str, Any]:
-        headline = html.escape(digest_title(len(jobs), ctx.search_name))
+        headline = html.escape(digest_title(len(jobs), ctx.search_name, locale=ctx.locale))
         lines = [f"<b>{headline}</b>", ""]
-        for block in digest_blocks(jobs):
+        for block in digest_blocks(jobs, locale=ctx.locale):
             title = html.escape(block.headline)
             entry = f"• {title}"
             if block.summary:

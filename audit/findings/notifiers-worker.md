@@ -124,7 +124,7 @@ This area covers the notification adapters (Slack, Discord, Telegram, ntfy, webh
 
 <a id="ntf-12"></a>
 ### NTF-12 — User-facing notification and email copy is hardcoded English with no localization hook
-⚪ **LOW** · 🔁 consistency · Status: ☐ open · Confidence: high (5/5 verifiers) · Effort: L · WS41
+⚪ **LOW** · 🔁 consistency · Status: ✅ done ([PR](https://github.com/davidcristian/HeadStart/pull/258)) · Confidence: high (5/5 verifiers) · Effort: L · WS41
 
 **Locations:** `backend/app/notifiers/digest_format.py:17` (`digest_title`); plus `backend/app/notifiers/adapters/email.py:86`, `:47`, `backend/app/core/email.py:41`, `:61`.
 

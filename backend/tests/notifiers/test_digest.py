@@ -60,6 +60,15 @@ def test_digest_title_without_search_name_and_singular() -> None:
     assert digest_title(3) == "3 new jobs"
 
 
+def test_digest_title_localizes_german() -> None:
+    assert digest_title(1, locale="de") == "1 neuer Job"
+    assert digest_title(2, "Backend", locale="de") == "2 neue Jobs — Backend"
+
+
+def test_job_headline_localizes_fallback_title() -> None:
+    assert job_headline(JobPosting(external_id="1", title=""), locale="de") == "Neuer Job"
+
+
 def test_digest_blocks_omit_location_when_absent() -> None:
     blocks = digest_blocks([JobPosting(external_id="1", title="Eng", company="ACME")])
     assert blocks[0].headline == "Eng @ ACME"

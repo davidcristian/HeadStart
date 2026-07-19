@@ -238,6 +238,30 @@ def test_complete_onboarding_is_idempotent(client: TestClient) -> None:
     assert second.json()["onboarding_completed_at"] is not None
 
 
+def test_patch_me_sets_and_clears_locale(client: TestClient) -> None:
+    """NTF-12: users can set notification/auth locale preference."""
+    headers = _register_and_verify(client, "locale@example.com")
+
+    me = client.get("/api/v1/auth/me", headers=headers)
+    assert me.status_code == 200
+    assert me.json()["locale"] is None
+
+    noop = client.patch("/api/v1/auth/me", headers=headers, json={})
+    assert noop.status_code == 200
+    assert noop.json()["locale"] is None
+
+    set_de = client.patch("/api/v1/auth/me", headers=headers, json={"locale": "de"})
+    assert set_de.status_code == 200
+    assert set_de.json()["locale"] == "de"
+
+    clear = client.patch("/api/v1/auth/me", headers=headers, json={"locale": None})
+    assert clear.status_code == 200
+    assert clear.json()["locale"] is None
+
+    bad = client.patch("/api/v1/auth/me", headers=headers, json={"locale": "fr"})
+    assert bad.status_code == 422
+
+
 def test_bootstrap_admin_claim_is_exclusive(db_session: Session) -> None:
     """Only one account can claim the bootstrap admin slot."""
     repo = UserRepository(db_session)

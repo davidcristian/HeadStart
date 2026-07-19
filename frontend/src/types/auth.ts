@@ -8,6 +8,8 @@ export interface User {
   plan: PlanId;
   onboarding_completed_at: string | null;
   email_verified_at: string | null;
+  /** Preferred notification/auth email locale; null inherits DEFAULT_LOCALE. */
+  locale?: "en" | "de" | null;
   created_at: string;
 }
 

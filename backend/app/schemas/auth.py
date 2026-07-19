@@ -66,7 +66,15 @@ class UserRead(BaseModel):
     plan: Literal["free", "starter", "plus", "pro"] = "free"
     onboarding_completed_at: datetime | None = None
     email_verified_at: datetime | None = None
+    # Null means inherit Settings.default_locale for notifier/auth copy (NTF-12).
+    locale: Literal["en", "de"] | None = None
     created_at: datetime
+
+
+class UpdateMeRequest(BaseModel):
+    """Self-service account fields the signed-in user may change."""
+
+    locale: Literal["en", "de"] | None = None
 
 
 class ForgotPasswordRequest(BaseModel):

@@ -83,9 +83,10 @@ def request_password_reset(
             send_password_reset_email,
             to_email=user.email,
             reset_url=reset_url,
+            locale=user.locale,
         )
     else:
-        send_password_reset_email(to_email=user.email, reset_url=reset_url)
+        send_password_reset_email(to_email=user.email, reset_url=reset_url, locale=user.locale)
     log_auth_event(
         "password_reset_requested",
         email=user.email,
