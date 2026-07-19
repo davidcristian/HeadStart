@@ -60,9 +60,11 @@ payload is a JSON object:
 ```
 
 Optional **resume file** (PDF or Word, up to `PROFILE_RESUME_MAX_BYTES`, default 2 MB) is
-stored in the same encrypted blob as base64 alongside the JSON fields above. The API
-returns only metadata (`filename`, `content_type`, `size_bytes`) — never raw bytes on
-`GET /profile`. On live apply, the file is attached for Greenhouse, Lever, Ashby,
+stored in the same encrypted blob as base64 alongside the JSON fields above. The Profile
+UI pre-validates file size and extension (`.pdf` / `.doc` / `.docx`) before upload so an
+oversized or wrong-type pick fails immediately without a round-trip (FRO-24); the API
+still enforces the same caps. The API returns only metadata (`filename`, `content_type`,
+`size_bytes`) — never raw bytes on `GET /profile`. On live apply, the file is attached for Greenhouse, Lever, Ashby,
 Workday, Google Careers, Microsoft Careers, Amazon Jobs, Apple Careers, and Meta
 Careers. LinkedIn-hosted and Indeed-hosted Easy Apply use `resume_text` only today
 (see [appliers.md](appliers.md)).
@@ -70,7 +72,8 @@ Careers. LinkedIn-hosted and Indeed-hosted Easy Apply use `resume_text` only tod
 Optional **LaTeX resume template** (`.tex` or `.zip` bundle, up to
 `PROFILE_RESUME_TEMPLATE_MAX_BYTES` for a single file or
 `PROFILE_RESUME_TEMPLATE_BUNDLE_MAX_BYTES` for a bundle, default 512 KB / 2 MB) is
-stored encrypted alongside the profile. Upload via `PUT /profile/resume-template`;
+stored encrypted alongside the profile. The Profile UI mirrors those size and extension
+gates before `PUT /profile/resume-template` (FRO-24). Upload via `PUT /profile/resume-template`;
 metadata is returned on `GET /profile` as `resume_template` (`format`: `single` or
 `bundle`, plus `entrypoint` and `file_count` for bundles). Placeholders use
 `[[full_name]]`, `[[skills]]`, `[[experience]]`, `[[education]]`, `[[summary]]`,

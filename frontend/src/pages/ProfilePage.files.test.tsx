@@ -46,6 +46,40 @@ describe("ProfilePage files and structured editing", () => {
     await waitFor(() => expect(screen.getByText("upload boom")).toBeInTheDocument());
   });
 
+  it("rejects an oversized resume before calling the upload API (FRO-24)", async () => {
+    renderWithClient(<ProfilePage />);
+    await waitFor(() => expect(mockApi.getProfile).toHaveBeenCalled());
+
+    mockApi.uploadResume.mockClear();
+    const input = document.querySelector<HTMLInputElement>('input[accept*=".pdf"]');
+    const file = new File([new Uint8Array(2_097_153)], "huge.pdf", {
+      type: "application/pdf",
+    });
+    fireEvent.change(input as HTMLInputElement, { target: { files: [file] } });
+
+    await waitFor(() =>
+      expect(screen.getByText("Resume file exceeds the 2 MB limit")).toBeInTheDocument(),
+    );
+    expect(mockApi.uploadResume).not.toHaveBeenCalled();
+  });
+
+  it("rejects a resume with a disallowed extension before upload (FRO-24)", async () => {
+    renderWithClient(<ProfilePage />);
+    await waitFor(() => expect(mockApi.getProfile).toHaveBeenCalled());
+
+    mockApi.uploadResume.mockClear();
+    const input = document.querySelector<HTMLInputElement>('input[accept*=".pdf"]');
+    const file = new File(["x"], "notes.txt", { type: "text/plain" });
+    fireEvent.change(input as HTMLInputElement, { target: { files: [file] } });
+
+    await waitFor(() =>
+      expect(
+        screen.getByText("Resume must be a PDF or Word document (.pdf, .doc, or .docx)"),
+      ).toBeInTheDocument(),
+    );
+    expect(mockApi.uploadResume).not.toHaveBeenCalled();
+  });
+
   it("removes an existing resume file", async () => {
     const withResume = {
       ...sampleProfile,
@@ -85,6 +119,23 @@ describe("ProfilePage files and structured editing", () => {
     fireEvent.change(input as HTMLInputElement, { target: { files: [file] } });
 
     await waitFor(() => expect(screen.getByText("template boom")).toBeInTheDocument());
+  });
+
+  it("rejects an oversized .tex template before calling the upload API (FRO-24)", async () => {
+    renderWithClient(<ProfilePage />);
+    await waitFor(() => expect(mockApi.getProfile).toHaveBeenCalled());
+
+    mockApi.uploadResumeTemplate.mockClear();
+    const input = document.querySelector<HTMLInputElement>('input[accept*=".tex"]');
+    const file = new File([new Uint8Array(524_289)], "huge.tex", {
+      type: "application/x-tex",
+    });
+    fireEvent.change(input as HTMLInputElement, { target: { files: [file] } });
+
+    await waitFor(() =>
+      expect(screen.getByText("Resume template exceeds the 512 KB limit")).toBeInTheDocument(),
+    );
+    expect(mockApi.uploadResumeTemplate).not.toHaveBeenCalled();
   });
 
   it("uploads a resume template", async () => {

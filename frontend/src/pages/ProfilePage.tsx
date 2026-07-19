@@ -9,6 +9,10 @@ import {
   ProfileDetailsForm,
   type ProfileFormState,
 } from "../components/profile/ProfileDetailsForm";
+import {
+  validateResumeTemplateUpload,
+  validateResumeUpload,
+} from "../components/profile/profileUploadValidation";
 import { Card } from "../components/ui";
 import { useApplicationLogs, useProfile } from "../hooks/queries";
 import {
@@ -113,6 +117,12 @@ export function ProfilePage() {
 
   async function onResumeSelected(file: File | null) {
     if (!file) return;
+    const preflight = validateResumeUpload(file);
+    if (preflight) {
+      setError(preflight);
+      setSaved(false);
+      return;
+    }
     setError(undefined);
     try {
       await uploadResume.mutateAsync(file);
@@ -134,6 +144,12 @@ export function ProfilePage() {
 
   async function onResumeTemplateSelected(file: File | null) {
     if (!file) return;
+    const preflight = validateResumeTemplateUpload(file);
+    if (preflight) {
+      setError(preflight);
+      setSaved(false);
+      return;
+    }
     setError(undefined);
     try {
       await uploadResumeTemplate.mutateAsync(file);

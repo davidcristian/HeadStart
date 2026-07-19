@@ -154,7 +154,7 @@ export function ProfileDetailsForm({
 
       <Field
         label="LaTeX resume template"
-        hint="Optional .tex file or .zip bundle (with main.tex) using [[full_name]], [[skills]], [[experience]], and other placeholders. A built-in template is used when none is uploaded."
+        hint="Optional .tex file (up to 512 KB) or .zip bundle with main.tex (up to 2 MB) using [[full_name]], [[skills]], [[experience]], and other placeholders. A built-in template is used when none is uploaded."
       >
         {existing?.resume_template ? (
           <div className="row-actions">

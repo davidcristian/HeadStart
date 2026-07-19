@@ -483,7 +483,7 @@ _Merged with FRO-15 — both records describe the same defect: no single-flight 
 
 <a id="fro-24"></a>
 ### FRO-24 — Resume/template uploads have no client-side size/type gate despite stated limits
-⚪ **LOW** · 🐞 bug · Status: ☐ open · Confidence: high (3/5 verifiers) · Effort: S · WS41
+⚪ **LOW** · 🐞 bug · Status: ✅ done · Confidence: high (3/5 verifiers) · Effort: S · WS41
 
 **Locations:** `frontend/src/components/profile/ProfileDetailsForm.tsx:146` (`ProfileDetailsForm`).
 
@@ -492,6 +492,8 @@ _Merged with FRO-15 — both records describe the same defect: no single-flight 
 **Failure scenario.** A user selects a 50 MB PDF; the full body uploads over a slow link only to get a late "exceeds 2 MB" error — wasted bandwidth and confusing UX with no pre-flight feedback.
 
 **Suggested fix.** Pre-validate `File.size` against the documented limits (and extension) before `mutateAsync`, surfacing an inline error immediately.
+
+**Fix.** `ProfilePage` runs `validateResumeUpload` / `validateResumeTemplateUpload` (defaults matching `PROFILE_RESUME_*_MAX_BYTES`) before mutate; wrong extension or oversize surfaces via the existing error Banner without calling the API. Template hint documents 512 KB / 2 MB caps. — [PR](https://github.com/davidcristian/HeadStart/pull/240)
 
 **Verification.** Confirmed 3/3 adversarial verifiers. A low UX/pre-flight gap only; the server enforces the real limit.
 
