@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from urllib.parse import urlparse
 
 import httpx
 import pytest
@@ -10,16 +11,15 @@ import pytest
 from app.portals.catalog import CURATED_PORTALS, get_portal_preset
 from app.scrapers import ScrapeContext, get_scraper
 from app.scrapers.adapters.ibm_careers_parse import (
+    IbmCareersTarget,
     extract_page,
     page_size,
+    resolve_target,
     search_api_url,
     to_posting,
 )
-from app.scrapers.adapters.ibm_careers_parse import (
-    IbmCareersTarget,
-    resolve_target,
-)
 from app.scrapers.url_detect import detect_source_from_url
+from app.scrapers.url_detect_ibm import detect_ibm_careers
 from tests.conftest import load_fixture, make_http_client
 
 
@@ -230,9 +230,7 @@ def test_ibm_careers_to_posting_builds_url_from_job_id() -> None:
 
 
 def test_ibm_careers_search_api_url_encodes_query() -> None:
-    target = IbmCareersTarget(
-        app_id="careers", scope="careers2", query="Hashi Corp", company="IBM"
-    )
+    target = IbmCareersTarget(app_id="careers", scope="careers2", query="Hashi Corp", company="IBM")
     url = search_api_url(target, offset=50, page_size=25)
     assert "fr=50" in url
     assert "nr=25" in url
@@ -356,9 +354,7 @@ def test_ibm_careers_extract_page_non_list_hits() -> None:
 
 
 def test_ibm_careers_posted_at_date_only_and_iso() -> None:
-    target = IbmCareersTarget(
-        app_id="careers", scope="careers2", query="*", company="IBM"
-    )
+    target = IbmCareersTarget(app_id="careers", scope="careers2", query="*", company="IBM")
     with_date = to_posting(
         {
             "title": "A",
@@ -456,9 +452,7 @@ def test_ibm_careers_stops_when_offset_reaches_total() -> None:
 
 
 def test_ibm_careers_posted_at_invalid_date_only_falls_through() -> None:
-    target = IbmCareersTarget(
-        app_id="careers", scope="careers2", query="*", company="IBM"
-    )
+    target = IbmCareersTarget(app_id="careers", scope="careers2", query="*", company="IBM")
     posting = to_posting(
         {
             "title": "X",
@@ -472,18 +466,12 @@ def test_ibm_careers_posted_at_invalid_date_only_falls_through() -> None:
 
 
 def test_detect_ibm_careers_rejects_unrelated_hosts() -> None:
-    from app.scrapers.url_detect_ibm import detect_ibm_careers
-    from urllib.parse import urlparse
-
     parsed = urlparse("https://example.com/jobs")
     assert detect_ibm_careers(parsed, "example.com", None) is None
 
 
 def test_detect_ibm_careers_api_wrong_path() -> None:
     assert detect_source_from_url("https://www-api.ibm.com/other") is None
-    from app.scrapers.url_detect_ibm import detect_ibm_careers
-    from urllib.parse import urlparse
-
     parsed = urlparse("https://www-api.ibm.com/search/api/v1-1/ibmcom/appid")
     assert detect_ibm_careers(parsed, "www-api.ibm.com", None) is None
 

@@ -70,11 +70,9 @@ def target_from_url(query_url: str) -> IbmCareersTarget:
         if not parsed_app:
             raise ValueError("ibm_careers scraper could not determine app_id from API query_url")
         app_id = parsed_app or app_id
-    elif host in {"www.ibm.com", "ibm.com"} and "/careers" in parsed.path.lower():
-        app_id = app_id or DEFAULT_APP_ID
-        scope = scope or DEFAULT_SCOPE
-        company = DEFAULT_COMPANY
-    elif host == "careers.ibm.com":
+    elif host == "careers.ibm.com" or (
+        host in {"www.ibm.com", "ibm.com"} and "/careers" in parsed.path.lower()
+    ):
         app_id = app_id or DEFAULT_APP_ID
         scope = scope or DEFAULT_SCOPE
         company = DEFAULT_COMPANY

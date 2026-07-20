@@ -21,9 +21,7 @@ def detect_ibm_careers(parsed: Any, host: str, page_title: str | None) -> Source
 
     if host == "www-api.ibm.com":
         parts = [part for part in path.split("/") if part]
-        if not (
-            len(parts) >= 6 and "/".join(parts[:5]) == "search/api/v1-1/ibmcom/appid"
-        ):
+        if not (len(parts) >= 6 and "/".join(parts[:5]) == "search/api/v1-1/ibmcom/appid"):
             return None
         app_id = parts[5] or app_id
     elif host in {"www.ibm.com", "ibm.com"}:
