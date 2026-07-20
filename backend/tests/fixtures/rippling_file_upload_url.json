@@ -1,0 +1,23 @@
+{
+  "data": {
+    "url": "https://prod-rippling-us1-ats.s3.amazonaws.com/",
+    "fields": {
+      "Content-Type": "application/pdf",
+      "Content-Disposition": "inline; filename=fixture-resume.pdf",
+      "uploadsig": "fixture-uploadsig",
+      "tagging": "<Tagging><TagSet></TagSet></Tagging>",
+      "key": "common/ats_public/fixture-resume.pdf",
+      "x-amz-algorithm": "AWS4-HMAC-SHA256",
+      "x-amz-credential": "AKIAEXAMPLE/20260101/us-west-2/s3/aws4_request",
+      "x-amz-date": "20260101T000000Z",
+      "policy": "fixture-policy",
+      "x-amz-signature": "fixture-signature"
+    },
+    "use_fields": true,
+    "finalUrl": {
+      "url": "https://prod-rippling-us1-ats.s3.amazonaws.com/common/ats_public/fixture-resume.pdf",
+      "previewUrl": "https://secured-assets.ripplingcdn.com/fixture-resume.pdf"
+    },
+    "acl": false
+  }
+}

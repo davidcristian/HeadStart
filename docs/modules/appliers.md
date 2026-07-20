@@ -83,6 +83,7 @@ source's `adapter_key` when that source supports auto-apply. Import the
 | `shopify_careers` | Delegates to Ashby | Shopify's careers site uses Ashby for applications; delegates to the `ashby` adapter with `board=shopify` (applier default when source config omits `board`; portal preset does not store that key — POR-01) |
 | `uber_careers` | Careers Fusion GraphQL | `POST /careers/apply/graphql` (`submitApplication`); screening questions via `getAdditionalQuestionsForJob`; see below |
 | `smartrecruiters` | Application API JSON POST | `GET api.smartrecruiters.com/postings/<uuid>/configuration` then `POST …/candidates`; see below |
+| `rippling` | Public board apply JSON POST | `GET/POST api.rippling.com/platform/api/ats/v1/board/<board>/jobs/<uuid>/…`; S3 resume upload; see below |
 
 ### Scrapers without apply adapters
 
@@ -92,9 +93,12 @@ work, but the Jobs page **Apply** action is unavailable:
 | Scraper key | Notes |
 | ----------- | ----- |
 | `playwright` / `generic_html` | Custom HTML sources; no generic apply path |
+| `icims` | Phase 24 Jibe Attract scrape; apply still pending ([Phase 28](../roadmap.md#phase-28--apply-adapters-for-recent-ats-scrapers)) |
+| `phenom` | Phase 25 Phenom widgets scrape; apply still pending ([Phase 28](../roadmap.md#phase-28--apply-adapters-for-recent-ats-scrapers)) |
+| `ibm_careers` | Phase 27 IBM Falcon search scrape; apply still pending ([Phase 28](../roadmap.md#phase-28--apply-adapters-for-recent-ats-scrapers)) |
 
 `GET /portals` sets `supports_auto_apply: false` for these keys. See
-[roadmap.md → Phase 7 polish](../roadmap.md#phase-7-polish--shipped-follow-ups).
+[roadmap.md → Phase 28](../roadmap.md#phase-28--apply-adapters-for-recent-ats-scrapers).
 
 ### Greenhouse
 
@@ -275,6 +279,44 @@ or, preferably, credential `session.smart_token` / `session.access_token`.
 Resume files are sent as base64 in the `resume` object; cover letters use
 `messageToHiringManager`. Required screening questions must be mapped in
 `profile.answers` before live submit succeeds.
+
+### Rippling
+
+Maps `ProfileData` to the public Rippling ATS board apply API used by
+`ats.rippling.com/<board>/jobs/<uuid>/apply`:
+
+| Step | Endpoint |
+| ---- | -------- |
+| Job + questions | `GET https://api.rippling.com/platform/api/ats/v1/board/<board>/jobs/<uuid>` |
+| Resume upload URL | `GET …/utility/file_upload_url?jobBoardSlug=<board>&contentType=…` |
+| Resume bytes | `POST` multipart to the returned S3 URL |
+| Submit | `POST …/board/<board>/jobs/<uuid>/apply` |
+
+Config / credentials:
+
+| Field | Where | Purpose |
+| ----- | ----- | ------- |
+| `board` | source `default_config` or parsed from `job_url` | Board slug (`ats.rippling.com/<board>/jobs/...`) |
+| `job_id` / `uuid` | source/search config | Optional job UUID override |
+| `current_company` | source/search config or profile `answers` | Fills required `current_company` when the profile has no current role |
+| `country_code` | source/search config or profile `answers` | Phone country code when the board asks for it |
+| `timezone` / `job_site` | source/search config | Defaults `UTC` / `ats` |
+| `cf_turnstile_token` | credential `session` (aliases: `turnstile_token`, `cf_client_response`) | **Required for live submit** — Cloudflare Turnstile token from the careers UI |
+
+**Dry run:** fetches `activeJobApplication.basicQuestions`, builds
+`applicationFormResponse` (resume metadata only, no S3 upload), and fails the
+preview when required fields such as resume are missing from the profile.
+
+**Resume file:** live submit requests a Rippling-presigned S3 POST, uploads the
+stored resume, and puts the final URL (+ `uploadsig`) into
+`applicationFormResponse.resume`. Optional cover-letter text is uploaded as
+`text/plain` when present.
+
+**Live submit:** public board apply is **Cloudflare Turnstile–gated**. Without a
+fresh `session.cf_turnstile_token`, the adapter refuses live submit (dry-run
+still works). Invalid tokens return `turnstile_verification_failure`. Treat live
+auto-apply as best-effort for local/power-user flows that can supply a Turnstile
+token; hosted pipeline auto-apply will not pass captcha on its own.
 
 ### Workday
 

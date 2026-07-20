@@ -3,14 +3,14 @@
 Living plan for HeadStart — what to build next and why. Update this doc when
 priorities shift or a milestone ships.
 
-**Current baseline (2026-07):** Phases 1–27 shipped (four-tier pricing, per-user AI
+**Current baseline (2026-07):** Phases 1–28 started (four-tier pricing, per-user AI
 summary preferences, curated employer portal catalog through batch 5 plus later
 unblocks for Rivian / Splunk / Rippling / Grammarly / Snyk / HashiCorp, SmartRecruiters adapter, custom career-site
 adapters for Shopify, Uber, and Snowflake, the dev-only local application agent, inbox OAuth
 providers for Gmail, Outlook, Yahoo, and Fastmail, the reusable iCIMS/Jibe
 Attract scraper with Rivian, the reusable Phenom People scraper with Splunk,
-the reusable Rippling ATS scraper with Rippling, and the reusable IBM Careers
-Falcon search scraper with HashiCorp). See
+the reusable Rippling ATS scraper with Rippling, the reusable IBM Careers
+Falcon search scraper with HashiCorp, and Phase 28 Rippling apply). See
 [architecture.md](architecture.md) for the system design.
 
 ---
@@ -870,6 +870,26 @@ title review in the Jobs feed.
 **Done when:** HashiCorp appears in the curated catalog with working scrape
 against fixtures, and at least one live smoke of the Falcon search API with
 `query=HashiCorp` succeeds outside CI.
+
+---
+
+## Phase 28 — Apply adapters for recent ATS scrapers
+
+Goal: close the auto-apply gap for scrapers shipped in Phases 24–27. Each
+row is one `@register_applier("key")` adapter matching the scraper's
+`adapter_key`, following [Phase 7 polish](#phase-7-polish--shipped-follow-ups)
+and the apply recipe in [recipes.md](recipes.md).
+
+| Adapter | Why | Notes |
+| ------- | --- | ----- |
+| `rippling` | Phase 26 board API is scrape-only; catalog employers cannot one-click apply | **Shipped (first):** `@register_applier("rippling")` uses public board apply (`GET …/jobs/<uuid>` + `POST …/apply`) with presigned S3 resume upload via `GET …/utility/file_upload_url`. Dry-run previews required questions + payload. Live submit requires Cloudflare Turnstile token in credential `session.cf_turnstile_token` (public apply is captcha-gated). See [modules/appliers.md](modules/appliers.md). |
+| `icims` | Phase 24 Jibe Attract scrape; Rivian apply still redirects to iCIMS login | Pending — partner Apply API / session-backed flow TBD |
+| `phenom` | Phase 25 Phenom widgets scrape (Splunk on Cisco) | Pending — apply surface varies by Phenom tenant |
+| `ibm_careers` | Phase 27 Falcon search scrape (HashiCorp) | Pending — IBM Careers apply is a separate authenticated flow |
+
+**Done when:** at least one of the four scrapers supports dry-run + documented live
+submit from the Jobs page (or an explicit, tested blocker is documented). **Met
+for `rippling`.**
 
 ---
 
