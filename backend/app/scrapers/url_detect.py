@@ -9,6 +9,7 @@ from urllib.parse import parse_qs, unquote, urlparse
 from app.scrapers.adapters.ashby_parse import encode_board_slug
 from app.scrapers.url_detect_amazon import detect_amazon_jobs
 from app.scrapers.url_detect_apple import detect_apple_careers
+from app.scrapers.url_detect_ibm import detect_ibm_careers
 from app.scrapers.url_detect_icims import detect_icims
 from app.scrapers.url_detect_indeed import detect_indeed
 from app.scrapers.url_detect_meta import detect_meta_careers
@@ -50,6 +51,7 @@ def detect_source_from_url(url: str, *, page_title: str | None = None) -> Source
         detect_icims,
         detect_phenom,
         detect_rippling,
+        detect_ibm_careers,
         detect_indeed,
     ):
         result = detector(parsed, host, page_title)

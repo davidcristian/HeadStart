@@ -1,0 +1,1595 @@
+{
+  "resultset": {
+    "version": "falcon-1.0.0",
+    "hostName": "falcon",
+    "searchquery": {
+      "appid": "careers",
+      "collection": "ibmcom",
+      "sources": "genesis-prod-1757171242861",
+      "userquery": "HashiCorp",
+      "variant": ""
+    },
+    "suggestions": [],
+    "alerts": [],
+    "searchresults": {
+      "totalresults": 3,
+      "startindex": 0,
+      "numresults": 3,
+      "smresults": 0,
+      "searchresultlist": [
+        {
+          "resultnum": 0,
+          "id": "f35e1b9ec53da22fbb0337e480985e23366582f0abd55a6af417119a486507fe",
+          "title": "Field CTO HashiCorp",
+          "description": "The Field CTO role is a high-impact position passionate about executive-level engagement, field enablement, and strategic product feedback. As a Field CTO, you act as an extension of the CTO and CEO to strategically enable and support sales teams by...",
+          "language": "en",
+          "summary": "",
+          "url": "https://careers.ibm.com/careers/JobDetail?jobId=116932",
+          "docattributes": [
+            {
+              "appliestoversion": ""
+            },
+            {
+              "category": ""
+            },
+            {
+              "country": "us"
+            },
+            {
+              "content_format": ""
+            },
+            {
+              "dc_subject_original": ""
+            },
+            {
+              "dc_subject_name": ""
+            },
+            {
+              "dc_type_original": ""
+            },
+            {
+              "dcc": ""
+            },
+            {
+              "dcdate": "2026-07-06"
+            },
+            {
+              "description": "The Field CTO role is a high-impact position passionate about executive-level engagement, field enablement, and strategic product feedback. As a Field CTO, you act as an extension of the CTO and CEO t..."
+            },
+            {
+              "docboosts": ""
+            },
+            {
+              "documentsize": "21722"
+            },
+            {
+              "effectivedate": "2026-06-09"
+            },
+            {
+              "entitled": ""
+            },
+            {
+              "expiredate": "2030-06-09T00:00:00Z"
+            },
+            {
+              "external_id": ""
+            },
+            {
+              "field_binary_01": ""
+            },
+            {
+              "field_binary_02": ""
+            },
+            {
+              "field_binary_03": ""
+            },
+            {
+              "field_binary_04": ""
+            },
+            {
+              "field_binary_05": ""
+            },
+            {
+              "field_boolean_01": ""
+            },
+            {
+              "field_boolean_02": ""
+            },
+            {
+              "field_boolean_03": ""
+            },
+            {
+              "field_boolean_04": ""
+            },
+            {
+              "field_boolean_05": ""
+            },
+            {
+              "field_date_01": ""
+            },
+            {
+              "field_date_02": ""
+            },
+            {
+              "field_date_03": ""
+            },
+            {
+              "field_date_04": ""
+            },
+            {
+              "field_date_05": ""
+            },
+            {
+              "field_double_01": ""
+            },
+            {
+              "field_double_02": ""
+            },
+            {
+              "field_double_03": ""
+            },
+            {
+              "field_double_04": ""
+            },
+            {
+              "field_double_05": ""
+            },
+            {
+              "field_hierarchy_01": ""
+            },
+            {
+              "field_hierarchy_02": ""
+            },
+            {
+              "field_hierarchy_03": ""
+            },
+            {
+              "field_hierarchy_04": ""
+            },
+            {
+              "field_hierarchy_05": ""
+            },
+            {
+              "field_hierarchy_06": ""
+            },
+            {
+              "field_hierarchy_07": ""
+            },
+            {
+              "field_hierarchy_08": ""
+            },
+            {
+              "field_hierarchy_09": ""
+            },
+            {
+              "field_hierarchy_10": ""
+            },
+            {
+              "field_hierarchy_11": ""
+            },
+            {
+              "field_hierarchy_12": ""
+            },
+            {
+              "field_hierarchy_13": ""
+            },
+            {
+              "field_hierarchy_14": ""
+            },
+            {
+              "field_hierarchy_15": ""
+            },
+            {
+              "field_hierarchy_16": ""
+            },
+            {
+              "field_hierarchy_17": ""
+            },
+            {
+              "field_hierarchy_18": ""
+            },
+            {
+              "field_hierarchy_19": ""
+            },
+            {
+              "field_hierarchy_20": ""
+            },
+            {
+              "field_integer_01": ""
+            },
+            {
+              "field_integer_02": ""
+            },
+            {
+              "field_integer_03": ""
+            },
+            {
+              "field_integer_04": ""
+            },
+            {
+              "field_integer_05": ""
+            },
+            {
+              "field_keyword_01": ""
+            },
+            {
+              "field_keyword_02": ""
+            },
+            {
+              "field_keyword_03": ""
+            },
+            {
+              "field_keyword_04": ""
+            },
+            {
+              "field_keyword_05": "United States"
+            },
+            {
+              "field_keyword_06": ""
+            },
+            {
+              "field_keyword_07": ""
+            },
+            {
+              "field_keyword_08": "Sales"
+            },
+            {
+              "field_keyword_09": ""
+            },
+            {
+              "field_keyword_10": ""
+            },
+            {
+              "field_keyword_11": ""
+            },
+            {
+              "field_keyword_12": ""
+            },
+            {
+              "field_keyword_13": ""
+            },
+            {
+              "field_keyword_14": ""
+            },
+            {
+              "field_keyword_15": ""
+            },
+            {
+              "field_keyword_16": ""
+            },
+            {
+              "field_keyword_17": "Hybrid"
+            },
+            {
+              "field_keyword_18": "Professional"
+            },
+            {
+              "field_keyword_19": "Boston, US"
+            },
+            {
+              "field_keyword_20": ""
+            },
+            {
+              "field_keyword_21": ""
+            },
+            {
+              "field_keyword_22": ""
+            },
+            {
+              "field_keyword_23": ""
+            },
+            {
+              "field_keyword_24": ""
+            },
+            {
+              "field_keyword_25": ""
+            },
+            {
+              "field_keyword_26": ""
+            },
+            {
+              "field_keyword_27": ""
+            },
+            {
+              "field_keyword_28": ""
+            },
+            {
+              "field_keyword_29": ""
+            },
+            {
+              "field_keyword_30": ""
+            },
+            {
+              "field_keyword_31": ""
+            },
+            {
+              "field_keyword_32": ""
+            },
+            {
+              "field_keyword_33": ""
+            },
+            {
+              "field_keyword_34": ""
+            },
+            {
+              "field_keyword_35": ""
+            },
+            {
+              "field_keyword_36": ""
+            },
+            {
+              "field_keyword_37": ""
+            },
+            {
+              "field_keyword_38": ""
+            },
+            {
+              "field_keyword_39": ""
+            },
+            {
+              "field_keyword_40": ""
+            },
+            {
+              "field_long_01": ""
+            },
+            {
+              "field_long_02": ""
+            },
+            {
+              "field_long_03": ""
+            },
+            {
+              "field_long_04": ""
+            },
+            {
+              "field_long_05": ""
+            },
+            {
+              "field_syno_text_01": ""
+            },
+            {
+              "field_syno_text_02": ""
+            },
+            {
+              "field_syno_text_03": ""
+            },
+            {
+              "field_syno_text_04": ""
+            },
+            {
+              "field_syno_text_05": ""
+            },
+            {
+              "field_text_01": "116932"
+            },
+            {
+              "field_text_02": ""
+            },
+            {
+              "field_text_03": ""
+            },
+            {
+              "field_text_04": ""
+            },
+            {
+              "field_text_05": ""
+            },
+            {
+              "field_text_06": ""
+            },
+            {
+              "field_text_07": ""
+            },
+            {
+              "field_text_08": ""
+            },
+            {
+              "field_text_09": ""
+            },
+            {
+              "field_text_10": ""
+            },
+            {
+              "field_text_11": ""
+            },
+            {
+              "field_text_12": ""
+            },
+            {
+              "field_text_13": ""
+            },
+            {
+              "field_text_14": ""
+            },
+            {
+              "field_text_15": ""
+            },
+            {
+              "field_text_16": ""
+            },
+            {
+              "field_text_17": ""
+            },
+            {
+              "field_text_18": ""
+            },
+            {
+              "field_text_19": ""
+            },
+            {
+              "field_text_20": ""
+            },
+            {
+              "h1s_content": ""
+            },
+            {
+              "industries": ""
+            },
+            {
+              "keywords": ""
+            },
+            {
+              "language": "en"
+            },
+            {
+              "latest_version": ""
+            },
+            {
+              "mhboosted": ""
+            },
+            {
+              "mhboostedurl": ""
+            },
+            {
+              "mhdecreased": ""
+            },
+            {
+              "mhscope": "ibmcom"
+            },
+            {
+              "pid": ""
+            },
+            {
+              "processedtime": "2026-07-12T11:15:09Z"
+            },
+            {
+              "region": "undefined"
+            },
+            {
+              "scope": "careers2"
+            },
+            {
+              "slc": ""
+            },
+            {
+              "title": "Field CTO HashiCorp"
+            },
+            {
+              "url": "https://careers.ibm.com/careers/JobDetail?jobId=116932"
+            },
+            {
+              "semver_tags": ""
+            },
+            {
+              "mtm_tags": ""
+            },
+            {
+              "altver_tags": ""
+            },
+            {
+              "build_epoch": ""
+            },
+            {
+              "pageviews": "0"
+            },
+            {
+              "percenttraffic": "0"
+            },
+            {
+              "uniquesessions": "0"
+            },
+            {
+              "utlevel10": ""
+            },
+            {
+              "utlevel15": ""
+            },
+            {
+              "utlevel17": ""
+            },
+            {
+              "utlevel20": ""
+            },
+            {
+              "utlevel30": ""
+            },
+            {
+              "utlevel35": ""
+            },
+            {
+              "company": []
+            },
+            {
+              "customranking": []
+            },
+            {
+              "images": []
+            },
+            {
+              "tags": ""
+            },
+            {
+              "topics": ""
+            },
+            {
+              "contenttype": ""
+            },
+            {
+              "md5": "477746f1f24e8e31083f8ac50fed6dd1"
+            },
+            {
+              "internal_only": "false"
+            },
+            {
+              "raw_body": " <div style=\"color: #1d1c1d; margin: 4px 0px; padding: 0px;\">The Field CTO role is a high-impact position passionate about executive-level engagement, field enablement, and strategic product feedback...."
+            }
+          ],
+          "highlightedtext": {
+            "title": "Field CTO HashiCorp",
+            "description": "The Field CTO role is a high-impact position passionate about executive-level engagement, field enablement",
+            "summary": "",
+            "url": "https://careers.ibm.com/careers/JobDetail?jobId=116932"
+          }
+        },
+        {
+          "resultnum": 1,
+          "id": "709999cc785cd823aab27798ee6a954e9bf3f58b7ffc944645e05090717c68f8",
+          "title": "HashiCorp Ecosystem GTM Specialist",
+          "description": "At IBM Software, we transform client challenges into solutions. Building the world\u2019s leading AI-powered, cloud-native products that shape the future of business and society. Our legacy of innovation creates endless opportunities for IBMers to learn,...",
+          "language": "en",
+          "summary": "",
+          "url": "https://careers.ibm.com/careers/JobDetail?jobId=122611",
+          "docattributes": [
+            {
+              "appliestoversion": ""
+            },
+            {
+              "category": ""
+            },
+            {
+              "country": "sg"
+            },
+            {
+              "content_format": ""
+            },
+            {
+              "dc_subject_original": ""
+            },
+            {
+              "dc_subject_name": ""
+            },
+            {
+              "dc_type_original": ""
+            },
+            {
+              "dcc": ""
+            },
+            {
+              "dcdate": "2026-07-09"
+            },
+            {
+              "description": "At IBM Software, we transform client challenges into solutions. Building the world\u2019s leading AI-powered, cloud-native products that shape the future of business and society. Our legacy of innovation c..."
+            },
+            {
+              "docboosts": ""
+            },
+            {
+              "documentsize": "65321"
+            },
+            {
+              "effectivedate": "2026-06-24"
+            },
+            {
+              "entitled": ""
+            },
+            {
+              "expiredate": "2030-06-24T00:00:00Z"
+            },
+            {
+              "external_id": ""
+            },
+            {
+              "field_binary_01": ""
+            },
+            {
+              "field_binary_02": ""
+            },
+            {
+              "field_binary_03": ""
+            },
+            {
+              "field_binary_04": ""
+            },
+            {
+              "field_binary_05": ""
+            },
+            {
+              "field_boolean_01": ""
+            },
+            {
+              "field_boolean_02": ""
+            },
+            {
+              "field_boolean_03": ""
+            },
+            {
+              "field_boolean_04": ""
+            },
+            {
+              "field_boolean_05": ""
+            },
+            {
+              "field_date_01": ""
+            },
+            {
+              "field_date_02": ""
+            },
+            {
+              "field_date_03": ""
+            },
+            {
+              "field_date_04": ""
+            },
+            {
+              "field_date_05": ""
+            },
+            {
+              "field_double_01": ""
+            },
+            {
+              "field_double_02": ""
+            },
+            {
+              "field_double_03": ""
+            },
+            {
+              "field_double_04": ""
+            },
+            {
+              "field_double_05": ""
+            },
+            {
+              "field_hierarchy_01": ""
+            },
+            {
+              "field_hierarchy_02": ""
+            },
+            {
+              "field_hierarchy_03": ""
+            },
+            {
+              "field_hierarchy_04": ""
+            },
+            {
+              "field_hierarchy_05": ""
+            },
+            {
+              "field_hierarchy_06": ""
+            },
+            {
+              "field_hierarchy_07": ""
+            },
+            {
+              "field_hierarchy_08": ""
+            },
+            {
+              "field_hierarchy_09": ""
+            },
+            {
+              "field_hierarchy_10": ""
+            },
+            {
+              "field_hierarchy_11": ""
+            },
+            {
+              "field_hierarchy_12": ""
+            },
+            {
+              "field_hierarchy_13": ""
+            },
+            {
+              "field_hierarchy_14": ""
+            },
+            {
+              "field_hierarchy_15": ""
+            },
+            {
+              "field_hierarchy_16": ""
+            },
+            {
+              "field_hierarchy_17": ""
+            },
+            {
+              "field_hierarchy_18": ""
+            },
+            {
+              "field_hierarchy_19": ""
+            },
+            {
+              "field_hierarchy_20": ""
+            },
+            {
+              "field_integer_01": ""
+            },
+            {
+              "field_integer_02": ""
+            },
+            {
+              "field_integer_03": ""
+            },
+            {
+              "field_integer_04": ""
+            },
+            {
+              "field_integer_05": ""
+            },
+            {
+              "field_keyword_01": ""
+            },
+            {
+              "field_keyword_02": ""
+            },
+            {
+              "field_keyword_03": ""
+            },
+            {
+              "field_keyword_04": ""
+            },
+            {
+              "field_keyword_05": "Singapore"
+            },
+            {
+              "field_keyword_06": ""
+            },
+            {
+              "field_keyword_07": ""
+            },
+            {
+              "field_keyword_08": "Sales"
+            },
+            {
+              "field_keyword_09": ""
+            },
+            {
+              "field_keyword_10": ""
+            },
+            {
+              "field_keyword_11": ""
+            },
+            {
+              "field_keyword_12": ""
+            },
+            {
+              "field_keyword_13": ""
+            },
+            {
+              "field_keyword_14": ""
+            },
+            {
+              "field_keyword_15": ""
+            },
+            {
+              "field_keyword_16": ""
+            },
+            {
+              "field_keyword_17": ""
+            },
+            {
+              "field_keyword_18": "Professional"
+            },
+            {
+              "field_keyword_19": "Singapore, SG"
+            },
+            {
+              "field_keyword_20": ""
+            },
+            {
+              "field_keyword_21": ""
+            },
+            {
+              "field_keyword_22": ""
+            },
+            {
+              "field_keyword_23": ""
+            },
+            {
+              "field_keyword_24": ""
+            },
+            {
+              "field_keyword_25": ""
+            },
+            {
+              "field_keyword_26": ""
+            },
+            {
+              "field_keyword_27": ""
+            },
+            {
+              "field_keyword_28": ""
+            },
+            {
+              "field_keyword_29": ""
+            },
+            {
+              "field_keyword_30": ""
+            },
+            {
+              "field_keyword_31": ""
+            },
+            {
+              "field_keyword_32": ""
+            },
+            {
+              "field_keyword_33": ""
+            },
+            {
+              "field_keyword_34": ""
+            },
+            {
+              "field_keyword_35": ""
+            },
+            {
+              "field_keyword_36": ""
+            },
+            {
+              "field_keyword_37": ""
+            },
+            {
+              "field_keyword_38": ""
+            },
+            {
+              "field_keyword_39": ""
+            },
+            {
+              "field_keyword_40": ""
+            },
+            {
+              "field_long_01": ""
+            },
+            {
+              "field_long_02": ""
+            },
+            {
+              "field_long_03": ""
+            },
+            {
+              "field_long_04": ""
+            },
+            {
+              "field_long_05": ""
+            },
+            {
+              "field_syno_text_01": ""
+            },
+            {
+              "field_syno_text_02": ""
+            },
+            {
+              "field_syno_text_03": ""
+            },
+            {
+              "field_syno_text_04": ""
+            },
+            {
+              "field_syno_text_05": ""
+            },
+            {
+              "field_text_01": "122611"
+            },
+            {
+              "field_text_02": ""
+            },
+            {
+              "field_text_03": ""
+            },
+            {
+              "field_text_04": ""
+            },
+            {
+              "field_text_05": ""
+            },
+            {
+              "field_text_06": ""
+            },
+            {
+              "field_text_07": ""
+            },
+            {
+              "field_text_08": ""
+            },
+            {
+              "field_text_09": ""
+            },
+            {
+              "field_text_10": ""
+            },
+            {
+              "field_text_11": ""
+            },
+            {
+              "field_text_12": ""
+            },
+            {
+              "field_text_13": ""
+            },
+            {
+              "field_text_14": ""
+            },
+            {
+              "field_text_15": ""
+            },
+            {
+              "field_text_16": ""
+            },
+            {
+              "field_text_17": ""
+            },
+            {
+              "field_text_18": ""
+            },
+            {
+              "field_text_19": ""
+            },
+            {
+              "field_text_20": ""
+            },
+            {
+              "h1s_content": ""
+            },
+            {
+              "industries": ""
+            },
+            {
+              "keywords": ""
+            },
+            {
+              "language": "en"
+            },
+            {
+              "latest_version": ""
+            },
+            {
+              "mhboosted": ""
+            },
+            {
+              "mhboostedurl": ""
+            },
+            {
+              "mhdecreased": ""
+            },
+            {
+              "mhscope": "ibmcom"
+            },
+            {
+              "pid": ""
+            },
+            {
+              "processedtime": "2026-07-12T11:15:11Z"
+            },
+            {
+              "region": "undefined"
+            },
+            {
+              "scope": "careers2"
+            },
+            {
+              "slc": ""
+            },
+            {
+              "title": "HashiCorp Ecosystem GTM Specialist"
+            },
+            {
+              "url": "https://careers.ibm.com/careers/JobDetail?jobId=122611"
+            },
+            {
+              "semver_tags": ""
+            },
+            {
+              "mtm_tags": ""
+            },
+            {
+              "altver_tags": ""
+            },
+            {
+              "build_epoch": ""
+            },
+            {
+              "pageviews": "0"
+            },
+            {
+              "percenttraffic": "0"
+            },
+            {
+              "uniquesessions": "0"
+            },
+            {
+              "utlevel10": ""
+            },
+            {
+              "utlevel15": ""
+            },
+            {
+              "utlevel17": ""
+            },
+            {
+              "utlevel20": ""
+            },
+            {
+              "utlevel30": ""
+            },
+            {
+              "utlevel35": ""
+            },
+            {
+              "company": []
+            },
+            {
+              "customranking": []
+            },
+            {
+              "images": []
+            },
+            {
+              "tags": ""
+            },
+            {
+              "topics": ""
+            },
+            {
+              "contenttype": ""
+            },
+            {
+              "md5": "36eec972692988209546171b0e9c5186"
+            },
+            {
+              "internal_only": "false"
+            },
+            {
+              "raw_body": "<p><span style=\"color: #000000; font-size: 12pt; font-family: arial;\">At IBM Software, we transform client challenges into solutions. Building the world\u2019s leading AI-powered, cloud-native products tha..."
+            }
+          ],
+          "highlightedtext": {
+            "title": "HashiCorp Ecosystem GTM Specialist",
+            "description": "At IBM Software, we transform client challenges into solutions. Building the world\u2019s leading AI-powered",
+            "summary": "",
+            "url": "https://careers.ibm.com/careers/JobDetail?jobId=122611"
+          }
+        },
+        {
+          "resultnum": 2,
+          "id": "01d8f4c6faa2a69db81f0c261c73399b0250e064d43e36b281303880a71df70c",
+          "title": "Application Developer- DevOps",
+          "description": "A career in IBM Consulting is built on long-term client relationships and close collaboration worldwide. You\u2019ll work with leading companies across industries, helping them shape their hybrid cloud and AI journeys. With support from our strategic...",
+          "language": "en",
+          "summary": "",
+          "url": "https://careers.ibm.com/careers/JobDetail?jobId=123914",
+          "docattributes": [
+            {
+              "appliestoversion": ""
+            },
+            {
+              "category": ""
+            },
+            {
+              "country": "cz"
+            },
+            {
+              "content_format": ""
+            },
+            {
+              "dc_subject_original": ""
+            },
+            {
+              "dc_subject_name": ""
+            },
+            {
+              "dc_type_original": ""
+            },
+            {
+              "dcc": ""
+            },
+            {
+              "dcdate": "2026-07-01"
+            },
+            {
+              "description": "A career in IBM Consulting is built on long-term client relationships and close collaboration worldwide. You\u2019ll work with leading companies across industries, helping them shape their hybrid cloud and..."
+            },
+            {
+              "docboosts": ""
+            },
+            {
+              "documentsize": "15761"
+            },
+            {
+              "effectivedate": "2026-07-01"
+            },
+            {
+              "entitled": ""
+            },
+            {
+              "expiredate": "2030-07-01T00:00:00Z"
+            },
+            {
+              "external_id": ""
+            },
+            {
+              "field_binary_01": ""
+            },
+            {
+              "field_binary_02": ""
+            },
+            {
+              "field_binary_03": ""
+            },
+            {
+              "field_binary_04": ""
+            },
+            {
+              "field_binary_05": ""
+            },
+            {
+              "field_boolean_01": ""
+            },
+            {
+              "field_boolean_02": ""
+            },
+            {
+              "field_boolean_03": ""
+            },
+            {
+              "field_boolean_04": ""
+            },
+            {
+              "field_boolean_05": ""
+            },
+            {
+              "field_date_01": ""
+            },
+            {
+              "field_date_02": ""
+            },
+            {
+              "field_date_03": ""
+            },
+            {
+              "field_date_04": ""
+            },
+            {
+              "field_date_05": ""
+            },
+            {
+              "field_double_01": ""
+            },
+            {
+              "field_double_02": ""
+            },
+            {
+              "field_double_03": ""
+            },
+            {
+              "field_double_04": ""
+            },
+            {
+              "field_double_05": ""
+            },
+            {
+              "field_hierarchy_01": ""
+            },
+            {
+              "field_hierarchy_02": ""
+            },
+            {
+              "field_hierarchy_03": ""
+            },
+            {
+              "field_hierarchy_04": ""
+            },
+            {
+              "field_hierarchy_05": ""
+            },
+            {
+              "field_hierarchy_06": ""
+            },
+            {
+              "field_hierarchy_07": ""
+            },
+            {
+              "field_hierarchy_08": ""
+            },
+            {
+              "field_hierarchy_09": ""
+            },
+            {
+              "field_hierarchy_10": ""
+            },
+            {
+              "field_hierarchy_11": ""
+            },
+            {
+              "field_hierarchy_12": ""
+            },
+            {
+              "field_hierarchy_13": ""
+            },
+            {
+              "field_hierarchy_14": ""
+            },
+            {
+              "field_hierarchy_15": ""
+            },
+            {
+              "field_hierarchy_16": ""
+            },
+            {
+              "field_hierarchy_17": ""
+            },
+            {
+              "field_hierarchy_18": ""
+            },
+            {
+              "field_hierarchy_19": ""
+            },
+            {
+              "field_hierarchy_20": ""
+            },
+            {
+              "field_integer_01": ""
+            },
+            {
+              "field_integer_02": ""
+            },
+            {
+              "field_integer_03": ""
+            },
+            {
+              "field_integer_04": ""
+            },
+            {
+              "field_integer_05": ""
+            },
+            {
+              "field_keyword_01": ""
+            },
+            {
+              "field_keyword_02": ""
+            },
+            {
+              "field_keyword_03": ""
+            },
+            {
+              "field_keyword_04": ""
+            },
+            {
+              "field_keyword_05": "Czech Republic"
+            },
+            {
+              "field_keyword_06": ""
+            },
+            {
+              "field_keyword_07": ""
+            },
+            {
+              "field_keyword_08": "Data & Analytics"
+            },
+            {
+              "field_keyword_09": ""
+            },
+            {
+              "field_keyword_10": ""
+            },
+            {
+              "field_keyword_11": ""
+            },
+            {
+              "field_keyword_12": ""
+            },
+            {
+              "field_keyword_13": ""
+            },
+            {
+              "field_keyword_14": ""
+            },
+            {
+              "field_keyword_15": ""
+            },
+            {
+              "field_keyword_16": ""
+            },
+            {
+              "field_keyword_17": "Hybrid"
+            },
+            {
+              "field_keyword_18": "Internship"
+            },
+            {
+              "field_keyword_19": "Praha, CZ"
+            },
+            {
+              "field_keyword_20": ""
+            },
+            {
+              "field_keyword_21": ""
+            },
+            {
+              "field_keyword_22": ""
+            },
+            {
+              "field_keyword_23": ""
+            },
+            {
+              "field_keyword_24": ""
+            },
+            {
+              "field_keyword_25": ""
+            },
+            {
+              "field_keyword_26": ""
+            },
+            {
+              "field_keyword_27": ""
+            },
+            {
+              "field_keyword_28": ""
+            },
+            {
+              "field_keyword_29": ""
+            },
+            {
+              "field_keyword_30": ""
+            },
+            {
+              "field_keyword_31": ""
+            },
+            {
+              "field_keyword_32": ""
+            },
+            {
+              "field_keyword_33": ""
+            },
+            {
+              "field_keyword_34": ""
+            },
+            {
+              "field_keyword_35": ""
+            },
+            {
+              "field_keyword_36": ""
+            },
+            {
+              "field_keyword_37": ""
+            },
+            {
+              "field_keyword_38": ""
+            },
+            {
+              "field_keyword_39": ""
+            },
+            {
+              "field_keyword_40": ""
+            },
+            {
+              "field_long_01": ""
+            },
+            {
+              "field_long_02": ""
+            },
+            {
+              "field_long_03": ""
+            },
+            {
+              "field_long_04": ""
+            },
+            {
+              "field_long_05": ""
+            },
+            {
+              "field_syno_text_01": ""
+            },
+            {
+              "field_syno_text_02": ""
+            },
+            {
+              "field_syno_text_03": ""
+            },
+            {
+              "field_syno_text_04": ""
+            },
+            {
+              "field_syno_text_05": ""
+            },
+            {
+              "field_text_01": "123914"
+            },
+            {
+              "field_text_02": ""
+            },
+            {
+              "field_text_03": ""
+            },
+            {
+              "field_text_04": ""
+            },
+            {
+              "field_text_05": ""
+            },
+            {
+              "field_text_06": ""
+            },
+            {
+              "field_text_07": ""
+            },
+            {
+              "field_text_08": ""
+            },
+            {
+              "field_text_09": ""
+            },
+            {
+              "field_text_10": ""
+            },
+            {
+              "field_text_11": ""
+            },
+            {
+              "field_text_12": ""
+            },
+            {
+              "field_text_13": ""
+            },
+            {
+              "field_text_14": ""
+            },
+            {
+              "field_text_15": ""
+            },
+            {
+              "field_text_16": ""
+            },
+            {
+              "field_text_17": ""
+            },
+            {
+              "field_text_18": ""
+            },
+            {
+              "field_text_19": ""
+            },
+            {
+              "field_text_20": ""
+            },
+            {
+              "h1s_content": ""
+            },
+            {
+              "industries": ""
+            },
+            {
+              "keywords": ""
+            },
+            {
+              "language": "en"
+            },
+            {
+              "latest_version": ""
+            },
+            {
+              "mhboosted": ""
+            },
+            {
+              "mhboostedurl": ""
+            },
+            {
+              "mhdecreased": ""
+            },
+            {
+              "mhscope": "ibmcom"
+            },
+            {
+              "pid": ""
+            },
+            {
+              "processedtime": "2026-07-12T11:15:13Z"
+            },
+            {
+              "region": "undefined"
+            },
+            {
+              "scope": "careers2"
+            },
+            {
+              "slc": ""
+            },
+            {
+              "title": "Application Developer- DevOps"
+            },
+            {
+              "url": "https://careers.ibm.com/careers/JobDetail?jobId=123914"
+            },
+            {
+              "semver_tags": ""
+            },
+            {
+              "mtm_tags": ""
+            },
+            {
+              "altver_tags": ""
+            },
+            {
+              "build_epoch": ""
+            },
+            {
+              "pageviews": "0"
+            },
+            {
+              "percenttraffic": "0"
+            },
+            {
+              "uniquesessions": "0"
+            },
+            {
+              "utlevel10": ""
+            },
+            {
+              "utlevel15": ""
+            },
+            {
+              "utlevel17": ""
+            },
+            {
+              "utlevel20": ""
+            },
+            {
+              "utlevel30": ""
+            },
+            {
+              "utlevel35": ""
+            },
+            {
+              "company": []
+            },
+            {
+              "customranking": []
+            },
+            {
+              "images": []
+            },
+            {
+              "tags": ""
+            },
+            {
+              "topics": ""
+            },
+            {
+              "contenttype": ""
+            },
+            {
+              "md5": "707f9da8c67f56a58a1a6bcf35d5839b"
+            },
+            {
+              "internal_only": "false"
+            },
+            {
+              "raw_body": "<p>A career in IBM Consulting is built on long-term client relationships and close collaboration worldwide. You\u2019ll work with leading companies across industries, helping them shape their hybrid cloud ..."
+            }
+          ],
+          "highlightedtext": {
+            "title": "Application Developer- DevOps",
+            "description": "A career in IBM Consulting is built on long-term client relationships and close collaboration worldwide",
+            "summary": "",
+            "url": "https://careers.ibm.com/careers/JobDetail?jobId=123914"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "resultset": {
+    "version": "falcon-1.0.0",
+    "hostName": "falcon",
+    "searchquery": {
+      "appid": "careers",
+      "collection": "ibmcom",
+      "sources": "genesis-prod-1757171242861",
+      "userquery": "HashiCorp",
+      "variant": ""
+    },
+    "suggestions": [],
+    "alerts": [],
+    "searchresults": {
+      "totalresults": 3,
+      "startindex": 10,
+      "numresults": 0,
+      "smresults": 0,
+      "searchresultlist": []
+    }
+  }
+}

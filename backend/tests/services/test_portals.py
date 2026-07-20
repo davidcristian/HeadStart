@@ -20,7 +20,7 @@ def test_list_portal_presets_filters_query() -> None:
 def test_curated_portal_catalog_size() -> None:
     from app.portals.catalog import CURATED_PORTALS
 
-    assert len(CURATED_PORTALS) == 120
+    assert len(CURATED_PORTALS) == 121
 
 
 def test_curated_portal_apple_preset() -> None:
@@ -284,6 +284,23 @@ def test_curated_portal_rippling_ats_preset() -> None:
     )
     assert other.default_config["board"] == "petfolk"
     assert other.base_url == "https://ats.rippling.com/petfolk"
+
+
+def test_curated_portal_hashicorp_ibm_careers_preset() -> None:
+    from app.portals.catalog import CURATED_PORTALS
+    from app.portals.catalog_helpers_ibm import ibm_careers_preset
+
+    preset = next(p for p in CURATED_PORTALS if p.id == "hashicorp")
+    assert preset.adapter_key == "ibm_careers"
+    assert preset.company_name == "HashiCorp"
+    assert preset.category == "unicorn"
+    assert "q=HashiCorp" in preset.base_url
+    assert preset.default_config["keywords"] == "HashiCorp"
+    assert preset.default_config["portal_id"] == "hashicorp"
+
+    bare = ibm_careers_preset(portal_id="ibm", company="IBM", keywords="")
+    assert bare.base_url == "https://www.ibm.com/careers/search"
+    assert "keywords" not in bare.default_config
 
 
 def test_curated_portal_confluent_ashby_preset() -> None:

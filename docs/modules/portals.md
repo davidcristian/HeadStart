@@ -17,11 +17,11 @@ helpers). Each `PortalPreset` carries:
 | `id` | Stable slug used in API and `default_config.portal_id` |
 | `company_name` | Display name in the UI |
 | `category` | `big_tech`, `unicorn`, or `ai` |
-| `adapter_key` | Scraper key (`greenhouse`, `lever`, `ashby`, `workday`, `smartrecruiters`, `apple_careers`, `google_careers`, `microsoft_careers`, `shopify_careers`, `snowflake_careers`, `uber_careers`, `icims`, `phenom`, `rippling`) |
+| `adapter_key` | Scraper key (`greenhouse`, `lever`, `ashby`, `workday`, `smartrecruiters`, `apple_careers`, `google_careers`, `microsoft_careers`, `shopify_careers`, `snowflake_careers`, `uber_careers`, `icims`, `phenom`, `rippling`, `ibm_careers`) |
 | `base_url` | Careers board URL passed to the scraper |
 | `default_config` | Adapter-specific config merged into new sources (always includes `portal_id`) |
 
-As of the current catalog: **120 employers** — 52 big tech, 57 unicorn, 11 AI —
+As of the current catalog: **121 employers** — 52 big tech, 58 unicorn, 11 AI —
 across Greenhouse (65), Ashby (13), Workday (14), SmartRecruiters (13), Lever (4),
 Apple Careers (1), Google Careers (1), Meta Careers (1), Microsoft Careers (1),
 Shopify Careers (1), Uber Careers (1), Amazon Jobs (1), iCIMS/Jibe (1), Phenom (1),
@@ -37,7 +37,8 @@ keeps `board` because its Ashby-backed scraper consumes it. Rivian uses the
 with board `Superhuman Platform Inc` (Grammarly careers redirect to Superhuman;
 `portal_id` stays `grammarly`). Snyk uses Workday (`tenant=snyk`, `site=External`,
 `region=wd103`); the marketing careers page at `snyk.io/careers` proxies the same
-board via `/api/next/jobs`.
+board via `/api/next/jobs`. HashiCorp uses `ibm_careers` with `keywords=HashiCorp`
+(post-acquisition roles live on IBM Careers).
 
 `GET /portals` annotates each row with:
 
@@ -103,7 +104,8 @@ prompt). The Portals page reads `plan.features.portal_search` from `GET /meta`
    `catalog_helpers.py`: `gh_preset`, `lever_preset`, `ashby_preset`,
    `sr_preset`, `workday_preset`, `icims_preset`, etc.; Phenom uses
    `phenom_preset` from `catalog_helpers_phenom.py`; Rippling uses
-   `rippling_preset` from `catalog_helpers_rippling.py`). Register it in `presets/__init__.py`.
+   `rippling_preset` from `catalog_helpers_rippling.py`; IBM Careers keyword
+   brands use `ibm_careers_preset` from `catalog_helpers_ibm.py`). Register it in `presets/__init__.py`.
 3. Set a unique `portal_id` in `default_config` (the factory helpers do this
    automatically).
 4. Pick `category` (`big_tech`, `unicorn`, `ai`).

@@ -65,6 +65,7 @@ everything. The worker resolves a scraper with `get_scraper(adapter_key)`.
 | `icims` | Public Jibe Attract `/api/jobs` JSON API | iCIMS/Jibe careers sites; `GET {careers_base_url}/api/jobs?page=&limit=`; config `careers_base_url` (or careers/`/api/jobs` `query_url`) + optional `company` / `keywords` / `page_size` / `max_results`; URL-detects known vanity hosts (e.g. `careers.rivian.com`), `*.jibeapply.com`, and explicit `/api/jobs` paths |
 | `phenom` | Phenom People `/widgets` refineSearch API (POST) | Phenom careers sites; `GET {careers_base_url}/{country}/{lang}/search-results` seeds CSRF, then `POST /widgets` with `ddoKey=refineSearch`; config `careers_base_url` + `country` / `locale` / optional `ref_num` / `keywords` / `selected_fields` / `page_size` / `max_results`; URL-detects known hosts (e.g. `careers.cisco.com`, including `/splunk` keyword seed) and explicit `/widgets` paths. Prefer the canonical Phenom host — vanity redirects drop CSRF cookies. |
 | `rippling` | Public Rippling ATS board API | `GET api.rippling.com/platform/api/ats/v1/board/<board>/jobs` (JSON array); config `board` + optional `company` / `keywords` / `max_results`; URL-detects `ats.rippling.com/<board>` and the API path. Same job UUID may appear once per location — rows are collapsed and locations joined. Employer must expose a public board (Recruiting Pro). |
+| `ibm_careers` | IBM Careers Falcon search API (GET) | `GET www-api.ibm.com/search/api/v1-1/ibmcom/appid/<appid>/responseFormat/json`; config `keywords`/`query` (default `*`) + `app_id` (default `careers`) + `scope` (default `careers2`) + optional `company` / `page_size` / `max_results`; URL-detects `ibm.com/careers/search`, `careers.ibm.com`, and the API path. Used for post-acquisition brands (e.g. HashiCorp) via keyword query — prefer title review in the Jobs feed. |
 | `indeed`        | Embedded search JSON in HTML (selectolax fallback) | `*.indeed.com/jobs?...`; parses `mosaic-provider-jobcards`; may need [credentials](credentials.md) for Cloudflare — **ToS risk** when session cookies are used (see [Safety](#linkedin--indeed-credentialed-scrape-tos-risk-xct-19)) |
 | `linkedin`      | Guest search pagination API (HTML fragments) | Opt-in only (not URL-detected). `linkedin.com/jobs/search?...` → guest `seeMoreJobPostings/search`; may need [credentials](credentials.md) for auth walls — **ToS risk** when session cookies are used (see [Safety](#linkedin--indeed-credentialed-scrape-tos-risk-xct-19)) |
 | `generic_html`  | CSS selectors from config (selectolax)    | For simple static pages; configured in the UI |
@@ -162,6 +163,7 @@ config value → adapter default → no limit.
 | `icims`        | 1.5                  |
 | `phenom`       | 1.5                  |
 | `rippling`     | 1.0                  |
+| `ibm_careers`  | 1.0                  |
 | `indeed`       | 5.0                  |
 | `linkedin`     | 7.5                  |
 | `generic_html` | 2.0                  |

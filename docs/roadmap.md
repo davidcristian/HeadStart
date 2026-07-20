@@ -3,13 +3,14 @@
 Living plan for HeadStart — what to build next and why. Update this doc when
 priorities shift or a milestone ships.
 
-**Current baseline (2026-07):** Phases 1–26 shipped (four-tier pricing, per-user AI
+**Current baseline (2026-07):** Phases 1–27 shipped (four-tier pricing, per-user AI
 summary preferences, curated employer portal catalog through batch 5 plus later
-unblocks for Rivian / Splunk / Rippling / Grammarly / Snyk, SmartRecruiters adapter, custom career-site
+unblocks for Rivian / Splunk / Rippling / Grammarly / Snyk / HashiCorp, SmartRecruiters adapter, custom career-site
 adapters for Shopify, Uber, and Snowflake, the dev-only local application agent, inbox OAuth
 providers for Gmail, Outlook, Yahoo, and Fastmail, the reusable iCIMS/Jibe
-Attract scraper with Rivian, the reusable Phenom People scraper with Splunk, and
-the reusable Rippling ATS scraper with Rippling). See
+Attract scraper with Rivian, the reusable Phenom People scraper with Splunk,
+the reusable Rippling ATS scraper with Rippling, and the reusable IBM Careers
+Falcon search scraper with HashiCorp). See
 [architecture.md](architecture.md) for the system design.
 
 ---
@@ -756,7 +757,7 @@ new custom scraper if the careers site uses a proprietary stack.
 | ~~Palo Alto Networks~~ | ~~Workday (`paloaltonetworks` / `panwexternalcareers` / `wd5`)~~ | ~~`big_tech`~~ | **Shipped** |
 | ~~SentinelOne~~ | ~~Greenhouse (`sentinellabs`)~~ | ~~`unicorn`~~ | **Shipped** — `portal_id` `sentinelone`, board token `sentinellabs` |
 | ~~Rippling~~ | ~~Ashby (`rippling`) or custom~~ | ~~`unicorn`~~ | **Shipped (Phase 26):** Rippling ATS via `@register_scraper("rippling")` on board slug `rippling` |
-| HashiCorp | Greenhouse or SmartRecruiters | `unicorn` | Still blocked — no public Greenhouse/SR/Ashby/Lever board; IBM careers (post-acquisition) |
+| ~~HashiCorp~~ | ~~Greenhouse or SmartRecruiters~~ | ~~`unicorn`~~ | **Shipped (Phase 27):** IBM Careers via `@register_scraper("ibm_careers")` with `keywords=HashiCorp` |
 | ~~Splunk~~ | ~~Greenhouse, SmartRecruiters, or Workday~~ | ~~`big_tech`~~ | **Shipped (Phase 25):** Phenom People via `@register_scraper("phenom")` on `careers.cisco.com` with `keywords=Splunk` |
 | ~~Grammarly~~ | ~~Greenhouse, Ashby, or SmartRecruiters~~ | ~~`unicorn`~~ | **Shipped:** Ashby board `Superhuman Platform Inc` (Grammarly careers redirect to Superhuman; public Postings API returns openings). Preset `portal_id=grammarly`. |
 | ~~Snyk~~ | ~~Greenhouse, Ashby, or SmartRecruiters~~ | ~~`unicorn`~~ | **Shipped:** Workday External board (`tenant=snyk`, `site=External`, `region=wd103`). Marketing site at `snyk.io/careers` proxies the same openings; Ashby board returns 0 jobs. |
@@ -767,7 +768,8 @@ Splunk shipped later via [Phase 25](#phase-25--phenom-people-adapter).
 Rippling shipped later via [Phase 26](#phase-26--rippling-ats-adapter).
 Grammarly shipped later via Ashby preset on the Superhuman Platform Inc board
 (catalog count **119**). Snyk shipped later via Workday External preset
-(catalog count **120**).
+(catalog count **120**). HashiCorp shipped later via
+[Phase 27](#phase-27--ibm-careers-adapter) (catalog count **121**).
 
 **Done when:** at least three employers from this list ship as verified presets (or
 new scrapers + presets where needed); skipped rows document why the public API
@@ -843,6 +845,31 @@ ATS board API / `ats.rippling.com/<board>` URLs.
 **Done when:** Rippling appears in the curated catalog with working scrape against
 fixtures, and at least one live smoke of
 `api.rippling.com/platform/api/ats/v1/board/rippling/jobs` succeeds outside CI.
+
+---
+
+## Phase 27 — IBM Careers adapter
+
+Goal: unlock employers whose public boards moved to **IBM Careers** after
+acquisition (starting with HashiCorp from the Phase 23 blocked list). IBM's
+marketing search UI is backed by a public Falcon JSON API on `www-api.ibm.com`
+(no BrassRing session required for listing).
+
+| Item | Why | Notes |
+| ---- | --- | ----- |
+| ~~`ibm_careers` scraper~~ | ~~Reusable gap for IBM-hosted brand searches~~ | **Shipped:** `@register_scraper("ibm_careers")`; `GET www-api.ibm.com/search/api/v1-1/ibmcom/appid/<appid>/responseFormat/json`; config `keywords`/`query` + `app_id` (default `careers`) + `scope` (default `careers2`) + optional `company` / `page_size` / `max_results` |
+| ~~Fixture + tests~~ | ~~CI safety~~ | **Shipped:** sample JSON under `tests/fixtures/ibm_careers_page*.json`; no live network |
+| ~~URL detection~~ | ~~Paste-friendly source setup~~ | **Shipped:** `ibm.com/careers/search`, `careers.ibm.com`, and the `www-api.ibm.com` search API path |
+| ~~Scraper docs~~ | ~~Operator discoverability~~ | **Shipped:** row in [modules/scrapers.md](modules/scrapers.md) |
+| ~~`ibm_careers_preset` + HashiCorp~~ | ~~Catalog growth~~ | **Shipped:** helper in `catalog_helpers_ibm.py`; HashiCorp preset (`keywords=HashiCorp`); catalog count **121** |
+
+**Caveat:** keyword search can include IBM jobs that merely mention the brand in
+skills/description (same class of noise as Splunk on Cisco Phenom) — prefer
+title review in the Jobs feed.
+
+**Done when:** HashiCorp appears in the curated catalog with working scrape
+against fixtures, and at least one live smoke of the Falcon search API with
+`query=HashiCorp` succeeds outside CI.
 
 ---
 
