@@ -29,6 +29,11 @@ def test_detect_rippling_api_url() -> None:
 def test_detect_rippling_rejects_invalid_board_slug() -> None:
     assert detect_source_from_url("https://ats.rippling.com/evil.board/jobs") is None
     assert detect_source_from_url("https://ats.rippling.com/-bad/jobs") is None
+    assert (
+        detect_source_from_url("https://api.rippling.com/platform/api/ats/v1/board/evil.board/jobs")
+        is None
+    )
+    assert detect_source_from_url("https://api.rippling.com/platform/api/ats/v1/jobs") is None
 
 
 def test_detect_rippling_uses_page_title() -> None:
@@ -38,3 +43,12 @@ def test_detect_rippling_uses_page_title() -> None:
     )
     assert result is not None
     assert result.suggested_name == "Rippling"
+
+
+def test_detect_rippling_page_title_without_suffix() -> None:
+    result = detect_source_from_url(
+        "https://ats.rippling.com/acme/jobs",
+        page_title="Acme Corp",
+    )
+    assert result is not None
+    assert result.suggested_name == "Acme Corp"

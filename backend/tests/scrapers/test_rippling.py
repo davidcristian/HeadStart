@@ -19,9 +19,7 @@ def test_rippling_parses_and_merges_locations() -> None:
         return httpx.Response(200, text=fixture, headers={"content-type": "application/json"})
 
     scraper = get_scraper("rippling", http=make_http_client(handler))
-    postings = scraper.fetch(
-        ScrapeContext(config={"board": "rippling", "company": "Rippling"})
-    )
+    postings = scraper.fetch(ScrapeContext(config={"board": "rippling", "company": "Rippling"}))
 
     assert len(seen) == 1
     assert len(postings) == 2
@@ -44,9 +42,7 @@ def test_rippling_accepts_ats_board_query_url() -> None:
         return httpx.Response(200, text=fixture)
 
     scraper = get_scraper("rippling", http=make_http_client(handler))
-    postings = scraper.fetch(
-        ScrapeContext(query_url="https://ats.rippling.com/petfolk/jobs")
-    )
+    postings = scraper.fetch(ScrapeContext(query_url="https://ats.rippling.com/petfolk/jobs"))
 
     assert seen["url"].endswith("/platform/api/ats/v1/board/petfolk/jobs")
     assert postings[0].company == "Petfolk"
@@ -77,9 +73,7 @@ def test_rippling_filters_keywords_from_config_and_filters() -> None:
         return httpx.Response(200, text=fixture)
 
     scraper = get_scraper("rippling", http=make_http_client(handler))
-    by_config = scraper.fetch(
-        ScrapeContext(config={"board": "rippling", "keywords": "Broker"})
-    )
+    by_config = scraper.fetch(ScrapeContext(config={"board": "rippling", "keywords": "Broker"}))
     assert len(by_config) == 1
     assert "Broker" in by_config[0].title
 
@@ -123,9 +117,7 @@ def test_rippling_rejects_ats_url_without_board() -> None:
 def test_rippling_rejects_malformed_api_path() -> None:
     scraper = get_scraper("rippling", http=make_http_client(lambda _: httpx.Response(200)))
     with pytest.raises(ValueError, match="could not determine board"):
-        scraper.fetch(
-            ScrapeContext(query_url="https://api.rippling.com/platform/api/ats/v1/jobs")
-        )
+        scraper.fetch(ScrapeContext(query_url="https://api.rippling.com/platform/api/ats/v1/jobs"))
 
 
 def test_rippling_rejects_non_list_payload() -> None:
@@ -174,6 +166,8 @@ def test_rippling_respects_max_results_while_merging() -> None:
        "workLocation": {"label": "SF"}},
       {"uuid": "1", "name": "A", "url": "https://ats.rippling.com/x/jobs/1",
        "workLocation": {"label": "Remote"}},
+      {"uuid": "1", "name": "A", "url": "https://ats.rippling.com/x/jobs/1",
+       "workLocation": {"label": "NY"}},
       {"uuid": "3", "name": "C", "url": "https://ats.rippling.com/x/jobs/3",
        "workLocation": {"label": "LA"}}
     ]
@@ -183,9 +177,7 @@ def test_rippling_respects_max_results_while_merging() -> None:
         return httpx.Response(200, text=payload)
 
     scraper = get_scraper("rippling", http=make_http_client(handler))
-    postings = scraper.fetch(
-        ScrapeContext(config={"board": "x", "company": "X", "max_results": 2})
-    )
+    postings = scraper.fetch(ScrapeContext(config={"board": "x", "company": "X", "max_results": 2}))
     assert len(postings) == 2
     assert postings[0].location == "NY; Remote"
     assert postings[1].external_id == "2"

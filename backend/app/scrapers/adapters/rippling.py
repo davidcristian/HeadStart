@@ -175,10 +175,7 @@ class RipplingScraper(Scraper):
     def _merge_locations(existing: JobPosting, new_location: str) -> JobPosting:
         if not new_location or new_location in existing.location.split("; "):
             return existing
-        if not existing.location:
-            location = new_location
-        else:
-            location = f"{existing.location}; {new_location}"
+        location = new_location if not existing.location else f"{existing.location}; {new_location}"
         return JobPosting(
             external_id=existing.external_id,
             title=existing.title,
