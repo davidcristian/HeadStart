@@ -4,7 +4,8 @@ Living plan for HeadStart — what to build next and why. Update this doc when
 priorities shift or a milestone ships.
 
 **Current baseline (2026-07):** Phases 1–26 shipped (four-tier pricing, per-user AI
-summary preferences, curated employer portal catalog through batch 5, SmartRecruiters adapter, custom career-site
+summary preferences, curated employer portal catalog through batch 5 plus later
+unblocks for Rivian / Splunk / Rippling / Grammarly, SmartRecruiters adapter, custom career-site
 adapters for Shopify, Uber, and Snowflake, the dev-only local application agent, inbox OAuth
 providers for Gmail, Outlook, Yahoo, and Fastmail, the reusable iCIMS/Jibe
 Attract scraper with Rivian, the reusable Phenom People scraper with Splunk, and
@@ -757,13 +758,15 @@ new custom scraper if the careers site uses a proprietary stack.
 | ~~Rippling~~ | ~~Ashby (`rippling`) or custom~~ | ~~`unicorn`~~ | **Shipped (Phase 26):** Rippling ATS via `@register_scraper("rippling")` on board slug `rippling` |
 | HashiCorp | Greenhouse or SmartRecruiters | `unicorn` | Still blocked — no public Greenhouse/SR/Ashby/Lever board; IBM careers (post-acquisition) |
 | ~~Splunk~~ | ~~Greenhouse, SmartRecruiters, or Workday~~ | ~~`big_tech`~~ | **Shipped (Phase 25):** Phenom People via `@register_scraper("phenom")` on `careers.cisco.com` with `keywords=Splunk` |
-| Grammarly | Greenhouse, Ashby, or SmartRecruiters | `unicorn` | Still blocked — careers redirect to Superhuman; Greenhouse `grammarly`/`superhuman` 404; Ashby board empty/404 |
+| ~~Grammarly~~ | ~~Greenhouse, Ashby, or SmartRecruiters~~ | ~~`unicorn`~~ | **Shipped:** Ashby board `Superhuman Platform Inc` (Grammarly careers redirect to Superhuman; public Postings API returns openings). Preset `portal_id=grammarly`. |
 | Snyk | Greenhouse, Ashby, or SmartRecruiters | `unicorn` | Still blocked — Ashby board returns 0 jobs; Greenhouse/Lever/SR tokens failed |
 
 **Shipped:** 4 presets in `presets/` (CrowdStrike, Zillow, Palo Alto Networks, SentinelOne);
 catalog count **115**. Rivian shipped later via [Phase 24](#phase-24--icimsjibe-attract-adapter).
 Splunk shipped later via [Phase 25](#phase-25--phenom-people-adapter).
 Rippling shipped later via [Phase 26](#phase-26--rippling-ats-adapter).
+Grammarly shipped later via Ashby preset on the Superhuman Platform Inc board
+(catalog count **119**).
 
 **Done when:** at least three employers from this list ship as verified presets (or
 new scrapers + presets where needed); skipped rows document why the public API

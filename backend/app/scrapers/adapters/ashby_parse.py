@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from typing import Any
-from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
+from urllib.parse import parse_qs, quote, unquote, urlencode, urlparse, urlunparse
 
 from app.scrapers.dates import parse_iso8601
 from app.scrapers.types import JobPosting
@@ -11,9 +11,14 @@ from app.scrapers.types import JobPosting
 ASHBY_API = "https://api.ashbyhq.com/posting-api/job-board/{board}"
 
 
+def encode_board_slug(board: str) -> str:
+    """Percent-encode an Ashby board slug (spaces/names like ``Superhuman Platform Inc``)."""
+    return quote(unquote(board.strip()), safe="")
+
+
 def api_url(board: str, include_compensation: bool) -> str:
     """Build the public Ashby Postings API URL for a board slug."""
-    url = ASHBY_API.format(board=board)
+    url = ASHBY_API.format(board=encode_board_slug(board))
     if include_compensation:
         return f"{url}?includeCompensation=true"
     return url

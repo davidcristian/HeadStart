@@ -21,8 +21,8 @@ helpers). Each `PortalPreset` carries:
 | `base_url` | Careers board URL passed to the scraper |
 | `default_config` | Adapter-specific config merged into new sources (always includes `portal_id`) |
 
-As of the current catalog: **118 employers** — 52 big tech, 55 unicorn, 11 AI —
-across Greenhouse (65), Ashby (12), Workday (13), SmartRecruiters (13), Lever (4),
+As of the current catalog: **119 employers** — 52 big tech, 56 unicorn, 11 AI —
+across Greenhouse (65), Ashby (13), Workday (13), SmartRecruiters (13), Lever (4),
 Apple Careers (1), Google Careers (1), Meta Careers (1), Microsoft Careers (1),
 Shopify Careers (1), Uber Careers (1), Amazon Jobs (1), iCIMS/Jibe (1), Phenom (1),
 and Rippling ATS (1).
@@ -33,7 +33,9 @@ Shopify Careers (`shopify_careers`) stores only `company` + `portal_id` in
 it does **not** take an Ashby `board` slug. Auto-apply still defaults
 `board=shopify` inside the applier when delegating to Ashby. Snowflake Careers
 keeps `board` because its Ashby-backed scraper consumes it. Rivian uses the
-`icims` scraper (`careers_base_url` + public `/api/jobs`).
+`icims` scraper (`careers_base_url` + public `/api/jobs`). Grammarly uses Ashby
+with board `Superhuman Platform Inc` (Grammarly careers redirect to Superhuman;
+`portal_id` stays `grammarly`).
 
 `GET /portals` annotates each row with:
 

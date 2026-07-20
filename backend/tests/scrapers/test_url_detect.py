@@ -45,6 +45,18 @@ def test_detect_ashby_board_url() -> None:
     assert result.default_config["board"] == "notion"
 
 
+def test_detect_ashby_board_url_with_spaces() -> None:
+    result = detect_source_from_url(
+        "https://jobs.ashbyhq.com/Superhuman%20Platform%20Inc",
+        page_title="Superhuman Careers",
+    )
+    assert result is not None
+    assert result.adapter_key == "ashby"
+    assert result.default_config["board"] == "Superhuman Platform Inc"
+    assert result.base_url == "https://jobs.ashbyhq.com/Superhuman%20Platform%20Inc"
+    assert result.suggested_name == "Superhuman"
+
+
 def test_detect_smartrecruiters_careers_board_url() -> None:
     result = detect_source_from_url(
         "https://careers.smartrecruiters.com/Atlassian",

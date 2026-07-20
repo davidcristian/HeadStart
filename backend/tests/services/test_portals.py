@@ -20,7 +20,7 @@ def test_list_portal_presets_filters_query() -> None:
 def test_curated_portal_catalog_size() -> None:
     from app.portals.catalog import CURATED_PORTALS
 
-    assert len(CURATED_PORTALS) == 118
+    assert len(CURATED_PORTALS) == 119
 
 
 def test_curated_portal_apple_preset() -> None:
@@ -292,6 +292,18 @@ def test_curated_portal_confluent_ashby_preset() -> None:
     preset = next(p for p in CURATED_PORTALS if p.id == "confluent")
     assert preset.adapter_key == "ashby"
     assert preset.default_config["board"] == "confluent"
+
+
+def test_curated_portal_grammarly_ashby_preset() -> None:
+    from app.portals.catalog import CURATED_PORTALS
+
+    preset = next(p for p in CURATED_PORTALS if p.id == "grammarly")
+    assert preset.adapter_key == "ashby"
+    assert preset.company_name == "Grammarly"
+    assert preset.category == "unicorn"
+    assert preset.default_config["board"] == "Superhuman Platform Inc"
+    assert preset.default_config["portal_id"] == "grammarly"
+    assert preset.base_url == "https://jobs.ashbyhq.com/Superhuman%20Platform%20Inc"
 
 
 def test_curated_portal_catalog_unique_portal_ids() -> None:

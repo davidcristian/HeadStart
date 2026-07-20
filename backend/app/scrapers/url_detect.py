@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import re
 from typing import Any
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, unquote, urlparse
 
+from app.scrapers.adapters.ashby_parse import encode_board_slug
 from app.scrapers.url_detect_amazon import detect_amazon_jobs
 from app.scrapers.url_detect_apple import detect_apple_careers
 from app.scrapers.url_detect_icims import detect_icims
@@ -133,9 +134,11 @@ def _detect_ashby(parsed: Any, host: str, page_title: str | None) -> SourceDetec
     if not board:
         return None
 
+    board = unquote(board)
     company = _humanize_slug(board)
     suggested_name = _title_or_slug(page_title, company)
-    base_url = f"https://jobs.ashbyhq.com/{board}"
+    encoded = encode_board_slug(board)
+    base_url = f"https://jobs.ashbyhq.com/{encoded}"
     return SourceDetection(
         adapter_key="ashby",
         suggested_name=suggested_name,

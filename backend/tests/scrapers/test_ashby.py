@@ -91,6 +91,47 @@ def test_ashby_accepts_jobs_page_url() -> None:
     assert seen["url"] == "https://api.ashbyhq.com/posting-api/job-board/acme"
 
 
+def test_ashby_encodes_board_slug_with_spaces() -> None:
+    fixture = load_fixture("ashby_postings.json")
+    seen: dict[str, str] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen["url"] = str(request.url)
+        return httpx.Response(200, text=fixture)
+
+    scraper = get_scraper("ashby", http=make_http_client(handler))
+    scraper.fetch(
+        ScrapeContext(
+            config={"board": "Superhuman Platform Inc", "company": "Grammarly"},
+        )
+    )
+
+    assert seen["url"] == (
+        "https://api.ashbyhq.com/posting-api/job-board/Superhuman%20Platform%20Inc"
+    )
+
+
+def test_ashby_accepts_percent_encoded_jobs_page_url() -> None:
+    fixture = load_fixture("ashby_postings.json")
+    seen: dict[str, str] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen["url"] = str(request.url)
+        return httpx.Response(200, text=fixture)
+
+    scraper = get_scraper("ashby", http=make_http_client(handler))
+    scraper.fetch(
+        ScrapeContext(
+            query_url="https://jobs.ashbyhq.com/Superhuman%20Platform%20Inc",
+            config={"company": "Grammarly"},
+        )
+    )
+
+    assert seen["url"] == (
+        "https://api.ashbyhq.com/posting-api/job-board/Superhuman%20Platform%20Inc"
+    )
+
+
 def test_ashby_include_compensation() -> None:
     fixture = load_fixture("ashby_postings.json")
     seen: dict[str, str] = {}

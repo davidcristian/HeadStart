@@ -12,7 +12,7 @@ Config / context:
     response when true (default false).
 """
 
-from urllib.parse import urlparse
+from urllib.parse import unquote, urlparse
 
 from app.scrapers.adapters.ashby_parse import (
     api_url,
@@ -63,7 +63,7 @@ class AshbyScraper(Scraper):
         parsed = urlparse(query_url)
         host = parsed.netloc.lower()
         if host == "jobs.ashbyhq.com":
-            slug = parsed.path.strip("/").split("/")[0] or board
+            slug = unquote(parsed.path.strip("/").split("/")[0] or board)
             if not slug:
                 raise ValueError("ashby scraper could not determine board from query_url")
             return api_url(slug, include_compensation)

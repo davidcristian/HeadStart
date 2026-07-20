@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any, Literal
+from urllib.parse import quote, unquote
 
 PortalCategory = Literal["big_tech", "unicorn", "ai"]
 
@@ -42,14 +43,23 @@ def lever_preset(site: str, company: str, *, category: PortalCategory = "unicorn
     )
 
 
-def ashby_preset(board: str, company: str, *, category: PortalCategory = "unicorn") -> PortalPreset:
+def ashby_preset(
+    board: str,
+    company: str,
+    *,
+    category: PortalCategory = "unicorn",
+    portal_id: str | None = None,
+) -> PortalPreset:
+    """Build an Ashby preset; portal_id defaults to board when omitted."""
+    pid = portal_id or board
+    encoded = quote(unquote(board.strip()), safe="")
     return PortalPreset(
-        id=board,
+        id=pid,
         company_name=company,
         category=category,
         adapter_key="ashby",
-        base_url=f"https://jobs.ashbyhq.com/{board}",
-        default_config={"board": board, "company": company, "portal_id": board},
+        base_url=f"https://jobs.ashbyhq.com/{encoded}",
+        default_config={"board": board, "company": company, "portal_id": pid},
     )
 
 

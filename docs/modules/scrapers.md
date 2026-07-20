@@ -51,7 +51,7 @@ everything. The worker resolves a scraper with `get_scraper(adapter_key)`.
 | --------------- | ----------------------------------------- | -------------------------------------- |
 | `greenhouse`    | Public Greenhouse job board JSON API      | `boards-api.greenhouse.io/v1/boards/<token>/jobs` |
 | `lever`         | Public Lever Postings API                 | `api.lever.co/v0/postings/<site>?mode=json`; also accepts `jobs.lever.co/<site>` URLs |
-| `ashby`         | Public Ashby Postings API                 | `api.ashbyhq.com/posting-api/job-board/<board>`; also accepts `jobs.ashbyhq.com/<board>` URLs. `/sources/detect` accepts the jobs host or an `*.ashbyhq.com` host whose path contains `posting-api/job-board` (not arbitrary hosts with that path substring) |
+| `ashby`         | Public Ashby Postings API                 | `api.ashbyhq.com/posting-api/job-board/<board>`; also accepts `jobs.ashbyhq.com/<board>` URLs. Board slugs with spaces (e.g. `Superhuman Platform Inc` for Grammarly) are percent-encoded. `/sources/detect` accepts the jobs host or an `*.ashbyhq.com` host whose path contains `posting-api/job-board` (not arbitrary hosts with that path substring) |
 | `smartrecruiters` | Public SmartRecruiters Postings API     | `api.smartrecruiters.com/v1/companies/<company_id>/postings`; also accepts `careers.smartrecruiters.com/<company_id>` URLs. Apply via Application API — see [appliers.md](appliers.md) |
 | `workday`       | Public Workday CXS jobs API (POST)        | `*.myworkdayjobs.com/wday/cxs/<tenant>/<site>/jobs`; also accepts careers board URLs |
 | `google_careers`| Embedded search JSON in HTML              | `google.com/about/careers/applications/jobs/results?...`; parses `AF_initDataCallback` `ds:1`; also accepts `careers.google.com` |

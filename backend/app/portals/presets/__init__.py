@@ -20,6 +20,7 @@ from app.portals.presets.endava import PORTAL as endava
 from app.portals.presets.ericsson import PORTAL as ericsson
 from app.portals.presets.fastly import PORTAL as fastly
 from app.portals.presets.fivetran import PORTAL as fivetran
+from app.portals.presets.grammarly import PORTAL as grammarly
 from app.portals.presets.gusto import PORTAL as gusto
 from app.portals.presets.hubspot import PORTAL as hubspot
 from app.portals.presets.infosys import PORTAL as infosys
@@ -99,4 +100,5 @@ PORTALS: tuple[PortalPreset, ...] = (
     paloaltonetworks,
     sentinelone,
     splunk,
+    grammarly,
 )
