@@ -129,18 +129,14 @@ def missing_required_fields(
     missing: list[str] = []
     for oid in required_oids:
         if oid == "resume":
-            if live and not form.get("resume"):
-                missing.append(oid)
-            elif not live and not (form.get("resume") or form.get("resume_file")):
+            if (live and not form.get("resume")) or (
+                not live and not (form.get("resume") or form.get("resume_file"))
+            ):
                 missing.append(oid)
             continue
         if oid == "cover_letter":
             if live and not form.get("cover_letter"):
                 # Optional on most boards; only require when the job marks it required.
-                missing.append(oid)
-            continue
-        if oid == "phone_number":
-            if not str(form.get("phone_number") or "").strip():
                 missing.append(oid)
             continue
         if not str(form.get(oid) or "").strip():
@@ -185,8 +181,6 @@ def extract_error_message(response: object) -> str:
             value = response.get(key)
             if isinstance(value, str) and value.strip():
                 return value.strip()
-        if response.get("error") == "turnstile_verification_failure":
-            return "turnstile_verification_failure"
     return "rippling apply failed"
 
 

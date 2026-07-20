@@ -8,8 +8,8 @@ from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 import httpx
 
 from app.appliers.adapters.rippling_common import file_upload_url
-from app.scrapers.http import HttpClient
 from app.schemas.profile import ResumeFile
+from app.scrapers.http import HttpClient
 
 
 def upload_application_file(

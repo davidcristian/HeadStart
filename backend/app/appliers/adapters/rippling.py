@@ -67,7 +67,10 @@ class RipplingApplier(Applier):
         if not job_id:
             return ApplyResult(
                 status="failed",
-                error="rippling applier needs a job UUID in job_external_id, config.job_id, or job_url",
+                error=(
+                    "rippling applier needs a job UUID in job_external_id, "
+                    "config.job_id, or job_url"
+                ),
             )
 
         job_detail: dict[str, Any] | None = None
@@ -129,7 +132,10 @@ class RipplingApplier(Applier):
         if "resume" in required and ctx.resume_file is None:
             return ApplyResult(
                 status="failed",
-                error="rippling live apply requires a stored resume file on the application profile",
+                error=(
+                    "rippling live apply requires a stored resume file "
+                    "on the application profile"
+                ),
                 payload=payload,
             )
 
@@ -204,9 +210,7 @@ def _response_has_error(response: object) -> bool:
         return False
     if response.get("error") or response.get("error_code"):
         return True
-    if response.get("ok") is False:
-        return True
-    return False
+    return response.get("ok") is False
 
 
 def _http_error_message(exc: httpx.HTTPError) -> str:
