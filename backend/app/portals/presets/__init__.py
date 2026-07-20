@@ -34,6 +34,7 @@ from app.portals.presets.pagerduty import PORTAL as pagerduty
 from app.portals.presets.paloaltonetworks import PORTAL as paloaltonetworks
 from app.portals.presets.purestorage import PORTAL as purestorage
 from app.portals.presets.riotgames import PORTAL as riotgames
+from app.portals.presets.rippling import PORTAL as rippling
 from app.portals.presets.rivian import PORTAL as rivian
 from app.portals.presets.roblox import PORTAL as roblox
 from app.portals.presets.roku import PORTAL as roku
@@ -61,6 +62,7 @@ PORTALS: tuple[PortalPreset, ...] = (
     klaviyo,
     riotgames,
     rivian,
+    rippling,
     chime,
     checkr,
     mercury,

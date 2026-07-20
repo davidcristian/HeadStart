@@ -83,7 +83,7 @@ def _config_keys_match(preset: PortalPreset, source: Source) -> bool:
         return cfg.get("board_token") == pcfg.get("board_token")
     if preset.adapter_key == "lever":
         return cfg.get("site") == pcfg.get("site")
-    if preset.adapter_key == "ashby":
+    if preset.adapter_key in {"ashby", "rippling"}:
         return cfg.get("board") == pcfg.get("board")
     if preset.adapter_key == "smartrecruiters":
         return cfg.get("company_id") == pcfg.get("company_id")
@@ -99,6 +99,7 @@ def _config_keys_match(preset: PortalPreset, source: Source) -> bool:
         "snowflake_careers",
         "uber_careers",
         "icims",
+        "phenom",
     }:
         return cfg.get("portal_id") == pcfg.get("portal_id")
     return False

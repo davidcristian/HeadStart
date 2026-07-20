@@ -3,11 +3,12 @@
 Living plan for HeadStart — what to build next and why. Update this doc when
 priorities shift or a milestone ships.
 
-**Current baseline (2026-07):** Phases 1–25 shipped (four-tier pricing, per-user AI
+**Current baseline (2026-07):** Phases 1–26 shipped (four-tier pricing, per-user AI
 summary preferences, curated employer portal catalog through batch 5, SmartRecruiters adapter, custom career-site
 adapters for Shopify, Uber, and Snowflake, the dev-only local application agent, inbox OAuth
 providers for Gmail, Outlook, Yahoo, and Fastmail, the reusable iCIMS/Jibe
-Attract scraper with Rivian, and the reusable Phenom People scraper with Splunk). See
+Attract scraper with Rivian, the reusable Phenom People scraper with Splunk, and
+the reusable Rippling ATS scraper with Rippling). See
 [architecture.md](architecture.md) for the system design.
 
 ---
@@ -753,7 +754,7 @@ new custom scraper if the careers site uses a proprietary stack.
 | ~~Zillow~~ | ~~Workday (`zillow` / `Zillow_Group_External` / `wd5`)~~ | ~~`big_tech`~~ | **Shipped** |
 | ~~Palo Alto Networks~~ | ~~Workday (`paloaltonetworks` / `panwexternalcareers` / `wd5`)~~ | ~~`big_tech`~~ | **Shipped** |
 | ~~SentinelOne~~ | ~~Greenhouse (`sentinellabs`)~~ | ~~`unicorn`~~ | **Shipped** — `portal_id` `sentinelone`, board token `sentinellabs` |
-| Rippling | Ashby (`rippling`) or custom | `unicorn` | Still blocked — Ashby Postings API 404; careers site is proprietary Rippling ATS |
+| ~~Rippling~~ | ~~Ashby (`rippling`) or custom~~ | ~~`unicorn`~~ | **Shipped (Phase 26):** Rippling ATS via `@register_scraper("rippling")` on board slug `rippling` |
 | HashiCorp | Greenhouse or SmartRecruiters | `unicorn` | Still blocked — no public Greenhouse/SR/Ashby/Lever board; IBM careers (post-acquisition) |
 | ~~Splunk~~ | ~~Greenhouse, SmartRecruiters, or Workday~~ | ~~`big_tech`~~ | **Shipped (Phase 25):** Phenom People via `@register_scraper("phenom")` on `careers.cisco.com` with `keywords=Splunk` |
 | Grammarly | Greenhouse, Ashby, or SmartRecruiters | `unicorn` | Still blocked — careers redirect to Superhuman; Greenhouse `grammarly`/`superhuman` 404; Ashby board empty/404 |
@@ -762,6 +763,7 @@ new custom scraper if the careers site uses a proprietary stack.
 **Shipped:** 4 presets in `presets/` (CrowdStrike, Zillow, Palo Alto Networks, SentinelOne);
 catalog count **115**. Rivian shipped later via [Phase 24](#phase-24--icimsjibe-attract-adapter).
 Splunk shipped later via [Phase 25](#phase-25--phenom-people-adapter).
+Rippling shipped later via [Phase 26](#phase-26--rippling-ats-adapter).
 
 **Done when:** at least three employers from this list ship as verified presets (or
 new scrapers + presets where needed); skipped rows document why the public API
@@ -811,6 +813,32 @@ mention Splunk in skills/description — prefer title review in the Jobs feed.
 **Done when:** Splunk appears in the curated catalog with working scrape against
 fixtures, and at least one live smoke of `careers.cisco.com/widgets` with
 `keywords=Splunk` succeeds outside CI.
+
+---
+
+## Phase 26 — Rippling ATS adapter
+
+Goal: unlock employers on Rippling's proprietary ATS (vanity boards at
+`ats.rippling.com/<board>` backed by a public zero-auth board API). Starts with
+Rippling itself from the Phase 23 blocked list and leaves a reusable adapter for
+further catalog growth.
+
+| Item | Why | Notes |
+| ---- | --- | ----- |
+| ~~`rippling` scraper~~ | ~~Reusable ATS gap after Greenhouse / Lever / Ashby / Workday / SmartRecruiters / iCIMS / Phenom~~ | **Shipped:** `@register_scraper("rippling")`; `GET https://api.rippling.com/platform/api/ats/v1/board/<board>/jobs`; config `board` + optional `company` / `keywords` / `max_results`; collapses multi-location UUID rows |
+| ~~Fixture + tests~~ | ~~CI safety~~ | **Shipped:** sample JSON under `tests/fixtures/rippling_jobs.json`; no live network |
+| ~~URL detection~~ | ~~Paste-friendly source setup~~ | **Shipped:** `ats.rippling.com/<board>` and `api.rippling.com/platform/api/ats/v1/board/<board>/jobs` |
+| ~~Scraper docs~~ | ~~Operator discoverability~~ | **Shipped:** row in [modules/scrapers.md](modules/scrapers.md) |
+| ~~`rippling_preset` + Rippling~~ | ~~Catalog growth~~ | **Shipped:** `rippling_preset` in `catalog_helpers_rippling.py`; Rippling preset (`board=rippling`); catalog count **118** |
+
+**Caveat:** public board availability is plan-dependent on the employer's Rippling
+Recruiting setup — verify each board slug before adding a catalog preset. The
+marketing careers page at `www.rippling.com/careers` is separate; scrape via the
+ATS board API / `ats.rippling.com/<board>` URLs.
+
+**Done when:** Rippling appears in the curated catalog with working scrape against
+fixtures, and at least one live smoke of
+`api.rippling.com/platform/api/ats/v1/board/rippling/jobs` succeeds outside CI.
 
 ---
 

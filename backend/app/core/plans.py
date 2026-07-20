@@ -33,6 +33,7 @@ FREE_SCRAPERS: frozenset[str] = frozenset(
         "uber_careers",
         "icims",
         "phenom",
+        "rippling",
     }
 )
 PREMIUM_SCRAPERS: frozenset[str] = frozenset({"indeed", "linkedin", "playwright"})

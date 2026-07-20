@@ -20,7 +20,7 @@ def test_list_portal_presets_filters_query() -> None:
 def test_curated_portal_catalog_size() -> None:
     from app.portals.catalog import CURATED_PORTALS
 
-    assert len(CURATED_PORTALS) == 117
+    assert len(CURATED_PORTALS) == 118
 
 
 def test_curated_portal_apple_preset() -> None:
@@ -262,6 +262,28 @@ def test_curated_portal_splunk_phenom_preset() -> None:
     )
     assert "keywords" not in bare.default_config
     assert bare.default_config["careers_base_url"] == "https://careers.cisco.com"
+
+
+def test_curated_portal_rippling_ats_preset() -> None:
+    from app.portals.catalog import CURATED_PORTALS
+    from app.portals.catalog_helpers_rippling import rippling_preset
+
+    preset = next(p for p in CURATED_PORTALS if p.id == "rippling")
+    assert preset.adapter_key == "rippling"
+    assert preset.company_name == "Rippling"
+    assert preset.category == "unicorn"
+    assert preset.base_url == "https://ats.rippling.com/rippling"
+    assert preset.default_config["board"] == "rippling"
+    assert preset.default_config["portal_id"] == "rippling"
+
+    other = rippling_preset(
+        portal_id="petfolk",
+        company="Petfolk",
+        board="petfolk",
+        category="unicorn",
+    )
+    assert other.default_config["board"] == "petfolk"
+    assert other.base_url == "https://ats.rippling.com/petfolk"
 
 
 def test_curated_portal_confluent_ashby_preset() -> None:

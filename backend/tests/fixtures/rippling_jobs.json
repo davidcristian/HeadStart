@@ -1,0 +1,41 @@
+[
+  {
+    "uuid": "2f0674e6-f01f-4ecd-b459-e947241c211f",
+    "name": "Account Executive - Accountants Channel (East Coast)",
+    "department": {
+      "id": "Sales",
+      "label": "Sales"
+    },
+    "url": "https://ats.rippling.com/rippling/jobs/2f0674e6-f01f-4ecd-b459-e947241c211f",
+    "workLocation": {
+      "label": "Remote (Connecticut, US)",
+      "id": "Remote (Connecticut, US)"
+    }
+  },
+  {
+    "uuid": "2f0674e6-f01f-4ecd-b459-e947241c211f",
+    "name": "Account Executive - Accountants Channel (East Coast)",
+    "department": {
+      "id": "Sales",
+      "label": "Sales"
+    },
+    "url": "https://ats.rippling.com/rippling/jobs/2f0674e6-f01f-4ecd-b459-e947241c211f",
+    "workLocation": {
+      "label": "Remote (Massachusetts, US)",
+      "id": "Remote (Massachusetts, US)"
+    }
+  },
+  {
+    "uuid": "94ac7084-9b63-4e9f-9e2a-fd5da349172d",
+    "name": "Account Executive, Broker Channel (Atlanta) ",
+    "department": {
+      "id": "Sales",
+      "label": "Sales"
+    },
+    "url": "https://ats.rippling.com/rippling/jobs/94ac7084-9b63-4e9f-9e2a-fd5da349172d",
+    "workLocation": {
+      "label": "Remote (Atlanta, Georgia, US)",
+      "id": "Remote (Atlanta, Georgia, US)"
+    }
+  }
+]
