@@ -1,0 +1,50 @@
+{
+  "refineSearch": {
+    "status": 200,
+    "hits": 2,
+    "totalHits": 3,
+    "data": {
+      "jobs": [
+        {
+          "title": "Customer Success Splunk Platform Area TAM",
+          "jobId": "2015573",
+          "jobSeqNo": "CISCISGLOBAL2015573EXTERNALENGLOBAL",
+          "reqId": "2015573",
+          "location": "Richardson, Texas, United States of America",
+          "city": "Richardson",
+          "state": "Texas",
+          "country": "United States of America",
+          "cityStateCountry": "Richardson, Texas, United States of America",
+          "postedDate": "2026-07-11T00:00:00.000+0000",
+          "dateCreated": "2026-05-28T03:03:51.879+0000",
+          "category": "Customer Experience",
+          "department": "Supervisory Organization 1359407 (Dan Taylor)",
+          "type": "Full time",
+          "RemoteType": "Remote",
+          "applyUrl": "https://cisco.wd5.myworkdayjobs.com/Cisco_Careers/job/Richardson-Texas-US/Customer-Success-Splunk-Platform-Area-TAM_2015573-1/apply",
+          "descriptionTeaser": "Embrace the role of a Customer Success Splunk Platform Area TAM and drive impactful solutions for enterprise clients. Leverage your Splunk expertise to guide teams, deliver onboarding workshops, and optimize technical performance. Collaborate with cross-functional teams to solve complex challenges and shape the future of customer success in a dynamic, remote environment."
+        },
+        {
+          "title": "Customer Success Splunk Platform Area TAM",
+          "jobId": "2015546",
+          "jobSeqNo": "CISCISGLOBAL2015546EXTERNALENGLOBAL",
+          "reqId": "2015546",
+          "location": "Richardson, Texas, United States of America",
+          "city": "Richardson",
+          "state": "Texas",
+          "country": "United States of America",
+          "cityStateCountry": "Richardson, Texas, United States of America",
+          "postedDate": "2026-07-11T00:00:00.000+0000",
+          "dateCreated": "2026-05-28T03:03:51.867+0000",
+          "category": "Customer Experience",
+          "department": "Supervisory Organization 1359407 (Dan Taylor)",
+          "type": "Full time",
+          "RemoteType": "Remote",
+          "applyUrl": "https://cisco.wd5.myworkdayjobs.com/Cisco_Careers/job/Richardson-Texas-US/Customer-Success-Splunk-Platform-Area-TAM_2015546-1/apply",
+          "descriptionTeaser": "Embrace the role of a Customer Success Splunk Platform Area TAM and drive impactful solutions for enterprise clients. Leverage your Splunk expertise to guide teams, deliver onboarding, and optimize technical performance. Collaborate with cross-functional teams to solve complex challenges and shape the future of customer success in a dynamic, remote environment."
+        }
+      ],
+      "aggregations": []
+    }
+  }
+}

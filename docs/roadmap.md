@@ -3,11 +3,11 @@
 Living plan for HeadStart — what to build next and why. Update this doc when
 priorities shift or a milestone ships.
 
-**Current baseline (2026-07):** Phases 1–23 shipped (four-tier pricing, per-user AI
+**Current baseline (2026-07):** Phases 1–25 shipped (four-tier pricing, per-user AI
 summary preferences, curated employer portal catalog through batch 5, SmartRecruiters adapter, custom career-site
-adapters for Shopify, Uber, and Snowflake, the dev-only local application agent, and inbox OAuth
-providers for Gmail, Outlook, Yahoo, and Fastmail). Phase 24 adds the reusable iCIMS/Jibe
-Attract scraper and Rivian catalog preset. See
+adapters for Shopify, Uber, and Snowflake, the dev-only local application agent, inbox OAuth
+providers for Gmail, Outlook, Yahoo, and Fastmail, the reusable iCIMS/Jibe
+Attract scraper with Rivian, and the reusable Phenom People scraper with Splunk). See
 [architecture.md](architecture.md) for the system design.
 
 ---
@@ -755,13 +755,13 @@ new custom scraper if the careers site uses a proprietary stack.
 | ~~SentinelOne~~ | ~~Greenhouse (`sentinellabs`)~~ | ~~`unicorn`~~ | **Shipped** — `portal_id` `sentinelone`, board token `sentinellabs` |
 | Rippling | Ashby (`rippling`) or custom | `unicorn` | Still blocked — Ashby Postings API 404; careers site is proprietary Rippling ATS |
 | HashiCorp | Greenhouse or SmartRecruiters | `unicorn` | Still blocked — no public Greenhouse/SR/Ashby/Lever board; IBM careers (post-acquisition) |
-| Splunk | Greenhouse, SmartRecruiters, or Workday | `big_tech` | Still blocked — careers redirect to Cisco Phenom (`careers.cisco.com/.../splunk`); Cisco Workday is not Splunk-scoped |
-| Rivian | Greenhouse, Lever, SmartRecruiters, or Workday | `unicorn` | **Shipped (Phase 24):** iCIMS/Jibe Attract via `@register_scraper("icims")` on `careers.rivian.com/api/jobs` |
+| ~~Splunk~~ | ~~Greenhouse, SmartRecruiters, or Workday~~ | ~~`big_tech`~~ | **Shipped (Phase 25):** Phenom People via `@register_scraper("phenom")` on `careers.cisco.com` with `keywords=Splunk` |
 | Grammarly | Greenhouse, Ashby, or SmartRecruiters | `unicorn` | Still blocked — careers redirect to Superhuman; Greenhouse `grammarly`/`superhuman` 404; Ashby board empty/404 |
 | Snyk | Greenhouse, Ashby, or SmartRecruiters | `unicorn` | Still blocked — Ashby board returns 0 jobs; Greenhouse/Lever/SR tokens failed |
 
 **Shipped:** 4 presets in `presets/` (CrowdStrike, Zillow, Palo Alto Networks, SentinelOne);
 catalog count **115**. Rivian shipped later via [Phase 24](#phase-24--icimsjibe-attract-adapter).
+Splunk shipped later via [Phase 25](#phase-25--phenom-people-adapter).
 
 **Done when:** at least three employers from this list ship as verified presets (or
 new scrapers + presets where needed); skipped rows document why the public API
@@ -786,6 +786,31 @@ blocked list and leaves a reusable adapter for further catalog growth.
 **Done when:** Rivian appears in the curated catalog with working scrape against
 fixtures, and at least one live smoke of `careers.rivian.com/api/jobs` succeeds
 outside CI.
+
+---
+
+## Phase 25 — Phenom People adapter
+
+Goal: unlock employers on Phenom-backed careers sites (vanity domains with a
+public `POST /widgets` refineSearch JSON API). Starts with Splunk from the
+Phase 23 blocked list (hosted on Cisco Phenom at `careers.cisco.com`) and leaves
+a reusable adapter for further catalog growth.
+
+| Item | Why | Notes |
+| ---- | --- | ----- |
+| ~~`phenom` scraper~~ | ~~Reusable ATS gap after Greenhouse / Lever / Ashby / Workday / SmartRecruiters / iCIMS~~ | **Shipped:** `@register_scraper("phenom")`; CSRF-seeded `POST {careers_base_url}/widgets`; config `careers_base_url` + `country` / `locale` + optional `ref_num` / `keywords` / `selected_fields` / `page_size` / `max_results` |
+| ~~Fixture + tests~~ | ~~CI safety~~ | **Shipped:** sample JSON under `tests/fixtures/phenom_jobs_page*.json`; no live network |
+| ~~URL detection~~ | ~~Paste-friendly source setup~~ | **Shipped:** known host `careers.cisco.com` (Splunk path seeds `keywords`), and explicit `/widgets` paths |
+| ~~Scraper docs~~ | ~~Operator discoverability~~ | **Shipped:** row in [modules/scrapers.md](modules/scrapers.md) |
+| ~~`phenom_preset` + Splunk~~ | ~~Catalog growth~~ | **Shipped:** helper in `catalog_helpers.py`; Splunk preset (`keywords=Splunk`); catalog count **117** |
+
+**Caveat:** post-acquisition Splunk roles live on Cisco's Phenom tenant. The
+preset filters with `keywords=Splunk`, which can include Cisco jobs that merely
+mention Splunk in skills/description — prefer title review in the Jobs feed.
+
+**Done when:** Splunk appears in the curated catalog with working scrape against
+fixtures, and at least one live smoke of `careers.cisco.com/widgets` with
+`keywords=Splunk` succeeds outside CI.
 
 ---
 

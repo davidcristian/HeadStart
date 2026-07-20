@@ -20,7 +20,7 @@ def test_list_portal_presets_filters_query() -> None:
 def test_curated_portal_catalog_size() -> None:
     from app.portals.catalog import CURATED_PORTALS
 
-    assert len(CURATED_PORTALS) == 116
+    assert len(CURATED_PORTALS) == 117
 
 
 def test_curated_portal_apple_preset() -> None:
@@ -236,6 +236,19 @@ def test_curated_portal_rivian_icims_preset() -> None:
     assert preset.default_config["careers_base_url"] == "https://careers.rivian.com"
     assert preset.default_config["portal_id"] == "rivian"
     assert preset.default_config["company"] == "Rivian"
+
+
+def test_curated_portal_splunk_phenom_preset() -> None:
+    from app.portals.catalog import CURATED_PORTALS
+
+    preset = next(p for p in CURATED_PORTALS if p.id == "splunk")
+    assert preset.adapter_key == "phenom"
+    assert preset.company_name == "Splunk"
+    assert preset.category == "big_tech"
+    assert preset.base_url == "https://careers.cisco.com"
+    assert preset.default_config["ref_num"] == "CISCISGLOBAL"
+    assert preset.default_config["keywords"] == "Splunk"
+    assert preset.default_config["portal_id"] == "splunk"
 
 
 def test_curated_portal_confluent_ashby_preset() -> None:

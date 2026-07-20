@@ -21,7 +21,7 @@ helpers). Each `PortalPreset` carries:
 | `base_url` | Careers board URL passed to the scraper |
 | `default_config` | Adapter-specific config merged into new sources (always includes `portal_id`) |
 
-As of the current catalog: **116 employers** — 51 big tech, 54 unicorn, 11 AI —
+As of the current catalog: **117 employers** — 52 big tech, 54 unicorn, 11 AI —
 across Greenhouse (65), Ashby (12), Workday (13), SmartRecruiters (13), Lever (4),
 Apple Careers (1), Google Careers (1), Meta Careers (1), Microsoft Careers (1),
 Shopify Careers (1), Uber Careers (1), Amazon Jobs (1), and iCIMS/Jibe (1).
@@ -96,7 +96,7 @@ prompt). The Portals page reads `plan.features.portal_search` from `GET /meta`
    (test with `POST /sources/detect` or a unit-test fixture).
 2. Add `presets/<portal_id>.py` exporting `PORTAL` (use helpers in
    `catalog_helpers.py`: `gh_preset`, `lever_preset`, `ashby_preset`,
-   `sr_preset`, `workday_preset`, etc.). Register it in `presets/__init__.py`.
+   `sr_preset`, `workday_preset`, `icims_preset`, `phenom_preset`, etc.). Register it in `presets/__init__.py`.
 3. Set a unique `portal_id` in `default_config` (the factory helpers do this
    automatically).
 4. Pick `category` (`big_tech`, `unicorn`, `ai`).

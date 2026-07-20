@@ -1,0 +1,31 @@
+{
+  "refineSearch": {
+    "status": 200,
+    "hits": 1,
+    "totalHits": 3,
+    "data": {
+      "jobs": [
+        {
+          "title": "Account Executive - Splunk",
+          "jobId": "2015447",
+          "jobSeqNo": "CISCISGLOBAL2015447EXTERNALENGLOBAL",
+          "reqId": "2015447",
+          "location": "North Sydney, New South Wales, Australia",
+          "city": "North Sydney",
+          "state": "New South Wales",
+          "country": "Australia",
+          "cityStateCountry": "North Sydney, New South Wales, Australia",
+          "postedDate": "2026-07-10T00:00:00.000+0000",
+          "dateCreated": "2026-05-29T17:08:56.728+0000",
+          "category": "Sales",
+          "department": "Supervisory Organization 1357313 (Julie Riley)",
+          "type": "Full time",
+          "RemoteType": "Hybrid",
+          "applyUrl": "https://cisco.wd5.myworkdayjobs.com/Cisco_Careers/job/North-Sydney-Australia/Account-Executive---Splunk_2015447-1/apply",
+          "descriptionTeaser": "Embrace the role of an Account Executive - Splunk and drive growth in the NSW/Sydney market. Leverage your enterprise SaaS sales expertise to manage key accounts, drive new business, and deliver innovative security, cloud, and analytics solutions. Collaborate with top professionals and make a real impact in a high-performing, customer-centric environment."
+        }
+      ],
+      "aggregations": []
+    }
+  }
+}
