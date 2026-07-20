@@ -84,6 +84,7 @@ source's `adapter_key` when that source supports auto-apply. Import the
 | `uber_careers` | Careers Fusion GraphQL | `POST /careers/apply/graphql` (`submitApplication`); screening questions via `getAdditionalQuestionsForJob`; see below |
 | `smartrecruiters` | Application API JSON POST | `GET api.smartrecruiters.com/postings/<uuid>/configuration` then `POST …/candidates`; see below |
 | `rippling` | Public board apply JSON POST | `GET/POST api.rippling.com/platform/api/ats/v1/board/<board>/jobs/<uuid>/…`; S3 resume upload; see below |
+| `icims` | Talent Cloud Partner API | `POST api.icims.com/customers/<id>/people` then `…/applicantworkflows`; see below |
 
 ### Scrapers without apply adapters
 
@@ -93,7 +94,6 @@ work, but the Jobs page **Apply** action is unavailable:
 | Scraper key | Notes |
 | ----------- | ----- |
 | `playwright` / `generic_html` | Custom HTML sources; no generic apply path |
-| `icims` | Phase 24 Jibe Attract scrape; apply still pending ([Phase 28](../roadmap.md#phase-28--apply-adapters-for-recent-ats-scrapers)) |
 | `phenom` | Phase 25 Phenom widgets scrape; apply still pending ([Phase 28](../roadmap.md#phase-28--apply-adapters-for-recent-ats-scrapers)) |
 | `ibm_careers` | Phase 27 IBM Falcon search scrape; apply still pending ([Phase 28](../roadmap.md#phase-28--apply-adapters-for-recent-ats-scrapers)) |
 
@@ -317,6 +317,50 @@ fresh `session.cf_turnstile_token`, the adapter refuses live submit (dry-run
 still works). Invalid tokens return `turnstile_verification_failure`. Treat live
 auto-apply as best-effort for local/power-user flows that can supply a Turnstile
 token; hosted pipeline auto-apply will not pass captcha on its own.
+
+### iCIMS / Jibe Attract
+
+Maps `ProfileData` to the iCIMS Talent Cloud Partner API. Public Jibe Attract
+careers sites (`/api/jobs`) are scrape-friendly but route apply through a
+login + captcha SPA (or an `*.icims.com` iframe) — there is no unauthenticated
+public apply POST.
+
+| Step | Endpoint |
+| ---- | -------- |
+| Optional job enrichment | `GET {careers_base_url}/api/jobs?keywords=<job_id>` (public) |
+| Create candidate | `POST https://api.icims.com/customers/<customer_id>/people` |
+| Link to job | `POST https://api.icims.com/customers/<customer_id>/applicantworkflows` |
+
+Config / credentials:
+
+| Field | Where | Purpose |
+| ----- | ----- | ------- |
+| `careers_base_url` | source `default_config` or parsed from `job_url` | Jibe Attract origin for optional job enrichment / `tenantId` discovery |
+| `customer_id` / `tenant_id` | source/search config or credential `session` | iCIMS customer id (**required for live submit**) |
+| `job_id` / `req_id` | source/search config | Optional numeric job id override |
+| `folder_id` | source/search config | Candidate folder (default `D32006` Cand:Unreviewed) |
+| `status_id` | source/search config | Applicant workflow status (default `D10100` Recently Applied) |
+| `application_source` | source/search config | Workflow `source` label (default `HeadStart`) |
+| `phone_type_id` / `address_type_id` / `address_country_id` | source/search config | Optional list ids for phones/addresses |
+| `notes_field` | source/search config | Person field for cover letter / notes (default `overview`) |
+| `icims_<field>` | profile `answers` | Pass-through custom Person fields (e.g. `icims_field1234`) |
+| `username` + `password` | credential `session` (aliases: `basic_auth_*`, `api_*`, `icims_*`) | **Required for live submit** — Partner Program Basic Auth |
+
+**Dry run:** optionally fetches the public job row (to surface `apply_url` and
+`meta_data.icims` tenant id), builds the person + applicantworkflow JSON, and
+returns a preview envelope without calling `api.icims.com`.
+
+**Resume file:** dry-run includes resume metadata only. Binary resume upload via
+the Profiles API is not wired in this adapter yet — attach resumes in the
+employer portal or a follow-up field upload when your partner credentials allow
+it.
+
+**Live submit:** creates a Person profile, then an applicant workflow linking
+that person to the job. Requires Partner Program credentials scoped to the
+employer customer (same class of gate as Rippling's Turnstile token — not
+available to typical self-serve job seekers without an approved integration).
+Public Jibe / `*.icims.com` login+captcha apply remains unsupported for
+automation.
 
 ### Workday
 

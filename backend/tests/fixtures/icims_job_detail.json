@@ -1,0 +1,34 @@
+{
+  "totalCount": 1,
+  "count": 1,
+  "jobs": [
+    {
+      "data": {
+        "slug": "31370",
+        "req_id": "31370",
+        "title": "Sr. Supplier Development Engineer, Exteriors",
+        "hiring_organization": "Rivian",
+        "full_location": "Normal, Illinois",
+        "short_location": "Normal, Illinois",
+        "city": "Normal",
+        "state": "Illinois",
+        "country": "United States",
+        "posted_date": "2026-06-12T14:10:00+0000",
+        "apply_url": "https://us-careers-rivian.icims.com/jobs/31370/login",
+        "description": "<p>Sample</p>",
+        "employment_type": "FULL_TIME",
+        "ats_code": "icims",
+        "meta_data": {
+          "icims": {
+            "primary_posted_site_object": {
+              "site": "us-careers-rivian",
+              "tenantId": "13315",
+              "siteId": "efbf127b-fc4b-4b4e-a3dd-73c038922782",
+              "siteType": "ATTRACT"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

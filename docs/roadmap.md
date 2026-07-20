@@ -10,7 +10,7 @@ adapters for Shopify, Uber, and Snowflake, the dev-only local application agent,
 providers for Gmail, Outlook, Yahoo, and Fastmail, the reusable iCIMS/Jibe
 Attract scraper with Rivian, the reusable Phenom People scraper with Splunk,
 the reusable Rippling ATS scraper with Rippling, the reusable IBM Careers
-Falcon search scraper with HashiCorp, and Phase 28 Rippling apply). See
+Falcon search scraper with HashiCorp, and Phase 28 Rippling + iCIMS apply). See
 [architecture.md](architecture.md) for the system design.
 
 ---
@@ -882,14 +882,14 @@ and the apply recipe in [recipes.md](recipes.md).
 
 | Adapter | Why | Notes |
 | ------- | --- | ----- |
-| `rippling` | Phase 26 board API is scrape-only; catalog employers cannot one-click apply | **Shipped (first):** `@register_applier("rippling")` uses public board apply (`GET …/jobs/<uuid>` + `POST …/apply`) with presigned S3 resume upload via `GET …/utility/file_upload_url`. Dry-run previews required questions + payload. Live submit requires Cloudflare Turnstile token in credential `session.cf_turnstile_token` (public apply is captcha-gated). See [modules/appliers.md](modules/appliers.md). |
-| `icims` | Phase 24 Jibe Attract scrape; Rivian apply still redirects to iCIMS login | Pending — partner Apply API / session-backed flow TBD |
+| ~~`rippling`~~ | ~~Phase 26 board API is scrape-only; catalog employers cannot one-click apply~~ | **Shipped:** `@register_applier("rippling")` uses public board apply (`GET …/jobs/<uuid>` + `POST …/apply`) with presigned S3 resume upload via `GET …/utility/file_upload_url`. Dry-run previews required questions + payload. Live submit requires Cloudflare Turnstile token in credential `session.cf_turnstile_token` (public apply is captcha-gated). See [modules/appliers.md](modules/appliers.md). |
+| ~~`icims`~~ | ~~Phase 24 Jibe Attract scrape; Rivian apply still redirects to iCIMS login~~ | **Shipped:** `@register_applier("icims")` uses Talent Cloud Partner API (`POST …/people` + `POST …/applicantworkflows`). Dry-run previews person + workflow JSON (optional public `/api/jobs` enrichment). Live submit requires Partner Program Basic Auth + `customer_id` — public Jibe apply stays login/captcha gated. See [modules/appliers.md](modules/appliers.md). |
 | `phenom` | Phase 25 Phenom widgets scrape (Splunk on Cisco) | Pending — apply surface varies by Phenom tenant |
 | `ibm_careers` | Phase 27 Falcon search scrape (HashiCorp) | Pending — IBM Careers apply is a separate authenticated flow |
 
 **Done when:** at least one of the four scrapers supports dry-run + documented live
 submit from the Jobs page (or an explicit, tested blocker is documented). **Met
-for `rippling`.**
+for `rippling` and `icims`.**
 
 ---
 
