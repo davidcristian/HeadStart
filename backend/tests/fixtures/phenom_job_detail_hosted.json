@@ -1,0 +1,19 @@
+{
+  "jobDetail": {
+    "status": 200,
+    "hits": 1,
+    "totalHits": 1,
+    "data": {
+      "job": {
+        "title": "Platform Engineer",
+        "jobId": "PHJOB1001",
+        "jobSeqNo": "ACMEGLOBALPHJOB1001EXTERNALENGLOBAL",
+        "reqId": "PHJOB1001",
+        "refNum": "ACMEGLOBAL",
+        "location": "Remote",
+        "externalApply": false,
+        "descriptionTeaser": "Build platform tooling."
+      }
+    }
+  }
+}

@@ -85,6 +85,7 @@ source's `adapter_key` when that source supports auto-apply. Import the
 | `smartrecruiters` | Application API JSON POST | `GET api.smartrecruiters.com/postings/<uuid>/configuration` then `POST …/candidates`; see below |
 | `rippling` | Public board apply JSON POST | `GET/POST api.rippling.com/platform/api/ats/v1/board/<board>/jobs/<uuid>/…`; S3 resume upload; see below |
 | `icims` | Talent Cloud Partner API | `POST api.icims.com/customers/<id>/people` then `…/applicantworkflows`; see below |
+| `phenom` | Downstream ATS delegation + partner Apply API | Resolves `applyUrl` via `POST /widgets` (`jobDetail`); delegates to Workday/Greenhouse/… when recognized; otherwise `POST api.phenompro.com/apply/v2/applications`; see below |
 
 ### Scrapers without apply adapters
 
@@ -94,7 +95,6 @@ work, but the Jobs page **Apply** action is unavailable:
 | Scraper key | Notes |
 | ----------- | ----- |
 | `playwright` / `generic_html` | Custom HTML sources; no generic apply path |
-| `phenom` | Phase 25 Phenom widgets scrape; apply still pending ([Phase 28](../roadmap.md#phase-28--apply-adapters-for-recent-ats-scrapers)) |
 | `ibm_careers` | Phase 27 IBM Falcon search scrape; apply still pending ([Phase 28](../roadmap.md#phase-28--apply-adapters-for-recent-ats-scrapers)) |
 
 `GET /portals` sets `supports_auto_apply: false` for these keys. See
@@ -361,6 +361,46 @@ employer customer (same class of gate as Rippling's Turnstile token — not
 available to typical self-serve job seekers without an approved integration).
 Public Jibe / `*.icims.com` login+captcha apply remains unsupported for
 automation.
+
+### Phenom People
+
+Maps `ProfileData` onto either a **downstream ATS** (when the Phenom listing
+exposes a recognizable `applyUrl`) or the **partner Apply API** for
+Phenom-hosted applications. Cisco/Splunk careers (`careers.cisco.com`) use
+Workday apply URLs — the same class of delegation as Indeed/LinkedIn.
+
+| Step | Endpoint |
+| ---- | -------- |
+| CSRF seed | `GET {careers_base_url}/{country}/{lang}/search-results` |
+| Job + `applyUrl` | `POST {careers_base_url}/widgets` with `ddoKey=jobDetail` |
+| Downstream apply | Delegates to Workday / Greenhouse / Lever / Ashby / … |
+| Phenom-hosted submit | `POST https://api.phenompro.com/apply/v2/applications` |
+
+Config / credentials:
+
+| Field | Where | Purpose |
+| ----- | ----- | ------- |
+| `careers_base_url` | source `default_config` or parsed from `job_url` | Phenom careers origin |
+| `country` / `locale` / `ref_num` | source/search config | Same as the Phenom scraper |
+| `apply_url` / `external_apply_url` | source/search config | Skip widgets fetch; route from this URL |
+| `applicant_source` | source/search config | Partner API `jobApplicationData.applicantSource` (default `HeadStart`) |
+| `phenom_apply_api_base` | source/search config | Override partner API origin (default `https://api.phenompro.com`) |
+| `phenom_<field>` | profile `answers` | Pass-through `customFieldData` keys |
+| `access_token` | credential `session` (aliases: `phenom_access_token`, `api_token`, `bearer_token`, `oauth_token`) | **Required for live Phenom-hosted submit** — partner OAuth bearer |
+
+**Dry run:** fetches job detail (unless `apply_url` is set), then either returns
+the delegated ATS preview or the partner application JSON (resume metadata
+only).
+
+**Resume file:** partner live submit Base64-encodes the stored resume as
+`resumeData.fileContent`. Delegated ATS adapters follow their own resume rules
+(e.g. Workday CXS attachments).
+
+**Live submit:** when `applyUrl` maps to Workday (Splunk on Cisco) or another
+supported ATS, live submit uses that adapter's credentials (e.g. Workday
+session cookies). Phenom-hosted tenants without a supported `applyUrl` need
+partner Apply API OAuth — public careers apply flows vary by tenant and are
+not automated here.
 
 ### Workday
 

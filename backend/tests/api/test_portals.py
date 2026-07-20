@@ -19,6 +19,9 @@ def test_portals_lists_curated_entries(client: TestClient, auth_headers: dict[st
     assert stripe["supports_auto_apply"] is True
     shopify = next(item for item in body["items"] if item["id"] == "shopify")
     assert shopify["supports_auto_apply"] is True
+    splunk = next(item for item in body["items"] if item["id"] == "splunk")
+    assert splunk["adapter_key"] == "phenom"
+    assert splunk["supports_auto_apply"] is True
     assert stripe["allowed_on_plan"] is True
     assert stripe["already_added"] is False
 

@@ -1,0 +1,25 @@
+{
+  "jobDetail": {
+    "status": 200,
+    "hits": 1,
+    "totalHits": 1,
+    "data": {
+      "job": {
+        "title": "Customer Success Splunk Platform Area TAM",
+        "jobId": "2015573",
+        "jobSeqNo": "CISCISGLOBAL2015573EXTERNALENGLOBAL",
+        "reqId": "2015573",
+        "refNum": "CISCISGLOBAL",
+        "location": "Richardson, Texas, United States of America",
+        "city": "Richardson",
+        "state": "Texas",
+        "country": "United States of America",
+        "type": "Full time",
+        "externalApply": false,
+        "applyUrl": "https://cisco.wd5.myworkdayjobs.com/Cisco_Careers/job/Richardson-Texas-US/Customer-Success-Splunk-Platform-Area-TAM_2015573-1/apply",
+        "descriptionTeaser": "Drive impactful Splunk solutions for enterprise clients."
+      },
+      "isMultiLocationEnabled": false
+    }
+  }
+}
