@@ -20,7 +20,7 @@ def test_list_portal_presets_filters_query() -> None:
 def test_curated_portal_catalog_size() -> None:
     from app.portals.catalog import CURATED_PORTALS
 
-    assert len(CURATED_PORTALS) == 119
+    assert len(CURATED_PORTALS) == 120
 
 
 def test_curated_portal_apple_preset() -> None:
@@ -304,6 +304,20 @@ def test_curated_portal_grammarly_ashby_preset() -> None:
     assert preset.default_config["board"] == "Superhuman Platform Inc"
     assert preset.default_config["portal_id"] == "grammarly"
     assert preset.base_url == "https://jobs.ashbyhq.com/Superhuman%20Platform%20Inc"
+
+
+def test_curated_portal_snyk_workday_preset() -> None:
+    from app.portals.catalog import CURATED_PORTALS
+
+    preset = next(p for p in CURATED_PORTALS if p.id == "snyk")
+    assert preset.adapter_key == "workday"
+    assert preset.company_name == "Snyk"
+    assert preset.category == "unicorn"
+    assert preset.default_config["tenant"] == "snyk"
+    assert preset.default_config["site"] == "External"
+    assert preset.default_config["region"] == "wd103"
+    assert preset.default_config["portal_id"] == "snyk"
+    assert preset.base_url == "https://snyk.wd103.myworkdayjobs.com/en-US/External"
 
 
 def test_curated_portal_catalog_unique_portal_ids() -> None:

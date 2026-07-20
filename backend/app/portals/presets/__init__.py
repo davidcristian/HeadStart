@@ -44,6 +44,7 @@ from app.portals.presets.samsara import PORTAL as samsara
 from app.portals.presets.samsung import PORTAL as samsung
 from app.portals.presets.sentinelone import PORTAL as sentinelone
 from app.portals.presets.servicenow import PORTAL as servicenow
+from app.portals.presets.snyk import PORTAL as snyk
 from app.portals.presets.splunk import PORTAL as splunk
 from app.portals.presets.squarespace import PORTAL as squarespace
 from app.portals.presets.unity3d import PORTAL as unity3d
@@ -101,4 +102,5 @@ PORTALS: tuple[PortalPreset, ...] = (
     sentinelone,
     splunk,
     grammarly,
+    snyk,
 )
