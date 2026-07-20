@@ -36,13 +36,9 @@ def _handler_with_pages(
                 assert body.get("keywords") == expect_keywords
             offset = int(body.get("from") or 0)
             if offset == 0:
-                return httpx.Response(
-                    200, text=page1, headers={"content-type": "application/json"}
-                )
+                return httpx.Response(200, text=page1, headers={"content-type": "application/json"})
             if page2 is not None:
-                return httpx.Response(
-                    200, text=page2, headers={"content-type": "application/json"}
-                )
+                return httpx.Response(200, text=page2, headers={"content-type": "application/json"})
             return httpx.Response(
                 200,
                 text='{"refineSearch":{"totalHits":0,"data":{"jobs":[]}}}',
@@ -73,8 +69,7 @@ def test_phenom_parses_postings_with_pagination() -> None:
     assert first.company == "Splunk"
     assert first.location == "Richardson, Texas, United States of America"
     assert (
-        first.url
-        == "https://careers.cisco.com/global/en/job/CISCISGLOBAL2015573EXTERNALENGLOBAL"
+        first.url == "https://careers.cisco.com/global/en/job/CISCISGLOBAL2015573EXTERNALENGLOBAL"
     )
     assert first.posted_at is not None
     assert postings[2].title == "Account Executive - Splunk"

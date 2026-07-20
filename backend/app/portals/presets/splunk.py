@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from app.portals.catalog_helpers import phenom_preset
+from app.portals.catalog_helpers_phenom import phenom_preset
 
 PORTAL = phenom_preset(
     portal_id="splunk",

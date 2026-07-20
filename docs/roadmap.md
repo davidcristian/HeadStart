@@ -802,7 +802,7 @@ a reusable adapter for further catalog growth.
 | ~~Fixture + tests~~ | ~~CI safety~~ | **Shipped:** sample JSON under `tests/fixtures/phenom_jobs_page*.json`; no live network |
 | ~~URL detection~~ | ~~Paste-friendly source setup~~ | **Shipped:** known host `careers.cisco.com` (Splunk path seeds `keywords`), and explicit `/widgets` paths |
 | ~~Scraper docs~~ | ~~Operator discoverability~~ | **Shipped:** row in [modules/scrapers.md](modules/scrapers.md) |
-| ~~`phenom_preset` + Splunk~~ | ~~Catalog growth~~ | **Shipped:** helper in `catalog_helpers.py`; Splunk preset (`keywords=Splunk`); catalog count **117** |
+| ~~`phenom_preset` + Splunk~~ | ~~Catalog growth~~ | **Shipped:** `phenom_preset` in `catalog_helpers_phenom.py`; Splunk preset (`keywords=Splunk`); catalog count **117** |
 
 **Caveat:** post-acquisition Splunk roles live on Cisco's Phenom tenant. The
 preset filters with `keywords=Splunk`, which can include Cisco jobs that merely

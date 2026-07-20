@@ -240,6 +240,7 @@ def test_curated_portal_rivian_icims_preset() -> None:
 
 def test_curated_portal_splunk_phenom_preset() -> None:
     from app.portals.catalog import CURATED_PORTALS
+    from app.portals.catalog_helpers_phenom import phenom_preset
 
     preset = next(p for p in CURATED_PORTALS if p.id == "splunk")
     assert preset.adapter_key == "phenom"
@@ -249,6 +250,18 @@ def test_curated_portal_splunk_phenom_preset() -> None:
     assert preset.default_config["ref_num"] == "CISCISGLOBAL"
     assert preset.default_config["keywords"] == "Splunk"
     assert preset.default_config["portal_id"] == "splunk"
+
+    bare = phenom_preset(
+        portal_id="acme",
+        company="Acme",
+        careers_base_url="https://careers.cisco.com/",
+        country="us",
+        locale="en_us",
+        ref_num="ACME",
+        keywords="   ",
+    )
+    assert "keywords" not in bare.default_config
+    assert bare.default_config["careers_base_url"] == "https://careers.cisco.com"
 
 
 def test_curated_portal_confluent_ashby_preset() -> None:

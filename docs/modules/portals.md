@@ -96,7 +96,8 @@ prompt). The Portals page reads `plan.features.portal_search` from `GET /meta`
    (test with `POST /sources/detect` or a unit-test fixture).
 2. Add `presets/<portal_id>.py` exporting `PORTAL` (use helpers in
    `catalog_helpers.py`: `gh_preset`, `lever_preset`, `ashby_preset`,
-   `sr_preset`, `workday_preset`, `icims_preset`, `phenom_preset`, etc.). Register it in `presets/__init__.py`.
+   `sr_preset`, `workday_preset`, `icims_preset`, etc.; Phenom uses
+   `phenom_preset` from `catalog_helpers_phenom.py`). Register it in `presets/__init__.py`.
 3. Set a unique `portal_id` in `default_config` (the factory helpers do this
    automatically).
 4. Pick `category` (`big_tech`, `unicorn`, `ai`).
