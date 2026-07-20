@@ -86,6 +86,7 @@ source's `adapter_key` when that source supports auto-apply. Import the
 | `rippling` | Public board apply JSON POST | `GET/POST api.rippling.com/platform/api/ats/v1/board/<board>/jobs/<uuid>/…`; S3 resume upload; see below |
 | `icims` | Talent Cloud Partner API | `POST api.icims.com/customers/<id>/people` then `…/applicantworkflows`; see below |
 | `phenom` | Downstream ATS delegation + partner Apply API | Resolves `applyUrl` via `POST /widgets` (`jobDetail`); delegates to Workday/Greenhouse/… when recognized; otherwise `POST api.phenompro.com/apply/v2/applications`; see below |
+| `ibm_careers` | Avature External Import Services | Dry-run previews CSV + portal URLs; live submit needs a provisioned Import Service endpoint; see below |
 
 ### Scrapers without apply adapters
 
@@ -95,7 +96,6 @@ work, but the Jobs page **Apply** action is unavailable:
 | Scraper key | Notes |
 | ----------- | ----- |
 | `playwright` / `generic_html` | Custom HTML sources; no generic apply path |
-| `ibm_careers` | Phase 27 IBM Falcon search scrape; apply still pending ([Phase 28](../roadmap.md#phase-28--apply-adapters-for-recent-ats-scrapers)) |
 
 `GET /portals` sets `supports_auto_apply: false` for these keys. See
 [roadmap.md → Phase 28](../roadmap.md#phase-28--apply-adapters-for-recent-ats-scrapers).
@@ -401,6 +401,50 @@ supported ATS, live submit uses that adapter's credentials (e.g. Workday
 session cookies). Phenom-hosted tenants without a supported `applyUrl` need
 partner Apply API OAuth — public careers apply flows vary by tenant and are
 not automated here.
+
+### IBM Careers (Avature)
+
+Maps `ProfileData` to an Avature **External Import Services** CSV upload.
+IBM Careers listings (`careers.ibm.com/careers/JobDetail?jobId=…`, including
+post-acquisition HashiCorp roles) scrape via the public Falcon search API, but
+applications run on an Avature portal behind AWS WAF with a multi-step
+login/register wizard — there is no unauthenticated public candidate apply POST.
+
+| Step | Endpoint |
+| ---- | -------- |
+| Dry-run preview | Local only (no WAF / portal fetch) |
+| Live import | `POST {avature_import_url}` multipart (`upload` = CSV) |
+
+Config / credentials:
+
+| Field | Where | Purpose |
+| ----- | ----- | ------- |
+| `job_id` / `jobId` | source/search config | Optional numeric job id override |
+| `careers_base_url` | source/search config or parsed from `job_url` | Portal origin (default `https://careers.ibm.com`) |
+| `avature_import_url` / `import_url` | source/search config or credential `session` | **Required for live submit** — Avature Import Service endpoint (`…/ImportService/<token>/`) |
+| `import_csv_columns` | source/search config | Ordered CSV columns matching the tenant's Import Data layout (default HeadStart layout below) |
+| `import_csv_header` | source/search config | When true, include a header row (Avature usually expects none) |
+| `import_return_url` | source/search config | Optional `returnUrl` callback for import results |
+| `api_key` / `avature_api_key` | credential `session` (or config) | Optional `X-Avature-Key` when the Import Service requires it |
+
+Default CSV columns: `first_name`, `last_name`, `email`, `phone`, `job_id`,
+`location`, `linkedin`, `website`, `cover_letter`, `resume_filename`,
+`resume_content_type`, `resume_base64`. Operators must map these columns to
+Person / Job fields in the Avature Import Data UI — layouts are tenant-specific.
+
+**Dry run:** builds the candidate CSV row and returns portal URLs
+(`job_detail_url`, `application_methods_url`) plus a `blocker` note when no
+Import Service URL is configured. Resume Base64 bytes are omitted from the
+preview payload.
+
+**Resume file:** live Import Service CSV includes Base64 resume bytes when the
+profile has a stored file (Avature supports Base64 attachments on import).
+
+**Live submit:** POSTs multipart CSV to the provisioned Import Service URL.
+Without that URL, live submit fails with a clear blocker (same class of gate as
+iCIMS Partner API credentials — not available to typical self-serve job seekers).
+Public `careers.ibm.com` / Avature login+WAF apply remains unsupported for
+automation; open `application_methods_url` to apply manually.
 
 ### Workday
 
