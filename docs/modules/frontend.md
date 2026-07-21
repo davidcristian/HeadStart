@@ -258,11 +258,15 @@ CI runs `just audit-frontend` after `npm ci`; Dependabot watches
 `just audit-backend` (`pip-audit` on the hashed lockfiles) with Dependabot on
 `/backend`.
 
-One pin is deliberately behind its latest major, so a Dependabot PR that
-raises it needs the paired change first:
+`vite` and `@vitejs/plugin-react` majors move **together**: the plugin declares
+a hard `vite` peer (6.x requires Vite 8), so a Dependabot PR that raises only
+one of them cannot install. Merge the pair in a single change.
 
-- `@vitejs/plugin-react` stays on **5.x**: 6.x requires Vite 8, and 5.2.0 is the
-  newest release that still accepts the Vite 6 line this app builds on.
+`@vitejs/plugin-react` also declares two optional peers, `@rolldown/plugin-babel`
+and `babel-plugin-react-compiler`. This app uses neither, and installing the
+first would drag in a conflicting `@babel/core` major, so leave them absent. A
+stale lockfile can make npm try to materialize them anyway and fail with
+ERESOLVE; regenerating `package-lock.json` resolves it.
 
 ## Progressive Web App (mobile)
 

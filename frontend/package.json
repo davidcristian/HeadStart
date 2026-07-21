@@ -29,7 +29,7 @@
     "@types/react-dom": "^19.2.3",
     "@typescript-eslint/eslint-plugin": "^8.64.0",
     "@typescript-eslint/parser": "^8.5.0",
-    "@vitejs/plugin-react": "^5.2.0",
+    "@vitejs/plugin-react": "^6.0.4",
     "@vitest/coverage-v8": "^4.1.10",
     "eslint": "^10.8.0",
     "eslint-plugin-react-hooks": "^7.1.1",
@@ -38,7 +38,7 @@
     "jsdom": "^25.0.0",
     "prettier": "^3.3.3",
     "typescript": "^5.5.4",
-    "vite": "^6.4.3",
+    "vite": "^8.1.5",
     "vite-plugin-pwa": "^1.3.0",
     "vitest": "^4.1.10"
   },
