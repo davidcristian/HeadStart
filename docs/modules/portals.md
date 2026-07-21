@@ -21,11 +21,12 @@ helpers). Each `PortalPreset` carries:
 | `base_url` | Careers board URL passed to the scraper |
 | `default_config` | Adapter-specific config merged into new sources (always includes `portal_id`) |
 
-As of the current catalog: **167 employers** — 59 big tech, 87 unicorn, 21 AI —
-across Greenhouse (84), Ashby (31), Workday (15), SmartRecruiters (14), Lever (4),
+As of the current catalog: **182 employers** — 59 big tech, 100 unicorn, 23 AI —
+across Greenhouse (93), Ashby (36), Workday (15), SmartRecruiters (15), Lever (4),
 Apple Careers (1), Google Careers (1), Meta Careers (1), Microsoft Careers (1),
 Shopify Careers (1), Snowflake Careers (1), Uber Careers (1), Amazon Jobs (1),
-iCIMS/Jibe (1), Phenom (4), Rippling ATS (1), IBM Careers (2), and Workable (2).
+iCIMS/Jibe (1), Phenom (4), Rippling ATS (1), IBM Careers (2), Workable (2), and
+SuccessFactors (1).
 Meta uses the `meta_careers` scraper (Relay GraphQL search on metacareers.com).
 Apple uses the `apple_careers` scraper (hydration JSON embedded in search HTML).
 Shopify Careers (`shopify_careers`) stores only `company` + `portal_id` in
@@ -51,7 +52,11 @@ and RTX use Phenom (`jobs.cvshealth.com`, `careers.gehealthcare.com`,
 `portal_id=characterai`), Midjourney, Pinecone, Grafana Labs (`grafanalabs` /
 `portal_id=grafana`), Temporal, PostHog, Neon, PlanetScale, Faire, Gong
 (`gongio` / `portal_id=gong`), and Checkout.com (`board=checkout.com` /
-`portal_id=checkout`).
+`portal_id=checkout`). Phase 37 batch 9 adds New Relic, Twitch, Nubank (Ashby),
+Celonis, JFrog, Mixpanel, Airbyte (Ashby), Hightouch, Gemini (crypto exchange
+Greenhouse board), Ripple, Alchemy (Ashby), Inflection (`inflectionai` /
+`portal_id=inflection`), Patreon (Ashby), Substack (Ashby), and Grab
+(SmartRecruiters `company_id=Grab`).
 
 `GET /portals` annotates each row with:
 

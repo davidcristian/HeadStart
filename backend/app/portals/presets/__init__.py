@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from app.portals.catalog_helpers import PortalPreset
 from app.portals.presets.adyen import PORTAL as adyen
+from app.portals.presets.airbyte import PORTAL as airbyte
 from app.portals.presets.airtable import PORTAL as airtable
+from app.portals.presets.alchemy import PORTAL as alchemy
 from app.portals.presets.amplitude import PORTAL as amplitude
 from app.portals.presets.anyscale import PORTAL as anyscale
 from app.portals.presets.asml import PORTAL as asml
@@ -16,6 +18,7 @@ from app.portals.presets.braze import PORTAL as braze
 from app.portals.presets.calendly import PORTAL as calendly
 from app.portals.presets.canva import PORTAL as canva
 from app.portals.presets.carta import PORTAL as carta
+from app.portals.presets.celonis import PORTAL as celonis
 from app.portals.presets.characterai import PORTAL as characterai
 from app.portals.presets.checkout import PORTAL as checkout
 from app.portals.presets.checkr import PORTAL as checkr
@@ -35,16 +38,21 @@ from app.portals.presets.faire import PORTAL as faire
 from app.portals.presets.fastly import PORTAL as fastly
 from app.portals.presets.fivetran import PORTAL as fivetran
 from app.portals.presets.gehealthcare import PORTAL as gehealthcare
+from app.portals.presets.gemini import PORTAL as gemini
 from app.portals.presets.gong import PORTAL as gong
+from app.portals.presets.grab import PORTAL as grab
 from app.portals.presets.grafana import PORTAL as grafana
 from app.portals.presets.grammarly import PORTAL as grammarly
 from app.portals.presets.gusto import PORTAL as gusto
 from app.portals.presets.hashicorp import PORTAL as hashicorp
+from app.portals.presets.hightouch import PORTAL as hightouch
 from app.portals.presets.hubspot import PORTAL as hubspot
 from app.portals.presets.huggingface import PORTAL as huggingface
+from app.portals.presets.inflection import PORTAL as inflection
 from app.portals.presets.infosys import PORTAL as infosys
 from app.portals.presets.intercom import PORTAL as intercom
 from app.portals.presets.jetbrains import PORTAL as jetbrains
+from app.portals.presets.jfrog import PORTAL as jfrog
 from app.portals.presets.klaviyo import PORTAL as klaviyo
 from app.portals.presets.langchain import PORTAL as langchain
 from app.portals.presets.launchdarkly import PORTAL as launchdarkly
@@ -54,13 +62,17 @@ from app.portals.presets.mercury import PORTAL as mercury
 from app.portals.presets.microstrategy import PORTAL as microstrategy
 from app.portals.presets.midjourney import PORTAL as midjourney
 from app.portals.presets.miro import PORTAL as miro
+from app.portals.presets.mixpanel import PORTAL as mixpanel
 from app.portals.presets.modal import PORTAL as modal
 from app.portals.presets.n26 import PORTAL as n26
 from app.portals.presets.neon import PORTAL as neon
+from app.portals.presets.newrelic import PORTAL as newrelic
+from app.portals.presets.nubank import PORTAL as nubank
 from app.portals.presets.nuro import PORTAL as nuro
 from app.portals.presets.onepassword import PORTAL as onepassword
 from app.portals.presets.pagerduty import PORTAL as pagerduty
 from app.portals.presets.paloaltonetworks import PORTAL as paloaltonetworks
+from app.portals.presets.patreon import PORTAL as patreon
 from app.portals.presets.pinecone import PORTAL as pinecone
 from app.portals.presets.planetscale import PORTAL as planetscale
 from app.portals.presets.pleo import PORTAL as pleo
@@ -69,6 +81,7 @@ from app.portals.presets.postman import PORTAL as postman
 from app.portals.presets.purestorage import PORTAL as purestorage
 from app.portals.presets.redhat import PORTAL as redhat
 from app.portals.presets.riotgames import PORTAL as riotgames
+from app.portals.presets.ripple import PORTAL as ripple
 from app.portals.presets.rippling import PORTAL as rippling
 from app.portals.presets.rivian import PORTAL as rivian
 from app.portals.presets.roblox import PORTAL as roblox
@@ -86,8 +99,10 @@ from app.portals.presets.snap import PORTAL as snap
 from app.portals.presets.snyk import PORTAL as snyk
 from app.portals.presets.splunk import PORTAL as splunk
 from app.portals.presets.squarespace import PORTAL as squarespace
+from app.portals.presets.substack import PORTAL as substack
 from app.portals.presets.temporal import PORTAL as temporal
 from app.portals.presets.together import PORTAL as together
+from app.portals.presets.twitch import PORTAL as twitch
 from app.portals.presets.typeform import PORTAL as typeform
 from app.portals.presets.unity3d import PORTAL as unity3d
 from app.portals.presets.webflow import PORTAL as webflow
@@ -197,4 +212,19 @@ PORTALS: tuple[PortalPreset, ...] = (
     gong,
     checkout,
     wlgore,
+    newrelic,
+    twitch,
+    nubank,
+    celonis,
+    jfrog,
+    mixpanel,
+    airbyte,
+    hightouch,
+    gemini,
+    ripple,
+    alchemy,
+    inflection,
+    patreon,
+    substack,
+    grab,
 )

@@ -343,7 +343,7 @@ def test_successfactors_preset_optional_category_id() -> None:
     )
     assert preset.default_config["category_id"] == 123
     assert preset.base_url == "https://acme.jobs.hr.cloud.sap"
-    assert len(CURATED_PORTALS) == 167
+    assert len(CURATED_PORTALS) == 182
     preset = next(p for p in CURATED_PORTALS if p.id == "wlgore")
     assert preset.adapter_key == "successfactors"
     assert preset.default_config["careers_base_url"] == "https://wlgore.jobs.hr.cloud.sap"

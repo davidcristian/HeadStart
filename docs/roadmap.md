@@ -3,9 +3,9 @@
 Living plan for HeadStart — what to build next and why. Update this doc when
 priorities shift or a milestone ships.
 
-**Current baseline (2026-07):** Phases 1–36 shipped (four-tier pricing, per-user AI
-summary preferences, curated employer portal catalog through batch 8 plus
-SuccessFactors (**167** employers), SmartRecruiters adapter, custom
+**Current baseline (2026-07):** Phases 1–37 shipped (four-tier pricing, per-user AI
+summary preferences, curated employer portal catalog through batch 9 plus
+SuccessFactors (**182** employers), SmartRecruiters adapter, custom
 career-site adapters for Shopify, Uber, and Snowflake, the dev-only local
 application agent, inbox OAuth providers for Gmail, Outlook, Yahoo, and
 Fastmail, the reusable iCIMS/Jibe Attract scraper with Rivian, the reusable
@@ -15,10 +15,11 @@ scraper (HashiCorp / Red Hat), Phase 28 Rippling + iCIMS + Phenom + IBM Careers
 apply, the reusable Workable widget scraper with Hugging Face, Phase 31
 portal catalog batch 7, Phase 32 Workable apply, Phase 33 Workday
 `*.myworkdaysite.com` support with Snap, Phase 34 portal catalog batch 8,
-Phase 35 SAP SuccessFactors Career Site Builder with W. L. Gore, and Phase 36
-SuccessFactors OData apply).
-**Next:** pick a follow-up from later roadmap rows (portal catalog batch 9 /
-more SuccessFactors employers, or another ATS gap).
+Phase 35 SAP SuccessFactors Career Site Builder with W. L. Gore, Phase 36
+SuccessFactors OData apply, and Phase 37 portal catalog batch 9).
+**Next:** pick a follow-up from later roadmap rows (more SuccessFactors CSB
+employers when additional public hosts are verified, another ATS gap, or
+portal catalog batch 10).
 See [architecture.md](architecture.md) for the system design.
 
 ---
@@ -1113,9 +1114,11 @@ Nike / Autodesk / Qualcomm / Broadcom / Arm** (enterprise boards not on public
 GH/Ashby/SR); **ByteDance** (SR live but only 2 postings — too thin for catalog);
 **Trade Republic** (GH live but only 1 posting); **Retool / GitHub** (still no
 public board; same class as Phase 29/31 skips); **New Relic / Twitch / Nubank /
-Celonis / JFrog / Mixpanel / Airbyte / Hightouch / Zoox / Gemini / Ripple /
-OpenSea / Consensys / Alchemy / Inflection / Stability / Patreon / Substack /
-Grab** (verified live — deferred to a later catalog batch to keep this PR scoped).
+Celonis / JFrog / Mixpanel / Airbyte / Hightouch / Gemini / Ripple / Alchemy /
+Inflection / Patreon / Substack / Grab** (verified live — deferred here;
+**shipped in [Phase 37](#phase-37--portal-catalog-batch-9-phase-34-deferred--existing-adapters)**);
+**Zoox / OpenSea / Consensys / Stability** (still deferred/skipped in Phase 37 —
+no board or too thin).
 
 **Out of scope for this phase:** new scraper adapters, apply-adapter work, and
 UI changes beyond the catalog list growing automatically from new presets.
@@ -1187,6 +1190,62 @@ Jobs page (or an explicit, tested blocker is documented). **Met.**
 
 ---
 
+## Phase 37 — Portal catalog batch 9 (Phase 34 deferred + existing adapters)
+
+Goal: grow the curated catalog from **167 → ~180** employers with **zero new
+scraper work** — only presets on adapters already shipped. Prefer employers
+deferred from [Phase 34](#phase-34--portal-catalog-batch-8-existing-adapters)
+(verified live then, held out to keep that PR scoped), then fill easy wins on
+Greenhouse / Ashby / SmartRecruiters. Additional SuccessFactors CSB hosts were
+probed but none beyond W. L. Gore answered on `*.jobs.hr.cloud.sap` at
+verification time.
+
+Each row must pass a **live smoke** against the public board API before merge.
+Board tokens, Ashby boards, and SmartRecruiters company IDs below are
+**candidates to verify** — replace or skip any that fail, and document skips in
+the PR.
+
+| Employer | Likely adapter | Category | Verify |
+| -------- | -------------- | -------- | ------ |
+| ~~New Relic~~ | ~~Greenhouse (`newrelic`)~~ | ~~`unicorn`~~ | **Shipped** |
+| ~~Twitch~~ | ~~Greenhouse (`twitch`)~~ | ~~`unicorn`~~ | **Shipped** |
+| ~~Nubank~~ | ~~Ashby (`nubank`)~~ | ~~`unicorn`~~ | **Shipped** — Greenhouse board also live; Ashby used |
+| ~~Celonis~~ | ~~Greenhouse (`celonis`)~~ | ~~`unicorn`~~ | **Shipped** |
+| ~~JFrog~~ | ~~Greenhouse (`jfrog`)~~ | ~~`unicorn`~~ | **Shipped** |
+| ~~Mixpanel~~ | ~~Greenhouse (`mixpanel`)~~ | ~~`unicorn`~~ | **Shipped** |
+| ~~Airbyte~~ | ~~Ashby (`airbyte`)~~ | ~~`unicorn`~~ | **Shipped** |
+| ~~Hightouch~~ | ~~Greenhouse (`hightouch`)~~ | ~~`unicorn`~~ | **Shipped** |
+| ~~Gemini~~ | ~~Greenhouse (`gemini`)~~ | ~~`unicorn`~~ | **Shipped** — crypto exchange board (not Google Gemini) |
+| ~~Ripple~~ | ~~Greenhouse (`ripple`)~~ | ~~`unicorn`~~ | **Shipped** |
+| ~~Alchemy~~ | ~~Ashby (`alchemy`)~~ | ~~`ai`~~ | **Shipped** |
+| ~~Inflection~~ | ~~Greenhouse (`inflectionai`)~~ | ~~`ai`~~ | **Shipped** — `portal_id=inflection` |
+| ~~Patreon~~ | ~~Ashby (`patreon`)~~ | ~~`unicorn`~~ | **Shipped** |
+| ~~Substack~~ | ~~Ashby (`substack`)~~ | ~~`unicorn`~~ | **Shipped** |
+| ~~Grab~~ | ~~SmartRecruiters (`Grab`)~~ | ~~`unicorn`~~ | **Shipped** — `portal_id=grab` |
+
+Skipped (roadmap candidates without a working public board at verification time,
+or too thin for catalog): **Zoox** (no public Greenhouse / Ashby / Workday CXS
+board verified); **OpenSea** (Ashby live but only 4 postings); **Consensys**
+(Greenhouse live but only 4 postings); **Stability AI** (Greenhouse
+`stabilityai` live but only 3 postings); **additional SuccessFactors CSB**
+tenants (guessed `*.jobs.hr.cloud.sap` hosts NXDOMAIN / non-200 except
+`wlgore`; Adidas `jobs.adidas-group.com` is older RMK — out of scope for the
+Phase 35 CSB scraper).
+
+**Out of scope for this phase:** new scraper adapters, apply-adapter work, and
+UI changes beyond the catalog list growing automatically from new presets.
+
+**Shipped:** 15 presets in `presets/` (New Relic, Twitch, Nubank, Celonis,
+JFrog, Mixpanel, Airbyte, Hightouch, Gemini, Ripple, Alchemy, Inflection,
+Patreon, Substack, Grab); catalog count **182**.
+
+**Done when:** catalog count is ≥ 180 **or** at least **12** new verified
+presets ship in this batch; every skipped candidate documents why the public
+API failed; `just check` passes; Pro portal search returns results for at least
+three new presets. **Met.**
+
+---
+
 ## Suggested starting points
 
 **Personal use (one job seeker):**
@@ -1205,12 +1264,14 @@ Jobs page (or an explicit, tested blocker is documented). **Met.**
 
 ## How to pick up work
 
-1. Choose an item from an open phase (Phase 36 SuccessFactors apply is **shipped** —
-   pick a catalog batch / more SF employers or an unstruck row in a later phase).
+1. Choose an item from an open phase (Phase 37 portal catalog batch 9 is
+   **shipped** — pick more SuccessFactors CSB employers when hosts are verified,
+   another ATS gap, or portal catalog batch 10).
 2. Read the relevant module doc under [modules/](modules/) and follow
    [AGENTS.md](../AGENTS.md).
 3. For new adapters, use [recipes.md](recipes.md) — one file, tests
    with fixtures, no live network in CI. For catalog presets only, follow the
-   Phase 22 / Phase 29 / Phase 31 / Phase 34 pattern (one preset file + live smoke + docs count).
+   Phase 22 / Phase 29 / Phase 31 / Phase 34 / Phase 37 pattern (one preset file
+   + live smoke + docs count).
 4. When an item ships, note it here (move to a **Shipped** subsection or strike
    through) and update the matching module doc.
