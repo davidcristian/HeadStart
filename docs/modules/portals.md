@@ -21,8 +21,8 @@ helpers). Each `PortalPreset` carries:
 | `base_url` | Careers board URL passed to the scraper |
 | `default_config` | Adapter-specific config merged into new sources (always includes `portal_id`) |
 
-As of the current catalog: **182 employers** — 59 big tech, 100 unicorn, 23 AI —
-across Greenhouse (93), Ashby (36), Workday (15), SmartRecruiters (15), Lever (4),
+As of the current catalog: **197 employers** — 59 big tech, 111 unicorn, 27 AI —
+across Greenhouse (103), Ashby (40), Workday (15), SmartRecruiters (16), Lever (4),
 Apple Careers (1), Google Careers (1), Meta Careers (1), Microsoft Careers (1),
 Shopify Careers (1), Snowflake Careers (1), Uber Careers (1), Amazon Jobs (1),
 iCIMS/Jibe (1), Phenom (4), Rippling ATS (1), IBM Careers (2), Workable (2), and
@@ -56,7 +56,11 @@ and RTX use Phenom (`jobs.cvshealth.com`, `careers.gehealthcare.com`,
 Celonis, JFrog, Mixpanel, Airbyte (Ashby), Hightouch, Gemini (crypto exchange
 Greenhouse board), Ripple, Alchemy (Ashby), Inflection (`inflectionai` /
 `portal_id=inflection`), Patreon (Ashby), Substack (Ashby), and Grab
-(SmartRecruiters `company_id=Grab`).
+(SmartRecruiters `company_id=Grab`). Batch 10 adds HelloFresh, Navan
+(`tripactions` / `portal_id=navan`), Appian, Sierra (Ashby), Freshworks
+(SmartRecruiters `company_id=Freshworks`), Decagon (Ashby), Cresta, Smartsheet,
+ZoomInfo, Baseten (Ashby), Proton, Sigma (`sigmacomputing` / `portal_id=sigma`),
+Docker (Ashby), Neo4j, and Pendo.
 
 `GET /portals` annotates each row with:
 

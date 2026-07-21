@@ -4,12 +4,13 @@ Living plan for HeadStart — what shipped, what is still open, and what to buil
 next. Update this when priorities shift or a milestone ships. Detail for shipped
 behavior lives in [modules/](modules/) and [adr/](adr/), not here.
 
-**Baseline (2026-07):** Phases **1–37** are shipped. Curated portal catalog:
-**182** employers. See [architecture.md](architecture.md) for the system design.
+**Baseline (2026-07):** Phases **1–37** are shipped; portal catalog **batch 10**
+adds 15 employers (**197** total). See [architecture.md](architecture.md) for
+the system design.
 
 ---
 
-## Shipped (Phases 1–37)
+## Shipped (Phases 1–37 + batch 10)
 
 | Area | What landed |
 | ---- | ----------- |
@@ -20,7 +21,7 @@ behavior lives in [modules/](modules/) and [adr/](adr/), not here.
 | Ops / SaaS | Metrics, rate limits, admin, hosted deploy polish, four-tier pricing (Free → Starter → Plus → Pro), Stripe billing, promo codes, ads on free tier, legal pages + Impressum, GDPR export/delete |
 | Auto-apply | Profile + resume, apply adapters for every production scraper except `generic_html` / `playwright`, pipeline auto-apply queue, application logs |
 | AI | Heuristic / OpenAI / Gemini / Anthropic / llama.cpp summaries; per-user + per-purpose model prefs; tailored LaTeX resume + cover letters |
-| Portals | Curated catalog + Pro cross-portal search through batch 9 (182 employers) |
+| Portals | Curated catalog + Pro cross-portal search through batch 10 (197 employers) |
 | Inbox (dev-only) | Local application agent: IMAP/SMTP, Gmail, Outlook, Yahoo, Fastmail; classify / route / draft / ghost / interview handoff behind `INBOX_AGENT_ENABLED` |
 
 Module docs: [scrapers](modules/scrapers.md), [appliers](modules/appliers.md),
@@ -36,8 +37,8 @@ bets — pick one when starting new work.
 
 ### Next bets (pick one)
 
-1. **Portal catalog batch 10** — more presets on existing adapters (same pattern
-   as batches 6–9).
+1. **Portal catalog batch 11** — more presets on existing adapters (same pattern
+   as batches 6–10).
 2. **More SuccessFactors CSB employers** — only when additional public
    `*.jobs.hr.cloud.sap` (or equivalent CSB) hosts are verified. Older RMK feeds
    stay out of scope for the current scraper.

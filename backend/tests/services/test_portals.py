@@ -20,7 +20,7 @@ def test_list_portal_presets_filters_query() -> None:
 def test_curated_portal_catalog_size() -> None:
     from app.portals.catalog import CURATED_PORTALS
 
-    assert len(CURATED_PORTALS) == 182
+    assert len(CURATED_PORTALS) == 197
 
 
 def test_curated_portal_apple_preset() -> None:
@@ -487,6 +487,47 @@ def test_curated_portal_batch_8_presets() -> None:
         "faire",
     ):
         preset = next(p for p in CURATED_PORTALS if p.id == portal_id)
+        assert preset.default_config["portal_id"] == portal_id
+
+
+def test_curated_portal_batch_10_presets() -> None:
+    """Portal catalog batch 10 — verified public boards on existing adapters."""
+    from app.portals.catalog import CURATED_PORTALS
+
+    navan = next(p for p in CURATED_PORTALS if p.id == "navan")
+    assert navan.adapter_key == "greenhouse"
+    assert navan.default_config["board_token"] == "tripactions"
+    assert navan.company_name == "Navan"
+
+    freshworks = next(p for p in CURATED_PORTALS if p.id == "freshworks")
+    assert freshworks.adapter_key == "smartrecruiters"
+    assert freshworks.default_config["company_id"] == "Freshworks"
+    assert freshworks.default_config["portal_id"] == "freshworks"
+
+    sigma = next(p for p in CURATED_PORTALS if p.id == "sigma")
+    assert sigma.adapter_key == "greenhouse"
+    assert sigma.default_config["board_token"] == "sigmacomputing"
+    assert sigma.company_name == "Sigma"
+
+    sierra = next(p for p in CURATED_PORTALS if p.id == "sierra")
+    assert sierra.adapter_key == "ashby"
+    assert sierra.category == "ai"
+
+    for portal_id, adapter_key in (
+        ("hellofresh", "greenhouse"),
+        ("appian", "greenhouse"),
+        ("decagon", "ashby"),
+        ("cresta", "greenhouse"),
+        ("smartsheet", "greenhouse"),
+        ("zoominfo", "greenhouse"),
+        ("baseten", "ashby"),
+        ("proton", "greenhouse"),
+        ("docker", "ashby"),
+        ("neo4j", "greenhouse"),
+        ("pendo", "greenhouse"),
+    ):
+        preset = next(p for p in CURATED_PORTALS if p.id == portal_id)
+        assert preset.adapter_key == adapter_key
         assert preset.default_config["portal_id"] == portal_id
 
 

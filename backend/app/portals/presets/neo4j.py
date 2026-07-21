@@ -1,0 +1,7 @@
+"""Neo4j curated portal preset."""
+
+from __future__ import annotations
+
+from app.portals.catalog_helpers import gh_preset
+
+PORTAL = gh_preset("neo4j", "Neo4j", category="unicorn")
