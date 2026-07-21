@@ -19,9 +19,10 @@ in 7.18.0:
 The first two are reachable from a plain single page app, so they describe real
 exposure here. Upgrading to 7.18.1 clears all three but enters the range of
 [GHSA-qwww-vcr4-c8h2](https://github.com/advisories/GHSA-qwww-vcr4-c8h2), a
-**high** CSRF bypass in React Router's RSC mode, affecting 7.12.0 through 8.2.0.
-No fixed 7.x exists and no 8.x is published, so there is no version that avoids
-both.
+**high** CSRF bypass in React Router's RSC mode. Its range has since been revised
+upward to `>=7.12.0 <8.3.0`, first patched in 8.3.0. No fixed 7.x exists and no
+8.x is published at all, so there is no version that avoids both, and each patch
+release inside 7.x stays inside the advisory.
 
 This app renders a plain SPA and never enables RSC, so the code path the high
 advisory describes is not present in the bundle. Staying on 6.x to keep the
