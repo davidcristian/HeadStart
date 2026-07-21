@@ -127,9 +127,11 @@ describe("OnboardingPage branch coverage", () => {
     expect(screen.getByText(/Found 3 posting/)).toBeInTheDocument();
 
     // Go to Jobs (RunStep onComplete) -> completes onboarding and navigates.
+    // React Router 7 routes inside startTransition, so the redirect lands a
+    // tick after completeOnboarding resolves; assert on it directly.
     fireEvent.click(screen.getByRole("button", { name: "Go to Jobs" }));
     await waitFor(() => expect(mockApi.completeOnboarding).toHaveBeenCalled());
-    expect(screen.getByText("JOBS SENTINEL")).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText("JOBS SENTINEL")).toBeInTheDocument());
   });
 
   it("shows an error banner when creating the source fails", async () => {

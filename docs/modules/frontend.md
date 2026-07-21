@@ -242,10 +242,12 @@ Commit the updated images when the app chrome changes.
 
 ## Toolchain & dependency security
 
-Vite **6.4.3+** (with `overrides.esbuild: ^0.25.0`) keeps the locked esbuild
-past [GHSA-67mh-4wv8-2f99](https://github.com/advisories/GHSA-67mh-4wv8-2f99)
-(dev-server CORS SSRF in esbuild ≤0.24.2). Vitest / `@vitest/coverage-v8` track
-**4.1.10+** so `npm audit --audit-level=high` stays clean. Three further
+Vite **8.x** no longer pulls esbuild into the tree at all, which retires
+[GHSA-67mh-4wv8-2f99](https://github.com/advisories/GHSA-67mh-4wv8-2f99)
+(dev-server CORS SSRF in esbuild ≤0.24.2). The `overrides.esbuild: ^0.25.0`
+entry is kept as a floor in case a future dependency reintroduces it, so it is
+inert today rather than dead weight. Vitest / `@vitest/coverage-v8` track
+**4.1.10+** so the audit gate stays clean. Three further
 `overrides` pull transitive packages past advisories their parents have not
 released a fix for: `brace-expansion ^5.0.8`
 ([GHSA-mh99-v99m-4gvg](https://github.com/advisories/GHSA-mh99-v99m-4gvg)),
@@ -257,6 +259,15 @@ CI runs `just audit-frontend` after `npm ci`; Dependabot watches
 `frontend/package-lock.json` weekly (`.github/dependabot.yml`). Backend SCA is
 `just audit-backend` (`pip-audit` on the hashed lockfiles) with Dependabot on
 `/backend`.
+
+`just audit-frontend` filters the `npm audit --json` report rather than calling
+`--audit-level=high` directly, because npm has no allowlist of its own. Only the
+advisory ids in `ALLOWED_ADVISORIES` (in `scripts/audit-frontend.sh`) are
+skipped, each with its reasoning inline; everything else at high or critical
+still fails, and an entry whose id cannot be resolved fails too. The single
+current entry is the React Router RSC advisory covered by
+[ADR 0013](../adr/0013-frontend-audit-allowlist.md). Prune it when a fixed
+release lands; the list is meant to stay near empty.
 
 `vite` and `@vitejs/plugin-react` majors move **together**: the plugin declares
 a hard `vite` peer (6.x requires Vite 8), so a Dependabot PR that raises only
