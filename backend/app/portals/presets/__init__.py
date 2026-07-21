@@ -17,8 +17,8 @@ from app.portals.presets.calendly import PORTAL as calendly
 from app.portals.presets.canva import PORTAL as canva
 from app.portals.presets.carta import PORTAL as carta
 from app.portals.presets.characterai import PORTAL as characterai
-from app.portals.presets.checkr import PORTAL as checkr
 from app.portals.presets.checkout import PORTAL as checkout
+from app.portals.presets.checkr import PORTAL as checkr
 from app.portals.presets.chime import PORTAL as chime
 from app.portals.presets.clickhouse import PORTAL as clickhouse
 from app.portals.presets.clickup import PORTAL as clickup
