@@ -55,6 +55,28 @@ def test_gate_detects_each_violation(injected: str) -> None:
     assert _run().returncode == 0
 
 
+def test_gate_sees_untracked_files() -> None:
+    """git grep skips untracked files, so a new file's violations would be
+    invisible until committed and `just check` would read green on a dirty tree."""
+    probe = _REPO_ROOT / "docs" / "_untracked_gate_probe.md"
+    assert not probe.exists()
+    try:
+        probe.write_text("prose with an em dash — here\n", encoding="utf-8")
+        proc = _run()
+        assert proc.returncode != 0, "gate ignored an untracked file"
+        assert "_untracked_gate_probe" in proc.stderr
+    finally:
+        probe.unlink(missing_ok=True)
+    assert _run().returncode == 0
+
+
+def test_allowlist_is_not_a_blanket_exemption() -> None:
+    """An over-broad entry silently reopens the rule, so keep the list narrow."""
+    text = (_REPO_ROOT / "scripts" / "check_text.sh").read_text(encoding="utf-8")
+    for entry in ("'backend/'", "'backend/app'", "'.py'", "'docs/'", "'/'"):
+        assert entry not in text, f"allowlist entry too broad: {entry}"
+
+
 def test_allowlist_spares_external_data_parsers() -> None:
     """The page-title matchers keep the dash the boards actually emit."""
     apple = (_REPO_ROOT / "backend" / "app" / "scrapers" / "url_detect_apple.py").read_text(

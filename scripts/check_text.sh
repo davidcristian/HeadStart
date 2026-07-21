@@ -28,6 +28,11 @@ ALLOW_DASH=(
   'scripts/check_text.sh'
   'scripts/check_commit_msg.sh'
   'docs/conventions.md'
+  # The gates' own tests carry a sample of every banned token on purpose: they
+  # assert the gate rejects each one. Without them a gate could quietly stop
+  # detecting anything and still look green.
+  'backend/tests/devops/test_text_gate.py'
+  'backend/tests/devops/test_commit_msg_gate.py'
 )
 
 allowed() {
@@ -50,7 +55,7 @@ while IFS=: read -r file _; do
   printf '  %s: em/en dash. Restructure the sentence; do not swap in a comma.\n' \
     "${file}" >&2
   failed=1
-done < <(git grep -In -e '—' -e '–' -- . 2>/dev/null | sort -u -t: -k1,1)
+done < <(git grep --untracked -In -e '—' -e '–' -- . 2>/dev/null | sort -u -t: -k1,1)
 
 # — spelled as an escape keeps the dash in the output while hiding it from
 # the grep above. That is not compliance, so ban the escape in source too.
@@ -63,17 +68,16 @@ while IFS=: read -r file _; do
   printf '  %s: unicode-escaped dash (\\u2013/\\u2014) still renders a dash.\n' \
     "${file}" >&2
   failed=1
-done < <(git grep -In -e '\\u2013' -e '\\u2014' -- . 2>/dev/null | sort -u -t: -k1,1)
+done < <(git grep --untracked -In -e '\\u2013' -e '\\u2014' -- . 2>/dev/null | sort -u -t: -k1,1)
 
 while IFS=: read -r file _; do
   [[ -n "${file}" ]] || continue
-  [[ "${file}" == "scripts/check_text.sh" ]] && continue
-  [[ "${file}" == "scripts/check_commit_msg.sh" ]] && continue
-  [[ "${file}" == "docs/conventions.md" ]] && continue
+  # Same allowlist: the gates and their tests must name the ids they reject.
+  allowed "${file}" && continue
   printf '  %s: tracker id (FRO-07 / WS26 style) resolves to nothing.\n' "${file}" >&2
   failed=1
 done < <(
-  git grep -InE '\b(AIA|API|APL|AUT|BIL|DAT|DOC|FRO|INB|NTF|OPS|POR|SCR|SVC|TST|XCT)-[0-9]+\b|\bWS[0-9]+\b' \
+  git grep --untracked -InE '\b(AIA|API|APL|AUT|BIL|DAT|DOC|FRO|INB|NTF|OPS|POR|SCR|SVC|TST|XCT)-[0-9]+\b|\bWS[0-9]+\b' \
     -- . 2>/dev/null | sort -u -t: -k1,1
 )
 
