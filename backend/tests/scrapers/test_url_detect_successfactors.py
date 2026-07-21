@@ -25,9 +25,7 @@ def test_detect_successfactors_known_wlgore() -> None:
 
 
 def test_detect_successfactors_jobs_api_path() -> None:
-    result = detect_source_from_url(
-        "https://careers.example.com/services/recruiting/v1/jobs"
-    )
+    result = detect_source_from_url("https://careers.example.com/services/recruiting/v1/jobs")
     assert result is not None
     assert result.adapter_key == "successfactors"
     assert result.default_config["careers_base_url"] == "https://careers.example.com"
@@ -44,6 +42,12 @@ def test_detect_successfactors_uses_page_title() -> None:
     )
     assert result is not None
     assert result.suggested_name == "Acme"
+
+
+def test_detect_successfactors_nested_cloud_subdomain() -> None:
+    result = detect_source_from_url("https://us.acme.jobs.hr.cloud.sap/")
+    assert result is not None
+    assert result.default_config["company"] == "Us"
 
 
 def test_detect_successfactors_blank_title_falls_back() -> None:

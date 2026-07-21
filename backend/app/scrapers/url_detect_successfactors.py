@@ -16,9 +16,7 @@ _KNOWN_HOSTS: dict[str, dict[str, str]] = {
 }
 
 
-def detect_successfactors(
-    parsed: Any, host: str, page_title: str | None
-) -> SourceDetection | None:
+def detect_successfactors(parsed: Any, host: str, page_title: str | None) -> SourceDetection | None:
     """Return adapter defaults for ``*.jobs.hr.cloud.sap`` or recruiting jobs URLs."""
     known = _KNOWN_HOSTS.get(host)
     is_cloud = host.endswith(_CLOUD_HOST_SUFFIX) and host != "jobs.hr.cloud.sap"

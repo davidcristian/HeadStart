@@ -332,8 +332,86 @@ def test_successfactors_prefers_first_category_when_no_all_jobs() -> None:
     assert payloads[0]["categoryId"] == 42
 
 
-def test_successfactors_catalog_includes_wlgore() -> None:
+def test_successfactors_preset_optional_category_id() -> None:
+    from app.portals.catalog_helpers_successfactors import successfactors_preset
+
+    preset = successfactors_preset(
+        portal_id="acme-sf",
+        company="Acme",
+        careers_base_url="https://acme.jobs.hr.cloud.sap/",
+        category_id=123,
+    )
+    assert preset.default_config["category_id"] == 123
+    assert preset.base_url == "https://acme.jobs.hr.cloud.sap"
     assert len(CURATED_PORTALS) == 167
     preset = next(p for p in CURATED_PORTALS if p.id == "wlgore")
     assert preset.adapter_key == "successfactors"
     assert preset.default_config["careers_base_url"] == "https://wlgore.jobs.hr.cloud.sap"
+
+
+def test_successfactors_parse_helpers_cover_edge_cases() -> None:
+    from app.scrapers.adapters.successfactors_parse import (
+        SuccessFactorsTarget,
+        _company_from_host,
+        _location,
+        _posted_at,
+        extract_page,
+        resolve_target,
+        to_posting,
+    )
+
+    with pytest.raises(ValueError, match="http\\(s\\) origin"):
+        resolve_target(ScrapeContext(config={"careers_base_url": "ftp://wlgore.jobs.hr.cloud.sap"}))
+
+    with pytest.raises(ValueError, match="http\\(s\\) careers"):
+        resolve_target(ScrapeContext(query_url="not-a-url"))
+
+    target = resolve_target(
+        ScrapeContext(query_url="https://jobs.hr.cloud.sap/services/recruiting/v1/jobs")
+    )
+    assert target.careers_base_url == "https://jobs.hr.cloud.sap"
+
+    vanity = resolve_target(
+        ScrapeContext(query_url="https://careers.example.com/services/recruiting/v1/jobs")
+    )
+    assert vanity.careers_base_url == "https://careers.example.com"
+
+    nested = resolve_target(
+        ScrapeContext(query_url="https://us.acme.jobs.hr.cloud.sap/", config={})
+    )
+    assert nested.company == "Us"
+
+    jobs, total = extract_page({})
+    assert jobs == [] and total is None
+    jobs, total = extract_page({"jobSearchResult": [{"response": "nope"}], "totalJobs": True})
+    assert jobs == [] and total is None
+    jobs, total = extract_page({"jobSearchResult": [], "totalJobs": -1})
+    assert total is None
+
+    posting = to_posting(
+        {
+            "id": "42",
+            "title": "Fallback Title",
+            "jobLocationCountry": ["Germany"],
+            "postedDate": "2026-07-01T12:00:00Z",
+        },
+        SuccessFactorsTarget(
+            careers_base_url="https://wlgore.jobs.hr.cloud.sap",
+            company="Gore",
+            locale="en_US",
+            keywords="",
+            category_id=None,
+        ),
+    )
+    assert posting is not None
+    assert posting.url == "https://wlgore.jobs.hr.cloud.sap/job/42"
+    assert posting.location == "Germany"
+    assert posting.posted_at == datetime(2026, 7, 1, 12, 0, tzinfo=UTC)
+
+    assert _location({"jobLocationShort": [1, None], "jobLocationCountry": [""]}) == ""
+    assert _location({"jobLocationShort": ["  "], "jobLocationCountry": ["USA"]}) == "USA"
+    assert _location({"jobLocationShort": [], "jobLocationCountry": []}) == ""
+    assert _posted_at({"unifiedStandardStart": "07/04/2026"}) == datetime(2026, 7, 4, tzinfo=UTC)
+    assert _posted_at({"startDate": "not-a-date", "postedDate": "also-bad"}) is None
+    assert _company_from_host("example.com") == "example.com"
+    assert _company_from_host(".jobs.hr.cloud.sap") == ".jobs.hr.cloud.sap"
