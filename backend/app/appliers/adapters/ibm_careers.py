@@ -133,9 +133,7 @@ class IbmCareersApplier(Applier):
             data["returnUrl"] = return_url
 
         try:
-            response = self.http.post_multipart(
-                import_url, data=data, files=files, headers=headers
-            )
+            response = self.http.post_multipart(import_url, data=data, files=files, headers=headers)
         except httpx.HTTPError as exc:
             return ApplyResult(status="failed", error=str(exc), payload=preview)
 

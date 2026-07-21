@@ -313,8 +313,7 @@ def test_resolve_careers_base_url_variants() -> None:
         == "https://custom.example"
     )
     assert (
-        resolve_careers_base_url({}, "https://www.ibm.com/careers/search")
-        == "https://www.ibm.com"
+        resolve_careers_base_url({}, "https://www.ibm.com/careers/search") == "https://www.ibm.com"
     )
     assert resolve_careers_base_url({}, "ftp://careers.ibm.com/x") == "https://careers.ibm.com"
     assert resolve_careers_base_url({}, "https://example.com/jobs/1") == "https://careers.ibm.com"

@@ -115,14 +115,16 @@ def build_dry_run_payload(
         "import_url": import_url,
         "import_csv_columns": columns,
         "candidate": preview_row,
-        "blocker": None
-        if import_url
-        else (
-            "careers.ibm.com is Avature-hosted behind AWS WAF with a multi-step "
-            "login/register apply wizard and no public candidate apply API. "
-            "Dry-run previews the payload; live submit needs an Avature External "
-            "Import Service URL (config.avature_import_url) provisioned for your "
-            "tenant, or apply manually via application_methods_url."
+        "blocker": (
+            None
+            if import_url
+            else (
+                "careers.ibm.com is Avature-hosted behind AWS WAF with a multi-step "
+                "login/register apply wizard and no public candidate apply API. "
+                "Dry-run previews the payload; live submit needs an Avature External "
+                "Import Service URL (config.avature_import_url) provisioned for your "
+                "tenant, or apply manually via application_methods_url."
+            )
         ),
     }
     meta = resume_meta_for_payload(resume_file)
