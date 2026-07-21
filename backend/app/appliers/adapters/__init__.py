@@ -23,6 +23,7 @@ from app.appliers.adapters import (
     smartrecruiters,
     snowflake_careers,
     uber_careers,
+    workable,
     workday,
 )
 
@@ -45,5 +46,6 @@ __all__ = [
     "smartrecruiters",
     "snowflake_careers",
     "uber_careers",
+    "workable",
     "workday",
 ]

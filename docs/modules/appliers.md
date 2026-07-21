@@ -87,6 +87,7 @@ source's `adapter_key` when that source supports auto-apply. Import the
 | `icims` | Talent Cloud Partner API | `POST api.icims.com/customers/<id>/people` then `…/applicantworkflows`; see below |
 | `phenom` | Downstream ATS delegation + partner Apply API | Resolves `applyUrl` via `POST /widgets` (`jobDetail`); delegates to Workday/Greenhouse/… when recognized; otherwise `POST api.phenompro.com/apply/v2/applications`; see below |
 | `ibm_careers` | Avature External Import Services | Dry-run previews CSV + portal URLs; live submit needs a provisioned Import Service endpoint; see below |
+| `workable` | Public careers apply JSON POST | `GET/POST apply.workable.com/api/v1/jobs/<shortcode>/…`; S3 resume upload; see below |
 
 ### Scrapers without apply adapters
 
@@ -98,7 +99,7 @@ work, but the Jobs page **Apply** action is unavailable:
 | `playwright` / `generic_html` | Custom HTML sources; no generic apply path |
 
 `GET /portals` sets `supports_auto_apply: false` for these keys. See
-[roadmap.md → Phase 28](../roadmap.md#phase-28--apply-adapters-for-recent-ats-scrapers).
+[roadmap.md → Phase 32](../roadmap.md#phase-32--workable-apply-adapter).
 
 ### Greenhouse
 
@@ -317,6 +318,43 @@ fresh `session.cf_turnstile_token`, the adapter refuses live submit (dry-run
 still works). Invalid tokens return `turnstile_verification_failure`. Treat live
 auto-apply as best-effort for local/power-user flows that can supply a Turnstile
 token; hosted pipeline auto-apply will not pass captcha on its own.
+
+### Workable
+
+Maps `ProfileData` to the public Workable careers apply API used by
+`apply.workable.com/<account>/j/<shortcode>/apply`:
+
+| Step | Endpoint |
+| ---- | -------- |
+| Form schema | `GET https://apply.workable.com/api/v1/jobs/<shortcode>/form` |
+| Resume upload URL | `GET …/jobs/<shortcode>/form/upload/resume` |
+| Resume bytes | `POST` multipart to the returned S3 URL |
+| Submit | `POST …/jobs/<shortcode>/apply` with body `{candidate: …}` |
+
+Config / credentials:
+
+| Field | Where | Purpose |
+| ----- | ----- | ------- |
+| `account` | source `default_config` or parsed from `job_url` | Optional account slug (`apply.workable.com/<account>/j/...`) |
+| `shortcode` / `job_id` | source/search config | Optional shortcode override (scrapers already store shortcode as `external_id`) |
+| `headline` / `summary` | source/search config or profile | Optional candidate headline / summary overrides |
+| `CA_*` / `QA_*` / custom ids | profile `answers` or source config | Screening questions from the form schema |
+| LinkedIn / GitHub / website | profile `links` | Auto-fill questions whose labels mention those sites |
+| `cf_turnstile_token` | credential `session` (aliases: `turnstile_token`, `x_turnstile_token`) | **Required for live submit** — Cloudflare Turnstile token from the careers UI (`X-TURNSTILE-TOKEN` header) |
+
+**Dry run:** fetches the form schema, builds the `candidate` JSON (resume
+metadata only, no S3 upload), and fails the preview when required fields such as
+resume or custom questions are missing from the profile.
+
+**Resume file:** live submit requests a Workable-presigned S3 POST, uploads the
+stored resume, and puts the returned `downloadUrl` into `candidate.resume`.
+
+**Live submit:** public careers apply is **Cloudflare Turnstile–gated**. Without a
+fresh `session.cf_turnstile_token`, the adapter refuses live submit (dry-run
+still works). HTTP 409 is treated as a Turnstile rejection; HTTP 412 is treated
+as a missing/stale Turnstile precondition. Treat live auto-apply as best-effort
+for local/power-user flows that can supply a Turnstile token; hosted pipeline
+auto-apply will not pass captcha on its own.
 
 ### iCIMS / Jibe Attract
 

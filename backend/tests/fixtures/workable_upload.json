@@ -1,0 +1,17 @@
+{
+  "uploadPostUrl": {
+    "url": "https://workable-application-form.s3.us-east-1.amazonaws.com",
+    "fields": {
+      "utf8": "",
+      "bucket": "workable-application-form",
+      "X-Amz-Algorithm": "AWS4-HMAC-SHA256",
+      "X-Amz-Credential": "AKIATEST/20260712/us-east-1/s3/aws4_request",
+      "X-Amz-Date": "20260712T000000Z",
+      "key": "tmp/ttl-1d/production/fixture-resume-key",
+      "Policy": "eyJ0ZXN0IjogdHJ1ZX0=",
+      "X-Amz-Signature": "fixture-signature"
+    },
+    "path": "tmp/ttl-1d/production/fixture-resume-key"
+  },
+  "downloadUrl": "https://workable-application-form.s3.us-east-1.amazonaws.com/tmp/ttl-1d/production/fixture-resume-key?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Signature=fixture"
+}

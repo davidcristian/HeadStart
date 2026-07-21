@@ -1,0 +1,9 @@
+{
+  "id": "cand-fixture-001",
+  "candidate": {
+    "id": "cand-fixture-001",
+    "firstname": "Ada",
+    "lastname": "Lovelace",
+    "email": "ada@example.com"
+  }
+}

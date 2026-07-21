@@ -1,0 +1,45 @@
+[
+  {
+    "name": "Personal information",
+    "fields": [
+      {"id": "firstname", "required": true, "label": "First name", "type": "text", "maxLength": 127},
+      {"id": "lastname", "required": true, "label": "Last name", "type": "text", "maxLength": 127},
+      {"id": "email", "required": true, "label": "Email", "type": "email", "maxLength": 255},
+      {"id": "phone", "required": false, "label": "Phone", "type": "phone", "maxLength": 255}
+    ]
+  },
+  {
+    "name": "Profile",
+    "fields": [
+      {"id": "resume", "required": true, "label": "Resume", "type": "file"},
+      {"id": "CA_47143", "required": true, "label": "Github profile", "type": "paragraph"},
+      {"id": "CA_47383", "required": true, "label": "Linkedin", "type": "paragraph"}
+    ]
+  },
+  {
+    "name": "Details",
+    "fields": [
+      {"id": "cover_letter", "required": false, "label": "Cover letter", "type": "paragraph"},
+      {
+        "id": "CA_10627",
+        "required": false,
+        "label": "Notice period / availability",
+        "type": "dropdown",
+        "choices": [
+          {"id": "immediate", "body": "Immediate"},
+          {"id": "two_weeks", "body": "2 weeks"}
+        ]
+      },
+      {
+        "id": "QA_11843967",
+        "required": true,
+        "label": "Can you confirm that everything in this application is true?",
+        "type": "boolean"
+      }
+    ]
+  },
+  {
+    "name": null,
+    "fields": [{"id": "gdpr", "required": true, "label": null, "type": "boolean"}]
+  }
+]

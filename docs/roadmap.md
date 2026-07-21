@@ -3,7 +3,7 @@
 Living plan for HeadStart — what to build next and why. Update this doc when
 priorities shift or a milestone ships.
 
-**Current baseline (2026-07):** Phases 1–31 shipped (four-tier pricing, per-user AI
+**Current baseline (2026-07):** Phases 1–32 shipped (four-tier pricing, per-user AI
 summary preferences, curated employer portal catalog through batch 7 plus
 Workable/Hugging Face (**150** employers), SmartRecruiters adapter, custom
 career-site adapters for Shopify, Uber, and Snowflake, the dev-only local
@@ -12,11 +12,11 @@ Fastmail, the reusable iCIMS/Jibe Attract scraper with Rivian, the reusable
 Phenom People scraper (Splunk / CVS Health / GE HealthCare / RTX), the reusable
 Rippling ATS scraper with Rippling, the reusable IBM Careers Falcon search
 scraper (HashiCorp / Red Hat), Phase 28 Rippling + iCIMS + Phenom + IBM Careers
-apply, the reusable Workable widget scraper with Hugging Face, and Phase 31
-portal catalog batch 7).
-**Next:** pick up a Workable apply adapter or a new ATS gap once priorities
-shift — Phase 31’s done-when (catalog ≥ 150 via verified presets) is met. See
-[architecture.md](architecture.md) for the system design.
+apply, the reusable Workable widget scraper with Hugging Face, Phase 31
+portal catalog batch 7, and Phase 32 Workable apply).
+**Next:** pick up a new ATS gap or another catalog batch once priorities
+shift — Phase 32’s done-when (Workable dry-run + documented live Turnstile
+submit) is met. See [architecture.md](architecture.md) for the system design.
 
 ---
 
@@ -1022,6 +1022,29 @@ three new presets. **Met.**
 
 ---
 
+## Phase 32 — Workable apply adapter
+
+Goal: close the auto-apply gap for the Phase 30 Workable scraper (Hugging Face,
+Skroutz, and future Workable catalog employers). One
+`@register_applier("workable")` adapter matching the scraper's `adapter_key`,
+following [Phase 28](#phase-28--apply-adapters-for-recent-ats-scrapers) and the
+apply recipe in [recipes.md](recipes.md).
+
+| Item | Why | Notes |
+| ---- | --- | ----- |
+| ~~`workable` apply adapter~~ | ~~Phase 30 widget scrape is scrape-only; catalog employers cannot one-click apply~~ | **Shipped:** `@register_applier("workable")` uses public careers apply (`GET …/jobs/<shortcode>/form`, S3 resume via `…/form/upload/resume`, `POST …/jobs/<shortcode>/apply`). Dry-run previews required fields + candidate JSON. Live submit requires Cloudflare Turnstile token in credential `session.cf_turnstile_token` (`X-TURNSTILE-TOKEN` header). See [modules/appliers.md](modules/appliers.md). |
+| ~~Fixture + tests~~ | ~~CI safety~~ | **Shipped:** form / upload / success fixtures under `tests/fixtures/workable_*.json`; no live network |
+| ~~Applier docs~~ | ~~Operator discoverability~~ | **Shipped:** row + section in [modules/appliers.md](modules/appliers.md) |
+
+**Caveat:** public careers apply is Turnstile-gated (same class as Rippling).
+Hosted pipeline auto-apply will not solve captcha on its own — live submit is
+best-effort for local/power-user flows that can supply a fresh token.
+
+**Done when:** Workable supports dry-run + documented live submit from the Jobs
+page (or an explicit, tested blocker is documented). **Met.**
+
+---
+
 ## Suggested starting points
 
 **Personal use (one job seeker):**
@@ -1040,7 +1063,7 @@ three new presets. **Met.**
 
 ## How to pick up work
 
-1. Choose an item from an open phase (Phase 31 catalog batch 7 is **shipped** —
+1. Choose an item from an open phase (Phase 32 Workable apply is **shipped** —
    pick the current **Next** item in the baseline blurb, or an unstruck row in a
    later phase).
 2. Read the relevant module doc under [modules/](modules/) and follow
