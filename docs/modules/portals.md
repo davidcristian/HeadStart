@@ -21,8 +21,8 @@ helpers). Each `PortalPreset` carries:
 | `base_url` | Careers board URL passed to the scraper |
 | `default_config` | Adapter-specific config merged into new sources (always includes `portal_id`) |
 
-As of the current catalog: **151 employers** — 59 big tech, 78 unicorn, 14 AI —
-across Greenhouse (79), Ashby (21), Workday (15), SmartRecruiters (14), Lever (4),
+As of the current catalog: **166 employers** — 59 big tech, 86 unicorn, 21 AI —
+across Greenhouse (84), Ashby (31), Workday (15), SmartRecruiters (14), Lever (4),
 Apple Careers (1), Google Careers (1), Meta Careers (1), Microsoft Careers (1),
 Shopify Careers (1), Snowflake Careers (1), Uber Careers (1), Amazon Jobs (1),
 iCIMS/Jibe (1), Phenom (4), Rippling ATS (1), IBM Careers (2), and Workable (2).
@@ -46,7 +46,12 @@ and RTX use Phenom (`jobs.cvshealth.com`, `careers.gehealthcare.com`,
 `portal_id=box`. Hugging Face and Skroutz use Workable (`account=huggingface`,
 `account=skroutz`). Wise uses SmartRecruiters (`company_id=Wise`,
 `portal_id=wise`). 1Password uses Ashby board `1password` with
-`portal_id=onepassword`.
+`portal_id=onepassword`. Phase 34 batch 8 adds Together AI (`togetherai` /
+`portal_id=together`), Modal, Anyscale, Runway, Character.AI (`board=character` /
+`portal_id=characterai`), Midjourney, Pinecone, Grafana Labs (`grafanalabs` /
+`portal_id=grafana`), Temporal, PostHog, Neon, PlanetScale, Faire, Gong
+(`gongio` / `portal_id=gong`), and Checkout.com (`board=checkout.com` /
+`portal_id=checkout`).
 
 `GET /portals` annotates each row with:
 

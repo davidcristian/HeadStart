@@ -20,7 +20,7 @@ def test_list_portal_presets_filters_query() -> None:
 def test_curated_portal_catalog_size() -> None:
     from app.portals.catalog import CURATED_PORTALS
 
-    assert len(CURATED_PORTALS) == 151
+    assert len(CURATED_PORTALS) == 166
 
 
 def test_curated_portal_apple_preset() -> None:
@@ -444,6 +444,50 @@ def test_curated_portal_batch7_presets() -> None:
     langchain = next(p for p in CURATED_PORTALS if p.id == "langchain")
     assert langchain.adapter_key == "ashby"
     assert langchain.category == "ai"
+
+
+def test_curated_portal_batch_8_presets() -> None:
+    """Phase 34 catalog batch 8 — verified public boards on existing adapters."""
+    from app.portals.catalog import CURATED_PORTALS
+
+    together = next(p for p in CURATED_PORTALS if p.id == "together")
+    assert together.adapter_key == "greenhouse"
+    assert together.default_config["board_token"] == "togetherai"
+    assert together.category == "ai"
+
+    characterai = next(p for p in CURATED_PORTALS if p.id == "characterai")
+    assert characterai.adapter_key == "ashby"
+    assert characterai.default_config["board"] == "character"
+    assert characterai.company_name == "Character.AI"
+
+    grafana = next(p for p in CURATED_PORTALS if p.id == "grafana")
+    assert grafana.adapter_key == "greenhouse"
+    assert grafana.default_config["board_token"] == "grafanalabs"
+    assert grafana.company_name == "Grafana Labs"
+
+    gong = next(p for p in CURATED_PORTALS if p.id == "gong")
+    assert gong.adapter_key == "greenhouse"
+    assert gong.default_config["board_token"] == "gongio"
+
+    checkout = next(p for p in CURATED_PORTALS if p.id == "checkout")
+    assert checkout.adapter_key == "ashby"
+    assert checkout.default_config["board"] == "checkout.com"
+    assert checkout.company_name == "Checkout.com"
+
+    for portal_id in (
+        "modal",
+        "anyscale",
+        "runway",
+        "midjourney",
+        "pinecone",
+        "temporal",
+        "posthog",
+        "neon",
+        "planetscale",
+        "faire",
+    ):
+        preset = next(p for p in CURATED_PORTALS if p.id == portal_id)
+        assert preset.default_config["portal_id"] == portal_id
 
 
 def test_curated_portal_confluent_ashby_preset() -> None:

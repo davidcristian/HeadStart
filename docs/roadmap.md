@@ -3,9 +3,9 @@
 Living plan for HeadStart — what to build next and why. Update this doc when
 priorities shift or a milestone ships.
 
-**Current baseline (2026-07):** Phases 1–33 shipped (four-tier pricing, per-user AI
-summary preferences, curated employer portal catalog through batch 7 plus
-Workable/Hugging Face and Snap (**151** employers), SmartRecruiters adapter, custom
+**Current baseline (2026-07):** Phases 1–34 shipped (four-tier pricing, per-user AI
+summary preferences, curated employer portal catalog through batch 8
+(**166** employers), SmartRecruiters adapter, custom
 career-site adapters for Shopify, Uber, and Snowflake, the dev-only local
 application agent, inbox OAuth providers for Gmail, Outlook, Yahoo, and
 Fastmail, the reusable iCIMS/Jibe Attract scraper with Rivian, the reusable
@@ -13,10 +13,10 @@ Phenom People scraper (Splunk / CVS Health / GE HealthCare / RTX), the reusable
 Rippling ATS scraper with Rippling, the reusable IBM Careers Falcon search
 scraper (HashiCorp / Red Hat), Phase 28 Rippling + iCIMS + Phenom + IBM Careers
 apply, the reusable Workable widget scraper with Hugging Face, Phase 31
-portal catalog batch 7, Phase 32 Workable apply, and Phase 33 Workday
-`*.myworkdaysite.com` support with Snap).
-**Next:** pick up a new ATS gap or another catalog batch once priorities
-shift — Phase 33’s done-when (Snap scrape + URL detect + catalog preset) is met.
+portal catalog batch 7, Phase 32 Workable apply, Phase 33 Workday
+`*.myworkdaysite.com` support with Snap, and Phase 34 portal catalog batch 8).
+**Next:** [Phase 35 — SAP SuccessFactors adapter](#phase-35--sap-successfactors-adapter)
+(largest remaining Fortune-500 ATS gap by market share).
 See [architecture.md](architecture.md) for the system design.
 
 ---
@@ -1075,6 +1075,87 @@ outside CI. **Met.**
 
 ---
 
+## Phase 34 — Portal catalog batch 8 (existing adapters)
+
+Goal: grow the curated catalog from **151 → ~165** employers with **zero new
+scraper work** — only presets on adapters already shipped. Prefer AI labs and
+infra/data unicorns that exercise Greenhouse / Ashby boards, then fill
+high-value commerce / GTM wins.
+
+Each row must pass a **live smoke** against the public board API before merge.
+Board tokens and Ashby boards below are **candidates to verify** — replace or
+skip any that fail, and document skips in the PR.
+
+| Employer | Likely adapter | Category | Verify |
+| -------- | -------------- | -------- | ------ |
+| ~~Together AI~~ | ~~Greenhouse (`togetherai`)~~ | ~~`ai`~~ | **Shipped** — `portal_id=together` |
+| ~~Modal~~ | ~~Ashby (`modal`)~~ | ~~`ai`~~ | **Shipped** |
+| ~~Anyscale~~ | ~~Ashby (`anyscale`)~~ | ~~`ai`~~ | **Shipped** |
+| ~~Runway~~ | ~~Ashby (`runway`)~~ | ~~`ai`~~ | **Shipped** |
+| ~~Character.AI~~ | ~~Ashby (`character`)~~ | ~~`ai`~~ | **Shipped** — `portal_id=characterai` |
+| ~~Midjourney~~ | ~~Ashby (`midjourney`)~~ | ~~`ai`~~ | **Shipped** |
+| ~~Pinecone~~ | ~~Ashby (`pinecone`)~~ | ~~`ai`~~ | **Shipped** |
+| ~~Grafana Labs~~ | ~~Greenhouse (`grafanalabs`)~~ | ~~`unicorn`~~ | **Shipped** — `portal_id=grafana` |
+| ~~Temporal~~ | ~~Ashby (`temporal`)~~ | ~~`unicorn`~~ | **Shipped** |
+| ~~PostHog~~ | ~~Ashby (`posthog`)~~ | ~~`unicorn`~~ | **Shipped** |
+| ~~Neon~~ | ~~Ashby (`neon`)~~ | ~~`unicorn`~~ | **Shipped** |
+| ~~PlanetScale~~ | ~~Greenhouse (`planetscale`)~~ | ~~`unicorn`~~ | **Shipped** |
+| ~~Faire~~ | ~~Greenhouse (`faire`)~~ | ~~`unicorn`~~ | **Shipped** |
+| ~~Gong~~ | ~~Greenhouse (`gongio`)~~ | ~~`unicorn`~~ | **Shipped** — `portal_id=gong` |
+| ~~Checkout.com~~ | ~~Ashby (`checkout.com`)~~ | ~~`unicorn`~~ | **Shipped** — `portal_id=checkout` |
+
+Skipped (roadmap candidates without a working public board at verification time,
+or deferred): **Mistral / Replicate / Weights & Biases** (no public GH/Ashby/
+Workable board); **Revolut / Klarna / Zendesk / Intuit / PayPal / Etsy / eBay /
+Nike / Autodesk / Qualcomm / Broadcom / Arm** (enterprise boards not on public
+GH/Ashby/SR); **ByteDance** (SR live but only 2 postings — too thin for catalog);
+**Trade Republic** (GH live but only 1 posting); **Retool / GitHub** (still no
+public board; same class as Phase 29/31 skips); **New Relic / Twitch / Nubank /
+Celonis / JFrog / Mixpanel / Airbyte / Hightouch / Zoox / Gemini / Ripple /
+OpenSea / Consensys / Alchemy / Inflection / Stability / Patreon / Substack /
+Grab** (verified live — deferred to a later catalog batch to keep this PR scoped).
+
+**Out of scope for this phase:** new scraper adapters, apply-adapter work, and
+UI changes beyond the catalog list growing automatically from new presets.
+
+**Shipped:** 15 presets in `presets/` (Together AI, Modal, Anyscale, Runway,
+Character.AI, Midjourney, Pinecone, Grafana Labs, Temporal, PostHog, Neon,
+PlanetScale, Faire, Gong, Checkout.com); catalog count **166**.
+
+**Done when:** catalog count is ≥ 165 **or** at least **12** new verified
+presets ship in this batch; every skipped candidate documents why the public
+API failed; `just check` passes; Pro portal search returns results for at least
+three new presets. **Met.**
+
+---
+
+## Phase 35 — SAP SuccessFactors adapter
+
+Goal: unlock employers on **SAP SuccessFactors** careers sites — the largest
+remaining Fortune-500 ATS gap by market share after Workday / Greenhouse /
+iCIMS (often cited around ~8% of large-employer boards). Leaves a reusable
+scraper for further catalog growth once a first live employer is verified.
+
+| Item | Why | Notes |
+| ---- | --- | ----- |
+| `successfactors` scraper | Reusable ATS gap for SF-hosted careers portals | `@register_scraper("successfactors")`; reverse-engineer the public job-search JSON used by typical `*.successfactors.com` / `*.jobs.sap` vanity hosts (confirm exact endpoint + pagination per tenant); config likely `company_id` / `career_site` / locale |
+| Fixture + tests | CI safety | Sample JSON under `tests/fixtures/`; no live network |
+| URL detection | Paste-friendly source setup | Detect known SuccessFactors host patterns + at least one vanity careers domain |
+| Scraper docs | Operator discoverability | Row in [modules/scrapers.md](modules/scrapers.md) |
+| `successfactors_preset` + first employer | Catalog growth | Helper + one verified preset once a public board returns openings |
+| Apply adapter (follow-up) | Close auto-apply gap | Separate phase after scrape lands — SF apply is often auth/captcha gated |
+
+**Caveat:** SuccessFactors tenants vary widely (classic career site vs. Recruiting
+Marketing / RMK vs. Career Site Builder). Prefer a zero-auth public search API
+when available; document per-employer blockers rather than forcing Playwright
+for the first adapter.
+
+**Done when:** the adapter parses fixture postings into `JobPosting`s, URL
+detection accepts at least one live SF careers URL, and at least one live smoke
+against a public SuccessFactors job search succeeds outside CI.
+
+---
+
 ## Suggested starting points
 
 **Personal use (one job seeker):**
@@ -1093,13 +1174,13 @@ outside CI. **Met.**
 
 ## How to pick up work
 
-1. Choose an item from an open phase (Phase 33 Workday myworkdaysite / Snap is
-   **shipped** — pick the current **Next** item in the baseline blurb, or an
-   unstruck row in a later phase).
+1. Choose an item from an open phase (Phase 34 portal catalog batch 8 is
+   **shipped** — pick [Phase 35 SuccessFactors](#phase-35--sap-successfactors-adapter)
+   or an unstruck row in a later phase).
 2. Read the relevant module doc under [modules/](modules/) and follow
    [AGENTS.md](../AGENTS.md).
 3. For new adapters, use [recipes.md](recipes.md) — one file, tests
    with fixtures, no live network in CI. For catalog presets only, follow the
-   Phase 22 / Phase 29 / Phase 31 pattern (one preset file + live smoke + docs count).
+   Phase 22 / Phase 29 / Phase 31 / Phase 34 pattern (one preset file + live smoke + docs count).
 4. When an item ships, note it here (move to a **Shipped** subsection or strike
    through) and update the matching module doc.
