@@ -7,8 +7,8 @@
 
 The candidate data an **auto-apply** flow needs to submit applications on the
 user's behalf. Storage and retrieval live here; [apply adapters](appliers.md)
-read the decrypted profile at submit time. See [Phase 7 — Auto-apply](../roadmap.md)
-for orchestration and per-site apply behavior.
+read the decrypted profile at submit time. See [roadmap.md](../roadmap.md)
+and [appliers.md](appliers.md) for orchestration and per-site apply behavior.
 
 ## What is stored
 

@@ -58,7 +58,7 @@ users).
 - [ ] **Privacy** (`/privacy`) and **Terms** (`/terms`) reviewed for your entity.
 - [ ] **Impressum** (`/impressum`) — customize placeholder operator details before
   marketing to German users (page and footer link are shipped; see
-  [roadmap Phase 10](roadmap.md#phase-10--german-legal-compliance)).
+  [roadmap.md](roadmap.md)).
 - [ ] **Subprocessors** (`/subprocessors`) accurate if you use Stripe, AI
   providers (OpenAI / Gemini / Anthropic), inbox mailbox OAuth (Gmail / Outlook /
   Yahoo), ads, or external SMTP.

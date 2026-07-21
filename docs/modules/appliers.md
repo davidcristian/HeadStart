@@ -99,8 +99,9 @@ work, but the Jobs page **Apply** action is unavailable:
 | ----------- | ----- |
 | `playwright` / `generic_html` | Custom HTML sources; no generic apply path |
 
-`GET /portals` sets `supports_auto_apply: false` for these keys. See
-[roadmap.md → Phase 36](../roadmap.md#phase-36--successfactors-apply-adapter).
+`GET /portals` sets `supports_auto_apply: false` for these keys. SuccessFactors
+and other production scrapers have apply adapters documented above; see also
+[roadmap.md](../roadmap.md) for remaining catalog / ATS gaps.
 
 ### Greenhouse
 

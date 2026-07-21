@@ -5,7 +5,7 @@
 
 ## Context
 
-[Phase 7 — Auto-apply](../roadmap.md) lets users submit applications from
+[Auto-apply](../roadmap.md) lets users submit applications from
 HeadStart instead of only opening apply links. Every apply flow needs the same
 structured candidate data: contact details, links, a resume, a cover-letter
 template, and answers to recurring questions (work authorization, notice period,

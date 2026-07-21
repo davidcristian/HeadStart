@@ -5,7 +5,7 @@
 
 ## Context
 
-[Phase 7 — Auto-apply](../roadmap.md) needs to submit applications per job board.
+[Auto-apply](../roadmap.md) needs to submit applications per job board.
 Each ATS has a different apply flow. [ADR-0008](0008-application-profile.md) added
 encrypted profile storage; the next step is a registry of apply adapters plus
 minimal orchestration so future UI and worker paths can call one service.
