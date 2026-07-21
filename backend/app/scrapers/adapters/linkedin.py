@@ -14,7 +14,7 @@ Config / context:
   - `config["max_results"]`: cap on jobs fetched across pages (default 50).
   - `config["page_size"]`: pagination step (default 25; LinkedIn uses 25).
 
-This adapter is opt-in only — it is not auto-detected from URLs.
+This adapter is opt-in only and is not auto-detected from URLs.
 """
 
 from __future__ import annotations

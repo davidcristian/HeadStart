@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Syntax-check shell scripts (bash -n + shellcheck) and smoke-test --help
-# on orchestration entrypoints. OPS-65: shellcheck catches quoting /
+# on orchestration entrypoints. shellcheck catches quoting /
 # unbound-variable bugs that bash -n cannot see.
 # shellcheck source=lib.sh
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
@@ -13,15 +13,15 @@ for script in "${REPO_ROOT}"/scripts/*.sh; do
   bash -n "${script}" || die "Syntax error in ${script}"
 done
 
-log "ShellCheck static analysis (OPS-65)"
-have shellcheck || die "shellcheck not found — install it: sudo apt install -y shellcheck (see docs/runbook.md)"
+log "ShellCheck static analysis"
+have shellcheck || die "shellcheck not found. Install it: sudo apt install -y shellcheck (see docs/runbook.md)"
 shellcheck -x -S warning "${REPO_ROOT}"/scripts/*.sh \
   || die "shellcheck reported warnings/errors in scripts/*.sh"
 
 log "Backend lockfiles present with hashes"
 for lock in requirements.txt requirements-dev.txt requirements-playwright.txt; do
   path="${BACKEND_DIR}/${lock}"
-  [[ -f "${path}" ]] || die "Missing ${path} — run 'just lock-backend'"
+  [[ -f "${path}" ]] || die "Missing ${path}. Run 'just lock-backend'"
   grep -q -- '--hash=' "${path}" || die "${path} has no package hashes"
 done
 

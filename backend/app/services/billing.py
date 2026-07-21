@@ -116,8 +116,9 @@ class BillingService:
                 "plan_upgrade",
             }:
                 session_kwargs["discounts"] = [{"promotion_code": promo.stripe_promotion_code_id}]
-        # Trial keys off the plan actually billed/granted (checkout_plan), not the
-        # requested plan — a plan_upgrade to Pro must still get STRIPE_TRIAL_DAYS.
+        # Trial keys off the plan actually billed/granted (checkout_plan) rather
+        # than the requested plan so a plan_upgrade to Pro still gets
+        # STRIPE_TRIAL_DAYS.
         promo_trial = promo is not None and promo.promo_type == "free_trial_days"
         if trial_days > 0 and (promo_trial or checkout_plan == "pro"):
             session_kwargs["subscription_data"]["trial_period_days"] = trial_days

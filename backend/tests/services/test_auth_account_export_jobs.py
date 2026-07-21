@@ -1,4 +1,4 @@
-"""GDPR export job ledger is walked in bounded chunks (AUT-34)."""
+"""GDPR export job ledger is walked in bounded chunks."""
 
 from __future__ import annotations
 
@@ -85,5 +85,5 @@ def test_export_jobs_uses_chunked_iteration(db_session: Session) -> None:
         "ext-1",
         "ext-0",
     ]
-    # Chunked path expunges each ORM row after JobRead serialization (AUT-34).
+    # Chunked path expunges each ORM row after JobRead serialization.
     assert not any(isinstance(obj, SeenJob) for obj in db_session.identity_map.values())

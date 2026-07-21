@@ -37,7 +37,7 @@ def parse_lookup_items(data: Any) -> list[dict[str, str]]:
 def match_lookup_item(items: list[dict[str, str]], value: str) -> dict[str, str] | None:
     """Pick the catalog row that exactly (or normalized-equal) matches a profile value.
 
-    A supplied Workday WID is accepted only when it appears in ``items`` (APL-24);
+    A supplied Workday WID is accepted only when it appears in ``items``;
     out-of-catalog hex ids return None so callers fall back to a self-reported
     descriptor. Prefix/substring fallbacks are intentionally omitted: short or
     common labels (e.g. ``BS``, ``Java``) otherwise bind a longer unrelated
@@ -72,7 +72,7 @@ def workday_reference(value: str, match: dict[str, str] | None) -> dict[str, str
     """Build the CXS reference object for a degree or field-of-study value.
 
     Catalog membership is required before emitting ``id``: a raw 32-hex string
-    without a matched catalog row falls back to ``descriptor`` (APL-24).
+    without a matched catalog row falls back to ``descriptor``.
     """
     stripped = value.strip()
     if not stripped:

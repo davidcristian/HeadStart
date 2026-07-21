@@ -1,4 +1,4 @@
-"""Coverage assertions for shared OAuth mailbox connector constants (INB-12)."""
+"""Coverage assertions for shared OAuth mailbox connector constants."""
 
 from app.inbox.base import get_mailbox
 from app.inbox.types import (

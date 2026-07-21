@@ -1,4 +1,4 @@
-"""Helpers for recording apply-outcome metadata used by inbox triage (Phase 20)."""
+"""Helpers for recording apply-outcome metadata used by inbox triage."""
 
 from __future__ import annotations
 
@@ -9,8 +9,8 @@ from app.models.base import utcnow
 from app.models.seen_job import SeenJob
 from app.schemas.profile import ResumeFile
 
-# Credential-bearing keys that must never land in plaintext application_log.payload
-# (SVC-11). Matched case-insensitively; covers site_credential shape + common aliases.
+# Credential-bearing keys that must never land in plaintext application_log.payload.
+# Matched case-insensitively; covers site_credential shape + common aliases.
 _SENSITIVE_ADAPTER_PAYLOAD_KEYS = frozenset(
     {
         "authorization",

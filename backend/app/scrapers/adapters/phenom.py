@@ -18,7 +18,7 @@ Config / context:
   - ``config["max_results"]``: cap across pages (default 1000).
 
 Use the canonical Phenom host (e.g. ``careers.cisco.com``), not vanity hosts
-that 301 across domains — CSRF cookies do not survive those redirects.
+that 301 across domains, because CSRF cookies do not survive those redirects.
 """
 
 from __future__ import annotations

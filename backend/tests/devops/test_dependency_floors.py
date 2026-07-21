@@ -1,4 +1,4 @@
-"""Regression: pyproject floors match majors CI actually tests (XCT-23)."""
+"""Regression: pyproject floors match majors CI actually tests."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ _LOCKFILES = (
     _REPO_ROOT / "backend" / "requirements-playwright.txt",
 )
 
-# Majors exercised by the hashed lockfiles / CI — floors must not lag these.
+# Floors must not lag the majors exercised by the hashed lockfiles / CI.
 _MIN_FLOORS: dict[str, tuple[int, ...]] = {
     "celery": (5, 6),
     "redis": (6, 0),
@@ -38,7 +38,7 @@ def _parse_lock_pin(text: str, name: str) -> tuple[int, ...]:
 
 
 def test_pyproject_floors_match_tested_majors() -> None:
-    """Declared support must not advertise untested older majors (XCT-23)."""
+    """Declared support must not advertise untested older majors."""
     text = _PYPROJECT.read_text(encoding="utf-8")
     for name, minimum in _MIN_FLOORS.items():
         floor = _parse_floor(text, name)
@@ -61,4 +61,4 @@ def test_deployment_doc_records_floor_policy() -> None:
     text = _DEPLOYMENT_DOC.read_text(encoding="utf-8")
     assert "just lock-backend" in text
     assert "floors" in text.lower()
-    assert "XCT-23" in text or "tested majors" in text.lower()
+    assert "tested majors" in text.lower()

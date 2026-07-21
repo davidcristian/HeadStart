@@ -203,8 +203,8 @@ def test_hosted_live_submit_posts_to_smartapply() -> None:
         if "viewjob" in url:
             return httpx.Response(200, text=viewjob)
         if "smartapply.indeed.com" in url:
-            # TST-02 / APL-02: authenticated smartapply must carry session cookies
-            # (and CSRF when present) — body-only asserts hide a cookie-drop regression.
+            # Authenticated smartapply must carry session cookies (and CSRF when
+            # present). Body-only asserts hide a cookie-drop regression.
             seen["method"] = request.method
             seen["body"] = json.loads(request.content.decode())
             seen["cookie"] = request.headers.get("cookie")
@@ -372,7 +372,7 @@ def test_hosted_live_submit_requires_session_cookies() -> None:
 
 
 def test_hosted_live_submit_requires_private_api_risk_ack() -> None:
-    """APL-17: hosted smartapply live submit needs explicit ToS/ban-risk consent."""
+    """Hosted smartapply live submit needs explicit ToS/ban-risk consent."""
     fixture = load_fixture("indeed_viewjob_hosted.html")
 
     def handler(request: httpx.Request) -> httpx.Response:
@@ -429,7 +429,7 @@ def test_hosted_live_submit_handles_http_error() -> None:
 
 
 def test_hosted_live_submit_fails_on_2xx_error_body() -> None:
-    """APL-16: smartapply 200 with success:false must not report submitted."""
+    """Smartapply 200 with success:false must not report submitted."""
     viewjob = load_fixture("indeed_viewjob_hosted.html")
 
     def handler(request: httpx.Request) -> httpx.Response:
@@ -528,7 +528,7 @@ def test_extract_application_id_and_credential_headers() -> None:
     headers = _credential_headers({"headers": {}, "session": {"csrf_token": "c-1"}})
     assert headers["X-Indeed-Csrf-Token"] == "c-1"
     assert headers["indeed-co"] == "US"
-    # APL-29: cookies travel via cookies=, not a raw Cookie header join.
+    # Cookies travel via cookies=, not a raw Cookie header join.
     cookie_headers = _credential_headers(
         {
             "headers": {},
@@ -541,7 +541,7 @@ def test_extract_application_id_and_credential_headers() -> None:
 
 
 def test_credential_cookies_jar_and_rejects_header_injection() -> None:
-    """APL-29: cookies= jar + reject CTL/semicolon self-injection."""
+    """Cookies= jar + reject CTL/semicolon self-injection."""
     import pytest
 
     from app.appliers.adapters.indeed import _credential_cookies

@@ -119,7 +119,7 @@ def test_compile_latex_workspace_reports_oserror(monkeypatch) -> None:
 
 
 def test_compiler_env_allowlists_runtime_keys_only(monkeypatch) -> None:
-    """Compiler children must not inherit app secrets (AIA-11)."""
+    """Compiler children must not inherit app secrets."""
     monkeypatch.setenv("PATH", "/usr/bin")
     monkeypatch.setenv("HOME", "/home/headstart")
     monkeypatch.setenv("TMPDIR", "/tmp")
@@ -175,7 +175,7 @@ def test_run_compiler_workspace_tectonic_success(monkeypatch, tmp_path) -> None:
 
 
 def test_run_compiler_workspace_pdflatex_success(monkeypatch) -> None:
-    """pdflatex must disable shell-escape and pin a restricted TeX open policy (AIA-03)."""
+    """pdflatex must disable shell-escape and pin a restricted TeX open policy."""
     captured_env: dict[str, str] = {}
 
     def fake_run(cmd_args, **kwargs):
@@ -229,7 +229,7 @@ def test_run_compiler_workspace_nonzero_exit_without_output_uses_code(monkeypatc
 
 def test_run_compiler_workspace_derives_pdf_name_from_final_suffix_only(monkeypatch) -> None:
     # entrypoint.replace(".tex", ".pdf") would mis-derive "report.tex.tex" as
-    # "report.pdf.pdf"; only the trailing suffix must swap (audit AIA-12).
+    # "report.pdf.pdf"; only the trailing suffix must swap.
     def fake_run(cmd_args, **kwargs):
         out_dir = Path(cmd_args[2])
         (out_dir / "report.tex.pdf").write_bytes(b"%PDF-suffix")
@@ -258,7 +258,7 @@ def test_run_compiler_workspace_returns_none_when_pdf_missing(monkeypatch) -> No
 
 
 def test_run_compiler_workspace_passes_rlimit_preexec_on_posix(monkeypatch) -> None:
-    """Compiler children get AS/CPU/NPROC rlimits via preexec_fn (AIA-10)."""
+    """Compiler children get AS/CPU/NPROC rlimits via preexec_fn."""
     captured: dict[str, object] = {}
 
     def fake_run(cmd_args, **kwargs):

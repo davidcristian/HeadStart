@@ -5,13 +5,13 @@ name: Deploy
 # ("Run workflow", choose beta/prod). The deploy job is guarded on
 # `vars.AWS_ROLE_ARN`, so it no-ops until the AWS OIDC role is configured.
 #
-# OPS-23 — OIDC / deploy hardening (defense in depth):
+# OIDC / deploy hardening (defense in depth):
 # 1. In-workflow ref scope: job `if` allows only refs/heads/main|master.
 # 2. GitHub Environment (`beta` / `prod`): enable required reviewers in
 #    Settings → Environments so a human must approve before credentials run.
 # 3. IAM trust policy for AWS_ROLE_ARN MUST pin the OIDC `sub` claim to those
 #    refs (and optionally to `environment:beta|prod`). Never use a wildcard
-#    like `repo:OWNER/REPO:*` — that lets any branch/workflow assume the role.
+#    like `repo:OWNER/REPO:*`, because it lets any branch/workflow assume the role.
 #    Example Condition StringEquals:
 #      token.actions.githubusercontent.com:aud: sts.amazonaws.com
 #      token.actions.githubusercontent.com:sub: repo:OWNER/REPO:ref:refs/heads/main
@@ -34,7 +34,7 @@ permissions:
 jobs:
   deploy:
     name: Deploy ${{ github.event.inputs.environment || 'beta' }}
-    # Skips cleanly until AWS OIDC is configured; OPS-23 also refuses non-default refs.
+    # Skips cleanly until AWS OIDC is configured; the ref check also refuses non-default refs.
     if: ${{ vars.AWS_ROLE_ARN != '' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main') }}
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment || 'beta' }}
@@ -42,7 +42,7 @@ jobs:
       TARGET_ENV: ${{ github.event.inputs.environment || 'beta' }}
       AWS_REGION: ${{ vars.AWS_REGION || 'us-east-2' }}
     steps:
-      # OPS-20: pin third-party actions to full commit SHAs (mutable tags cannot move under us).
+      # Pin third-party actions to full commit SHAs (mutable tags cannot move under us).
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Configure AWS credentials (OIDC)
@@ -51,7 +51,7 @@ jobs:
           role-to-assume: ${{ vars.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
           audience: sts.amazonaws.com
-          # CloudTrail-friendly session id (OPS-23); pairs with IAM sub/aud pins above.
+          # CloudTrail-friendly session id; pairs with IAM sub/aud pins above.
           role-session-name: headstart-deploy-${{ github.run_id }}
 
       - name: Login to Amazon ECR

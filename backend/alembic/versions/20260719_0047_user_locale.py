@@ -1,4 +1,4 @@
-"""add user.locale for notification/auth copy (NTF-12)
+"""add user.locale for notification/auth copy
 
 Revision ID: 0047_user_locale
 Revises: 0046_status_filter_idx

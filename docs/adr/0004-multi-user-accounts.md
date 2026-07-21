@@ -27,7 +27,7 @@ credentials, without seeing each other's data.
 
 ## Consequences
 
-- Reads are no longer anonymous — the frontend must log in. Added an
+- Because reads are no longer anonymous, the frontend must log in. Added an
   `AuthContext`, login/register pages, protected routes, and transparent
   refresh-on-401 in the API client.
 - A new Alembic migration adds the tables/columns and backfills any pre-existing
@@ -37,10 +37,11 @@ credentials, without seeing each other's data.
 
 ## Alternatives considered
 
-- **Per-user long-lived API tokens only** — simplest, closest to the old model,
-  but worse UX (manual token handling) and no real session/expiry story.
-- **Server-side session cookies** — more XSS-resistant, but adds CSRF handling
+- **Per-user long-lived API tokens only** would be simplest and closest to the
+  old model, but the UX is worse (manual token handling) with no real
+  session/expiry story.
+- **Server-side session cookies** are more XSS-resistant, but add CSRF handling
   and server-side session storage; JWT keeps the API stateless and the SPA
   simple.
-- **Shared global source catalog** — rejected; full per-user isolation is
-  simpler to reason about and matches the "my own watchlist" mental model.
+- **Shared global source catalog** was rejected because full per-user isolation
+  is simpler to reason about and matches the "my own watchlist" mental model.

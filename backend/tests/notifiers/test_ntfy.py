@@ -129,7 +129,7 @@ def test_ntfy_rejects_non_http_click_url() -> None:
 
     notifier = NtfyNotifier(client=httpx.Client(transport=httpx.MockTransport(handler)))
     ctx = NotifyContext(target_type="ntfy", config={"topic": "secret"})
-    # Bypass ingest validation to assert render-side scheme gating (NTF-08).
+    # Bypass ingest validation to assert render-side scheme gating.
     job = JobPosting.model_construct(
         external_id="1",
         title="Engineer",

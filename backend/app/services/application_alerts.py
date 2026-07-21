@@ -127,7 +127,7 @@ class ApplicationAlertService:
             target = self.targets.get(job.search.target_id, user_id)
             if target is not None:
                 return [target]
-        # SVC-09: no-target searches used to broadcast to every channel.
+        # No-target searches used to broadcast to every channel.
         fallback = self.targets.list_all(user_id)
         return fallback[:1]
 
@@ -157,7 +157,7 @@ class ApplicationAlertService:
 
 def _interview_handoff_copy(job: SeenJob) -> tuple[str, str]:
     company = job.company or "Employer"
-    headline = f"Interview to schedule at {company} — take over from here"
+    headline = f"Interview to schedule at {company}. Take over from here."
     summary = (
         f"{company} wants to schedule an interview for {job.title}. "
         "Check your inbox and calendar to pick a time."
@@ -168,10 +168,10 @@ def _interview_handoff_copy(job: SeenJob) -> tuple[str, str]:
 def _ghost_recovery_copy(job: SeenJob, *, label: str) -> tuple[str, str]:
     company = job.company or "Employer"
     if label == "interview_request":
-        headline = f"Interview to schedule at {company} — take over from here"
+        headline = f"Interview to schedule at {company}. Take over from here."
         summary = (
             f"{company} replied after you marked {job.title} as ghosted. "
-            "They want to schedule an interview — check your inbox and calendar."
+            "They want to schedule an interview, so check your inbox and calendar."
         )
     elif label == "rejection":
         headline = f"{company} replied after you marked this ghosted"

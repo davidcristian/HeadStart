@@ -19,7 +19,7 @@ def claim_queued_apply(
 
     Commit this in its own transaction so an ``acks_late`` redelivery after a
     mid-submit crash sees ``processing`` and skips instead of double-posting
-    to the employer (NTF-03).
+    to the employer.
     """
     logs = ApplicationLogRepository(session)
     log = logs.get_for_user(application_log_id, user_id)

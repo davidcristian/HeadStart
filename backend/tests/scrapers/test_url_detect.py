@@ -380,7 +380,7 @@ def test_detect_ashby_posting_api_missing_board_returns_none() -> None:
 
 
 def test_detect_ashby_rejects_non_ashby_host_with_api_path() -> None:
-    """SCR-07: path substring alone must not label arbitrary hosts as Ashby."""
+    """Path substring alone must not label arbitrary hosts as Ashby."""
     assert detect_source_from_url("https://evil.example.com/posting-api/job-board/acme") is None
     assert detect_source_from_url("https://example.com/posting-api/job-board/notion/jobs") is None
     assert detect_source_from_url("https://evilashbyhq.com/posting-api/job-board/acme") is None

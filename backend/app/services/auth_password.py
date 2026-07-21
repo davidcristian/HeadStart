@@ -44,7 +44,7 @@ def request_password_reset(
     Token generation/hashing always runs (even for unknown emails) so response
     work matches the issued path before any mail I/O. When ``schedule_email`` is
     provided (API BackgroundTasks), SMTP runs after the response so timing cannot
-    enumerate accounts via the SMTP round-trip (AUT-26).
+    enumerate accounts via the SMTP round-trip.
     """
     email = data.email.lower()
     # Cap outbound reset mail per address even when the account is missing,
@@ -112,8 +112,8 @@ def reset_password(
     if row is None:
         raise ValidationError("Invalid or expired reset link. Request a new one.")
     # Persist the consume before any path that may raise so single-use does not
-    # depend on a later delete surviving the request transaction (DAT-18), and
-    # so an inactive/missing user cannot leave a replayable link (AUT-30).
+    # depend on a later delete surviving the request transaction, and so an
+    # inactive/missing user cannot leave a replayable link.
     session.commit()
 
     user = users.get(row.user_id)

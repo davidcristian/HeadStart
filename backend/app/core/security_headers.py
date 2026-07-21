@@ -1,7 +1,7 @@
-"""HTTP security response headers for the API (AUT-23).
+"""HTTP security response headers for the API.
 
-The SPA already sets these via nginx (XCT-16 / FRO-11). The API is a separate
-origin behind the ALB, so it needs its own middleware — nothing else adds
+The SPA already sets these via nginx. The API is a separate origin behind the
+ALB, so it needs its own middleware because nothing else adds
 HSTS/nosniff/framing/referrer hardening on JSON responses.
 """
 

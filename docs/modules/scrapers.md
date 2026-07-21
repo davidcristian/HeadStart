@@ -14,7 +14,7 @@ class JobPosting(BaseModel):
     title: str
     company: str
     location: str = ""
-    url: str              # http(s) only; non-http schemes cleared at ingest (NTF-08)
+    url: str              # http(s) only; non-http schemes cleared at ingest
     posted_at: datetime | None = None
     raw: dict = {}        # original payload, for debugging
 
@@ -52,24 +52,24 @@ everything. The worker resolves a scraper with `get_scraper(adapter_key)`.
 | `greenhouse`    | Public Greenhouse job board JSON API      | `boards-api.greenhouse.io/v1/boards/<token>/jobs` |
 | `lever`         | Public Lever Postings API                 | `api.lever.co/v0/postings/<site>?mode=json`; also accepts `jobs.lever.co/<site>` URLs |
 | `ashby`         | Public Ashby Postings API                 | `api.ashbyhq.com/posting-api/job-board/<board>`; also accepts `jobs.ashbyhq.com/<board>` URLs. Board slugs with spaces (e.g. `Superhuman Platform Inc` for Grammarly) are percent-encoded. `/sources/detect` accepts the jobs host or an `*.ashbyhq.com` host whose path contains `posting-api/job-board` (not arbitrary hosts with that path substring) |
-| `smartrecruiters` | Public SmartRecruiters Postings API     | `api.smartrecruiters.com/v1/companies/<company_id>/postings`; also accepts `careers.smartrecruiters.com/<company_id>` URLs. Apply via Application API — see [appliers.md](appliers.md) |
+| `smartrecruiters` | Public SmartRecruiters Postings API     | `api.smartrecruiters.com/v1/companies/<company_id>/postings`; also accepts `careers.smartrecruiters.com/<company_id>` URLs. Apply via Application API, documented in [appliers.md](appliers.md) |
 | `workday`       | Public Workday CXS jobs API (POST)        | `*.myworkdayjobs.com/wday/cxs/<tenant>/<site>/jobs` **or** `{region}.myworkdaysite.com/wday/cxs/<tenant>/<site>/jobs`; also accepts classic board URLs and `/recruiting/<tenant>/<site>` site boards (e.g. Snap). Config `host_kind`: `jobs` (default) or `site` |
 | `google_careers`| Embedded search JSON in HTML              | `google.com/about/careers/applications/jobs/results?...`; parses `AF_initDataCallback` `ds:1`; also accepts `careers.google.com` |
-| `microsoft_careers` | Eightfold PCSX JSON search API       | `apply.careers.microsoft.com/api/pcsx/search`; config `domain` (default `microsoft.com`) + optional `q` / `location`; also accepts careers board URLs. `/sources/detect` requires host `careers.microsoft.com` or a `*.careers.microsoft.com` suffix (dot boundary — not `evilcareers.microsoft.com`) |
+| `microsoft_careers` | Eightfold PCSX JSON search API       | `apply.careers.microsoft.com/api/pcsx/search`; config `domain` (default `microsoft.com`) + optional `q` / `location`; also accepts careers board URLs. `/sources/detect` requires host `careers.microsoft.com` or a `*.careers.microsoft.com` suffix (dot boundary, so `evilcareers.microsoft.com` is rejected) |
 | `meta_careers`      | Relay GraphQL search (form POST)       | `metacareers.com/graphql` with `CareersJobSearchResultsDataQuery`; config `q` + optional `graphql_doc_id`; also accepts `metacareers.com/jobsearch` URLs |
 | `amazon_jobs`   | Public search JSON API                    | `amazon.jobs/<locale>/search.json`; config `locale` (default `en`) + optional `base_query` / `loc_query` / `country`; also accepts search board URLs |
 | `apple_careers` | Embedded search JSON in HTML              | `jobs.apple.com/<locale>/search?...`; parses `window.__staticRouterHydrationData`; config `locale` (default `en-us`) + optional `search` / `location`; also accepts careers search URLs |
-| `shopify_careers` | Embedded React Router flight stream in HTML | `shopify.com/careers`; parses `window.__reactRouterContext.streamController.enqueue` loader data (Ashby-backed, no public Postings API); config optional `q` / `company` / `max_results` (no `board` — that key is Snowflake/Ashby-only) |
+| `shopify_careers` | Embedded React Router flight stream in HTML | `shopify.com/careers`; parses `window.__reactRouterContext.streamController.enqueue` loader data (Ashby-backed, no public Postings API); config optional `q` / `company` / `max_results` (no `board`, because that key is Snowflake/Ashby-only) |
 | `uber_careers` | Public `loadSearchJobsResults` JSON API | `uber.com/.../careers/list`; `POST /api/loadSearchJobsResults?localeCode=en`; config optional `q` (client-side), `country` (server-side location filter), `careers_locale_path` (default `us/en`) |
 | `snowflake_careers` | Public Ashby Postings API (Ashby-backed) | `careers.snowflake.com`; `GET api.ashbyhq.com/posting-api/job-board/snowflake`; config optional `q` (client-side), `board` (default `snowflake`), `include_compensation` |
 | `icims` | Public Jibe Attract `/api/jobs` JSON API | iCIMS/Jibe careers sites; `GET {careers_base_url}/api/jobs?page=&limit=`; config `careers_base_url` (or careers/`/api/jobs` `query_url`) + optional `company` / `keywords` / `page_size` / `max_results`; URL-detects known vanity hosts (e.g. `careers.rivian.com`), `*.jibeapply.com`, and explicit `/api/jobs` paths |
-| `phenom` | Phenom People `/widgets` refineSearch API (POST) | Phenom careers sites; `GET {careers_base_url}/{country}/{lang}/search-results` seeds CSRF, then `POST /widgets` with `ddoKey=refineSearch`; config `careers_base_url` + `country` / `locale` / optional `ref_num` / `keywords` / `selected_fields` / `page_size` / `max_results`; URL-detects known hosts (`careers.cisco.com` incl. `/splunk` keyword seed, `jobs.cvshealth.com`, `careers.gehealthcare.com`, `careers.rtx.com`) and explicit `/widgets` paths. Prefer the canonical Phenom host — vanity redirects drop CSRF cookies. |
-| `rippling` | Public Rippling ATS board API | `GET api.rippling.com/platform/api/ats/v1/board/<board>/jobs` (JSON array); config `board` + optional `company` / `keywords` / `max_results`; URL-detects `ats.rippling.com/<board>` and the API path. Same job UUID may appear once per location — rows are collapsed and locations joined. Employer must expose a public board (Recruiting Pro). |
-| `ibm_careers` | IBM Careers Falcon search API (GET) | `GET www-api.ibm.com/search/api/v1-1/ibmcom/appid/<appid>/responseFormat/json`; config `keywords`/`query` (default `*`) + `app_id` (default `careers`) + `scope` (default `careers2`) + optional `company` / `page_size` / `max_results`; URL-detects `ibm.com/careers/search`, `careers.ibm.com`, and the API path. Used for post-acquisition brands (e.g. HashiCorp) via keyword query — prefer title review in the Jobs feed. |
+| `phenom` | Phenom People `/widgets` refineSearch API (POST) | Phenom careers sites; `GET {careers_base_url}/{country}/{lang}/search-results` seeds CSRF, then `POST /widgets` with `ddoKey=refineSearch`; config `careers_base_url` + `country` / `locale` / optional `ref_num` / `keywords` / `selected_fields` / `page_size` / `max_results`; URL-detects known hosts (`careers.cisco.com` incl. `/splunk` keyword seed, `jobs.cvshealth.com`, `careers.gehealthcare.com`, `careers.rtx.com`) and explicit `/widgets` paths. Prefer the canonical Phenom host, because vanity redirects drop CSRF cookies. |
+| `rippling` | Public Rippling ATS board API | `GET api.rippling.com/platform/api/ats/v1/board/<board>/jobs` (JSON array); config `board` + optional `company` / `keywords` / `max_results`; URL-detects `ats.rippling.com/<board>` and the API path. Same job UUID may appear once per location, so rows are collapsed and locations joined. Employer must expose a public board (Recruiting Pro). |
+| `ibm_careers` | IBM Careers Falcon search API (GET) | `GET www-api.ibm.com/search/api/v1-1/ibmcom/appid/<appid>/responseFormat/json`; config `keywords`/`query` (default `*`) + `app_id` (default `careers`) + `scope` (default `careers2`) + optional `company` / `page_size` / `max_results`; URL-detects `ibm.com/careers/search`, `careers.ibm.com`, and the API path. Used for post-acquisition brands (e.g. HashiCorp) via keyword query. Prefer title review in the Jobs feed. |
 | `workable` | Public Workable widget careers API | `GET apply.workable.com/api/v1/widget/accounts/<account>`; config `account` + optional `company` / `keywords` / `max_results`; URL-detects `apply.workable.com/<account>` and the widget API path. Job shortlinks (`/j/<shortcode>`) are not account URLs. |
 | `successfactors` | SuccessFactors Career Site Builder jobs API (POST) | CSRF-seeded `GET {careers_base_url}/` then `POST {careers_base_url}/services/recruiting/v1/jobs`; config `careers_base_url` + optional `company` / `locale` / `category_id` / `keywords` / `max_results`; URL-detects `*.jobs.hr.cloud.sap` (e.g. W. L. Gore), known host `wlgore.jobs.hr.cloud.sap`, and explicit `/services/recruiting/v1/jobs` paths. Category defaults to homepage `All-Jobs` `/go/.../<id>/` when `category_id` is omitted. Keywords are sent in the JSON body and also applied client-side on titles. |
-| `indeed`        | Embedded search JSON in HTML (selectolax fallback) | `*.indeed.com/jobs?...`; parses `mosaic-provider-jobcards`; may need [credentials](credentials.md) for Cloudflare — **ToS risk** when session cookies are used (see [Safety](#linkedin--indeed-credentialed-scrape-tos-risk-xct-19)) |
-| `linkedin`      | Guest search pagination API (HTML fragments) | Opt-in only (not URL-detected). `linkedin.com/jobs/search?...` → guest `seeMoreJobPostings/search`; may need [credentials](credentials.md) for auth walls — **ToS risk** when session cookies are used (see [Safety](#linkedin--indeed-credentialed-scrape-tos-risk-xct-19)) |
+| `indeed`        | Embedded search JSON in HTML (selectolax fallback) | `*.indeed.com/jobs?...`; parses `mosaic-provider-jobcards`; may need [credentials](credentials.md) for Cloudflare, with **ToS risk** when session cookies are used (see [Safety](#linkedin--indeed-credentialed-scrape-tos-risk)) |
+| `linkedin`      | Guest search pagination API (HTML fragments) | Opt-in only (not URL-detected). `linkedin.com/jobs/search?...` → guest `seeMoreJobPostings/search`; may need [credentials](credentials.md) for auth walls, with **ToS risk** when session cookies are used (see [Safety](#linkedin--indeed-credentialed-scrape-tos-risk)) |
 | `generic_html`  | CSS selectors from config (selectolax)    | For simple static pages; configured in the UI |
 | `playwright`    | Headless browser (base helper)            | For JS-heavy/anti-bot pages (opt-in)   |
 
@@ -80,8 +80,8 @@ everything. The worker resolves a scraper with `get_scraper(adapter_key)`.
 
 See [../recipes.md](../recipes.md) → "add a new job-site scraper".
 Tests must use saved fixtures and never hit the network. Also add the adapter
-key to `FREE_SCRAPERS` or `PREMIUM_SCRAPERS` in `app/core/plans.py` — unclassified
-keys are denied on every plan.
+key to `FREE_SCRAPERS` or `PREMIUM_SCRAPERS` in `app/core/plans.py`, because
+unclassified keys are denied on every plan.
 
 ## Error handling
 
@@ -90,13 +90,13 @@ search without crashing. Be a polite client: real User-Agent, respect intervals,
 no retry storms.
 
 Upstream JSON/HTML is **untrusted**: a single bad field or record must not abort
-the run. Parse defensively — a malformed date becomes `None` (use
+the run. Parse defensively. A malformed date becomes `None` (use
 `app.scrapers.dates.parse_iso8601` for ISO strings, or
-`parse_epoch_seconds` / `parse_epoch_millis` for Unix epochs — both catch
+`parse_epoch_seconds` / `parse_epoch_millis` for Unix epochs, both of which catch
 `OverflowError`/`OSError`/`ValueError` from `fromtimestamp`), a non-list/non-dict
 payload node is skipped, and a non-finite or out-of-range count/index falls back
 to a safe default rather than raising (use `app.scrapers.numbers.coerce_count`
-for `total` / `hits` / `count` / `totalFound` / `totalRecords` — bare `int()`
+for `total` / `hits` / `count` / `totalFound` / `totalRecords`, since bare `int()`
 raises on JSON `Infinity`/`NaN`). Shopify Careers' React Router flight-stream
 resolver (`_resolve_node`) also caps reference-graph depth (default 64) so a long
 non-cyclic chain cannot raise `RecursionError`. Aborting is reserved for a
@@ -110,8 +110,8 @@ fragments) use **selectolax** (Modest/lolhtml C extension). That dependency is
 declared as `selectolax>=0.4.10` in `backend/pyproject.toml` and pinned with
 hashes in the pip-tools lockfiles (`backend/requirements*.txt`; see
 [ADR-0012](../adr/0012-backend-dependency-lockfiles.md)). Do not raise the floor
-or bump the lock without reviewing the release notes — this code path ingests
-attacker-influenced markup.
+or bump the lock without reviewing the release notes, because this code path
+ingests attacker-influenced markup.
 
 **Upstream health / fallback.** If selectolax stalls, ships an unpatched parser
 CVE, or a release looks untrustworthy, pin (or roll back) via `just lock-backend`
@@ -185,7 +185,7 @@ and **enabled in production on the worker only**:
 - **Docker:** `backend/Dockerfile` target `worker` installs Chromium; the lean
   `api` / `beat` images omit Playwright. Runtime stays as `appuser`; Chromium
   keeps its process sandbox (no `--no-sandbox` unless `PLAYWRIGHT_NO_SANDBOX`
-  in local/test — OPS-27).
+  in local/test).
 - **Browser pool:** each Celery worker child process reuses one headless Chromium
   instance across scrapes (`app/scrapers/playwright_browser.py`). The browser
   is closed on worker shutdown. Launch args keep `--disable-dev-shm-usage` /
@@ -209,7 +209,7 @@ On AWS, the worker ECS task is sized larger than api/beat (default **1024 CPU /
 2048 MiB**) and pulls the `headstart-backend-worker` image. See
 [deployment.md](deployment.md).
 
-## LinkedIn / Indeed credentialed scrape ToS risk (XCT-19)
+## LinkedIn / Indeed credentialed scrape ToS risk
 
 The `linkedin` and `indeed` scrapers can inject Site credentials (session
 cookies / headers) to pass auth walls or Cloudflare challenges. That is
@@ -223,6 +223,6 @@ risk before saving LinkedIn/Indeed credentials. Guest/unauthenticated scrape
 (no Site credentials) does not require that acknowledgment.
 
 Hosted Easy Apply / auto-apply for the same adapters has a separate
-`accept_private_api_risk` gate and disclosure — see
+`accept_private_api_risk` gate and disclosure. See
 [appliers.md Safety & consent](appliers.md#safety--consent) and
-[launch-checklist §7 Safety](../launch-checklist.md#7-auto-apply-optional--know-the-limits).
+[launch-checklist §7 Safety](../launch-checklist.md#7-auto-apply-optional-and-its-limits).

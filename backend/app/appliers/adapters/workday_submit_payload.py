@@ -16,7 +16,7 @@ def mid_flow_failure(
     *,
     payload: dict[str, Any] | None = None,
 ) -> ApplyResult:
-    """Failed result after Workday already created an application (APL-26).
+    """Failed result after Workday already created an application.
 
     Candidate CXS has no withdraw/delete for drafts, so a mid-flow failure can
     leave a partial application on the ATS. Persist the id and flag the payload

@@ -75,9 +75,9 @@ def test_fetch_orders_by_received_time_not_hex_id() -> None:
 
 @respx.mock
 def test_fetch_short_circuits_date_probes_at_limit() -> None:
-    """INB-10: list may return many ids; only probe internalDate for the oldest `limit`."""
+    """List may return many ids; only probe internalDate for the oldest `limit`."""
     # Newest-first listing: n0 is newest, n4 is oldest. limit=2 should date-probe
-    # only n4 then n3 (and raw-fetch those two) — not n0/n1/n2.
+    # only n4 then n3 (and raw-fetch those two). It must skip n0/n1/n2.
     ids_newest_first = [f"n{i}" for i in range(5)]
     respx.get(f"{BASE}/messages").mock(
         return_value=Response(200, json={"messages": [{"id": gid} for gid in ids_newest_first]})

@@ -112,7 +112,7 @@ def test_flatten_lever_form_fields_handles_urls_consent_bool_scalar() -> None:
 
 
 def test_flatten_lever_form_fields_skips_resume_file_metadata() -> None:
-    """APL-13: do not stringify resume_file meta beside the multipart resume part."""
+    """Do not stringify resume_file meta beside the multipart resume part."""
     from app.appliers.resume import flatten_lever_form_fields
 
     parts = flatten_lever_form_fields(

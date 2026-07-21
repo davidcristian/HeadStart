@@ -51,7 +51,7 @@ def test_queue_counts_enqueued(db_session: Session) -> None:
 
 
 def test_queue_batches_seen_job_ids(db_session: Session) -> None:
-    """DigestService.queue persists all ids via one repository batch (SVC-15)."""
+    """DigestService.queue persists all ids via one repository batch."""
     search = _digest_search(db_session)
     from app.models.seen_job import SeenJob
 
@@ -167,7 +167,7 @@ def test_flush_search_records_error_and_reraises(db_session: Session) -> None:
 
 
 def test_flush_due_isolates_per_search_notifier_failure(db_session: Session) -> None:
-    """One bad target must not block other due digests (SVC-04)."""
+    """One bad target must not block other due digests."""
     # Lower id flushes first and fails; higher id must still succeed.
     failing = _digest_search(db_session, interval=60)
     failing.name = "failing"
@@ -205,7 +205,7 @@ def test_flush_due_isolates_per_search_notifier_failure(db_session: Session) -> 
 
 
 def test_flush_due_commits_before_later_search_failure(db_session: Session) -> None:
-    """A later send failure must not roll back an earlier delivered digest (SVC-05)."""
+    """A later send failure must not roll back an earlier delivered digest."""
     first = _digest_search(db_session, interval=60)
     first.name = "first"
     second = _digest_search(db_session, interval=60)

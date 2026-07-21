@@ -179,7 +179,7 @@ def test_parse_template_bundle_rejects_absolute_input_in_sty() -> None:
 
 
 def test_render_template_bundle_rejects_absolute_input_after_substitution() -> None:
-    """AIA-06: verbatim [[experience]] must not smuggle absolute \\input into compile."""
+    """Verbatim [[experience]] must not smuggle absolute \\input into compile."""
     bundle = ResumeTemplateBundle(
         entrypoint="main.tex",
         files={"main.tex": b"[[experience]]"},

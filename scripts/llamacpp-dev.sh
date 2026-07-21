@@ -22,7 +22,7 @@ usage() {
   cat <<EOF
 Usage: $(basename "$0") [--help]
 
-Start llama-server for local HeadStart AI summaries (Phase 12 dev helper).
+Start llama-server for local HeadStart AI summaries (dev helper).
 
 Environment:
   LLAMACPP_MODEL_PATH   Path to a .gguf model file (required to start)

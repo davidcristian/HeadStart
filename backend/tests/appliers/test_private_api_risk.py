@@ -1,4 +1,4 @@
-"""Tests for LinkedIn/Indeed private-API risk acknowledgment (APL-17)."""
+"""Tests for LinkedIn/Indeed private-API risk acknowledgment."""
 
 from __future__ import annotations
 

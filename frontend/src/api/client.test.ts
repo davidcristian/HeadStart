@@ -59,7 +59,7 @@ type FetchInit = {
   headers: Record<string, string>;
 };
 
-/** First (or nth) fetch call args as a definite tuple (FRO-42). */
+/** First (or nth) fetch call args as a definite tuple. */
 function fetchCall(index = 0): [unknown, FetchInit] {
   const call = fetchMock.mock.calls[index];
   if (call === undefined) {
@@ -127,7 +127,7 @@ describe("request", () => {
     await expect(request("/thing")).rejects.toMatchObject({ message: "Server Error" });
   });
 
-  it("throws ApiError instead of SyntaxError on malformed JSON 2xx body (FRO-14)", async () => {
+  it("throws ApiError instead of SyntaxError on malformed JSON 2xx body", async () => {
     fetchMock.mockResolvedValueOnce({
       status: 200,
       ok: true,
@@ -141,7 +141,7 @@ describe("request", () => {
     });
   });
 
-  it("throws ApiError on malformed JSON error bodies for requestForm too (FRO-14)", async () => {
+  it("throws ApiError on malformed JSON error bodies for requestForm too", async () => {
     const body = new FormData();
     fetchMock.mockResolvedValueOnce({
       status: 502,
@@ -186,7 +186,7 @@ describe("request", () => {
     expect(settings.cleared).toBe(true);
   });
 
-  it("shares one refresh across concurrent 401s from request helpers (FRO-13)", async () => {
+  it("shares one refresh across concurrent 401s from request helpers", async () => {
     let resolveRefresh: ((value: Response) => void) | undefined;
     const refreshPending = new Promise<Response>((resolve) => {
       resolveRefresh = resolve;
@@ -233,13 +233,13 @@ describe("refreshSession", () => {
     expect(await refreshSession()).toBe(false);
   });
 
-  it("returns false on network failure instead of throwing (FRO-16)", async () => {
+  it("returns false on network failure instead of throwing", async () => {
     fetchMock.mockRejectedValueOnce(new TypeError("Failed to fetch"));
     expect(await refreshSession()).toBe(false);
     expect(settings.accessToken).toBe("access-1");
   });
 
-  it("returns false when a 2xx refresh body is not JSON (FRO-16)", async () => {
+  it("returns false when a 2xx refresh body is not JSON", async () => {
     fetchMock.mockResolvedValueOnce({
       status: 200,
       ok: true,
@@ -252,7 +252,7 @@ describe("refreshSession", () => {
     expect(settings.accessToken).toBe("access-1");
   });
 
-  it("clears the session when a 401 refresh fails with a network error (FRO-16)", async () => {
+  it("clears the session when a 401 refresh fails with a network error", async () => {
     const onUnauthorized = vi.fn();
     setUnauthorizedHandler(onUnauthorized);
     fetchMock
@@ -263,7 +263,7 @@ describe("refreshSession", () => {
     expect(onUnauthorized).toHaveBeenCalledTimes(1);
   });
 
-  it("dedupes concurrent callers onto one POST /auth/refresh (FRO-13)", async () => {
+  it("dedupes concurrent callers onto one POST /auth/refresh", async () => {
     let resolveRefresh: ((value: Response) => void) | undefined;
     const refreshPending = new Promise<Response>((resolve) => {
       resolveRefresh = resolve;

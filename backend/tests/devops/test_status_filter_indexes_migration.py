@@ -1,4 +1,4 @@
-"""Regression: DAT-11 status-filter indexes land in Alembic revision 0046."""
+"""Regression: status-filter indexes land in Alembic revision 0046."""
 
 from __future__ import annotations
 

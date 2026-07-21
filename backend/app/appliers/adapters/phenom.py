@@ -1,7 +1,7 @@
 """Phenom People apply adapter.
 
 Phenom careers sites (``POST /widgets``) often redirect apply to a downstream
-ATS — Cisco/Splunk postings use Workday ``applyUrl`` values. This adapter:
+ATS. Cisco/Splunk postings use Workday ``applyUrl`` values. This adapter:
 
 1. Resolves job detail via ``ddoKey=jobDetail`` (or ``config.apply_url``).
 2. Delegates to the matching applier when ``applyUrl`` is a known ATS.

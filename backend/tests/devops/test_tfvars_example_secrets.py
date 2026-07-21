@@ -1,4 +1,4 @@
-"""Regression: tfvars.example must not prime inline core secrets (OPS-33)."""
+"""Regression: tfvars.example must not prime inline core secrets."""
 
 from __future__ import annotations
 
@@ -18,7 +18,6 @@ def test_tfvars_examples_require_core_secrets_via_tf_var_only() -> None:
     for env in ("beta", "prod"):
         path = _TF_ENVS / env / "terraform.tfvars.example"
         text = path.read_text(encoding="utf-8")
-        assert "OPS-33" in text, f"{path} should cite OPS-33"
         for name in _CORE_SECRETS:
             assert f"TF_VAR_{name}" in text, f"{path} missing TF_VAR_{name} guidance"
             for line in text.splitlines():
@@ -26,4 +25,4 @@ def test_tfvars_examples_require_core_secrets_via_tf_var_only() -> None:
                 if stripped.startswith("#"):
                     continue
                 if stripped.startswith(f"{name}") and "=" in stripped:
-                    raise AssertionError(f"active {name} assignment in {path} (OPS-33): {line}")
+                    raise AssertionError(f"active {name} assignment in {path}: {line}")

@@ -1,18 +1,18 @@
 name: Terraform
 
 # PR path: fmt + validate only (no secrets, no AWS). Credentialed plan is a
-# separate job that never runs on pull_request checkouts (OPS-24).
+# separate job that never runs on pull_request checkouts.
 #
-# OPS-24 — credentialed terraform plan hardening:
+# Credentialed terraform plan hardening:
 # 1. Never inject TF_VAR_* secrets or assume AWS on untrusted PR code.
 # 2. Plan job runs only on workflow_dispatch from refs/heads/main|master
-#    (same default-branch gate as deploy.yml / OPS-23).
+#    (same default-branch gate as deploy.yml).
 # 3. Plan targets the GitHub Environment (`beta` / `prod`): enable required
 #    reviewers in Settings → Environments so a human must approve.
 # 4. IAM trust policy for AWS_ROLE_ARN MUST pin the OIDC `sub` claim to those
 #    refs (and optionally to `environment:beta|prod`). Never use a wildcard
 #    like `repo:OWNER/REPO:*`.
-# 5. Set repo variable `TF_STATE_BUCKET` for remote-state init (OPS-29 partial
+# 5. Set repo variable `TF_STATE_BUCKET` for remote-state init (partial
 #    backend). Plan stays dormant until `AWS_ROLE_ARN` + secrets + bucket are set.
 
 on:
@@ -42,7 +42,7 @@ jobs:
       run:
         working-directory: devops/terraform/environments/${{ matrix.env }}
     steps:
-      # OPS-20: pin third-party actions to full commit SHAs (mutable tags cannot move under us).
+      # Pin third-party actions to full commit SHAs (mutable tags cannot move under us).
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
         with:
@@ -58,7 +58,7 @@ jobs:
       - name: Validate
         run: terraform validate
 
-  # Credentialed plan: trusted refs only — never on pull_request (OPS-24).
+  # Credentialed plan runs on trusted refs only and never on pull_request.
   plan:
     name: Plan ${{ github.event.inputs.environment || 'beta' }}
     if: ${{ vars.AWS_ROLE_ARN != '' && github.event_name == 'workflow_dispatch' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main') }}
@@ -92,7 +92,7 @@ jobs:
           TF_STATE_BUCKET: ${{ vars.TF_STATE_BUCKET }}
         run: |
           if [ -z "${TF_STATE_BUCKET}" ]; then
-            echo "Set repo variable TF_STATE_BUCKET (OPS-29 partial backend) before plan." >&2
+            echo "Set repo variable TF_STATE_BUCKET (partial backend) before plan." >&2
             exit 1
           fi
           terraform init -input=false \

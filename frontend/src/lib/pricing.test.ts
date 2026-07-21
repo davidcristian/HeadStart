@@ -9,7 +9,7 @@ import {
 } from "./pricing";
 
 describe("pricing", () => {
-  it("formats prices in EUR with de-DE locale (FRO-35)", () => {
+  it("formats prices in EUR with de-DE locale", () => {
     expect(BILLING_CURRENCY).toBe("EUR");
     expect(formatPrice(0)).toBe("0,00\u00a0€");
     expect(formatPrice(9.99)).toBe("9,99\u00a0€");

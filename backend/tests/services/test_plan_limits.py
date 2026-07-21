@@ -94,7 +94,7 @@ def test_premium_scrapers_gated_by_tier() -> None:
 
 
 def test_unknown_scraper_fails_closed() -> None:
-    """Unclassified adapter keys must not unlock on any plan (BIL-06)."""
+    """Unclassified adapter keys must not unlock on any plan."""
     for plan in ("free", "starter", "plus", "pro"):
         assert scraper_allowed(plan, "not_a_real_scraper") is False
 

@@ -30,9 +30,9 @@ describe("ComparisonCell", () => {
     expect(screen.getByLabelText("Included")).toHaveTextContent("✓");
   });
 
-  it("renders a dash for an excluded boolean", () => {
+  it("renders a cross for an excluded boolean", () => {
     render(<ComparisonCell value={false} />);
-    expect(screen.getByLabelText("Not included")).toHaveTextContent("—");
+    expect(screen.getByLabelText("Not included")).toHaveTextContent("✗");
   });
 
   it("renders a plain string value", () => {

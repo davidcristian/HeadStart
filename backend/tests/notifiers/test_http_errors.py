@@ -1,4 +1,4 @@
-"""Unit tests for notifier HTTP error redaction (NTF-10)."""
+"""Unit tests for notifier HTTP error redaction."""
 
 import httpx
 import pytest

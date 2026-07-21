@@ -37,7 +37,7 @@ def test_resolve_node_resolves_list_of_references() -> None:
 def test_resolve_node_caps_depth_on_long_noncyclic_chain(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """A deep non-cyclic ref chain degrades to None instead of RecursionError (SCR-06)."""
+    """A deep non-cyclic ref chain degrades to None instead of RecursionError."""
     monkeypatch.setattr(
         "app.scrapers.adapters.shopify_careers_parse._MAX_RESOLVE_DEPTH",
         3,
@@ -50,7 +50,7 @@ def test_resolve_node_caps_depth_on_long_noncyclic_chain(
 def test_resolve_node_caps_depth_on_dict_reference_chain(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Dict-value reference chains honor the same max-depth bound (SCR-06)."""
+    """Dict-value reference chains honor the same max-depth bound."""
     monkeypatch.setattr(
         "app.scrapers.adapters.shopify_careers_parse._MAX_RESOLVE_DEPTH",
         2,

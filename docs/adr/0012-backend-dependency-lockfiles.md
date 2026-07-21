@@ -8,20 +8,20 @@
 Backend runtime and optional extras were declared only as open lower bounds in
 `backend/pyproject.toml` (`fastapi>=0.111`, …) with no committed lockfile.
 `pip install -e backend` and the Docker image therefore resolved whatever PyPI
-served that day, so CI and production images could silently diverge (XCT-14).
+served that day, so CI and production images could silently diverge.
 The frontend already pins via `package-lock.json`.
 
 ## Decision
 
 Commit pip-tools lockfiles with hashes under `backend/`:
 
-- `requirements.txt` — runtime
-- `requirements-dev.txt` — runtime + `dev` extra
-- `requirements-playwright.txt` — runtime + `playwright` extra
+- `requirements.txt` covers runtime
+- `requirements-dev.txt` covers runtime plus the `dev` extra
+- `requirements-playwright.txt` covers runtime plus the `playwright` extra
 
 `pyproject.toml` keeps human-editable `>=` floors. Those floors must track the
-majors CI actually tests via the lockfiles (XCT-23) — do not advertise an older
-major the suite never runs. Builds install from the lockfiles
+majors CI actually tests via the lockfiles. Do not advertise an older major the
+suite never runs. Builds install from the lockfiles
 (`--require-hashes`), then install the local package with `--no-deps`.
 Regenerate with `just lock-backend` whenever floors or extras change.
 
@@ -35,9 +35,9 @@ Regenerate with `just lock-backend` whenever floors or extras change.
 
 ## Alternatives considered
 
-- **uv lock / Poetry** — also fine; pip-tools matches the existing pip-based
+- **uv lock / Poetry.** Also fine; pip-tools matches the existing pip-based
   Dockerfile and CI without adding a second package manager.
-- **Upper caps only in pyproject** — still non-reproducible across patch
+- **Upper caps only in pyproject.** Still non-reproducible across patch
   releases and does not pin transitive deps.
-- **Lock runtime only** — leaves CI tooling and Playwright unpinned; we lock
+- **Lock runtime only.** Leaves CI tooling and Playwright unpinned; we lock
   all three install surfaces that the repo actually builds.

@@ -171,7 +171,7 @@ def test_lever_empty_categories_and_empty_all_locations() -> None:
 
 
 def test_lever_overflow_created_at_returns_none() -> None:
-    """Out-of-range createdAt must not abort the scrape (SCR-02)."""
+    """Out-of-range createdAt must not abort the scrape."""
     payload = json.dumps(
         [
             {

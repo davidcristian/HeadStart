@@ -42,8 +42,8 @@ class AdminService:
             raise ValidationError("At least one admin account must remain.")
         if data.plan is not None and data.plan not in VALID_PLANS:
             raise ValidationError(f"Unknown plan '{data.plan}'.")
-        # Stripe webhooks own plan while a subscription still grants access
-        # (BIL-08); a local override would be silently reverted on the next event.
+        # Stripe webhooks own plan while a subscription still grants access;
+        # a local override would be silently reverted on the next event.
         if (
             data.plan is not None
             and data.plan != user.plan
@@ -57,7 +57,7 @@ class AdminService:
 
         before = _admin_flags(user)
         # Deactivation must permanently invalidate outstanding JWTs so a later
-        # reactivation cannot resurrect pre-lockout access/refresh tokens (XCT-08).
+        # reactivation cannot resurrect pre-lockout access/refresh tokens.
         revoke_sessions = data.is_active is False and user.is_active
 
         updated = self.users.update_flags(

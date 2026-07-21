@@ -124,7 +124,7 @@ def test_score_job_match_scores_in_reply_to_thread(db_session: Session) -> None:
 
 
 def test_score_job_match_normalizes_in_reply_to_whitespace(db_session: Session) -> None:
-    """INB-17: whitespace around Message-IDs must not drop the thread boost."""
+    """Whitespace around Message-IDs must not drop the thread boost."""
     job = _seed_applied_job(db_session)
     log = job.application_logs[0]
     log.payload = {
@@ -154,7 +154,7 @@ def test_link_message_to_job_returns_none_below_threshold(db_session: Session) -
 
 
 def test_link_message_to_job_rejects_company_only_mention(db_session: Session) -> None:
-    """INB-18: a bare company substring (+20) is not a confident link."""
+    """A bare company substring (+20) is not a confident link."""
     job = _seed_applied_job(db_session)
     message = InboxMessage(
         uid=5,

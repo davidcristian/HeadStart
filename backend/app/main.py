@@ -28,7 +28,7 @@ API_PREFIX = "/api/v1"
 
 def create_app() -> FastAPI:
     configure_logging()
-    # AUT-25: interactive OpenAPI UI is local/test only — prod must not enumerate routes.
+    # Interactive OpenAPI UI is local/test only so prod cannot enumerate routes.
     docs_enabled = is_local_environment(get_settings().environment)
 
     app = FastAPI(

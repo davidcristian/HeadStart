@@ -78,8 +78,8 @@ export function PrivacyPolicyPage() {
         <p>
           We process account, configuration, and operational data to provide the service you request
           (performance of a contract). Optional features that send your personal data to third
-          parties — including auto-apply to career sites and AI-backed features — run only after you
-          opt in. For those features the lawful basis is your consent, which you can withdraw by
+          parties run only after you opt in. Auto-apply to career sites and AI-backed features are
+          examples. The lawful basis for all of them is your consent, which you can withdraw by
           turning the feature off (for example disabling auto-apply on a source) or deleting your
           account.
         </p>
@@ -97,11 +97,11 @@ export function PrivacyPolicyPage() {
         <ul>
           <li>
             <strong>Job boards and career sites</strong> you ask us to monitor (for scraping). When
-            you enable auto-apply on a source, we also transmit application-profile data — such as
-            your name, email, phone, links, resume file or text, work history, education, skills,
-            and custom answers — to that employer&apos;s career site or applicant-tracking system so
-            we can submit an application on your behalf. Each live or preview attempt stores an
-            auditable consent record on the application log.
+            you enable auto-apply on a source, we also transmit application-profile data to that
+            employer&apos;s career site or applicant-tracking system so we can submit an application
+            on your behalf. That data includes your name, email, phone, links, resume file or text,
+            work history, education, skills, and custom answers. Each live or preview attempt stores
+            an auditable consent record on the application log.
           </li>
           <li>
             <strong>Notification providers</strong> you choose (for example ntfy, email via SMTP,
@@ -118,8 +118,8 @@ export function PrivacyPolicyPage() {
               <li>
                 <strong>Cover letters and resume curation:</strong> job posting context plus
                 application-profile fields such as name, location, skills, work history, education,
-                and resume text excerpts (not email or phone — those stay local and are merged into
-                the document after generation).
+                and resume text excerpts (not email or phone). Those stay local and are merged into
+                the document after generation.
               </li>
               <li>
                 <strong>Email classification:</strong> inbound recruiter message metadata and body
@@ -182,7 +182,7 @@ export function PrivacyPolicyPage() {
           <strong>Inbox / recruiter email:</strong> when you connect a mailbox, we retain message
           metadata, classification excerpts, reply drafts, pending auto-replies, and send logs
           needed for inbox features for as long as the account (and mailbox connection) remains.
-          That recruiter-email content is removed with your account — it does not survive erasure.
+          That recruiter-email content is removed with your account and does not survive erasure.
         </p>
         <p>
           <strong>Post-deletion audit log:</strong> after account deletion we keep a minimal

@@ -26,7 +26,7 @@ def _make_request(
 def test_request_meta_ignores_xff_without_trusted_proxies(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """AUT-17: forged XFF must not win when TRUSTED_PROXY_CIDRS is empty."""
+    """Forged XFF must not win when TRUSTED_PROXY_CIDRS is empty."""
     monkeypatch.setattr(request_meta_mod.settings, "trusted_proxy_cidrs", [])
     request = _make_request(
         headers=[
@@ -108,7 +108,7 @@ def test_request_meta_ignores_xff_from_untrusted_peer(
 def test_request_meta_rejects_overlong_and_invalid_ips(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Overlong / non-IP tokens must not reach String(45) persistence (AUT-17)."""
+    """Overlong / non-IP tokens must not reach String(45) persistence."""
     monkeypatch.setattr(
         request_meta_mod.settings,
         "trusted_proxy_cidrs",
@@ -176,7 +176,7 @@ def test_request_meta_handles_missing_client(
 def test_request_meta_drops_non_ip_peer(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Starlette TestClient uses host 'testclient' — not a storable IP."""
+    """Starlette TestClient uses host 'testclient', which is not a storable IP."""
     monkeypatch.setattr(request_meta_mod.settings, "trusted_proxy_cidrs", [])
     request = _make_request(client_host="testclient")
     assert request_meta(request).ip_address is None

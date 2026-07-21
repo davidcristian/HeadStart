@@ -13,7 +13,7 @@ data isolation.
   `is_active`, `plan` (`free` / `starter` / `plus` / `pro`, default `free`),
   `email_verified_at` (null until the user confirms their address),
   `locale` (`en` / `de` / null → `DEFAULT_LOCALE` for notification and auth
-  email copy; NTF-12). See [data-model.md](data-model.md).
+  email copy). See [data-model.md](data-model.md).
   `PATCH /auth/me` updates `locale`.
 - The **first** registered user becomes admin (`AuthService.register`). A
   `registration_lock` singleton row is claimed atomically
@@ -43,8 +43,8 @@ data isolation.
   user's current version, so bumping `token_version` invalidates every
   outstanding access **and** refresh token at once. Password reset bumps it (see
   below); `/logout` bumps it when a valid refresh token is presented; `/refresh`
-  bumps it before issuing a new refresh cookie (rotation — a previously issued
-  refresh JWT cannot be replayed). Admin deactivation (`PATCH /admin/users/{id}`
+  bumps it before issuing a new refresh cookie, so rotation means a previously
+  issued refresh JWT cannot be replayed. Admin deactivation (`PATCH /admin/users/{id}`
   with `is_active=false`) also bumps `token_version`, so a later reactivation
   cannot resurrect JWTs minted before the lock-out. RSS feed URLs use a separate
   `feed_token_version` claim; password reset bumps that too so leaked feed links
@@ -60,14 +60,14 @@ data isolation.
   `refresh_token` in the `/refresh` body. See
   [adr/0007-httponly-refresh-cookie.md](../adr/0007-httponly-refresh-cookie.md).
 - `decode_token(token, expected_type=...)` validates signature, required claims
-  (`exp`, `iat`, `sub`, `ver` — PyJWT `options.require`, RFC 8725), expiry, and
+  (`exp`, `iat`, `sub`, `ver` via PyJWT `options.require`, RFC 8725), expiry, and
   the `type` claim, raising `TokenError` otherwise. `decode_feed_token` applies
   the same required-claim set before checking `type == "feed"`.
 - Passwords: `hash_password` / `verify_password` (bcrypt, input truncated to the
   72-byte bcrypt limit).
 - URL-borne single-use tokens (password reset and email verification) are stored
-  as SHA-256 digests via shared `hash_url_token` — not bcrypt, and not named for
-  one family only (AUT-31). The two families live in separate tables.
+  as SHA-256 digests via shared `hash_url_token`, which is not bcrypt and is not
+  named for one family only. The two families live in separate tables.
 
 ## Enforcement
 
@@ -99,7 +99,7 @@ returns `NotFoundError` (404), never another user's data.
 \* `/refresh` is unauthenticated but requires a valid refresh token, normally
 read from the httpOnly cookie (falls back to a `refresh_token` body field).
 
-## Rate limiting (AUT-03)
+## Rate limiting
 
 Unauthenticated and email-issuing auth routes are throttled in-process with a
 sliding window (`app.core.rate_limit`). Exceeding a bucket returns **429**
@@ -121,13 +121,13 @@ logging (trusted-proxy XFF or TCP peer; see below).
 Counters are process-local (each API task enforces its own ceiling). Tests call
 `reset_rate_limiter()` so suites do not leak 429s across cases.
 
-## Security event logging (AUT-10)
+## Security event logging
 
 Auth services emit structured INFO lines via `app.core.auth_events` (never
 plaintext email or tokens). Each line is `auth_event=<name>` plus optional
 `email_hash=` (HMAC fingerprint, same as GDPR audit pseudonyms), `user_id=`,
 `ip=`, `reason=`, and `issued=`. The same fields are attached as JSON log
-extras when `LOG_FORMAT=json` (default; see [api.md](api.md#structured-json-logs-aut-16)).
+extras when `LOG_FORMAT=json` (default; see [api.md](api.md#structured-json-logs)).
 
 | Event | When |
 | ----- | ---- |
@@ -155,7 +155,7 @@ Failed logins also increment Prometheus `headstart_auth_login_failures_total`
   `logout()` calls `/auth/logout` to clear the cookie. `ProtectedRoute` gates
   the app and redirects to `/login`. `OnboardingGuard` and
   `EmailVerificationGuard` also wait for auth to finish and redirect
-  unauthenticated visitors to `/login` before their own checks (FRO-18).
+  unauthenticated visitors to `/login` before their own checks.
   `OnboardingGuard` sends new accounts to `/app/onboarding` until
   `onboarding_completed_at` is set. `EmailVerificationGuard` sends unverified
   accounts to `/verify-email` before onboarding or the main app shell.
@@ -168,25 +168,25 @@ Failed logins also increment Prometheus `headstart_auth_login_failures_total`
   (`GET /auth/me/export`) or permanently delete the account (`DELETE /auth/me`
   with the current password). Deletion cascades to sources, searches, targets,
   credentials, profile, jobs, and delivery history. The sole remaining admin
-  cannot delete their account while other users exist — promote another admin
+  cannot delete their account while other users exist. Promote another admin
   first.
 
 ## Registration
 
 1. User submits email + password on `/register` → `POST /auth/register`.
 2. The API **always** returns **201** with the same ack message whether the email
-   was new or already registered (no email enumeration via status or body;
-   AUT-27). bcrypt runs on both paths so CPU time is similar.
+   was new or already registered (no email enumeration via status or body).
+   bcrypt runs on both paths so CPU time is similar.
 3. **New email:** create the user (first registrant claims bootstrap admin), store
    a hashed verification token, and send the verification email. The insert uses a
    SAVEPOINT so a concurrent same-email race that hits the unique constraint is
-   treated as the duplicate path below instead of surfacing as a 500 (AUT-28).
+   treated as the duplicate path below instead of surfacing as a 500.
 4. **Existing active email:** do not create a second row or change the password;
    send an "existing account" notice with sign-in / forgot-password links
    (rate-limited per address like forgot-password mail). When the notice cap is
    hit, mail is skipped but the HTTP ack stays the same (a 429 would re-enumerate).
    Inactive accounts get the same HTTP ack but no outbound mail.
-5. The SPA does **not** auto-login after register — it sends the user to
+5. The SPA does **not** auto-login after register. Instead it sends the user to
    `/verify-email` so a duplicate signup cannot be inferred from a follow-up
    login failure. New users verify via the emailed link, then sign in.
 
@@ -195,40 +195,40 @@ Failed logins also increment Prometheus `headstart_auth_login_failures_total`
 1. User submits their email on `/forgot-password` → `POST /auth/forgot-password`.
 2. If the account exists and is active, a single-use token is stored (hashed) and
    emailed. The API always returns the same success message (no email enumeration).
-3. Token generation and hashing always run — including for unknown or inactive
-   emails — so the miss path does not skip that work. The reset email is queued
-   on FastAPI `BackgroundTasks` so the HTTP response does not wait on SMTP;
-   response timing therefore cannot enumerate accounts via the mail round-trip
-   (AUT-26). Direct service callers without a scheduler still send synchronously.
+3. Token generation and hashing always run for every request, unknown or
+   inactive emails included, so the miss path does not skip that work. The reset
+   email is queued on FastAPI `BackgroundTasks` so the HTTP response does not
+   wait on SMTP; response timing therefore cannot enumerate accounts via the mail
+   round-trip. Direct service callers without a scheduler still send synchronously.
 4. The email link opens `/reset-password?token=...` → `POST /auth/reset-password`
    with the token and new password.
 5. Valid tokens are **claimed** (`used_at` stamped under row lock) and that
    consume is committed before the password change **and before** the
    inactive/missing-user check; rows are also deleted after a successful reset.
-   A second use of the same link fails even if the delete never runs (DAT-18),
-   including after a deactivate-then-reactivate within the expiry window
-   (AUT-30). Expired or already-used tokens are rejected.
+   A second use of the same link fails even if the delete never runs,
+   including after a deactivate-then-reactivate within the expiry window.
+   Expired or already-used tokens are rejected.
 6. The reset **bumps `token_version` and `feed_token_version`**, so any
    access/refresh token or RSS feed URL issued before the reset (e.g. one
-   captured from a compromised session) immediately stops validating — the user
-   must sign in again everywhere and re-issue feed links.
+   captured from a compromised session) immediately stops validating, so the
+   user must sign in again everywhere and re-issue feed links.
 
 **Email delivery:** configure SMTP via `SMTP_*` env vars. When `SMTP_HOST` is
 empty in `local`/`test`, the API logs the reset URL at INFO instead of sending
 mail. Outside those environments `SMTP_HOST` is required at startup, and the
-log fallback refuses to emit the token-bearing URL (AUT-01).
+log fallback refuses to emit the token-bearing URL.
 
 ## Email verification
 
 1. On a successful new registration, a single-use token is stored (hashed via
-   shared `hash_url_token`, same helper as password reset — AUT-31) and
+   shared `hash_url_token`, the same helper as password reset) and
    emailed. Existing accounts created before this feature are grandfathered as
    verified. Re-registration of an already-known address does not issue a new
    verification token (see Registration above).
 2. The email link opens `/verify-email?token=...` → `POST /auth/verify-email`
    with the token. The token is claimed (`used_at`) and committed before the
    verify write and before the inactive/missing-user check, same single-use
-   rule as password reset (DAT-18 / AUT-30).
+   rule as password reset.
 3. Signed-in users can request another email via `POST /auth/resend-verification`.
 4. Most API routes require a verified email (`403` otherwise). Auth self-service
    (`/me`, export, delete) and `/app/settings` stay available while unverified.
@@ -240,7 +240,7 @@ non-local environments require SMTP and never log the token.
 ## Account data export & deletion
 
 Users can download a portable JSON export of everything they own
-(`GET /auth/me/export`) — account, sources, searches, targets, site credentials
+(`GET /auth/me/export`), covering account, sources, searches, targets, site credentials
 (including decrypted session material), application profile (with resume and
 LaTeX template bytes), job history, application logs, generated artifacts
 (decrypted), delivery logs, mailbox metadata (secrets redacted), inbox
@@ -249,7 +249,7 @@ redemptions. `format_version` is `2`. Password hashes and live mailbox OAuth
 tokens / IMAP passwords are never included. Job history is loaded in keyset
 pages (`SeenJobRepository.iter_for_user`, default 500 rows) and each ORM row is
 expunged after `JobRead` serialization so export never issues one unbounded
-`seen_job` SELECT (AUT-34).
+`seen_job` SELECT.
 
 Permanent account deletion (`DELETE /auth/me` with `{ "password": "..." }`)
 requires the current password, clears the refresh cookie, and removes the user
@@ -271,21 +271,20 @@ no safe per-app revoke for multi-tenant Mail.* apps (Graph
 `revokeSignInSessions` would invalidate all of the user's refresh tokens and
 requires scopes we do not hold), so Outlook tokens are discarded locally only;
 users can revoke at account.microsoft.com. IMAP/Fastmail have no OAuth refresh
-grant to revoke. Provider errors are logged and do not block local erasure
-(AUT-33).
+grant to revoke. Provider errors are logged and do not block local erasure.
 
 Successful export and deletion requests are recorded in `data_request_log`.
 Export rows keep the live email (and optional client IP / user agent) while the
 account exists. Client IP comes from `app.core.request_meta`: the TCP peer by
-default, or — when `TRUSTED_PROXY_CIDRS` includes that peer — the rightmost
-untrusted hop in `X-Forwarded-For` (validated/normalized, max 45 chars). Empty
-`TRUSTED_PROXY_CIDRS` ignores XFF so clients cannot forge GDPR/audit IPs
-(AUT-17); ECS sets the VPC CIDR so ALB-appended addresses are trusted. On
+default, or the rightmost untrusted hop in `X-Forwarded-For` when
+`TRUSTED_PROXY_CIDRS` includes that peer (validated/normalized, max 45 chars).
+Empty `TRUSTED_PROXY_CIDRS` ignores XFF so clients cannot forge GDPR/audit IPs;
+ECS sets the VPC CIDR so ALB-appended addresses are trusted. On
 deletion, prior export rows for that user are redacted and
 the deletion row stores only an HMAC email pseudonym (`erased:<hex>`) with no
-IP or user agent — recoverable PII does not survive erasure (DAT-02). Admins
+IP or user agent, so recoverable PII does not survive erasure. Admins
 list recent rows via `GET /admin/data-requests` (`limit` bounded `1..500`,
-default 100 — BIL-04).
+default 100).
 
 Public subprocessors and DPA overview: `/subprocessors` (linked from the privacy
 policy and site footer). The list names AWS, Stripe, OpenAI, Google Gemini,
@@ -297,7 +296,7 @@ set).
 
 Every account has a `plan` (`free`, `starter`, `plus`, or `pro`; default `free`).
 Caps and feature gates are defined in `app/core/plans.py` (mirrors the public
-pricing page) and enforced in `PlanLimitsService` — **services raise
+pricing page) and enforced in `PlanLimitsService`: **services raise
 `PlanLimitError`, mapped to HTTP 402**, never UI-only checks.
 
 | Resource / feature | Free | Starter | Plus | Pro |
@@ -337,7 +336,7 @@ are not dropped on serialize.
 `PATCH /admin/users/{id}` accepts `plan` for manual overrides when the user
 has no Stripe subscription status that still grants access (`active` /
 `trialing` / `past_due`); otherwise the API returns 422 so webhooks remain the
-source of truth for paid plans (BIL-08).
+source of truth for paid plans.
 
 ## Admin
 
@@ -353,7 +352,7 @@ Every successful `PATCH /admin/users/{id}` that changes `is_active`, `is_admin`,
 or `plan` emits a structured INFO audit line via `app.core.admin_events`
 (`admin_event=user_update actor_id=… target_id=… before=… after=…`, also as JSON
 extras under `LOG_FORMAT=json`) so privilege and plan mutations leave a
-server-side trail for incident response (BIL-01). No-op patches (same values)
+server-side trail for incident response. No-op patches (same values)
 do not log.
 
 ## Configuration
@@ -365,7 +364,7 @@ settings `AUTH_COOKIE_NAME` / `AUTH_COOKIE_PATH` / `AUTH_COOKIE_SECURE` /
 `AUTH_COOKIE_SAMESITE`, and optional `SMTP_*` (see `.env.example`). The cookie
 defaults are production-safe (`Secure` + `SameSite=Lax`); for local dev over
 plain HTTP set `AUTH_COOKIE_SECURE=false`. Outside `local`/`test`, startup
-rejects incoherent combos (AUT-13): `AUTH_COOKIE_SAMESITE=none` without
+rejects incoherent combos: `AUTH_COOKIE_SAMESITE=none` without
 `AUTH_COOKIE_SECURE=true`, and `AUTH_COOKIE_SECURE=true` with a non-`https`
 `FRONTEND_BASE_URL` (use `AUTH_COOKIE_SECURE=false` for plain-HTTP frontends).
 On AWS, Terraform sets `AUTH_COOKIE_SECURE` from `https_enabled` in the ECS

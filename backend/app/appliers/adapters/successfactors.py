@@ -54,7 +54,7 @@ from app.appliers.types import ApplyContext, ApplyResult
 
 _LIVE_BLOCKER = (
     "successfactors live apply requires config.odata_base_url (or "
-    "session.odata_base_url) and company_id plus API user Basic Auth — "
+    "session.odata_base_url) and company_id plus API user Basic Auth. "
     "Career Site Builder /talentcommunity/apply/ is login-gated with no "
     "public candidate apply API"
 )

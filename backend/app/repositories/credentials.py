@@ -1,4 +1,4 @@
-"""Data access for SiteCredential. Queries only — no business logic."""
+"""Query-only data access for SiteCredential. Holds no business logic."""
 
 from __future__ import annotations
 

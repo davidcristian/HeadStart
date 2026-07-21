@@ -35,7 +35,7 @@ export const PLANS: Plan[] = [
   {
     id: "free",
     name: "Free",
-    description: "Try HeadStart on a couple of watches — no credit card required.",
+    description: "Try HeadStart on a couple of watches. No credit card required.",
     monthlyPrice: 0,
     annualPricePerMonth: 0,
     cta: "Get started free",
@@ -103,7 +103,7 @@ export const PLANS: Plan[] = [
   {
     id: "pro",
     name: "Pro",
-    description: "HeadStart’s full toolkit — AI summaries, RSS, and one-click portal search.",
+    description: "The full HeadStart toolkit with AI summaries, RSS, and one-click portal search.",
     monthlyPrice: 9.99,
     annualPricePerMonth: 8.29,
     highlight: true,
@@ -186,7 +186,7 @@ export function planDisplayPrice(plan: Plan, period: BillingPeriod): number {
   return period === "annual" ? plan.annualPricePerMonth : plan.monthlyPrice;
 }
 
-/** Format a plan price for display (EUR / de-DE by default — FRO-35). */
+/** Format a plan price for display (EUR / de-DE by default). */
 export function formatPrice(amount: number): string {
   return priceFormatter.format(amount);
 }

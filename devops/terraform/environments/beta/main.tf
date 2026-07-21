@@ -21,12 +21,12 @@ module "stack" {
   smtp_use_tls           = var.smtp_use_tls
   log_level              = var.log_level
 
-  # Explicit beta CIDR (stack default); prod uses 10.30.0.0/16 (OPS-30).
+  # Explicit beta CIDR (stack default); prod uses 10.30.0.0/16.
   vpc_cidr             = "10.20.0.0/16"
   public_subnet_cidrs  = ["10.20.0.0/24", "10.20.1.0/24"]
   private_subnet_cidrs = ["10.20.10.0/24", "10.20.11.0/24"]
 
-  # Beta: small + cheap; allow teardown without a final snapshot (OPS-48).
+  # Beta: small + cheap; allow teardown without a final snapshot.
   db_instance_class        = "db.t4g.micro"
   db_multi_az              = false
   db_deletion_protection   = false

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Install backend deps from the hashed lockfile, then the local package
-# without resolving further deps (XCT-14). Used by setup and CI.
+# without resolving further deps. Used by setup and CI.
 #
 # Usage:
 #   ./scripts/install-backend.sh              # runtime lock + editable package

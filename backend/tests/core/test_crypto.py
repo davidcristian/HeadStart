@@ -34,7 +34,7 @@ def test_tampered_token_raises() -> None:
 def test_legacy_sha256_ciphertext_still_decrypts(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Pre-AUT-05 tokens (unsalted SHA-256 Fernet) remain readable via MultiFernet."""
+    """Legacy tokens (unsalted SHA-256 Fernet) remain readable via MultiFernet."""
     secret = "legacy-compatible-credentials-secret-key"
     monkeypatch.setattr(crypto.settings, "credentials_secret_key", secret)
     monkeypatch.setattr(crypto.settings, "credentials_secret_key_previous", "")

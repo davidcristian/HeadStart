@@ -1,4 +1,4 @@
-"""INB-14: InboxMessage field bounds and mailbox-parser clipping."""
+"""InboxMessage field bounds and mailbox-parser clipping."""
 
 from __future__ import annotations
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Apply every alembic migration from scratch against a real Postgres (TST-03).
+# Apply every alembic migration from scratch against a real Postgres.
 #
 # Backend unit tests build schema via SQLite ``create_all``, so dialect-specific
 # migration SQL (raw UPDATE/DELETE, partial indexes, boolean literals, ...) is

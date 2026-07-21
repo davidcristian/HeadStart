@@ -1,7 +1,7 @@
 # Backend image. One image runs the API, worker, or beat (see docker-entrypoint.sh).
 # Targets:
-#   api    (default) — lean image without Playwright
-#   worker           — includes Chromium for the playwright scraper adapter
+#   api    (default) runs a lean image without Playwright
+#   worker           includes Chromium for the playwright scraper adapter
 
 FROM python:3.12-slim AS base
 
@@ -12,7 +12,7 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR /app
 
-# Install locked runtime deps first (hashed; better layer caching — OPS-28).
+# Install locked runtime deps first. Hashing them keeps the layer cache warm.
 # Copy app/ only after the deps layer so source-only edits do not reinstall
 # third-party wheels. psycopg[binary] and selectolax ship wheels, so no
 # compiler/system libs are required.
@@ -35,7 +35,7 @@ RUN chmod +x /usr/local/bin/entrypoint.sh \
 FROM base AS worker
 
 # Playwright + Chromium for JS-heavy scrapes. Needs root for system deps;
-# runtime stays as appuser with Chromium's process sandbox enabled (OPS-27).
+# runtime stays as appuser with Chromium's process sandbox enabled.
 # Do not pass --no-sandbox in production (see playwright_browser.py).
 # requirements-playwright.txt is a full hashed lock (runtime + playwright).
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright

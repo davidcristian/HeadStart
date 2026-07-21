@@ -4,7 +4,7 @@
 # Usage:
 #   ./scripts/terraform-bootstrap-state.sh YOURNAME us-east-2
 #
-# Then pass the bucket at init time (do not commit it into backend.tf — OPS-29):
+# Then pass the bucket at init time (do not commit it into backend.tf):
 #   terraform init -backend-config="bucket=YOURNAME-headstart-tfstate"
 # or copy environments/<env>/backend.hcl.example → backend.hcl and edit the bucket.
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
@@ -23,7 +23,7 @@ have aws || die "AWS CLI is required."
 
 log "Creating S3 bucket ${BUCKET} in ${REGION}"
 if aws s3api head-bucket --bucket "${BUCKET}" 2>/dev/null; then
-  warn "Bucket ${BUCKET} already exists — skipping create"
+  warn "Bucket ${BUCKET} already exists. Skipping create."
 else
   if [[ "${REGION}" == "us-east-1" ]]; then
     aws s3api create-bucket --bucket "${BUCKET}" --region "${REGION}"
@@ -42,7 +42,7 @@ aws s3api put-bucket-versioning \
 
 log "Creating DynamoDB lock table ${LOCK_TABLE}"
 if aws dynamodb describe-table --table-name "${LOCK_TABLE}" --region "${REGION}" >/dev/null 2>&1; then
-  warn "Table ${LOCK_TABLE} already exists — skipping create"
+  warn "Table ${LOCK_TABLE} already exists. Skipping create."
 else
   aws dynamodb create-table \
     --table-name "${LOCK_TABLE}" \
@@ -55,11 +55,11 @@ fi
 ok "Remote state bootstrap complete."
 echo
 echo "Next steps:"
-echo "  1. Pass the bucket at terraform init (OPS-29 — do not commit it into backend.tf):"
+echo "  1. Pass the bucket at terraform init (do not commit it into backend.tf):"
 echo "       cd devops/terraform/environments/beta"
 echo "       cp backend.hcl.example backend.hcl"
 echo "       # edit backend.hcl: bucket = \"${BUCKET}\""
 echo "       terraform init -backend-config=backend.hcl"
 echo "  2. Repeat for environments/prod when you add production."
 echo "  3. Or use: just aws-first-deploy PREFIX=${PREFIX} AWS_REGION=${REGION}"
-echo "  4. terraform apply (with TF_VAR_* secrets set — see docs/deploying-to-aws.md)"
+echo "  4. terraform apply with TF_VAR_* secrets set (see docs/deploying-to-aws.md)"

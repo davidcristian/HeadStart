@@ -237,7 +237,7 @@ def _http_error_message(exc: httpx.HTTPError) -> str:
                 return "workable apply rejected Cloudflare Turnstile token " f"({message})"
             if status == 412:
                 return (
-                    "workable apply precondition failed — ensure a fresh "
+                    "workable apply precondition failed. Ensure a fresh "
                     f"X-TURNSTILE-TOKEN is supplied ({message})"
                 )
             return message

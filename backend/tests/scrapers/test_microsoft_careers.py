@@ -288,7 +288,7 @@ def test_microsoft_careers_count_falls_back_to_len() -> None:
 
 @pytest.mark.parametrize("count", ["Infinity", "NaN", "-Infinity"])
 def test_microsoft_careers_nonfinite_count_fallback(count: str) -> None:
-    """JSON Infinity/NaN count must not raise on int() (SCR-05)."""
+    """JSON Infinity/NaN count must not raise on int()."""
     body = '{"data": {"positions": [{"id": 1, "name": "A"}], "count": ' + count + "}}"
     scraper = get_scraper(
         "microsoft_careers",
@@ -326,7 +326,7 @@ def test_microsoft_careers_location_and_url_fallbacks() -> None:
 
 
 def test_microsoft_careers_overflow_posted_ts_returns_none() -> None:
-    """Out-of-range postedTs must not abort the scrape page (SCR-02)."""
+    """Out-of-range postedTs must not abort the scrape page."""
     payload = {
         "data": {
             "positions": [

@@ -1,4 +1,4 @@
-"""Regression tests for ApplicationLog status vocabulary (DAT-09)."""
+"""Regression tests for ApplicationLog status vocabulary."""
 
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ def test_application_log_statuses_include_in_flight_and_terminals() -> None:
 
 
 def test_application_log_status_column_comment_lists_all_statuses() -> None:
-    """Inline status comment must not omit queued/processing (DAT-09 regression)."""
+    """Inline status comment must not omit queued/processing."""
     source = inspect.getsource(application_log_module)
     comment_line = next(
         line for line in source.splitlines() if "queued | processing | submitted" in line

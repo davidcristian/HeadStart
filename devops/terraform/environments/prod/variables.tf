@@ -4,7 +4,7 @@ variable "region" {
 }
 
 # Required: pin the AWS account this env may target so a wrong ambient
-# credential cannot apply prod into another account (OPS-31).
+# credential cannot apply prod into another account.
 variable "aws_account_id" {
   type        = string
   description = "12-digit AWS account ID allowed for this environment's provider."
@@ -21,7 +21,7 @@ variable "azs" {
 }
 
 # Required: pin ECS task images to an immutable tag (git SHA). Floating
-# "latest" is rejected so a recycle cannot silently pull a different build (OPS-07).
+# "latest" is rejected so a recycle cannot silently pull a different build.
 variable "image_tag" {
   type        = string
   description = "Immutable container image tag (git SHA). Do not use latest."
@@ -56,28 +56,28 @@ variable "cors_origins" {
   default     = []
 }
 
-# Required for prod HTTPS (OPS-36): either domain_name + route53_zone_id
+# Required for prod HTTPS: either domain_name + route53_zone_id
 # (auto ACM) or acm_certificate_arn. Stack check fails plan/apply if neither
-# path enables TLS — the ALB must not forward auth traffic on plaintext HTTP.
+# path enables TLS. The ALB must not forward auth traffic on plaintext HTTP.
 variable "domain_name" {
   type        = string
-  description = "Custom hostname for HTTPS (e.g. jobs.example.com). Required for prod unless acm_certificate_arn is set (OPS-36)."
+  description = "Custom hostname for HTTPS (e.g. jobs.example.com). Required for prod unless acm_certificate_arn is set."
   default     = ""
 }
 
 variable "route53_zone_id" {
   type        = string
-  description = "Route53 zone for domain_name (ACM validation + ALB alias). Required with domain_name when not bringing your own cert (OPS-36)."
+  description = "Route53 zone for domain_name (ACM validation + ALB alias). Required with domain_name when not bringing your own cert."
   default     = ""
 }
 
 variable "acm_certificate_arn" {
   type        = string
-  description = "Pre-validated ACM cert ARN instead of auto-provisioning. Alternative to domain_name + route53_zone_id (OPS-36)."
+  description = "Pre-validated ACM cert ARN instead of auto-provisioning. Alternative to domain_name + route53_zone_id."
   default     = ""
 }
 
-# Required: ntfy.sh topics are public by name — never ship a guessable default (OPS-16).
+# Required: ntfy.sh topics are public by name, so never ship a guessable default.
 variable "ntfy_default_topic" {
   type        = string
   description = "Unguessable ntfy topic for the seeded default notification target."
@@ -124,7 +124,7 @@ variable "smtp_use_tls" {
   default = true
 }
 
-# Optional: raise to DEBUG during incidents without editing the stack module (OPS-55).
+# Optional: raise to DEBUG during incidents without editing the stack module.
 variable "log_level" {
   type        = string
   default     = "INFO"

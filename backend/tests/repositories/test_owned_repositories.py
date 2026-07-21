@@ -55,7 +55,7 @@ def test_get_by_stripe_customer_id(db_session: Session) -> None:
 
 
 def test_try_add_rejects_duplicate_email(db_session: Session) -> None:
-    """Regression: email unique constraint is caught via SAVEPOINT (AUT-28)."""
+    """Regression: email unique constraint is caught via SAVEPOINT."""
     repo = UserRepository(db_session)
     first = repo.try_add(User(email="unique@example.test", password_hash="x", is_active=True))
     assert first is not None
@@ -87,7 +87,7 @@ def test_get_for_update_takes_row_lock_branch_on_non_sqlite(db_session: Session)
 
 
 def test_get_for_update_compiles_for_update_for_postgres() -> None:
-    """Postgres rate-slot reserve must lock the user row (INB-23)."""
+    """Postgres rate-slot reserve must lock the user row."""
     from sqlalchemy import select
 
     stmt = select(User).where(User.id == 1).with_for_update()

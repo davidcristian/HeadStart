@@ -168,7 +168,7 @@ def test_evaluate_before_send_allows_under_both_caps(db_session: Session, monkey
 
 
 def test_reserve_before_send_second_call_hits_hourly_cap(db_session: Session, monkeypatch) -> None:
-    """A reserved slot counts toward the cap so overlapping sends cannot both pass (INB-23)."""
+    """A reserved slot counts toward the cap so overlapping sends cannot both pass."""
     monkeypatch.setattr(settings, "inbox_agent_enabled", True)
     monkeypatch.setattr(settings, "inbox_reply_max_per_hour", 1)
     monkeypatch.setattr(settings, "inbox_reply_max_per_day", 0)
@@ -300,7 +300,7 @@ def test_body_excerpt_short_body_unchanged(db_session: Session) -> None:
 
 
 def test_inbound_body_unescapes_html_entities_for_topic_scan(db_session: Session) -> None:
-    """HTML-encoded sensitive terms must still hit the topic blocklist (INB-08)."""
+    """HTML-encoded sensitive terms must still hit the topic blocklist."""
     service = ReplySafeSendService(db_session)
     # &#108;awsuit → lawsuit after html.unescape
     row = InboxClassification(
@@ -340,7 +340,7 @@ def test_evaluate_before_send_blocks_html_encoded_inbound_topic(
 def test_evaluate_before_send_blocks_sensitive_topic_past_legacy_500_char_cut(
     db_session: Session, monkeypatch
 ) -> None:
-    """Topic terms beyond the old raw 500-char excerpt must still block (INB-08)."""
+    """Topic terms beyond the old raw 500-char excerpt must still block."""
     monkeypatch.setattr(settings, "inbox_agent_enabled", True)
     search = _make_search(db_session)
     user_id = search.user_id

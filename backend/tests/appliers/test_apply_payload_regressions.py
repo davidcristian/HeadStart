@@ -1,4 +1,4 @@
-"""WS4 apply-adapter payload regressions (kept out of the per-adapter files for size)."""
+"""Apply-adapter payload regressions (kept out of the per-adapter files for size)."""
 
 from __future__ import annotations
 

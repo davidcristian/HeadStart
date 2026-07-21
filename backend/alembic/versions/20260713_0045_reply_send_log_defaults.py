@@ -5,7 +5,7 @@ Revises: 0044_token_used_at
 Create Date: 2026-07-13
 
 Migration 0031 created reason/subject/body_excerpt as NOT NULL without
-server_default, while the ORM only supplies default='' (DAT-08). Sibling
+server_default, while the ORM only supplies default=''. Sibling
 inbox_classification (0024) already uses server_default=''. Patch existing
 DBs that applied 0031 before the create_table was corrected.
 """

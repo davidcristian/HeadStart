@@ -84,17 +84,17 @@ def _experience_item(entry: WorkExperienceEntry) -> str:
         part.strip().lstrip("-•*") for part in entry.description.splitlines() if part.strip()
     )
     if description:
-        line += f" — {escape_latex(description[:500])}"
+        line += f". {escape_latex(description[:500])}"
     return line
 
 
 def _period(entry: WorkExperienceEntry) -> str:
     start = _month_year(entry.start_month, entry.start_year)
     if entry.is_current:
-        return f"{start}–Present" if start else "Present"
+        return f"{start} to Present" if start else "Present"
     end = _month_year(entry.end_month, entry.end_year)
     if start and end:
-        return f"{start}–{end}"
+        return f"{start} to {end}"
     return start or end
 
 
@@ -126,11 +126,11 @@ def _education_line(entry: EducationEntry) -> str:
     )
     years = ""
     if entry.start_year and entry.end_year:
-        years = f" ({entry.start_year}–{entry.end_year})"
+        years = f" ({entry.start_year} to {entry.end_year})"
     elif entry.end_year:
         years = f" ({entry.end_year})"
-    suffix = f" — {detail}{years}" if detail or years else years
-    return f"{school}{suffix}"
+    lead = f"{detail} at {school}" if detail else school
+    return f"{lead}{years}"
 
 
 def _skills(profile: ProfileData) -> str:

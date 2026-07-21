@@ -1,4 +1,4 @@
-"""Curated employer portal entries — kept separate to stay under the file line cap."""
+"""Curated employer portal entries kept separate to stay under the file line cap."""
 
 from __future__ import annotations
 

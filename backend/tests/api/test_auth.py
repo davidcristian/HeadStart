@@ -65,7 +65,7 @@ def test_second_user_is_not_admin(client: TestClient) -> None:
 
 
 def test_register_duplicate_email_does_not_enumerate(client: TestClient) -> None:
-    """Duplicate register returns the same 201 ack as a fresh signup (AUT-27)."""
+    """Duplicate register returns the same 201 ack as a fresh signup."""
     payload = {"email": "dupe@example.com", "password": "password123"}
     first = client.post("/api/v1/auth/register", json=payload)
     assert first.status_code == 201
@@ -239,7 +239,7 @@ def test_complete_onboarding_is_idempotent(client: TestClient) -> None:
 
 
 def test_patch_me_sets_and_clears_locale(client: TestClient) -> None:
-    """NTF-12: users can set notification/auth locale preference."""
+    """Users can set notification/auth locale preference."""
     headers = _register_and_verify(client, "locale@example.com")
 
     me = client.get("/api/v1/auth/me", headers=headers)
@@ -276,7 +276,7 @@ def test_bootstrap_admin_claim_is_exclusive(db_session: Session) -> None:
 
 
 def test_bootstrap_claim_survives_bootstrap_user_deletion(db_session: Session) -> None:
-    """Deleting the bootstrap admin must not re-open self-service admin promotion (DAT-01)."""
+    """Deleting the bootstrap admin must not re-open self-service admin promotion."""
     from app.models.registration_lock import RegistrationLock
     from app.schemas.auth import DeleteAccountRequest
 

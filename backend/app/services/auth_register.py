@@ -15,7 +15,7 @@ from app.models.user import User
 from app.repositories.users import UserRepository
 from app.schemas.auth import RegisterRequest
 
-# Same body for create and duplicate so /register cannot enumerate emails (AUT-27).
+# Same body for create and duplicate so /register cannot enumerate emails.
 REGISTER_ACK_MESSAGE = (
     "If this email is available, we created an account and sent a verification link. "
     "Check your inbox."
@@ -53,9 +53,9 @@ def register_account(
         is_admin=False,
         is_active=True,
     )
-    # SAVEPOINT + unique email: a racing duplicate must not 500 (AUT-28).
-    # On conflict, follow the same non-enumerating ack path as get_by_email hit
-    # (AUT-27) — never ConflictError/409.
+    # SAVEPOINT + unique email: a racing duplicate must not 500.
+    # On conflict, follow the same non-enumerating ack path as a get_by_email
+    # hit rather than raising ConflictError/409.
     created = users.try_add(user)
     if created is None:
         existing_after_race = users.get_by_email(email)
@@ -87,7 +87,7 @@ def _acknowledge_existing_registration(
     email: str,
     ip_address: str | None,
 ) -> None:
-    """Notify an existing account without changing the HTTP response (AUT-27)."""
+    """Notify an existing account without changing the HTTP response."""
     if not user.is_active:
         log_auth_event(
             "register_duplicate",

@@ -40,7 +40,7 @@ def test_amazon_jobs_parse_response_hits_fallback_to_len() -> None:
 
 @pytest.mark.parametrize("hits", [float("inf"), float("nan"), float("-inf")])
 def test_amazon_jobs_parse_response_nonfinite_hits_fallback(hits: float) -> None:
-    """JSON Infinity/NaN hits must not raise OverflowError/ValueError (SCR-05)."""
+    """JSON Infinity/NaN hits must not raise OverflowError/ValueError."""
     jobs, count = AmazonJobsScraper._parse_response({"jobs": [{"id": "1"}], "hits": hits})
     assert count == 1
     assert jobs == [{"id": "1"}]

@@ -80,7 +80,7 @@ source's `adapter_key` when that source supports auto-apply. Import the
 | `indeed` | Viewjob parse + downstream ATS delegation | Fetches `/viewjob?jk=…`, delegates to Greenhouse/Lever/Ashby/Workday/Google when the listing embeds an employer apply URL; see below |
 | `linkedin` | Guest job page + Voyager GraphQL + downstream ATS delegation | Fetches `/jobs-guest/jobs/api/jobPosting/{id}`, enriches offsite listings via Voyager when session cookies are present, delegates to Greenhouse/Lever/Ashby/Workday/Google/Microsoft/Amazon/Meta when the employer apply URL is recognized; see below |
 | `snowflake_careers` | Delegates to Ashby | Snowflake's Phenom careers site uses Ashby for applications; delegates to the `ashby` adapter with `board=snowflake` |
-| `shopify_careers` | Delegates to Ashby | Shopify's careers site uses Ashby for applications; delegates to the `ashby` adapter with `board=shopify` (applier default when source config omits `board`; portal preset does not store that key — POR-01) |
+| `shopify_careers` | Delegates to Ashby | Shopify's careers site uses Ashby for applications; delegates to the `ashby` adapter with `board=shopify` (applier default when source config omits `board`; the portal preset does not store that key) |
 | `uber_careers` | Careers Fusion GraphQL | `POST /careers/apply/graphql` (`submitApplication`); screening questions via `getAdditionalQuestionsForJob`; see below |
 | `smartrecruiters` | Application API JSON POST | `GET api.smartrecruiters.com/postings/<uuid>/configuration` then `POST …/candidates`; see below |
 | `rippling` | Public board apply JSON POST | `GET/POST api.rippling.com/platform/api/ats/v1/board/<board>/jobs/<uuid>/…`; S3 resume upload; see below |
@@ -92,7 +92,7 @@ source's `adapter_key` when that source supports auto-apply. Import the
 
 ### Scrapers without apply adapters
 
-These scraper keys have **no** registered applier — alerts and manual apply links
+These scraper keys have **no** registered applier. Alerts and manual apply links
 work, but the Jobs page **Apply** action is unavailable:
 
 | Scraper key | Notes |
@@ -128,7 +128,7 @@ Education rows need a resolvable `school_name_id`, `degree_id`, and
 `discipline_id` (numeric profile values, `education_id_aliases`, or public List
 Schools/Degrees/Disciplines lookup when `skip_education_lookup` is false).
 
-**Dry run:** `ApplyContext.dry_run` defaults to `True` (safe-by-default; APL-27).
+**Dry run:** `ApplyContext.dry_run` defaults to `True` (safe-by-default).
 `ApplyService.apply_to_job(..., dry_run=True)` (or an omitted/`True` context flag)
 returns the JSON payload without calling Greenhouse. Pass `dry_run=False`
 explicitly for a live POST. Use preview before consent/audit UI ships.
@@ -158,7 +158,7 @@ credentials:
 | `region` | source/search config | `"eu"` selects `api.eu.lever.co` |
 | `postings_api_key` | `default_config` or credential `session` | Employer Postings API key for **live** submission |
 | `gdpr_consent` | source/search config | When true, sets `consent` to `{"store": true, "marketing": false}` |
-| `compliance_policy_id` | source/search config | Optional Lever compliance policy GUID. **Only applied when `gdpr_consent` is also set** — it rewrites `consent.store` to `{"provided": true, "compliancePolicyId": …}`; without `gdpr_consent` it is a no-op |
+| `compliance_policy_id` | source/search config | Optional Lever compliance policy GUID. **Only applied when `gdpr_consent` is also set**, in which case it rewrites `consent.store` to `{"provided": true, "compliancePolicyId": …}`; without `gdpr_consent` it is a no-op |
 | `silent_confirmations` | source/search config | When true, sets `silent` so Lever skips candidate email |
 | `urls.<Label>` | profile `answers` | Extra profile URLs (e.g. `urls.Twitter`) |
 | `skip_structured_profile` | source/search config | When true, omit work history/education/skills from `comments` |
@@ -166,10 +166,10 @@ credentials:
 **Structured profile:** when the application profile has `work_experience`,
 `education`, or `skills`, the adapter appends a formatted supplement to
 `comments` (after the cover letter and optional `resume_text`). Lever's Postings
-API has no native employment/education fields — use this for human-readable
+API has no native employment/education fields, so use this for human-readable
 context or configure custom questions via `answers`.
 
-**Dry run:** same as Greenhouse — preview JSON without calling Lever.
+**Dry run:** same as Greenhouse, previewing JSON without calling Lever.
 
 **Live submit:** requires a Postings API key (Super Admin → Integrations).
 Store in source config or, preferably, credential `session.postings_api_key`.
@@ -187,7 +187,7 @@ credentials:
 
 | Field | Where | Purpose |
 | ----- | ----- | ------- |
-| `board` | source `default_config` or parsed from `job_url` | Jobs page slug (`jobs.ashbyhq.com/<board>/...`) — informational for operators |
+| `board` | source `default_config` or parsed from `job_url` | Jobs page slug (`jobs.ashbyhq.com/<board>/...`); informational for operators |
 | `ashby_api_key` | `default_config` or credential `session` | Organization API key with `candidatesWrite` for **live** submission |
 | `cover_letter_path` | source/search config | Optional form field path for cover letter + `resume_text` |
 | `phone_path` | source/search config | Optional form field path for the profile phone |
@@ -206,7 +206,7 @@ and `skills` to Ashby field submissions. Education uses the Ashby
 Work history is sent as plain text; skills default to an array for
 `MultiValueSelect` fields.
 
-**Dry run:** same as Greenhouse — preview JSON without calling Ashby.
+**Dry run:** same as Greenhouse, previewing JSON without calling Ashby.
 
 **Live submit:** requires an Ashby API key (Admin → Settings → API) with
 `candidatesWrite`. Store in source config or, preferably, credential
@@ -242,14 +242,14 @@ Config / credentials:
 `attachments` entries (`content` + `name`).
 
 **Dry run:** fetches screening questions, builds the `applicationFormRequest`
-preview (resume bytes and `sessionToken` redacted — never persisted to
+preview (resume bytes and `sessionToken` redacted, never persisted to
 `application_log.payload`), and does not require a session token.
 
 Only screening questions the API flags **required** gate live submit; optional
 questions without a mapped answer are skipped rather than blocking the apply.
 
 **Live submit:** requires the candidate's own Uber Careers session token.
-Cover letters are not a first-class field on Uber's form — use screening-question
+Cover letters are not a first-class field on Uber's form, so use screening-question
 answers or the Application profile cover-letter generator before submit. Uber does
 not expose a stable public employer API; this adapter reverse-engineers the same
 Fusion GraphQL flow as the careers site.
@@ -259,7 +259,7 @@ Fusion GraphQL flow as the careers site.
 Maps `ProfileData` to the [SmartRecruiters Application
 API](https://developers.smartrecruiters.com/docs/application-api) candidate
 shape. One adapter covers all SmartRecruiters-backed catalog employers (Atlassian,
-Bosch, ServiceNow, etc.) — they share the same API. Config / credentials:
+Bosch, ServiceNow, etc.), which all share the same API. Config / credentials:
 
 | Field | Where | Purpose |
 | ----- | ----- | ------- |
@@ -267,13 +267,13 @@ Bosch, ServiceNow, etc.) — they share the same API. Config / credentials:
 | `posting_uuid` | source/search config | Optional posting UUID override (else fetched from the public Postings detail API) |
 | `smart_token` | `default_config` or credential `session` | Application API token (`X-SmartToken`) for **live** submission |
 | `access_token` | `default_config` or credential `session` | OAuth bearer token alternative to `smart_token` |
-| `gdpr_consent` | source/search config | Drives the consent decision. When the posting exposes consent settings, the adapter always sends `consentDecisions` (per-scope for a `SEPARATED` model, `{"SINGLE": …}` otherwise) — consent is granted by default and only withheld when `gdpr_consent` is explicitly `false`. With no posting consent settings, a truthy flag sends `consentDecisions` `{"SINGLE": true}` and an explicit `false` sends `{"SINGLE": false}`; unset sends no consent |
+| `gdpr_consent` | source/search config | Drives the consent decision. When the posting exposes consent settings, the adapter always sends `consentDecisions` (per-scope for a `SEPARATED` model, `{"SINGLE": …}` otherwise); consent is granted by default and only withheld when `gdpr_consent` is explicitly `false`. With no posting consent settings, a truthy flag sends `consentDecisions` `{"SINGLE": true}` and an explicit `false` sends `{"SINGLE": false}`; unset sends no consent |
 | `include_conditional_questions` | source/search config | When true, fetches conditional screening questions in configuration |
 | `sr_<question_id>` | profile `answers` | Screening answers keyed by SmartRecruiters question id (also accepts raw id or `question_<id>`) |
 
 **Dry run:** resolves the posting UUID via the public Postings detail API,
-builds the candidate JSON, and — when an Application API token is present in
-credentials — fetches screening questions and reports any missing required
+builds the candidate JSON, and, when an Application API token is present in
+credentials, fetches screening questions and reports any missing required
 answers in the preview payload.
 
 **Live submit:** requires a SmartRecruiters Application API token or OAuth
@@ -304,7 +304,7 @@ Config / credentials:
 | `current_company` | source/search config or profile `answers` | Fills required `current_company` when the profile has no current role |
 | `country_code` | source/search config or profile `answers` | Phone country code when the board asks for it |
 | `timezone` / `job_site` | source/search config | Defaults `UTC` / `ats` |
-| `cf_turnstile_token` | credential `session` (aliases: `turnstile_token`, `cf_client_response`) | **Required for live submit** — Cloudflare Turnstile token from the careers UI |
+| `cf_turnstile_token` | credential `session` (aliases: `turnstile_token`, `cf_client_response`) | **Required for live submit**: Cloudflare Turnstile token from the careers UI |
 
 **Dry run:** fetches `activeJobApplication.basicQuestions`, builds
 `applicationFormResponse` (resume metadata only, no S3 upload), and fails the
@@ -315,7 +315,7 @@ stored resume, and puts the final URL (+ `uploadsig`) into
 `applicationFormResponse.resume`. Optional cover-letter text is uploaded as
 `text/plain` when present.
 
-**Live submit:** public board apply is **Cloudflare Turnstile–gated**. Without a
+**Live submit:** public board apply is **gated by Cloudflare Turnstile**. Without a
 fresh `session.cf_turnstile_token`, the adapter refuses live submit (dry-run
 still works). Invalid tokens return `turnstile_verification_failure`. Treat live
 auto-apply as best-effort for local/power-user flows that can supply a Turnstile
@@ -342,7 +342,7 @@ Config / credentials:
 | `headline` / `summary` | source/search config or profile | Optional candidate headline / summary overrides |
 | `CA_*` / `QA_*` / custom ids | profile `answers` or source config | Screening questions from the form schema |
 | LinkedIn / GitHub / website | profile `links` | Auto-fill questions whose labels mention those sites |
-| `cf_turnstile_token` | credential `session` (aliases: `turnstile_token`, `x_turnstile_token`) | **Required for live submit** — Cloudflare Turnstile token from the careers UI (`X-TURNSTILE-TOKEN` header) |
+| `cf_turnstile_token` | credential `session` (aliases: `turnstile_token`, `x_turnstile_token`) | **Required for live submit**: Cloudflare Turnstile token from the careers UI (`X-TURNSTILE-TOKEN` header) |
 
 **Dry run:** fetches the form schema, builds the `candidate` JSON (resume
 metadata only, no S3 upload), and fails the preview when required fields such as
@@ -351,7 +351,7 @@ resume or custom questions are missing from the profile.
 **Resume file:** live submit requests a Workable-presigned S3 POST, uploads the
 stored resume, and puts the returned `downloadUrl` into `candidate.resume`.
 
-**Live submit:** public careers apply is **Cloudflare Turnstile–gated**. Without a
+**Live submit:** public careers apply is **gated by Cloudflare Turnstile**. Without a
 fresh `session.cf_turnstile_token`, the adapter refuses live submit (dry-run
 still works). HTTP 409 is treated as a Turnstile rejection; HTTP 412 is treated
 as a missing/stale Turnstile precondition. Treat live auto-apply as best-effort
@@ -362,7 +362,7 @@ auto-apply will not pass captcha on its own.
 
 Maps `ProfileData` to the iCIMS Talent Cloud Partner API. Public Jibe Attract
 careers sites (`/api/jobs`) are scrape-friendly but route apply through a
-login + captcha SPA (or an `*.icims.com` iframe) — there is no unauthenticated
+login + captcha SPA (or an `*.icims.com` iframe), so there is no unauthenticated
 public apply POST.
 
 | Step | Endpoint |
@@ -384,20 +384,20 @@ Config / credentials:
 | `phone_type_id` / `address_type_id` / `address_country_id` | source/search config | Optional list ids for phones/addresses |
 | `notes_field` | source/search config | Person field for cover letter / notes (default `overview`) |
 | `icims_<field>` | profile `answers` | Pass-through custom Person fields (e.g. `icims_field1234`) |
-| `username` + `password` | credential `session` (aliases: `basic_auth_*`, `api_*`, `icims_*`) | **Required for live submit** — Partner Program Basic Auth |
+| `username` + `password` | credential `session` (aliases: `basic_auth_*`, `api_*`, `icims_*`) | **Required for live submit**: Partner Program Basic Auth |
 
 **Dry run:** optionally fetches the public job row (to surface `apply_url` and
 `meta_data.icims` tenant id), builds the person + applicantworkflow JSON, and
 returns a preview envelope without calling `api.icims.com`.
 
 **Resume file:** dry-run includes resume metadata only. Binary resume upload via
-the Profiles API is not wired in this adapter yet — attach resumes in the
+the Profiles API is not wired in this adapter yet, so attach resumes in the
 employer portal or a follow-up field upload when your partner credentials allow
 it.
 
 **Live submit:** creates a Person profile, then an applicant workflow linking
 that person to the job. Requires Partner Program credentials scoped to the
-employer customer (same class of gate as Rippling's Turnstile token — not
+employer customer (same class of gate as Rippling's Turnstile token, and not
 available to typical self-serve job seekers without an approved integration).
 Public Jibe / `*.icims.com` login+captcha apply remains unsupported for
 automation.
@@ -407,7 +407,7 @@ automation.
 Maps `ProfileData` onto either a **downstream ATS** (when the Phenom listing
 exposes a recognizable `applyUrl`) or the **partner Apply API** for
 Phenom-hosted applications. Cisco/Splunk careers (`careers.cisco.com`) use
-Workday apply URLs — the same class of delegation as Indeed/LinkedIn.
+Workday apply URLs, the same class of delegation as Indeed/LinkedIn.
 
 | Step | Endpoint |
 | ---- | -------- |
@@ -426,7 +426,7 @@ Config / credentials:
 | `applicant_source` | source/search config | Partner API `jobApplicationData.applicantSource` (default `HeadStart`) |
 | `phenom_apply_api_base` | source/search config | Override partner API origin (default `https://api.phenompro.com`) |
 | `phenom_<field>` | profile `answers` | Pass-through `customFieldData` keys |
-| `access_token` | credential `session` (aliases: `phenom_access_token`, `api_token`, `bearer_token`, `oauth_token`) | **Required for live Phenom-hosted submit** — partner OAuth bearer |
+| `access_token` | credential `session` (aliases: `phenom_access_token`, `api_token`, `bearer_token`, `oauth_token`) | **Required for live Phenom-hosted submit**: partner OAuth bearer |
 
 **Dry run:** fetches job detail (unless `apply_url` is set), then either returns
 the delegated ATS preview or the partner application JSON (resume metadata
@@ -439,7 +439,7 @@ only).
 **Live submit:** when `applyUrl` maps to Workday (Splunk on Cisco) or another
 supported ATS, live submit uses that adapter's credentials (e.g. Workday
 session cookies). Phenom-hosted tenants without a supported `applyUrl` need
-partner Apply API OAuth — public careers apply flows vary by tenant and are
+partner Apply API OAuth. Public careers apply flows vary by tenant and are
 not automated here.
 
 ### IBM Careers (Avature)
@@ -448,7 +448,7 @@ Maps `ProfileData` to an Avature **External Import Services** CSV upload.
 IBM Careers listings (`careers.ibm.com/careers/JobDetail?jobId=…`, including
 post-acquisition HashiCorp roles) scrape via the public Falcon search API, but
 applications run on an Avature portal behind AWS WAF with a multi-step
-login/register wizard — there is no unauthenticated public candidate apply POST.
+login/register wizard, so there is no unauthenticated public candidate apply POST.
 
 | Step | Endpoint |
 | ---- | -------- |
@@ -461,7 +461,7 @@ Config / credentials:
 | ----- | ----- | ------- |
 | `job_id` / `jobId` | source/search config | Optional numeric job id override |
 | `careers_base_url` | source/search config or parsed from `job_url` | Portal origin (default `https://careers.ibm.com`) |
-| `avature_import_url` / `import_url` | source/search config or credential `session` | **Required for live submit** — Avature Import Service endpoint (`…/ImportService/<token>/`) |
+| `avature_import_url` / `import_url` | source/search config or credential `session` | **Required for live submit**: Avature Import Service endpoint (`…/ImportService/<token>/`) |
 | `import_csv_columns` | source/search config | Ordered CSV columns matching the tenant's Import Data layout (default HeadStart layout below) |
 | `import_csv_header` | source/search config | When true, include a header row (Avature usually expects none) |
 | `import_return_url` | source/search config | Optional `returnUrl` callback for import results |
@@ -470,7 +470,7 @@ Config / credentials:
 Default CSV columns: `first_name`, `last_name`, `email`, `phone`, `job_id`,
 `location`, `linkedin`, `website`, `cover_letter`, `resume_filename`,
 `resume_content_type`, `resume_base64`. Operators must map these columns to
-Person / Job fields in the Avature Import Data UI — layouts are tenant-specific.
+Person / Job fields in the Avature Import Data UI, because layouts are tenant-specific.
 
 **Dry run:** builds the candidate CSV row and returns portal URLs
 (`job_detail_url`, `application_methods_url`) plus a `blocker` note when no
@@ -482,7 +482,7 @@ profile has a stored file (Avature supports Base64 attachments on import).
 
 **Live submit:** POSTs multipart CSV to the provisioned Import Service URL.
 Without that URL, live submit fails with a clear blocker (same class of gate as
-iCIMS Partner API credentials — not available to typical self-serve job seekers).
+iCIMS Partner API credentials, and not available to typical self-serve job seekers).
 Public `careers.ibm.com` / Avature login+WAF apply remains unsupported for
 automation; open `application_methods_url` to apply manually.
 
@@ -492,7 +492,7 @@ Maps `ProfileData` to SuccessFactors Recruiting OData (`Candidate` + optional
 `Attachment` + `JobApplication`). Career Site Builder boards
 (`*.jobs.hr.cloud.sap`, e.g. W. L. Gore) scrape via the public jobs search API,
 but applications run through a login-gated Talent Community wizard
-(`/talentcommunity/apply/<id>/`) — there is no unauthenticated public candidate
+(`/talentcommunity/apply/<id>/`), so there is no unauthenticated public candidate
 apply POST.
 
 | Step | Endpoint |
@@ -509,13 +509,13 @@ Config / credentials:
 | `careers_base_url` | source `default_config` or parsed from `job_url` | CSB origin for Talent Community apply URL |
 | `locale` | source/search config | Apply URL locale (default `en_US`) |
 | `job_req_id` / `job_id` | source/search config | Optional numeric requisition id override |
-| `odata_base_url` / `api_base_url` | source/search config or credential `session` | **Required for live submit** — API host (`apiN.successfactors.com` / `apiN.sapsf.*`) |
-| `company_id` / `sf_company_id` | source/search config or credential `session` | **Required for live submit** — SF company id (appended as `user@CompanyId` when needed) |
+| `odata_base_url` / `api_base_url` | source/search config or credential `session` | **Required for live submit**: API host (`apiN.successfactors.com` / `apiN.sapsf.*`) |
+| `company_id` / `sf_company_id` | source/search config or credential `session` | **Required for live submit**: SF company id (appended as `user@CompanyId` when needed) |
 | `country` | source/search config or profile `answers` | Candidate country (default `United States`) |
 | `agree_to_privacy_statement` | source/search config | Candidate DPCS flag (default true) |
 | `sf_<field>` | profile `answers` | Pass-through JobApplication fields |
 | `sf_field_<name>` | source/search config | Pass-through JobApplication field overrides |
-| `username` + `password` | credential `session` (aliases: `basic_auth_*`, `api_*`, `sf_*`, `odata_*`) | **Required for live submit** — OData Basic Auth |
+| `username` + `password` | credential `session` (aliases: `basic_auth_*`, `api_*`, `sf_*`, `odata_*`) | **Required for live submit**: OData Basic Auth |
 
 **Dry run:** builds Candidate + JobApplication JSON (and Attachment metadata when
 a resume is stored), returns the Talent Community apply URL, and sets a
@@ -529,7 +529,7 @@ omitted from the preview payload.
 **Live submit:** creates Candidate → optional Attachment → JobApplication with
 API-user Basic Auth. Without `odata_base_url` + `company_id` + credentials, live
 submit fails with a clear blocker (same class of gate as iCIMS Partner API /
-IBM Avature Import Service — not available to typical self-serve job seekers).
+IBM Avature Import Service, and not available to typical self-serve job seekers).
 Public CSB Talent Community login apply remains unsupported for automation; open
 `talentcommunity_apply_url` to apply manually.
 
@@ -573,10 +573,10 @@ calling Workday. When the profile has an uploaded resume, the preview includes a
 
 **Live submit:** requires cookies from a **logged-in** Workday candidate account
 on the target tenant (create/sign-in on the apply page, then copy session cookies
-from dev tools). Optional credential `headers` are merged as a **base** only —
+from dev tools). Optional credential `headers` are merged as a **base** only:
 computed `Accept` / `Content-Type` / `X-CALYPSO-CSRF-TOKEN` / `X-Cxs-Session-Id` /
 `Referer` always win so a stale stored header cannot clobber a freshly resolved
-CSRF token or content type (APL-22). Multipart resume upload omits `Content-Type`
+CSRF token or content type. Multipart resume upload omits `Content-Type`
 entirely (httpx sets the boundary). The adapter creates the application, posts the legal name, uploads
 the resume file to the CXS `attachments` endpoint and registers it on
 `resumeattachments` (when the application profile has a stored file), submits
@@ -589,7 +589,7 @@ finalize. Question answers come from `profile.answers` (question WID or label �
 answer WID or label such as `Yes` / `No`). Use **dry run** to preview
 `questionnaireAnswers` and `resumeAttachments` before enabling live apply.
 
-**Non-atomic create (APL-26):** CXS creates the candidate application on the first
+**Non-atomic create:** CXS creates the candidate application on the first
 `jobapplications` POST, then fills sections before `finalize`. Candidate CXS has
 no withdraw/delete for drafts, so a mid-flow failure (name, resume, experience,
 questionnaire, terms, or finalize) can leave a **partial, unfinalized** application
@@ -609,8 +609,8 @@ start month/year; education needs at least a school name. Degree and field of
 study are resolved against tenant catalogs via
 `GET …/institutionvalues/degree?searchText=…` and
 `GET …/institutionvalues/fieldOfStudy?searchText=…` when session cookies are
-available (exact or normalized-equal match only, then descriptor fallback —
-prefix/substring catalog hits are not auto-bound; a 32-hex value that is not in
+available (exact or normalized-equal match only, then descriptor fallback;
+prefix/substring catalog hits are not auto-bound, and a 32-hex value that is not in
 the fetched candidate list is also refused and falls back to descriptor). Paste a
 catalog WID directly into the profile degree/field fields or set
 `education_lookup_aliases` to override a label. Use dry run to preview resolved
@@ -634,11 +634,11 @@ proficiency and a native-language flag. Use dry run to preview `skills` /
 detail CXS response. The adapter fetches each questionnaire definition, maps
 `profile.answers` to `questionnaireAnswers`, and POSTs
 `jobapplication/{id}/questionnaireresponse?type=primary|secondary|supplementary`.
-Required questions without a mapped answer — or with a present value that cannot
+Required questions fail before finalize with a clear error listing the question
+ids when they have no mapped answer, or when a present value cannot
 be converted (unmatched choice label, a 32-hex answer id that is not a member of
 that question's `possibleAnswers`, non-int / non-positive numeric, or a
-multi-choice value where any comma-split token fails to resolve) — fail
-before finalize with a clear error listing the question ids. Multi-select
+multi-choice value where any comma-split token fails to resolve). Multi-select
 answers never submit a truncated subset of matched options. Raw Workday WIDs in
 `profile.answers` are accepted only when they appear in the fetched question's
 `possibleAnswers` (stale/wrong hex ids are treated as unresolvable).
@@ -647,7 +647,7 @@ answers never submit a truncated subset of matched options. Raw Workday WIDs in
 branching questionnaires where follow-up questions depend on earlier choices you
 did not map. LinkedIn/generic sources have no apply adapter. Branching
 questionnaires only submit answers you explicitly map in `profile.answers`. See
-[launch-checklist.md](../launch-checklist.md#7-auto-apply-optional--know-the-limits)
+[launch-checklist.md](../launch-checklist.md#7-auto-apply-optional-and-its-limits)
 before advertising auto-apply on a public instance.
 
 ### Google Careers
@@ -797,7 +797,7 @@ never leaked to Apple. Retail **PIPE** roles with `role_location_selection`
 need explicit `store_locations` / `post_locations` in source config. A 2xx
 `applyJob` body with `success: false`, a non-empty `errors` list, or an
 `error` value is treated as a failed submit (same post-2xx envelope check as
-Microsoft SmartApply) — not a success with a null application id. Treat live
+Microsoft SmartApply), not a success with a null application id. Treat live
 auto-apply as best-effort; always preview with dry run first.
 
 ### Meta Careers
@@ -842,7 +842,7 @@ preview with dry run first.
 
 ### Indeed
 
-Indeed listings rarely submit on Indeed itself — most **Easily apply** jobs
+Indeed listings rarely submit on Indeed itself, because most **Easily apply** jobs
 redirect to an employer ATS. The adapter fetches the public viewjob page,
 parses embedded `window._initialData`, and **delegates** to Greenhouse, Lever,
 Ashby, Workday, Google Careers, Microsoft Careers, Amazon Jobs, or Meta Careers when the
@@ -855,14 +855,14 @@ Config / credentials:
 | `external_apply_url` | source/search config | Optional override to skip the viewjob fetch (pin a known employer apply URL) |
 | Indeed session cookies | credential `cookies` | Logged-in Indeed account (`PPID`, `SOCK`, …) for **Indeed-hosted** Easy Apply live submit |
 | `csrf_token` | credential `session` | Optional `X-Indeed-Csrf-Token` for smartapply live submit |
-| `accept_private_api_risk` | source/search config | **Required for hosted live submit / auto-apply.** Explicit acknowledgment that smartapply uses private Indeed APIs with session cookies and can risk ToS violations or account bans (APL-17). Dry-run preview and delegated ATS apply do not require it. |
+| `accept_private_api_risk` | source/search config | **Required for hosted live submit / auto-apply.** Explicit acknowledgment that smartapply uses private Indeed APIs with session cookies and can risk ToS violations or account bans. Dry-run preview and delegated ATS apply do not require it. |
 
 **Dry run:** fetches viewjob (unless `external_apply_url` is set), resolves the
 apply route, and previews either the delegated ATS payload or the Indeed-hosted
 smartapply contact payload. No Indeed login required for delegation previews.
 
 **Live submit (delegated):** uses the downstream adapter's requirements (API
-keys, Workday cookies, etc.) — the preview payload includes `indeed_route` and
+keys, Workday cookies, etc.). The preview payload includes `indeed_route` and
 `delegated_adapter` metadata.
 
 **Live submit (Indeed-hosted):** when the listing has no external ATS URL but
@@ -871,18 +871,18 @@ does expose an Easy Apply button, posts to
 session cookies passed via httpx `cookies=` (not a raw `Cookie` string join),
 plus optional `X-Indeed-Csrf-Token`. Cookie names/values that contain CTL bytes
 or `;` are rejected before the POST so a pasted credential cannot splice extra
-request headers (APL-29). Requires `accept_private_api_risk: true` in
-source/search config (APL-17). The hosted live-submit regression
+request headers. Requires `accept_private_api_risk: true` in
+source/search config. The hosted live-submit regression
 (`test_hosted_live_submit_posts_to_smartapply`) asserts those cookies (and CSRF
-when set) are on the wire — body-only checks would miss an APL-02 cookie-drop
-regression (TST-02). A 2xx response whose body reports `success: false`, `error` /
+when set) are on the wire, because body-only checks would miss a cookie-drop
+regression. A 2xx response whose body reports `success: false`, `error` /
 `errors`, or a `message` without an application id is treated as failure (same
-post-2xx guard as Greenhouse / SmartRecruiters) — not `submitted`. When the
+post-2xx guard as Greenhouse / SmartRecruiters), not `submitted`. When the
 application profile has an uploaded resume file, live
 submit includes `applicant.resume.file` (`fileName`, `contentType`, Base64
 `data`) per the Indeed Apply payload shape; plain `resumeText` is used only when
 no file is stored. Multi-step employer questionnaires are best-effort; map answers
-in `profile.answers`. Cloudflare may block unauthenticated viewjob fetches —
+in `profile.answers`. Cloudflare may block unauthenticated viewjob fetches, so
 reuse [site credentials](credentials.md) session cookies from scraping.
 
 **Unsupported:** external apply URLs that are not a recognized ATS (e.g. custom
@@ -903,7 +903,7 @@ Config / credentials:
 | `external_apply_url` | source/search config | Optional override to skip the guest page fetch (pin a known employer apply URL) |
 | `li_at` + `JSESSIONID` | credential `cookies` | Logged-in LinkedIn account for Voyager enrichment and **LinkedIn-hosted** Easy Apply live submit |
 | `csrf_token` | credential `session` | Optional CSRF token for Voyager requests (defaults to the `JSESSIONID` cookie value) |
-| `accept_private_api_risk` | source/search config | **Required for hosted live submit / auto-apply.** Explicit acknowledgment that Voyager Easy Apply uses private LinkedIn APIs with session cookies and can risk ToS violations or account bans (APL-17). Dry-run preview and delegated ATS apply do not require it. |
+| `accept_private_api_risk` | source/search config | **Required for hosted live submit / auto-apply.** Explicit acknowledgment that Voyager Easy Apply uses private LinkedIn APIs with session cookies and can risk ToS violations or account bans. Dry-run preview and delegated ATS apply do not require it. |
 
 **Dry run:** fetches the guest job-posting page (unless `external_apply_url` is
 set), resolves the apply route, and previews either the delegated ATS payload or
@@ -912,22 +912,22 @@ requires session cookies but is not required for Easy Apply previews detected fr
 the guest HTML.
 
 **Live submit (delegated):** uses the downstream adapter's requirements (API
-keys, Workday cookies, etc.) — the preview payload includes `linkedin_route` and
+keys, Workday cookies, etc.). The preview payload includes `linkedin_route` and
 `delegated_adapter` metadata.
 
 **Live submit (LinkedIn-hosted Easy Apply):** when the listing exposes an Easy
 Apply button, loads the application form via Voyager GraphQL and posts to
 `/voyager/api/voyagerJobsDashOnsiteApplyApplication?action=submitApplication`
 with the user's LinkedIn session cookies. Requires `accept_private_api_risk: true`
-in source/search config (APL-17). A 2xx response whose body reports
+in source/search config. A 2xx response whose body reports
 `success: false`, `error` / `errors`, or a `message` without an application id
-is treated as failure (same post-2xx guard as Greenhouse / SmartRecruiters) —
+is treated as failure (same post-2xx guard as Greenhouse / SmartRecruiters),
 not `submitted`. When the application profile has an
 uploaded resume file and the form includes a document-upload field, live submit
 registers the file via `voyagerMediaUploadMetadata`, uploads it to LinkedIn's
 Ambry endpoint, and includes the asset URN in `fileUploadResponses`. The Ambry
 PUT uses the signed upload URL only (no Voyager session cookies) so a
-response-supplied host cannot receive `li_at` (APL-19). Plain `resume_text`
+response-supplied host cannot receive `li_at`. Plain `resume_text`
 remains a preview/fallback when no file is stored. Multi-step employer
 questionnaires are best-effort; map answers in `profile.answers` using the form
 element URN or a normalized field label key.
@@ -941,13 +941,13 @@ from scraping.
 
 Live submission requires explicit opt-in per source (`source.auto_apply_enabled`,
 default `false`). Toggle from the Sources page (only for adapters with a
-registered applier). `ApplyService` rejects non–dry-run applies when opt-in is
+registered applier). `ApplyService` rejects live applies when opt-in is
 off; preview (`dry_run`) still works. Enabling auto-apply is the user's consent
 to transmit application-profile PII to that employer's career site; the privacy
 policy discloses the data categories and lawful basis (consent for opt-in
 third-party sends).
 
-**LinkedIn / Indeed private-API risk (APL-17 / DOC-12 / XCT-19).** Hosted Easy Apply posts
+**LinkedIn / Indeed private-API risk.** Hosted Easy Apply posts
 to LinkedIn Voyager and Indeed smartapply using the candidate's own session
 cookies. Those are private/member APIs; LinkedIn and Indeed User Agreements
 typically prohibit automated access, and anti-bot defenses can suspend or ban
@@ -959,10 +959,10 @@ shows a confirm dialog that explains the risk and writes that flag into
 `default_config`. Adapters refuse hosted live submit without it; dry-run
 preview and delegated ATS apply are unchanged. The same session cookies also
 power **credentialed scrape** (auth walls / Cloudflare); the Credentials UI
-confirms ToS risk before saving LinkedIn/Indeed cookies — see
-[scrapers.md](scrapers.md#linkedin--indeed-credentialed-scrape-tos-risk-xct-19).
+confirms ToS risk before saving LinkedIn/Indeed cookies. See
+[scrapers.md](scrapers.md#linkedin--indeed-credentialed-scrape-tos-risk).
 See also
-[launch-checklist §7 Safety](../launch-checklist.md#7-auto-apply-optional--know-the-limits).
+[launch-checklist §7 Safety](../launch-checklist.md#7-auto-apply-optional-and-its-limits).
 
 Every apply attempt (preview or live, success or failure) is recorded in
 `application_log` with baseline tracking metadata (`employer_domain`, `posting`
@@ -973,18 +973,18 @@ with the final outcome. Before persist, `merge_application_log_payload` scrubs
 credential-bearing keys from the adapter body (`cookies` / `headers` /
 `authorization` / `session` / token aliases, nested) so a buggy adapter cannot
 echo decrypted site credentials into plaintext `application_log.payload` or the
-`/application-logs` API (SVC-11). List recent rows via
+`/application-logs` API. List recent rows via
 `GET /api/v1/application-logs`; fetch one queued row via
 `GET /api/v1/application-logs/{id}` while a live submit runs in the worker. At
-most one in-flight live apply (`queued` or `processing`) per job is allowed —
+most one in-flight live apply (`queued` or `processing`) per job is allowed,
 enforced by a partial unique index so concurrent enqueue requests cannot
 double-submit. The worker commits the `queued` → `processing` lease before the
-employer POST so `acks_late` redelivery cannot double-submit (NTF-03).
+employer POST so `acks_late` redelivery cannot double-submit.
 Successful live applies set `seen_job.applied_at`. When
 `source.auto_apply_enabled` is on, the scrape pipeline queues applies for new
 matches automatically (same Celery path as the Jobs page **Apply** button), up
 to the plan's rolling 24-hour live-apply volume cap (`max_auto_applies_per_day`
-in `app/core/plans.py` — Free 3 / Starter 5 / Plus 10 / Pro 20). Further
+in `app/core/plans.py`: Free 3 / Starter 5 / Plus 10 / Pro 20). Further
 pipeline matches are skipped silently until the window has capacity; manual
 **Apply** from the Jobs page is unchanged. Dry-run previews do not count toward
 the cap. The Application profile page shows the same audit trail.
@@ -999,7 +999,7 @@ best-effort. Branching questionnaires only
 submit answers you explicitly map in `profile.answers`. Uber Careers live submit
 needs a logged-in careers session token; employer questionnaires map via
 `profile.answers`. See
-[launch-checklist.md](../launch-checklist.md#7-auto-apply-optional--know-the-limits)
+[launch-checklist.md](../launch-checklist.md#7-auto-apply-optional-and-its-limits)
 before advertising auto-apply on a public instance.
 
 ## Adding one

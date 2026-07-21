@@ -70,7 +70,7 @@ def raise_on_jmap_method_errors(responses: list[list[Any]]) -> None:
 
     RFC 8620 §3.6 returns per-method failures as ``["error", …]`` rows or as
     non-empty ``notCreated`` / ``notUpdated`` / ``notDestroyed`` maps on ``*/set``
-    responses — neither is caught by ``raise_for_status``.
+    responses. Neither shape is caught by ``raise_for_status``.
     """
     for response in responses:
         if not isinstance(response, list) or len(response) < 2:

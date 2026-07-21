@@ -117,7 +117,7 @@ export function WorkExperienceSection({
                 }
               />
             </Field>
-            {/* Field is a <label>; nest only one label around the checkbox (FRO-26). */}
+            {/* Field is a <label>; nest only one label around the checkbox. */}
             <div className="field">
               <span className="field-label">Current role</span>
               <label className="checkbox-row">

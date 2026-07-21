@@ -6,7 +6,7 @@ Create Date: 2026-07-06
 
 Stores the Stripe event ``created`` unix timestamp of the last applied
 subscription lifecycle webhook so stale/out-of-order updated/deleted events
-cannot regress plan state (BIL-02 / BIL-03).
+cannot regress plan state.
 """
 
 from collections.abc import Sequence

@@ -1,5 +1,5 @@
 # One ECR repository per image. Scan on push and a lifecycle policy to keep the
-# repo from growing unbounded. Tags are IMMUTABLE (OPS-09) so a re-push cannot
+# repo from growing unbounded. Tags are IMMUTABLE so a re-push cannot
 # silently replace the image a task definition still references by tag.
 
 resource "aws_ecr_repository" "this" {

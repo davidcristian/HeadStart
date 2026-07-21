@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Fail CI/local gates when frontend deps have high/critical advisories (FRO-12).
+# Fail CI/local gates when frontend deps have high/critical advisories.
 # shellcheck source=lib.sh
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
 

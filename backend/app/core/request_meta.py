@@ -20,7 +20,7 @@ class RequestMeta:
 
 
 def request_meta(request: Request) -> RequestMeta:
-    """Best-effort client IP and user agent for audit logging (AUT-17)."""
+    """Best-effort client IP and user agent for audit logging."""
     return RequestMeta(ip_address=_client_ip(request), user_agent=request.headers.get("user-agent"))
 
 
@@ -61,7 +61,7 @@ def _ip_in_networks(
 
 
 def _normalize_ip(raw: str | None) -> str | None:
-    """Parse and canonicalize an IP; drop invalid or overlong values (AUT-17)."""
+    """Parse and canonicalize an IP; drop invalid or overlong values."""
     if raw is None:
         return None
     text = raw.strip()

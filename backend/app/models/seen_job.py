@@ -18,8 +18,7 @@ class SeenJob(Base):
     __tablename__ = "seen_job"
     __table_args__ = (
         UniqueConstraint("search_id", "external_id", name="uq_seen_job_search_external"),
-        # Ghost-detection claim filters status/applied_at over unghosted rows
-        # (DAT-03 / DAT-14).
+        # Ghost-detection claim filters status/applied_at over unghosted rows.
         Index(
             "ix_seen_job_status_applied_at_unghosted",
             "status",
@@ -27,9 +26,9 @@ class SeenJob(Base):
             postgresql_where=text("ghosted_at IS NULL"),
             sqlite_where=text("ghosted_at IS NULL"),
         ),
-        # Job feed / applications pipeline filter by search + status (DAT-11).
+        # Job feed / applications pipeline filter by search + status.
         Index("ix_seen_job_search_id_status", "search_id", "status"),
-        # Cross-search URL dedup intersects the current batch in SQL (DAT-05).
+        # Cross-search URL dedup intersects the current batch in SQL.
         Index("ix_seen_job_normalized_url", "normalized_url"),
     )
 
@@ -45,7 +44,7 @@ class SeenJob(Base):
     location: Mapped[str] = mapped_column(String(300), nullable=False, default="")
     salary: Mapped[str] = mapped_column(String(200), nullable=False, default="")
     url: Mapped[str] = mapped_column(String(2000), nullable=False, default="")
-    # Canonical form of url for cross-search dedup; written at insert (DAT-05).
+    # Canonical form of url for cross-search dedup; written at insert.
     normalized_url: Mapped[str] = mapped_column(String(2000), nullable=False, default="")
     summary: Mapped[str] = mapped_column(String(1000), nullable=False, default="")
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="new")

@@ -1,6 +1,6 @@
 # ElastiCache Redis used as the Celery broker + result backend.
-# Always a replication group so transit encryption + AUTH are available
-# (single-node cache clusters cannot enable in-transit encryption — OPS-10).
+# Always a replication group so transit encryption + AUTH are available.
+# Single-node cache clusters cannot enable in-transit encryption.
 # automatic_failover selects Multi-AZ HA (prod) vs a single primary (beta).
 
 resource "aws_elasticache_subnet_group" "this" {
@@ -24,7 +24,7 @@ resource "aws_elasticache_replication_group" "this" {
   automatic_failover_enabled = var.automatic_failover
   multi_az_enabled           = var.automatic_failover
 
-  # OPS-10: encrypt broker traffic and snapshots; require AUTH over TLS.
+  # Encrypt broker traffic and snapshots; require AUTH over TLS.
   transit_encryption_enabled = true
   at_rest_encryption_enabled = true
   auth_token                 = var.auth_token

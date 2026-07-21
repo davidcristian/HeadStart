@@ -111,7 +111,7 @@ def test_process_due_ghosts_stale_application(
 
 
 def test_claim_due_ids_leases_then_second_claim_empty(db_session: Session, monkeypatch) -> None:
-    """Claim stamps ghosted_at so overlapping ticks cannot re-select the row (XCT-11)."""
+    """Claim stamps ghosted_at so overlapping ticks cannot re-select the row."""
     monkeypatch.setattr(settings, "inbox_agent_enabled", True)
     monkeypatch.setattr(settings, "inbox_ghost_window_days", 1)
     user_id = _user(db_session)
@@ -210,7 +210,7 @@ def test_process_due_skips_without_mailbox(db_session: Session, monkeypatch) -> 
     now = datetime(2026, 6, 30, 12, 0, tzinfo=UTC)
     result = GhostDetectionService(db_session).process_due(now=now)
 
-    # Released at claim time — never handed to process_claimed.
+    # Released at claim time and never handed to process_claimed.
     assert result.checked == 0
     assert result.ghosted == 0
     assert job.ghosted_at is None
@@ -289,7 +289,7 @@ def test_process_due_skips_failed_apply(db_session: Session, monkeypatch) -> Non
 
 
 def test_process_due_isolates_per_job_exception(db_session: Session, monkeypatch) -> None:
-    """One job raise must not abort the rest of the batch (SVC-06)."""
+    """One job raise must not abort the rest of the batch."""
     monkeypatch.setattr(settings, "inbox_agent_enabled", True)
     monkeypatch.setattr(settings, "inbox_ghost_window_days", 1)
     first_user = _user(db_session, email="ghost-fail@example.test")
@@ -340,7 +340,7 @@ def test_process_due_isolates_per_job_exception(db_session: Session, monkeypatch
 
 
 def test_process_due_commits_before_later_job_failure(db_session: Session, monkeypatch) -> None:
-    """A later raise must not roll back an earlier successful ghost (SVC-06)."""
+    """A later raise must not roll back an earlier successful ghost."""
     monkeypatch.setattr(settings, "inbox_agent_enabled", True)
     monkeypatch.setattr(settings, "inbox_ghost_window_days", 1)
     first_user = _user(db_session, email="ghost-first@example.test")

@@ -1,4 +1,4 @@
-"""Celery tasks for async resume / cover-letter generation (API-01)."""
+"""Celery tasks for async resume / cover-letter generation."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ def generate_resume_task(
     user_id: int,
     job_id: int,
 ) -> dict[str, object]:
-    """Run one queued tailored-resume generation in the worker (API-01)."""
+    """Run one queued tailored-resume generation in the worker."""
     return _run_document_generation(generation_id, user_id, job_id, kind="resume")
 
 
@@ -27,7 +27,7 @@ def generate_cover_letter_task(
     user_id: int,
     job_id: int,
 ) -> dict[str, object]:
-    """Run one queued cover-letter generation in the worker (API-01)."""
+    """Run one queued cover-letter generation in the worker."""
     return _run_document_generation(generation_id, user_id, job_id, kind="cover_letter")
 
 

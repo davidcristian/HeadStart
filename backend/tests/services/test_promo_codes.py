@@ -211,7 +211,7 @@ def test_create_code_with_stripe_sync_and_cap(
     assert read.stripe_promotion_code_id == "promo_x"
     # The cap is forwarded to the Stripe promotion code.
     assert mock_promotion.call_args.kwargs["max_redemptions"] == 25
-    # Local promo id is flushed before Stripe create so metadata is not empty (BIL-13).
+    # Local promo id is flushed before Stripe create so metadata is not empty.
     assert read.id is not None
     assert mock_promotion.call_args.kwargs["metadata"] == {"promo_code_id": str(read.id)}
 
@@ -317,7 +317,7 @@ def test_validate_rate_limited(db_session: Session) -> None:
 
 
 def test_resolve_for_checkout_rate_limited(db_session: Session) -> None:
-    """Checkout promo resolution shares the validate attempt throttle (BIL-09)."""
+    """Checkout promo resolution shares the validate attempt throttle."""
     user = _user(db_session)
     _add_promo(db_session)
     repo = PromoCodeRepository(db_session)
@@ -442,7 +442,7 @@ def test_describe_variants(db_session: Session) -> None:
 def test_describe_fixed_amount_respects_billing_currency(
     db_session: Session, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """FRO-35: promo copy and Stripe coupons follow BILLING_CURRENCY."""
+    """Promo copy and Stripe coupons follow BILLING_CURRENCY."""
     service = PromoCodeService(db_session)
     promo = PromoCode(code="USD10", promo_type="fixed_amount", value_int=1000)
 

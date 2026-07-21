@@ -9,9 +9,9 @@
 HeadStart instead of only opening apply links. Every apply flow needs the same
 structured candidate data: contact details, links, a resume, a cover-letter
 template, and answers to recurring questions (work authorization, notice period,
-etc.). That data is PII and must be stored safely, but — unlike a session cookie
-— the user needs to read and edit it. This is the foundational, storage-only
-slice of the phase; apply adapters and orchestration come later.
+etc.). That data is PII and must be stored safely. Unlike a session cookie, the
+user needs to read and edit it. This is the foundational, storage-only slice of
+auto-apply; apply adapters and orchestration come later.
 
 ## Decision
 
@@ -29,25 +29,24 @@ slice of the phase; apply adapters and orchestration come later.
   unset), `PUT` (full replacement), `DELETE` (clear). All routes are scoped to
   the authenticated user.
 - **Scope now: storage + retrieval only.** Apply adapters, the orchestration
-  service, the Jobs "Apply" action, and per-source consent are deferred to later
-  Phase 7 items.
+  service, the Jobs "Apply" action, and per-source consent are deferred.
 
 ## Consequences
 
 - Reuses the existing crypto module and secret; rotating `CREDENTIALS_SECRET_KEY`
-  makes saved profiles unreadable (same trade-off as credentials — the user
-  re-enters them).
+  makes saved profiles unreadable, so the user re-enters them (the same
+  trade-off as credentials).
 - Profiles follow the same per-user isolation as everything else (ADR-0004).
 - Provides a stable seam: apply adapters can read a decrypted `ProfileData`
   without re-deriving the storage/encryption concern.
 
 ## Alternatives considered
 
-- **Store profile fields as plaintext columns/JSON** — simplest, but leaves PII
+- **Store profile fields as plaintext columns/JSON.** Simplest, but leaves PII
   unencrypted at rest; rejected.
-- **Reuse `site_credential` for profile data** — conflates a write-only secret
+- **Reuse `site_credential` for profile data.** Conflates a write-only secret
   with editable user data and is keyed per `(user, source)` rather than per
   user; rejected.
-- **Multiple named profiles per user** — useful later (e.g. tailored resumes per
+- **Multiple named profiles per user.** Useful later (e.g. tailored resumes per
   role), but adds CRUD surface the first auto-apply slice does not need. Start
   with a singleton; revisit if demand appears.

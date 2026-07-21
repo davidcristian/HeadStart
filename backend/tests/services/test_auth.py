@@ -111,7 +111,7 @@ def test_reset_password_inactive_user_rejected(db_session: Session) -> None:
         )
 
     # Consume is committed before the inactive check so the link cannot be
-    # replayed after reactivation (DAT-18 / AUT-30).
+    # replayed after reactivation.
     assert (
         PasswordResetTokenRepository(db_session).get_valid_by_hash(token_hash, now=utcnow()) is None
     )
@@ -221,7 +221,7 @@ def test_register_duplicate_returns_none_and_notifies(
 def test_register_integrity_error_follows_duplicate_ack(
     db_session: Session, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Racing insert that hits the email unique constraint must not 500 (AUT-28)."""
+    """Racing insert that hits the email unique constraint must not 500."""
     from app.schemas.auth import RegisterRequest
 
     with patch("app.services.auth.send_verification_email"):

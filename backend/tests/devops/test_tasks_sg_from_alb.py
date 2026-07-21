@@ -1,4 +1,4 @@
-"""Regression: tasks SG ingress from ALB is limited to target ports (OPS-14)."""
+"""Regression: tasks SG ingress from ALB is limited to target ports."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ _SECURITY_MAIN = _REPO_ROOT / "devops" / "terraform" / "modules" / "security" / 
 
 
 def test_tasks_ingress_from_alb_is_limited_to_target_ports() -> None:
-    """ALB may reach frontend :8080 and api :8000 only — not 0–65535 / metrics :9090."""
+    """ALB may reach frontend :8080 and api :8000 but never :9090 or all ports."""
     main = _SECURITY_MAIN.read_text(encoding="utf-8")
     assert 'resource "aws_security_group_rule" "tasks_from_alb"' not in main
     assert "to_port                  = 65535" not in main

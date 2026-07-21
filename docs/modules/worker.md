@@ -3,31 +3,31 @@
 **Path:** `backend/app/worker/`
 
 Celery provides the scheduler (beat) and the workers. The worker package is
-**glue only** — it calls services; business logic lives in services.
+**glue only**. It calls services; business logic lives in services.
 
 ## Pieces
 
-- `celery_app.py` — the Celery application + config (broker/result backend from
-  settings). On AWS, Terraform sets `REDIS_TLS=true` and injects
+- `celery_app.py` defines the Celery application + config (broker/result backend
+  from settings). On AWS, Terraform sets `REDIS_TLS=true` and injects
   `REDIS_PASSWORD` (ElastiCache AUTH) so settings build `rediss://` URLs
   with `ssl_cert_reqs=required`; local docker Redis stays plaintext
   `redis://` with no password. Task `prerun`/`postrun` signals bind the
   Celery task id into the shared log correlation field (see
-  [Request correlation id](#request-correlation-id-aut-15)).
-- `schedule.py` — beat ticks: enqueue due searches, flush digest queues, and
-  (when inbox agent is enabled) inbox polling and ghost detection.
-- `tasks.py` — `run_search(search_id)`, `run_search_run` (manual Run now),
+  [Request correlation id](#request-correlation-id)).
+- `schedule.py` runs the beat ticks: enqueue due searches, flush digest queues,
+  and (when inbox agent is enabled) inbox polling and ghost detection.
+- `tasks.py` defines `run_search(search_id)`, `run_search_run` (manual Run now),
   `flush_due_digests()`, `apply_to_job`,
   `generate_resume`, `generate_cover_letter`, `process_inbox_messages`, and
   `detect_ghosted_applications`.
 
-## Request correlation id (AUT-15)
+## Request correlation id
 
 While a task runs, log lines include the Celery task id as `request_id` (same
 field as the API's `X-Request-ID`). With the default `LOG_FORMAT=json` that is a
 top-level JSON key; with `LOG_FORMAT=text` it appears as `[<celery-task-id>]`.
 That lets scrape/notify/apply warnings from overlapping worker children be
-attributed to one task (see [api.md](api.md#structured-json-logs-aut-16)).
+attributed to one task (see [api.md](api.md#structured-json-logs)).
 
 ## Due-based scheduling with catch-up
 
@@ -39,11 +39,11 @@ Beat runs every `SCHEDULER_TICK_SECONDS`. On each tick (and once on startup) it:
    lease: a scrape slower than the tick interval, or an overlapping tick, cannot
    re-enqueue the same search and double-notify. Unit tests force the non-SQLite
    branch and compile the repository statement as Postgres so `FOR UPDATE` /
-   `SKIP LOCKED` cannot regress without failing (TST-04); SQLite drops the clause
+   `SKIP LOCKED` cannot regress without failing; SQLite drops the clause
    at execute time and cannot validate locking by itself.
 2. Flushes digest queues whose `digest_interval_seconds` has elapsed (each search is
-   locked with `get_for_update(..., skip_locked=True)` while flushing — same TST-04
-   compile assertion — so overlapping ticks don't double-send a digest). A notifier
+   locked with `get_for_update(..., skip_locked=True)` while flushing under the same
+   compile assertion, so overlapping ticks don't double-send a digest). A notifier
    failure on one search is isolated: the tick logs it and continues, and each
    successful flush commits before the next search so a later failure cannot roll
    back already-delivered digests.
@@ -88,7 +88,7 @@ flowchart TD
 4. Sync job lifecycle: mark `new`/`seen` rows missing from the scrape as `closed`;
    reopen `closed` rows that reappear as `seen`. Applied/archived rows are untouched.
    Implemented as two set-based `UPDATE … WHERE search_id = …` statements keyed on the
-   scraped `external_id` set (DAT-16), not a full `SELECT` of the search ledger.
+   scraped `external_id` set, not a full `SELECT` of the search ledger.
 5. Apply the search's `filters` JSON to drop non-matching postings.
 6. Dedupe postings against `seen_job` for that search (by `external_id`).
 7. Skip notification when the normalized job URL was already seen in any of the
@@ -99,9 +99,9 @@ flowchart TD
    not queue digest rows.
 9. Persist new `seen_job` rows. For immediate mode, **commit** them before
    calling the notifier so an `acks_late` redelivery after a mid-send crash
-   dedupes instead of re-notifying the same jobs (XCT-12). Digest mode queues
+   dedupes instead of re-notifying the same jobs. Digest mode queues
    `pending_digest` rows in the open transaction with one flush for the batch
-   (SVC-15; no external side effect yet).
+   (no external side effect yet).
 10. Send remaining new postings via `get_notifier(target.type).send(ctx, new_jobs)`,
     or queue them in `pending_digest` when `notification_mode` is `digest`; write
     `delivery_log` entries (immediate mode); update schedule fields.
@@ -124,7 +124,7 @@ running.
 
 ## Queued auto-apply
 
-Live submissions from `POST /jobs/{id}/apply` (non–dry-run) are validated in the
+Live submissions from `POST /jobs/{id}/apply` (not dry runs) are validated in the
 API, written to `application_log` with status `queued`, and enqueued as
 `apply_to_job`. The same queue path runs from the pipeline when
 `source.auto_apply_enabled` is on and a new match appears during `run_search`
@@ -135,13 +135,13 @@ manual Apply is uncapped by this limit). A Celery worker **claims** the row
 `ApplyService.apply_to_job`, then updates the audit row to `submitted` or
 `failed` and sets `seen_job.applied_at` / `applied` on success. The durable
 claim means an `acks_late` redelivery after a mid-submit crash skips instead of
-double-posting to the employer (NTF-03). If the outcome transaction fails after
+double-posting to the employer. If the outcome transaction fails after
 the claim, the row stays `processing` so the in-flight unique index still blocks
 a user re-apply. Preview (`dry_run: true`) still runs synchronously in the API.
 Clients poll `GET /application-logs/{id}` until the log reaches a terminal
 status.
 
-## Queued document generation (API-01)
+## Queued document generation
 
 `POST /jobs/{id}/generate-resume` and `POST /jobs/{id}/generate-cover-letter`
 validate ownership/profile/feature flags in the API, write a
@@ -152,7 +152,7 @@ stores the payload in `result` with status `ready` (or `failed` + `error`).
 Clients poll `GET /document-generations/{id}` until terminal. This keeps the
 HTTP anyio threadpool free of long LLM/subprocess work.
 
-## Queued manual search run (API-02)
+## Queued manual search run
 
 `POST /searches/{id}/run` validates ownership in the API, writes a `search_run`
 row (`queued`), commits, and enqueues `run_search_run`. The worker claims
@@ -167,19 +167,19 @@ hard `task_time_limit` (10m / 11m), and `result_expires` (1h) so hung tasks are
 killed and unread result payloads do not accumulate in Redis.
 
 Every `application_log` row includes baseline tracking metadata in `payload`
-(`employer_domain`, `posting` title/company/url) for downstream inbox triage
-(Phase 20). Adapter bodies are scrubbed of credential-bearing keys before
-merge (SVC-11; see [appliers.md](appliers.md)).
+(`employer_domain`, `posting` title/company/url) for downstream inbox triage.
+Adapter bodies are scrubbed of credential-bearing keys before merge
+(see [appliers.md](appliers.md)).
 
 When a scrape uses the `playwright` adapter, the worker reuses a process-scoped
 headless Chromium browser (see [scrapers.md](scrapers.md)). Use the worker Docker
 target / `headstart-backend-worker` image in production (Chromium keeps its
-process sandbox; ECS applies RuntimeDefault seccomp — OPS-27).
+process sandbox; ECS applies RuntimeDefault seccomp).
 
 Prometheus metrics for scrape latency, pipeline outcomes, and notification
-delivery are recorded here — see [metrics.md](metrics.md). Prefork children all
+delivery are recorded here. See [metrics.md](metrics.md). Prefork children all
 attempt `METRICS_PORT`; only the first binder serves `/metrics`, and siblings
-skip on `EADDRINUSE` so concurrency does not crash-loop (XCT-13).
+skip on `EADDRINUSE` so concurrency does not crash-loop.
 
 ## Ghost detection (dev inbox)
 
@@ -187,13 +187,13 @@ When `INBOX_AGENT_ENABLED=true`, beat also schedules
 `detect_ghosted_applications` every `INBOX_GHOST_CHECK_INTERVAL_SECONDS`
 (default 3600). The task **claims** due rows (`ghosted_at` lease under
 `FOR UPDATE SKIP LOCKED`, committed before SMTP) then emails self-summaries
-for applications past `INBOX_GHOST_WINDOW_DAYS` without a recruiter reply
-(XCT-11). The claim query filters `status=applied` / `applied_at` /
+for applications past `INBOX_GHOST_WINDOW_DAYS` without a recruiter reply.
+The claim query filters `status=applied` / `applied_at` /
 `ghosted_at IS NULL` and is backed by partial index
 `ix_seen_job_status_applied_at_unghosted` so the periodic sweep does not
-full-scan `seen_job` (DAT-03 / DAT-14). Failed sends release the lease for
-retry. Failures on one job are isolated so the rest of the batch continues
-(SVC-06). See [inbox.md](inbox.md).
+full-scan `seen_job`. Failed sends release the lease for
+retry. Failures on one job are isolated so the rest of the batch continues.
+See [inbox.md](inbox.md).
 
 ## Inbox orchestration (dev inbox)
 
@@ -204,11 +204,11 @@ every `INBOX_POLL_INTERVAL_SECONDS` (default 300). The task calls
 1. Fetch new mail since the stored UID cursor (`inbox_poll_state.last_polled_uid`,
    bootstrapped from the highest classified UID when unset).
 2. Skip unrelated mail via `InboxGateService` (employer domain, thread headers,
-   ghost self-mail, optional sender allowlist) — no classifier or DB write.
+   ghost self-mail, optional sender allowlist) without a classifier or DB write.
 3. Classify gated messages via `EmailClassificationService` (link application,
    ghost recovery, interview handoff, folder routing).
 4. Advance the cursor through classified and ignored messages
-   (`upsert_last_polled_uid` SAVEPOINT insert / conflict update — DAT-15);
+   (`upsert_last_polled_uid` SAVEPOINT insert / conflict update);
    classify failures retry on the next tick.
 
 The task return payload includes `ignored` (mail skipped by the gate).

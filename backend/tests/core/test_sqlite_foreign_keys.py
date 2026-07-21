@@ -1,4 +1,4 @@
-"""Regression: test SQLite engines enforce foreign keys (TST-01 / DAT-07)."""
+"""Regression: test SQLite engines enforce foreign keys."""
 
 from sqlalchemy import text
 from sqlalchemy.orm import Session

@@ -20,7 +20,7 @@ def test_profile_requires_auth(client: TestClient) -> None:
 def test_attachment_deletes_are_state_returning_not_204(
     client: TestClient, auth_headers: dict[str, str]
 ) -> None:
-    """API-11: resume/template DELETEs return 200+ProfileRead; full clear stays 204."""
+    """Resume/template DELETEs return 200+ProfileRead; full clear stays 204."""
     client.put(
         "/api/v1/profile",
         json={"full_name": "Ada Lovelace", "email": "ada@example.com"},

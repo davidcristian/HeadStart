@@ -1,4 +1,4 @@
-"""Regression: Terraform must inject METRICS_TOKEN into ECS (OPS-54)."""
+"""Regression: Terraform must inject METRICS_TOKEN into ECS."""
 
 from __future__ import annotations
 

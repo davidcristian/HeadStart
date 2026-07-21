@@ -4,7 +4,7 @@ A headless Chromium instance is expensive to launch; workers keep one browser
 open per child process and reuse it across scrapes. Browsers are created lazily
 on first use and closed on worker shutdown.
 
-Chromium keeps its process sandbox by default (OPS-27). ``--no-sandbox`` is
+Chromium keeps its process sandbox by default. ``--no-sandbox`` is
 only added when ``PLAYWRIGHT_NO_SANDBOX=true`` in local/test.
 """
 

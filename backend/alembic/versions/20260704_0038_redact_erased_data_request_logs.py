@@ -37,5 +37,5 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    # Irreversible redaction — prior plaintext cannot be restored.
+    # Irreversible redaction leaves no prior plaintext to restore.
     pass

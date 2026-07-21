@@ -2,7 +2,7 @@
 
 Idempotent: safe to run repeatedly. Creates a demo account that owns a default
 ntfy target (from settings, or a random high-entropy topic when the configured
-default is guessable — NTF-06), one example Greenhouse source, and a disabled
+default is guessable), one example Greenhouse source, and a disabled
 example search. The search is left disabled so it never sends surprise
 notifications before you've set your own ntfy topic and reviewed it.
 
@@ -30,7 +30,7 @@ logger = get_logger(__name__)
 
 
 def _seed_ntfy_topic() -> str:
-    """Prefer configured topic; replace guessable placeholders with a random one (NTF-06)."""
+    """Prefer configured topic; replace guessable placeholders with a random one."""
     configured = settings.ntfy_default_topic
     if not is_guessable_ntfy_topic(configured):
         return configured.strip()

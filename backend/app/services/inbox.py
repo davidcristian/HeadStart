@@ -207,7 +207,7 @@ class InboxService:
         limit: int = 50,
         ctx: MailboxContext | None = None,
     ) -> FetchResult:
-        """Fetch inbound mail; pass ``ctx`` when the caller already resolved it (INB-20)."""
+        """Fetch inbound mail; pass ``ctx`` when the caller already resolved it."""
         self.require_enabled()
         resolved = ctx if ctx is not None else self.resolve_context(user_id)
         if resolved is None:

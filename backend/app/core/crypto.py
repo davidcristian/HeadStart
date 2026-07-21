@@ -43,7 +43,7 @@ def _fernet_key_from_scrypt(secret: str) -> bytes:
 
 
 def _fernet_key_from_sha256(secret: str) -> bytes:
-    """Legacy unsalted SHA-256 derivation (pre-AUT-05); decrypt-only via MultiFernet."""
+    """Legacy unsalted SHA-256 derivation; decrypt-only via MultiFernet."""
     digest = hashlib.sha256(secret.encode("utf-8")).digest()
     return base64.urlsafe_b64encode(digest)
 

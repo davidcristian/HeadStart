@@ -1,4 +1,4 @@
-"""Process-local sliding-window rate limiter for auth abuse prevention (AUT-03).
+"""Process-local sliding-window rate limiter for auth abuse prevention.
 
 Each API process enforces its own counters. That is enough to stop unbounded
 credential stuffing and email bombing on a single task; multi-task deployments

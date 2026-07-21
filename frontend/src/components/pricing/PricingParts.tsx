@@ -8,7 +8,7 @@ export function ComparisonCell({ value }: { value: string | boolean }) {
     const label = value ? "Included" : "Not included";
     return (
       <span className={value ? "pricing-check" : "pricing-dash"} aria-label={label}>
-        {value ? "✓" : "—"}
+        {value ? "✓" : "✗"}
       </span>
     );
   }

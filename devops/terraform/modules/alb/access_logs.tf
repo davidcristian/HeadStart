@@ -1,4 +1,4 @@
-# ALB access-log destination (OPS-08). Bucket name includes account id for global uniqueness.
+# ALB access-log destination. Bucket name includes account id for global uniqueness.
 
 data "aws_caller_identity" "current" {}
 data "aws_elb_service_account" "current" {}

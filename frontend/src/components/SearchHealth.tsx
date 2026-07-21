@@ -62,7 +62,7 @@ export function SearchHealthDetails({ search }: { search: Search }) {
                   ) : (
                     failure.job_title
                   )}
-                  {failure.error ? ` — ${failure.error}` : ""}
+                  {failure.error ? `: ${failure.error}` : ""}
                   <span className="muted"> ({formatRelativeTime(failure.sent_at)})</span>
                 </li>
               );

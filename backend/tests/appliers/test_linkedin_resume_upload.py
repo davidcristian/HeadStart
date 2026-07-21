@@ -104,12 +104,12 @@ def test_upload_easy_apply_resume_posts_metadata_then_puts_file() -> None:
     assert seen["upload_method"] == "PUT"
     assert seen["upload_content_type"] == "application/pdf"
     assert seen["upload_body"] == b"%PDF"
-    # Signed Ambry URL must not receive the Voyager session jar (APL-19).
+    # Signed Ambry URL must not receive the Voyager session jar.
     assert seen["upload_cookie"] == ""
 
 
 def test_upload_easy_apply_resume_omits_cookies_on_foreign_upload_host() -> None:
-    """Response-supplied upload hosts must not receive li_at (APL-19)."""
+    """Response-supplied upload hosts must not receive li_at."""
     seen: dict[str, object] = {}
 
     def handler(request: httpx.Request) -> httpx.Response:

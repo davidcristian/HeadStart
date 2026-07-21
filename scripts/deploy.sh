@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Deploy to AWS: build + push images, then register ECS task defs pinned to the
 # freshly pushed tag *and* ECR content digest, and roll services onto those
-# revisions (OPS-01 tag pin; OPS-64 digest pin).
-# Migrations must finish successfully before any service roll (OPS-17).
+# revisions.
+# Migrations must finish successfully before any service roll.
 # Intended to be run by CI (with an assumed AWS role) or locally with creds.
 #
 # Env:
@@ -11,7 +11,7 @@
 #   ECR_REGISTRY   required
 #   ECS_CLUSTER    required (ECS cluster name; usually a Terraform output)
 #   IMAGE_TAG      optional (default: git short sha)
-#   SERVICE_PREFIX optional (default: headstart) — ECS family/service name prefix
+#   SERVICE_PREFIX optional (default: headstart; ECS family/service name prefix)
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 ENVIRONMENT="${ENVIRONMENT:-beta}"
@@ -23,7 +23,7 @@ export IMAGE_TAG="${IMAGE_TAG:-$(git -C "${REPO_ROOT}" rev-parse --short HEAD 2>
 
 have aws || die "aws CLI is required"
 
-# Resolve the ECR content digest for a just-pushed ``IMAGE_TAG`` (OPS-64).
+# Resolve the ECR content digest for a just-pushed ``IMAGE_TAG``.
 ecr_image_digest() {
   local repo="$1"
   local digest
@@ -86,7 +86,7 @@ register_retargeted_task_def() {
 }
 
 # Submit a one-off migrate task, wait until it stops, and abort unless every
-# container exited 0 — so a failed/partial schema never rolls new app images.
+# container exited 0. A failed or partial schema then never rolls new app images.
 run_and_await_migrate_task() {
   local task_def_arn="$1"
   local run_out task_arn exit_codes code
@@ -153,7 +153,7 @@ DIGEST_FRONTEND="$(ecr_image_digest "headstart-frontend")"
 ok "Pinned digests: backend=${DIGEST_BACKEND} worker=${DIGEST_WORKER} frontend=${DIGEST_FRONTEND}"
 
 # 3) Run migrations as a one-off ECS task on a revision pinned to tag@digest.
-#    Wait for completion and require exit 0 before any service roll (OPS-17).
+#    Wait for completion and require exit 0 before any service roll.
 log "Running database migrations (one-off ECS task)"
 migrate_td="$(register_retargeted_task_def "${SERVICE_PREFIX}-migrate")"
 log "Registered migrate revision: ${migrate_td}"
@@ -161,9 +161,9 @@ run_and_await_migrate_task "${migrate_td}"
 
 # 4) Register a digest-pinned revision per long-running service, then roll onto it.
 #    Force-new-deployment alone would re-pull the Terraform-pinned tag (often
-#    ``latest``), which build-images.sh never re-pushes — so new code would not
-#    ship. ECS services ignore Terraform task_definition changes after first
-#    apply; deploy owns the image pin at roll time (OPS-01 + OPS-64).
+#    ``latest``), which build-images.sh never re-pushes, leaving new code
+#    unshipped. ECS services ignore Terraform task_definition changes after
+#    first apply; deploy owns the image pin at roll time.
 for svc in api frontend worker beat; do
   family="${SERVICE_PREFIX}-${svc}"
   log "Registering ${family} pinned to ${IMAGE_TAG}@digest"

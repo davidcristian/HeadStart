@@ -36,7 +36,7 @@ class DeliveryLogRepository:
         if not search_ids:
             return {}
         # Rank in SQL so search-status never materializes a search's full
-        # failure history just to show the newest N rows (DAT-04).
+        # failure history just to show the newest N rows.
         ranked = (
             select(
                 DeliveryLog.id.label("log_id"),

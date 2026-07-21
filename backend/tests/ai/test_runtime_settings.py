@@ -85,7 +85,7 @@ def test_resolve_ai_settings_uses_user_api_key_when_provider_matches() -> None:
 
 
 def test_resolve_ai_settings_drops_user_key_on_crossed_provider() -> None:
-    """Purpose override to another vendor must not receive the stored OpenAI key (XCT-05)."""
+    """Purpose override to another vendor must not receive the stored OpenAI key."""
     user = User(
         email="pro@example.com",
         password_hash="x",

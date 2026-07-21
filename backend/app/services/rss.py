@@ -52,7 +52,7 @@ def _render_item(job: SeenJob) -> str:
     description_parts = [part for part in description_fields if part]
     description = " · ".join(description_parts) if description_parts else job.status
     if job.summary:
-        description = f"{job.summary} — {description}"
+        description = f"{job.summary}. {description}"
     seen_at = job.first_seen_at
     if seen_at.tzinfo is None:
         seen_at = seen_at.replace(tzinfo=UTC)

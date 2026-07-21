@@ -17,5 +17,5 @@ What becomes easier or harder as a result. Trade-offs accepted. Follow-ups.
 
 ## Alternatives considered
 
-- **Option A** — why not.
-- **Option B** — why not.
+- **Option A** and why it was rejected.
+- **Option B** and why it was rejected.

@@ -1,4 +1,4 @@
-"""Tests for the NTF-12 message catalog and locale resolution."""
+"""Tests for the message catalog and locale resolution."""
 
 from __future__ import annotations
 

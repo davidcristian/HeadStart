@@ -84,7 +84,7 @@ def test_route_endpoint_moves_classified_message(client: TestClient, monkeypatch
             "message": {
                 "uid": 33,
                 "subject": "Update",
-                "body_text": "Thanks for applying — we will review your profile.",
+                "body_text": "Thanks for applying. We will review your profile.",
             }
         },
     )

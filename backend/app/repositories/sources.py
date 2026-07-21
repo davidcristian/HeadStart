@@ -1,4 +1,4 @@
-"""Data access for Source. Queries only — no business logic."""
+"""Data access for Source. Contains queries only and no business logic."""
 
 from __future__ import annotations
 

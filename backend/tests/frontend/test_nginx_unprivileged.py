@@ -1,4 +1,4 @@
-"""Regression: frontend nginx image runs unprivileged (FRO-08)."""
+"""Regression: frontend nginx image runs unprivileged."""
 
 from __future__ import annotations
 

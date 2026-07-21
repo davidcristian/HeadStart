@@ -1,4 +1,4 @@
-"""Tests for JSON / text logging configuration (AUT-16)."""
+"""Tests for JSON / text logging configuration."""
 
 from __future__ import annotations
 

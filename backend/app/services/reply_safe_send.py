@@ -137,7 +137,7 @@ class ReplySafeSendService:
 
         A ``reserved`` audit row counts toward hourly/daily caps until the send
         finalizes to ``sent`` or the reservation is released on failure, so
-        overlapping workers cannot both pass the same below-cap read (INB-23).
+        overlapping workers cannot both pass the same below-cap read.
         """
         self.users.get_for_update(user_id)
         decision = self.evaluate_before_send(user_id, draft, classification, now=now)
@@ -227,7 +227,7 @@ class ReplySafeSendService:
         if not isinstance(excerpt, str):
             return ""
         # max_chars=0: keep the stored excerpt intact after unescape/tag-strip so
-        # terms past a historical 500-char raw cut still match (INB-08).
+        # terms past a historical 500-char raw cut still match.
         return sanitize_message_body(excerpt, max_chars=0)
 
     def _body_excerpt(self, body: str) -> str:

@@ -22,9 +22,9 @@ celery_app = Celery(
     backend=settings.result_backend,
 )
 
-# Soft/hard limits bound hung scrapes and live applies (NTF-03 / NTF-13).
+# Soft/hard limits bound hung scrapes and live applies.
 # reject_on_worker_lost + acks_late: do not ack a task whose worker died mid-run.
-# result_expires: fire-and-forget task payloads must not accumulate in Redis (NTF-14).
+# result_expires: fire-and-forget task payloads must not accumulate in Redis.
 _TASK_SOFT_TIME_LIMIT_SECONDS = 600
 _TASK_TIME_LIMIT_SECONDS = 660
 _RESULT_EXPIRES_SECONDS = 3600
@@ -63,7 +63,7 @@ def _close_playwright_browser(**_: object) -> None:
 
 @task_prerun.connect
 def _bind_task_request_id(task_id: str | None = None, **_: object) -> None:
-    """Correlate worker log lines to the Celery task id (AUT-15)."""
+    """Correlate worker log lines to the Celery task id."""
     bind_celery_task_id(task_id)
 
 

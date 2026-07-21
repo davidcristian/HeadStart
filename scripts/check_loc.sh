@@ -16,17 +16,17 @@ mapfile -t offenders < <(
           */alembic/versions/*) continue ;;
           # The ~300-line cap targets source modules (low-context, one
           # responsibility). Test files map to one module and grow with the
-          # number of cases, so they are exempt — but only at known roots
-          # (OPS-68): a nested …/tests/ under app/src must stay capped.
+          # number of cases, so they are exempt at known roots only: a nested
+          # …/tests/ under app/src must stay capped.
           # Frontend vitest helpers live under src/test/ (singular) and are
-          # coverage-excluded the same way (OPS-67).
+          # coverage-excluded the same way.
           */backend/tests/*) continue ;;
           */src/test/*) continue ;;
           *.test.ts | *.test.tsx) continue ;;
         esac
         lines=$(wc -l < "${file}")
         if (( lines > MAX_LOC )); then
-          # Literal prefix strip (OPS-63): ${var#pattern} treats the pattern as a
+          # Literal prefix strip: ${var#pattern} treats the pattern as a
           # glob, so a REPO_ROOT with *?[] would mis-strip. Length-based slice
           # after a literal [[ == ]] prefix check does not.
           prefix="${REPO_ROOT}/"

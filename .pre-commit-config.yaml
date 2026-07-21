@@ -1,7 +1,7 @@
 # Pre-commit hooks. Install with `just setup` (runs `pre-commit install`).
 # Fast local subset of the CI quality gate (ruff/black/eslint/prettier + LOC +
-# shell syntax). Types, tests, and coverage stay in `just check` / ci.yml —
-# they are too slow for every commit. See docs/modules/deployment.md.
+# shell syntax). Types, tests, and coverage stay in `just check` / ci.yml
+# because they are too slow for every commit. See docs/modules/deployment.md.
 default_language_version:
   python: python3.12
 
@@ -18,11 +18,12 @@ repos:
         args: [--fix=lf]
 
   # Mirror the CI backend gate exactly (see scripts/lint.sh): `ruff check app
-  # tests` + `black --check app tests`. CI does NOT run `ruff format` — black is
-  # the sole formatter, and ruff-format disagrees with black on some constructs,
-  # so running both here reformat-loops. CI also does not lint alembic/, so the
-  # scope is app|tests. Pins track the versions `pip install -e backend[dev]`
-  # resolves today; bump them together with the pyproject floors to avoid drift.
+  # tests` + `black --check app tests`. CI does NOT run `ruff format` because
+  # black is the sole formatter, and ruff-format disagrees with black on some
+  # constructs, so running both here reformat-loops. CI also does not lint
+  # alembic/, so the scope is app|tests. Pins track the versions that `pip
+  # install -e backend[dev]` resolves today; bump them together with the
+  # pyproject floors to avoid drift.
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.15.20
     hooks:
@@ -37,8 +38,8 @@ repos:
         files: ^backend/(app|tests)/
 
   # Frontend eslint must pass an explicit path (`.`): ESLint 8 with no path
-  # argument lints zero files and always exits 0 (OPS-03). Matches `npm run lint`.
-  # LOC / shell / prettier close the remaining OPS-04 gaps that CI already
+  # argument lints zero files and always exits 0. Matches `npm run lint`.
+  # LOC / shell / prettier close the remaining gaps that CI already
   # covers via `just lint` / `just test --scripts`.
   - repo: local
     hooks:

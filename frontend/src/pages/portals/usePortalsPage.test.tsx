@@ -15,7 +15,7 @@ vi.mock("../../hooks/mutations", () => ({
   useSubscribePortals: () => ({ mutateAsync: vi.fn() }),
 }));
 
-// Minimal catalog items — the hook only reads `id` and `allowed_on_plan`.
+// Minimal catalog items because the hook only reads `id` and `allowed_on_plan`.
 function catalog(ids: string[]) {
   return {
     data: {

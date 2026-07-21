@@ -197,7 +197,7 @@ def test_telegram_digest_sends_single_message() -> None:
     assert all(r.status == "sent" for r in results)
     assert len(captured) == 1
     text = captured[0]["text"]
-    assert "2 new jobs — Backend" in text
+    assert "2 new jobs for Backend" in text
     assert "why it matches" in text
     assert "Apply" in text
 
@@ -232,7 +232,7 @@ def test_telegram_digest_records_failure() -> None:
 
 
 def test_telegram_text_rejects_non_http_apply_url() -> None:
-    # Bypass ingest validation to assert render-side scheme gating (NTF-08).
+    # Bypass ingest validation to assert render-side scheme gating.
     job = JobPosting.model_construct(
         external_id="1",
         title="Engineer",

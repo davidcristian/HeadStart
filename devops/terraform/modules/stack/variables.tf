@@ -8,7 +8,7 @@ variable "region" { type = string }
 variable "vpc_cidr" {
   type        = string
   default     = "10.20.0.0/16"
-  description = "VPC CIDR. Environments must not share the same range (beta 10.20/16, prod 10.30/16 — OPS-30)."
+  description = "VPC CIDR. Environments must not share the same range (beta 10.20/16, prod 10.30/16)."
 }
 variable "azs" {
   type = list(string)
@@ -63,7 +63,7 @@ variable "cors_origins" {
 variable "domain_name" {
   type        = string
   default     = ""
-  description = "Custom hostname (e.g. jobs.example.com). Enables HTTPS with route53_zone_id or acm_certificate_arn. Required for environment=prod (OPS-36) unless acm_certificate_arn is set."
+  description = "Custom hostname (e.g. jobs.example.com). Enables HTTPS with route53_zone_id or acm_certificate_arn. Required for environment=prod unless acm_certificate_arn is set."
 }
 
 variable "route53_zone_id" {
@@ -83,7 +83,7 @@ variable "ntfy_default_server_url" {
   default = "https://ntfy.sh"
 }
 
-# Required: ntfy.sh topics are public by name — never ship a guessable default (OPS-16).
+# Required because ntfy.sh topics are public by name. Never ship a guessable default.
 variable "ntfy_default_topic" {
   type        = string
   description = "Unguessable ntfy topic for the seeded default notification target."
@@ -145,12 +145,12 @@ variable "db_multi_az" {
 variable "db_deletion_protection" {
   type        = bool
   default     = false
-  description = "Block accidental RDS destroy. Prod must set true (OPS-48)."
+  description = "Block accidental RDS destroy. Prod must set true."
 }
 variable "db_skip_final_snapshot" {
   type        = bool
   default     = false
-  description = "Skip RDS final snapshot on destroy. Prefer false; beta may set true (OPS-48)."
+  description = "Skip RDS final snapshot on destroy. Prefer false; beta may set true."
 }
 variable "alb_deletion_protection" {
   type        = bool
@@ -169,7 +169,7 @@ variable "log_retention_days" {
 }
 
 # App process log verbosity (Python logging / Celery --loglevel). Override via
-# tfvars or TF_VAR_log_level during incidents without patching module source (OPS-55).
+# tfvars or TF_VAR_log_level during incidents without patching module source.
 variable "log_level" {
   type        = string
   default     = "INFO"

@@ -5,11 +5,12 @@
 
 ## Context
 
-Phase 20 adds application-pipeline automation: read recruiter email, classify
-replies, draft follow-ups, and hand off interview scheduling. That requires
-direct access to a user's mailbox (IMAP/SMTP credentials or OAuth tokens) and
-eventually autonomous outbound email — sensitive capabilities that do not belong
-on a hosted multi-tenant SaaS without explicit user-controlled infrastructure.
+Application-pipeline automation reads recruiter email, classifies replies,
+drafts follow-ups, and hands off interview scheduling. That requires direct
+access to a user's mailbox (IMAP/SMTP credentials or OAuth tokens) and
+eventually autonomous outbound email. These are sensitive capabilities that do
+not belong on a hosted multi-tenant SaaS without explicit user-controlled
+infrastructure.
 
 HeadStart already runs as both a self-hosted dev tool and a hosted product.
 
@@ -23,10 +24,10 @@ HeadStart already runs as both a self-hosted dev tool and a hosted product.
 4. Optional `INBOX_USE_ENV_CREDENTIALS` + `INBOX_*` env vars for single-user local
    dev when no per-user credential is saved.
 5. Ship classification, folder routing, ghost detection, reply drafting,
-   response-delay auto-send, and beat orchestration **behind the same flag** —
-   not as a hosted product feature.
+   response-delay auto-send, and beat orchestration **behind the same flag**
+   rather than as a hosted product feature.
 
-## Shipped scope (Phase 20)
+## Shipped scope
 
 All of the following require `INBOX_AGENT_ENABLED=true` and stay off on hosted
 multi-tenant production:
@@ -44,7 +45,7 @@ multi-tenant production:
 | Human-like auto-reply delay | `inbox_pending_reply`; beat `process_pending_replies` |
 | Local LLM stack | `llamacpp` adapters for classify/draft/resume/cover-letter purposes |
 
-Operator setup: [runbook.md → Local application agent](../runbook.md#local-application-agent-phase-20-dev-only).
+Operator setup: [runbook.md → Local application agent](../runbook.md#local-application-agent-dev-only).
 Subsystem detail: [modules/inbox.md](../modules/inbox.md).
 
 ## Consequences
@@ -57,12 +58,12 @@ Subsystem detail: [modules/inbox.md](../modules/inbox.md).
   see [modules/inbox.md](../modules/inbox.md) and [roadmap.md](../roadmap.md).
   IMAP (`imap_smtp`) works as a fallback when a provider allows it.
 - Autonomous email carries legal and misrepresentation risk; defaults keep
-  `auto_reply_enabled` off and apply safe-send caps — see [modules/inbox.md](../modules/inbox.md).
+  `auto_reply_enabled` off and apply safe-send caps. See [modules/inbox.md](../modules/inbox.md).
 
 ## Alternatives considered
 
-- **Hosted inbox with OAuth** — better UX but heavy compliance/tenancy work; not
+- **Hosted inbox with OAuth.** Better UX but heavy compliance/tenancy work; not
   v1.
-- **Reuse app-wide `SMTP_*` for inbound** — only covers outbound; no IMAP.
-- **Store mailbox creds in `site_credential`** — wrong ownership model (mailbox
+- **Reuse app-wide `SMTP_*` for inbound.** Only covers outbound; no IMAP.
+- **Store mailbox creds in `site_credential`.** Wrong ownership model (mailbox
   is per user, not per job source).

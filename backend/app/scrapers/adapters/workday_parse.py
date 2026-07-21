@@ -79,7 +79,7 @@ def build_host(tenant: str, region: str | None, host_kind: str = HOST_KIND_JOBS)
 def parse_host(host: str) -> tuple[str, str | None, str]:
     """Return ``(tenant_or_empty, region, host_kind)`` for a Workday careers host.
 
-    Site hosts encode the region in the hostname and leave tenant empty — callers
+    Site hosts encode the region in the hostname and leave tenant empty. Callers
     must read tenant from the ``/recruiting/{tenant}/{site}`` path or CXS path.
     """
     match = _HOST_WITH_REGION.match(host)

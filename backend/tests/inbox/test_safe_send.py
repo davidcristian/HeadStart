@@ -36,7 +36,7 @@ def test_check_topic_blocklist_blocks_discrimination_thread() -> None:
 
 
 def test_check_topic_blocklist_blocks_plain_workers_compensation() -> None:
-    """INB-04: single-space spelling must match, not only the apostrophe form."""
+    """Single-space spelling must match, not only the apostrophe form."""
     for body in (
         "Please discuss workers compensation with HR.",
         "Please discuss workers' compensation with HR.",

@@ -3,9 +3,9 @@
 #   frontend           -> frontend image
 # Plus a one-off `migrate` task definition invoked by scripts/deploy.sh.
 #
-# OPS-38: every long-running container runs non-root, with a read-only root
-# filesystem (+ /tmp tmpfs), container healthCheck, and CapabilityBoundingSet
-# drop-all. Worker keeps OPS-27 RuntimeDefault seccomp around Chromium.
+# Every long-running container runs non-root, with a read-only root filesystem
+# (+ /tmp tmpfs), container healthCheck, and CapabilityBoundingSet drop-all.
+# Worker keeps RuntimeDefault seccomp around Chromium.
 
 locals {
   backend_ref        = "${var.backend_image}:${var.image_tag}"
@@ -16,7 +16,7 @@ locals {
   secrets_list = [for k, v in var.secrets : { name = k, valueFrom = v }]
 
   # Images already USER appuser (uid 10001) / nginx (uid 101); pin in the task
-  # def so a rebuilt image cannot silently revert to root (OPS-38 / OPS-39).
+  # def so a rebuilt image cannot silently revert to root.
   backend_user  = "10001:10001"
   frontend_user = "101:101"
 
@@ -76,7 +76,7 @@ locals {
     retries     = 3
     startPeriod = 60
   }
-  # METRICS_TOKEN is always set on AWS (OPS-54); 401 still proves the scrape port is up.
+  # METRICS_TOKEN is always set on AWS; 401 still proves the scrape port is up.
   worker_health_check = {
     command = [
       "CMD-SHELL",
@@ -144,7 +144,7 @@ locals {
           tmpfs = [local.tmp_tmpfs]
         })
       },
-      # One-off migrate has no long-lived probe; api/beat get healthCheck (OPS-38).
+      # One-off migrate has no long-lived probe; api/beat get healthCheck.
       contains(keys(local.backend_health_by_role), role) ? {
         healthCheck = local.backend_health_by_role[role]
       } : {},
@@ -153,7 +153,7 @@ locals {
   backend_container = {
     for role, obj in local.backend_container_objects : role => jsonencode([obj])
   }
-  # OPS-27 seccomp + OPS-38 readonly/non-root/healthCheck around Chromium scrapes.
+  # Seccomp + readonly/non-root/healthCheck around Chromium scrapes.
   worker_container = jsonencode([{
     name                   = "worker"
     image                  = local.worker_backend_ref

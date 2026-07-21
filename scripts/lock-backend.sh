@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Regenerate hashed backend lockfiles from pyproject.toml (XCT-14).
+# Regenerate hashed backend lockfiles from pyproject.toml.
 # Docker, CI, and `just setup` install from these files so builds are
 # reproducible; keep pyproject.toml floors as the human-editable contract.
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"

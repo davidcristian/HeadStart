@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from app.models.application_artifact import ApplicationArtifact
     from app.models.seen_job import SeenJob
 
-# Canonical persisted status values (DAT-09). Keep in sync with apply enqueue/claim
+# Canonical persisted status values. Keep in sync with apply enqueue/claim
 # and the in-flight partial unique index predicate below.
 APPLICATION_LOG_STATUSES = frozenset({"queued", "processing", "submitted", "dry_run", "failed"})
 APPLICATION_LOG_IN_FLIGHT_STATUSES = frozenset({"queued", "processing"})
@@ -28,7 +28,7 @@ class ApplicationLog(Base):
             postgresql_where=text("status IN ('queued', 'processing') AND dry_run IS FALSE"),
             sqlite_where=text("status IN ('queued', 'processing') AND dry_run = 0"),
         ),
-        # Applications pipeline distinct subquery filters dry_run (DAT-03).
+        # Applications pipeline distinct subquery filters dry_run.
         Index("ix_application_log_dry_run_seen_job_id", "dry_run", "seen_job_id"),
     )
 
@@ -37,7 +37,7 @@ class ApplicationLog(Base):
         ForeignKey("seen_job.id", ondelete="CASCADE"), index=True, nullable=False
     )
 
-    # queued | processing | submitted | dry_run | failed — see APPLICATION_LOG_STATUSES
+    # See APPLICATION_LOG_STATUSES: queued | processing | submitted | dry_run | failed
     status: Mapped[str] = mapped_column(String(20), nullable=False)
     dry_run: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     error: Mapped[str | None] = mapped_column(Text, nullable=True)

@@ -1,4 +1,4 @@
-"""Regression: ECS AUTH_COOKIE_SECURE must follow ALB HTTPS (XCT-15)."""
+"""Regression: ECS AUTH_COOKIE_SECURE must follow ALB HTTPS."""
 
 from __future__ import annotations
 

@@ -159,7 +159,7 @@ def test_should_process_allows_self_ghost_archive_without_applications(
         uid=4,
         from_addr="user@example.com",
         to_addrs=["user@example.com"],
-        subject=f"{GHOST_SUBJECT_PREFIX} No reply: ACME — Engineer",
+        subject=f"{GHOST_SUBJECT_PREFIX} No reply: Engineer at ACME",
         body_text="Ghost summary.",
         raw_headers={GHOST_HEADER_TYPE: GHOST_HEADER_VALUE},
     )

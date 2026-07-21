@@ -68,7 +68,7 @@ def _classification_payload(
     linked_payload: dict[str, object] | None,
 ) -> dict[str, object]:
     # Sanitize + keep up to email_classify_max_body_chars so safe-send topic
-    # scanning sees HTML-decoded text beyond a raw 500-char slice (INB-08).
+    # scanning sees HTML-decoded text beyond a raw 500-char slice.
     max_chars = int(getattr(default_settings, "email_classify_max_body_chars", 8000))
     payload: dict[str, object] = {
         "body_excerpt": sanitize_message_body(message.body_text, max_chars=max_chars),

@@ -24,7 +24,7 @@ SENSITIVE_TOPIC_PATTERNS: Final[list[tuple[str, re.Pattern[str]]]] = [
     ("non_compete", re.compile(r"\bnon[- ]compete\b", re.IGNORECASE)),
     ("hr_investigation", re.compile(r"\bHR investigation\b", re.IGNORECASE)),
     # Optional apostrophe + flexible whitespace so "workers compensation" and
-    # "workers' compensation" both match (INB-04: `[' ]` + literal space needed two chars).
+    # "workers' compensation" both match (`[' ]` + literal space needed two chars).
     ("workers_comp", re.compile(r"\bworkers['’]?\s*compensation\b", re.IGNORECASE)),
 ]
 

@@ -78,7 +78,7 @@ def test_parse_total_fallback_and_skips_non_dict() -> None:
 
 @pytest.mark.parametrize("total_records", [float("inf"), float("nan"), float("-inf")])
 def test_parse_nonfinite_total_records_fallback(total_records: float) -> None:
-    """JSON Infinity/NaN totalRecords must not raise on int() (SCR-05)."""
+    """JSON Infinity/NaN totalRecords must not raise on int()."""
     data = {
         "loaderData": {
             "search": {

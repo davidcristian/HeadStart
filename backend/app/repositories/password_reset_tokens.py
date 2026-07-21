@@ -1,4 +1,4 @@
-"""Data access for password-reset tokens. Queries only — no business logic."""
+"""Query-only data access for password-reset tokens. Holds no business logic."""
 
 from __future__ import annotations
 
@@ -32,7 +32,7 @@ class PasswordResetTokenRepository:
     def claim_valid_by_hash(self, token_hash: str, *, now: datetime) -> PasswordResetToken | None:
         """Atomically mark a non-expired unused token consumed and return it.
 
-        Single-use must not depend on a later best-effort delete (DAT-18). On
+        Single-use must not depend on a later best-effort delete. On
         Postgres the row is locked with FOR UPDATE so concurrent claims cannot
         both succeed; SQLite (tests) still serializes via the used_at stamp.
         """

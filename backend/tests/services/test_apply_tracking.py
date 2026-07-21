@@ -96,7 +96,7 @@ def test_merge_application_log_payload_preserves_prior_consent() -> None:
 
 
 def test_scrub_adapter_payload_drops_credential_keys() -> None:
-    """SVC-11: cookies/headers/authorization (and aliases) never persist."""
+    """Cookies/headers/authorization (and aliases) never persist."""
     scrubbed = scrub_adapter_payload(
         {
             "email": "ada@example.com",
@@ -120,7 +120,7 @@ def test_scrub_adapter_payload_drops_credential_keys() -> None:
 
 
 def test_merge_application_log_payload_scrubs_adapter_secrets() -> None:
-    """SVC-11: merge drops credential keys before storing application_log.payload."""
+    """Merge drops credential keys before storing application_log.payload."""
     job = SeenJob(
         search_id=1,
         external_id="5501001",

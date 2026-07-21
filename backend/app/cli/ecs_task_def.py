@@ -3,8 +3,7 @@
 ``scripts/deploy.sh`` describes the current family revision, pipes it through
 this helper to swap the image (tag and preferably ECR content digest), then
 registers the result. That keeps env, secrets, and CPU/memory from Terraform
-while ensuring the rolled revision points at the exact image just pushed
-(OPS-01 tag pin; OPS-64 digest pin).
+while ensuring the rolled revision points at the exact image just pushed.
 """
 
 from __future__ import annotations
@@ -64,7 +63,7 @@ def image_uri(
     *,
     digest: str | None = None,
 ) -> str:
-    """Build ``{registry}/{repo}:{tag}`` or ``…:{tag}@{sha256:…}`` (OPS-64)."""
+    """Build ``{registry}/{repo}:{tag}`` or ``…:{tag}@{sha256:…}``."""
     registry = ecr_registry.rstrip("/")
     uri = f"{registry}/{image_repo_for_family(family)}:{image_tag}"
     if digest is None or not digest.strip():

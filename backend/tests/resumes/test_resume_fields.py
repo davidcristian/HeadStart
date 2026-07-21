@@ -55,10 +55,12 @@ def test_experience_item_uses_company_only_and_period_and_description() -> None:
         )
     )
     assert r"\textbf{ACME}" in fields.experience
-    assert "(2019–2021)" in fields.experience
+    assert "(2019 to 2021)" in fields.experience
     assert "Did things" in fields.experience
     assert "And more" in fields.experience
-    assert " — " in fields.experience
+    # Pins the exact tail: the description hangs off the dates on a full stop, and the
+    # bullet-marker stripping leaves the spacing the literal shows.
+    assert fields.experience == r"\item \textbf{ACME} (2019 to 2021).  Did things  And more"
 
 
 def test_experience_item_escapes_latex_special_chars_in_free_text() -> None:
@@ -85,7 +87,9 @@ def test_experience_item_without_period_or_description() -> None:
     fields = _fields(ProfileData(work_experience=[WorkExperienceEntry(job_title="Engineer")]))
     assert r"\item \textbf{Engineer}" in fields.experience
     assert "(" not in fields.experience
-    assert "—" not in fields.experience
+    # Exact match: with no dates and no description, neither the "(dates)" suffix nor
+    # the ". description" tail may be appended.
+    assert fields.experience == r"\item \textbf{Engineer}"
 
 
 def test_period_year_only_when_month_missing() -> None:
@@ -104,12 +108,12 @@ def test_education_skips_blank_and_formats_end_year_only() -> None:
             ]
         )
     )
-    assert "MIT — BSc (2020)" in fields.education
+    assert "BSc at MIT (2020)" in fields.education
 
 
 def test_education_detail_without_years() -> None:
     fields = _fields(ProfileData(education=[EducationEntry(school="MIT", degree="BSc")]))
-    assert "MIT — BSc" in fields.education
+    assert "BSc at MIT" in fields.education
     assert "(" not in fields.education
 
 

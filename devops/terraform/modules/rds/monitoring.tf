@@ -1,4 +1,4 @@
-# Enhanced Monitoring IAM role for RDS OS metrics (OPS-43).
+# Enhanced Monitoring IAM role for RDS OS metrics.
 
 data "aws_iam_policy_document" "monitoring_assume" {
   statement {

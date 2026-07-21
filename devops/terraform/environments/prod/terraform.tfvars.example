@@ -1,6 +1,6 @@
 # Non-secret knobs may live in a local terraform.tfvars (gitignored).
-# Core secrets MUST stay in the shell as TF_VAR_* — do not paste them into
-# terraform.tfvars (OPS-33). A copied file with real secrets is an easy leak
+# Core secrets MUST stay in the shell as TF_VAR_*. Never paste them into
+# terraform.tfvars. A copied file with real secrets is an easy leak
 # if force-added or backed up outside git.
 #
 #   export TF_VAR_db_password="$(openssl rand -base64 24)"
@@ -8,18 +8,18 @@
 #   export TF_VAR_credentials_secret_key="$(openssl rand -hex 32)"
 
 region = "us-east-2"
-# Required: pin the AWS account this env may target (OPS-31). Terraform rejects
+# Required: pin the AWS account this env may target. Terraform rejects
 # non-12-digit values; wrong ambient credentials then fail at provider init:
 #   export TF_VAR_aws_account_id="$(aws sts get-caller-identity --query Account --output text)"
 # aws_account_id = "123456789012"
 
-# Required: immutable pin (git SHA). Terraform rejects empty / "latest" (OPS-07).
+# Required: immutable pin (git SHA). Terraform rejects empty / "latest".
 # Prefer TF_VAR_image_tag from the shell so the pin matches the just-built image:
 #   export TF_VAR_image_tag="$(git rev-parse --short HEAD)"
 image_tag = "REPLACE_WITH_GIT_SHA"
 
 # Required in prod: HTTPS so the ALB does not serve auth traffic over
-# plaintext HTTP (OPS-36). Either domain_name + route53_zone_id (auto ACM)
+# plaintext HTTP. Either domain_name + route53_zone_id (auto ACM)
 # or set acm_certificate_arn instead.
 domain_name     = "jobs.example.com"
 route53_zone_id = "Z0123456789ABCDEFGHIJ"
@@ -38,6 +38,6 @@ route53_zone_id = "Z0123456789ABCDEFGHIJ"
 #   export TF_VAR_ntfy_default_topic="jobs-$(openssl rand -hex 8)"
 # ntfy_default_topic = "jobs-a1b2c3d4e5f67890"
 
-# Optional: ECS LOG_LEVEL (default INFO). Raise for incident diagnosis (OPS-55):
+# Optional: ECS LOG_LEVEL (default INFO). Raise for incident diagnosis:
 # log_level = "DEBUG"
 #   # or: export TF_VAR_log_level=DEBUG

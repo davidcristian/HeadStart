@@ -1,4 +1,4 @@
-# Customer-managed KMS key for Secrets Manager (OPS-51).
+# Customer-managed KMS key for Secrets Manager.
 # Isolates JWT / Fernet / DB / Redis / metrics secrets from the shared
 # aws/secretsmanager key and enables annual rotation.
 

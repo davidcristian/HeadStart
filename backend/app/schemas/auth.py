@@ -66,7 +66,7 @@ class UserRead(BaseModel):
     plan: Literal["free", "starter", "plus", "pro"] = "free"
     onboarding_completed_at: datetime | None = None
     email_verified_at: datetime | None = None
-    # Null means inherit Settings.default_locale for notifier/auth copy (NTF-12).
+    # Null means inherit Settings.default_locale for notifier/auth copy.
     locale: Literal["en", "de"] | None = None
     created_at: datetime
 
@@ -99,7 +99,7 @@ class DeleteAccountRequest(BaseModel):
 
 
 class CredentialExport(BaseModel):
-    """Site credential with decrypted secrets — only returned in a data export."""
+    """Site credential with decrypted secrets. Only a data export returns this."""
 
     model_config = ConfigDict(from_attributes=True)
 

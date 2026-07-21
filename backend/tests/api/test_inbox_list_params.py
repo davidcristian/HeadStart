@@ -1,4 +1,4 @@
-"""Inbox query-param bounds: API-04/API-09 list routes + API-07 /messages."""
+"""Inbox query-param bounds for the list routes and /messages."""
 
 from fastapi.testclient import TestClient
 
@@ -54,7 +54,7 @@ def test_reply_send_logs_limit_out_of_bounds_returns_422(client: TestClient, mon
 
 
 def test_messages_since_uid_and_limit_bounds_return_422(client: TestClient, monkeypatch) -> None:
-    """API-07: /messages uses Query(ge,le) so bad params 422 before the service."""
+    """The /messages route uses Query(ge,le) so bad params 422 before the service."""
     monkeypatch.setattr(settings, "inbox_agent_enabled", True)
     headers = register_and_login(client, "list-params-messages@example.com")
 
@@ -75,7 +75,7 @@ def test_messages_since_uid_and_limit_bounds_return_422(client: TestClient, monk
 
 
 def test_list_limit_openapi_exposes_shared_maximum(client: TestClient) -> None:
-    """API-09: list `limit` bounds appear in OpenAPI with the shared le=500 cap."""
+    """List `limit` bounds appear in OpenAPI with the shared le=500 cap."""
     schema = client.get("/openapi.json").json()
     paths = (
         "/api/v1/inbox/classifications",

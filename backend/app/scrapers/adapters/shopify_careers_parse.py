@@ -16,7 +16,7 @@ _STREAM_RE = re.compile(
 )
 _CAREERS_ROUTE = "($locale)/careers"
 # Cap flight-graph recursion so a long non-cyclic reference chain cannot
-# exhaust Python's recursion limit (SCR-06). Real careers payloads nest shallowly.
+# exhaust Python's recursion limit. Real careers payloads nest shallowly.
 _MAX_RESOLVE_DEPTH = 64
 
 

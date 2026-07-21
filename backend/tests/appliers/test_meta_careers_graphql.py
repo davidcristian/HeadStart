@@ -85,7 +85,7 @@ def test_post_graphql_multipart_returns_dict_directly() -> None:
 
 
 def test_post_graphql_multipart_rejects_dict_error_envelope() -> None:
-    """Resume multipart must fail on GraphQL errors like the JSON path (APL-05)."""
+    """Resume multipart must fail on GraphQL errors like the JSON path."""
 
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(

@@ -28,23 +28,23 @@ class Settings(BaseSettings):
     # ---- general ----
     environment: str = "local"
     log_level: str = "INFO"
-    # json (default) for CloudWatch/Loki; text for local grepping (AUT-16).
+    # json (default) for CloudWatch/Loki; text for local grepping.
     log_format: Annotated[str, BeforeValidator(parse_log_format)] = "json"
     # ---- api ----
     cors_origins: CsvStrList = [
         "http://localhost:5173",
         "http://localhost:8080",
     ]
-    # Empty = ignore XFF. ECS sets VPC CIDR so ALB client IPs are trusted (AUT-17).
+    # Empty = ignore XFF. ECS sets VPC CIDR so ALB client IPs are trusted.
     trusted_proxy_cidrs: TrustedProxyCidrs = []
 
     # ---- auth (JWT) ----
-    # Stable random JWT secret; rejected outside local/test — see core/secret_policy.py.
+    # Stable random JWT secret; rejected outside local/test by core/secret_policy.py.
     jwt_secret: str = secret_policy.DEV_JWT_SECRET
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
     refresh_token_expire_days: int = 7
-    # RSS feed JWTs travel in ?token= URLs; keep far shorter than a decade (AUT-22).
+    # RSS feed JWTs travel in ?token= URLs; keep far shorter than a decade.
     feed_token_expire_days: int = 90
     password_reset_expire_minutes: int = 60
     email_verification_expire_minutes: int = 1440  # 24 hours
@@ -63,7 +63,7 @@ class Settings(BaseSettings):
         return normalize_samesite(value)
 
     # ---- email (password reset + email notifier) ----
-    # Empty SMTP_HOST is local/test-only (links logged); required elsewhere (AUT-01).
+    # Empty SMTP_HOST is local/test-only (links logged); required elsewhere.
     smtp_host: str = ""
     smtp_port: int = 587
     smtp_user: str = ""
@@ -92,7 +92,7 @@ class Settings(BaseSettings):
     redis_host: str = "localhost"
     redis_port: int = 6379
     redis_password: str = ""  # ElastiCache AUTH; empty for local docker Redis
-    redis_tls: bool = False  # rediss:// when true (required with AUTH — OPS-10)
+    redis_tls: bool = False  # rediss:// when true (required with AUTH)
     celery_broker_url: str | None = None
     celery_result_backend: str | None = None
 
@@ -102,9 +102,9 @@ class Settings(BaseSettings):
     # ---- playwright (worker / opt-in scraper) ----
     playwright_navigation_timeout_ms: int = 30_000
     playwright_max_retries: int = 1  # retries after first attempt; 0 = none
-    # OPS-27: keep Chromium's process sandbox; local/test-only escape hatch.
+    # Keep Chromium's process sandbox; local/test-only escape hatch.
     playwright_no_sandbox: bool = False
-    scraper_max_response_bytes: int = 5_242_880  # SCR-04 HTTP body cap
+    scraper_max_response_bytes: int = 5_242_880  # HTTP body cap
 
     # ---- metrics (Prometheus) ----
     metrics_enabled: bool = True
@@ -155,7 +155,7 @@ class Settings(BaseSettings):
     ads_enabled: bool = True
     ads_external_slot_url: str = ""  # HTTPS iframe; empty = upgrade CTA only
 
-    # ---- inbox agent (dev-only; Phase 20c mailbox connector) ----
+    # ---- inbox agent (dev-only; mailbox connector) ----
     inbox_agent_enabled: bool = False
     inbox_use_env_credentials: bool = False
     inbox_imap_host: str = ""
@@ -200,10 +200,10 @@ class Settings(BaseSettings):
     stripe_price_pro_monthly: str = ""
     stripe_price_pro_annual: str = ""
     stripe_trial_days: int = 14
-    # ISO 4217 lowercase; Stripe fixed-amount coupons + pricing display (FRO-35).
+    # ISO 4217 lowercase; Stripe fixed-amount coupons + pricing display.
     # Default eur matches the DE Impressum / EU VAT-inclusive product surface.
     billing_currency: str = "eur"
-    # Instance default for notification/auth email copy when user.locale is unset (NTF-12).
+    # Instance default for notification/auth email copy when user.locale is unset.
     # Supported: en, de (and BCP-47 prefixes like en-US / de-DE).
     default_locale: str = "en"
 
@@ -246,7 +246,7 @@ class Settings(BaseSettings):
             auth_cookie_samesite=self.auth_cookie_samesite,
             frontend_base_url=self.frontend_base_url,
         )
-        # OPS-27: Chromium must keep its process sandbox outside local/test.
+        # Chromium must keep its process sandbox outside local/test.
         if self.playwright_no_sandbox and not secret_policy.is_local_environment(self.environment):
             raise ValueError(
                 f"PLAYWRIGHT_NO_SANDBOX must be false when ENVIRONMENT="

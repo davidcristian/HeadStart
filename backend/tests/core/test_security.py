@@ -42,7 +42,7 @@ def test_verify_password_on_malformed_hash_returns_false() -> None:
 
 
 def test_url_token_hash_is_deterministic_sha256() -> None:
-    """Password-reset and email-verification share hash_url_token (AUT-31)."""
+    """Password-reset and email-verification share hash_url_token."""
     token = generate_password_reset_token()
     assert token and token == token.strip()
     digest = hash_url_token(token)
@@ -128,7 +128,7 @@ def test_feed_token_roundtrip() -> None:
 
 
 def test_feed_token_uses_configured_lifetime(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Feed JWTs expire after FEED_TOKEN_EXPIRE_DAYS, not a decade (AUT-22)."""
+    """Feed JWTs expire after FEED_TOKEN_EXPIRE_DAYS, not a decade."""
     monkeypatch.setattr(settings, "feed_token_expire_days", 90)
     token = create_feed_token(1, version=0)
     payload = jwt.decode(

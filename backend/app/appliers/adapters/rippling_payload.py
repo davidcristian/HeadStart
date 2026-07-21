@@ -201,7 +201,7 @@ def _current_company(profile: ProfileData, config: dict[str, Any], company: str)
 def _location(profile: ProfileData, config: dict[str, Any]) -> str:
     raw = config.get("location") or profile.location
     text = str(raw or "").strip()
-    # Rippling's default label is "Location (city only)" — keep the first segment.
+    # Rippling's default label is "Location (city only)", so keep the first segment.
     if "," in text:
         return text.split(",", 1)[0].strip()
     return text

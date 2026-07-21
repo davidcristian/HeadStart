@@ -102,7 +102,7 @@ class InboxOrchestrationService:
         return sorted(user_ids)
 
     def _list_pollable_contexts(self) -> list[tuple[int, MailboxContext]]:
-        """Resolve each candidate mailbox once for this tick (INB-20)."""
+        """Resolve each candidate mailbox once for this tick."""
         pollable: list[tuple[int, MailboxContext]] = []
         for user_id in self._candidate_user_ids():
             ctx = self.inbox.resolve_context(user_id)

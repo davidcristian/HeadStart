@@ -23,8 +23,8 @@ _BLOCKED_HOSTNAMES = frozenset(
 # are a DNS-free escape hatch for tests ONLY: in local/test the resolution + IP
 # checks are skipped (see `_reserved_test_tld_bypass_allowed`), but production
 # resolves them normally so a rogue / split-horizon resolver can't smuggle an
-# internal address past the SSRF checks. `.localhost` is excluded entirely — it
-# resolves to loopback and must always be checked.
+# internal address past the SSRF checks. `.localhost` is excluded entirely
+# because it resolves to loopback and must always be checked.
 _TEST_TLD_SUFFIXES = (".test", ".example", ".invalid")
 _LOCAL_ENVIRONMENTS = frozenset({"local", "test"})
 

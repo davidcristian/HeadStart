@@ -5,8 +5,8 @@ Lever, Ashby, Workday, Google Careers, Microsoft Careers, Amazon Jobs). This ada
 fetches the public viewjob page, parses embedded `_initialData`, and delegates to
 the matching downstream applier when possible. When the posting is hosted on Indeed itself, dry-run
 previews the smartapply payload; live submit needs logged-in Indeed session
-cookies and posts to smartapply (best-effort — multi-step questionnaires may
-still require manual answers in `profile.answers`).
+cookies and posts to smartapply (best-effort because multi-step questionnaires
+may still require manual answers in `profile.answers`).
 """
 
 from __future__ import annotations
@@ -41,7 +41,7 @@ from app.appliers.types import ApplyContext, ApplyResult
 from app.schemas.profile import ResumeFile
 
 # Cookie names/values must not carry CTL / separators that break Cookie headers
-# (APL-29 self header-injection via credential paste).
+# (self header-injection via credential paste).
 _COOKIE_UNSAFE = re.compile(r"[\x00-\x1f\x7f;]")
 
 
@@ -195,8 +195,8 @@ def _detail_from_override(ctx: ApplyContext, external_apply_url: str) -> IndeedJ
 def _credential_headers(credentials: dict[str, dict[str, str]] | None) -> dict[str, str]:
     """Non-Cookie headers for smartapply (CSRF + optional stored headers).
 
-    Session cookies are passed via ``cookies=`` on the HTTP client (APL-29) so
-    httpx builds/validates morsels instead of a raw ``Cookie`` string join.
+    Session cookies are passed via ``cookies=`` on the HTTP client so httpx
+    builds/validates morsels instead of a raw ``Cookie`` string join.
     """
     if not credentials:
         return {}

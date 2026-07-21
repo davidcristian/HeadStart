@@ -103,7 +103,7 @@ export function SkillsLanguagesForm({
                   placeholder="Fluent"
                 />
               </Field>
-              {/* Field is a <label>; nest only one label around the checkbox (FRO-26). */}
+              {/* Field is a <label>; nest only one label around the checkbox. */}
               <div className="field">
                 <span className="field-label">Native language</span>
                 <label className="checkbox-row">

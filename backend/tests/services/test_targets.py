@@ -53,7 +53,7 @@ def test_create_rejects_unknown_type(db_session: Session) -> None:
 
 
 def test_create_rejects_guessable_ntfy_topic(db_session: Session) -> None:
-    """NTF-06: placeholder / short topics must not become live targets."""
+    """Placeholder / short topics must not become live targets."""
     user = _pro_user(db_session)
     service = TargetService(db_session)
     for topic in ("headstart-change-me", "jobs", "my-topic-change-me", ""):
@@ -109,7 +109,7 @@ def test_update_changes_type_revalidates(db_session: Session) -> None:
 
 
 def test_update_type_without_matching_config_rejects(db_session: Session) -> None:
-    """API-14: changing type re-validates the existing config against the new type."""
+    """Changing type re-validates the existing config against the new type."""
     user = _pro_user(db_session)
     service = TargetService(db_session)
     target = service.create(

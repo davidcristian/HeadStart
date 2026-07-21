@@ -11,7 +11,7 @@ generates it after dedup/filtering and before notifying, then:
   reused for batched digests.
 
 It is **best-effort and presentational**: a provider failure never blocks a
-notification — the blurb is just left empty.
+notification and just leaves the blurb empty.
 
 ## Prompt injection hardening
 
@@ -50,7 +50,7 @@ class Summarizer(ABC):
 
 Adapters self-register with `@register_summarizer("key")`, are imported in
 `app/summarizers/adapters/__init__.py`, and are resolved with
-`get_summarizer(key)` — the same pattern as scrapers/notifiers. Nothing branches
+`get_summarizer(key)`, following the same pattern as scrapers/notifiers. Nothing branches
 on the provider name; you add a file, not an `if`.
 
 ## Providers
@@ -61,14 +61,14 @@ on the provider name; you add a file, not an `if`.
 | `openai` | You want richer, natural-language blurbs in hosted/prod | Calls an OpenAI-compatible Chat Completions endpoint per job. Requires `OPENAI_API_KEY`; honors `OPENAI_MODEL` and `OPENAI_BASE_URL`. |
 | `gemini` | You want hosted blurbs on Google AI instead of OpenAI | Calls the Gemini `generateContent` REST API per job. Requires `GEMINI_API_KEY`; honors `GEMINI_MODEL` and `GEMINI_BASE_URL`. |
 | `anthropic` | You want hosted blurbs on Anthropic Claude instead of OpenAI/Gemini | Calls the Anthropic Messages REST API per job. Requires `ANTHROPIC_API_KEY`; honors `ANTHROPIC_MODEL`, `ANTHROPIC_BASE_URL`, and `ANTHROPIC_API_VERSION`. |
-| `llamacpp` | **Local dev only.** Free summaries against a local model | Calls a llama.cpp `llama-server` OpenAI-compatible endpoint (default `http://localhost:8080/v1`). No API key required unless your server expects one. Start a server with `just llamacpp` (needs `LLAMACPP_MODEL_PATH`). The helper script passes sensible defaults (`--flash-attn on`, `--ctx-size 2048`, `--n-gpu-layers 99`); override via `LLAMACPP_FLASH_ATTN`, `LLAMACPP_CTX_SIZE`, `LLAMACPP_NGL`. Do not use in deployed environments — keep `SUMMARY_PROVIDER=openai` or `heuristic` there. |
+| `llamacpp` | **Local dev only.** Free summaries against a local model | Calls a llama.cpp `llama-server` OpenAI-compatible endpoint (default `http://localhost:8080/v1`). No API key required unless your server expects one. Start a server with `just llamacpp` (needs `LLAMACPP_MODEL_PATH`). The helper script passes sensible defaults (`--flash-attn on`, `--ctx-size 2048`, `--n-gpu-layers 99`); override via `LLAMACPP_FLASH_ATTN`, `LLAMACPP_CTX_SIZE`, `LLAMACPP_NGL`. Do not use in deployed environments. Keep `SUMMARY_PROVIDER=openai` or `heuristic` there. |
 
 ## Per-user preferences (Pro)
 
 Pro users can override the deployment-wide `SUMMARY_PROVIDER` and optionally store
 their own API key for hosted providers (`openai`, `gemini`, `anthropic`). They can
 also set **per-purpose** provider and model overrides for cover letters and future
-inbox/resume agents — unset purposes inherit the global default, then env defaults.
+inbox/resume agents. Unset purposes inherit the global default, then env defaults.
 
 | Endpoint | Purpose |
 | -------- | ------- |

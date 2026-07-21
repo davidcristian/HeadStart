@@ -63,7 +63,7 @@ def test_applier_defaults_to_real_http_client() -> None:
 
 
 def test_apply_context_dry_run_defaults_to_true() -> None:
-    """APL-27: omitting dry_run must preview, never live-submit by accident."""
+    """Omitting dry_run must preview, never live-submit by accident."""
     from app.schemas.profile import ProfileData
 
     ctx = ApplyContext(

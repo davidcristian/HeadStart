@@ -31,7 +31,7 @@ DEMO_JOBS = [
         "title": "Senior Backend Engineer",
         "company": "Acme Corp",
         "location": "Remote · US",
-        "salary": "$180k – $210k",
+        "salary": "$180k to $210k",
         "url": "https://boards.greenhouse.io/example/jobs/1001",
         "summary": "Matches your Kubernetes and Python filters; remote-first team.",
         "status": "new",
@@ -41,7 +41,7 @@ DEMO_JOBS = [
         "title": "Staff Platform Engineer",
         "company": "Northwind Labs",
         "location": "Amsterdam · Hybrid",
-        "salary": "€85k – €100k",
+        "salary": "€85k to €100k",
         "url": "https://jobs.lever.co/example/staff-platform",
         "summary": "Includes “kubernetes” and platform ownership keywords.",
         "status": "seen",
@@ -51,7 +51,7 @@ DEMO_JOBS = [
         "title": "Product Engineer",
         "company": "Brightside",
         "location": "London · Hybrid",
-        "salary": "£95k – £115k",
+        "salary": "£95k to £115k",
         "url": "https://jobs.ashbyhq.com/example/product-engineer",
         "summary": "Full-stack role with product surface area; hybrid 2 days/week.",
         "status": "applied",
@@ -78,7 +78,7 @@ def seed_marketing_demo() -> None:
     with session_scope() as session:
         user = session.scalar(select(User).where(User.email == email))
         if user is None:
-            raise RuntimeError(f"Seed user {email} not found — run `just seed` first.")
+            raise RuntimeError(f"Seed user {email} not found. Run `just seed` first.")
 
         search = session.scalar(
             select(Search)
@@ -86,7 +86,7 @@ def seed_marketing_demo() -> None:
             .where(Search.name == "Example - all jobs")
         )
         if search is None:
-            raise RuntimeError("Example search missing — run `just seed` first.")
+            raise RuntimeError("Example search missing. Run `just seed` first.")
 
         if user.onboarding_completed_at is None:
             user.onboarding_completed_at = utcnow()
@@ -196,7 +196,7 @@ def _capture_notification_card(page, outfile: Path) -> None:
       <div class="card">
         <div class="label">New match · ntfy</div>
         <strong>Senior Backend Engineer</strong>
-        <span class="meta">Acme Corp · Remote · $180k – $210k</span>
+        <span class="meta">Acme Corp · Remote · $180k to $210k</span>
         <span class="pill">Just posted</span>
         <p class="summary">Matches your Kubernetes and Python filters; remote-first team.</p>
       </div>

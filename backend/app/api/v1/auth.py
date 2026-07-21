@@ -71,7 +71,7 @@ def register(
     request: Request,
     db: Session = Depends(get_db),
 ) -> MessageResponse:
-    """Create an account or acknowledge a duplicate without revealing which (AUT-27)."""
+    """Create an account or acknowledge a duplicate without revealing which."""
     limit_register(request)
     meta = request_meta(request)
     AuthService(db).register(data, ip_address=meta.ip_address)
@@ -131,7 +131,7 @@ def forgot_password(
     """Request a password-reset email. Response is identical whether the email exists."""
     limit_forgot_password(request, data.email)
     meta = request_meta(request)
-    # Defer SMTP so response timing cannot enumerate accounts (AUT-26).
+    # Defer SMTP so response timing cannot enumerate accounts.
     message = AuthService(db).request_password_reset(
         data,
         ip_address=meta.ip_address,

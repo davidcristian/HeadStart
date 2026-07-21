@@ -16,7 +16,7 @@ _CONFIGURED = False
 # "-" means "no active request/task" so the formatter always has a field.
 _request_id: ContextVar[str] = ContextVar("request_id", default="-")
 
-# LogRecord attributes that are not application extras (AUT-16 JSON fields).
+# LogRecord attributes that are not application extras (JSON fields).
 _STANDARD_RECORD_ATTRS = frozenset(
     {
         "name",

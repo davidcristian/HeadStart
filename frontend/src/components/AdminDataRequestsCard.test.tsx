@@ -63,6 +63,6 @@ describe("AdminDataRequestsCard", () => {
     expect(screen.getByText("Account deletion")).toBeInTheDocument();
     expect(screen.getByText("10.0.0.1")).toBeInTheDocument();
     expect(screen.getByText("erased:abc123")).toBeInTheDocument();
-    expect(screen.getByText("—")).toBeInTheDocument();
+    expect(screen.getByText("None")).toBeInTheDocument();
   });
 });

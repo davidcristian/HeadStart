@@ -131,7 +131,7 @@ def test_to_posting_with_numeric_pub_date() -> None:
 
 
 def test_to_posting_overflow_pub_date_returns_none() -> None:
-    """Out-of-range pubDate must not raise (SCR-02)."""
+    """Out-of-range pubDate must not raise."""
     posting = _to_posting({"jobkey": "k", "title": "Role", "pubDate": 1e30}, ORIGIN)
     assert posting is not None
     assert posting.posted_at is None

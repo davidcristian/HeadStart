@@ -241,8 +241,8 @@ def test_draft_forces_heuristic_when_subject_has_injection(
     monkeypatch.setattr(settings, "inbox_agent_enabled", True)
     user_id, _job = _seed_applied_job(db_session)
     ProfileService(db_session).save(user_id, ProfileData(full_name="Alex Example"))
-    # Injection lives in the subject with a benign body — the subject also reaches the LLM
-    # prompt, so it must be guarded too.
+    # Injection lives in the subject with a benign body. The subject also reaches the
+    # LLM prompt, so it must be guarded too.
     row = _follow_up_classification(
         db_session,
         user_id,
@@ -265,8 +265,8 @@ def test_draft_forces_heuristic_when_from_has_injection(db_session: Session, mon
     monkeypatch.setattr(settings, "inbox_agent_enabled", True)
     user_id, _job = _seed_applied_job(db_session)
     ProfileService(db_session).save(user_id, ProfileData(full_name="Alex Example"))
-    # Injection in From display-name with a benign subject+body — From reaches the LLM
-    # prompt as "- From: …", so it must be sanitized and injection-checked (INB-07).
+    # Injection in From display-name with a benign subject+body. From reaches the
+    # LLM prompt as "- From: …", so it must be sanitized and injection-checked.
     row = _follow_up_classification(
         db_session,
         user_id,

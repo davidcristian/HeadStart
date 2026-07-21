@@ -82,7 +82,7 @@ def hash_url_token(token: str) -> str:
 
     Shared by password-reset and email-verification families (separate tables).
     Named neutrally so a future reset-only salt change cannot silently retarget
-    verification hashing (AUT-31).
+    verification hashing.
     """
     return hashlib.sha256(token.encode("utf-8")).hexdigest()
 

@@ -37,9 +37,9 @@ def test_render_resume_template_escapes_latex_special_chars() -> None:
 def test_render_resume_template_preserves_experience_markup_verbatim() -> None:
     # The experience field carries controlled LaTeX (\item / \textbf); escaping it
     # would strip the \item rows the itemize environment requires (audit AIA-01).
-    fields = CuratedResumeFields(experience=r"\item \textbf{Engineer, ACME} — Built APIs")
+    fields = CuratedResumeFields(experience=r"\item \textbf{Engineer, ACME}. Built APIs")
     rendered = render_resume_template("[[experience]]", fields)
-    assert rendered == r"\item \textbf{Engineer, ACME} — Built APIs"
+    assert rendered == r"\item \textbf{Engineer, ACME}. Built APIs"
     assert r"\textbackslash{}item" not in rendered
 
 

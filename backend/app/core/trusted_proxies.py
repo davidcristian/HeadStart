@@ -1,4 +1,4 @@
-"""CSV list and TRUSTED_PROXY_CIDRS settings helpers (AUT-17)."""
+"""CSV list and TRUSTED_PROXY_CIDRS settings helpers."""
 
 from __future__ import annotations
 

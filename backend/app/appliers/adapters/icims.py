@@ -112,8 +112,8 @@ class IcimsApplier(Applier):
                 status="failed",
                 error=(
                     "icims live apply requires config.customer_id (or tenant_id) "
-                    "— public Jibe apply is login/captcha gated; use Talent Cloud "
-                    "Partner API credentials scoped to the employer"
+                    "because public Jibe apply is login/captcha gated; use Talent "
+                    "Cloud Partner API credentials scoped to the employer"
                 ),
                 payload=preview,
             )

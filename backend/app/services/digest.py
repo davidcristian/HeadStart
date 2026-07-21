@@ -50,7 +50,7 @@ class DigestService:
         re-checked under the lock, so overlapping beat ticks cannot double-send a
         digest. SQLite (tests) has no row locking and runs single-threaded.
 
-        Per-search isolation (SVC-04 / SVC-05): a notifier failure on one search is
+        Per-search isolation: a notifier failure on one search is
         logged and skipped so other due digests still flush; each successful flush
         commits immediately so a later failure cannot roll back already-delivered
         bookkeeping and cause a duplicate send on the next tick.

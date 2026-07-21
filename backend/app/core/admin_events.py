@@ -1,4 +1,4 @@
-"""Structured admin mutation audit logging for operators (BIL-01)."""
+"""Structured admin mutation audit logging for operators."""
 
 from __future__ import annotations
 

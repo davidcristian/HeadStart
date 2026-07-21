@@ -6,7 +6,7 @@
 #   just deploy
 #
 # Values are emitted with printf %q so a terraform/aws output containing a
-# single quote (or other metacharacters) cannot break the eval'd string (OPS-62).
+# single quote (or other metacharacters) cannot break the eval'd string.
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 ENVIRONMENT="${1:-beta}"

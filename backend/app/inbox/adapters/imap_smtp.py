@@ -1,7 +1,7 @@
 """IMAP + SMTP mailbox connector.
 
 Fetches inbound mail via IMAP (UID SEARCH/FETCH) and sends outbound mail via SMTP.
-Uses the Python stdlib only — no extra dependencies.
+Uses the Python stdlib only and needs no extra dependencies.
 
 Connector config shape: see `MailboxConfig` in `app.inbox.types`.
 """

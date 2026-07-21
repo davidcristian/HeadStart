@@ -1,4 +1,4 @@
-"""Regression: Terraform S3 backend must not commit a CHANGEME bucket (OPS-29)."""
+"""Regression: Terraform S3 backend must not commit a CHANGEME bucket."""
 
 from __future__ import annotations
 
@@ -49,4 +49,4 @@ def test_bootstrap_script_does_not_instruct_editing_backend_tf() -> None:
     assert "CHANGEME" not in script
     assert "-backend-config" in script
     assert "backend.hcl" in script
-    assert "do not commit" in script.lower() or "OPS-29" in script
+    assert "do not commit" in script.lower()

@@ -90,7 +90,7 @@ export function CredentialsPage() {
         them into requests for that source, which can bypass bot/captcha walls. Secrets are
         encrypted at rest and never shown again after saving. For LinkedIn and Indeed, session
         cookies enable credentialed scrape (and auto-apply); those platforms typically prohibit
-        automated access — you accept ToS / account-ban risk when you save them.
+        automated access, so you accept ToS / account-ban risk when you save them.
       </p>
 
       <Card title="Add a credential">

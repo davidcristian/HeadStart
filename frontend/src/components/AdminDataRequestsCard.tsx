@@ -37,7 +37,7 @@ export function AdminDataRequestsCard() {
                   <td className="muted">{formatDateTime(row.created_at)}</td>
                   <td>{row.user_email}</td>
                   <td>{formatRequestType(row.request_type)}</td>
-                  <td className="muted">{row.ip_address ?? "—"}</td>
+                  <td className="muted">{row.ip_address ?? "None"}</td>
                 </tr>
               ))}
             </tbody>

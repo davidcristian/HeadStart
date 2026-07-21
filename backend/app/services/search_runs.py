@@ -1,4 +1,4 @@
-"""Queue and complete async manual search pipeline runs (API-02)."""
+"""Queue and complete async manual search pipeline runs."""
 
 from __future__ import annotations
 

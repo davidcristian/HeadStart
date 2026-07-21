@@ -1,4 +1,4 @@
-"""Heuristic resume curator — offline default."""
+"""Heuristic resume curator used as the offline default."""
 
 from __future__ import annotations
 

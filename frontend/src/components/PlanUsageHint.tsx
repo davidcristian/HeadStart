@@ -23,7 +23,7 @@ type Props = {
 
 export function PlanUsageHint({ plan, resource }: Props) {
   if (plan.unlimited) {
-    return <p className="muted">Admin account — no plan limits.</p>;
+    return <p className="muted">Admin accounts have no plan limits.</p>;
   }
 
   const max = plan.limits[LIMIT_KEYS[resource]];
@@ -37,7 +37,7 @@ export function PlanUsageHint({ plan, resource }: Props) {
       {planLabel(plan.plan)} plan
       {atCap ? (
         <>
-          {" — "}
+          {". "}
           {atCapMessage(plan, RESOURCE_LABELS[resource])} <Link to="/pricing">View plans</Link>
         </>
       ) : null}

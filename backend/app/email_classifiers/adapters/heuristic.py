@@ -1,4 +1,4 @@
-"""Heuristic email classifier — offline default."""
+"""Heuristic email classifier used as the offline default."""
 
 from __future__ import annotations
 

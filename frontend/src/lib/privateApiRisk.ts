@@ -1,4 +1,4 @@
-/** LinkedIn/Indeed cookie automation ToS / account-ban risk (APL-17 / XCT-19). */
+/** LinkedIn/Indeed cookie automation ToS / account-ban risk. */
 
 export const PRIVATE_API_RISK_ADAPTERS = new Set(["linkedin", "indeed"]);
 

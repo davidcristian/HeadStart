@@ -1,4 +1,4 @@
-# HeadStart — thin wrapper over scripts/. Bare `just` lists every recipe.
+# HeadStart is a thin wrapper over scripts/. Bare `just` lists every recipe.
 # Every recipe delegates to a script in scripts/ so that local dev, CI, and
 # cloud agents all execute the exact same code paths.
 
@@ -12,7 +12,7 @@ default:
 setup:
     ./scripts/setup.sh
 
-# Regenerate hashed backend lockfiles from pyproject.toml (XCT-14)
+# Regenerate hashed backend lockfiles from pyproject.toml
 lock-backend:
     ./scripts/lock-backend.sh
 
@@ -60,15 +60,15 @@ format:
 typecheck *args:
     ./scripts/typecheck.sh {{ args }}
 
-# Frontend npm audit (high+); also runs in CI after npm ci (FRO-12)
+# Frontend npm audit (high+); also runs in CI after npm ci
 audit-frontend:
     ./scripts/audit-frontend.sh
 
-# Backend pip-audit on hashed lockfiles; also runs in CI after install (OPS-19)
+# Backend pip-audit on hashed lockfiles; also runs in CI after install
 audit-backend:
     ./scripts/audit-backend.sh
 
-# Regenerate THIRD_PARTY_LICENSES.md (root + image contexts) after dep bumps (XCT-24)
+# Regenerate THIRD_PARTY_LICENSES.md (root + image contexts) after dep bumps
 generate-third-party-licenses:
     ./scripts/generate-third-party-licenses.sh
 
@@ -76,7 +76,7 @@ generate-third-party-licenses:
 check *args:
     ./scripts/check.sh {{ args }}
 
-# Frontend SPA production build (tsc + vite); CI uses this (OPS-22)
+# Frontend SPA production build (tsc + vite); CI uses this
 build-frontend:
     ./scripts/build-frontend.sh
 

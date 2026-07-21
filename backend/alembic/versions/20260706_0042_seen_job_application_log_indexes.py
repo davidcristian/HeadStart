@@ -6,7 +6,7 @@ Create Date: 2026-07-06
 
 Ghost detection filters seen_job by status/applied_at where ghosted_at IS NULL
 on every beat tick; the applications pipeline distinct subquery filters
-application_log by dry_run. Neither path had a supporting index (DAT-03).
+application_log by dry_run. Neither path had a supporting index.
 """
 
 from collections.abc import Sequence

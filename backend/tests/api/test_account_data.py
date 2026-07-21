@@ -142,7 +142,7 @@ def test_export_is_scoped_per_user(client: TestClient) -> None:
 
 
 def test_export_includes_applications_artifacts_inbox_and_promos(db_session: Session) -> None:
-    """GDPR export must include every user-owned table (XCT-09 / AUT-32)."""
+    """GDPR export must include every user-owned table."""
     service = AuthService(db_session)
     user = service.register(
         RegisterRequest(email="export-full@example.com", password="password123")
@@ -402,7 +402,7 @@ def test_delete_cascades_owned_rows(db_session: Session) -> None:
 
 
 def test_orm_cascade_erases_artifacts_without_sqlite_fk(db_session: Session) -> None:
-    """DAT-07: User ORM delete-orphan must purge artifacts/promos even if SQLite FKs are off."""
+    """User ORM delete-orphan must purge artifacts/promos even if SQLite FKs are off."""
     from sqlalchemy import text
 
     db_session.execute(text("PRAGMA foreign_keys=OFF"))

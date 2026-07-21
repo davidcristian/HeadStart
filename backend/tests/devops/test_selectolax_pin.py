@@ -1,4 +1,4 @@
-"""Regression: selectolax stays reviewed-floor + hash-pinned (XCT-22)."""
+"""Regression: selectolax stays reviewed-floor + hash-pinned."""
 
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ def _parse_selectolax_floor(text: str) -> tuple[int, int, int]:
 
 
 def test_pyproject_selectolax_floor_is_reviewed_version() -> None:
-    """Manifest floor must not lag the reviewed lock pin (XCT-22)."""
+    """Manifest floor must not lag the reviewed lock pin."""
     floor = _parse_selectolax_floor(_PYPROJECT.read_text(encoding="utf-8"))
     assert floor >= _MIN_FLOOR, f"selectolax floor {floor} below reviewed {_MIN_FLOOR}"
 

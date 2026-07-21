@@ -12,12 +12,12 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-headstart}
-      # Require an explicit password from .env (OPS-58); no weak compose default.
+      # Require an explicit password from .env; no weak compose default.
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env (see .env.example)}
       POSTGRES_DB: ${POSTGRES_DB:-headstart}
     volumes:
       - pgdata:/var/lib/postgresql/data
-    # Loopback only so LAN peers cannot reach Postgres (OPS-58 / OPS-59).
+    # Loopback only so LAN peers cannot reach Postgres.
     ports:
       - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     healthcheck:
@@ -29,7 +29,7 @@ services:
   redis:
     image: redis:7-alpine
     restart: unless-stopped
-    # Loopback only: local Redis has no AUTH (OPS-58 / OPS-59).
+    # Loopback only: local Redis has no AUTH.
     ports:
       - "127.0.0.1:${REDIS_PORT:-6379}:6379"
     healthcheck:
@@ -43,7 +43,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
       target: api
-    # :local is the compose build tag (not registry :latest) — OPS-56.
+    # :local is the compose build tag, not the registry :latest tag.
     image: headstart/backend:local
     restart: unless-stopped
     command: ["api"]
@@ -58,7 +58,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    # Match ECS api healthCheck (OPS-57): wait until uvicorn serves /api/v1/health.
+    # Match ECS api healthCheck: wait until uvicorn serves /api/v1/health.
     healthcheck:
       test:
         [
@@ -89,7 +89,7 @@ services:
         condition: service_healthy
     ports:
       - "${METRICS_PORT:-9090}:${METRICS_PORT:-9090}"
-    # Match ECS worker healthCheck (OPS-57): /metrics 200 or 401 proves the port is up.
+    # Match ECS worker healthCheck: /metrics 200 or 401 proves the port is up.
     healthcheck:
       test:
         [
@@ -118,7 +118,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    # Match ECS beat healthCheck (OPS-57): a live celery beat cmdline under /proc.
+    # Match ECS beat healthCheck: a live celery beat cmdline under /proc.
     healthcheck:
       test:
         [
@@ -145,7 +145,7 @@ services:
         condition: service_healthy
 
   # Optional fully-offline notifications. Enable with: --profile offline
-  # Pin version + multi-arch index digest so `compose pull` cannot float (OPS-56).
+  # Pin version + multi-arch index digest so `compose pull` cannot float.
   ntfy:
     image: binwiederhier/ntfy:v2.25.0@sha256:cfbbb1bac9196cb711e29ef0ac4adaeb033be6235f1df857705dc39c14384a1d
     profiles: ["offline"]

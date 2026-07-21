@@ -1,4 +1,4 @@
-"""Route tests for async search runs (API-02)."""
+"""Route tests for async search runs."""
 
 from unittest.mock import patch
 

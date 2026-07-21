@@ -125,7 +125,7 @@ class PendingReplyService:
         """Lease due pending replies (flip to ``sending``) and return their ids.
 
         Caller must commit before SMTP so overlapping ticks / ``acks_late``
-        redelivery cannot re-select the same rows (XCT-01 / XCT-03).
+        redelivery cannot re-select the same rows.
         """
         if not settings.inbox_agent_enabled:
             return []

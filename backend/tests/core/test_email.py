@@ -132,7 +132,7 @@ def test_send_or_log_email_falls_back_to_logging_in_local(
 def test_send_or_log_email_refuses_to_log_token_outside_local(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Non-local environments must not emit reset/verify tokens to logs (AUT-01)."""
+    """Non-local environments must not emit reset/verify tokens to logs."""
     monkeypatch.setattr(settings, "smtp_host", "")
     monkeypatch.setattr(settings, "environment", "production")
     with (

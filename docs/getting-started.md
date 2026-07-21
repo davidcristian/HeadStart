@@ -113,13 +113,13 @@ tick. You can also click **Run now**.
 
 ## 8. Get notified
 
-- The **first** run records everything currently posted as "seen" — you will not
-  be spammed with the whole back catalogue.
+- The **first** run records everything currently posted as "seen", so you are not
+  spammed with the whole back catalogue.
 - From then on, only **newly posted** jobs trigger a push to your phone, with the
   job title and a tap-through link.
 - Browse everything discovered so far on the **Jobs** page.
 
-That's it — you're now watching that portal. Repeat steps 5–7 for every
+That's it. You're now watching that portal. Repeat steps 5 to 7 for every
 site/role you care about (e.g. "Google SWE in Amsterdam", "Microsoft PM in Dublin").
 
 ---
@@ -129,7 +129,7 @@ site/role you care about (e.g. "Google SWE in Amsterdam", "Microsoft PM in Dubli
 | Symptom                          | Fix                                                                   |
 | -------------------------------- | --------------------------------------------------------------------- |
 | Redirected to login repeatedly   | Token expired or backend unreachable; check the API URL in **Settings** |
-| Test notification never arrives  | Topic mismatch — the target's `topic` must equal your ntfy subscription |
+| Test notification never arrives  | Topic mismatch; make the target's `topic` equal your ntfy subscription |
 | Search never runs                | It is disabled, or `next_run_at` is in the future; use **Run now**    |
 | A source returns nothing         | Wrong adapter/config; verify against [modules/scrapers.md](modules/scrapers.md) |
 | Site needs login                 | Add **Site credentials** ([modules/credentials.md](modules/credentials.md)) |

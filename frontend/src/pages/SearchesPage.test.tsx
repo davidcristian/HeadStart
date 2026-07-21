@@ -348,7 +348,7 @@ describe("SearchesPage", () => {
     await waitFor(() =>
       expect(screen.getByText("Digest mode requires Starter or above.")).toBeInTheDocument(),
     );
-    expect(screen.getByText(/Digest \(batched summary\) — Starter\+/)).toBeInTheDocument();
+    expect(screen.getByText(/Digest \(batched summary\) requires Starter\+/)).toBeInTheDocument();
     expect(screen.getByText(/1 \/ 3 searches used/)).toBeInTheDocument();
   });
 

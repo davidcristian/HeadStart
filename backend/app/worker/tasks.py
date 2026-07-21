@@ -63,7 +63,7 @@ def run_search_run_task(
     user_id: int,
     search_id: int,
 ) -> dict[str, object]:
-    """Run one queued manual search (API-02) and persist pollable counts."""
+    """Run one queued manual search and persist pollable counts."""
     from app.services.search_runs import SearchRunService
 
     with session_scope() as session:
@@ -141,7 +141,7 @@ def apply_to_job_task(
     """Run one queued live auto-apply in the worker.
 
     Claims ``queued`` → ``processing`` and commits before the employer POST so
-    ``acks_late`` redelivery cannot double-submit (NTF-03).
+    ``acks_late`` redelivery cannot double-submit.
     """
     with session_scope() as session:
         claimed = claim_queued_apply(session, application_log_id, user_id, job_id)
@@ -173,7 +173,7 @@ def apply_to_job_task(
         # After a durable ``processing`` claim, do not flip to ``failed``: the
         # employer POST may have succeeded before this exception (commit failure
         # or mid-response crash). Leaving ``processing`` blocks re-apply via the
-        # in-flight unique index (NTF-03 path 2).
+        # in-flight unique index.
         logger.exception(
             "apply_to_job failed log=%s job=%s user=%s (left processing)",
             application_log_id,
@@ -223,7 +223,7 @@ def detect_ghosted_applications() -> dict[str, int]:
     """Beat tick: lease then email self-summaries for stale applications.
 
     Claim stamps ``ghosted_at`` and commits before SMTP so overlapping ticks /
-    ``acks_late`` redelivery cannot re-select the same row (XCT-11). Failed
+    ``acks_late`` redelivery cannot re-select the same row. Failed
     sends release the lease for retry on the next tick.
     """
     now = utcnow()
@@ -265,7 +265,7 @@ def process_pending_replies() -> dict[str, int]:
     """Beat tick: lease then SMTP-send recruiter replies whose delay has elapsed.
 
     Claim flips due rows to ``sending`` and commits before SMTP so overlapping
-    ticks / ``acks_late`` redelivery cannot re-select the same row (XCT-01/03).
+    ticks / ``acks_late`` redelivery cannot re-select the same row.
     """
     now = utcnow()
     with session_scope() as session:

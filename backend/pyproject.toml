@@ -17,7 +17,7 @@ dependencies = [
     "pydantic>=2.7",
     "pydantic[email]>=2.7",
     "pydantic-settings>=2.3",
-    # Floors match majors CI/lockfiles actually test (XCT-23); do not lag pins.
+    # Floors match majors CI/lockfiles actually test; do not lag pins.
     "celery[redis]>=5.6",
     "redis>=6.0",
     "httpx>=0.28",
@@ -38,7 +38,7 @@ dev = [
     "black>=24.8",
     "mypy>=1.11",
     "pre-commit>=3.7",
-    # SCA gate for hashed lockfiles (OPS-19); CI runs `just audit-backend`.
+    # SCA gate for hashed lockfiles; CI runs `just audit-backend`.
     "pip-audit>=2.7",
 ]
 # Heavy, opt-in: requires `playwright install` to download browsers.

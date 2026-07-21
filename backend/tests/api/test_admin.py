@@ -209,7 +209,7 @@ def test_update_user_rejects_unknown_plan(db_session: Session) -> None:
 def test_update_user_rejects_plan_change_with_active_stripe_subscription(
     db_session: Session,
 ) -> None:
-    """Admin plan overrides must not fight Stripe while a sub still grants access (BIL-08)."""
+    """Admin plan overrides must not fight Stripe while a sub still grants access."""
     from app.core.exceptions import ValidationError
     from app.schemas.admin import AdminUserUpdate
 
@@ -316,7 +316,7 @@ def test_update_user_persists_flags(db_session: Session) -> None:
 
 
 def test_deactivate_bumps_token_version(db_session: Session) -> None:
-    """Admin deactivation must invalidate outstanding JWTs even after reactivation (XCT-08)."""
+    """Admin deactivation must invalidate outstanding JWTs even after reactivation."""
     from fastapi import HTTPException
 
     from app.api.deps import get_current_user

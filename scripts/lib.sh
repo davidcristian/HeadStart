@@ -36,11 +36,11 @@ py_bin() {
   fi
 }
 
-# Frontend deps must exist before any frontend gate runs — a skipped gate
+# Frontend deps must exist before any frontend gate runs. A skipped gate
 # reads as green, so missing node_modules is a hard failure, not a warning.
 require_frontend_deps() {
   [[ -d "${FRONTEND_DIR}/node_modules" ]] \
-    || die "frontend/node_modules missing — run 'just setup' first."
+    || die "frontend/node_modules missing. Run 'just setup' first."
 }
 
 # Run a python module in the backend dir using the chosen interpreter.

@@ -25,7 +25,7 @@ export const STEPS = [
   {
     step: "3",
     title: "Apply while others are scrolling",
-    body: "Instant alerts via ntfy, email, Slack, Discord, Telegram, or your own webhook — plus AI summaries of why each role fits.",
+    body: "Instant alerts via ntfy, email, Slack, Discord, Telegram, or your own webhook, each with an AI summary of why the role fits.",
   },
 ];
 
@@ -36,7 +36,7 @@ export const FEATURES = [
   },
   {
     title: "Your channels, your rules",
-    body: "Immediate pings or batched digests. Route alerts wherever you already live — phone, inbox, or team chat.",
+    body: "Immediate pings or batched digests. Route alerts to your phone, inbox, or team chat, wherever you already live.",
   },
   {
     title: "Built for speed",
@@ -65,7 +65,7 @@ export const SHOWCASE = [
     id: "alerts",
     label: "Alerts",
     title: "Get pinged the moment it posts",
-    body: "Push to ntfy, email, Slack, Discord, Telegram, or a signed webhook — each alert includes an AI summary of why the role fits.",
+    body: "Push to ntfy, email, Slack, Discord, Telegram, or a signed webhook. Each alert includes an AI summary of why the role fits.",
     image: "/marketing/notification.png",
     alt: "Example ntfy notification for a new Senior Backend Engineer match",
   },
@@ -82,6 +82,6 @@ export const FAQ = [
   },
   {
     q: "Which sites are supported?",
-    a: "Greenhouse, Lever, Ashby, Workday, Indeed, LinkedIn, and generic HTML career pages — with more adapters added over time.",
+    a: "Greenhouse, Lever, Ashby, Workday, Indeed, LinkedIn, and generic HTML career pages. We add more adapters over time.",
   },
 ];

@@ -1,7 +1,7 @@
 /** Runtime connection settings + in-memory access-token storage.
  *
  * The API base URL is persisted in localStorage. The access token is held only
- * in memory (a module variable) — never in localStorage/sessionStorage — so it
+ * in memory (a module variable) and never in localStorage/sessionStorage, so it
  * is not exposed to XSS or readable across tabs. The long-lived refresh token is
  * an httpOnly cookie owned by the backend and is never visible to JavaScript; on
  * a fresh load the app exchanges that cookie for a new access token.

@@ -168,7 +168,7 @@ def test_reset_password_bumps_token_version(db_session) -> None:
 
 def test_token_without_ver_claim_is_rejected(client: TestClient) -> None:
     """Legacy tokens minted before this feature carry no `ver` and must be treated
-    as stale — guards against a future `payload.get("ver", user.token_version)`
+    as stale. This guards against a future `payload.get("ver", user.token_version)`
     regression that would silently revive them across a reset."""
     _register(client)
     login = client.post(
@@ -269,7 +269,7 @@ def test_reset_password_rejects_expired_token(db_session) -> None:
 
 
 def test_forgot_password_burns_token_crypto_for_unknown_email(db_session) -> None:
-    """Unknown emails still generate+hash a token so timing matches the hit path (AUT-26)."""
+    """Unknown emails still generate+hash a token so timing matches the hit path."""
     with (
         patch("app.services.auth_password.send_password_reset_email") as mock_email,
         patch(
@@ -299,7 +299,7 @@ def test_forgot_password_burns_token_crypto_for_unknown_email(db_session) -> Non
 
 
 def test_forgot_password_defers_email_via_scheduler(db_session) -> None:
-    """When schedule_email is set, SMTP is not invoked on the request path (AUT-26)."""
+    """When schedule_email is set, SMTP is not invoked on the request path."""
     UserRepository(db_session).add(
         User(
             email="defer@example.com",

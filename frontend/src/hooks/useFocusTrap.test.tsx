@@ -75,7 +75,7 @@ function FocusContainerDialog({ onClose }: { onClose: () => void }) {
   );
 }
 
-/** New onClose identity each render — mirrors ApplyJobDialog / JobsPage. */
+/** New onClose identity each render, mirroring ApplyJobDialog / JobsPage. */
 function UnstableOnCloseDialog({ tick }: { tick: number }) {
   const ref = useRef<HTMLDivElement>(null);
   useFocusTrap(true, ref, () => {
@@ -237,7 +237,7 @@ describe("useFocusTrap", () => {
     expect(middle).toHaveFocus();
   });
 
-  it("does not steal focus when onClose identity changes while open (FRO-32)", () => {
+  it("does not steal focus when onClose identity changes while open", () => {
     const { rerender } = render(<UnstableOnCloseDialog tick={0} />);
     expect(screen.getByText("first")).toHaveFocus();
 
@@ -251,7 +251,7 @@ describe("useFocusTrap", () => {
     expect(last).toHaveFocus();
   });
 
-  it("uses the latest onClose after identity changes (FRO-32)", () => {
+  it("uses the latest onClose after identity changes", () => {
     const firstClose = vi.fn();
     const secondClose = vi.fn();
 

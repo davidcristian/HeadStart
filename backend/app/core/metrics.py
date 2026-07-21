@@ -104,7 +104,7 @@ def record_scheduler_enqueued(count: int) -> None:
 
 
 def record_auth_login_failure() -> None:
-    """Record one failed login for credential-stuffing alerts (AUT-10)."""
+    """Record one failed login for credential-stuffing alerts."""
     if not get_settings().metrics_enabled:
         return
     AUTH_LOGIN_FAILURES.inc()
@@ -124,7 +124,7 @@ def metrics_bearer_authorized(authorization: str, token: str) -> bool:
 
 
 def authorized_metrics_app(token: str) -> WSGIApp:
-    """WSGI app that exposes Prometheus metrics behind optional Bearer auth (AUT-06)."""
+    """WSGI app that exposes Prometheus metrics behind optional Bearer auth."""
     from prometheus_client import make_wsgi_app
 
     base_app = make_wsgi_app()
@@ -151,10 +151,10 @@ def start_metrics_server(port: int) -> None:
 
     Prefork Celery children all call this on the same ``METRICS_PORT``. The
     first binder wins; later children hit ``EADDRINUSE`` and must skip so the
-    pool does not crash-loop (XCT-13). Only that child's registry is scraped.
+    pool does not crash-loop. Only that child's registry is scraped.
 
     When ``METRICS_TOKEN`` is set, scrapes must send ``Authorization: Bearer``
-    (same contract as the API ``GET /metrics`` route — AUT-06 / XCT-20).
+    (same contract as the API ``GET /metrics`` route).
     """
     settings = get_settings()
     if not settings.metrics_enabled:

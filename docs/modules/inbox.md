@@ -2,8 +2,8 @@
 
 **Path:** `backend/app/inbox/`
 
-Dev-only mailbox connectors for Phase 20 application-pipeline automation.
-Recruiter replies land in email, not in the app — this subsystem reads and sends
+Dev-only mailbox connectors for application-pipeline automation.
+Recruiter replies land in email, not in the app, so this subsystem reads and sends
 mail, classifies recruiter threads, routes folders, drafts follow-ups, and
 supports interview handoff (all behind `INBOX_AGENT_ENABLED`).
 
@@ -20,7 +20,7 @@ class MailboxContext(BaseModel):
     config: AnyMailboxConfig # IMAP MailboxConfig or OAuth/API config
     user_id: int | None = None
 
-# Shared OAuth/API connector set (INB-12) — import these; do not re-list:
+# Shared OAuth/API connector set. Import these; do not re-list:
 # OAUTH_CONNECTOR_TYPES, OAUTH_CONFIG_TYPES, OAUTH_CONFIG_BY_CONNECTOR
 
 # app/inbox/base.py
@@ -44,7 +44,7 @@ Adapters self-register with `@register_mailbox("key")`. Modules are imported in
 - **Body text:** `parse_rfc822` / `extract_body_text` prefer a non-attachment
   `text/plain` part; when the message is HTML-only (`multipart/alternative` or
   single-part `text/html`), tags are stripped to plain text so classification
-  and reply drafting still see recruiter content (INB-13). Gmail / Outlook /
+  and reply drafting still see recruiter content. Gmail / Outlook /
   Yahoo raw MIME paths share the same helper.
 - **Send:** plain-text SMTP with optional `In-Reply-To` / `References` for
   threading.
@@ -64,7 +64,7 @@ SMTP host/port/TLS, credentials, optional `smtp_from`).
   cursor) + `users.messages.get`. List returns ids only; `internalDate` is
   probed with `format=minimal` while walking the newest-first listing from the
   oldest end, stopping once the poll `limit` of unpolled uids is known so a busy
-  inbox does not GET metadata for every listed message (INB-10). The `uid` poll
+  inbox does not GET metadata for every listed message. The `uid` poll
   cursor is derived from each message's `internalDate` (time-ordered), since
   Gmail ids are not chronological and sorting by id could permanently skip
   later-arriving mail. Kept messages then get a `format=raw` fetch. The raw
@@ -79,18 +79,18 @@ SMTP host/port/TLS, credentials, optional `smtp_from`).
 
 - `GMAIL_OAUTH_CLIENT_ID`
 - `GMAIL_OAUTH_CLIENT_SECRET`
-- `GMAIL_OAUTH_REDIRECT_URI` — e.g. `http://localhost:8000/api/v1/inbox/gmail/callback`
+- `GMAIL_OAUTH_REDIRECT_URI` points at e.g. `http://localhost:8000/api/v1/inbox/gmail/callback`
 
 Token refresh runs automatically before fetch/send when the access token is near
 expiry (`app/inbox/gmail_oauth.py`). Near-expiry refresh locks the
 `mailbox_credential` row (`SELECT … FOR UPDATE` on Postgres), re-reads the
 stored tokens, and skips the provider call when another worker already rotated
-them — so concurrent inbox/ghost/pending-reply ticks cannot invalidate each
-other's refresh_token (INB-06).
+them. Concurrent inbox/ghost/pending-reply ticks therefore cannot invalidate
+each other's refresh_token.
 
 Account deletion (`DELETE /auth/me`) best-effort revokes the stored Gmail
-refresh token at Google before the encrypted credential row is removed (AUT-33;
-see [auth.md](auth.md#account-data-export--deletion)).
+refresh token at Google before the encrypted credential row is removed (see
+[auth.md](auth.md#account-data-export--deletion)).
 
 ## outlook adapter
 
@@ -111,9 +111,9 @@ see [auth.md](auth.md#account-data-export--deletion)).
 
 **Operator env** (all required for OAuth):
 
-- `OUTLOOK_OAUTH_CLIENT_ID` — Azure app registration application (client) ID
-- `OUTLOOK_OAUTH_CLIENT_SECRET` — client secret value
-- `OUTLOOK_OAUTH_REDIRECT_URI` — e.g. `http://localhost:8000/api/v1/inbox/outlook/callback`
+- `OUTLOOK_OAUTH_CLIENT_ID` is the Azure app registration application (client) ID
+- `OUTLOOK_OAUTH_CLIENT_SECRET` is the client secret value
+- `OUTLOOK_OAUTH_REDIRECT_URI` points at e.g. `http://localhost:8000/api/v1/inbox/outlook/callback`
 
 **Azure app registration (summary):**
 
@@ -127,18 +127,18 @@ see [auth.md](auth.md#account-data-export--deletion)).
 
 Token refresh runs automatically before fetch/send when the access token is near
 expiry (`app/inbox/outlook_oauth.py`). Refresh is serialized on the
-`mailbox_credential` row (same lock + re-check as Gmail; INB-06) because
+`mailbox_credential` row (same lock + re-check as Gmail) because
 Microsoft may rotate the refresh_token on each grant.
 
 Account deletion discards Outlook tokens locally only: Microsoft has no safe
-per-app OAuth revoke for Mail.* multi-tenant apps (AUT-33). Users can revoke
+per-app OAuth revoke for Mail.* multi-tenant apps. Users can revoke
 app access at account.microsoft.com.
 
 ## yahoo adapter
 
 **Key:** `yahoo`. Uses Yahoo identity OAuth 2.0 and IMAP/SMTP with SASL
 OAUTHBEARER (`imap.mail.yahoo.com` / `smtp.mail.yahoo.com`). Yahoo does not
-publish a Gmail/Graph-style REST API — mail access is over standard protocols.
+publish a Gmail/Graph-style REST API. Mail access is over standard protocols.
 
 - **Connect:** `GET /inbox/yahoo/authorize` (auth required) returns a Yahoo consent
   URL; `GET /inbox/yahoo/callback` exchanges the code and stores encrypted tokens on
@@ -150,9 +150,9 @@ publish a Gmail/Graph-style REST API — mail access is over standard protocols.
 
 **Operator env** (all required for OAuth):
 
-- `YAHOO_OAUTH_CLIENT_ID` — Yahoo Developer Network app client ID
-- `YAHOO_OAUTH_CLIENT_SECRET` — client secret
-- `YAHOO_OAUTH_REDIRECT_URI` — e.g. `http://localhost:8000/api/v1/inbox/yahoo/callback`
+- `YAHOO_OAUTH_CLIENT_ID` is the Yahoo Developer Network app client ID
+- `YAHOO_OAUTH_CLIENT_SECRET` is the client secret
+- `YAHOO_OAUTH_REDIRECT_URI` points at e.g. `http://localhost:8000/api/v1/inbox/yahoo/callback`
 
 **Yahoo app registration (summary):**
 
@@ -165,11 +165,11 @@ publish a Gmail/Graph-style REST API — mail access is over standard protocols.
 
 Token refresh runs automatically before fetch/send when the access token is near
 expiry (`app/inbox/yahoo_oauth.py`). Refresh is serialized on the
-`mailbox_credential` row (same lock + re-check as Gmail/Outlook; INB-06) because
+`mailbox_credential` row (same lock + re-check as Gmail/Outlook) because
 Yahoo may rotate the refresh_token on each grant.
 
 Account deletion best-effort revokes the stored Yahoo refresh token at Yahoo
-before the encrypted credential row is removed (AUT-33).
+before the encrypted credential row is removed.
 
 ## fastmail adapter
 
@@ -193,19 +193,19 @@ before the encrypted credential row is removed (AUT-33).
    with **Mail** and **Submission** scopes.
 2. In HeadStart Settings → Inbox, enter your Fastmail address and paste the token.
 
-No operator env vars are required — auth is per-user. `imap_smtp` remains the
+No operator env vars are required, because auth is per-user. `imap_smtp` remains the
 generic fallback for providers that expose IMAP.
 
 ## Credential storage
 
 Per-user encrypted row in `mailbox_credential` (one per account). Passwords are
-write-only — `MailboxCredentialRead` exposes host/user metadata only. The
+write-only. `MailboxCredentialRead` exposes host/user metadata only. The
 Settings → Inbox IMAP form labels both the IMAP and SMTP password fields with
 "Write-only; not shown after save." so a blank field after reload is not
-mistaken for a lost credential (FRO-28).
+mistaken for a lost credential.
 `decode_mailbox_config` / `mailbox_email_from_*` / credential read mapping use
 `OAUTH_CONNECTOR_TYPES` and `OAUTH_CONFIG_*` from `app/inbox/types.py` so a new
-OAuth connector is registered in one place (INB-12).
+OAuth connector is registered in one place.
 
 **Service:** `InboxService` (`app/services/inbox.py`) encrypts on write, resolves
 `MailboxContext` for fetch/send/test, and raises `InboxNotEnabledError` when
@@ -242,26 +242,26 @@ bound `code_verifier` so a leaked authorization code cannot be redeemed without
 the initiator's state. A victim cannot complete an OAuth flow started by an
 attacker and link the victim's mailbox to the attacker's account.
 
-**OAuth error redirects (API-05):** provider `error` query values (and fixed
+**OAuth error redirects:** provider `error` query values (and fixed
 reasons such as `missing_code`) are reflected into the Settings `Location` via
 `urllib.parse.urlencode`, so reserved characters cannot inject extra query
 parameters or fragments into the trusted frontend URL.
 
 | POST   | `/test`           | Test IMAP + SMTP (optional inline config)    |
-| GET    | `/messages`       | Fetch inbound messages (`since_uid` ≥1 optional, `limit` Query 1–100, default 50) |
+| GET    | `/messages`       | Fetch inbound messages (`since_uid` ≥1 optional, `limit` Query 1 to 100, default 50) |
 | POST   | `/classify`       | Classify one message (body or mailbox `uid`) |
-| GET    | `/classifications`| List recent classifications (`limit` 1–500)  |
+| GET    | `/classifications`| List recent classifications (`limit` 1 to 500) |
 | GET    | `/routing`        | Read label→folder routing settings           |
 | PUT    | `/routing`        | Update label→folder routing settings         |
 | POST   | `/route`          | Move a classified message to its folder      |
 | POST   | `/draft-reply`    | Draft a recruiter follow-up (dry-run preview; may queue auto-send) |
-| GET    | `/reply-drafts`   | List reply drafts (`seen_job_id` ≥1, `limit` 1–500) |
-| GET    | `/reply-send-logs`| List auto-reply audit rows (`limit` 1–500)   |
+| GET    | `/reply-drafts`   | List reply drafts (`seen_job_id` ≥1, `limit` 1 to 500) |
+| GET    | `/reply-send-logs`| List auto-reply audit rows (`limit` 1 to 500) |
 
 `GET /meta` includes `mailboxes` (registered connector keys) and
 `inbox_agent_enabled`.
 
-## Email classification (Phase 20c)
+## Email classification
 
 **Path:** `backend/app/email_classifiers/`
 
@@ -273,7 +273,7 @@ Labels: `general`, `rejection`, `follow_up`, `interview_request`,
   `get_email_classifier(key)`.
 - **Heuristic default:** keyword/header rules (offline); used for free-tier users
   and as LLM fallback.
-- **LLM providers:** `openai`, `gemini`, `anthropic`, `llamacpp` — selected via
+- **LLM providers:** `openai`, `gemini`, `anthropic`, and `llamacpp` are selected via
   `resolve_ai_settings(..., "email_classify")` (Pro users can override per-purpose
   in Settings → AI models). Provider POSTs go through `llm_post` (shared SSRF /
   DNS-pin policy; see [summaries.md](summaries.md#outbound-http-ssrf)).
@@ -281,9 +281,9 @@ Labels: `general`, `rejection`, `follow_up`, `interview_request`,
   (`sanitize_message_header` preserves angle-addrs); body/headers capped
   (`EMAIL_CLASSIFY_MAX_BODY_CHARS`). Obvious prompt-injection patterns in
   subject, From, To, or body force the offline heuristic (which maps them to
-  `out_of_scope`) before any LLM classifier runs — same guard pattern as reply
-  drafting (INB-07 / INB-09).
-- **Input bounds (INB-14):** `InboxMessage` (used by `POST /inbox/classify` and
+  `out_of_scope`) before any LLM classifier runs. This is the same guard pattern
+  as reply drafting.
+- **Input bounds:** `InboxMessage` (used by `POST /inbox/classify` and
   mailbox fetch) caps `subject` / message-id fields at 998 chars, addresses at
   320, `body_text` at 100 000, `to_addrs` at 50 entries, and `raw_headers` at 64
   items (name ≤256 / value ≤8192). Oversized client payloads return HTTP 422;
@@ -293,13 +293,13 @@ Labels: `general`, `rejection`, `follow_up`, `interview_request`,
   (+50), job title (+30) / company (+20) mentions, and optional `In-Reply-To`
   (+80) against `application_log.payload.outbound_message_ids`. A confident link
   requires `CONFIDENT_LINK_MIN_SCORE` (30), so a bare company-name substring
-  alone cannot attribute the thread (INB-18). Message-IDs are compared via
+  alone cannot attribute the thread. Message-IDs are compared via
   shared `normalize_message_id` (strip) so whitespace around stored or header
   ids still earns the thread boost (same helper the inbox gate uses).
 - **Persistence:** `inbox_classification` table (one row per user + mailbox UID);
   `EmailClassificationService` orchestrates classify + link + store.
 
-## Folder / label routing (Phase 20c)
+## Folder / label routing
 
 After classification, routable labels can be moved into configured IMAP folders
 (Gmail labels and Outlook folders are exposed as IMAP mailboxes).
@@ -317,19 +317,19 @@ After classification, routable labels can be moved into configured IMAP folders
 - **Audit:** `routed_to`, `routing_status` (`moved` / `skipped` / `failed`), and
   `routing_error` on `inbox_classification`.
 
-## Beat orchestration loop (Phase 20f)
+## Beat orchestration loop
 
 When `INBOX_AGENT_ENABLED=true`, beat runs `process_inbox_messages` every
 `INBOX_POLL_INTERVAL_SECONDS` (default 300; `Settings.inbox_poll_interval_seconds`
-— beat poll cadence for new message classification). `InboxOrchestrationService`:
+sets the beat poll cadence for new message classification).
+`InboxOrchestrationService`:
 
 1. Resolves pollable users once per tick (enabled `mailbox_credential` rows, plus
    env-fallback users when `INBOX_USE_ENV_CREDENTIALS=true`), then reuses that
-   `MailboxContext` for fetch so credential/config lookup is not repeated
-   (INB-20).
+   `MailboxContext` for fetch so credential/config lookup is not repeated.
 2. Fetches inbound mail since `inbox_poll_state.last_polled_uid` (bootstraps from
    the highest persisted classification UID when unset).
-3. Applies `InboxGateService` before classification — only messages tied to active
+3. Applies `InboxGateService` before classification. Only messages tied to active
    or ghosted applications (employer domain, thread headers, ghost self-mail, or
    optional `sender_allowlist`) enter the classifier; unrelated mail is ignored and
    the poll cursor advances past it without LLM calls or DB writes.
@@ -338,20 +338,20 @@ When `INBOX_AGENT_ENABLED=true`, beat runs `process_inbox_messages` every
 5. Advances the poll cursor through classified and ignored messages via
    `InboxPollStateRepository.upsert_last_polled_uid` (SAVEPOINT-wrapped insert with
    update-on-`unique(user_id)` conflict so overlapping first-poll ticks cannot abort
-   on IntegrityError — DAT-15); classify failures stop the batch so the failed
+   on IntegrityError); classify failures stop the batch so the failed
    message retries on the next tick.
 
 Batch size per user per tick: `INBOX_POLL_BATCH_SIZE` (default 50). See
 [worker.md](worker.md).
 
-**Known gap:** none for the application-scoped gate — unrelated mail is skipped
+**Known gap:** none for the application-scoped gate. Unrelated mail is skipped
 before classification. See `InboxGateService` in `app/services/inbox_gate.py`.
 
-## Ghost recovery (Phase 20c)
+## Ghost recovery
 
 When inbound mail is classified for a **ghosted** application (`seen_job.ghosted_at`
 set) and the label is recruiter signal (`general`, `rejection`, `follow_up`,
-`interview_request` — not `self_ghost_archive` or `out_of_scope`):
+`interview_request`, but not `self_ghost_archive` or `out_of_scope`):
 
 1. Clear `ghosted_at` and set `ghost_recovered_at`.
 2. Transition pipeline stage:
@@ -360,13 +360,13 @@ set) and the label is recruiter signal (`general`, `rejection`, `follow_up`,
    - `follow_up` / `general` → `awaiting_reply`
 3. Record recovery metadata on `inbox_classification.payload.ghost_recovery`.
 4. Send a high-priority alert via the search's notification target (or, when the
-   search has none / an unresolvable target, the user's first target by id — never
-   a fan-out to every channel). ntfy uses `priority: high`.
+   search has none / an unresolvable target, the user's first target by id). It
+   never fans out to every channel. ntfy uses `priority: high`.
 
 `EmailClassificationService.classify` invokes `GhostRecoveryService` after linking
 a job and before folder routing.
 
-## Interview handoff (Phase 20e)
+## Interview handoff
 
 When inbound mail classifies as `interview_request` for a linked, active
 application (`status=applied` or a live submitted attempt) that is **not**
@@ -375,9 +375,9 @@ ghosted and not already `interview_pending`:
 1. Set `seen_job.interview_pending_at`.
 2. Record `interview_handoff` metadata on `inbox_classification.payload`.
 3. Send a high-priority alert via the search's notification target (or, when the
-   search has none / an unresolvable target, the user's first target by id — never
-   a fan-out to every channel). ntfy uses `priority: high`. Alert copy:
-   "Interview to schedule at {company} — take over from here".
+   search has none / an unresolvable target, the user's first target by id). It
+   never fans out to every channel. ntfy uses `priority: high`. Alert copy:
+   "Interview to schedule at {company}. Take over from here."
 
 Ghosted applications still route through `GhostRecoveryService` first; interview
 handoff skips when `ghosted_at` is set or `interview_pending_at` is already set.
@@ -385,7 +385,7 @@ handoff skips when `ghosted_at` is set or `interview_pending_at` is already set.
 `EmailClassificationService.classify` invokes `InterviewHandoffService` after
 ghost recovery and before folder routing.
 
-## Ghost detection (Phase 20c)
+## Ghost detection
 
 When `INBOX_AGENT_ENABLED=true`, beat runs `detect_ghosted_applications` every
 `INBOX_GHOST_CHECK_INTERVAL_SECONDS` (default 3600). `GhostDetectionService`
@@ -393,19 +393,19 @@ finds `seen_job` rows with `status=applied`, no `ghosted_at`, and
 `applied_at` older than `INBOX_GHOST_WINDOW_DAYS` (default 14). That claim
 predicate is covered by partial index
 `ix_seen_job_status_applied_at_unghosted` on `(status, applied_at)` where
-`ghosted_at IS NULL` (DAT-03 / DAT-14). For each stale application where the
+`ghosted_at IS NULL`. For each stale application where the
 user has mailbox credentials:
 
 1. **Claim** eligible rows under `FOR UPDATE SKIP LOCKED`, stamp
    `seen_job.ghosted_at`, and commit the lease before SMTP so overlapping ticks
-   / `acks_late` redelivery cannot double-send (XCT-11).
+   / `acks_late` redelivery cannot double-send.
 2. Send a self-addressed summary email (`build_ghost_summary_message` in
    `app/inbox/ghost_message.py`) with `[HeadStart Ghost]` subject prefix and
    `X-HeadStart-Type: ghost`.
 3. On send failure (or an unexpected raise), **release** `ghosted_at` so the
    next tick can retry; successful sends keep the lease stamp.
 
-Per-item isolation (SVC-06): each leased job is processed in its own try/except.
+Per-item isolation: each leased job is processed in its own try/except.
 A raise from one application (token refresh, SMTP, validation) is logged and
 counted as `failed` so the rest of the batch still runs; each outcome commits
 immediately so a later failure cannot roll back earlier bookkeeping.
@@ -414,11 +414,11 @@ The applications pipeline exposes stage `ghosted` when `ghosted_at` is set.
 When the summary email returns to the inbox, the existing classifier labels it
 `self_ghost_archive` and routing moves it to `HeadStart/Ghost`.
 
-## Follow-ups (Phase 20d)
+## Follow-ups
 
 Autonomous reply drafts build on classification and routing. Drafts are persisted
 and previewed immediately; when `auto_reply_enabled` is on, SMTP send is queued
-with a human-like delay (see [Response delay queue](#response-delay-queue-phase-20d)).
+with a human-like delay (see [Response delay queue](#response-delay-queue)).
 
 **Path:** `backend/app/reply_drafters/`
 
@@ -428,7 +428,7 @@ Supported classification labels: `follow_up`, `general`.
 - **Registry:** `@register_reply_drafter("key")`; resolve with `get_reply_drafter(key)`.
 - **Heuristic default:** template replies from profile `answers` (salary, work auth,
   availability) and job context; offline.
-- **LLM providers:** `openai`, `gemini`, `anthropic`, `llamacpp` — selected via
+- **LLM providers:** `openai`, `gemini`, `anthropic`, and `llamacpp` are selected via
   `resolve_ai_settings(..., "email_draft")` (Pro users can override per-purpose
   in Settings → AI models). Provider POSTs go through `llm_post` (shared SSRF /
   DNS-pin policy; see [summaries.md](summaries.md#outbound-http-ssrf)).
@@ -438,7 +438,7 @@ Supported classification labels: `follow_up`, `general`.
   RFC5322 angle-addrs like `<hr@acme.com>` are preserved). Because this path can
   auto-send over SMTP, a **From, subject, or body** matching
   instruction-injection patterns bypasses the LLM entirely and is drafted by the
-  offline heuristic instead — recorded as `injection_guarded` in the draft
+  offline heuristic instead and recorded as `injection_guarded` in the draft
   payload and surfaced in the draft `notes`. Detection runs on the sanitized
   text, so HTML-encoded payloads (e.g. `&#105;gnore…` in a display-name or body)
   are caught.
@@ -446,7 +446,7 @@ Supported classification labels: `follow_up`, `general`.
   `ReplyDraftService` orchestrates draft + store.
 - **API:** `POST /inbox/draft-reply` (`classification_id` or `message_uid`,
   optional `regenerate`); `GET /inbox/reply-drafts` (`seen_job_id` filter,
-  `limit` 1–500 — the SPA client forwards both).
+  `limit` 1 to 500, both forwarded by the SPA client).
 - **Applications UI:** `/app/applications` shows the latest draft per job and a
   **Draft reply** button when a draftable classification exists.
 
@@ -459,11 +459,11 @@ and classification stores a sanitized excerpt up to
 late-in-body sensitive terms still match; per-user hourly/daily caps
 (`INBOX_REPLY_MAX_PER_HOUR`, `INBOX_REPLY_MAX_PER_DAY`) are enforced by
 locking the user row and inserting a `reserved` audit slot before SMTP so
-overlapping workers cannot both pass a below-cap read (INB-23; the slot
+overlapping workers cannot both pass a below-cap read (the slot
 finalizes to `sent` on success or is deleted on send failure); recipient domain must
 match the linked application's `employer_domain` (or the job posting URL host)
 before auto-send (`auto_reply_recipient_allowed` in
-`ReplySafeSendService.evaluate_before_send` — outcome `blocked_recipient` when
+`ReplySafeSendService.evaluate_before_send`, with outcome `blocked_recipient` when
 the inbound `From` is outside that domain, even if the inbox gate admitted the
 message via forged thread headers or an allowlist); audit log at
 `GET /inbox/reply-send-logs` for queue, send, and blocked decisions. Blocked
@@ -471,9 +471,9 @@ sends set `inbox_pending_reply.status=blocked` and leave the draft in `draft`
 for manual review. `inbox_reply_send_log.reason` / `subject` / `body_excerpt`
 are NOT NULL with `server_default=''` (same convention as
 `inbox_classification`) so non-ORM inserts that omit those columns still
-succeed (DAT-08).
+succeed.
 
-## Response delay queue (Phase 20d)
+## Response delay queue
 
 When `auto_reply_enabled` is true on the user's routing config, each new reply
 draft is queued in `inbox_pending_reply` with a `send_after` timestamp
@@ -493,7 +493,7 @@ optional random jitter (`INBOX_REPLY_DELAY_JITTER_SECONDS`, default 900).
   marks drafts `sent` (or `failed` / `blocked` / `cancelled`). Overlapping ticks
   and `acks_late` redelivery therefore cannot re-select the same row.
 - **Safe-send:** topic blocklist, hourly/daily caps (atomic `reserved` rate
-  slot before SMTP — INB-23), and audit log via `ReplySafeSendService`; see
-  [Follow-ups (Phase 20d)](#follow-ups-phase-20d).
+  slot before SMTP), and audit log via `ReplySafeSendService`; see
+  [Follow-ups](#follow-ups).
 - **API fields:** `ReplyDraftRead.queue_status` and `send_after` expose queue state
   (`pending`, `sending`, `sent`, `failed`, `blocked`, `cancelled`).

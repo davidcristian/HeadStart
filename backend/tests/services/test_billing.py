@@ -179,7 +179,7 @@ def test_plan_upgrade_promo_bills_target_plan_price(
     assert kwargs["metadata"]["plan"] == "pro"
     assert kwargs["subscription_data"]["metadata"]["plan"] == "pro"
     assert kwargs["discounts"] == [{"promotion_code": "promo_upgrade"}]
-    # BIL-10: Pro trial follows checkout_plan (target), not the requested starter plan.
+    # Pro trial follows checkout_plan (target), not the requested starter plan.
     assert kwargs["subscription_data"]["trial_period_days"] == settings.stripe_trial_days
 
 
@@ -191,7 +191,7 @@ def test_plan_upgrade_to_non_pro_skips_default_trial(
     db_session: Session,
     billing_settings: None,
 ) -> None:
-    """A plan_upgrade away from Pro must not attach the default Pro trial (BIL-10)."""
+    """A plan_upgrade away from Pro must not attach the default Pro trial."""
     user = _add_user(db_session)
     PromoCodeRepository(db_session).add(
         PromoCode(
@@ -587,7 +587,7 @@ def test_subscription_deleted_clears_id_and_downgrades(
 def test_stale_subscription_updated_after_delete_does_not_regrant(
     db_session: Session, billing_settings: None
 ) -> None:
-    """BIL-02: a delayed updated must not revive a plan after deleted."""
+    """A delayed updated must not revive a plan after deleted."""
     user = _add_user(db_session)
     UserRepository(db_session).update_billing(
         user,
@@ -625,7 +625,7 @@ def test_stale_subscription_updated_after_delete_does_not_regrant(
 def test_deleted_for_superseded_subscription_does_not_wipe_current(
     db_session: Session, billing_settings: None
 ) -> None:
-    """BIL-03: late deleted for an old sub must not downgrade a newer one."""
+    """A late deleted for an old sub must not downgrade a newer one."""
     user = _add_user(db_session)
     UserRepository(db_session).update_billing(
         user,

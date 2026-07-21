@@ -16,7 +16,7 @@ def mailbox_oauth_settings_redirect(
     *,
     reason: str | None = None,
 ) -> RedirectResponse:
-    """302 to Settings with URL-encoded mailbox/reason query params (API-05)."""
+    """302 to Settings with URL-encoded mailbox/reason query params."""
     settings_url = f"{settings.frontend_base_url.rstrip('/')}/app/settings"
     params: dict[str, str] = {"mailbox": mailbox}
     if reason is not None:

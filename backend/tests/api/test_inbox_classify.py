@@ -79,7 +79,7 @@ def test_classify_by_uid_fetches_from_mailbox(client: TestClient, monkeypatch) -
 
 
 def test_classify_rejects_overlong_body_text(client: TestClient, monkeypatch) -> None:
-    """INB-14: client-supplied InboxMessage body_text is bounded (HTTP 422)."""
+    """Client-supplied InboxMessage body_text is bounded (HTTP 422)."""
     monkeypatch.setattr(settings, "inbox_agent_enabled", True)
     headers = register_and_login(client, "classify-bounds@example.com")
     resp = client.post(

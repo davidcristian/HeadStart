@@ -1,4 +1,4 @@
-"""Regression: pre-commit frontend eslint must pass a path (OPS-03)."""
+"""Regression: pre-commit frontend eslint must pass a path."""
 
 from __future__ import annotations
 

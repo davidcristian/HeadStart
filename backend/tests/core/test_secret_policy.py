@@ -64,7 +64,7 @@ def test_assert_ntfy_topic_rejects_change_me_substring() -> None:
 
 
 def test_assert_ntfy_topic_rejects_short_outside_local() -> None:
-    """NTF-06: non-local boots also reject under-length topics."""
+    """Non-local boots also reject under-length topics."""
     with pytest.raises(ValueError, match="NTFY_DEFAULT_TOPIC"):
         secret_policy.assert_ntfy_topic_safe_for_environment("production", "short-topic")
 
@@ -181,7 +181,7 @@ def test_assert_boot_safe_rejects_incoherent_cookie_flags() -> None:
 
 
 def test_assert_secrets_rejects_short_credentials_key() -> None:
-    """Non-local boots reject a non-placeholder key that is still too short (AUT-05)."""
+    """Non-local boots reject a non-placeholder key that is still too short."""
     with pytest.raises(ValueError, match="at least 32"):
         secret_policy.assert_secrets_safe_for_environment(
             "production",

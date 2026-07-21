@@ -1,4 +1,4 @@
-"""Unit tests for Redis URL construction (OPS-10)."""
+"""Unit tests for Redis URL construction."""
 
 from types import SimpleNamespace
 

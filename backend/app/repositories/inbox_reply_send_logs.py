@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.models.inbox_reply_send_log import InboxReplySendLog
 
-# Outcomes that consume an hourly/daily auto-reply rate slot (INB-23).
+# Outcomes that consume an hourly/daily auto-reply rate slot.
 RATE_SLOT_OUTCOMES = ("sent", "reserved")
 
 

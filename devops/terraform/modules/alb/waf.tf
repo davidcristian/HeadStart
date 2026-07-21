@@ -1,4 +1,4 @@
-# Regional WAFv2 ACL on the public ALB (OPS-08).
+# Regional WAFv2 ACL on the public ALB.
 
 resource "aws_wafv2_web_acl" "this" {
   name  = "${var.name}-alb"

@@ -1,4 +1,4 @@
-# VPC flow logs → CloudWatch (OPS-41). Captures accepted/rejected ENI traffic
+# VPC flow logs → CloudWatch. Captures accepted/rejected ENI traffic
 # for incident response without changing the VPC data plane.
 
 resource "aws_cloudwatch_log_group" "flow_log" {

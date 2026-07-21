@@ -1,4 +1,4 @@
-"""Regression: prod Terraform must not default ECS images to mutable latest (OPS-07)."""
+"""Regression: prod Terraform must not default ECS images to mutable latest."""
 
 from __future__ import annotations
 

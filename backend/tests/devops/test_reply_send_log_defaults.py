@@ -1,4 +1,4 @@
-"""Regression: inbox_reply_send_log empty-string cols have DB defaults (DAT-08)."""
+"""Regression: inbox_reply_send_log empty-string cols have DB defaults."""
 
 from __future__ import annotations
 

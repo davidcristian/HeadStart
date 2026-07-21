@@ -1,4 +1,4 @@
-/** Public Impressum (German legal notice) for HeadStart — placeholder until operator details are set. */
+/** Public Impressum (German legal notice) for HeadStart. Placeholder until operator details are set. */
 
 import { Link } from "react-router-dom";
 import { LegalPageLayout } from "../components/LegalPageLayout";
@@ -52,8 +52,8 @@ export function ImpressumPage() {
         </p>
         <p>
           <em>
-            Entfällt bei Einzelunternehmen oder natürlichen Personen ohne Handelsregistereintrag —
-            diesen Abschnitt dann entfernen oder als nicht zutreffend kennzeichnen.
+            Entfällt bei Einzelunternehmen oder natürlichen Personen ohne Handelsregistereintrag.
+            Diesen Abschnitt dann entfernen oder als nicht zutreffend kennzeichnen.
           </em>
         </p>
       </section>

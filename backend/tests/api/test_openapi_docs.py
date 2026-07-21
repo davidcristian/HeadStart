@@ -1,4 +1,4 @@
-"""OpenAPI interactive docs are local/test only (AUT-25)."""
+"""OpenAPI interactive docs are local/test only."""
 
 from __future__ import annotations
 

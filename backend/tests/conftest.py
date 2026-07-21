@@ -60,7 +60,7 @@ def register_and_login(
 
 
 def post_search_run(client: TestClient, search_id: int, headers: dict[str, str]):
-    """POST /searches/{id}/run and execute the Celery task on the test DB (API-02)."""
+    """POST /searches/{id}/run and execute the Celery task on the test DB."""
     from contextlib import contextmanager
 
     from app.worker.tasks import run_search_run_task

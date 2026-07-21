@@ -19,7 +19,7 @@ _COMPILER_ENV = {
     "shell_escape": "f",
 }
 
-# Soft ceilings for the compiler child (AIA-10). NPROC is high enough not to
+# Soft ceilings for the compiler child. NPROC is high enough not to
 # collide with a busy Celery worker UID while still bounding fork bombs.
 _COMPILER_RLIMIT_AS_BYTES = 512 * 1024 * 1024
 _COMPILER_RLIMIT_NPROC = 512
@@ -86,7 +86,7 @@ def _pdf_output_name(entrypoint: str) -> str:
 
 
 def _compiler_env() -> dict[str, str]:
-    """Build an allowlisted env so the compiler cannot read app secrets (AIA-11)."""
+    """Build an allowlisted env so the compiler cannot read app secrets."""
     env = {
         key: value
         for key, value in os.environ.items()
@@ -118,7 +118,7 @@ def _try_set_rlimit(which: int, ceiling: int) -> None:
 
 
 def _compiler_preexec(timeout: float) -> Callable[[], None]:
-    """Build a preexec_fn that applies AS/CPU/NPROC rlimits (AIA-10)."""
+    """Build a preexec_fn that applies AS/CPU/NPROC rlimits."""
     cpu_seconds = max(1, math.ceil(timeout))
 
     def _apply_compiler_rlimits() -> None:

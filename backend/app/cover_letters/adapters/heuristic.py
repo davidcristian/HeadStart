@@ -1,4 +1,4 @@
-"""Heuristic cover-letter generator — offline default.
+"""Heuristic cover-letter generator used as the offline default.
 
 Builds a cover letter from the user's template (with placeholder substitution)
 or a simple structured draft from profile fields. No API key or network required.

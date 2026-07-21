@@ -21,13 +21,13 @@ module "stack" {
   smtp_use_tls           = var.smtp_use_tls
   log_level              = var.log_level
 
-  # Distinct from beta's 10.20.0.0/16 so VPC peering / shared routing stays unambiguous (OPS-30).
+  # Distinct from beta's 10.20.0.0/16 so VPC peering / shared routing stays unambiguous.
   vpc_cidr             = "10.30.0.0/16"
   public_subnet_cidrs  = ["10.30.0.0/24", "10.30.1.0/24"]
   private_subnet_cidrs = ["10.30.10.0/24", "10.30.11.0/24"]
 
   # Prod: HA database, longer backups/logs, deletion protection + final
-  # snapshot required (OPS-48), Redis failover.
+  # snapshot required, Redis failover.
   db_instance_class        = "db.t4g.small"
   db_multi_az              = true
   db_deletion_protection   = true

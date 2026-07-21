@@ -12,7 +12,7 @@ class NotifyContext(BaseModel):
     config: dict[str, Any] = Field(default_factory=dict)
     digest: bool = False
     search_name: str | None = None
-    # Preferred locale for user-facing copy; None → DEFAULT_LOCALE (NTF-12).
+    # Preferred locale for user-facing copy; None → DEFAULT_LOCALE.
     locale: str | None = None
 
 

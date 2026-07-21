@@ -41,12 +41,12 @@ without abandoning the existing access/refresh JWT scheme or the simple
 
 ## Alternatives considered
 
-- **Keep both tokens in `localStorage`** — simplest, but leaves the long-lived
-  refresh token exposed to XSS. Rejected.
-- **Both tokens in httpOnly cookies (cookie-only auth)** — would require sending
+- **Keep both tokens in `localStorage`** would be simplest, but leaves the
+  long-lived refresh token exposed to XSS. Rejected.
+- **Both tokens in httpOnly cookies (cookie-only auth)** would require sending
   the access token as a cookie too and add CSRF surface (state-changing requests
   authenticated by an ambient cookie). Keeping the access token in a `Bearer`
   header avoids CSRF for the API while still protecting the refresh token.
-- **`sessionStorage` for the access token** — still JS-readable; in-memory is
+- **`sessionStorage` for the access token** is still JS-readable; in-memory is
   strictly better and the refresh cookie already restores sessions across
   reloads.

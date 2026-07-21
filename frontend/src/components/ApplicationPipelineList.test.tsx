@@ -85,9 +85,9 @@ describe("ApplicationPipelineList (table / desktop)", () => {
     expect(screen.getByText("No live attempts yet")).toBeInTheDocument();
   });
 
-  it("renders a dash when there is no applied date", () => {
+  it("renders a placeholder when there is no applied date", () => {
     renderWithClient(<ApplicationPipelineList items={[makeItem({ applied_at: null })]} />);
-    expect(screen.getByText("—")).toBeInTheDocument();
+    expect(screen.getByText("None")).toBeInTheDocument();
   });
 });
 

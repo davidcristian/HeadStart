@@ -1,4 +1,4 @@
-"""Regression: production nginx ships SPA security headers (XCT-16)."""
+"""Regression: production nginx ships SPA security headers."""
 
 from __future__ import annotations
 

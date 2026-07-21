@@ -1,4 +1,4 @@
-"""Route tests for cover-letter generation (async queue, API-01)."""
+"""Route tests for cover-letter generation (async queue)."""
 
 from unittest.mock import patch
 

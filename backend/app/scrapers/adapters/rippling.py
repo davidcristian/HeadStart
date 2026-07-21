@@ -5,7 +5,7 @@ Rippling-backed employers expose a zero-auth board API:
   GET https://api.rippling.com/platform/api/ats/v1/board/<board>/jobs
 
 Careers UI lives at ``https://ats.rippling.com/<board>/jobs``. The API returns
-a JSON **array**; the same job UUID may appear once per work location — this
+a JSON **array**; the same job UUID may appear once per work location, so this
 adapter collapses those rows and joins locations.
 
 Config / context:

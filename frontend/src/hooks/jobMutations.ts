@@ -12,7 +12,7 @@ export function useUpdateJob() {
       api.updateJob(id, { status }),
     onSuccess: () => {
       // Status changes (applied/archived/seen) also drive pipeline stage on
-      // /app/applications — keep both caches fresh (FRO-30).
+      // /app/applications, so both caches must stay fresh.
       invalidate(qc, ["jobs"]);
       invalidate(qc, ["applications"]);
     },
@@ -44,8 +44,8 @@ export function useApplyToJob() {
     onSuccess: (_result, variables) => {
       invalidate(qc, queryKeys.applicationLogs);
       // A live apply moves the job into the pipeline (queued / apply_failed / …), so
-      // refetch applications and jobs. Live enqueue returns status=queued (API-10);
-      // do not gate jobs refresh on unreachable "submitted" (FRO-31 / XCT-27).
+      // refetch applications and jobs. Live enqueue returns status=queued;
+      // do not gate jobs refresh on unreachable "submitted".
       // Dry-run previews don't.
       if (!variables.dry_run) {
         invalidate(qc, ["applications"]);

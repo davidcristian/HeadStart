@@ -123,7 +123,7 @@ def test_process_due_classifies_self_ghost_archive_without_applications(
                 uid=40,
                 from_addr="user@example.com",
                 to_addrs=["user@example.com"],
-                subject=f"{GHOST_SUBJECT_PREFIX} No reply: ACME — Engineer",
+                subject=f"{GHOST_SUBJECT_PREFIX} No reply: ACME Engineer",
                 body_text="Ghost summary.",
             ),
         ],

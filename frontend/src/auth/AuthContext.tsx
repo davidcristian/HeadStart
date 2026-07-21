@@ -83,7 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = useCallback(async (email: string, password: string) => {
     // Do not auto-login: duplicate emails also return success so existence
-    // cannot be inferred from a follow-up login failure (AUT-27).
+    // cannot be inferred from a follow-up login failure.
     await api.register(email, password);
   }, []);
 

@@ -4,7 +4,7 @@ variable "region" {
 }
 
 # Required: pin the AWS account this env may target so a wrong ambient
-# credential cannot apply into another account (OPS-31).
+# credential cannot apply into another account.
 variable "aws_account_id" {
   type        = string
   description = "12-digit AWS account ID allowed for this environment's provider."
@@ -60,7 +60,7 @@ variable "acm_certificate_arn" {
   default = ""
 }
 
-# Required: ntfy.sh topics are public by name — never ship a guessable default (OPS-16).
+# Required: ntfy.sh topics are public by name, so never ship a guessable default.
 variable "ntfy_default_topic" {
   type        = string
   description = "Unguessable ntfy topic for the seeded default notification target."
@@ -105,7 +105,7 @@ variable "smtp_use_tls" {
   default = true
 }
 
-# Optional: raise to DEBUG during incidents without editing the stack module (OPS-55).
+# Optional: raise to DEBUG during incidents without editing the stack module.
 variable "log_level" {
   type        = string
   default     = "INFO"

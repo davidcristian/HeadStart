@@ -6,7 +6,7 @@ from typing import Any
 
 from app.scrapers.url_detect_types import SourceDetection
 
-# Canonical Phenom hosts (not vanity redirect domains — CSRF is host-scoped).
+# Canonical Phenom hosts, not vanity redirect domains, because CSRF is host-scoped.
 _KNOWN_HOSTS: dict[str, dict[str, str]] = {
     "careers.cisco.com": {
         "company": "Cisco",
@@ -62,7 +62,7 @@ def detect_phenom(parsed: Any, host: str, page_title: str | None) -> SourceDetec
         "locale": known["locale"],
         "ref_num": known["ref_num"],
     }
-    # Cisco hosts Splunk roles under /.../splunk — seed keyword filter for that brand.
+    # Cisco hosts Splunk roles under /.../splunk, so seed a keyword filter for it.
     if host == "careers.cisco.com" and any(part.lower() == "splunk" for part in path_parts):
         company = "Splunk"
         config["company"] = "Splunk"

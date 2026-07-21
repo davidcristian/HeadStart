@@ -24,8 +24,7 @@ minimal orchestration so future UI and worker paths can call one service.
   `session.job_board_api_key` (employer-issued; encrypted when stored as a
   credential).
 - On successful live submit, set `seen_job.status` to `applied`. API routes,
-  Jobs UI, queued workers, consent gates, and audit logs remain later Phase 7
-  items.
+  Jobs UI, queued workers, consent gates, and audit logs come later.
 
 ## Consequences
 
@@ -37,7 +36,7 @@ minimal orchestration so future UI and worker paths can call one service.
 
 ## Alternatives considered
 
-- **Browser-only apply (Playwright) for v1** — works without employer API keys
+- **Browser-only apply (Playwright) for v1.** Works without employer API keys
   but is harder to test and more brittle; defer as a complement to API adapters.
-- **Apply logic inline in `JobService`** — violates module boundaries and makes
+- **Apply logic inline in `JobService`.** Violates module boundaries and makes
   per-site extension painful; rejected.

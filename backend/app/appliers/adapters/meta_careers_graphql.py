@@ -90,7 +90,7 @@ def post_graphql_multipart(
         ),
     )
     # post_multipart may return a parsed JSON dict; still enforce the same
-    # GraphQL errors envelope as the non-resume JSON path (APL-05).
+    # GraphQL errors envelope as the non-resume JSON path.
     if isinstance(response, dict):
         return _parse_graphql_payload(response)
     return _parse_graphql_json(str(response))

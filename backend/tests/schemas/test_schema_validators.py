@@ -52,7 +52,7 @@ def test_profile_accepts_valid_skills() -> None:
     assert ProfileData(skills=["python", "sql"]).skills == ["python", "sql"]
 
 
-# ---- profile: answers validator (API-13) ----
+# ---- profile: answers validator ----
 
 
 def test_profile_rejects_too_many_answers() -> None:

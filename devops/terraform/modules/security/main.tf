@@ -58,9 +58,9 @@ resource "aws_security_group_rule" "alb_egress" {
 }
 
 # ---- Tasks ----
-# OPS-14: only the ALB target-group ports (frontend 8080, api 8000). A 0–65535
+# Only the ALB target-group ports (frontend 8080, api 8000). A 0 to 65535
 # range would also expose the worker metrics port (9090) to the ALB SG.
-# FRO-08 moved the SPA container off privileged :80 onto unprivileged :8080.
+# The SPA container listens on unprivileged :8080, not privileged :80.
 resource "aws_security_group_rule" "tasks_http_from_alb" {
   type                     = "ingress"
   security_group_id        = aws_security_group.tasks.id

@@ -1,4 +1,4 @@
-"""Regression: beta and prod must use distinct VPC CIDRs (OPS-30)."""
+"""Regression: beta and prod must use distinct VPC CIDRs."""
 
 from __future__ import annotations
 
@@ -28,9 +28,9 @@ def _env_network(env: str) -> tuple[str, list[str], list[str]]:
     vpc = _VPC_CIDR.search(text)
     public = _PUBLIC.search(text)
     private = _PRIVATE.search(text)
-    assert vpc is not None, f"{env} must set vpc_cidr explicitly (OPS-30)"
-    assert public is not None, f"{env} must set public_subnet_cidrs (OPS-30)"
-    assert private is not None, f"{env} must set private_subnet_cidrs (OPS-30)"
+    assert vpc is not None, f"{env} must set vpc_cidr explicitly"
+    assert public is not None, f"{env} must set public_subnet_cidrs"
+    assert private is not None, f"{env} must set private_subnet_cidrs"
     return vpc.group("value"), _cidr_list(public.group("body")), _cidr_list(private.group("body"))
 
 

@@ -1,6 +1,6 @@
 # Application Load Balancer. Default traffic goes to the frontend; anything under
-# /api/* is routed to the API service. OpenAPI UI paths are not forwarded (AUT-25:
-# docs are disabled outside local/test and would otherwise hit the SPA).
+# /api/* is routed to the API service. OpenAPI UI paths are not forwarded: docs
+# are disabled outside local/test and would otherwise hit the SPA.
 # When certificate_arn is set, HTTPS terminates on 443 and HTTP redirects.
 
 locals {
@@ -28,7 +28,7 @@ resource "aws_lb" "this" {
 
 resource "aws_lb_target_group" "frontend" {
   name        = "${var.name}-frontend"
-  # FRO-08: unprivileged nginx listens on 8080 inside the task.
+  # Unprivileged nginx listens on 8080 inside the task.
   port        = 8080
   protocol    = "HTTP"
   vpc_id      = var.vpc_id

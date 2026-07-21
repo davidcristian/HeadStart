@@ -50,7 +50,7 @@ def test_seed_creates_demo_account_and_example_data(seed_scope: Session) -> None
     assert target is not None
     assert target.type == "ntfy"
     topic = target.config["topic"]
-    # Guessable NTFY_DEFAULT_TOPIC is replaced with a random high-entropy topic (NTF-06).
+    # Guessable NTFY_DEFAULT_TOPIC is replaced with a random high-entropy topic.
     assert isinstance(topic, str)
     assert not is_guessable_ntfy_topic(topic)
     if not is_guessable_ntfy_topic(settings.ntfy_default_topic):

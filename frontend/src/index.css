@@ -3,7 +3,7 @@
   --bg: light-dark(#fafafa, #09090b);
   --bg-elev: light-dark(#ffffff, #131316);
   --bg-elev-2: light-dark(#f4f4f5, #1c1c21);
-  /* Semantic aliases used by cookie-consent / portal cards (FRO-33). */
+  /* Semantic aliases used by cookie-consent / portal cards. */
   --surface: var(--bg-elev);
   --bg-muted: var(--bg-elev-2);
   --border: light-dark(#e4e4e7, #2a2a31);
@@ -57,7 +57,7 @@ a:hover {
   min-height: 100vh;
 }
 
-/* Visually hidden until focused so keyboard users bypass the sidebar (FRO-22). */
+/* Visually hidden until focused so keyboard users bypass the sidebar. */
 .skip-to-content {
   position: absolute;
   left: 12px;
@@ -89,7 +89,7 @@ a:hover {
   outline-offset: 2px;
 }
 
-/* Screen-reader-only text (e.g. onboarding step "completed"; FRO-39). */
+/* Screen-reader-only text (e.g. onboarding step "completed"). */
 .visually-hidden {
   position: absolute;
   width: 1px;

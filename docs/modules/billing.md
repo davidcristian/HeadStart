@@ -5,7 +5,7 @@
 `frontend/src/pages/SettingsPage.tsx`, `frontend/src/pages/PricingPage.tsx`
 
 Stripe-powered subscriptions for the three paid tiers (Starter, Plus, Pro).
-Billing is **optional** — when `STRIPE_*` env vars are unset the API reports
+Billing is **optional**. When `STRIPE_*` env vars are unset the API reports
 `configured: false` and checkout buttons are hidden. Free accounts have no
 Stripe checkout; see [Plans](#plans) for the full four-tier matrix.
 
@@ -44,8 +44,8 @@ Set all of the following to enable checkout:
 
 ### Stripe Dashboard setup
 
-1. Create three Products (Starter, Plus, Pro) — or one product with three prices
-   per billing interval.
+1. Create three Products (Starter, Plus, Pro). One product carrying three prices
+   per billing interval works too.
 2. For each paid tier, create **monthly** and **annual** recurring Prices in the
    same currency as `BILLING_CURRENCY` (default **EUR** for German/EU instances).
 3. Copy each Price ID (`price_…`) into the matching env var above.
@@ -58,7 +58,7 @@ Set all of the following to enable checkout:
 6. Paste the webhook signing secret into `STRIPE_WEBHOOK_SECRET`.
 
 Promo codes (optional) create Stripe Coupon + Promotion Code objects when billing
-is enabled — see [Promo codes](#promo-codes) below. Fixed-amount coupons use
+is enabled. See [Promo codes](#promo-codes) below. Fixed-amount coupons use
 `BILLING_CURRENCY` (not a hardcoded USD).
 
 ## Endpoints (prefix `/api/v1/billing`)
@@ -98,27 +98,27 @@ checkout cannot bypass the validate throttle. Redemptions are logged in
 
 ### Data model & code
 
-- **Models** — `models/promo_code.py` (`promo_code`), `models/promo_redemption.py`
+- **Models**: `models/promo_code.py` (`promo_code`), `models/promo_redemption.py`
   (`promo_redemption`, one row per user per promo), `models/promo_validation_attempt.py`
   (`promo_validation_attempt`, for rate limiting).
-- **Repository** — `repositories/promo_codes.py`: lookups, the atomic
+- **Repository**: `repositories/promo_codes.py` holds lookups, the atomic
   `reserve_global_slot`/`release_global_slot`, and `add_redemption_if_absent`.
-- **Service** — `services/promo_codes.py`: validation, admin CRUD, Stripe sync,
+- **Service**: `services/promo_codes.py` holds validation, admin CRUD, Stripe sync,
   `resolve_for_checkout`, `record_redemption`.
-- **Schemas** — `schemas/promo.py`: `PromoCodeCreate` / `Update` / `Read`,
+- **Schemas**: `schemas/promo.py` holds `PromoCodeCreate` / `Update` / `Read`,
   `PromoValidateRequest` / `Response`, `PromoRedemptionRead`.
 
 ### Redemption caps & idempotency
 
-- **Per-user uniqueness** — a `UniqueConstraint(promo_code_id, user_id)` backs
+- **Per-user uniqueness**: a `UniqueConstraint(promo_code_id, user_id)` backs
   `promo_redemption`, so a Stripe webhook retry or a concurrent delivery is a
   no-op (`record_redemption` catches the `IntegrityError`) instead of
   double-counting `redemption_count`.
-- **Global cap** — for `percent_off` / `fixed_amount` / `plan_upgrade`, Stripe's
+- **Global cap**: for `percent_off` / `fixed_amount` / `plan_upgrade`, Stripe's
   Promotion Code enforces `max_redemptions`. `free_trial_days` promos have **no**
   Stripe promotion code, so their cap is reserved at checkout: `resolve_for_checkout`
   atomically claims a slot (conditional counter bump + per-user row) before the
-  Stripe session is created. An **abandoned** checkout keeps its reservation — that
+  Stripe session is created. An **abandoned** checkout keeps its reservation, which
   is intentional, so the cap can't be overrun; a failed checkout request rolls the
   reservation back with the rest of the transaction.
 
@@ -144,7 +144,7 @@ emit a structured `admin_event=user_update` audit log with actor, target, and
 before/after `plan` / privilege flags (JSON extras when `LOG_FORMAT=json`).
 Plan changes are **rejected** while `subscription_status` still grants access
 (`active` / `trialing` / `past_due`) so a local override cannot be silently
-reverted by the next `customer.subscription.updated` webhook (BIL-08). Cancel
+reverted by the next `customer.subscription.updated` webhook. Cancel
 or change the subscription in Stripe (or wait until status no longer grants)
 before editing `plan`. Same-plan no-ops and non-plan flag edits still succeed.
 
@@ -168,7 +168,7 @@ are no-ops: checkout / subscription handlers return without mutating any other
 user's billing fields. Unit tests seed a control user and assert the full
 billing snapshot (`stripe_customer_id`, `stripe_subscription_id`,
 `subscription_status`, `plan`, `stripe_billing_event_at`) is unchanged after
-those ghost-customer calls (TST-05).
+those ghost-customer calls.
 
 Downgrade does **not** delete existing sources/targets. Premium scrapers
 (`indeed` / `linkedin` / `playwright`, **Plus+**) and the webhook notifier
@@ -181,7 +181,7 @@ adapter cannot silently unlock on Free.
 Plan resolution prefers the Stripe Price ID (`billing_prices.plan_for_price_id`);
 subscription metadata `plan` is a fallback. An active subscription whose price and
 metadata are both unrecognized defaults to the **lowest paid tier** (`starter`)
-and logs a warning — it never silently grants Pro.
+and logs a warning. It never silently grants Pro.
 
 ## Account deletion
 
@@ -195,11 +195,11 @@ See [auth.md](auth.md).
 
 On `user`:
 
-- `plan` — `free` / `starter` / `plus` / `pro`
+- `plan`: `free` / `starter` / `plus` / `pro`
 - `stripe_customer_id`
 - `stripe_subscription_id`
-- `subscription_status` — last known Stripe status (`active`, `trialing`, `past_due`, `canceled`, …)
-- `stripe_billing_event_at` — unix `created` of the last applied subscription
+- `subscription_status`: last known Stripe status (`active`, `trialing`, `past_due`, `canceled`, …)
+- `stripe_billing_event_at`: unix `created` of the last applied subscription
   lifecycle webhook (ordering guard)
 
 ## UI
@@ -207,7 +207,7 @@ On `user`:
 - **Pricing** (`/pricing`): signed-in users start Starter, Plus, or Pro checkout
   with optional promo code; billing-period toggle applies to all paid tiers.
   Listed amounts use EUR (`formatPrice` / `de-DE`) and disclose VAT-inclusive
-  pricing (FRO-35); Stripe Prices must match `BILLING_CURRENCY`.
+  pricing; Stripe Prices must match `BILLING_CURRENCY`.
 - **Settings** (`/app/settings`): upgrade to Pro with optional promo code, manage
   subscription, success/cancel banners. Other tiers link to `/pricing`.
 - **Admin** (`/app/admin`): create and retire promo codes.

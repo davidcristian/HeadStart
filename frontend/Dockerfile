@@ -12,7 +12,7 @@ ARG VITE_API_BASE_URL=/api
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 RUN npm run build
 
-# FRO-08: stock nginx starts the master as root; the unprivileged image runs as
+# Stock nginx starts the master as root; the unprivileged image runs as
 # the nginx user and listens on 8080 (non-privileged).
 FROM nginxinc/nginx-unprivileged:1.27-alpine AS runtime
 COPY nginx.conf /etc/nginx/conf.d/default.conf

@@ -1,4 +1,4 @@
-"""Per-type NotificationTarget config validation at create/update (API-14)."""
+"""Per-type NotificationTarget config validation at create/update."""
 
 from __future__ import annotations
 

@@ -162,7 +162,7 @@ export function SearchesPage() {
             >
               <option value="immediate">Immediate (one alert per job)</option>
               <option value="digest" disabled={!digestAllowed}>
-                Digest (batched summary){digestAllowed ? "" : " — Starter+"}
+                Digest (batched summary){digestAllowed ? "" : " requires Starter+"}
               </option>
             </select>
           </Field>

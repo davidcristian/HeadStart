@@ -282,7 +282,7 @@ def test_classification_payload_omits_absent_ids() -> None:
 
 
 def test_classification_payload_sanitizes_and_keeps_body_past_500() -> None:
-    """Stored body_excerpt is HTML-decoded and not hard-capped at 500 (INB-08)."""
+    """Stored body_excerpt is HTML-decoded and not hard-capped at 500."""
     long_prefix = "a" * 520
     message = InboxMessage(
         uid=1,

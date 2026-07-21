@@ -18,7 +18,7 @@ class PendingDigestRepository:
         return self.add_many(search_id, [seen_job_id])[0]
 
     def add_many(self, search_id: int, seen_job_ids: list[int]) -> list[PendingDigest]:
-        """Enqueue many seen jobs with one flush (SVC-15)."""
+        """Enqueue many seen jobs with one flush."""
         if not seen_job_ids:
             return []
         rows = [
@@ -40,7 +40,7 @@ class PendingDigestRepository:
         )
 
     def delete_for_search(self, search_id: int) -> None:
-        """Clear the digest queue for a search in one statement (DAT-13)."""
+        """Clear the digest queue for a search in one statement."""
         self.session.execute(delete(PendingDigest).where(PendingDigest.search_id == search_id))
 
     def searches_with_pending(self) -> list[Search]:

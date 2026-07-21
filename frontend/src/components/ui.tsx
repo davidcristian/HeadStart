@@ -63,7 +63,7 @@ export function Banner({
   kind: "error" | "info" | "success";
   children: ReactNode;
 }) {
-  // Async error/success sinks (login, apply, settings, …) must announce to AT (FRO-29).
+  // Async error/success sinks (login, apply, settings, …) must announce to AT.
   const live =
     kind === "error"
       ? ({ role: "alert", "aria-live": "assertive" } as const)

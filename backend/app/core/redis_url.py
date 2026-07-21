@@ -19,7 +19,7 @@ def build_redis_url(
     password: str = "",
     tls: bool = False,
 ) -> str:
-    """Return redis:// or rediss:// URL; percent-encode AUTH when set (OPS-10)."""
+    """Return redis:// or rediss:// URL; percent-encode AUTH when set."""
     scheme = "rediss" if tls else "redis"
     auth = f":{quote(password, safe='')}@" if password else ""
     url = f"{scheme}://{auth}{host}:{port}/{db}"

@@ -84,7 +84,7 @@ def gmail_oauth_callback(
     oauth_nonce: str | None = Cookie(default=None, alias=MAILBOX_OAUTH_COOKIE_NAME),
     db: Session = Depends(get_db),
 ) -> RedirectResponse:
-    """OAuth redirect target — stores encrypted Gmail tokens and returns to Settings."""
+    """OAuth redirect target that stores encrypted Gmail tokens and returns to Settings."""
     if error:
         return mailbox_oauth_settings_redirect("gmail_error", reason=error)
     if not code or not state:
@@ -116,7 +116,7 @@ def outlook_oauth_callback(
     oauth_nonce: str | None = Cookie(default=None, alias=MAILBOX_OAUTH_COOKIE_NAME),
     db: Session = Depends(get_db),
 ) -> RedirectResponse:
-    """OAuth redirect target — stores encrypted Outlook tokens and returns to Settings."""
+    """OAuth redirect target that stores encrypted Outlook tokens and returns to Settings."""
     if error:
         return mailbox_oauth_settings_redirect("outlook_error", reason=error)
     if not code or not state:
@@ -148,7 +148,7 @@ def yahoo_oauth_callback(
     oauth_nonce: str | None = Cookie(default=None, alias=MAILBOX_OAUTH_COOKIE_NAME),
     db: Session = Depends(get_db),
 ) -> RedirectResponse:
-    """OAuth redirect target — stores encrypted Yahoo tokens and returns to Settings."""
+    """OAuth redirect target that stores encrypted Yahoo tokens and returns to Settings."""
     if error:
         return mailbox_oauth_settings_redirect("yahoo_error", reason=error)
     if not code or not state:

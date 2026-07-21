@@ -9,16 +9,16 @@ log "Setting up HeadStart development environment"
 # check and warn so missing tools are discoverable. On Ubuntu/WSL, see
 # docs/runbook.md "Prerequisites & toolchain" for exact install commands.
 log "Checking host tools (run inside WSL on Windows)"
-have just    || warn "'just' not found — install it: sudo apt install -y just (or see https://just.systems)"
-have docker  || warn "'docker' not found — needed for 'just up' (Docker Desktop WSL integration or native engine)."
+have just    || warn "'just' not found. Install it: sudo apt install -y just (or see https://just.systems)"
+have docker  || warn "'docker' not found. Needed for 'just up' (Docker Desktop WSL integration or native engine)."
 docker compose version >/dev/null 2>&1 \
-             || warn "'docker compose' plugin not found — needed for 'just up'."
-have python3 || warn "'python3' not found — install it: sudo apt install -y python3 python3-venv"
-have npm     || warn "'npm' not found — install Node.js 20+ (nodesource or nvm)."
-have shellcheck || warn "'shellcheck' not found — needed for 'just check --scripts': sudo apt install -y shellcheck."
+             || warn "'docker compose' plugin not found. Needed for 'just up'."
+have python3 || warn "'python3' not found. Install it: sudo apt install -y python3 python3-venv"
+have npm     || warn "'npm' not found. Install Node.js 20+ (nodesource or nvm)."
+have shellcheck || warn "'shellcheck' not found. Needed for 'just check --scripts': sudo apt install -y shellcheck."
 # Deploy-only tools (safe to skip for local development):
-have terraform || warn "'terraform' not found — only required for 'just deploy' (AWS)."
-have aws       || warn "'aws' (AWS CLI v2) not found — only required for 'just deploy' (AWS)."
+have terraform || warn "'terraform' not found. Only required for 'just deploy' (AWS)."
+have aws       || warn "'aws' (AWS CLI v2) not found. Only required for 'just deploy' (AWS)."
 
 # ---- .env ----
 if [[ ! -f "${REPO_ROOT}/.env" ]]; then

@@ -107,8 +107,8 @@ def resolve_ai_settings(base: Any, user: User | None, purpose: AiPurposeId = "su
     """Return effective AI settings for one purpose."""
     provider = resolve_provider_for_purpose(base, user, purpose)
 
-    # The single stored key belongs to summary_provider only — never attach it
-    # when a purpose resolves to a different vendor (XCT-05).
+    # The single stored key belongs to summary_provider only. Never attach it
+    # when a purpose resolves to a different vendor.
     api_key_overrides: dict[str, str] = {}
     key_provider = (
         str(user.summary_provider) if user is not None and user.summary_provider else None

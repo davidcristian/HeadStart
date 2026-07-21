@@ -1,6 +1,6 @@
 # Managed Postgres for the application.
-# OPS-43: CMK encryption, IAM DB auth, Performance Insights, Postgres log
-# exports, enhanced monitoring, and non-disruptive apply by default.
+# CMK encryption, IAM DB auth, Performance Insights, Postgres log exports,
+# enhanced monitoring, and non-disruptive apply by default.
 
 resource "aws_db_subnet_group" "this" {
   name       = "${var.name}-db"
@@ -31,7 +31,7 @@ resource "aws_db_instance" "this" {
   multi_az                = var.multi_az
   backup_retention_period = var.backup_retention_days
   deletion_protection     = var.deletion_protection
-  # OPS-48: final snapshot is independent of deletion_protection so a
+  # Final snapshot is independent of deletion_protection so a
   # forgotten protection override cannot destroy without a recoverable copy.
   skip_final_snapshot       = var.skip_final_snapshot
   final_snapshot_identifier = var.skip_final_snapshot ? null : "${var.name}-final"

@@ -134,7 +134,7 @@ def test_email_digest_sends_single_email(mock_send) -> None:
     assert all(r.status == "sent" for r in results)
     mock_send.assert_called_once()
     kwargs = mock_send.call_args.kwargs
-    assert kwargs["subject"] == "2 new jobs — Backend"
+    assert kwargs["subject"] == "2 new jobs for Backend"
     assert "Software Engineer @ Google" in kwargs["body"]
 
 

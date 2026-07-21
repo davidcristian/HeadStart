@@ -10,9 +10,8 @@
  * `tabIndex={-1}` on the container) rather than announcing only that button.
  *
  * `onClose` is kept in a ref so a new callback identity (common for inline
- * `() => setOpen(false)` props) does not re-run the effect mid-open — that
- * would steal focus back to the first control and overwrite the restore target
- * (FRO-32).
+ * `() => setOpen(false)` props) does not re-run the effect mid-open. Re-running
+ * would steal focus back to the first control and overwrite the restore target.
  */
 
 import { useEffect, useRef } from "react";

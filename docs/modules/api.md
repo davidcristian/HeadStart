@@ -4,7 +4,7 @@
 
 FastAPI app exposing CRUD for the configurable entities plus a job feed and
 health. Interactive docs at `/docs` (and `/redoc` / `/openapi.json`) are
-enabled only when `ENVIRONMENT` is `local` or `test` (AUT-25); production
+enabled only when `ENVIRONMENT` is `local` or `test`; production
 boots set those URLs to `None` so the public surface cannot be enumerated.
 
 ## Layering
@@ -39,7 +39,7 @@ never touch the DB directly (services use repositories). See
 | PATCH  | `/sources/{id}`       | Update a source                          |
 | DELETE | `/sources/{id}`       | Delete a source                          |
 | POST   | `/sources/{id}/test`  | Dry-run scrape; return sample postings   |
-| GET    | `/portals`            | Curated employer portal catalog — see [portals.md](portals.md) |
+| GET    | `/portals`            | Curated employer portal catalog. See [portals.md](portals.md) |
 | POST   | `/portals/search`     | Cross-portal job search (Pro+; `portal_search` feature) |
 | POST   | `/portals/subscribe`  | Bulk create sources + searches for curated portals (Pro+) |
 | GET    | `/searches`           | List searches                            |
@@ -51,7 +51,7 @@ never touch the DB directly (services use repositories). See
 | GET    | `/search-runs/{id}`   | Poll one queued manual search run until terminal status |
 | GET    | `/jobs`               | Feed of seen jobs (filter by `search_id`, `status`) |
 | PATCH  | `/jobs/{id}`          | Update triage status (`seen` / `applied` / `archived`) |
-| POST   | `/jobs/{id}/apply`    | Submit or preview an auto-apply (`dry_run`, optional `cover_letter`, optional `tailored_resume_b64` or `tailored_resume_artifact_id`). Dry-run preview returns HTTP 200; live submit returns HTTP 202 with `status=queued` + `application_log_id` — poll `GET /application-logs/{id}`. |
+| POST   | `/jobs/{id}/apply`    | Submit or preview an auto-apply (`dry_run`, optional `cover_letter`, optional `tailored_resume_b64` or `tailored_resume_artifact_id`). Dry-run preview returns HTTP 200; live submit returns HTTP 202 with `status=queued` + `application_log_id`. Poll `GET /application-logs/{id}`. |
 | POST   | `/jobs/{id}/generate-cover-letter` | Queue a tailored cover letter (`status=queued`). Poll `GET /document-generations/{id}` until `ready`/`failed`; ready `result` has `cover_letter`, `provider`, `fallback`. |
 | POST   | `/jobs/{id}/generate-resume` | Queue a tailored resume PDF (`status=queued`). Poll `GET /document-generations/{id}`; ready `result` has `pdf_b64`, `artifact_id`, `provider`, `fallback`, `injection_guarded`. Compiles in the worker with `tectonic`/`pdflatex` (`-no-shell-escape` + restricted env + POSIX `RLIMIT_AS`/`CPU`/`NPROC`). |
 | GET    | `/document-generations/{id}` | Poll one queued resume/cover-letter generation until terminal status |
@@ -59,12 +59,12 @@ never touch the DB directly (services use repositories). See
 | GET    | `/application-logs/{id}` | Poll one queued/live apply log until terminal status |
 | GET    | `/application-artifacts/{id}` | Metadata for one stored generated document (owner only) |
 | GET    | `/application-artifacts/{id}/download` | Download decrypted artifact bytes (e.g. tailored resume PDF) |
-| GET    | `/applications` | Application pipeline rows (`stage` filter optional): job + derived `pipeline_stage`, `latest_attempt`, chronological `attempts`. Stage derivation maps archived/closed/rejected/interview_pending/ghosted/queued/apply_failed explicitly; everything else (including applied/submitted) is `awaiting_reply` (SVC-10) |
+| GET    | `/applications` | Application pipeline rows (`stage` filter optional): job + derived `pipeline_stage`, `latest_attempt`, chronological `attempts`. Stage derivation maps archived/closed/rejected/interview_pending/ghosted/queued/apply_failed explicitly; everything else (including applied/submitted) is `awaiting_reply` |
 | GET    | `/feed/url`           | Signed RSS feed URL for the current user             |
 | POST   | `/feed/rotate`        | Invalidate prior feed URLs and issue a new one       |
-| GET    | `/feed/rss`           | RSS 2.0 job feed (public; `token` query **or** `Authorization: Bearer`). Missing/invalid token → `UnauthorizedError` (401); plan gate raises `PlanLimitError` (402 with `code`/`plan`/`limit`) via the central handlers — not local `HTTPException`. Text fields strip XML 1.0–invalid C0 controls (keeping tab/LF/CR) before markup escape so a hostile scraped title cannot invalidate the whole feed (SVC-16). |
+| GET    | `/feed/rss`           | RSS 2.0 job feed (public; `token` query **or** `Authorization: Bearer`). Missing/invalid token → `UnauthorizedError` (401); plan gate raises `PlanLimitError` (402 with `code`/`plan`/`limit`) via the central handlers rather than a local `HTTPException`. Text fields strip C0 controls that XML 1.0 rejects (keeping tab/LF/CR) before markup escape so a hostile scraped title cannot invalidate the whole feed. |
 | GET    | `/targets`            | List notification targets                |
-| POST   | `/targets`            | Create a target; HTTP **201**; per-type `config` validated (required keys + SSRF-safe URLs; API-14) |
+| POST   | `/targets`            | Create a target; HTTP **201**; per-type `config` validated (required keys + SSRF-safe URLs) |
 | PATCH  | `/targets/{id}`       | Update a target (re-validates effective type+config) |
 | DELETE | `/targets/{id}`       | Delete a target                          |
 | POST   | `/targets/{id}/test`  | Send a test notification                 |
@@ -81,7 +81,7 @@ never touch the DB directly (services use repositories). See
 | DELETE | `/profile`            | Clear the application profile (HTTP 204) |
 | GET    | `/summary-preferences` | Per-user AI provider/model preferences (global + per-purpose); see [summaries.md](summaries.md) |
 | PATCH  | `/summary-preferences` | Update global `provider` / optional `api_key` and `purpose_preferences` (Pro; `402` for free) |
-| GET    | `/inbox/credentials`  | Mailbox credential metadata (dev-only; requires `INBOX_AGENT_ENABLED`) — full inbox API in [inbox.md](inbox.md) |
+| GET    | `/inbox/credentials`  | Mailbox credential metadata (dev-only; requires `INBOX_AGENT_ENABLED`). Full inbox API in [inbox.md](inbox.md) |
 | PUT    | `/inbox/credentials`  | Upsert encrypted IMAP/SMTP or Fastmail mailbox credentials |
 | DELETE | `/inbox/credentials`  | Remove saved mailbox credentials |
 | GET    | `/inbox/gmail/authorize` | Start Gmail OAuth (consent URL + PKCE cookie) |
@@ -91,15 +91,15 @@ never touch the DB directly (services use repositories). See
 | GET    | `/inbox/yahoo/authorize` | Start Yahoo OAuth (consent URL + PKCE cookie) |
 | GET    | `/inbox/yahoo/callback` | Yahoo OAuth redirect (stores tokens; unauthenticated) |
 | POST   | `/inbox/test`         | Test mailbox connector (optional inline config) |
-| GET    | `/inbox/messages`     | Fetch inbound messages (`since_uid` ≥1 optional, `limit` 1–100) |
+| GET    | `/inbox/messages`     | Fetch inbound messages (`since_uid` ≥1 optional, `limit` 1 to 100) |
 | POST   | `/inbox/classify`     | Classify one message (body or mailbox `uid`) |
-| GET    | `/inbox/classifications` | List recent classifications (`limit` 1–500) |
+| GET    | `/inbox/classifications` | List recent classifications (`limit` 1 to 500) |
 | GET    | `/inbox/routing`      | Read label→folder routing settings |
 | PUT    | `/inbox/routing`      | Update label→folder routing settings |
 | POST   | `/inbox/route`        | Move a classified message to its folder |
 | POST   | `/inbox/draft-reply`  | Draft a recruiter follow-up (may queue auto-send) |
-| GET    | `/inbox/reply-drafts` | List reply drafts (`seen_job_id` ≥1, `limit` 1–500) |
-| GET    | `/inbox/reply-send-logs` | List auto-reply audit rows (`limit` 1–500) |
+| GET    | `/inbox/reply-drafts` | List reply drafts (`seen_job_id` ≥1, `limit` 1 to 500) |
+| GET    | `/inbox/reply-send-logs` | List auto-reply audit rows (`limit` 1 to 500) |
 | GET    | `/admin/users`        | List all users (admin only)              |
 | PATCH  | `/admin/users/{id}`   | Toggle `is_active` / `is_admin` / `plan` (admin; structured `admin_event=user_update` audit log) |
 | GET    | `/admin/stats`        | Global scrape/delivery aggregates (admin)|
@@ -114,7 +114,7 @@ never touch the DB directly (services use repositories). See
 | POST   | `/billing/portal`     | Open Stripe customer portal              |
 | POST   | `/billing/webhook`    | Stripe subscription webhooks (signed); HTTP **204** (no body) |
 
-### Success status codes (DOC-11)
+### Success status codes
 
 Unless a row above says otherwise, successful responses use **200**. Non-default
 success statuses used by the v1 API:
@@ -122,7 +122,7 @@ success statuses used by the v1 API:
 | Status | When |
 | ------ | ---- |
 | **201** | Resource creates: `POST /auth/register`, `/sources`, `/searches`, `/targets`, `/credentials`, `/admin/promo-codes` |
-| **202** | Accepted async work (search run, live apply enqueue, document generation) — poll the linked status URL |
+| **202** | Accepted async work (search run, live apply enqueue, document generation). Poll the linked status URL |
 | **204** | No-content deletes (`DELETE` on sources/searches/targets/credentials/profile/auth/me/inbox credentials) and `POST /billing/webhook` |
 
 Exceptions already called out in the table: `DELETE /profile/resume` and
@@ -142,7 +142,7 @@ Multi-user with JWT. **Public** routes (no bearer token): `/health`,
 and `/auth/verify-email`.
 
 All other routes require `Authorization: Bearer <access_token>` and are
-**scoped to the authenticated user** — including reads. Cross-user access returns
+**scoped to the authenticated user**, reads included. Cross-user access returns
 404. Most product routes additionally require a **verified email** (`403` until
 `email_verified_at` is set); auth self-service (`/auth/me`, export, delete) and
 settings remain available while unverified. Full detail in [auth.md](auth.md);
@@ -156,14 +156,14 @@ out-of-bounds values return **422** and appear in OpenAPI. List resources share
 one cap (`ge=1, le=500`): jobs, applications, application-logs, feed, admin
 data-requests, and inbox classifications / reply-drafts / reply-send-logs.
 `GET /inbox/messages` keeps a tighter live-mailbox fetch cap (`since_uid` ≥1
-optional, `limit` 1–100). Do not clamp unbounded ints in the handler body.
+optional, `limit` 1 to 100). Do not clamp unbounded ints in the handler body.
 
 Auth abuse endpoints (`/auth/login`, `/register`, `/forgot-password`,
 `/reset-password`, `/verify-email`, `/resend-verification`, `/refresh`) return
-**429** when their per-IP / per-email / per-user sliding windows are exceeded —
-see [auth.md](auth.md#rate-limiting-aut-03).
+**429** when their per-IP / per-email / per-user sliding windows are exceeded.
+See [auth.md](auth.md#rate-limiting).
 
-## Request correlation id (AUT-15)
+## Request correlation id
 
 Every HTTP response includes an `X-Request-ID` header. Clients may send their
 own `X-Request-ID` (letters, digits, `.`, `_`, `-`; max 128 chars); otherwise
@@ -171,9 +171,9 @@ the API mints a UUID4. The active id is bound via a contextvar and appears on
 every log line as the `request_id` JSON field (or `[request_id]` when
 `LOG_FORMAT=text`) so interleaved API output can be filtered to one request.
 Celery workers bind the same field to the task id for the duration of each
-task (see [worker.md](worker.md#request-correlation-id-aut-15)).
+task (see [worker.md](worker.md#request-correlation-id)).
 
-## Security response headers (AUT-23)
+## Security response headers
 
 `SecurityHeadersMiddleware` stamps every API response (including CORS
 preflight) with:
@@ -190,7 +190,7 @@ HSTS is omitted in `local`/`test` so browsers do not pin plain-HTTP localhost.
 The SPA nginx shell sets the same baseline (see [frontend.md](frontend.md));
 the API is a separate origin behind the ALB and needs its own middleware.
 
-## Interactive OpenAPI docs (AUT-25)
+## Interactive OpenAPI docs
 
 `create_app()` enables FastAPI's `/docs`, `/redoc`, and `/openapi.json` only
 when `ENVIRONMENT` is `local` or `test`. Outside those environments the three
@@ -198,7 +198,7 @@ URLs are `None` (404), the root payload omits the `docs` link, and the ALB
 forwards only `/api/*` to the API target group so `/docs` hits the SPA instead
 of exposing the schema.
 
-## Structured JSON logs (AUT-16)
+## Structured JSON logs
 
 `configure_logging()` defaults to one JSON object per stdout line
 (`LOG_FORMAT=json`): `timestamp`, `level`, `logger`, `request_id`, `message`,

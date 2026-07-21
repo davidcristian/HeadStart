@@ -107,7 +107,8 @@ def build_application_payload(
 ) -> dict[str, Any]:
     """Dry-run preview payload with metadata and redacted secrets/bytes.
 
-    Never embeds a live ``sessionToken`` — ApplicationLog persists this payload.
+    Never embeds a live ``sessionToken`` because ApplicationLog persists this
+    payload.
     """
     application_form_request = build_application_form_request(
         profile,

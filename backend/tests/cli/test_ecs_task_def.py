@@ -1,4 +1,4 @@
-"""Unit tests for ECS task-definition image retargeting (OPS-01)."""
+"""Unit tests for ECS task-definition image retargeting."""
 
 from __future__ import annotations
 
@@ -68,7 +68,7 @@ def test_image_uri_strips_trailing_slash() -> None:
 
 
 def test_image_uri_appends_sha256_digest() -> None:
-    """OPS-64: tag@digest pins the exact ECR manifest, not only the tag."""
+    """Tag@digest pins the exact ECR manifest, not only the tag."""
     digest = "sha256:" + ("ab" * 32)
     assert (
         image_uri(

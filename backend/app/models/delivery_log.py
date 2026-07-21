@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 class DeliveryLog(Base):
     __tablename__ = "delivery_log"
     __table_args__ = (
-        # Admin stats + search-status failure counts filter by status (DAT-11).
+        # Admin stats + search-status failure counts filter by status.
         Index("ix_delivery_log_status", "status"),
     )
 

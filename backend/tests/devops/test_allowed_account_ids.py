@@ -1,4 +1,4 @@
-"""Regression: beta/prod AWS providers must pin allowed_account_ids (OPS-31)."""
+"""Regression: beta/prod AWS providers must pin allowed_account_ids."""
 
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ def test_env_providers_pin_allowed_account_ids() -> None:
     """Beta and prod providers must refuse credentials outside aws_account_id."""
     for env in ("beta", "prod"):
         text = (_TF_ENVS / env / "providers.tf").read_text(encoding="utf-8")
-        assert _ALLOWED.search(text), f"{env} providers.tf missing allowed_account_ids (OPS-31)"
+        assert _ALLOWED.search(text), f"{env} providers.tf missing allowed_account_ids"
 
 
 def test_env_aws_account_id_is_required_and_validated() -> None:
@@ -44,7 +44,6 @@ def test_tfvars_examples_do_not_bake_in_account_id() -> None:
     for env in ("beta", "prod"):
         path = _TF_ENVS / env / "terraform.tfvars.example"
         text = path.read_text(encoding="utf-8")
-        assert "OPS-31" in text, f"{path} should document the account pin"
         assert "TF_VAR_aws_account_id" in text
         for line in text.splitlines():
             stripped = line.strip()
@@ -57,5 +56,4 @@ def test_aws_first_deploy_resolves_account_id() -> None:
     text = _FIRST_DEPLOY.read_text(encoding="utf-8")
     assert "TF_VAR_aws_account_id" in text
     assert "get-caller-identity" in text
-    assert "OPS-31" in text
     assert "export TF_VAR_aws_account_id=" in text

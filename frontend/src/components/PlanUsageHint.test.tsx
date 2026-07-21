@@ -27,7 +27,7 @@ describe("PlanUsageHint", () => {
   it("shows the admin note for unlimited plans", () => {
     render({ ...sampleAccountPlan, unlimited: true }, "searches");
 
-    expect(screen.getByText("Admin account — no plan limits.")).toBeInTheDocument();
+    expect(screen.getByText("Admin accounts have no plan limits.")).toBeInTheDocument();
   });
 
   it("shows usage below the cap without an upgrade prompt", () => {

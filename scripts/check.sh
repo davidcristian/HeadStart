@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Full quality gate: lint + typecheck + tests (same entrypoint local and CI).
-# Pass --backend | --frontend | --scripts to scope; default is all (OPS-22).
+# Pass --backend | --frontend | --scripts to scope; default is all.
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 scope="${1:-all}"

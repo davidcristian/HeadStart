@@ -11,8 +11,8 @@ from app.core.exceptions import ValidationError
 # compile workspace (packages and classes are loaded by the entrypoint).
 SCANNED_BUNDLE_EXTENSIONS: Final[frozenset[str]] = frozenset({".tex", ".sty", ".cls"})
 
-# Absolute, pipe, home, or parent-path file access — plus shell-escape /
-# stream-read primitives. Relative same-tree includes like \\input{section}
+# Absolute, pipe, home, or parent-path file access, along with shell-escape
+# and stream-read primitives. Relative same-tree includes like \\input{section}
 # remain allowed.
 _DANGEROUS_LATEX_PATTERNS = (
     re.compile(r"\\write18\b", re.IGNORECASE),

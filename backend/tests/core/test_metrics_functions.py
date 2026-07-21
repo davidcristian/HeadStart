@@ -135,7 +135,7 @@ def test_start_metrics_server_starts_when_enabled(metrics_enabled: None) -> None
 
 
 def test_start_metrics_server_skips_when_port_in_use(metrics_enabled: None) -> None:
-    """Prefork siblings must not crash when METRICS_PORT is already bound (XCT-13)."""
+    """Prefork siblings must not crash when METRICS_PORT is already bound."""
     with patch.object(
         metrics,
         "make_server",

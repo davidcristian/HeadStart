@@ -17,7 +17,7 @@ from app.scrapers.rate_limit import RateLimiter
 DEFAULT_USER_AGENT = "HeadStart/0.1 (+https://github.com/; polite job-posting watcher)"
 DEFAULT_TIMEOUT = 20.0
 # Job-board HTML/JSON pages are typically well under this; a hostile upstream
-# that streams multi-GB bodies must not OOM a shared Celery worker (SCR-04).
+# that streams multi-GB bodies must not OOM a shared Celery worker.
 DEFAULT_MAX_RESPONSE_BYTES = 5_242_880  # 5 MiB
 
 

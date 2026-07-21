@@ -1,4 +1,4 @@
-"""Unit tests for shared scraper count coercion (SCR-05)."""
+"""Unit tests for shared scraper count coercion."""
 
 import math
 

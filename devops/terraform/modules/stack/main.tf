@@ -1,13 +1,13 @@
 # Full HeadStart stack for one environment. Each environment (beta, prod) calls
 # this module with its own provider + remote state.
 
-# OPS-10: ElastiCache AUTH token (alphanumeric avoids /@" which Redis rejects).
+# ElastiCache AUTH token (alphanumeric avoids /@" which Redis rejects).
 resource "random_password" "redis_auth" {
   length  = 32
   special = false
 }
 
-# OPS-54: Bearer token for API + worker /metrics (empty METRICS_TOKEN = open scrape).
+# Bearer token for API + worker /metrics (empty METRICS_TOKEN = open scrape).
 resource "random_password" "metrics_token" {
   length  = 32
   special = false
@@ -56,16 +56,16 @@ locals {
   secret_values      = merge(local.base_secret_values, local.smtp_secret_values)
 }
 
-# OPS-36: prod must terminate TLS on the ALB. Without a cert, the port-80
+# Prod must terminate TLS on the ALB. Without a cert, the port-80
 # listener forwards auth/credential API traffic in cleartext.
 check "prod_requires_https" {
   assert {
     condition     = var.environment != "prod" || local.https_enabled
-    error_message = "Production requires HTTPS so the ALB does not serve auth traffic over plaintext HTTP (OPS-36). Set domain_name + route53_zone_id (auto ACM) or acm_certificate_arn."
+    error_message = "Production requires HTTPS so the ALB does not serve auth traffic over plaintext HTTP. Set domain_name + route53_zone_id (auto ACM) or acm_certificate_arn."
   }
 }
 
-# OPS-48: prod must keep RDS deletion protection on and never skip the final
+# Prod must keep RDS deletion protection on and never skip the final
 # snapshot, so a fat-finger destroy cannot drop the datastore with no copy.
 check "prod_requires_db_deletion_protection" {
   assert {
@@ -73,7 +73,7 @@ check "prod_requires_db_deletion_protection" {
       var.environment != "prod"
       || (var.db_deletion_protection && !var.db_skip_final_snapshot)
     )
-    error_message = "Production requires db_deletion_protection=true and db_skip_final_snapshot=false so RDS destroy cannot drop data without a final snapshot (OPS-48)."
+    error_message = "Production requires db_deletion_protection=true and db_skip_final_snapshot=false so RDS destroy cannot drop data without a final snapshot."
   }
 }
 
@@ -193,7 +193,7 @@ locals {
   ecs_environment = merge(
     {
       ENVIRONMENT   = var.environment
-      # OPS-55: tunable via var.log_level (tfvars / TF_VAR_log_level).
+      # Tunable via var.log_level (tfvars / TF_VAR_log_level).
       LOG_LEVEL     = upper(trimspace(var.log_level))
       POSTGRES_HOST = module.rds.address
       POSTGRES_PORT = tostring(module.rds.port)
@@ -201,11 +201,11 @@ locals {
       POSTGRES_USER = var.db_username
       REDIS_HOST    = module.redis.address
       REDIS_PORT    = tostring(module.redis.port)
-      # OPS-10: ElastiCache requires TLS when AUTH is enabled → Celery rediss://.
+      # ElastiCache requires TLS when AUTH is enabled → Celery rediss://.
       REDIS_TLS         = "true"
       CORS_ORIGINS      = join(",", local.effective_cors)
       FRONTEND_BASE_URL = local.app_base_url
-      # AUT-17: trust ALB-appended X-Forwarded-For from peers in this VPC.
+      # Trust ALB-appended X-Forwarded-For from peers in this VPC.
       TRUSTED_PROXY_CIDRS              = var.vpc_cidr
       # Match Secure cookie flag to ALB scheme (HTTP default drops Secure cookies).
       AUTH_COOKIE_SECURE               = local.https_enabled ? "true" : "false"
@@ -224,7 +224,7 @@ locals {
       JWT_SECRET             = module.secrets.secret_arns["JWT_SECRET"]
       CREDENTIALS_SECRET_KEY = module.secrets.secret_arns["CREDENTIALS_SECRET_KEY"]
       REDIS_PASSWORD         = module.secrets.secret_arns["REDIS_PASSWORD"]
-      # OPS-54: always inject so ECS /metrics is never unauthenticated.
+      # Always inject so ECS /metrics is never unauthenticated.
       METRICS_TOKEN          = module.secrets.secret_arns["METRICS_TOKEN"]
     },
     var.smtp_password != "" ? {

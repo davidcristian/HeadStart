@@ -132,7 +132,7 @@ def request_headers(
 
     Credential ``headers`` are a base layer only; computed Accept / Content-Type /
     CSRF / session / Referer always win so a stale stored value cannot clobber a
-    freshly resolved token or content type (APL-22).
+    freshly resolved token or content type.
     """
     headers: dict[str, str] = {}
     if credentials:

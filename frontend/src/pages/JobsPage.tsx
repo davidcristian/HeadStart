@@ -126,7 +126,7 @@ export function JobsPage() {
           <>
             <p className="muted">
               Subscribe in any RSS reader. The URL respects the search and status filters selected
-              below. Links expire after a bounded period — use Regenerate link if one may have
+              below. Links expire after a bounded period. Use Regenerate link if one may have
               leaked.
             </p>
             <Field

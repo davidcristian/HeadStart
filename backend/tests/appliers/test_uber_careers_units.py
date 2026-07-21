@@ -196,7 +196,7 @@ def test_build_application_payload_omits_blank_cover_letter() -> None:
 
 
 def test_build_application_payload_redacts_session_token() -> None:
-    """Dry-run preview must not persist a live Uber Careers sessionToken (APL-21)."""
+    """Dry-run preview must not persist a live Uber Careers sessionToken."""
     payload = build_application_payload(
         _profile(),
         job_id=1,

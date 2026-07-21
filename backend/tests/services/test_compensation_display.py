@@ -104,11 +104,11 @@ def test_format_display_range_from_structured_without_display() -> None:
             }
         }
     )
-    assert format_compensation_display(posting) == "$120K – $180K"
+    assert format_compensation_display(posting) == "$120K to $180K"
 
 
 def test_format_display_uses_iso_code_for_unmapped_currency() -> None:
-    """SVC-14: CHF/SEK must not be mislabeled with a USD dollar sign."""
+    """CHF/SEK must not be mislabeled with a USD dollar sign."""
     posting = _posting(
         raw={
             "compensation": {
@@ -124,7 +124,7 @@ def test_format_display_uses_iso_code_for_unmapped_currency() -> None:
             }
         }
     )
-    assert format_compensation_display(posting) == "CHF 120K – CHF 150K"
+    assert format_compensation_display(posting) == "CHF 120K to CHF 150K"
 
 
 def test_format_display_omits_prefix_when_currency_unknown() -> None:

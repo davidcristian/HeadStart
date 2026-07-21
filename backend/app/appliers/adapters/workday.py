@@ -11,7 +11,7 @@ Workday career sites use the CXS apply flow:
   8. PUT /wday/cxs/{tenant}/jobapplication/{applicationId}/termsandconditions (optional)
   9. POST /wday/cxs/{tenant}/jobapplication/{applicationId}/finalize
 
-Live submission requires an authenticated candidate session — store the
+Live submission requires an authenticated candidate session. Store the
 ``CALYPSO_SESSION`` and ``CALYPSO_CSRF_TOKEN`` cookies (or
 ``session.csrf_token``) from a logged-in apply page in [site
 credentials](../../docs/modules/credentials.md). Map screening questions via

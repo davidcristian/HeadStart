@@ -28,7 +28,7 @@ const SUBPROCESSORS = [
     name: "OpenAI",
     purpose:
       "Optional AI features (match summaries, cover letters, resume curation, email classification, reply drafting) when the operator enables the OpenAI provider.",
-    data: "Job and filter context, application-profile fields, resume text excerpts, and recruiter message content depending on the enabled purpose — never your password or encrypted credentials.",
+    data: "Job and filter context, application-profile fields, resume text excerpts, and recruiter message content depending on the enabled purpose. We never send your password or encrypted credentials.",
     location: "United States.",
     safeguards: "OpenAI Data Processing Addendum available to business customers.",
     link: "https://openai.com/policies/data-processing-addendum",
@@ -37,7 +37,7 @@ const SUBPROCESSORS = [
     name: "Google (Gemini)",
     purpose:
       "Optional AI features (match summaries, cover letters, resume curation, email classification, reply drafting) when the operator enables the Gemini provider.",
-    data: "Job and filter context, application-profile fields, resume text excerpts, and recruiter message content depending on the enabled purpose — never your password or encrypted credentials.",
+    data: "Job and filter context, application-profile fields, resume text excerpts, and recruiter message content depending on the enabled purpose. We never send your password or encrypted credentials.",
     location: "United States and other Google Cloud processing regions.",
     safeguards: "Google Cloud Data Processing Addendum and SCCs where required.",
     link: "https://cloud.google.com/terms/data-processing-addendum",
@@ -46,7 +46,7 @@ const SUBPROCESSORS = [
     name: "Anthropic",
     purpose:
       "Optional AI features (match summaries, cover letters, resume curation, email classification, reply drafting) when the operator enables the Anthropic provider.",
-    data: "Job and filter context, application-profile fields, resume text excerpts, and recruiter message content depending on the enabled purpose — never your password or encrypted credentials.",
+    data: "Job and filter context, application-profile fields, resume text excerpts, and recruiter message content depending on the enabled purpose. We never send your password or encrypted credentials.",
     location: "United States.",
     safeguards: "Anthropic Data Processing Addendum available to business customers.",
     link: "https://www.anthropic.com/legal/commercial-terms",

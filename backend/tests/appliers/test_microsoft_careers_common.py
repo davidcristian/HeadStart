@@ -76,7 +76,7 @@ def test_resolve_csrf_token_handles_fetch_error() -> None:
 
 
 def test_resolve_csrf_token_propagates_non_http_errors() -> None:
-    """SSRF / programming errors must not collapse into a missing-CSRF result (APL-20)."""
+    """SSRF / programming errors must not collapse into a missing-CSRF result."""
     with pytest.raises(UnsafeOutboundUrlError):
         resolve_csrf_token(
             None,

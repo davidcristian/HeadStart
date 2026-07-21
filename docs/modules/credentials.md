@@ -41,7 +41,7 @@ the search's source (`CredentialService.secret_for_source`), decrypts it, and:
 1. Builds an `HttpClient(headers=..., cookies=...)` passed to the scraper, and
 2. Populates `ScrapeContext.cookies` / `.headers` for adapters that want them.
 
-Existing adapters need **no changes** — the shared HTTP client carries the
+Existing adapters need **no changes**, because the shared HTTP client carries the
 cookies/headers automatically. If no credential exists, behavior is unchanged.
 
 For **Greenhouse auto-apply**, store a Job Board API key in the credential
@@ -69,18 +69,18 @@ For **LinkedIn auto-apply**, store logged-in session cookies (`li_at`,
 CSRF header when Voyager requests fail with CSRF errors. The session is
 candidate-owned, not employer-issued. See [appliers.md](appliers.md).
 
-**LinkedIn / Indeed ToS risk (XCT-19).** Session cookies for `linkedin` /
+**LinkedIn / Indeed ToS risk.** Session cookies for `linkedin` /
 `indeed` sources also power credentialed scrape (auth walls / Cloudflare).
 Those platforms' User Agreements typically prohibit automated access; saving
 cookies is at the operator/user's own risk. The Credentials page confirms this
 before create. Apply-side private-API risk is gated separately via
-`accept_private_api_risk` — see [appliers.md](appliers.md) and
-[scrapers.md](scrapers.md#linkedin--indeed-credentialed-scrape-tos-risk-xct-19).
+`accept_private_api_risk`. See [appliers.md](appliers.md) and
+[scrapers.md](scrapers.md#linkedin--indeed-credentialed-scrape-tos-risk).
 
 For **SmartRecruiters auto-apply**, store an Application API token in credential
 `session.smart_token` (`X-SmartToken` header) or an OAuth bearer token in
 `session.access_token`. Tokens are partner/employer-issued via the SmartRecruiters
-developer portal — see [appliers.md](appliers.md).
+developer portal. See [appliers.md](appliers.md).
 
 ## Endpoints (prefix `/api/v1/credentials`)
 

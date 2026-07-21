@@ -80,7 +80,7 @@ def test_build_answers_drops_optional_when_conversion_returns_none() -> None:
 
 
 def test_build_answers_flags_required_when_numeric_unresolvable() -> None:
-    """APL-04: present-but-unconvertible required answers must not be dropped."""
+    """Present-but-unconvertible required answers must not be dropped."""
     questionnaire = {"questions": [_question("q-num", "Numeric", required=True)]}
     answers, missing = build_questionnaire_answers(
         questionnaire, ProfileData(answers={"q-num": "0"}), {}
@@ -211,7 +211,7 @@ def test_answer_entry_multi_choice_by_workday_id_and_label() -> None:
 
 
 def test_answer_entry_rejects_out_of_catalog_workday_id() -> None:
-    """APL-24: a 32-hex token must be a possibleAnswers member, not any WID."""
+    """A 32-hex token must be a possibleAnswers member, not any WID."""
     questionnaire = {
         "questions": [
             {
@@ -252,7 +252,7 @@ def test_answer_entry_rejects_out_of_catalog_workday_id() -> None:
 
 
 def test_build_answers_rejects_partial_multi_choice() -> None:
-    """APL-23: unmatched multi-select tokens must not silently truncate the set."""
+    """Unmatched multi-select tokens must not silently truncate the set."""
     questionnaire = {
         "questions": [
             {

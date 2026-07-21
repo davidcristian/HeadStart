@@ -82,7 +82,7 @@ class PromoCodeService:
             one_per_user=data.one_per_user,
             eligible_plans=data.eligible_plans,
         )
-        # Flush before Stripe so PromotionCode metadata carries the local id (BIL-13).
+        # Flush before Stripe so PromotionCode metadata carries the local id.
         self.promos.add(promo)
         if settings.billing_enabled and data.promo_type in {
             "percent_off",
@@ -118,7 +118,7 @@ class PromoCodeService:
         return promo
 
     def _lookup_redeemable_promo(self, user_id: int, code: str) -> tuple[User, PromoCode]:
-        """Shared validate/checkout lookup with the same attempt throttle (BIL-09)."""
+        """Shared validate/checkout lookup with the same attempt throttle."""
         user = self._require_user(user_id)
         self._enforce_validation_rate_limit(user_id)
         normalized = normalize_promo_code(code)
@@ -229,7 +229,7 @@ class PromoCodeService:
         normalized = normalize_promo_code(code)
         if not _CODE_PATTERN.match(normalized):
             raise ValidationError(
-                "Promo codes must be 1–64 characters: letters, numbers, and hyphens only."
+                "Promo codes must be 1 to 64 characters: letters, numbers, and hyphens only."
             )
         return normalized
 

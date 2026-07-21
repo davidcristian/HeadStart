@@ -37,8 +37,8 @@ def derive_pipeline_stage(job: SeenJob, latest: ApplicationLog | None) -> Applic
 
     Explicit stages cover archived/closed/rejected/interview_pending/ghosted/
     queued/apply_failed. Everything else (applied/submitted, recovered ghosts,
-    or no live attempt yet) is ``awaiting_reply`` — there is no distinct
-    post-submit stage.
+    or no live attempt yet) is ``awaiting_reply``, because there is no
+    distinct post-submit stage.
     """
     if job.status == "archived":
         return "archived"

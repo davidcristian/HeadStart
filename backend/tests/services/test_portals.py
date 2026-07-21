@@ -303,7 +303,7 @@ def test_curated_portal_hashicorp_ibm_careers_preset() -> None:
     assert "keywords" not in bare.default_config
 
 
-def test_curated_portal_phase29_batch_presets() -> None:
+def test_curated_portal_redhat_box_and_phenom_presets() -> None:
     from app.portals.catalog import CURATED_PORTALS
     from app.portals.catalog_helpers import gh_preset
 
@@ -389,7 +389,7 @@ def test_curated_portal_huggingface_workable_preset() -> None:
     assert other.default_config["account"] == "acme-corp"
 
 
-def test_curated_portal_batch7_presets() -> None:
+def test_curated_portal_skroutz_typeform_and_wise_presets() -> None:
     from app.portals.catalog import CURATED_PORTALS
 
     skroutz = next(p for p in CURATED_PORTALS if p.id == "skroutz")
@@ -446,8 +446,8 @@ def test_curated_portal_batch7_presets() -> None:
     assert langchain.category == "ai"
 
 
-def test_curated_portal_batch_8_presets() -> None:
-    """Phase 34 catalog batch 8 — verified public boards on existing adapters."""
+def test_curated_portal_together_grafana_and_gong_presets() -> None:
+    """Verified public boards on existing adapters."""
     from app.portals.catalog import CURATED_PORTALS
 
     together = next(p for p in CURATED_PORTALS if p.id == "together")
@@ -490,8 +490,8 @@ def test_curated_portal_batch_8_presets() -> None:
         assert preset.default_config["portal_id"] == portal_id
 
 
-def test_curated_portal_batch_10_presets() -> None:
-    """Portal catalog batch 10 — verified public boards on existing adapters."""
+def test_curated_portal_navan_freshworks_and_sigma_presets() -> None:
+    """Verified public boards on existing adapters."""
     from app.portals.catalog import CURATED_PORTALS
 
     navan = next(p for p in CURATED_PORTALS if p.id == "navan")

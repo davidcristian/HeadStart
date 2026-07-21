@@ -53,7 +53,7 @@ class PlanLimits:
     max_searches: int
     max_sources: int
     max_targets: int
-    # Rolling 24h ceiling on live (non–dry-run) applies from the scrape pipeline.
+    # Rolling 24h ceiling on applies from the scrape pipeline, excluding dry runs.
     max_auto_applies_per_day: int
 
 

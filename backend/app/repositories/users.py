@@ -1,4 +1,4 @@
-"""Data access for User. Queries only — no business logic."""
+"""Data access for User. Contains queries only and no business logic."""
 
 from __future__ import annotations
 
@@ -26,8 +26,7 @@ class UserRepository:
         """Fetch a user holding a row lock (Postgres) to serialize per-user work.
 
         Used so concurrent auto-reply sends cannot both pass the same rate-cap
-        check (INB-23). SQLite (tests) has no row locking; returns the unlocked
-        row.
+        check. SQLite (tests) has no row locking; returns the unlocked row.
         """
         if self._is_sqlite():
             return self.get(user_id)
@@ -73,8 +72,7 @@ class UserRepository:
         """Insert a user, returning None when the email unique constraint conflicts.
 
         Contained in a SAVEPOINT so a concurrent duplicate registration rolls
-        back only this insert, leaving the surrounding transaction usable
-        (AUT-28).
+        back only this insert, leaving the surrounding transaction usable.
         """
         try:
             with self.session.begin_nested():

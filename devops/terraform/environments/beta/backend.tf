@@ -1,5 +1,5 @@
 # Remote state in S3 with DynamoDB locking. See devops/terraform/README.md.
-# The state bucket is not committed (OPS-29) — pass it at init time:
+# The state bucket is not committed. Pass it at init time:
 #   terraform init -backend-config=backend.hcl
 # or:
 #   terraform init -backend-config="bucket=YOURNAME-headstart-tfstate"

@@ -291,7 +291,7 @@ def test_notify_counts_failed_deliveries(db_session: Session) -> None:
 
 
 def test_run_commits_seen_jobs_before_notify(db_session: Session) -> None:
-    """seen_job rows must be durable before notifier.send (XCT-12)."""
+    """seen_job rows must be durable before notifier.send."""
     from app.models.seen_job import SeenJob
 
     search = make_search(db_session)
@@ -325,7 +325,7 @@ def test_run_commits_seen_jobs_before_notify(db_session: Session) -> None:
 
 
 def test_run_seen_jobs_survive_post_notify_rollback(db_session: Session) -> None:
-    """A crash after send must not roll back already-committed seen_jobs (XCT-12)."""
+    """A crash after send must not roll back already-committed seen_jobs."""
     from app.models.seen_job import SeenJob
 
     search = make_search(db_session)

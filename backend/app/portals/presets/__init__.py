@@ -1,4 +1,4 @@
-"""Curated employer presets — one module per portal (`presets/<portal_id>.py`)."""
+"""Each curated employer preset lives in its own `presets/<portal_id>.py` module."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Route tests for async document generation (API-01)."""
+"""Route tests for async document generation."""
 
 from unittest.mock import patch
 

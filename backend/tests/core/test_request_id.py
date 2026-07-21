@@ -1,4 +1,4 @@
-"""Tests for request/task correlation ids in logs (AUT-15)."""
+"""Tests for request/task correlation ids in logs."""
 
 from __future__ import annotations
 

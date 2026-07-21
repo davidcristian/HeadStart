@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Production SPA build (tsc + vite). CI uses this so the build step cannot
-# drift from a documented just/scripts entrypoint (OPS-22).
+# drift from a documented just/scripts entrypoint.
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 require_frontend_deps

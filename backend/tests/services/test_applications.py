@@ -34,7 +34,7 @@ def _seed_job(session: Session) -> tuple[int, SeenJob]:
 
 
 def test_derive_pipeline_stage_awaiting_reply_after_submit(db_session: Session) -> None:
-    """Applied + submitted share the default awaiting_reply fall-through (SVC-10)."""
+    """Applied + submitted share the default awaiting_reply fall-through."""
     _, job = _seed_job(db_session)
     log = ApplicationLog(
         seen_job_id=job.id,

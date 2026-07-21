@@ -154,7 +154,7 @@ def test_process_user_records_fetch_failure(db_session: Session, monkeypatch) ->
 
 
 def test_process_due_resolves_context_once_per_user(db_session: Session, monkeypatch) -> None:
-    """INB-20: env-mode listing must not re-resolve before fetch."""
+    """Env-mode listing must not re-resolve before fetch."""
     monkeypatch.setattr(settings, "inbox_agent_enabled", True)
     monkeypatch.setattr(settings, "inbox_use_env_credentials", True)
     user = make_user(db_session, email="orchestrate-once@example.test")

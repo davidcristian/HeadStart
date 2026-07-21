@@ -1,4 +1,4 @@
-"""Heuristic reply drafter — offline default."""
+"""Heuristic reply drafter used as the offline default."""
 
 from __future__ import annotations
 
@@ -67,7 +67,7 @@ def _build_reply(ctx: ReplyDraftContext) -> ReplyDraftResult:
             paragraphs.append(f"Regarding work authorization: {work_auth.rstrip('.')}.")
         else:
             paragraphs.append(
-                "I'm happy to discuss work authorization details — please let me know "
+                "I'm happy to discuss work authorization details. Please let me know "
                 "what information you need."
             )
     elif _matches_any(_AVAILABILITY_PATTERNS, haystack):

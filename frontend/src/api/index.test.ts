@@ -43,7 +43,7 @@ beforeEach(() => {
   requestForm.mockClear();
 });
 
-/** Helper: last request() call as a definite tuple (FRO-42). */
+/** Helper: last request() call as a definite tuple. */
 function lastCall(): [string, RequestOptions?] {
   const call = request.mock.calls[request.mock.calls.length - 1];
   if (call === undefined) {

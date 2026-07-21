@@ -147,7 +147,7 @@ def test_discord_digest_sends_single_message() -> None:
     assert all(r.status == "sent" for r in results)
     assert len(captured) == 1
     embed = captured[0]["embeds"][0]
-    assert embed["title"] == "2 new jobs — Backend"
+    assert embed["title"] == "2 new jobs for Backend"
     assert "great match" in embed["description"]
     link = "[Software Engineer @ Google (Amsterdam)](https://careers.example/jobs/1)"
     assert link in embed["description"]

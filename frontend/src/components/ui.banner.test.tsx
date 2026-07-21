@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { Banner } from "./ui";
 
-describe("Banner live regions (FRO-29)", () => {
+describe("Banner live regions", () => {
   it("announces errors assertively", () => {
     render(<Banner kind="error">Boom</Banner>);
     const alert = screen.getByRole("alert");

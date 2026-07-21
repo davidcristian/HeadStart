@@ -1,9 +1,9 @@
 """Application profile request/response schemas.
 
 The profile holds the candidate data an auto-apply flow needs. It is PII and is
-encrypted at rest, but — unlike write-only site-credential secrets — it is
-returned in full to its owner so they can review and edit it. `ProfileData` is
-both the write body (full replacement on PUT) and the core of the read view.
+encrypted at rest. Unlike write-only site-credential secrets, it is returned in
+full to its owner so they can review and edit it. `ProfileData` is both the
+write body (full replacement on PUT) and the core of the read view.
 """
 
 from __future__ import annotations
@@ -91,7 +91,7 @@ class ProfileData(BaseModel):
     cover_letter_template: str = Field(default="", max_length=20_000)
     # Free-form answers to recurring application questions, e.g.
     # {"work_authorization": "US citizen", "notice_period": "2 weeks"}.
-    # Capped like skills (API-13): 100 keys, 200 chars per key/value.
+    # Capped like skills: 100 keys, 200 chars per key/value.
     answers: dict[str, str] = Field(default_factory=dict)
     work_experience: list[WorkExperienceEntry] = Field(default_factory=list)
     education: list[EducationEntry] = Field(default_factory=list)
@@ -236,7 +236,7 @@ class ResumeFileStored(BaseModel):
         )
 
     def to_meta(self) -> ResumeFileMeta:
-        """Metadata only — safe for API responses and audit previews."""
+        """Metadata only, so it is safe for API responses and audit previews."""
         raw = base64.b64decode(self.data_b64)
         return ResumeFileMeta(
             filename=self.filename,

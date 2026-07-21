@@ -1,4 +1,4 @@
-"""Unit tests for auth rate limiting (AUT-03)."""
+"""Unit tests for auth rate limiting."""
 
 from unittest.mock import patch
 

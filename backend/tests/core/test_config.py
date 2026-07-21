@@ -11,7 +11,7 @@ def test_cors_origins_parses_comma_separated_env(monkeypatch: pytest.MonkeyPatch
 
 
 def test_trusted_proxy_cidrs_parses_and_validates(monkeypatch: pytest.MonkeyPatch) -> None:
-    """AUT-17: TRUSTED_PROXY_CIDRS accepts CSV CIDRs and rejects junk at boot."""
+    """TRUSTED_PROXY_CIDRS accepts CSV CIDRs and rejects junk at boot."""
     monkeypatch.setenv("TRUSTED_PROXY_CIDRS", "10.0.0.0/8, 2001:db8::/32")
     settings = Settings(_env_file=None)  # type: ignore[call-arg]
     assert settings.trusted_proxy_cidrs == ["10.0.0.0/8", "2001:db8::/32"]
@@ -56,7 +56,7 @@ def test_real_secrets_pass_outside_local(monkeypatch: pytest.MonkeyPatch) -> Non
 def test_http_frontend_with_secure_cookie_rejected_outside_local(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """AUT-13: Secure refresh cookie + http FRONTEND_BASE_URL must fail fast outside local."""
+    """Secure refresh cookie + http FRONTEND_BASE_URL must fail fast outside local."""
     monkeypatch.setenv("ENVIRONMENT", "production")
     monkeypatch.setenv("JWT_SECRET", "a-real-long-random-production-secret-value")
     monkeypatch.setenv("CREDENTIALS_SECRET_KEY", "another-real-production-fernet-value")
@@ -73,7 +73,7 @@ def test_http_frontend_with_secure_cookie_rejected_outside_local(
 def test_http_frontend_with_insecure_cookie_allowed_outside_local(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """HTTP ALB deploys (XCT-15) keep AUTH_COOKIE_SECURE=false with an http frontend."""
+    """HTTP ALB deploys keep AUTH_COOKIE_SECURE=false with an http frontend."""
     monkeypatch.setenv("ENVIRONMENT", "production")
     monkeypatch.setenv("JWT_SECRET", "a-real-long-random-production-secret-value")
     monkeypatch.setenv("CREDENTIALS_SECRET_KEY", "another-real-production-fernet-value")
@@ -88,7 +88,7 @@ def test_http_frontend_with_insecure_cookie_allowed_outside_local(
 def test_samesite_none_without_secure_rejected_outside_local(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """AUT-13: SameSite=None without Secure is rejected outside local/test."""
+    """SameSite=None without Secure is rejected outside local/test."""
     monkeypatch.setenv("ENVIRONMENT", "staging")
     monkeypatch.setenv("JWT_SECRET", "a-real-long-random-production-secret-value")
     monkeypatch.setenv("CREDENTIALS_SECRET_KEY", "another-real-production-fernet-value")
@@ -120,7 +120,7 @@ def test_samesite_none_with_secure_https_allowed_outside_local(
 
 
 def test_smtp_host_required_outside_local(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Non-local boots must set SMTP_HOST so reset/verify tokens are never logged (AUT-01)."""
+    """Non-local boots must set SMTP_HOST so reset/verify tokens are never logged."""
     monkeypatch.setenv("ENVIRONMENT", "production")
     monkeypatch.setenv("JWT_SECRET", "a-real-long-random-production-secret-value")
     monkeypatch.setenv("CREDENTIALS_SECRET_KEY", "another-real-production-fernet-value")
@@ -189,7 +189,7 @@ def test_derived_urls(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_redis_tls_auth_builds_rediss_urls(monkeypatch: pytest.MonkeyPatch) -> None:
-    """OPS-10: ElastiCache AUTH + TLS → rediss:// with URL-encoded password."""
+    """ElastiCache AUTH + TLS → rediss:// with URL-encoded password."""
     monkeypatch.setenv("REDIS_HOST", "cache.example")
     monkeypatch.setenv("REDIS_PORT", "6379")
     monkeypatch.setenv("REDIS_PASSWORD", "p@ss/word")
@@ -224,7 +224,7 @@ def test_database_url_overrides_derived(monkeypatch: pytest.MonkeyPatch) -> None
 def test_short_credentials_key_rejected_outside_local(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Non-placeholder but short CREDENTIALS_SECRET_KEY fails the AUT-05 length floor."""
+    """Non-placeholder but short CREDENTIALS_SECRET_KEY fails the length floor."""
     monkeypatch.setenv("ENVIRONMENT", "production")
     monkeypatch.setenv("JWT_SECRET", "a-real-long-random-production-secret-value")
     monkeypatch.setenv("CREDENTIALS_SECRET_KEY", "too-short-to-be-safe")
@@ -239,7 +239,7 @@ def test_short_credentials_key_rejected_outside_local(
 def test_placeholder_ntfy_topic_rejected_outside_local(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Non-local boots must override the guessable ntfy default topic (OPS-16)."""
+    """Non-local boots must override the guessable ntfy default topic."""
     monkeypatch.setenv("ENVIRONMENT", "production")
     monkeypatch.setenv("JWT_SECRET", "a-real-long-random-production-secret-value")
     monkeypatch.setenv("CREDENTIALS_SECRET_KEY", "another-real-production-fernet-value")
@@ -320,7 +320,7 @@ def test_parse_csv_list_and_validate_trusted_proxy_cidrs() -> None:
 
 
 def test_inbox_poll_interval_comment_has_no_edit_artifact() -> None:
-    """AUT-11: Settings comment must say 'new message classification', not an Edit leftover."""
+    """Settings comment must say 'new message classification', not an Edit leftover."""
     from pathlib import Path
 
     source = Path(__file__).resolve().parents[2] / "app" / "core" / "config.py"

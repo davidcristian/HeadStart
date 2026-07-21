@@ -1,4 +1,4 @@
-"""LOG_FORMAT env parsing for structured vs text logs (AUT-16)."""
+"""LOG_FORMAT env parsing for structured vs text logs."""
 
 from __future__ import annotations
 

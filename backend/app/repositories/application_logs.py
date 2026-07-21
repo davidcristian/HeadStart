@@ -38,7 +38,7 @@ class ApplicationLogRepository:
         return log
 
     def count_live_since(self, user_id: int, *, since: datetime) -> int:
-        """Count non–dry-run apply attempts for the user created at or after ``since``."""
+        """Count apply attempts that are not dry runs for the user since ``since``."""
         stmt = (
             select(func.count())
             .select_from(ApplicationLog)

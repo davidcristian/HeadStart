@@ -9,7 +9,7 @@ day-to-day details.
 - Line length 100.
 - Naming: `snake_case` for functions/variables, `PascalCase` for classes,
   `UPPER_SNAKE` for constants.
-- Imports: standard lib, third-party, local — grouped and sorted (ruff isort).
+- Imports are grouped and sorted (ruff isort): standard lib, third-party, local.
 - Use type hints everywhere. Prefer `from __future__ import annotations` is not
   needed on 3.12 for built-in generics.
 - Pydantic v2 for all schemas and settings. SQLAlchemy 2.0 typed ORM
@@ -17,8 +17,9 @@ day-to-day details.
 - **Synchronous by design.** The persistence layer, services, scrapers, and
   notifiers are all synchronous. FastAPI routes are plain `def` (FastAPI runs
   them in a threadpool), and Celery tasks call the same services directly. This
-  keeps one execution model across API and worker — no async/await, no event-loop
-  juggling — which is the right trade-off for an I/O-light polling workload.
+  keeps one execution model across API and worker with no async/await and no
+  event-loop juggling. That is the right trade-off for an I/O-light polling
+  workload.
   HTTP uses `httpx.Client`; the optional Playwright scraper uses its sync API.
 
 ### Layering (enforced)
@@ -33,8 +34,8 @@ table in [AGENTS.md](../AGENTS.md) §1.
   them to HTTP responses via the handlers in `app/main.py` (`NotFoundError`→404,
   `ValidationError`→400, `ConflictError`→409, `UnauthorizedError`→401,
   `PlanLimitError`→402 with `code`/`plan`/`limit`, `RateLimitError`→429). Never
-  re-raise `HTTPException` for those cases in a router — that bypasses the shared
-  body shape (see API-03). Never leak raw DB/driver errors to clients.
+  re-raise `HTTPException` for those cases in a router, because that bypasses
+  the shared body shape. Never leak raw DB/driver errors to clients.
 - Scrapers and notifiers must not crash the worker: wrap external I/O and surface
   failures as logged, recorded errors.
 
@@ -45,8 +46,8 @@ table in [AGENTS.md](../AGENTS.md) §1.
   drift fails the gate the same way `black --check` does for the backend.
 - Functional components + hooks. Server state via **TanStack Query** hooks in
   `src/hooks/` (`queries.ts` / `mutations.ts`), which wrap the typed API client
-  in `src/api/`. Components do not call `api.*` directly. No business logic in
-  components — keep it in hooks/helpers.
+  in `src/api/`. Components do not call `api.*` directly. Keep business logic
+  out of components and in hooks/helpers.
 - Types for API payloads live in `src/types/` and mirror the backend schemas.
 
 ## Commits & branches
@@ -60,7 +61,7 @@ table in [AGENTS.md](../AGENTS.md) §1.
 
 - Backend: `pytest`. Unit-test services, scrapers (against saved fixtures), and
   notifiers (mocked HTTP). Integration-test the worker pipeline.
-- Scraper tests must not hit the network — use fixtures under
+- Scraper tests must not hit the network. Use fixtures under
   `backend/tests/fixtures/`.
 - Frontend: `vitest` + Testing Library for components and hooks.
 
@@ -68,15 +69,15 @@ table in [AGENTS.md](../AGENTS.md) §1.
 
 - Soft cap of **~300 lines per source file** (see [AGENTS.md](../AGENTS.md) §3).
   `just lint` runs `scripts/check_loc.sh` and fails when any `.py`/`.ts`/`.tsx`
-  file exceeds 300 lines (excluding `alembic/versions/`, `backend/tests/` only
-  — not any nested `…/tests/` under app code (OPS-68) — `frontend/src/test/`
-  vitest helpers — OPS-67 — and `*.test.ts(x)`). Offender paths are printed
-  relative to the repo root via a literal prefix strip (`[[ == ]]` +
+  file exceeds 300 lines. The exclusions are `alembic/versions/`,
+  `backend/tests/` only (not any nested `…/tests/` under app code),
+  `frontend/src/test/` vitest helpers, and `*.test.ts(x)`. Offender paths are
+  printed relative to the repo root via a literal prefix strip (`[[ == ]]` +
   `${file:${#prefix}}`), not `${file#${REPO_ROOT}/}`, so a checkout path
-  containing glob metacharacters (`*?[]`) cannot garble the report (OPS-63).
+  containing glob metacharacters (`*?[]`) cannot garble the report.
 
 ## Configuration
 
 - All config via environment variables, parsed by `app/core/config.py`
   (pydantic-settings). Document every new variable in `.env.example`.
-- No magic numbers in code that should be tunable — promote them to settings.
+- No magic numbers in code that should be tunable. Promote them to settings.

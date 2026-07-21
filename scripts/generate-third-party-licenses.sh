@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Regenerate the third-party attribution manifest (XCT-24).
+# Regenerate the third-party attribution manifest.
 # Inventories packages conveyed by the backend/frontend container images:
 #   - backend runtime lock (requirements.txt) + worker Playwright lock
 #   - frontend npm production dependencies
@@ -15,11 +15,11 @@ FRONTEND_OUT="${FRONTEND_DIR}/public/${OUT_NAME}"
 have python3 || die "python3 is required to generate ${OUT_NAME}"
 have npm || die "npm is required to generate ${OUT_NAME}"
 [[ -f "${BACKEND_DIR}/requirements.txt" ]] \
-  || die "Missing ${BACKEND_DIR}/requirements.txt — run 'just lock-backend'"
+  || die "Missing ${BACKEND_DIR}/requirements.txt. Run 'just lock-backend'"
 [[ -f "${BACKEND_DIR}/requirements-playwright.txt" ]] \
-  || die "Missing ${BACKEND_DIR}/requirements-playwright.txt — run 'just lock-backend'"
+  || die "Missing ${BACKEND_DIR}/requirements-playwright.txt. Run 'just lock-backend'"
 [[ -d "${FRONTEND_DIR}/node_modules" ]] \
-  || die "frontend/node_modules missing — run 'just setup' first."
+  || die "frontend/node_modules missing. Run 'just setup' first."
 
 tmpdir="$(mktemp -d "${TMPDIR:-/tmp}/headstart-licenses.XXXXXX")"
 cleanup() { rm -rf "${tmpdir}"; }
@@ -151,11 +151,11 @@ the LGPL library's corresponding source and to relink with a modified version.
 Because psycopg remains a normal pip dependency (not statically vendored into
 HeadStart), that obligation is met for self-hosters by:
 
-1. **Corresponding source** — download the same versions from PyPI
+1. **Corresponding source.** Download the same versions from PyPI
    (`pip download psycopg==<version> psycopg-binary==<version>`) or from the
    upstream project at https://psycopg.org / the repository URL listed in the
    table above.
-2. **Relink** — replace the installed wheels in your image or venv with a
+2. **Relink.** Replace the installed wheels in your image or venv with a
    rebuilt `psycopg` / `psycopg-binary` of your choice and restart the process;
    no HeadStart rebuild of a vendored copy is required.
 

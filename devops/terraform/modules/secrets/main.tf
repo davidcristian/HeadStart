@@ -6,7 +6,7 @@
 # sensitive value as a for_each key) and look up each value from the sensitive
 # `secret_values` map only where it is consumed.
 #
-# Secrets are encrypted with a customer-managed KMS key (OPS-51) and keep an
+# Secrets are encrypted with a customer-managed KMS key and keep an
 # explicit recovery window so deletes cannot silently use an undocumented
 # default.
 

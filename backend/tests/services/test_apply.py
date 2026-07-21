@@ -20,7 +20,8 @@ from tests.worker.test_pipeline import _make_search
 
 
 def _foreign_source_id(session: Session) -> int:
-    """A source owned by another user — valid FK, but invisible to the job owner's lookups."""
+    """A source owned by another user. The FK is valid, but the job owner's
+    lookups never return it."""
     other = User(email="foreign-source@example.com", password_hash="hash")
     session.add(other)
     session.flush()
@@ -376,7 +377,7 @@ def test_enqueue_auto_apply_ineligible_when_no_profile(db_session: Session) -> N
 
 
 def test_enqueue_auto_apply_skips_when_daily_volume_cap_reached(db_session: Session) -> None:
-    """SVC-02: pipeline auto-apply stops once the plan's rolling 24h live-apply cap is hit."""
+    """Pipeline auto-apply stops once the plan's rolling 24h live-apply cap is hit."""
     # Pipeline helpers default to is_admin=True (unlimited); use a free-tier owner.
     owner = User(
         email="volume-cap@example.com",

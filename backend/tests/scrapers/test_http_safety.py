@@ -173,7 +173,7 @@ def _client_with_cap(
 
 
 def test_get_text_rejects_oversized_content_length() -> None:
-    """Content-Length above the cap fails before the body is buffered (SCR-04)."""
+    """Content-Length above the cap fails before the body is buffered."""
 
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(
@@ -188,7 +188,7 @@ def test_get_text_rejects_oversized_content_length() -> None:
 
 
 def test_get_text_rejects_body_that_exceeds_cap_without_content_length() -> None:
-    """Chunked/unknown-length bodies abort once streamed past the cap (SCR-04)."""
+    """Chunked/unknown-length bodies abort once streamed past the cap."""
 
     def handler(request: httpx.Request) -> httpx.Response:
         # ByteStream omits Content-Length so the client must count streamed bytes.

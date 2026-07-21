@@ -155,7 +155,7 @@ class AuthService:
         return user
 
     def update_me(self, user_id: int, data: UpdateMeRequest) -> User:
-        """Apply self-service account fields (locale preference for NTF-12)."""
+        """Apply self-service account fields (locale preference)."""
         user = self.me(user_id)
         fields = data.model_dump(exclude_unset=True)
         if "locale" in fields:
@@ -190,9 +190,8 @@ class AuthService:
         if row is None:
             raise ValidationError("Invalid or expired verification link. Request a new one.")
         # Persist the consume before any path that may raise so single-use does
-        # not depend on a later delete surviving the request transaction
-        # (DAT-18), and so an inactive/missing user cannot leave a replayable
-        # link (AUT-30).
+        # not depend on a later delete surviving the request transaction, and so
+        # an inactive/missing user cannot leave a replayable link.
         self.session.commit()
 
         user = self.repo.get(row.user_id)

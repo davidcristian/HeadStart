@@ -1,4 +1,4 @@
-"""Structured auth security event logging for operators (AUT-10)."""
+"""Structured auth security event logging for operators."""
 
 from __future__ import annotations
 

@@ -8,7 +8,7 @@ def test_detect_microsoft_non_matching_host_returns_none() -> None:
 
 
 def test_detect_microsoft_rejects_lookalike_host_without_dot_boundary() -> None:
-    """SCR-08: suffix match must require a dot before careers.microsoft.com."""
+    """Suffix match must require a dot before careers.microsoft.com."""
     assert detect_source_from_url("https://evilcareers.microsoft.com/careers") is None
     assert detect_source_from_url("https://xcareers.microsoft.com/api/pcsx/search") is None
 

@@ -144,7 +144,7 @@ def test_live_submit_uses_multipart_when_resume_file_present() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         seen["content_type"] = request.headers.get("content-type", "")
         seen["has_resume"] = b'name="resume"' in request.content
-        # APL-13: metadata-only resume_file must not appear as a form field.
+        # Metadata-only resume_file must not appear as a form field.
         seen["has_resume_file_field"] = b'name="resume_file"' in request.content
         return httpx.Response(200, json={"ok": True, "applicationId": "with-resume"})
 

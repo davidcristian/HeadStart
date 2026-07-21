@@ -54,7 +54,7 @@ export function LandingPage() {
           <h1>See new roles before the crowd.</h1>
           <p className="landing-sub">
             HeadStart watches the boards you care about, filters out the noise, and pings you the
-            moment a matching role goes live — so you can apply while everyone else is still
+            moment a matching role goes live so you can apply while everyone else is still
             scrolling.
           </p>
           <div className="landing-cta">
@@ -122,7 +122,7 @@ export function LandingPage() {
               See it in action
             </h2>
             <p className="landing-showcase-lead">
-              Real screens from HeadStart — configure watches, triage your feed, and get alerted the
+              Real screens from HeadStart. Configure watches, triage your feed, and get alerted the
               second a role matches.
             </p>
           </div>

@@ -12,7 +12,7 @@ export const STEPS: { key: Step; label: string }[] = [
 ];
 
 export const NOTIFIER_DEFAULTS: Record<string, Json> = {
-  // Pre-fill a high-entropy topic so onboarding never submits a guessable channel (NTF-06).
+  // Pre-fill a high-entropy topic so onboarding never submits a guessable channel.
   ntfy: {
     server_url: "https://ntfy.sh",
     topic: `jobs-${crypto.randomUUID().replaceAll("-", "").slice(0, 16)}`,
@@ -26,7 +26,7 @@ export const NOTIFIER_DEFAULTS: Record<string, Json> = {
 };
 
 // Concrete keys (not Record) so known-channel hints stay definite under
-// noUncheckedIndexedAccess (FRO-42); dynamic lookup still needs a fallback.
+// noUncheckedIndexedAccess; dynamic lookup still needs a fallback.
 export const NOTIFIER_HINTS = {
   ntfy: "Topic is a secret (≥16 chars). Subscribe in the ntfy app or at ntfy.sh/<topic>; optional auth token recommended.",
   email: "Requires SMTP_* env vars on the server.",

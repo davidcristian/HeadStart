@@ -1,4 +1,4 @@
-"""Tests for async manual search runs (API-02)."""
+"""Tests for async manual search runs."""
 
 from unittest.mock import patch
 

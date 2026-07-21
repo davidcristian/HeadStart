@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Fail CI/local gates when hashed backend lockfiles have known advisories (OPS-19).
+# Fail CI/local gates when hashed backend lockfiles have known advisories.
 # Uses --disable-pip so hashed pins are audited without a throwaway venv.
 # shellcheck source=lib.sh
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"

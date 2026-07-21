@@ -1,4 +1,4 @@
-"""Tests for lenient scraper date helpers (SCR-02)."""
+"""Tests for lenient scraper date helpers."""
 
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ def test_parse_epoch_seconds_rejects_non_numeric() -> None:
 
 
 def test_parse_epoch_seconds_overflow_returns_none() -> None:
-    """Hostile epochs must degrade to None instead of raising (SCR-02)."""
+    """Hostile epochs must degrade to None instead of raising."""
     assert parse_epoch_seconds(1e30) is None
     assert parse_epoch_seconds(1e20) is None
     assert parse_epoch_seconds(-1e20) is None

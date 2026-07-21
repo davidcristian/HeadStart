@@ -197,7 +197,7 @@ class ReplyDraftService:
             )
         inbound_subject = sanitize_message_header(classification.subject or "", max_chars=max_chars)
         # From is recruiter-controlled (display-name + addr) and reaches the LLM prompt;
-        # sanitize + injection-check it the same way as subject/body (INB-07).
+        # sanitize + injection-check it the same way as subject/body.
         inbound_from = sanitize_message_header(classification.from_addr or "", max_chars=max_chars)
         linked_application = None
         if classification.seen_job is not None:

@@ -65,7 +65,7 @@ class User(Base, TimestampMixin):
     ai_purpose_providers: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     # Optional per-purpose model overrides keyed by purpose id.
     ai_purpose_models: Mapped[dict | None] = mapped_column(JSON, nullable=True)
-    # Preferred notification/auth email locale (`en` / `de`); null → DEFAULT_LOCALE (NTF-12).
+    # Preferred notification/auth email locale (`en` / `de`); null → DEFAULT_LOCALE.
     locale: Mapped[str | None] = mapped_column(String(16), nullable=True)
 
     sources: Mapped[list["Source"]] = relationship(

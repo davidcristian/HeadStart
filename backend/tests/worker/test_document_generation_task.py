@@ -1,4 +1,4 @@
-"""Worker + service coverage for document generation (API-01)."""
+"""Worker + service coverage for document generation."""
 
 from contextlib import contextmanager
 from unittest.mock import patch

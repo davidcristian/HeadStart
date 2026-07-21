@@ -1,4 +1,4 @@
-"""Heuristic (rule-based) summarizer — the offline default.
+"""Heuristic (rule-based) summarizer used as the offline default.
 
 Builds a short "why this matches" blurb from the search's own filters: which
 include-keywords appear, whether the location/workplace line up, etc. It needs

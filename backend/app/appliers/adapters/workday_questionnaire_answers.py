@@ -54,8 +54,8 @@ def build_questionnaire_answers(
         entry = _answer_entry(question, raw_value)
         if entry is None:
             # Present but unresolvable (bad choice label, non-int/'0' numeric,
-            # …) must fail the required guard — silent drop lets submit POST
-            # without the answer after the application is already created.
+            # …) must fail the required guard because a silent drop lets submit
+            # POST without the answer after the application is already created.
             if question.get("required"):
                 missing_required.append(question_id)
             continue
@@ -132,10 +132,10 @@ def _question_type(question: dict[str, Any]) -> str:
 def _resolve_choice_ids(question: dict[str, Any], raw_value: str, *, multi: bool) -> list[str]:
     """Resolve choice answer ids from a Workday id or human-readable label.
 
-    A 32-hex token is accepted only when it is a member of ``possibleAnswers``
-    (APL-24); stale/wrong WIDs fall through like an unmatched label. Multi-choice
+    A 32-hex token is accepted only when it is a member of ``possibleAnswers``;
+    stale/wrong WIDs fall through like an unmatched label. Multi-choice
     refuses a partial set: any unresolved comma-split token returns [] so
-    callers treat the answer as unresolvable (APL-23) instead of submitting only
+    callers treat the answer as unresolvable instead of submitting only
     the labels that happened to match.
     """
     if multi:

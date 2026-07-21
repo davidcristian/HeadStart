@@ -25,7 +25,7 @@ _PLACEHOLDER_KEYS = (
 
 # Fields whose curated value is controlled LaTeX markup (\item / \textbf rows the
 # default template wraps in an itemize) rather than free text. Escaping them would
-# neutralize the very structure the template depends on — the heuristic and LLM
+# neutralize the very structure the template depends on. The heuristic and LLM
 # paths both emit this markup and are responsible for escaping their own free-text
 # parts. Every other placeholder is a free-text / PII scalar and is escaped here.
 _RAW_LATEX_KEYS = frozenset({"experience"})

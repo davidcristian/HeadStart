@@ -5,7 +5,7 @@ The refresh path must serialize with the same encoder as the initial store
 credential round-trips through `decode_mailbox_config`. It previously used
 `model_dump_json()`, which emits a different (compact) plaintext.
 
-INB-06: refresh also locks the mailbox_credential row and re-checks expiry so
+Refresh also locks the mailbox_credential row and re-checks expiry so
 concurrent workers cannot rotate the same Outlook/Yahoo refresh_token.
 """
 
@@ -134,7 +134,7 @@ def test_ensure_fresh_returns_config_unchanged_when_no_refresh_needed(
 def test_ensure_fresh_skips_provider_refresh_when_lock_recheck_is_fresh(
     db_session: Session, monkeypatch, connector, config_cls, needs_fn, refresh_fn, ensure_fn
 ) -> None:
-    """INB-06: after waiting for the row lock, reuse a peer's already-rotated token."""
+    """After waiting for the row lock, reuse a peer's already-rotated token."""
     user_id = _user(db_session)
     stale = config_cls(
         email_address=f"user@{connector}.test", access_token="old", refresh_token="r1"

@@ -1,4 +1,4 @@
-"""OPS-27: Chromium launch keeps the process sandbox unless explicitly disabled."""
+"""Chromium launch keeps the process sandbox unless explicitly disabled."""
 
 from __future__ import annotations
 
@@ -37,7 +37,7 @@ def test_chromium_launch_args_allow_local_no_sandbox_escape() -> None:
 def test_playwright_no_sandbox_rejected_outside_local(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Production boots must refuse PLAYWRIGHT_NO_SANDBOX=true (OPS-27)."""
+    """Production boots must refuse PLAYWRIGHT_NO_SANDBOX=true."""
     monkeypatch.setenv("ENVIRONMENT", "production")
     monkeypatch.setenv("JWT_SECRET", "a-real-long-random-production-secret-value")
     monkeypatch.setenv("CREDENTIALS_SECRET_KEY", "another-real-production-fernet-value")

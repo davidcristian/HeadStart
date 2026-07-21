@@ -1,4 +1,4 @@
-"""SearchRun: queued manual search pipeline executions (API-02)."""
+"""SearchRun: queued manual search pipeline executions."""
 
 from datetime import datetime
 from typing import TYPE_CHECKING, Any

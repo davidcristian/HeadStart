@@ -5,7 +5,7 @@ Revises: 0043_seen_job_norm_url
 Create Date: 2026-07-08
 
 Single-use for password-reset and email-verification tokens previously relied
-only on a post-success delete (DAT-18). Persist used_at so claim can mark a
+only on a post-success delete. Persist used_at so claim can mark a
 token consumed atomically before any later path that may raise or roll back.
 """
 

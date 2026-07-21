@@ -1,4 +1,4 @@
-"""Minimal message catalog for user-facing notification and auth email copy (NTF-12)."""
+"""Minimal message catalog for user-facing notification and auth email copy."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ _MESSAGES: dict[Locale, dict[str, str]] = {
         "job.fallback_title": "New job",
         "digest.title_one": "{count} new job",
         "digest.title_many": "{count} new jobs",
-        "digest.title_with_search": "{base} — {search_name}",
+        "digest.title_with_search": "{base} for {search_name}",
         "email.why_matches": "Why this matches: {summary}",
         "email.company": "Company: {company}",
         "email.location": "Location: {location}",
@@ -47,7 +47,7 @@ _MESSAGES: dict[Locale, dict[str, str]] = {
         "job.fallback_title": "Neuer Job",
         "digest.title_one": "{count} neuer Job",
         "digest.title_many": "{count} neue Jobs",
-        "digest.title_with_search": "{base} — {search_name}",
+        "digest.title_with_search": "{base} für {search_name}",
         "email.why_matches": "Warum das passt: {summary}",
         "email.company": "Unternehmen: {company}",
         "email.location": "Ort: {location}",

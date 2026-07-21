@@ -2,8 +2,8 @@
 
 Thin orchestration over the summarizer registry: gate on config, pick the
 configured provider, and degrade gracefully. A summary is presentational and
-best-effort, so any provider failure must never break the pipeline — it just
-leaves the blurb empty.
+best-effort, so any provider failure must never break the pipeline. A failure
+just leaves the blurb empty.
 """
 
 from __future__ import annotations

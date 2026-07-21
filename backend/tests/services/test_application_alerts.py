@@ -18,7 +18,8 @@ from tests.worker.test_pipeline import _make_search
 
 
 def _foreign_target_id(session: Session) -> int:
-    """A target owned by another user — valid FK, but invisible to the job owner's lookups."""
+    """A target owned by another user. The FK is valid, but the job owner's
+    lookups never return it."""
     other = User(email="foreign-target@example.com", password_hash="hash")
     session.add(other)
     session.flush()
@@ -145,7 +146,7 @@ def test_alert_handles_notifier_without_close(db_session: Session) -> None:
 def test_alert_falls_back_to_single_default_when_search_target_missing(
     db_session: Session,
 ) -> None:
-    """SVC-09: missing search target must not fan out to every user channel."""
+    """Missing search target must not fan out to every user channel."""
     user_id, job, target = _seed_job_with_target(db_session)
     extra = NotificationTarget(
         user_id=user_id,

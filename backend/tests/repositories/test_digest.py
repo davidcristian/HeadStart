@@ -1,4 +1,4 @@
-"""PendingDigestRepository regressions (DAT-13 bulk clear, SVC-15 batch add)."""
+"""PendingDigestRepository regressions for bulk clear and batch add."""
 
 from __future__ import annotations
 
@@ -28,7 +28,7 @@ def _seen_job(session: Session, search_id: int, external_id: str) -> SeenJob:
 
 
 def test_add_many_flushes_once_for_batch(db_session: Session) -> None:
-    """Queueing N jobs issues one flush, not one per row (SVC-15)."""
+    """Queueing N jobs issues one flush, not one per row."""
     search = make_search(db_session)
     jobs = [_seen_job(db_session, search.id, eid) for eid in ("a1", "a2", "a3")]
     repo = PendingDigestRepository(db_session)

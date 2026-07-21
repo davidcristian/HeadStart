@@ -185,7 +185,7 @@ def test_format_amount_millions_and_small() -> None:
     assert _format_amount(125_500) == "125.5K"
 
 
-# --- _format_currency_prefix (SVC-14) -------------------------------------
+# --- _format_currency_prefix ----------------------------------------------
 
 
 def test_format_currency_prefix_known_and_fallback() -> None:

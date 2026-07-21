@@ -1,4 +1,4 @@
-"""Unit tests for per-type notification target config validation (API-14)."""
+"""Unit tests for per-type notification target config validation."""
 
 from unittest.mock import patch
 

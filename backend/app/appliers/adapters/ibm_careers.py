@@ -55,8 +55,8 @@ from app.appliers.types import ApplyContext, ApplyResult
 _LIVE_BLOCKER = (
     "ibm_careers live apply requires config.avature_import_url (or "
     "session.avature_import_url) pointing at an Avature External Import "
-    "Service endpoint — careers.ibm.com apply is Avature-hosted behind AWS "
-    "WAF with a multi-step login/register wizard and no public candidate "
+    "Service endpoint, because careers.ibm.com apply is Avature-hosted behind "
+    "AWS WAF with a multi-step login/register wizard and no public candidate "
     "apply API"
 )
 

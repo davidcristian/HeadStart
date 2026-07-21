@@ -381,7 +381,7 @@ def test_finalize_error_code_returns_failed() -> None:
 
 
 def test_mid_flow_name_http_error_flags_partial_application() -> None:
-    """APL-26: post-create failures keep the ATS id and mark partial_application."""
+    """Post-create failures keep the ATS id and mark partial_application."""
 
     def handler(request: httpx.Request) -> httpx.Response:
         if request.url.path.endswith("/jobapplications"):

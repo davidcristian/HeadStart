@@ -11,7 +11,7 @@ Config / context:
 
 Live submission requires a Postings API key (Super Admin → Integrations). Use
 `dry_run=True` to preview the JSON payload without a key. Resume files are not
-uploaded in v1 — `resume_text` is appended to `comments` when present.
+uploaded in v1, so `resume_text` is appended to `comments` when present.
 """
 
 from __future__ import annotations

@@ -1,4 +1,4 @@
-"""HTTP and Celery correlation-id binding for structured triage (AUT-15)."""
+"""HTTP and Celery correlation-id binding for structured triage."""
 
 from __future__ import annotations
 

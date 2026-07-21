@@ -4,7 +4,7 @@ Revision ID: 0029_inbox_reply_draft
 Revises: 0028_inbox_poll_state
 Create Date: 2026-07-03
 
-Stores dry-run recruiter reply drafts for dev inbox automation (Phase 20d).
+Stores dry-run recruiter reply drafts for dev inbox automation.
 """
 
 from collections.abc import Sequence

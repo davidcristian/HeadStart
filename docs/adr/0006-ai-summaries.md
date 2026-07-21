@@ -6,7 +6,7 @@
 ## Context
 
 Notifications listed a job's title/company/location/URL but never said *why* a
-posting matched the user's search. Phase 5 of the roadmap calls for a short
+posting matched the user's search. The roadmap calls for a short
 "why this matches" blurb. We needed this to:
 
 - work with no external dependency by default (CI, local, self-host),
@@ -41,9 +41,9 @@ scraper/notifier registry pattern: a `Summarizer` base class plus
 
 ## Alternatives considered
 
-- **Generate in each notifier** — would duplicate work per channel and re-call
+- **Generate in each notifier** would duplicate work per channel and re-call
   the model for digests. Rejected; generate once in the pipeline.
-- **Don't persist; pass only in-memory** — digests (which rebuild postings from
-  `seen_job`) and the Jobs feed would lose the blurb. Rejected.
-- **Hard-code an OpenAI dependency** — breaks offline/CI use and forces an API
+- **Don't persist; pass only in-memory** would make digests (which rebuild
+  postings from `seen_job`) and the Jobs feed lose the blurb. Rejected.
+- **Hard-code an OpenAI dependency** breaks offline/CI use and forces an API
   key. Rejected in favor of a registry with an offline default.

@@ -1,11 +1,12 @@
-"""Opt-in acknowledgment for LinkedIn/Indeed private-API live apply (APL-17)."""
+"""Opt-in acknowledgment for LinkedIn/Indeed private-API live apply."""
 
 from __future__ import annotations
 
 from typing import Any
 
 # Hosted Easy Apply posts to Voyager / smartapply with the candidate's session
-# cookies — private APIs that can trip ToS/anti-automation and ban personal accounts.
+# cookies. These private APIs can trip ToS/anti-automation and ban personal
+# accounts.
 PRIVATE_API_RISK_ADAPTERS = frozenset({"linkedin", "indeed"})
 ACCEPT_PRIVATE_API_RISK_KEY = "accept_private_api_risk"
 

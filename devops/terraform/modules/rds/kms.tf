@@ -1,4 +1,4 @@
-# Customer-managed KMS key for RDS storage + Performance Insights (OPS-43).
+# Customer-managed KMS key for RDS storage + Performance Insights.
 # Isolates encryption from the shared aws/rds key and enables annual rotation.
 
 data "aws_caller_identity" "current" {}

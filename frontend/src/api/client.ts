@@ -51,7 +51,7 @@ async function rawFetch(
   });
 }
 
-/** In-flight refresh promise so concurrent 401s share one POST /auth/refresh (FRO-13). */
+/** In-flight refresh promise so concurrent 401s share one POST /auth/refresh. */
 let refreshInFlight: Promise<boolean> | null = null;
 
 /** Exchange the httpOnly refresh cookie for a fresh access token. */
@@ -69,7 +69,7 @@ export async function refreshSession(): Promise<boolean> {
       return true;
     } catch {
       // Network/CORS reject or non-JSON 2xx body must not throw past callers'
-      // clear-session path (FRO-16).
+      // clear-session path.
       return false;
     }
   })().finally(() => {
@@ -86,7 +86,7 @@ async function parse<T>(resp: Response): Promise<T> {
     data = undefined;
   } else {
     try {
-      // Non-JSON bodies (proxy HTML, truncated payload) -> ApiError, not SyntaxError (FRO-14).
+      // Non-JSON bodies (proxy HTML, truncated payload) -> ApiError, not SyntaxError.
       data = JSON.parse(text) as { detail?: string };
     } catch {
       throw new ApiError(resp.status, text);
@@ -99,7 +99,7 @@ async function parse<T>(resp: Response): Promise<T> {
   return data as T;
 }
 
-/** Multipart upload (e.g. resume file). Does not set Content-Type — the browser adds the boundary. */
+/** Multipart upload (e.g. resume file). Omits Content-Type so the browser adds the boundary. */
 export async function requestForm<T>(
   path: string,
   options: RequestOptions & { body: FormData },

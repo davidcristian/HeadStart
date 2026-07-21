@@ -23,7 +23,7 @@ run_frontend() {
   ( cd "${FRONTEND_DIR}" && npm run lint --silent )
 
   # Prettier is the frontend formatter (black's counterpart). CI and
-  # `just lint` must enforce it — format-only drift is otherwise silent (OPS-04).
+  # `just lint` must enforce it because format-only drift is otherwise silent.
   log "Frontend format check (prettier)"
   ( cd "${FRONTEND_DIR}" && npm run format:check --silent )
 }

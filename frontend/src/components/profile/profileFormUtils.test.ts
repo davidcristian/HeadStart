@@ -15,13 +15,13 @@ describe("parseOptionalInt", () => {
     expect(parseOptionalInt("abc")).toBeNull();
   });
 
-  it("truncates decimals to an integer (FRO-27)", () => {
+  it("truncates decimals to an integer", () => {
     expect(parseOptionalInt("3.5")).toBe(3);
     expect(parseOptionalInt("2024.9")).toBe(2024);
     expect(parseOptionalInt("-2.7")).toBe(-2);
   });
 
-  it("clamps to optional min/max (FRO-27)", () => {
+  it("clamps to optional min/max", () => {
     expect(parseOptionalInt("-2", 1, 12)).toBe(1);
     expect(parseOptionalInt("13", 1, 12)).toBe(12);
     expect(parseOptionalInt("3.5", 1, 12)).toBe(3);

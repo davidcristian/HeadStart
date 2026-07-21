@@ -147,7 +147,7 @@ def test_build_application_state_maps_profile_fields() -> None:
 
 
 def test_build_application_state_keeps_education_arrays_aligned() -> None:
-    """School-only rows must not drop degree/field slots (APL-06)."""
+    """School-only rows must not drop degree/field slots."""
     detail = parse_job_detail_response(load_json_fixture(DETAIL_FIXTURE), requisition_id=JOB_ID)
     profile = _profile()
     profile.education = [
@@ -276,7 +276,7 @@ def test_live_submit_with_resume_uses_multipart() -> None:
 
 
 def test_live_submit_with_resume_fails_on_graphql_errors() -> None:
-    """Multipart resume submit must not report submitted on GraphQL errors (APL-05)."""
+    """Multipart resume submit must not report submitted on GraphQL errors."""
 
     def handler(request: httpx.Request) -> httpx.Response:
         if request.method == "GET":

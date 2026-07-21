@@ -21,8 +21,9 @@ helpers). Each `PortalPreset` carries:
 | `base_url` | Careers board URL passed to the scraper |
 | `default_config` | Adapter-specific config merged into new sources (always includes `portal_id`) |
 
-As of the current catalog: **197 employers** — 59 big tech, 111 unicorn, 27 AI —
-across Greenhouse (103), Ashby (40), Workday (15), SmartRecruiters (16), Lever (4),
+As of the current catalog there are **197 employers**: 59 big tech, 111 unicorn,
+and 27 AI. They span
+Greenhouse (103), Ashby (40), Workday (15), SmartRecruiters (16), Lever (4),
 Apple Careers (1), Google Careers (1), Meta Careers (1), Microsoft Careers (1),
 Shopify Careers (1), Snowflake Careers (1), Uber Careers (1), Amazon Jobs (1),
 iCIMS/Jibe (1), Phenom (4), Rippling ATS (1), IBM Careers (2), Workable (2), and
@@ -30,8 +31,8 @@ SuccessFactors (1).
 Meta uses the `meta_careers` scraper (Relay GraphQL search on metacareers.com).
 Apple uses the `apple_careers` scraper (hydration JSON embedded in search HTML).
 Shopify Careers (`shopify_careers`) stores only `company` + `portal_id` in
-`default_config` — the scraper reads those (plus optional `q` / `max_results`);
-it does **not** take an Ashby `board` slug. Auto-apply still defaults
+`default_config`. The scraper reads those (plus optional `q` / `max_results`) and
+does **not** take an Ashby `board` slug. Auto-apply still defaults
 `board=shopify` inside the applier when delegating to Ashby. Snowflake Careers
 keeps `board` because its Ashby-backed scraper consumes it. Rivian uses the
 `icims` scraper (`careers_base_url` + public `/api/jobs`). Grammarly uses Ashby
@@ -47,16 +48,16 @@ and RTX use Phenom (`jobs.cvshealth.com`, `careers.gehealthcare.com`,
 `portal_id=box`. Hugging Face and Skroutz use Workable (`account=huggingface`,
 `account=skroutz`). Wise uses SmartRecruiters (`company_id=Wise`,
 `portal_id=wise`). 1Password uses Ashby board `1password` with
-`portal_id=onepassword`. Phase 34 batch 8 adds Together AI (`togetherai` /
+`portal_id=onepassword`. The catalog also covers Together AI (`togetherai` /
 `portal_id=together`), Modal, Anyscale, Runway, Character.AI (`board=character` /
 `portal_id=characterai`), Midjourney, Pinecone, Grafana Labs (`grafanalabs` /
 `portal_id=grafana`), Temporal, PostHog, Neon, PlanetScale, Faire, Gong
 (`gongio` / `portal_id=gong`), and Checkout.com (`board=checkout.com` /
-`portal_id=checkout`). Phase 37 batch 9 adds New Relic, Twitch, Nubank (Ashby),
+`portal_id=checkout`). It also covers New Relic, Twitch, Nubank (Ashby),
 Celonis, JFrog, Mixpanel, Airbyte (Ashby), Hightouch, Gemini (crypto exchange
 Greenhouse board), Ripple, Alchemy (Ashby), Inflection (`inflectionai` /
 `portal_id=inflection`), Patreon (Ashby), Substack (Ashby), and Grab
-(SmartRecruiters `company_id=Grab`). Batch 10 adds HelloFresh, Navan
+(SmartRecruiters `company_id=Grab`). It further covers HelloFresh, Navan
 (`tripactions` / `portal_id=navan`), Appian, Sierra (Ashby), Freshworks
 (SmartRecruiters `company_id=Freshworks`), Decagon (Ashby), Cresta, Smartsheet,
 ZoomInfo, Baseten (Ashby), Proton, Sigma (`sigmacomputing` / `portal_id=sigma`),
@@ -64,9 +65,9 @@ Docker (Ashby), Neo4j, and Pendo.
 
 `GET /portals` annotates each row with:
 
-- `supports_auto_apply` — whether a registered apply adapter exists for the scraper key
-- `allowed_on_plan` — whether the user's plan may use that scraper (see [auth.md](auth.md))
-- `already_added` — duplicate detection against owned sources
+- `supports_auto_apply` is true when a registered apply adapter exists for the scraper key
+- `allowed_on_plan` reports whether the user's plan may use that scraper (see [auth.md](auth.md))
+- `already_added` comes from duplicate detection against owned sources
 
 Duplicate detection matches `portal_id` in `default_config`, normalized
 `base_url`, or adapter-specific identity fields (e.g. `board_token` for
@@ -86,12 +87,12 @@ All portal routes require a **verified** email (`get_verified_user`).
 
 Request body (`PortalSearchRequest`):
 
-- `keywords` (required) — applied as search filters after each portal scrape
-- `category` — optional filter to one catalog category
-- `portal_ids` — optional subset (max 30); defaults to all allowed presets on the user's plan
-  (the Companies UI caps selection at 30 — default / Select-all take the first 30 in catalog
-  order — so Search / Subscribe never 422 on the happy path)
-- `location`, `workplace` — optional structured filters (same semantics as search filters)
+- `keywords` (required) is applied as search filters after each portal scrape
+- `category` is an optional filter to one catalog category
+- `portal_ids` is an optional subset (max 30); defaults to all allowed presets on the user's plan.
+  The Companies UI caps selection at 30, and default / Select-all take the first 30 in catalog
+  order, so Search / Subscribe never 422 on the happy path
+- `location`, `workplace` are optional structured filters (same semantics as search filters)
 
 The service scrapes each portal via `PipelineService.scrape` (no DB writes),
 applies posting filters, and returns up to **10 jobs per portal** and **100 total**.
@@ -102,14 +103,14 @@ Per-portal failures are collected in `errors` without failing the whole request.
 Creates missing sources from presets, then one enabled search per portal with
 the given `keywords`, `target_id`, `interval_seconds`, and notification mode.
 Portals the user already owns are skipped (`skipped_portal_ids`). Respects plan
-source/search caps — may return a partial result with a `message` when limits
+source/search caps and may return a partial result with a `message` when limits
 are hit.
 
 ## Frontend surfaces
 
 | Surface | Path | Purpose |
 | ------- | ---- | ------- |
-| Sources catalog | `/app/sources` | Browse/filter presets (category filters: labelled button group with `aria-pressed`, not a bare tablist — FRO-41); **Add source** pre-fills adapter + config |
+| Sources catalog | `/app/sources` | Browse/filter presets (category filters: labelled button group with `aria-pressed`, not a bare tablist); **Add source** pre-fills adapter + config |
 | Companies search | `/app/portals` | Pro+ keyword search across the catalog (same category button group; max 30 portals per request); preview results; one-click alert setup |
 
 Free users see the catalog on Sources but cannot open `/app/portals` (upgrade
@@ -136,8 +137,8 @@ prompt). The Portals page reads `plan.features.portal_search` from `GET /meta`
 4. Pick `category` (`big_tech`, `unicorn`, `ai`).
 5. Add a regression test if search/subscribe behaviour depends on the new entry.
 
-No registry or router changes are needed — the catalog is static data consumed
-by `PortalCatalogService` and `PortalSearchService`.
+No registry or router changes are needed, because the catalog is static data
+consumed by `PortalCatalogService` and `PortalSearchService`.
 
 ## Related docs
 

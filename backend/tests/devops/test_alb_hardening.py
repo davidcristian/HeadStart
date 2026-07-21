@@ -1,4 +1,4 @@
-"""Regression: ALB Terraform hardens access logs, WAF, headers, deletion protection (OPS-08)."""
+"""Regression: ALB Terraform hardens access logs, WAF, headers, deletion protection."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Regression: deploy pins ECS images to ECR content digests (OPS-64)."""
+"""Regression: deploy pins ECS images to ECR content digests."""
 
 from __future__ import annotations
 

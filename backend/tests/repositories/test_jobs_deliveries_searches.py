@@ -118,7 +118,7 @@ def test_seen_job_existing_normalized_urls_intersects_batch(db_session: Session)
 
 
 def test_seen_job_iter_for_user_pages_across_chunks(db_session: Session) -> None:
-    """Export iteration must cover every row via bounded keyset pages (AUT-34)."""
+    """Export iteration must cover every row via bounded keyset pages."""
     search = _search(db_session)
     base = utcnow()
     for i in range(5):
@@ -132,7 +132,7 @@ def test_seen_job_iter_for_user_pages_across_chunks(db_session: Session) -> None
 
 
 def test_seen_job_iter_for_user_keyset_ties_on_same_timestamp(db_session: Session) -> None:
-    """Equal first_seen_at values must still page stably on id (AUT-34)."""
+    """Equal first_seen_at values must still page stably on id."""
     search = _search(db_session)
     base = utcnow()
     for i in range(3):
@@ -175,7 +175,7 @@ def test_seen_job_add_fills_normalized_url(db_session: Session) -> None:
 
 
 def test_seen_job_sync_after_scrape_set_based(db_session: Session) -> None:
-    """Close/reopen via UPDATEs; empty scrape closes actives (DAT-16)."""
+    """Close/reopen via UPDATEs; empty scrape closes actives."""
     search = _search(db_session)
     other = _search(db_session)
     gone = _job(db_session, search.id, "gone", status="new")
@@ -208,7 +208,7 @@ def test_seen_job_sync_after_scrape_set_based(db_session: Session) -> None:
 
 
 def test_seen_job_sync_after_scrape_uses_update_not_full_select() -> None:
-    """Compiled close/reopen statements must be UPDATEs scoped by search_id (DAT-16)."""
+    """Compiled close/reopen statements must be UPDATEs scoped by search_id."""
     from sqlalchemy.dialects import postgresql
 
     scraped = {"a", "b"}
@@ -351,7 +351,7 @@ def test_search_delete(db_session: Session) -> None:
 
 
 def test_claim_due_takes_row_lock_branch_on_non_sqlite(db_session: Session) -> None:
-    """Non-sqlite claim_due must run a statement that compiles FOR UPDATE SKIP LOCKED (TST-04).
+    """Non-sqlite claim_due must run a statement that compiles FOR UPDATE SKIP LOCKED.
 
     SQLite silently drops the lock clause at execute time, so capturing the
     repository statement and compiling it as Postgres is what proves the branch
@@ -379,7 +379,7 @@ def test_claim_due_takes_row_lock_branch_on_non_sqlite(db_session: Session) -> N
 
 
 def test_get_for_update_takes_lock_branch_on_non_sqlite(db_session: Session) -> None:
-    """Non-sqlite get_for_update must compile FOR UPDATE SKIP LOCKED (TST-04)."""
+    """Non-sqlite get_for_update must compile FOR UPDATE SKIP LOCKED."""
     search = _search(db_session)
     repo = SearchRepository(db_session)
     repo._is_sqlite = lambda: False  # type: ignore[method-assign]

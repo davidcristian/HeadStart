@@ -120,7 +120,7 @@ def test_request_headers_omits_cookie_when_empty() -> None:
 
 
 def test_request_headers_computed_win_over_stale_credential_headers() -> None:
-    """Stale credential headers must not clobber CSRF / Content-Type / Referer (APL-22)."""
+    """Stale credential headers must not clobber CSRF / Content-Type / Referer."""
     target = resolve_target({"tenant": "acme", "site": "AcmeCareers", "region": "wd5"}, "")
     assert target is not None
     headers = request_headers(

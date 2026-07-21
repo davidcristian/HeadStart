@@ -17,9 +17,9 @@ sensitive and must not leak.
   (`app.core.crypto`); only `secret_ciphertext` is persisted.
 - Stretch the Fernet key from `CREDENTIALS_SECRET_KEY` with **scrypt** (fixed
   salt `headstart.credentials.v1`). `MultiFernet` also keeps the legacy
-  unsalted-SHA-256 derivation of the current secret (pre-AUT-05 ciphertext) and
-  an optional `CREDENTIALS_SECRET_KEY_PREVIOUS` so operators can rotate without
-  bricking stored secrets. Non-local boots require length ≥ 32 and reject the
+  unsalted-SHA-256 derivation of the current secret and an optional
+  `CREDENTIALS_SECRET_KEY_PREVIOUS` so operators can rotate without bricking
+  stored secrets. Non-local boots require length ≥ 32 and reject the
   built-in placeholder.
 - Never return secret values over the API. `CredentialRead` exposes metadata and
   booleans (`has_cookies` / `has_headers` / `has_session`) only.
@@ -42,9 +42,9 @@ sensitive and must not leak.
 
 ## Alternatives considered
 
-- **Store secrets in `search`/`source` config JSON** — simplest, but plaintext
-  at rest and mixes secrets with non-secret config; rejected.
-- **External secrets manager per credential** — overkill for per-user session
+- **Store secrets in `search`/`source` config JSON** would be simplest, but it
+  leaves plaintext at rest and mixes secrets with non-secret config; rejected.
+- **External secrets manager per credential** is overkill for per-user session
   cookies and couples local dev to cloud infra.
-- **Encrypt with a per-user key** — stronger blast-radius isolation, but adds key
-  management we don't need yet; a single app key is sufficient for now.
+- **Encrypt with a per-user key** gives stronger blast-radius isolation, but adds
+  key management we don't need yet; a single app key is sufficient for now.

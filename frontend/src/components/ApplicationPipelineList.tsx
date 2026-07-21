@@ -205,7 +205,7 @@ function AttemptTimeline({ attempts }: { attempts: ApplicationPipelineItem["atte
 }
 
 function formatAppliedAt(value: string | null): string {
-  if (!value) return "—";
+  if (!value) return "None";
   return formatDateTime(value);
 }
 

@@ -12,7 +12,7 @@ case "${1:-api}" in
     exec celery -A "${CELERY_APP}" worker --loglevel="${LOG_LEVEL:-INFO}"
     ;;
   beat)
-    # Schedule file on /tmp so a read-only rootfs (OPS-38) stays writable.
+    # Schedule file on /tmp so a read-only rootfs stays writable.
     exec celery -A "${CELERY_APP}" beat \
       --schedule=/tmp/celerybeat-schedule \
       --loglevel="${LOG_LEVEL:-INFO}"

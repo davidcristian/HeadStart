@@ -4,7 +4,8 @@ Holds the structured data an auto-apply flow needs (contact details, resume
 text, a cover-letter template, and free-form per-field answers). The payload is
 PII, so the whole JSON blob is Fernet-encrypted before storage; only
 `data_ciphertext` ever reaches the database. Unlike `site_credential` secrets,
-the decrypted profile *is* returned to its owner — they must read and edit it.
+the decrypted profile *is* returned to its owner because they must read and
+edit it.
 """
 
 from datetime import datetime

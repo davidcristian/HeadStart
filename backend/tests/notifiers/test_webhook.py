@@ -122,7 +122,7 @@ def test_webhook_merges_custom_headers() -> None:
 
 
 def test_webhook_ignores_user_override_of_content_type_and_signature() -> None:
-    """NTF-09: reserved Content-Type / signature headers always win over config."""
+    """Reserved Content-Type / signature headers always win over config."""
     captured_headers: list[dict[str, str]] = []
     captured_body: list[bytes] = []
 

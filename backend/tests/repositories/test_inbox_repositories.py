@@ -135,7 +135,7 @@ def test_poll_state_upsert_inserts_then_updates(db_session: Session) -> None:
 
 
 def test_poll_state_upsert_recovers_from_unique_race(db_session: Session) -> None:
-    """DAT-15: concurrent first-poll insert loses unique(user_id) then updates the winner."""
+    """Concurrent first-poll insert loses unique(user_id) then updates the winner."""
     user = _user(db_session, email="poll-race@example.test")
     db_session.add(InboxPollState(user_id=user.id, last_polled_uid=5))
     db_session.flush()

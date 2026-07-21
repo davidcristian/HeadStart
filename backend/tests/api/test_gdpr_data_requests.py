@@ -34,7 +34,7 @@ def test_export_creates_audit_log(client: TestClient, auth_headers: dict[str, st
 
 
 def test_export_audit_log_ignores_untrusted_forwarded_ip(client: TestClient) -> None:
-    """AUT-17: without TRUSTED_PROXY_CIDRS, forged XFF must not poison the audit IP."""
+    """Without TRUSTED_PROXY_CIDRS, forged XFF must not poison the audit IP."""
     admin = register_and_login(client, "audit-admin@example.com")
     member = register_and_login(client, "audit-member@example.com")
 
@@ -95,7 +95,7 @@ def test_delete_redacts_prior_export_audit_rows(client: TestClient) -> None:
     before = client.get("/api/v1/admin/data-requests", headers=admin).json()
     assert len(before) == 1
     assert before[0]["user_email"] == "soon-gone@example.com"
-    # TestClient peer is not a valid IP and XFF is untrusted by default (AUT-17).
+    # TestClient peer is not a valid IP and XFF is untrusted by default.
     assert before[0]["ip_address"] is None
     assert before[0]["user_agent"] == "pytest-export-then-delete/1.0"
 
@@ -129,7 +129,7 @@ def test_admin_data_requests_requires_admin(client: TestClient) -> None:
 
 
 def test_admin_data_requests_limit_out_of_bounds_returns_422(client: TestClient) -> None:
-    """BIL-04: negative/zero/over-max limit must 422 before reaching SQL LIMIT."""
+    """Negative/zero/over-max limit must 422 before reaching SQL LIMIT."""
     admin = register_and_login(client, "admin@example.com")
 
     negative = client.get("/api/v1/admin/data-requests?limit=-1", headers=admin)

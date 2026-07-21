@@ -1,4 +1,4 @@
-"""Shopify Careers apply adapter — delegates to Ashby."""
+"""Shopify Careers apply adapter that delegates to Ashby."""
 
 from __future__ import annotations
 

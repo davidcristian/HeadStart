@@ -32,16 +32,16 @@ erDiagram
 `promo_validation_attempt`, and the inbox/mailbox owned tables each carry a
 `user_id` FK (`ON DELETE CASCADE`) and a matching `User` ORM relationship with
 `cascade="all, delete-orphan"` so account erasure does not rely on the DB FK
-alone (DAT-07 / DAT-12). `seen_job`, `delivery_log`, and `application_log` have
+alone. `seen_job`, `delivery_log`, and `application_log` have
 no `user_id`; they are scoped transitively through their parent `search`.
 `data_request_log.user_id` is nullable (`ON DELETE SET NULL`) so a post-erasure
 compliance row can survive without a live user FK. All API queries filter by
-the authenticated user — see [auth.md](auth.md).
+the authenticated user. See [auth.md](auth.md).
 
 **Inbox / mailbox tables** (`mailbox_credential`, `inbox_poll_state`,
 `inbox_classification`, `inbox_reply_draft`, `inbox_pending_reply`,
 `inbox_reply_send_log`) live in [inbox.md](inbox.md); this doc covers the
-core job-pipeline schema plus billing/GDPR/artifact tables below (DOC-19).
+core job-pipeline schema plus billing/GDPR/artifact tables below.
 
 ### user
 
@@ -69,7 +69,7 @@ admin cannot re-open self-service admin creation (see [auth.md](auth.md)).
 | summary_api_key_ciphertext | str? | Fernet-encrypted API key for the selected hosted provider |
 | ai_purpose_providers | JSON? | Optional per-purpose provider overrides (`cover_letter`, `resume_curation`, …) |
 | ai_purpose_models | JSON? | Optional per-purpose model overrides keyed by purpose id |
-| locale | str? | Preferred notification/auth email locale (`en` / `de`); null inherits `DEFAULT_LOCALE` (NTF-12) |
+| locale | str? | Preferred notification/auth email locale (`en` / `de`); null inherits `DEFAULT_LOCALE` |
 | created_at    | datetime |                                    |
 
 ### registration_lock
@@ -92,7 +92,7 @@ Single-use, time-limited token for email address verification.
 | user_id    | FK user  | Owner; cascade delete              |
 | token_hash | str      | SHA-256 via shared `hash_url_token` (unique) |
 | expires_at | datetime |                                    |
-| used_at    | datetime?| Set atomically on claim (DAT-18)   |
+| used_at    | datetime?| Set atomically on claim            |
 | created_at | datetime |                                    |
 
 ### password_reset_token
@@ -105,7 +105,7 @@ Single-use, time-limited token for email-based password reset.
 | user_id    | FK user  | Owner; cascade delete              |
 | token_hash | str      | SHA-256 via shared `hash_url_token` (unique) |
 | expires_at | datetime |                                    |
-| used_at    | datetime?| Set atomically on claim (DAT-18)   |
+| used_at    | datetime?| Set atomically on claim            |
 | created_at | datetime |                                    |
 
 ### source
@@ -147,15 +147,15 @@ A saved query against a source, on an interval, delivering to a target.
 | last_error      | text?     | Most recent scrape failure message             |
 | next_run_at     | datetime  | Drives due-based scheduling/catch-up           |
 
-**`filters` JSON** — applied in the pipeline after scraping, before dedup:
+**`filters` JSON**, applied in the pipeline after scraping, before dedup:
 
 | Key | Type | Behavior |
 | --- | ---- | -------- |
 | `keywords` / `keywords_include` | string or list | All terms must appear in title, company, or location (case-insensitive) |
 | `keywords_exclude` | string or list | Exclude when any term appears in title, company, or location |
 | `location` | string or list | Location field must contain any of the terms |
-| `workplace` | string or list | `remote`, `hybrid`, or `onsite` — matches inferred workplace; unknown workplace passes |
-| `min_salary` | number | Minimum annual salary when compensation is known; unknown or mismatched currency passes. Structured Ashby components with `MONTH`/`WEEK`/`DAY`/`HOUR` intervals are annualized (×12 / ×52 / ×260 / ×2080) before comparison; unknown intervals pass through unchanged. Text amounts accept US (`$88,500`, `$1,234.56`) and EU (`€55.000`, `1.234,56`) grouping/decimal separators (SVC-13) |
+| `workplace` | string or list | `remote`, `hybrid`, or `onsite`; matches inferred workplace, and unknown workplace passes |
+| `min_salary` | number | Minimum annual salary when compensation is known; unknown or mismatched currency passes. Structured Ashby components with `MONTH`/`WEEK`/`DAY`/`HOUR` intervals are annualized (×12 / ×52 / ×260 / ×2080) before comparison; unknown intervals pass through unchanged. Text amounts accept US (`$88,500`, `$1,234.56`) and EU (`€55.000`, `1.234,56`) grouping/decimal separators |
 | `salary_currency` | string | ISO currency for `min_salary` (default `USD`) |
 
 ### seen_job
@@ -173,18 +173,18 @@ dedup is also applied across a user's searches by normalized job URL (see
 | title         | str         |                                               |
 | company       | str         |                                               |
 | location      | str         |                                               |
-| salary        | str         | Formatted compensation when scraped (optional). Display uses `$`/`€`/`£` for USD/EUR/GBP; other ISO codes (e.g. CHF) are shown as the code prefix, and unknown currency omits a symbol rather than defaulting to `$` (SVC-14) |
+| salary        | str         | Formatted compensation when scraped (optional). Display uses `$`/`€`/`£` for USD/EUR/GBP; other ISO codes (e.g. CHF) are shown as the code prefix, and unknown currency omits a symbol rather than defaulting to `$` |
 | url           | str         |                                               |
-| normalized_url| str         | Canonical form of `url` for cross-search dedup (DAT-05); written at insert |
+| normalized_url| str         | Canonical form of `url` for cross-search dedup; written at insert |
 | summary       | str         | "Why this matches" blurb (optional); see [summaries.md](summaries.md) |
 | status        | str         | `new` / `seen` / `applied` / `archived` / `closed` |
 | first_seen_at | datetime    |                                               |
 | applied_at    | datetime    | Set when a live apply succeeds (manual or pipeline) |
 | ghosted_at    | datetime?   | Set when ghost-detection leases a stale apply |
 |               |             | **Unique (search_id, external_id)**           |
-|               |             | **Index** `ix_seen_job_status_applied_at_unghosted` on `(status, applied_at)` where `ghosted_at IS NULL` (DAT-03 / DAT-14; ghost-detection claim) |
-|               |             | **Index** `ix_seen_job_search_id_status` on `(search_id, status)` (DAT-11; job feed / applications status filters) |
-|               |             | **Index** `ix_seen_job_normalized_url` on `normalized_url` (DAT-05; cross-search URL dedup) |
+|               |             | **Index** `ix_seen_job_status_applied_at_unghosted` on `(status, applied_at)` where `ghosted_at IS NULL` (ghost-detection claim) |
+|               |             | **Index** `ix_seen_job_search_id_status` on `(search_id, status)` (job feed / applications status filters) |
+|               |             | **Index** `ix_seen_job_normalized_url` on `normalized_url` (cross-search URL dedup) |
 
 **`status` lifecycle:**
 
@@ -194,13 +194,13 @@ dedup is also applied across a user's searches by normalized job URL (see
 | `seen` | User or pipeline | User acknowledged, or a previously closed listing reappeared |
 | `applied` | User or apply pipeline | User applied, or auto-apply succeeded |
 | `archived` | User | Hidden from active triage; not auto-closed on re-scrape |
-| `closed` | Pipeline | Job no longer appears in scrape results (applied/archived rows are left alone). `SeenJobRepository.sync_after_scrape` applies this with two set-based `UPDATE`s (close missing `new`/`seen`, reopen matching `closed` → `seen`) rather than loading the full ledger into Python (DAT-16). |
+| `closed` | Pipeline | Job no longer appears in scrape results (applied/archived rows are left alone). `SeenJobRepository.sync_after_scrape` applies this with two set-based `UPDATE`s (close missing `new`/`seen`, reopen matching `closed` → `seen`) rather than loading the full ledger into Python. |
 
 ### pending_digest
 
 Jobs waiting to be included in the next batched digest notification for a search.
 Enqueue (`PendingDigestRepository.add_many` / `DigestService.queue`) inserts the
-batch with a single `flush` rather than one flush per job (SVC-15). After a
+batch with a single `flush` rather than one flush per job. After a
 successful (or plan-skipped) flush, `PendingDigestRepository.delete_for_search`
 clears the queue with a single bulk `DELETE … WHERE search_id = …` rather than
 re-selecting and deleting ORM rows one-by-one.
@@ -282,9 +282,9 @@ Audit of notification attempts.
 | status      | str         | `sent` / `failed`              |
 | error       | str?        | Present when failed            |
 | sent_at     | datetime    |                                |
-|             |             | **Index** `ix_delivery_log_status` on `status` (DAT-11; admin stats / failure counts) |
+|             |             | **Index** `ix_delivery_log_status` on `status` (admin stats / failure counts) |
 
-**Search-status top-N (DAT-04):** `DeliveryLogRepository.recent_failures_for_searches`
+**Search-status top-N:** `DeliveryLogRepository.recent_failures_for_searches`
 ranks failed rows with `ROW_NUMBER() PARTITION BY seen_job.search_id ORDER BY
 sent_at DESC` and keeps only the newest N per search, so the searches list
 endpoint does not load unbounded failure history into Python.
@@ -297,19 +297,19 @@ Audit of auto-apply attempts (preview and live).
 | ------------------------ | ----------- | ---------------------------------------- |
 | id                       | int PK      |                                          |
 | seen_job_id              | FK seen_job |                                          |
-| status                   | str         | `queued` / `processing` / `submitted` / `dry_run` / `failed` (canonical: `APPLICATION_LOG_STATUSES` in `application_log.py`; DAT-09) |
+| status                   | str         | `queued` / `processing` / `submitted` / `dry_run` / `failed` (canonical: `APPLICATION_LOG_STATUSES` in `application_log.py`) |
 | dry_run                  | bool        | True when the attempt was a preview only |
 | error                    | text?       | Present when failed                      |
-| payload                  | JSON?       | Scrubbed adapter body (SVC-11 drops `cookies`/`headers`/`authorization`/`session`/token keys) plus `employer_domain` + `posting` metadata for triage, and a `user_consent` stamp (`basis`, `mechanism`, `live_submission`, `recorded_at`) for each attempt |
+| payload                  | JSON?       | Scrubbed adapter body (the scrub drops `cookies`/`headers`/`authorization`/`session`/token keys) plus `employer_domain` + `posting` metadata for triage, and a `user_consent` stamp (`basis`, `mechanism`, `live_submission`, `recorded_at`) for each attempt |
 | external_application_id  | str?        | Board-assigned ID on success             |
 | tailored_resume_artifact_id | int? FK → application_artifact | Optional tailored PDF attached to the attempt (`ON DELETE SET NULL`) |
 | created_at               | datetime    |                                          |
 
-**Indexes (DAT-03):** `ix_application_log_dry_run_seen_job_id` on
+**Indexes:** `ix_application_log_dry_run_seen_job_id` on
 `(dry_run, seen_job_id)` supports the applications-pipeline distinct subquery
-that lists jobs with live (non–dry-run) apply activity.
+that lists jobs with live apply activity, meaning attempts that are not dry runs.
 
-**In-flight uniqueness (XCT-02 / SVC-01):** partial unique index
+**In-flight uniqueness:** partial unique index
 `uq_application_log_inflight_job` on `seen_job_id` where
 `status IN ('queued', 'processing') AND dry_run IS FALSE`. Live enqueue
 (`ApplicationLogRepository.try_add_pending`) inserts under a SAVEPOINT and
@@ -354,7 +354,7 @@ Audit trail when a user redeems a promo (one row per user per promo).
 
 ### promo_validation_attempt
 
-Rate-limit ledger for promo validate / checkout resolution attempts (BIL-09).
+Rate-limit ledger for promo validate / checkout resolution attempts.
 
 | Column       | Type      | Notes                              |
 | ------------ | --------- | ---------------------------------- |
@@ -371,7 +371,7 @@ GDPR export / account-deletion audit. See [auth.md](auth.md).
 | ------------ | --------- | ------------------------------------------------------------------ |
 | id           | int PK    |                                                                    |
 | user_id      | FK user?  | Nullable; `ON DELETE SET NULL` so compliance rows survive erasure |
-| user_email   | str       | Live email while account exists; post-deletion HMAC pseudonym (`erased:<hex>`) only (DAT-02) |
+| user_email   | str       | Live email while account exists; post-deletion HMAC pseudonym (`erased:<hex>`) only |
 | request_type | str       | `export` or `delete`                                               |
 | ip_address   | str?      | Cleared on deletion redaction                                      |
 | user_agent   | text?     | Cleared on deletion redaction                                      |
@@ -379,7 +379,7 @@ GDPR export / account-deletion audit. See [auth.md](auth.md).
 
 ### document_generation
 
-Ephemeral queue row for async resume / cover-letter generation (API-01).
+Ephemeral queue row for async resume / cover-letter generation.
 
 | Column       | Type        | Notes                                              |
 | ------------ | ----------- | -------------------------------------------------- |
@@ -395,7 +395,7 @@ Ephemeral queue row for async resume / cover-letter generation (API-01).
 
 ### search_run
 
-Ephemeral queue row for async manual `POST /searches/{id}/run` (API-02).
+Ephemeral queue row for async manual `POST /searches/{id}/run`.
 
 | Column       | Type        | Notes                                              |
 | ------------ | ----------- | -------------------------------------------------- |
@@ -413,14 +413,14 @@ Ephemeral queue row for async manual `POST /searches/{id}/run` (API-02).
 Change a model, then `just makemigration "..."`, review, `just migrate`.
 
 Unit tests still build schema via SQLite `create_all` for speed. **Postgres
-compatibility (TST-03)** is gated separately: CI's `migrations` job runs
+compatibility** is gated separately: CI's `migrations` job runs
 `just test-migrations`, which boots disposable Postgres 16, applies
 `alembic upgrade head` from an empty database, then `alembic check` so ORM
 metadata cannot drift from the applied migrations. Irreversible data
 migrations (plan rewrite, GDPR redaction) intentionally no-op `downgrade()`,
 so a full downgrade-to-base round-trip is not part of the gate.
 
-**Empty-string NOT NULL text columns (DAT-08):** when the ORM uses
+**Empty-string NOT NULL text columns:** when the ORM uses
 `default=""` on a non-nullable text/string column, the Alembic migration must
 also set `server_default=""` so raw SQL / tooling inserts that omit the column
 succeed. `inbox_classification` (0024) and `inbox_reply_send_log` (0031 +

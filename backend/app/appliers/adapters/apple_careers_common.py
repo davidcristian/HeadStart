@@ -170,7 +170,7 @@ def apply_error_message(response: Any) -> str | None:
             if value and str(value).strip():
                 return str(value)
         return "apple_careers apply request failed"
-    # Bare error envelopes (no success:false) — same fallthrough as Microsoft.
+    # Bare error envelopes (no success:false) take the same fallthrough as Microsoft.
     errors = response.get("errors")
     if isinstance(errors, list) and errors:
         first = errors[0]

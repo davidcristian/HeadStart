@@ -104,7 +104,7 @@ describe("FreeTierAd", () => {
 
     const frame = screen.getByTitle("Partner advertisement");
     expect(frame).toHaveAttribute("src", "https://ads.example.com/slot");
-    // FRO-20: never combine allow-scripts with allow-same-origin on untrusted embeds.
+    // Never combine allow-scripts with allow-same-origin on untrusted embeds.
     expect(frame).toHaveAttribute("sandbox", "allow-scripts allow-popups");
     expect(frame.getAttribute("sandbox")).not.toContain("allow-same-origin");
   });

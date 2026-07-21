@@ -33,7 +33,7 @@ def build_ghost_summary_message(*, job: SeenJob, mailbox_email: str) -> Outbound
     """Compose a ghost summary email with HeadStart archive markers."""
     company = job.company.strip() or "Unknown company"
     title = job.title.strip() or "Unknown role"
-    subject = f"{GHOST_SUBJECT_PREFIX} No reply: {company} — {title}"
+    subject = f"{GHOST_SUBJECT_PREFIX} No reply: {title} at {company}"
     body = _format_body(job=job, applied_at=job.applied_at)
     return OutboundMessage(
         to=[mailbox_email],
@@ -51,9 +51,9 @@ def _format_body(*, job: SeenJob, applied_at: datetime | None) -> str:
     lines = [
         "HeadStart recorded no recruiter reply for this application.",
         "",
-        f"Company: {job.company or '—'}",
-        f"Role: {job.title or '—'}",
-        f"Location: {job.location or '—'}",
+        f"Company: {job.company or 'None'}",
+        f"Role: {job.title or 'None'}",
+        f"Location: {job.location or 'None'}",
         f"Applied: {applied_label}",
     ]
     if job.url:

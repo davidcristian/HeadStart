@@ -12,7 +12,7 @@ from app.models.search import Search
 from app.models.seen_job import SeenJob
 from app.scrapers.url import normalize_job_url
 
-# GDPR export walks the full ledger in bounded SELECTs (AUT-34).
+# GDPR export walks the full ledger in bounded SELECTs.
 DEFAULT_EXPORT_JOBS_CHUNK_SIZE = 500
 
 
@@ -118,7 +118,7 @@ class SeenJobRepository:
         return set(self.session.scalars(stmt))
 
     def add(self, seen_job: SeenJob) -> SeenJob:
-        # Keep the indexed column in sync when callers only set url (DAT-05).
+        # Keep the indexed column in sync when callers only set url.
         if not seen_job.normalized_url and seen_job.url:
             seen_job.normalized_url = normalize_job_url(seen_job.url)
         self.session.add(seen_job)
@@ -126,7 +126,7 @@ class SeenJobRepository:
         return seen_job
 
     def sync_after_scrape(self, search_id: int, scraped_external_ids: set[str]) -> tuple[int, int]:
-        """Close missing listings and reopen reappeared ones via set-based UPDATEs (DAT-16)."""
+        """Close missing listings and reopen reappeared ones via set-based UPDATEs."""
         close_stmt = (
             update(SeenJob)
             .where(SeenJob.search_id == search_id)

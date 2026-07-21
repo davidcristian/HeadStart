@@ -39,7 +39,7 @@ def test_callback_redirects_on_provider_error(client: TestClient, provider: str)
 
 @pytest.mark.parametrize("provider", _PROVIDERS)
 def test_callback_encodes_provider_error_in_redirect(client: TestClient, provider: str) -> None:
-    """API-05: attacker-controlled error must not inject extra query params."""
+    """Attacker-controlled error must not inject extra query params."""
     payload = "access_denied&mailbox=evil#frag"
     resp = client.get(
         f"/api/v1/inbox/{provider}/callback",

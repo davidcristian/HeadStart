@@ -4,7 +4,7 @@ Revision ID: 0030_inbox_pending_reply
 Revises: 0029_inbox_reply_draft
 Create Date: 2026-07-03
 
-Stores human-like send delays before auto-reply SMTP delivery (Phase 20d).
+Stores human-like send delays before auto-reply SMTP delivery.
 """
 
 from collections.abc import Sequence

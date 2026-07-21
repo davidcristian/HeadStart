@@ -5,7 +5,7 @@ Revises: 0042_seen_job_app_log_idx
 Create Date: 2026-07-06
 
 Cross-search dedup used to SELECT every seen_job.url for a user and normalize
-in Python on each scrape (DAT-05). Persist the canonical URL at insert time and
+in Python on each scrape. Persist the canonical URL at insert time and
 index it so the batch intersect can run in SQL.
 """
 

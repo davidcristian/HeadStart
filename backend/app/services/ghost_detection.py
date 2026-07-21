@@ -40,7 +40,7 @@ class GhostDetectionService:
         """Lease stale applications (stamp ``ghosted_at``) and return their ids.
 
         Caller must commit before SMTP so overlapping ticks / ``acks_late``
-        redelivery cannot re-select the same row (XCT-11). Ineligible jobs and
+        redelivery cannot re-select the same row. Ineligible jobs and
         users without a mailbox are released immediately and not returned.
         """
         if not settings.inbox_agent_enabled:
@@ -71,7 +71,7 @@ class GhostDetectionService:
     def process_claimed(self, job_ids: list[int]) -> GhostDetectionResult:
         """SMTP-send ghost summaries for previously leased jobs.
 
-        Per-item isolation (SVC-06): a raise from one job is logged and counted
+        Per-item isolation: a raise from one job is logged and counted
         as failed so other leased jobs still process. Failed sends and skips
         release the ``ghosted_at`` lease so the next tick can retry.
         """

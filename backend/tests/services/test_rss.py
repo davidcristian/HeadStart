@@ -57,7 +57,7 @@ def test_build_rss_feed_escapes_xml_special_characters() -> None:
 
 
 def test_build_rss_feed_strips_xml_invalid_control_characters() -> None:
-    """Scraped C0 controls must not break strict RSS readers (SVC-16)."""
+    """Scraped C0 controls must not break strict RSS readers."""
     xml = build_rss_feed(
         RssChannel(
             title="HeadStart\x0cjobs",
@@ -83,7 +83,7 @@ def test_build_rss_feed_strips_xml_invalid_control_characters() -> None:
     assert "<title>HeadStartjobs</title>" in xml
     assert "<description>Channeldesc</description>" in xml
     assert "<title>BackendEngineer</title>" in xml
-    assert "Whymatch — ACME · Remote · $100K · new" in xml
+    assert "Whymatch. ACME · Remote · $100K · new" in xml
 
 
 def test_build_rss_feed_keeps_tab_lf_cr() -> None:

@@ -1,4 +1,4 @@
-"""Tests for API security response headers (AUT-23)."""
+"""Tests for API security response headers."""
 
 from __future__ import annotations
 
@@ -50,7 +50,7 @@ def test_health_response_includes_security_headers(client: TestClient) -> None:
     assert response.headers["X-Frame-Options"] == X_FRAME_OPTIONS
     assert response.headers["Referrer-Policy"] == REFERRER_POLICY
     assert response.headers["Content-Security-Policy"] == CSP_FRAME_ANCESTORS
-    # Default test ENVIRONMENT is local/test — no HSTS pin for localhost HTTP.
+    # Default test ENVIRONMENT is local/test and needs no HSTS pin for local HTTP.
     assert "Strict-Transport-Security" not in response.headers
 
 

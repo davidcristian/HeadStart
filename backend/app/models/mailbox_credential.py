@@ -1,7 +1,7 @@
 """MailboxCredential: encrypted IMAP/SMTP settings for inbox automation.
 
 One row per user. The secret payload is a JSON `MailboxConfig` encrypted with
-Fernet before storage. Dev-only — used when `INBOX_AGENT_ENABLED=true`.
+Fernet before storage. Dev-only and used when `INBOX_AGENT_ENABLED=true`.
 """
 
 from typing import TYPE_CHECKING, Any

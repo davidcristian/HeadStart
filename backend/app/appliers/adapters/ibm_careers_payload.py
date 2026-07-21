@@ -13,7 +13,7 @@ from app.schemas.profile import ProfileData, ResumeFile
 
 # Default CSV column order for Avature External Import Services.
 # Operators must map these columns to Person / Job fields in the Avature
-# Import Data UI — layout is tenant-specific.
+# Import Data UI because the layout is tenant-specific.
 DEFAULT_CSV_COLUMNS: tuple[str, ...] = (
     "first_name",
     "last_name",

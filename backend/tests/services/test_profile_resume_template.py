@@ -70,7 +70,7 @@ def test_validate_zip_accepts_valid_bundle() -> None:
 
 
 def test_validate_zip_rejects_dangerous_tex_content() -> None:
-    """AIA-07: upload validation content-scans bundle members before storage."""
+    """Upload validation content-scans bundle members before storage."""
     data = _zip_files(
         {
             "main.tex": r"\documentclass{article}\begin{document}\read 5 to \x\end{document}",

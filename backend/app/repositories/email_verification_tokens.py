@@ -1,4 +1,4 @@
-"""Data access for email-verification tokens. Queries only — no business logic."""
+"""Query-only data access for email-verification tokens. Holds no business logic."""
 
 from __future__ import annotations
 
@@ -34,7 +34,7 @@ class EmailVerificationTokenRepository:
     ) -> EmailVerificationToken | None:
         """Atomically mark a non-expired unused token consumed and return it.
 
-        Single-use must not depend on a later best-effort delete (DAT-18). On
+        Single-use must not depend on a later best-effort delete. On
         Postgres the row is locked with FOR UPDATE so concurrent claims cannot
         both succeed; SQLite (tests) still serializes via the used_at stamp.
         """

@@ -1,4 +1,4 @@
-"""Regression: ECS TRUSTED_PROXY_CIDRS must be the VPC CIDR (AUT-17)."""
+"""Regression: ECS TRUSTED_PROXY_CIDRS must be the VPC CIDR."""
 
 from __future__ import annotations
 

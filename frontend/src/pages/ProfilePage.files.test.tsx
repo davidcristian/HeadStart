@@ -46,7 +46,7 @@ describe("ProfilePage files and structured editing", () => {
     await waitFor(() => expect(screen.getByText("upload boom")).toBeInTheDocument());
   });
 
-  it("rejects an oversized resume before calling the upload API (FRO-24)", async () => {
+  it("rejects an oversized resume before calling the upload API", async () => {
     renderWithClient(<ProfilePage />);
     await waitFor(() => expect(mockApi.getProfile).toHaveBeenCalled());
 
@@ -63,7 +63,7 @@ describe("ProfilePage files and structured editing", () => {
     expect(mockApi.uploadResume).not.toHaveBeenCalled();
   });
 
-  it("rejects a resume with a disallowed extension before upload (FRO-24)", async () => {
+  it("rejects a resume with a disallowed extension before upload", async () => {
     renderWithClient(<ProfilePage />);
     await waitFor(() => expect(mockApi.getProfile).toHaveBeenCalled());
 
@@ -121,7 +121,7 @@ describe("ProfilePage files and structured editing", () => {
     await waitFor(() => expect(screen.getByText("template boom")).toBeInTheDocument());
   });
 
-  it("rejects an oversized .tex template before calling the upload API (FRO-24)", async () => {
+  it("rejects an oversized .tex template before calling the upload API", async () => {
     renderWithClient(<ProfilePage />);
     await waitFor(() => expect(mockApi.getProfile).toHaveBeenCalled());
 

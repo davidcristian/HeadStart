@@ -23,7 +23,7 @@ class InboxPollStateRepository:
 
         First-time inserts use a SAVEPOINT so a concurrent first poll that lost
         the unique(user_id) race rolls back only the insert, then updates the
-        winning row (DAT-15).
+        winning row.
         """
         row = self.get_for_user(user_id)
         if row is not None:

@@ -1,16 +1,16 @@
 # Roadmap
 
-Living plan for HeadStart — what shipped, what is still open, and what to build
-next. Update this when priorities shift or a milestone ships. Detail for shipped
-behavior lives in [modules/](modules/) and [adr/](adr/), not here.
+Living plan for HeadStart. It tracks what shipped, what is still open, and what
+to build next. Update this when priorities shift or a milestone ships. Detail
+for shipped behavior lives in [modules/](modules/) and [adr/](adr/), not here.
 
-**Baseline (2026-07):** Phases **1–37** are shipped; portal catalog **batch 10**
-adds 15 employers (**197** total). See [architecture.md](architecture.md) for
-the system design.
+**Baseline (2026-07):** the areas below are shipped, and the portal catalog
+covers **197** employers. See [architecture.md](architecture.md) for the system
+design.
 
 ---
 
-## Shipped (Phases 1–37 + batch 10)
+## Shipped
 
 | Area | What landed |
 | ---- | ----------- |
@@ -21,7 +21,7 @@ the system design.
 | Ops / SaaS | Metrics, rate limits, admin, hosted deploy polish, four-tier pricing (Free → Starter → Plus → Pro), Stripe billing, promo codes, ads on free tier, legal pages + Impressum, GDPR export/delete |
 | Auto-apply | Profile + resume, apply adapters for every production scraper except `generic_html` / `playwright`, pipeline auto-apply queue, application logs |
 | AI | Heuristic / OpenAI / Gemini / Anthropic / llama.cpp summaries; per-user + per-purpose model prefs; tailored LaTeX resume + cover letters |
-| Portals | Curated catalog + Pro cross-portal search through batch 10 (197 employers) |
+| Portals | Curated catalog + Pro cross-portal search across 197 employers |
 | Inbox (dev-only) | Local application agent: IMAP/SMTP, Gmail, Outlook, Yahoo, Fastmail; classify / route / draft / ghost / interview handoff behind `INBOX_AGENT_ENABLED` |
 
 Module docs: [scrapers](modules/scrapers.md), [appliers](modules/appliers.md),
@@ -32,18 +32,18 @@ Module docs: [scrapers](modules/scrapers.md), [appliers](modules/appliers.md),
 
 ## Open / deferred
 
-No open phase checklists remain. These are the leftover candidates and next
-bets — pick one when starting new work.
+No open checklists remain. These are the leftover candidates and next bets.
+Pick one when starting new work.
 
 ### Next bets (pick one)
 
-1. **Portal catalog batch 11** — more presets on existing adapters (same pattern
-   as batches 6–10).
-2. **More SuccessFactors CSB employers** — only when additional public
+1. **More portal catalog presets** on existing adapters, following the pattern
+   the current presets already use.
+2. **More SuccessFactors CSB employers**, but only when additional public
    `*.jobs.hr.cloud.sap` (or equivalent CSB) hosts are verified. Older RMK feeds
    stay out of scope for the current scraper.
-3. **Another ATS gap** — new reusable scraper (+ apply adapter when feasible)
-   when a high-value board stack is still uncovered.
+3. **Another ATS gap**, meaning a new reusable scraper (+ apply adapter when
+   feasible) when a high-value board stack is still uncovered.
 
 ### Catalog candidates still blocked or deferred
 
@@ -53,7 +53,7 @@ bets — pick one when starting new work.
 | Too thin for catalog | OpenSea, Consensys, Stability AI, ByteDance, Trade Republic |
 | No verified public board | Zoox |
 | Enterprise boards not on public GH / Ashby / SR | Revolut, Klarna, Zendesk, Intuit, PayPal, Etsy, eBay, Nike, Autodesk, Qualcomm, Broadcom, Arm |
-| Extra vanity boards | Second Rippling ATS / iCIMS Jibe hosts beyond current presets — none verified yet |
+| Extra vanity boards | No second Rippling ATS / iCIMS Jibe host beyond the current presets is verified yet |
 | SuccessFactors beyond Gore | Guessed CSB hosts NXDOMAIN / non-200 at last probe; Adidas `jobs.adidas-group.com` is older RMK |
 
 Re-verify before adding a preset: live smoke the public board API, document
@@ -66,7 +66,7 @@ skips, keep `portal_id` unique. Catalog helpers and the preset recipe live in
   ([adr/0011](adr/0011-inbox-dev-only.md)).
 - Live apply on captcha- or credential-gated boards (Rippling, Workable Turnstile;
   iCIMS / IBM / SuccessFactors partner APIs) remains best-effort for operators
-  who can supply tokens or integration users — see [appliers](modules/appliers.md).
+  who can supply tokens or integration users. See [appliers](modules/appliers.md).
 
 ---
 
@@ -79,4 +79,4 @@ skips, keep `portal_id` unique. Catalog helpers and the preset recipe live in
    live network in CI). Catalog-only: one preset file + live smoke + update the
    count in [modules/portals.md](modules/portals.md).
 4. When something ships, update **this** file (baseline / open table) and the
-   module doc — do not reintroduce long per-phase history here.
+   module doc. Do not reintroduce long historical checklists here.

@@ -13,7 +13,7 @@ const TYPE_DEFAULTS: Record<string, Json> = {
   email: { to: "you@example.com" },
   ntfy: {
     server_url: "https://ntfy.sh",
-    // High-entropy default so Create never ships the public headstart-change-me topic (NTF-06).
+    // High-entropy default so Create never ships the public headstart-change-me topic.
     topic: `jobs-${crypto.randomUUID().replaceAll("-", "").slice(0, 16)}`,
     priority: "default",
   },

@@ -182,7 +182,7 @@ def test_posted_at_valid() -> None:
 
 
 def test_posted_at_overflow_returns_none() -> None:
-    """Out-of-range epochs degrade to None instead of aborting the scrape (SCR-02)."""
+    """Out-of-range epochs degrade to None instead of aborting the scrape."""
     record: list[Any] = ["1", "Job"] + [None] * 10 + [[1e30]]
     assert _posted_at_from_record(record) is None
 

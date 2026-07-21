@@ -16,7 +16,7 @@ variable "secret_values" {
 
 variable "recovery_window_in_days" {
   type        = number
-  description = "Days Secrets Manager retains a deleted secret before purge (7–30, or 0 for immediate)."
+  description = "Days Secrets Manager retains a deleted secret before purge (7 to 30, or 0 for immediate)."
   default     = 30
 
   validation {

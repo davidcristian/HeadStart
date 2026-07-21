@@ -5,24 +5,23 @@
 The same container images run locally (Docker Compose) and on AWS (ECS Fargate).
 Local development never depends on anything in `devops/`.
 
-**Compose image pins (OPS-56).** `docker-compose.yml` tags locally built app
+**Compose image pins.** `docker-compose.yml` tags locally built app
 images as `headstart/backend:local`, `headstart/backend-worker:local`, and
 `headstart/frontend:local` (not registry `:latest`). The optional offline-profile
 ntfy service pins a concrete version **and** multi-arch index digest
 (`binwiederhier/ntfy:v2.25.0@sha256:…`) so `docker compose pull` cannot float an
 unaudited upstream. Bump the ntfy pin deliberately when upgrading. `just up`
-starts the default profile only (api, worker, beat, db, redis, frontend) —
-self-hosted ntfy stays opt-in via `docker compose --profile offline up -d ntfy`
-(DOC-25).
+starts the default profile only (api, worker, beat, db, redis, frontend), and
+self-hosted ntfy stays opt-in via `docker compose --profile offline up -d ntfy`.
 
-**Compose healthchecks (OPS-57).** `api`, `worker`, and `beat` define healthchecks
+**Compose healthchecks.** `api`, `worker`, and `beat` define healthchecks
 aligned with the ECS container probes: api `GET /api/v1/health`, worker
 `/metrics` accepting 200 or 401, beat a live `celery … beat` cmdline under
 `/proc`. `frontend.depends_on.api` uses `condition: service_healthy` so the SPA
 does not start until uvicorn is serving (not merely when the api container is
 created).
 
-**Compose db/redis publish (OPS-58).** `db` and `redis` publish only on
+**Compose db/redis publish.** `db` and `redis` publish only on
 `127.0.0.1` (not `0.0.0.0`), so a laptop on a shared LAN does not expose
 Postgres or unauthenticated Redis to peers. Compose requires an explicit
 `POSTGRES_PASSWORD` from `.env` (no `${…:-headstart}` default); copy
@@ -36,25 +35,25 @@ in `backend/requirements.txt`, `requirements-dev.txt`, and
 `requirements-playwright.txt` (pip-tools; see
 [ADR-0012](../adr/0012-backend-dependency-lockfiles.md)). The Dockerfile and CI
 install with `pip install --require-hashes -r …`, then install the local package
-with `--no-deps`. **Layer order (OPS-28):** `backend/Dockerfile` copies only
+with `--no-deps`. **Layer order:** `backend/Dockerfile` copies only
 `pyproject.toml` + `requirements.txt` for the hashed deps `RUN`, then
 `COPY app` and `pip install --no-deps .`, so application source edits do not
 bust the third-party dependency layer. Regenerate via `just lock-backend`
 after editing `backend/pyproject.toml` dependency floors.
 
-**Floors must match tested majors (XCT-23).** `pyproject.toml` `>=` floors are
+**Floors must match tested majors.** `pyproject.toml` `>=` floors are
 the human-readable support contract. Keep them aligned with the majors already
-pinned in the lockfiles (and exercised by CI) — for example `celery>=5.6`,
+pinned in the lockfiles (and exercised by CI), for example `celery>=5.6`,
 `redis>=6.0`, `httpx>=0.28`, `cryptography>=49.0`, `stripe>=15.0`. Do not leave
 floors on older majors the suite never runs against.
 
-**Dependency CVE scanning (OPS-19).** CI runs `just audit-backend` after the
+**Dependency CVE scanning.** CI runs `just audit-backend` after the
 dev install (`pip-audit --disable-pip` against the three hashed lockfiles).
 `pip-audit` is a `[dev]` extra. Dependabot watches `/backend` weekly alongside
 the frontend npm ecosystem. Locally: `just audit-backend` (needs
 `./scripts/install-backend.sh --dev`).
 
-**Third-party attribution (XCT-24 / XCT-25).** Conveyed backend and frontend
+**Third-party attribution.** Conveyed backend and frontend
 images ship a `THIRD_PARTY_LICENSES.md` inventory of bundled upstream packages
 (MIT/BSD/Apache/LGPL and similar). The canonical file lives at the repo root;
 copies are kept in `backend/` (Docker `COPY` → `/app/THIRD_PARTY_LICENSES.md`)
@@ -90,19 +89,19 @@ devops/terraform/
 ├── modules/
 │   ├── network/   # VPC, subnets, NAT, VPC flow logs → CloudWatch
 │   ├── ecr/       # image repositories
-│   ├── rds/       # Postgres (CMK, IAM auth, PI, log exports, EM — OPS-43)
+│   ├── rds/       # Postgres (CMK, IAM auth, PI, log exports, EM)
 │   ├── redis/     # ElastiCache
 │   ├── acm/       # DNS-validated TLS certificates (optional)
 │   ├── alb/       # load balancer, listeners, target groups, access logs, WAF
 │   ├── ecs/       # cluster, task defs + services (api, frontend, worker, beat)
 │   ├── iam/       # task execution + task roles
-│   └── secrets/   # Secrets Manager (CMK + recovery window — OPS-51)
+│   └── secrets/   # Secrets Manager (CMK + recovery window)
 └── environments/
     ├── beta/
     └── prod/
 ```
 
-**Module provider floors (OPS-40).** Every reusable module under `modules/*`
+**Module provider floors.** Every reusable module under `modules/*`
 ships a `versions.tf` with `required_version >= 1.5.0` and
 `required_providers` for `hashicorp/aws >= 5.60` (the stack module also pins
 `hashicorp/random >= 3.6` for `random_password`). Environment roots still own
@@ -112,20 +111,20 @@ without a pin fails fast instead of binding an incompatible provider.
 State is remote: S3 bucket + DynamoDB lock table. Each environment's
 `backend.tf` is a **partial** config (state `key`, region, lock table,
 encryption); the bucket is supplied at `terraform init` via
-`-backend-config` / `backend.hcl` so a real bucket name is never committed
-(OPS-29). Secrets are stored in Secrets Manager / SSM and injected into ECS
-task definitions — never in Terraform variables committed to git. Core apply
+`-backend-config` / `backend.hcl` so a real bucket name is never committed.
+Secrets are stored in Secrets Manager / SSM and injected into ECS task
+definitions, never in Terraform variables committed to git. Core apply
 secrets (`db_password`, `jwt_secret`, `credentials_secret_key`) are supplied
 only via `TF_VAR_*` env vars; beta/prod `terraform.tfvars.example` files no
 longer show inline assignments for them so operators are not primed to paste
-real secrets into a local `terraform.tfvars` (OPS-33).
+real secrets into a local `terraform.tfvars`.
 
 ## HTTPS (required in prod)
 
 **Beta** may serve HTTP on port 80 using the ALB's AWS-assigned DNS name (useful
 for throwaway stacks). **Prod** refuses that path: the stack `check
 "prod_requires_https"` fails plan/apply unless TLS is configured, so auth and
-site-credential API traffic cannot ride cleartext on the public ALB (OPS-36).
+site-credential API traffic cannot ride cleartext on the public ALB.
 
 To terminate TLS:
 
@@ -139,11 +138,11 @@ when HTTPS is enabled. `AUTH_COOKIE_SECURE` is derived the same way (`true` when
 `https_enabled`, otherwise `false`) so the refresh cookie is not dropped on a
 beta HTTP ALB. Outside `local`/`test`, the API also refuses to boot when
 `AUTH_COOKIE_SECURE=true` is paired with a non-`https` `FRONTEND_BASE_URL`, or
-when `AUTH_COOKIE_SAMESITE=none` is set without Secure (AUT-13). Optional
+when `AUTH_COOKIE_SAMESITE=none` is set without Secure. Optional
 `smtp_*` variables configure transactional email (`SMTP_PASSWORD` in Secrets
 Manager). `ntfy_default_topic` is **required** (no Terraform default): ntfy.sh
 topics are public by name, so beta/prod reject empty or `change-me` placeholders
-and the app refuses the same guessable default outside `local`/`test` (OPS-16).
+and the app refuses the same guessable default outside `local`/`test`.
 See [deploying-to-aws.md](../deploying-to-aws.md#custom-domain--https) and
 [launch-checklist.md](../launch-checklist.md).
 
@@ -154,7 +153,7 @@ with Chromium pre-installed. Default Fargate sizing is **1024 CPU / 2048 MiB**
 (vs **256 / 512** for api, beat, and frontend). Override via stack module vars
 `worker_cpu` and `worker_memory` in `environments/<env>/main.tf`.
 
-### Chromium sandbox & seccomp (OPS-27)
+### Chromium sandbox & seccomp
 
 The worker scrapes untrusted employer sites inside Chromium. Hardening:
 
@@ -167,7 +166,7 @@ The worker scrapes untrusted employer sites inside Chromium. Hardening:
 - **Image:** `backend/Dockerfile` target `worker` installs Playwright/Chromium
   as root (system deps), then runs as `appuser`.
 
-### Container hardening (OPS-38)
+### Container hardening
 
 Every ECS task definition (api, worker, beat, frontend, and the one-off
 migrate) pins defense-in-depth beyond the image `USER`:
@@ -179,14 +178,14 @@ migrate) pins defense-in-depth beyond the image `USER`:
   `/var/cache/nginx` and `/var/run`). Beat writes
   `--schedule=/tmp/celerybeat-schedule` so the schedule file is not on `/app`.
 - **Container `healthCheck`:** api probes `/api/v1/health`; worker accepts
-  `/metrics` 200 or 401 (token always set — OPS-54); beat checks a live
+  `/metrics` 200 or 401 (token always set); beat checks a live
   `celery … beat` cmdline under `/proc`; frontend `wget`s `:8080/`. Migrate
   omits a probe (one-shot).
 - **`linuxParameters`:** all roles use `RuntimeDefault` seccomp, drop all
-  capabilities, and enable container init (worker already did this for
-  OPS-27).
+  capabilities, and enable container init (the worker already did this for its
+  Chromium sandbox).
 
-## Distinct VPC CIDRs (OPS-30)
+## Distinct VPC CIDRs
 
 Beta and prod must not share the same private address space. Each environment's
 `main.tf` sets `vpc_cidr` / subnet CIDRs explicitly:
@@ -201,10 +200,10 @@ module calls; env wrappers own the real pin. `TRUSTED_PROXY_CIDRS` follows
 `var.vpc_cidr`, so ALB-trusted XFF stays aligned with each env's VPC.
 
 **Existing prod stacks** that already applied the old shared `10.20.0.0/16`
-will see a VPC replacement on the next apply — plan carefully (or leave the
+will see a VPC replacement on the next apply, so plan carefully (or leave the
 live CIDR and only use `10.30` for greenfield prod).
 
-## AWS account pin (OPS-31)
+## AWS account pin
 
 Beta and prod providers set `allowed_account_ids = [var.aws_account_id]`.
 `aws_account_id` is **required** (no default) and must be a 12-digit AWS
@@ -219,7 +218,7 @@ export TF_VAR_aws_account_id="$(aws sts get-caller-identity --query Account --ou
 `scripts/aws-first-deploy.sh` resolves the caller account when unset and
 persists it to `.aws-first-deploy-secrets.env` so later runs keep the pin.
 
-## Prod resilience knobs (OPS-05 / OPS-08 / OPS-10)
+## Prod resilience knobs
 
 `environments/prod/main.tf` raises durability beyond the stack defaults that
 `beta` keeps:
@@ -240,16 +239,16 @@ module into `rds` / `ecs` / `network` (VPC flow logs). Redis is always an
 default; optional `kms_key_id`), and an AUTH token from `random_password` stored
 in Secrets Manager as `REDIS_PASSWORD`. ECS tasks get `REDIS_TLS=true` and the
 password secret so Celery builds `rediss://` broker/result URLs with
-`ssl_cert_reqs=required` (OPS-10).
+`ssl_cert_reqs=required`.
 Enabling encryption/AUTH on an existing unencrypted broker replaces the
 resource (brief Celery downtime on apply). Prod also requires an explicit
 immutable `image_tag` (git SHA): there is no `"latest"` default, and Terraform
-rejects `latest` so a task recycle cannot silently pull a different build
-(OPS-07). ECR repositories set `image_tag_mutability = "IMMUTABLE"` so a
-re-push cannot overwrite a tag that task definitions still reference (OPS-09).
+rejects `latest` so a task recycle cannot silently pull a different build.
+ECR repositories set `image_tag_mutability = "IMMUTABLE"` so a
+re-push cannot overwrite a tag that task definitions still reference.
 Ongoing rolls still retarget task defs via `deploy.sh` / `IMAGE_TAG`.
 
-### VPC flow logs (OPS-41)
+### VPC flow logs
 
 Every environment's VPC publishes **ALL** traffic flow logs to CloudWatch Logs
 (`/vpc/{name}/flow-logs`) via a dedicated IAM role assumed by
@@ -257,13 +256,13 @@ Every environment's VPC publishes **ALL** traffic flow logs to CloudWatch Logs
 beta, 90 on prod) so accepted/rejected ENI traffic to tasks/RDS/Redis is
 available for incident response without changing the data plane.
 
-### RDS datastore hardening (OPS-43)
+### RDS datastore hardening
 
 Every environment's Postgres instance:
 
 - Encrypts storage (and Performance Insights) with a **customer-managed KMS
-  key** (`alias/{name}-rds`) that has annual key rotation enabled — not the
-  shared `aws/rds` key
+  key** (`alias/{name}-rds`) that has annual key rotation enabled, rather than
+  the shared `aws/rds` key
 - Enables **IAM database authentication** (password auth still works; operators
   can add IAM-mapped DB users as a second factor)
 - Turns on **Performance Insights** (7-day retention by default) and
@@ -272,7 +271,7 @@ Every environment's Postgres instance:
 - Defaults `apply_immediately = false` so engine/parameter changes wait for the
   maintenance window instead of rebooting mid-apply
 
-### RDS destroy safety (OPS-48)
+### RDS destroy safety
 
 `skip_final_snapshot` is a **separate** knob from `deletion_protection` (it used
 to be `!deletion_protection`, so a forgotten protection override also skipped
@@ -284,16 +283,16 @@ plan/apply unless `environment=prod` has `db_deletion_protection=true` **and**
 `db_skip_final_snapshot=false`.
 
 **Existing stacks** that already applied AWS-managed storage encryption will
-see an RDS replacement when adopting the CMK — plan a snapshot / restore
+see an RDS replacement when adopting the CMK, so plan a snapshot / restore
 window before apply.
 
-### Secrets Manager CMK + recovery window (OPS-51)
+### Secrets Manager CMK + recovery window
 
 Application secrets (`JWT_SECRET`, `CREDENTIALS_SECRET_KEY`,
 `POSTGRES_PASSWORD`, `REDIS_PASSWORD`, `METRICS_TOKEN`, optional
 `SMTP_PASSWORD`) are encrypted with a **customer-managed KMS key**
-(`alias/{name}-secrets`) that has annual key rotation enabled — not the shared
-`aws/secretsmanager` key. The key policy allows use only via Secrets Manager
+(`alias/{name}-secrets`) that has annual key rotation enabled, rather than the
+shared `aws/secretsmanager` key. The key policy allows use only via Secrets Manager
 (`kms:ViaService`) for principals in the account. Each secret sets an explicit
 `recovery_window_in_days` (default **30**). The ECS task execution role is
 granted `kms:Decrypt` / `kms:DescribeKey` on that CMK alongside
@@ -303,7 +302,7 @@ Adopting the CMK on an existing stack re-encrypts secret material in place (no
 secret replacement); schedule the apply during a quiet window and confirm tasks
 still pull secrets after the roll.
 
-### Tunable ECS LOG_LEVEL (OPS-55)
+### Tunable ECS LOG_LEVEL
 
 `ecs_environment` injects `LOG_LEVEL` from stack `var.log_level` (default
 `INFO`, validated as `DEBUG` / `INFO` / `WARNING` / `ERROR` / `CRITICAL`). Beta
@@ -311,7 +310,7 @@ and prod wrappers pass the same knob through so operators can raise verbosity
 during an incident via tfvars or `TF_VAR_log_level=DEBUG` without patching
 module source. Celery worker/beat entrypoints already honor `LOG_LEVEL`.
 
-### ALB hardening (OPS-08)
+### ALB hardening
 
 Every environment's ALB (beta and prod) enables:
 
@@ -324,11 +323,11 @@ Prod additionally sets `alb_deletion_protection = true` so a fat-finger
 protection off so throwaway stacks can tear down cleanly (the access-logs
 bucket uses `force_destroy` when deletion protection is off).
 
-### Tasks SG from ALB (OPS-14)
+### Tasks SG from ALB
 
 The shared ECS tasks security group accepts ingress from the ALB SG only on the
 two target-group ports: **8080** (frontend, unprivileged nginx) and **8000**
-(api). A prior `0–65535` rule would also have exposed the worker metrics port
+(api). A prior all-ports rule would also have exposed the worker metrics port
 (`9090`) to any member of the ALB SG. Worker/beat have no ALB targets; scrape
 them from a dedicated Prometheus/CloudWatch agent security group, not via the
 ALB rule.
@@ -343,9 +342,10 @@ Prometheus metrics are exposed from two scrape targets:
 See [modules/metrics.md](../modules/metrics.md) for metric names, PromQL examples,
 and `METRICS_TOKEN` Bearer auth (honored by both API and worker scrape targets).
 Terraform always stores a generated `METRICS_TOKEN` in Secrets Manager and injects
-it into ECS tasks (OPS-54), so AWS scrapes must send `Authorization: Bearer`.
+it into ECS tasks, so AWS scrapes must send `Authorization: Bearer`.
 On AWS, open worker `:9090` from your scraper security group (not the ALB SG;
-see OPS-14 above) and scrape with Prometheus or the CloudWatch agent.
+see [Tasks SG from ALB](#tasks-sg-from-alb) above) and scrape with Prometheus or
+the CloudWatch agent.
 
 ## Deploy flow
 
@@ -353,11 +353,11 @@ see OPS-14 above) and scrape with Prometheus or the CloudWatch agent.
 `eval "$(just aws-deploy-env)"` (reads Terraform outputs for `ECR_REGISTRY`,
 `ECS_CLUSTER`, `APP_URL`, etc.). `aws-deploy-env.sh` emits each value with
 `printf %q` so a terraform/aws output containing a single quote or other
-shell metacharacters cannot break the `eval`'d string (OPS-62; previously a
+shell metacharacters cannot break the `eval`'d string (previously a
 single-quoted heredoc).
 
 **First-time deploy:** `just aws-first-deploy PREFIX=yourname` chains state
-bootstrap, `terraform apply`, and `just deploy` — see
+bootstrap, `terraform apply`, and `just deploy`. See
 [deploying-to-aws.md](../deploying-to-aws.md#quick-start-one-command).
 
 1. Build images (`scripts/build-images.sh`): lean `headstart-backend` (api/beat)
@@ -370,9 +370,9 @@ bootstrap, `terraform apply`, and `just deploy` — see
 4. Register a new `headstart-migrate` task-definition revision whose container
    image is pinned to `:{IMAGE_TAG}@{sha256:…}` (not tag alone), then run
    migrations as a one-off ECS task. `deploy.sh` waits for the task to stop and
-   requires every container `exitCode == 0` before continuing — a failed or
+   requires every container `exitCode == 0` before continuing. A failed or
    still-running migration aborts the deploy so new app images never roll
-   against a bad schema (OPS-17).
+   against a bad schema.
 5. For each long-running service (`api`, `frontend`, `worker`, `beat`), register
    a new task-definition revision pinned to the same `tag@digest` (via
    `python -m app.cli.ecs_task_def retarget --image-digest …`) and
@@ -382,62 +382,62 @@ ECS services use `lifecycle { ignore_changes = [task_definition] }` so Terraform
 keeps the initial wiring while `deploy.sh` owns the image pin at roll time.
 Force-new-deployment alone is not enough when the task def still points at a
 tag the build never re-pushes (historically Terraform's `image_tag = "latest"`;
-prod now requires an immutable SHA pin — OPS-07). `deploy.sh` registers a new
-revision pinned to `IMAGE_TAG` before rolling (OPS-01), and further pins that
-revision to the ECR content digest resolved after push (OPS-64) so the rolled
-task cannot pull a different manifest than this pipeline built — even if a tag
+prod now requires an immutable SHA pin). `deploy.sh` registers a new
+revision pinned to `IMAGE_TAG` before rolling, and further pins that
+revision to the ECR content digest resolved after push, so the rolled
+task cannot pull a different manifest than this pipeline built even if a tag
 were ever mutable again.
 
 All workflows live in `.github/workflows/`. The CI quality gate (`ci.yml`) runs
-on push/PR via the same `scripts/check.sh` entrypoint as local `just check`
-(OPS-22): backend `just check --backend` (ruff + black + LOC, mypy, pytest) and
-`just check --scripts` (shell syntax + shellcheck `-S warning`, OPS-65); frontend `just check --frontend`
+on push/PR via the same `scripts/check.sh` entrypoint as local `just check`:
+backend `just check --backend` (ruff + black + LOC, mypy, pytest) and
+`just check --scripts` (shell syntax + shellcheck `-S warning`); frontend `just check --frontend`
 (eslint + prettier `--check`, tsc, vitest) plus `just build-frontend`. Audits
-stay adjacent: `just audit-backend` (`pip-audit` on hashed lockfiles, OPS-19)
-and `just audit-frontend` (`npm audit --audit-level=high`, FRO-12). Every
+stay adjacent: `just audit-backend` (`pip-audit` on hashed lockfiles)
+and `just audit-frontend` (`npm audit --audit-level=high`). Every
 third-party `uses:` is pinned to a full commit SHA with a version comment
-(OPS-20) so a re-pointed `@vN` tag cannot silently change the job; Dependabot
+so a re-pointed `@vN` tag cannot silently change the job; Dependabot
 opens weekly PRs for those SHAs, for `frontend/package-lock.json`, and for
 backend pip (`.github/dependabot.yml`). On push failures, a `notify` job posts
-to Slack when `secrets.SLACK_WEBHOOK_URL` is set — the webhook is mapped at
+to Slack when `secrets.SLACK_WEBHOOK_URL` is set. The webhook is mapped at
 **job** level so the step `if: env.SLACK_WEBHOOK_URL != ''` can see it
-(OPS-21; step-level `env` is not available to that same step's `if`). Local
+(step-level `env` is not available to that same step's `if`). Local
 pre-commit is a **fast subset** of that gate (whitespace/yaml, ruff/black,
-eslint, prettier, LOC, shell validation) — types, tests, coverage, and
+eslint, prettier, LOC, shell validation), while types, tests, coverage, and
 dependency audits stay in `just check` / CI. The `frontend-lint` hook runs
 `npx eslint . --max-warnings=0` (same as `npm run lint`) so ESLint always
-receives an explicit path — without one, ESLint 8 scans zero files and exits
-0 (OPS-03). LOC, shell validation, and prettier are enforced in both
-pre-commit and CI (OPS-04). Shell validation runs `bash -n` then `shellcheck
--x -S warning` on every `scripts/*.sh` (OPS-65; CI installs `shellcheck` before
+receives an explicit path; without one, ESLint 8 scans zero files and exits
+0. LOC, shell validation, and prettier are enforced in both
+pre-commit and CI. Shell validation runs `bash -n` then `shellcheck
+-x -S warning` on every `scripts/*.sh` (CI installs `shellcheck` before
 that step). The LOC gate prints offender paths with a literal
 repo-root strip so glob metacharacters in the checkout path cannot garble the
-report (OPS-63). Test exemptions are only `backend/tests/`,
-`frontend/src/test/`, and `*.test.ts(x)` — not every path segment named
-`tests/` (OPS-68). `deploy.yml` (manual `workflow_dispatch`) and `terraform.yml`'s credentialed
+report. Test exemptions are only `backend/tests/`,
+`frontend/src/test/`, and `*.test.ts(x)`, not every path segment named
+`tests/`. `deploy.yml` (manual `workflow_dispatch`) and `terraform.yml`'s credentialed
 `plan` job are guarded on `vars.AWS_ROLE_ARN` (plus default-branch refs), so
 they stay dormant until AWS is configured. `terraform.yml` still runs
-`fmt`/`validate` on `devops/terraform/**` PRs **without** secrets or OIDC
-(OPS-24); credentialed `terraform plan` is manual-only from `main`/`master`.
+`fmt`/`validate` on `devops/terraform/**` PRs **without** secrets or OIDC;
+credentialed `terraform plan` is manual-only from `main`/`master`.
 
-**Deploy OIDC hardening (OPS-23).** `deploy.yml` assumes `AWS_ROLE_ARN` only
+**Deploy OIDC hardening.** `deploy.yml` assumes `AWS_ROLE_ARN` only
 when `github.ref` is `refs/heads/main` or `refs/heads/master`, sets OIDC
 `audience: sts.amazonaws.com` and a `role-session-name` of
 `headstart-deploy-<run_id>`, and targets the GitHub Environment named by the
-workflow input (`beta` / `prod` — enable required reviewers there). The IAM
+workflow input (`beta` / `prod`, where you should enable required reviewers). The IAM
 trust policy for that role **must** pin
 `token.actions.githubusercontent.com:sub` to
 `repo:<owner>/<repo>:ref:refs/heads/main` (or `master`), not a wildcard
 `repo:…:*`. Protect `main`/`master` with branch protection so only reviewed
 commits are dispatchable from those refs.
 
-**Terraform plan trust (OPS-24).** `terraform.yml` never injects
+**Terraform plan trust.** `terraform.yml` never injects
 `TF_VAR_*` secrets or assumes AWS on `pull_request` checkouts (a same-repo
 branch could otherwise exfiltrate them via plan-time provider/data-source
 code). The credentialed `plan` job is `workflow_dispatch` only, requires
 `refs/heads/main|master`, uses the `beta`/`prod` GitHub Environment, OIDC
 (`audience` + `role-session-name: headstart-tf-plan-<run_id>`), and
-`vars.TF_STATE_BUCKET` for remote-state init (OPS-29 partial backend).
+`vars.TF_STATE_BUCKET` for remote-state init (partial backend).
 
 ## First-time setup
 
@@ -447,12 +447,11 @@ See **[deploying-to-aws.md](../deploying-to-aws.md)** for the full walkthrough
 Summary:
 
 1. Bootstrap S3 state + DynamoDB lock, then
-   `terraform init -backend-config=…` (bucket not in committed `backend.tf`;
-   OPS-29).
+   `terraform init -backend-config=…` (bucket not in committed `backend.tf`).
 2. `terraform apply` in `environments/beta` (or `prod`).
 3. `just deploy` with `ECR_REGISTRY` and `ECS_CLUSTER` set.
 4. Optional: activate the deploy/terraform workflows by setting the
    `AWS_ROLE_ARN` and `TF_STATE_BUCKET` repo variables and the AWS/GitHub
    secrets (the workflow files are already in place). Pin the IAM OIDC trust
    `sub` to `main`/`master`, enable Environment reviewers, and keep branch
-   protection (OPS-23 / OPS-24).
+   protection.

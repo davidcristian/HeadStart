@@ -1,6 +1,6 @@
 /** Shared helpers for repeatable profile form rows. */
 
-/** Parse a trimmed integer; empty/non-numeric → null. Optional min/max clamp (FRO-27). */
+/** Parse a trimmed integer; empty/non-numeric → null. Optional min/max clamp. */
 export function parseOptionalInt(value: string, min?: number, max?: number): number | null {
   const trimmed = value.trim();
   if (!trimmed) return null;

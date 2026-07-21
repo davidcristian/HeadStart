@@ -130,7 +130,7 @@ class PipelineService:
                     result.queued = self._queue_digest(search_id, to_notify, seen_rows)
                 else:
                     # Durable before side-effect notify so acks_late redelivery
-                    # cannot re-notify the same jobs after a mid-send crash (XCT-12).
+                    # cannot re-notify the same jobs after a mid-send crash.
                     self.session.commit()
                     sent, failed = self._notify(search, to_notify, seen_rows)
                     result.notified, result.failed = sent, failed

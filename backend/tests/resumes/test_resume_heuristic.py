@@ -71,7 +71,7 @@ def test_heuristic_fields_format_education_and_current_role() -> None:
         ),
     )
     fields = heuristic_fields(ctx)
-    assert "Mar 2022–Present" in fields.experience
+    assert "Mar 2022 to Present" in fields.experience
     assert "Example University" in fields.education
     assert "BSc" in fields.education
     assert fields.skills.count(",") == 19

@@ -469,7 +469,7 @@ def test_live_submit_fails_on_success_false_body() -> None:
 
 
 def test_live_submit_fails_on_bare_errors_body() -> None:
-    """APL-28: 200 {"errors":[...]} without success:false must not report submitted."""
+    """200 {"errors":[...]} without success:false must not report submitted."""
     detail_fixture = load_fixture("apple_careers_job_detail.html")
 
     def handler(request: httpx.Request) -> httpx.Response:

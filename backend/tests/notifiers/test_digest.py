@@ -45,7 +45,7 @@ def test_ntfy_digest_posts_single_batched_payload() -> None:
     assert all(r.status == "sent" for r in results)
     assert len(captured) == 1
     body = captured[0]
-    assert body["title"] == "2 new jobs — Backend roles"
+    assert body["title"] == "2 new jobs for Backend roles"
     assert "Software Engineer @ Google" in body["message"]
     assert "https://careers.example/jobs/1" in body["message"]
 
@@ -62,7 +62,7 @@ def test_digest_title_without_search_name_and_singular() -> None:
 
 def test_digest_title_localizes_german() -> None:
     assert digest_title(1, locale="de") == "1 neuer Job"
-    assert digest_title(2, "Backend", locale="de") == "2 neue Jobs — Backend"
+    assert digest_title(2, "Backend", locale="de") == "2 neue Jobs für Backend"
 
 
 def test_job_headline_localizes_fallback_title() -> None:

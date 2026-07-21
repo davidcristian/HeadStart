@@ -11,7 +11,7 @@ from app.models.seen_job import SeenJob
 from app.services.applications import latest_live_attempt
 
 # Company substring alone scores +20; require title (+30), domain (+50), thread
-# (+80), or company+title so a bare "Meta"/"Apple" mention cannot link (INB-18).
+# (+80), or company+title so a bare "Meta"/"Apple" mention cannot link.
 CONFIDENT_LINK_MIN_SCORE = 30
 
 

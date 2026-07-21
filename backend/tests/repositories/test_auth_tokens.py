@@ -1,4 +1,4 @@
-"""Regression tests for atomic reset/verify token consume (DAT-18)."""
+"""Regression tests for atomic reset/verify token consume."""
 
 from datetime import timedelta
 

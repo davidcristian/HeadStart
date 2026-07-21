@@ -31,7 +31,7 @@ _PROVIDER_OPTIONS: tuple[SummaryProviderOption, ...] = (
     SummaryProviderOption(
         id="heuristic",
         label="Built-in",
-        description="Offline filter-based blurbs — no API key required.",
+        description="Offline filter-based blurbs that need no API key.",
         requires_api_key=False,
     ),
     SummaryProviderOption(

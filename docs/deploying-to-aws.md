@@ -6,7 +6,7 @@ For architecture and Terraform module layout, see
 
 Local development is documented in [runbook.md](runbook.md) and
 [getting-started.md](getting-started.md). After deploy, use
-[getting-started.md](getting-started.md) from step 2 onward — only the URLs
+[getting-started.md](getting-started.md) from step 2 onward. Only the URLs
 change.
 
 ---
@@ -25,8 +25,8 @@ This single command:
 
 1. Creates the remote Terraform state bucket + DynamoDB lock table (if missing)
 2. Generates application secrets and saves them to `.aws-first-deploy-secrets.env`
-   (gitignored — back them up)
-3. Runs `terraform init` (with `-backend-config` for the state bucket — OPS-29)
+   (gitignored, so back them up)
+3. Runs `terraform init` (with `-backend-config` for the state bucket)
    and `terraform apply`
 4. Builds container images, pushes to ECR, runs migrations, and rolls ECS services
 
@@ -34,7 +34,7 @@ Add `YES=1` to skip the terraform confirmation prompt (useful in automation).
 Add `SKIP_DEPLOY=1` to provision infrastructure only (no Docker image push).
 
 Optional HTTPS on **beta** during first deploy (Route53 hosted zone required).
-**Prod** always needs these (or `ACM_CERTIFICATE_ARN`) — OPS-36:
+**Prod** always needs these (or `ACM_CERTIFICATE_ARN`):
 
 ```bash
 just aws-first-deploy PREFIX=yourname \
@@ -58,32 +58,31 @@ control or need to troubleshoot.
 
 Terraform (`devops/terraform/`) provisions:
 
-- VPC, subnets, security groups, VPC flow logs → CloudWatch (OPS-41)
+- VPC, subnets, security groups, VPC flow logs → CloudWatch
 - Application Load Balancer (public entrypoint; HTTP allowed on **beta**,
-  **prod** requires HTTPS — OPS-36)
+  **prod** requires HTTPS)
 - ECS Fargate cluster with services: `api`, `frontend`, `worker`, `beat`
 - RDS Postgres (CMK encryption, IAM DB auth, Performance Insights, Postgres
-  log exports, Enhanced Monitoring — OPS-43) + ElastiCache Redis
+  log exports, Enhanced Monitoring) + ElastiCache Redis
 - ECR repositories for backend, backend-worker (Playwright), and frontend images
-  (tags are **immutable** — re-pushing the same tag fails; use a new git SHA —
-  OPS-09)
+  (tags are **immutable**, so re-pushing the same tag fails; use a new git SHA)
 - Secrets Manager entries for `POSTGRES_PASSWORD`, `JWT_SECRET`,
   `CREDENTIALS_SECRET_KEY` (and Redis / metrics / optional SMTP) encrypted with
-  a customer-managed KMS key and an explicit recovery window (OPS-51)
+  a customer-managed KMS key and an explicit recovery window
 
 Default region is **`us-east-2`**. Use the **`beta`** environment first (cheaper);
 **`prod`** adds Multi-AZ RDS and deletion protection on RDS and the ALB. Both
 environments enable ALB access logs, `drop_invalid_header_fields`, and a
-regional WAFv2 ACL (OPS-08), VPC flow logs to CloudWatch (OPS-41), and the
-RDS datastore hardening above (OPS-43).
+regional WAFv2 ACL, VPC flow logs to CloudWatch, and the
+RDS datastore hardening above.
 
-> **Cost:** even `beta` runs an ALB, four Fargate tasks, RDS, and Redis — expect
-> ongoing monthly charges, not a free-tier-only stack.
+> **Cost:** even `beta` runs an ALB, four Fargate tasks, RDS, and Redis, so
+> expect ongoing monthly charges, not a free-tier-only stack.
 
 > **HTTPS:** **beta** without a custom domain serves **HTTP on port 80** at
 > `http://<alb-dns-name>`. **Prod** requires TLS: set `domain_name` and
 > `route53_zone_id` (or `acm_certificate_arn`) or Terraform plan/apply fails
-> (`check "prod_requires_https"`, OPS-36) — see
+> (`check "prod_requires_https"`). See
 > [Custom domain & HTTPS](#custom-domain--https) below.
 > On HTTP-only beta deploys Terraform sets `AUTH_COOKIE_SECURE=false` (derived from
 > `https_enabled`) so the httpOnly refresh cookie is stored; with HTTPS it stays
@@ -126,8 +125,8 @@ just terraform-bootstrap PREFIX=YOURNAME
 
 Or run the underlying script directly: `./scripts/terraform-bootstrap-state.sh YOURNAME us-east-2`.
 
-Committed `backend.tf` files omit the state bucket (OPS-29). After bootstrap,
-pass it at init — copy `backend.hcl.example` → `backend.hcl` (gitignored) and
+Committed `backend.tf` files omit the state bucket. After bootstrap,
+pass it at init. Copy `backend.hcl.example` → `backend.hcl` (gitignored) and
 set `bucket = "YOURNAME-headstart-tfstate"`, then
 `terraform init -backend-config=backend.hcl`. Repeat for `environments/prod`
 when you add production.
@@ -142,17 +141,17 @@ when you add production.
 ```bash
 cd devops/terraform/environments/beta
 
-# Save these somewhere safe — you cannot recover them from Terraform output.
+# Save these somewhere safe. You cannot recover them from Terraform output.
 export TF_VAR_db_password="$(openssl rand -base64 24)"
 export TF_VAR_jwt_secret="$(openssl rand -hex 32)"
 export TF_VAR_credentials_secret_key="$(openssl rand -hex 32)"
 
-# Required: pin the AWS account this env may target (OPS-31). Wrong ambient
+# Required: pin the AWS account this env may target. Wrong ambient
 # credentials then fail at provider init instead of applying into another account.
 export TF_VAR_aws_account_id="$(aws sts get-caller-identity --query Account --output text)"
 
 # Required: unguessable default ntfy topic (ntfy.sh topics are public by name).
-# Terraform rejects empty / change-me placeholders (OPS-16).
+# Terraform rejects empty / change-me placeholders.
 export TF_VAR_ntfy_default_topic="jobs-$(openssl rand -hex 8)"
 
 cp backend.hcl.example backend.hcl
@@ -164,7 +163,7 @@ terraform apply
 
 Secrets are written to **AWS Secrets Manager** and injected into ECS tasks at
 runtime. Never commit them to git. Keep `db_password` / `jwt_secret` /
-`credentials_secret_key` in the shell as `TF_VAR_*` (OPS-33) — do not paste them
+`credentials_secret_key` in the shell as `TF_VAR_*`. Do not paste them
 into `terraform.tfvars`. Non-secret knobs may use a local `terraform.tfvars`
 (gitignored); see `terraform.tfvars.example` in the same directory.
 
@@ -192,7 +191,7 @@ just deploy
 ```
 
 `just aws-deploy-env` reads Terraform outputs and prints shell-safe
-`export` lines (`printf %q`, OPS-62) for `AWS_REGION`, `ECR_REGISTRY`,
+`export` lines (`printf %q`) for `AWS_REGION`, `ECR_REGISTRY`,
 `ECS_CLUSTER`, `APP_URL`, and `ENVIRONMENT`. For production use
 `eval "$(just aws-deploy-env ENVIRONMENT=prod)"`.
 
@@ -211,14 +210,14 @@ just deploy
 1. Builds backend images (`scripts/build-images.sh --push`): lean API/beat image
    plus the Playwright-enabled worker image, and the frontend image
 2. Pushes them to ECR (tag = current git short SHA, or `latest` if not in git).
-   ECR tags are immutable (OPS-09), so re-pushing an existing tag fails — use a
+   ECR tags are immutable, so re-pushing an existing tag fails. Use a
    new commit SHA (or a unique `IMAGE_TAG`) for each build.
 3. Resolves each pushed image's ECR content digest and registers task definitions
    with `:{IMAGE_TAG}@{sha256:…}` so the roll is pinned to the exact manifest
-   this pipeline pushed (OPS-64), not only the tag string
+   this pipeline pushed, not only the tag string
 4. Registers a new `headstart-migrate` task-definition revision with that
    digest pin, then runs DB migrations as a one-off ECS task, waits until the
-   task stops, and aborts the deploy unless every container exits 0 (OPS-17)
+   task stops, and aborts the deploy unless every container exits 0
 5. Registers a new digest-pinned task-definition revision per long-running
    service (`headstart-api`, `headstart-frontend`, `headstart-worker`,
    `headstart-beat`), then rolls each service onto that revision
@@ -227,12 +226,12 @@ The retarget step matters: if a task definition still pointed at a floating
 tag such as `latest` (which the build does not re-push), a bare
 `--force-new-deployment` would keep serving the old image. Updating the service
 with `--task-definition` (not only `--force-new-deployment`) is what makes the
-deployed image match the just-built tag (OPS-01). Pinning `@sha256:…` closes the
+deployed image match the just-built tag. Pinning `@sha256:…` closes the
 remaining build→deploy provenance gap if a tag ever pointed at a different
-manifest than the one this run pushed (OPS-64). Prod Terraform also requires
-an immutable `image_tag` (git SHA) up front and rejects `latest` (OPS-07).
+manifest than the one this run pushed. Prod Terraform also requires
+an immutable `image_tag` (git SHA) up front and rejects `latest`.
 ECR repositories themselves reject tag overwrite (`image_tag_mutability =
-"IMMUTABLE"`, OPS-09), so a compromised or accidental re-push cannot replace
+"IMMUTABLE"`), so a compromised or accidental re-push cannot replace
 the digest behind a tag still referenced by task definitions.
 The migrate await matters too: without it, a failed or still-running schema
 change would let new app images roll and serve 500s until noticed.
@@ -270,8 +269,8 @@ Open the app URL in a browser (`terraform output app_url`):
 - **UI:** `<app-url>/`
 - **API health:** `<app-url>/api/v1/health`
 
-Interactive OpenAPI docs (`/docs`) are disabled in deployed environments
-(AUT-25); use a local `just dev` stack to browse the schema.
+Interactive OpenAPI docs (`/docs`) are disabled in deployed environments;
+use a local `just dev` stack to browse the schema.
 
 Without a custom domain, use `http://<alb-dns>/` as above.
 
@@ -305,30 +304,30 @@ Migrations run automatically on each deploy.
 When ready for production:
 
 1. Copy `environments/prod/backend.hcl.example` → `backend.hcl` and set your
-   state bucket (OPS-29 — do not commit the bucket into `backend.tf`).
+   state bucket (do not commit the bucket into `backend.tf`).
 2. `cd environments/prod` and run
    `terraform init -backend-config=backend.hcl && terraform apply` with the
    same `TF_VAR_*` secrets pattern. Set `TF_VAR_aws_account_id` to the 12-digit
-   production account (OPS-31 — provider `allowed_account_ids` rejects a wrong
-   ambient credential). Prod also requires an immutable image pin
-   (no `"latest"` default; Terraform rejects `latest` — OPS-07):
+   production account, because provider `allowed_account_ids` rejects a wrong
+   ambient credential. Prod also requires an immutable image pin
+   (no `"latest"` default; Terraform rejects `latest`):
    `export TF_VAR_image_tag="$(git rev-parse --short HEAD)"`.
-3. Set `TF_VAR_cors_origins` to your real domain(s) — see
+3. Set `TF_VAR_cors_origins` to your real domain(s). See
    `prod/terraform.tfvars.example`.
 4. Deploy with `ENVIRONMENT=prod` and `ECS_CLUSTER=headstart-prod`.
 
 `prod` uses larger instances, Multi-AZ RDS, and deletion protection on the
-database and ALB. ALB access logs + WAF apply in beta and prod (OPS-08).
+database and ALB. ALB access logs + WAF apply in beta and prod.
 
 ---
 
 ## Custom domain & HTTPS
 
 ACM cannot issue a certificate for the default `*.elb.amazonaws.com` hostname, so
-HTTPS requires a domain you control. **Prod requires HTTPS** — without
+HTTPS requires a domain you control. **Prod requires HTTPS.** Without
 `domain_name` + `route53_zone_id` (or `acm_certificate_arn`), the stack check
 `prod_requires_https` fails plan/apply so the ALB cannot forward auth traffic
-over plaintext HTTP (OPS-36). Beta may still use the HTTP ALB DNS name.
+over plaintext HTTP. Beta may still use the HTTP ALB DNS name.
 
 **Recommended (Route53 + auto ACM):** add to `terraform.tfvars` or `TF_VAR_*`:
 
@@ -393,27 +392,27 @@ curl "$(terraform output -raw app_url)/api/v1/health"
 
 All workflows live in `.github/workflows/`. The **CI** quality gate (`ci.yml`)
 runs on every push and pull request via the same `just check` / `scripts/check.sh`
-entrypoints used locally (OPS-22) — backend lint (including the LOC cap) /
+entrypoints used locally. It covers backend lint (including the LOC cap) /
 type / tests, shell-script validation, and frontend lint (eslint + prettier
 `--check`) / type / tests / `just build-frontend`, both coverage-gated at 100%.
-Third-party GitHub Actions are pinned to full commit SHAs (OPS-20); Dependabot
+Third-party GitHub Actions are pinned to full commit SHAs; Dependabot
 bumps those SHAs weekly alongside frontend npm and backend pip. Local
 pre-commit is a fast subset (formatters, eslint, prettier, LOC, shell).
 **`deploy.yml`** is
 manual-only (`workflow_dispatch`) and its job is guarded by
 `vars.AWS_ROLE_ARN != ''` **and** `github.ref` being `refs/heads/main` or
-`refs/heads/master` (OPS-23), so it stays dormant until you set that repo
+`refs/heads/master`, so it stays dormant until you set that repo
 variable and only assumes the role from protected default-branch refs;
 **`terraform.yml`** runs `fmt`/`validate` on `devops/terraform/**` PRs with
-**no** secrets and **no** AWS assume (OPS-24). Its credentialed `plan` job is
+**no** secrets and **no** AWS assume. Its credentialed `plan` job is
 manual-only (`workflow_dispatch`), gated on `vars.AWS_ROLE_ARN`,
 `vars.TF_STATE_BUCKET`, default-branch refs (`main`/`master`), and the
-`beta`/`prod` GitHub Environment — same trust model as deploy. Configure the
+`beta`/`prod` GitHub Environment, which is the same trust model as deploy. Configure the
 AWS OIDC role (`AWS_ROLE_ARN`), state bucket (`TF_STATE_BUCKET`), plus the
 `TF_VAR_*` secrets to activate plan; no files need to move.
 
 When creating the deploy/plan IAM role trust policy, pin the GitHub OIDC `sub`
-(and `aud`) claims — for example
+(and `aud`) claims, for example
 `repo:<owner>/<repo>:ref:refs/heads/main` with audience `sts.amazonaws.com`.
 Do not use `repo:<owner>/<repo>:*`. Enable required reviewers on the `beta`
 and `prod` GitHub Environments, and keep branch protection on `main`/`master`.
@@ -426,11 +425,11 @@ Deploy sets `role-session-name: headstart-deploy-<run_id>`; terraform plan sets
 
 | Symptom | Likely cause / fix |
 | ------- | ------------------ |
-| ECS tasks stuck `PENDING` | Images not in ECR yet — run `just deploy` |
+| ECS tasks stuck `PENDING` | Images not in ECR yet; run `just deploy` |
 | `just deploy` fails on ECR login | `aws sts get-caller-identity` or region mismatch |
 | Health check fails | Migrations not finished; check CloudWatch log group `/ecs/headstart-beta` |
 | 401 / login loops in UI | API not reachable; confirm ALB routes `/api/*` to the API target group |
-| No job notifications | Same as local — ntfy topic mismatch; see [getting-started.md](getting-started.md) |
+| No job notifications | Same as local: ntfy topic mismatch; see [getting-started.md](getting-started.md) |
 | `terraform apply` state lock | Another apply in progress, or stale DynamoDB lock row |
 
 Operational debugging (logs, pipeline) is covered in [runbook.md](runbook.md).

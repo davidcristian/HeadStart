@@ -56,8 +56,8 @@ The scheduler is **due-based**, not fire-and-forget. This matters because a
 notifier's host may sleep or restart (e.g. running locally on a laptop).
 
 - Each search stores `last_run_at` and a computed `next_run_at`.
-- On every tick — and immediately on worker/beat startup — any search whose
-  `next_run_at` is in the past is enqueued.
+- Any search whose `next_run_at` is in the past is enqueued on every tick and
+  immediately on worker/beat startup.
 - Because dedup is based on `seen_job`, a missed window only **delays**
   notifications; it never drops or duplicates them.
 - Because `next_run_at` is recomputed from *now* (not advanced once per missed

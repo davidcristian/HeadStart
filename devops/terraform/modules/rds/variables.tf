@@ -41,10 +41,10 @@ variable "backup_retention_days" {
 variable "deletion_protection" {
   type        = bool
   default     = false
-  description = "Block terraform destroy / accidental RDS delete. Prod must set true (OPS-48)."
+  description = "Block terraform destroy / accidental RDS delete. Prod must set true."
 }
 
-# OPS-48: independent of deletion_protection so a forgotten protection
+# Independent of deletion_protection so a forgotten protection
 # override still takes a final snapshot on destroy (beta may skip).
 variable "skip_final_snapshot" {
   type        = bool
@@ -52,7 +52,7 @@ variable "skip_final_snapshot" {
   description = "Skip the final DB snapshot on destroy. Prefer false; beta throwaway stacks may set true."
 }
 
-# OPS-43: default false so parameter/engine changes wait for the next
+# Default false so parameter/engine changes wait for the next
 # maintenance window instead of forcing an immediate reboot.
 variable "apply_immediately" {
   type        = bool
@@ -74,7 +74,7 @@ variable "monitoring_interval" {
 variable "performance_insights_retention_days" {
   type        = number
   default     = 7
-  description = "Performance Insights retention (7 free tier; 31–731 paid)."
+  description = "Performance Insights retention. 7 is free tier; paid is 31 to 731."
 
   validation {
     condition = (
@@ -84,7 +84,7 @@ variable "performance_insights_retention_days" {
         && var.performance_insights_retention_days <= 731
       )
     )
-    error_message = "performance_insights_retention_days must be 7 or 31–731."
+    error_message = "performance_insights_retention_days must be 7, or 31 to 731."
   }
 }
 

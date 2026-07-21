@@ -82,7 +82,7 @@ def test_match_lookup_item_returns_none_for_empty_value() -> None:
 
 
 def test_match_lookup_item_by_workday_id_found_and_rejects_unknown() -> None:
-    """APL-24: out-of-catalog WIDs must not be trusted as catalog ids."""
+    """Out-of-catalog WIDs must not be trusted as catalog ids."""
     wid = "a1b2c3d4e5f6478990a1b2c3d4e5f678"
     other = "b2c3d4e5f6478990a1b2c3d4e5f67801"
     items = [{"id": wid, "descriptor": "Alpha"}]
@@ -96,13 +96,13 @@ def test_match_lookup_item_normalized_match() -> None:
 
 
 def test_match_lookup_item_rejects_prefix_only_match() -> None:
-    """Prefix hits must not bind a longer catalog row (APL-08)."""
+    """Prefix hits must not bind a longer catalog row."""
     items = [{"id": "w1", "descriptor": "Bachelor of Science in Engineering"}]
     assert match_lookup_item(items, "Bachelor of Science") is None
 
 
 def test_match_lookup_item_rejects_substring_only_match() -> None:
-    """Substring hits must not bind a related-but-different catalog row (APL-08)."""
+    """Substring hits must not bind a related-but-different catalog row."""
     items = [{"id": "w1", "descriptor": "MS Data"}]
     assert match_lookup_item(items, "Advanced MS Data degree") is None
     assert match_lookup_item([{"id": "w2", "descriptor": "JavaScript"}], "Java") is None
@@ -121,7 +121,7 @@ def test_workday_reference_raises_for_empty() -> None:
 
 
 def test_workday_reference_falls_back_for_unmatched_workday_id() -> None:
-    """APL-24: raw WID without a catalog match becomes a descriptor, not an id."""
+    """Raw WID without a catalog match becomes a descriptor, not an id."""
     wid = "a1b2c3d4e5f6478990a1b2c3d4e5f678"
     assert workday_reference(wid, None) == {"descriptor": wid}
 

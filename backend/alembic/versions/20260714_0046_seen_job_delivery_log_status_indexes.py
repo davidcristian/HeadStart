@@ -5,8 +5,8 @@ Revises: 0045_reply_send_defaults
 Create Date: 2026-07-14
 
 Job feed and applications pipeline filter seen_job by search_id + status;
-admin stats and search-status count delivery_log by status. DAT-03's partial
-ghost index does not cover those callers (DAT-11).
+admin stats and search-status count delivery_log by status. The existing
+partial ghost index does not cover those callers.
 """
 
 from collections.abc import Sequence

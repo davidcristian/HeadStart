@@ -60,7 +60,7 @@ def format_compensation_display(posting: JobPosting) -> str:
             return f"{prefix}{_format_amount(info.min_annual)}"
         min_text = _format_amount(info.min_annual)
         max_text = _format_amount(info.max_annual)
-        return f"{prefix}{min_text} – {prefix}{max_text}"
+        return f"{prefix}{min_text} to {prefix}{max_text}"
     if info.min_annual is not None:
         return f"{prefix}{_format_amount(info.min_annual)}+"
     # Reaching here means max_annual is the only populated bound (the all-None

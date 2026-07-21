@@ -172,7 +172,7 @@ export function PricingPage() {
                       key={feature.label}
                       className={feature.included ? undefined : "pricing-feature-muted"}
                     >
-                      <span aria-hidden="true">{feature.included ? "✓" : "—"}</span>
+                      <span aria-hidden="true">{feature.included ? "✓" : "✗"}</span>
                       {feature.label}
                     </li>
                   ))}

@@ -5,7 +5,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field, field_validator
 
-# Bounds for client-supplied and normalized inbound mail (INB-14).
+# Bounds for client-supplied and normalized inbound mail.
 # Subject matches OutboundMessage / RFC 5322 line length; body caps multi-MB
 # classify payloads while still fitting typical recruiter threads.
 INBOX_MESSAGE_ID_MAX_LENGTH = 998
@@ -79,8 +79,8 @@ class FastmailMailboxConfig(BaseModel):
     api_token: str = Field(min_length=1, max_length=4096)
 
 
-# Single source of truth for OAuth/API mailbox connectors (INB-12).
-# Membership checks and isinstance tuples must import these — do not re-list.
+# Single source of truth for OAuth/API mailbox connectors.
+# Membership checks and isinstance tuples must import these rather than re-list them.
 OAUTH_CONNECTOR_TYPES: frozenset[str] = frozenset({"gmail", "outlook", "yahoo", "fastmail"})
 OAUTH_CONFIG_TYPES: tuple[
     type[GmailMailboxConfig],

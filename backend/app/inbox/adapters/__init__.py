@@ -1,4 +1,4 @@
-"""Mailbox connector adapters — import to trigger self-registration."""
+"""Mailbox connector adapters. Import them to trigger self-registration."""
 
 from app.inbox.adapters import fastmail as fastmail  # noqa: F401
 from app.inbox.adapters import gmail as gmail  # noqa: F401

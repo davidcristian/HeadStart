@@ -1,4 +1,4 @@
-"""Regression: frontend lockfile pins esbuild past GHSA-67mh-4wv8-2f99 (FRO-12)."""
+"""Regression: frontend lockfile pins esbuild past GHSA-67mh-4wv8-2f99."""
 
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ def test_package_json_overrides_esbuild_past_ssrf_floor() -> None:
     pkg = json.loads(_PACKAGE_JSON.read_text(encoding="utf-8"))
     overrides = pkg.get("overrides") or {}
     floor = overrides.get("esbuild")
-    assert isinstance(floor, str), "missing overrides.esbuild for FRO-12"
+    assert isinstance(floor, str), "missing overrides.esbuild"
     assert floor.lstrip("^~>= ").startswith("0.25"), floor
 
 

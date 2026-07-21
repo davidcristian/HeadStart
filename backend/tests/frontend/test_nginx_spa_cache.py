@@ -1,4 +1,4 @@
-"""Regression: SPA HTML shell is not long-cached (FRO-10)."""
+"""Regression: SPA HTML shell is not long-cached."""
 
 from __future__ import annotations
 

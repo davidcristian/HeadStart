@@ -7,7 +7,7 @@ email-verification URLs (token embedded) to stdout. A guessable
 ``NTFY_DEFAULT_TOPIC`` (e.g. ``headstart-change-me``) publishes job alerts to
 a public ntfy.sh channel anyone can subscribe to. Incoherent refresh-cookie
 flags (``SameSite=None`` without ``Secure``, or ``Secure`` with an ``http``
-``FRONTEND_BASE_URL``) boot into silent auth breakage (AUT-13). The values live
+``FRONTEND_BASE_URL``) boot into silent auth breakage. The values live
 here (not inline in ``config.py``) so the settings schema can stay under the
 file-length cap while the policy has one obvious home.
 """
@@ -23,14 +23,14 @@ DEV_JWT_SECRET = "dev-local-jwt-secret-change-me-to-a-long-random-value"
 DEV_CREDENTIALS_SECRET_KEY = "dev-local-credentials-key-change-me"
 DEV_NTFY_DEFAULT_TOPIC = "headstart-change-me"
 
-# Floor for CREDENTIALS_SECRET_KEY outside local/test (AUT-05). Fernet.generate_key()
+# Floor for CREDENTIALS_SECRET_KEY outside local/test. Fernet.generate_key()
 # yields 44 urlsafe chars; openssl rand -hex 32 yields 64. Short custom strings
 # remain brute-forceable even after scrypt stretching.
 MIN_CREDENTIALS_SECRET_KEY_LEN = 32
 
 # On ntfy.sh the topic name is the capability. Reject placeholders and short
-# topics so a seeded/UI default cannot publish PII to a guessable public channel
-# (NTF-06). 16 hex chars ≈ openssl rand -hex 8 (matches deploy docs).
+# topics so a seeded/UI default cannot publish PII to a guessable public
+# channel. 16 hex chars ≈ openssl rand -hex 8 (matches deploy docs).
 MIN_NTFY_TOPIC_LEN = 16
 
 _LOCAL_ENVIRONMENTS = frozenset({"local", "test"})
@@ -95,12 +95,12 @@ def assert_ntfy_topic_not_guessable(topic: str) -> None:
     raise ValueError(
         "ntfy topic must be an unguessable secret (not empty, not a change-me "
         f"placeholder, and at least {MIN_NTFY_TOPIC_LEN} characters); "
-        "on ntfy.sh the topic name is the capability — prefer an auth token too."
+        "on ntfy.sh the topic name is the capability. Prefer an auth token too."
     )
 
 
 def generate_ntfy_topic() -> str:
-    """Return a high-entropy topic suitable for public ntfy.sh (NTF-06)."""
+    """Return a high-entropy topic suitable for public ntfy.sh."""
     return f"jobs-{secrets.token_hex(8)}"
 
 

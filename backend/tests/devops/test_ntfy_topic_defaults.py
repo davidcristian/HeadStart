@@ -1,4 +1,4 @@
-"""Regression: Terraform must not default ntfy topics to a public placeholder (OPS-16)."""
+"""Regression: Terraform must not default ntfy topics to a public placeholder."""
 
 from __future__ import annotations
 

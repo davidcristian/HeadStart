@@ -216,7 +216,7 @@ def test_fetch_messages_delegates_to_connector(db_session: Session, monkeypatch)
 
 
 def test_fetch_messages_reuses_pre_resolved_context(db_session: Session, monkeypatch) -> None:
-    """INB-20: callers that already resolved context must not trigger a second lookup."""
+    """Callers that already resolved context must not trigger a second lookup."""
     monkeypatch.setattr(settings, "inbox_agent_enabled", True)
     user_id = _user(db_session)
     svc = InboxService(db_session)

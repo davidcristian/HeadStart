@@ -163,7 +163,7 @@ describe("ApplyJobDialog", () => {
     expect(onClose).toHaveBeenCalled();
   });
 
-  it("describes the dialog and focuses the container, not Close (FRO-19)", () => {
+  it("describes the dialog and focuses the container, not Close", () => {
     renderDialog();
     const dialog = screen.getByRole("dialog");
     expect(dialog).toHaveAttribute("aria-describedby", "apply-dialog-description");
@@ -174,7 +174,7 @@ describe("ApplyJobDialog", () => {
     );
   });
 
-  it("announces apply errors via an assertive live region (FRO-19)", async () => {
+  it("announces apply errors via an assertive live region", async () => {
     applyToJobMock.mockRejectedValue(new Error("Boom"));
     renderDialog();
     fireEvent.click(screen.getByRole("button", { name: "Submit application" }));

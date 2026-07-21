@@ -3,7 +3,7 @@
 `messages.list` returns ids only; uid ordering needs `internalDate` from a
 separate get. Walk the newest-first listing from the oldest end and stop once
 `limit` unpolled candidates are known so a busy inbox does not metadata-GET
-every listed message (INB-10).
+every listed message.
 """
 
 from __future__ import annotations

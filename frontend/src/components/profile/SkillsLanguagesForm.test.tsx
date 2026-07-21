@@ -81,7 +81,7 @@ describe("SkillsLanguagesForm", () => {
     expect(onLanguagesChange).toHaveBeenLastCalledWith([makeLang({ is_native: true })]);
   });
 
-  it("does not nest the native-language checkbox label inside a Field label (FRO-26)", () => {
+  it("does not nest the native-language checkbox label inside a Field label", () => {
     renderForm({ languages: [makeLang()] });
 
     const checkbox = screen.getByRole("checkbox", { name: "This is my native language" });

@@ -77,7 +77,7 @@ def send_verification_email(*, to_email: str, verify_url: str, locale: str | Non
 
 
 def send_existing_account_email(*, to_email: str, locale: str | None = None) -> None:
-    """Tell an existing user someone tried to register with their address (AUT-27)."""
+    """Tell an existing user someone tried to register with their address."""
     base = settings.frontend_base_url.rstrip("/")
     login_url = f"{base}/login"
     forgot_url = f"{base}/forgot-password"
@@ -109,7 +109,7 @@ def _send_or_log_email(
     try:
         send_email(to=to_email, subject=subject, body=body)
     except SmtpNotConfiguredError:
-        # Never emit reset/verify tokens outside local/test (AUT-01). Startup
+        # Never emit reset/verify tokens outside local/test. Startup
         # already requires SMTP_HOST in non-local envs; this is defense in depth.
         if not secret_policy.is_local_environment(settings.environment):
             logger.error(

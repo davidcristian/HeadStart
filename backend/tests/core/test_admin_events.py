@@ -1,4 +1,4 @@
-"""Tests for structured admin mutation audit logging (BIL-01)."""
+"""Tests for structured admin mutation audit logging."""
 
 from __future__ import annotations
 

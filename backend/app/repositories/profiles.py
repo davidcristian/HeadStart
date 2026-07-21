@@ -1,4 +1,4 @@
-"""Data access for ApplicationProfile. Queries only — no business logic."""
+"""Data access for ApplicationProfile. Contains queries only and no business logic."""
 
 from __future__ import annotations
 

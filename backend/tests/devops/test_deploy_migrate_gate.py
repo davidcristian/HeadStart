@@ -1,4 +1,4 @@
-"""Regression: deploy must await migrate success before rolling ECS (OPS-17)."""
+"""Regression: deploy must await migrate success before rolling ECS."""
 
 from __future__ import annotations
 

@@ -114,7 +114,7 @@ def test_apply_error_message_variants() -> None:
     assert apply_error_message({"success": False, "message": "closed req"}) == "closed req"
     assert apply_error_message({"success": False, "error": "plain error"}) == "plain error"
     assert apply_error_message({"success": False}) == "apple_careers apply request failed"
-    # APL-28: bare errors/error envelopes without success:false
+    # Bare errors/error envelopes without success:false
     assert apply_error_message({"errors": [{"message": "missing required answer"}]}) == (
         "missing required answer"
     )

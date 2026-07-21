@@ -62,9 +62,9 @@ payload is a JSON object:
 Optional **resume file** (PDF or Word, up to `PROFILE_RESUME_MAX_BYTES`, default 2 MB) is
 stored in the same encrypted blob as base64 alongside the JSON fields above. The Profile
 UI pre-validates file size and extension (`.pdf` / `.doc` / `.docx`) before upload so an
-oversized or wrong-type pick fails immediately without a round-trip (FRO-24); the API
+oversized or wrong-type pick fails immediately without a round-trip; the API
 still enforces the same caps. The API returns only metadata (`filename`, `content_type`,
-`size_bytes`) — never raw bytes on `GET /profile`. On live apply, the file is attached for Greenhouse, Lever, Ashby,
+`size_bytes`) and never raw bytes on `GET /profile`. On live apply, the file is attached for Greenhouse, Lever, Ashby,
 Workday, Google Careers, Microsoft Careers, Amazon Jobs, Apple Careers, and Meta
 Careers. LinkedIn-hosted and Indeed-hosted Easy Apply use `resume_text` only today
 (see [appliers.md](appliers.md)).
@@ -73,7 +73,7 @@ Optional **LaTeX resume template** (`.tex` or `.zip` bundle, up to
 `PROFILE_RESUME_TEMPLATE_MAX_BYTES` for a single file or
 `PROFILE_RESUME_TEMPLATE_BUNDLE_MAX_BYTES` for a bundle, default 512 KB / 2 MB) is
 stored encrypted alongside the profile. The Profile UI mirrors those size and extension
-gates before `PUT /profile/resume-template` (FRO-24). Upload via `PUT /profile/resume-template`;
+gates before `PUT /profile/resume-template`. Upload via `PUT /profile/resume-template`;
 metadata is returned on `GET /profile` as `resume_template` (`format`: `single` or
 `bundle`, plus `entrypoint` and `file_count` for bundles). Placeholders use
 `[[full_name]]`, `[[skills]]`, `[[experience]]`, `[[education]]`, `[[summary]]`,
@@ -83,8 +83,8 @@ carries curated `\item`/`\textbf` list markup (the default template wraps it in 
 `itemize`); every other placeholder is a free-text/PII scalar and is LaTeX-escaped
 before substitution. A regression (`test_default_template_heuristic_render_feeds_compile_workspace`)
 renders the built-in default template with heuristic fields and asserts the compile
-workspace still receives real `\item` rows — service-layer tests that inject a fake
-`compile_fn` cannot catch that over-escape alone (TST-06). Bundle archives must include `main.tex` or
+workspace still receives real `\item` rows, because service-layer tests that inject a
+fake `compile_fn` cannot catch that over-escape alone. Bundle archives must include `main.tex` or
 `resume.tex` (or a single `.tex` file); allowed member types are `.tex`, `.sty`,
 `.cls`, `.bib`, and common image formats. When no template is uploaded, a
 built-in default template is used. Uploaded `.tex` / `.sty` / `.cls` members are
@@ -94,30 +94,30 @@ absolute/pipe/home(`~`)/parent-path `\input`/`\include`) at upload
 and again after placeholder substitution (so verbatim `[[experience]]` markup
 cannot smuggle file-read primitives into the compiler). Relative same-tree
 includes like `\input{section}` remain allowed. `POST /jobs/{id}/generate-resume`
-queues curation + compile on a Celery worker (API-01); poll
+queues curation + compile on a Celery worker; poll
 `GET /document-generations/{id}` until `ready`. Pro users use the
 `resume_curation` AI purpose; scraped job fields and resume excerpt are fenced
 in the LLM user prompt (`<<<JOB_POSTING>>>` / `<<<CANDIDATE_PROFILE>>>`), and
 when those fields match the shared `looks_like_prompt_injection` heuristic the
 worker skips the LLM and uses the offline heuristic curator instead
-(`injection_guarded: true` on the ready result; AIA-13). Provider POSTs go
+(`injection_guarded: true` on the ready result). Provider POSTs go
 through `llm_post` (shared SSRF / DNS-pin policy; see
 [summaries.md](summaries.md#outbound-http-ssrf)). The curation prompt
-sends name, location, skills, experience, education, and a resume excerpt —
-not email or phone (same PII surface as cover-letter prompts; AIA-14). Contact
+sends name, location, skills, experience, education, and a resume excerpt but
+not email or phone (same PII surface as cover-letter prompts). Contact
 fields are merged from the stored profile after the LLM returns, so the PDF
 still shows them. The worker renders LaTeX and compiles a tailored PDF
 (prefers `tectonic`, falls back to `pdflatex` with `-no-shell-escape` and a
 minimal env that forces `openin_any=p` / `openout_any=p` / `shell_escape=f` so
 host `texmf.cnf` defaults cannot re-enable shell escape or absolute-path reads).
 That env is an allowlist (`PATH`, `HOME`, `TMPDIR`/`TEMP`/`TMP`, `LANG`/`LC_ALL`
-plus the TeX policy vars) — app secrets such as `JWT_SECRET`,
+plus the TeX policy vars), so app secrets such as `JWT_SECRET`,
 `CREDENTIALS_SECRET_KEY`, DB passwords, and provider API keys are never
-forwarded to the compiler child (AIA-11).
+forwarded to the compiler child.
 On POSIX, the compiler child also gets `RLIMIT_AS` (512 MiB), `RLIMIT_CPU`
 (ceil of the compile timeout), and `RLIMIT_NPROC` (512) via `preexec_fn` so a
 pathological template cannot exhaust worker RAM/CPU/processes for the full
-wall-clock timeout alone (AIA-10).
+wall-clock timeout alone.
 The PDF persists in
 `application_artifact` (per-user SHA-256 dedup, Fernet-encrypted). The ready
 `result` includes `artifact_id` for preview/download via
@@ -133,7 +133,7 @@ mirroring the `skills` bounds so apply/LLM payloads cannot bloat unbounded.
 Work experience needs a job title, company, and start month/year; education rows
 need at least a school name. The profile UI's "current role" and "native
 language" checkboxes use a single `<label>` each (not nested inside `Field`'s
-`<label>`) so assistive tech gets one unambiguous name (FRO-26). Greenhouse also
+`<label>`) so assistive tech gets one unambiguous name. Greenhouse also
 needs resolvable degree and field of study catalog ids (or `default_degree_id` /
 `default_discipline_id` in source config). Ashby uses these rows when
 `education_history_path` is configured; Lever includes a formatted summary in
@@ -141,7 +141,7 @@ needs resolvable degree and field of study catalog ids (or `default_degree_id` /
 
 `skills` is a list of skill names (up to 100 entries, 200 characters each).
 `languages` is a structured list with language name, optional proficiency label,
-and an optional native-language flag — used by the Workday apply adapter.
+and an optional native-language flag. The Workday apply adapter uses it.
 Greenhouse, Lever, and Ashby consume `skills` when their adapter config enables
 structured profile mapping (see [appliers.md](appliers.md)).
 
@@ -150,19 +150,19 @@ structured profile mapping (see [appliers.md](appliers.md)).
 The whole payload is **Fernet-encrypted before storage** (`core.crypto.encrypt`,
 keyed by scrypt-stretched `CREDENTIALS_SECRET_KEY`); only `data_ciphertext`
 reaches the database.
-The profile is PII, not a shared secret like a login cookie, so — unlike
-[site credentials](credentials.md) — the decrypted profile **is returned to its
+The profile is PII, not a shared secret like a login cookie. Unlike
+[site credentials](credentials.md), the decrypted profile **is returned to its
 owner** so it can be reviewed and edited in the UI. It is never exposed to other
 users (every route is scoped to `get_current_user`).
 
 `ProfileRead` adds three fields on top of the stored data:
 
-- `exists` — `false` when the user has never saved a profile (the API returns
+- `exists` is `false` when the user has never saved a profile (the API returns
   empty defaults rather than a 404), so the UI can tell an empty default apart
   from a deliberately-cleared profile.
-- `updated_at` — when the profile was last saved.
-- `resume_file` — metadata for an uploaded resume attachment, or `null`.
-- `resume_template` — metadata for an uploaded LaTeX template, or `null`.
+- `updated_at` records when the profile was last saved.
+- `resume_file` holds metadata for an uploaded resume attachment, or `null`.
+- `resume_template` holds metadata for an uploaded LaTeX template, or `null`.
 
 ## Endpoints (prefix `/api/v1/profile`)
 
@@ -179,8 +179,8 @@ users (every route is scoped to `get_current_user`).
 `PUT` on the root path is a whole-profile replacement for text fields (not a partial
 patch); the UI always sends the complete form. Uploading a resume does **not**
 clear other fields, and saving text fields does **not** remove an uploaded resume.
-`DELETE /resume` and `DELETE /resume-template` are **state-returning** clears
-(API-11): they remove only that attachment and return the updated `ProfileRead`
+`DELETE /resume` and `DELETE /resume-template` are **state-returning** clears:
+they remove only that attachment and return the updated `ProfileRead`
 so the SPA can refresh without a follow-up `GET`. Full-profile `DELETE /profile`
 stays the usual empty **204**. All routes require auth and are scoped to the
 current user.

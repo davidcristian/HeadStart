@@ -133,7 +133,7 @@ class PortalSearchService:
                 search = search_service.create(
                     user.id,
                     SearchCreate(
-                        name=f"{preset.company_name} — {data.keywords.strip()}",
+                        name=f"{data.keywords.strip()} at {preset.company_name}",
                         source_id=source.id,
                         target_id=data.target_id,
                         query_url=preset.base_url,

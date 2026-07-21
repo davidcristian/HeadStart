@@ -110,7 +110,7 @@ describe("WorkExperienceSection", () => {
     ]);
   });
 
-  it("does not nest the current-role checkbox label inside a Field label (FRO-26)", () => {
+  it("does not nest the current-role checkbox label inside a Field label", () => {
     render(<WorkExperienceSection workExperience={[makeRow()]} onWorkExperienceChange={vi.fn()} />);
 
     const checkbox = screen.getByRole("checkbox", { name: "I currently work here" });

@@ -177,7 +177,7 @@ def test_process_due_skips_before_send_after(db_session: Session, monkeypatch) -
 
 
 def test_process_due_blocks_mismatched_recipient_domain(db_session: Session, monkeypatch) -> None:
-    """INB-03: forged From outside employer_domain must not auto-send."""
+    """A forged From outside employer_domain must not auto-send."""
     monkeypatch.setattr(settings, "inbox_agent_enabled", True)
     search = _make_search(db_session)
     user_id = search.user_id

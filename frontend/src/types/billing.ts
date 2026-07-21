@@ -10,7 +10,7 @@ export interface BillingStatus {
   can_checkout: boolean;
   can_manage: boolean;
   trial_days: number;
-  /** ISO 4217 lowercase; mirrors backend BILLING_CURRENCY (FRO-35). */
+  /** ISO 4217 lowercase; mirrors backend BILLING_CURRENCY. */
   currency: string;
 }
 

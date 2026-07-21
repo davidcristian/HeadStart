@@ -1,4 +1,4 @@
-"""PlanFeaturesRead must keep snapshot feature flags (XCT-06 / API-12)."""
+"""PlanFeaturesRead must keep snapshot feature flags."""
 
 from app.schemas.plan import AccountPlanRead, PlanFeaturesRead
 

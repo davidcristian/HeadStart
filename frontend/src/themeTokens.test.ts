@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 
 const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "index.css"), "utf8");
 
-describe("theme tokens (FRO-33)", () => {
+describe("theme tokens", () => {
   it("defines --surface, --accent, and --bg-muted as aliases of existing palette tokens", () => {
     // Cookie-consent / portal / reply-draft styles reference these names; without
     // :root definitions they resolve invalid and paint transparent.

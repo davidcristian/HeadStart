@@ -10,14 +10,14 @@ healthy?" without reading worker logs.
 
 | Process | URL | What it measures |
 | ------- | --- | ---------------- |
-| API (`uvicorn`) | `GET /metrics` | Source-test scrapes and other API-side work (manual Run now is queued on the worker — API-02) |
+| API (`uvicorn`) | `GET /metrics` | Source-test scrapes and other API-side work (manual Run now is queued on the worker) |
 | Worker (Celery) | `GET :METRICS_PORT/metrics` (default `9090`) | Scheduled + manual pipeline runs, digest flushes, scheduler enqueue |
 
-Scrape **both** targets in production — they run in separate processes and each
-holds its own registry. When `METRICS_TOKEN` is set, **both** endpoints require
-`Authorization: Bearer <token>` (API route and worker WSGI server — AUT-06).
+Scrape **both** targets in production, because they run in separate processes
+and each holds its own registry. When `METRICS_TOKEN` is set, **both** endpoints require
+`Authorization: Bearer <token>` (API route and worker WSGI server).
 
-### Prefork worker port binding (XCT-13)
+### Prefork worker port binding
 
 Celery's default prefork pool runs `worker_process_init` in every child. Each
 child calls `start_metrics_server(METRICS_PORT)`. The first child to bind wins;
@@ -35,8 +35,8 @@ per worker OS process (not an aggregate across concurrency slots).
 | `headstart_scrape_jobs_found` | Histogram | `adapter` | Postings returned per scrape |
 | `headstart_notification_deliveries_total` | Counter | `notifier`, `status` (`sent`, `failed`), `mode` (`immediate`, `digest`) | Per-job delivery attempts |
 | `headstart_digest_flushes_total` | Counter | `status` (`success`, `error`) | Digest batch sends |
-| `headstart_scheduler_searches_enqueued_total` | Counter | — | Due searches enqueued per beat tick |
-| `headstart_auth_login_failures_total` | Counter | — | Failed login attempts (AUT-10) |
+| `headstart_scheduler_searches_enqueued_total` | Counter | *(none)* | Due searches enqueued per beat tick |
+| `headstart_auth_login_failures_total` | Counter | *(none)* | Failed login attempts |
 
 ### Example PromQL
 
@@ -68,8 +68,8 @@ histogram_quantile(0.95, sum by (adapter, le) (rate(headstart_scrape_duration_se
 
 Set `METRICS_TOKEN` in any deployment reachable from the internet (or any network
 that can reach the worker metrics port). Empty token keeps both surfaces open for
-local scrapes; AWS ECS always injects a generated token from Secrets Manager
-(OPS-54) — retrieve it with `aws secretsmanager get-secret-value` for Prometheus
+local scrapes; AWS ECS always injects a generated token from Secrets Manager.
+Retrieve it with `aws secretsmanager get-secret-value` for Prometheus
 `Authorization: Bearer` scrapes.
 
 ## AWS / CloudWatch

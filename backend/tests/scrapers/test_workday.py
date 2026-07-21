@@ -175,7 +175,7 @@ def test_workday_stops_on_empty_job_postings() -> None:
 
 @pytest.mark.parametrize("total", ["Infinity", "NaN", "-Infinity"])
 def test_workday_nonfinite_total_fallback(total: str) -> None:
-    """JSON Infinity/NaN total must not raise on int() (SCR-05)."""
+    """JSON Infinity/NaN total must not raise on int()."""
     body = (
         '{"total": ' + total + ', "jobPostings": [{"title": "Eng", "externalPath": "/job/a", '
         '"bulletFields": ["REQ-1"]}]}'

@@ -98,7 +98,7 @@ def test_uber_careers_dry_run() -> None:
     assert result.status == "dry_run"
     assert result.payload is not None
     assert result.payload["job_id"] == 154672
-    # Live session token must not land in the persisted dry-run payload (APL-21).
+    # Live session token must not land in the persisted dry-run payload.
     assert result.payload["application_form_request"]["sessionToken"] == ""
     assert "uber-session-token" not in str(result.payload)
 

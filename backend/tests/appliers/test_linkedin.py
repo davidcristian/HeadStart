@@ -236,7 +236,7 @@ def test_hosted_live_submit_posts_to_voyager() -> None:
 
 
 def test_hosted_live_submit_requires_private_api_risk_ack() -> None:
-    """APL-17: Voyager live submit needs explicit ToS/ban-risk consent."""
+    """Voyager live submit needs explicit ToS/ban-risk consent."""
     viewjob = load_fixture("linkedin_job_easy_apply.html")
     form = load_fixture("linkedin_easy_apply_form_simple.json")
 
@@ -277,7 +277,7 @@ def test_hosted_live_submit_requires_private_api_risk_ack() -> None:
 
 
 def test_hosted_live_submit_fails_on_2xx_error_body() -> None:
-    """APL-16: Voyager 200 with errors must not report submitted."""
+    """Voyager 200 with errors must not report submitted."""
     viewjob = load_fixture("linkedin_job_easy_apply.html")
     form = load_fixture("linkedin_easy_apply_form_simple.json")
 

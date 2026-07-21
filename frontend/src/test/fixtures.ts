@@ -137,7 +137,7 @@ export const sampleJob: Job = {
   title: "Software Engineer",
   company: "ACME",
   location: "Remote",
-  salary: "$150K – $180K",
+  salary: "$150K to $180K",
   url: "https://example.test/jobs/1",
   summary: "Matches your search: mentions engineer; remote role.",
   status: "new",
