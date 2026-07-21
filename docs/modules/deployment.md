@@ -67,6 +67,15 @@ for `psycopg` / `psycopg-binary`: they stay unmodified PyPI deps (not vendored),
 so self-hosters satisfy §4 corresponding-source / relink by downloading those
 wheels from PyPI (or upstream) and swapping them in the image/venv.
 
+**TDM reservation signals.** Text and data mining and AI training of the served
+site content are reserved. Because German case law requires that reservation to be
+machine-readable at the serving layer for online content, the SPA ships
+`frontend/public/robots.txt` (Content-Signal line plus per-crawler training
+blocks; ordinary search stays allowed) and `frontend/public/.well-known/tdmrep.json`
+(TDMRep well-known file), and every `nginx.conf` location adds a
+`tdm-reservation: 1` response header. Keep all three in place when changing the
+frontend serving setup.
+
 ## AWS topology
 
 ```mermaid
