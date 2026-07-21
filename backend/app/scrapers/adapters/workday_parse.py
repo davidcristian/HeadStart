@@ -109,7 +109,7 @@ def board_from_url(url: str, *, locale: str = "en-US") -> WorkdayBoard:
     parsed = urlparse(url)
     host = parsed.netloc.lower()
     tenant, region, host_kind = parse_host(host)
-    parts = [part for part in parsed.path.split("/") if part]
+    parts = parsed.path.strip("/").split("/") if parsed.path.strip("/") else []
 
     if len(parts) >= 2 and parts[0] == "wday" and parts[1] == "cxs":
         if len(parts) < 4 or not (parts[2] and parts[3]):
