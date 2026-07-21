@@ -167,4 +167,25 @@ describe("SettingsSummaryCard", () => {
     fireEvent.change(screen.getByLabelText("AI provider API key"), { target: { value: "sk-new" } });
     expect(screen.getByText(/Shared across hosted providers/)).toBeInTheDocument();
   });
+
+  it("leaves the key field alone when the remove-key checkbox is unticked", async () => {
+    getSummaryPreferences.mockResolvedValue(
+      enabledPreferences({
+        selected_provider: "openai",
+        effective_provider: "openai",
+        has_custom_api_key: true,
+      }),
+    );
+    renderWithClient(<SettingsSummaryCard />);
+    const keyInput = (await screen.findByLabelText("AI provider API key")) as HTMLInputElement;
+    const removeCheckbox = screen.getByRole("checkbox") as HTMLInputElement;
+
+    // Ticking clears the draft key; unticking must not touch it again.
+    fireEvent.click(removeCheckbox);
+    expect(keyInput.value).toBe("");
+    fireEvent.click(removeCheckbox);
+
+    expect(removeCheckbox.checked).toBe(false);
+    expect(keyInput.value).toBe("");
+  });
 });

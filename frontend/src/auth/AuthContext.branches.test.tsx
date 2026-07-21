@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, render, renderHook, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { clearAccessToken, getAccessToken } from "../lib/settings";
+import { clearAccessToken, getAccessToken, setAccessToken } from "../lib/settings";
 import { AuthProvider, useAuth } from "./AuthContext";
 
 const user = {
@@ -157,6 +157,47 @@ describe("AuthContext (branches)", () => {
 
     unmount();
     expect(setUnauthorizedHandler).toHaveBeenCalledWith(null);
+  });
+
+  it("drops a bootstrap result that lands after the provider unmounts", async () => {
+    refreshSession.mockResolvedValue(true);
+    let resolveMe!: (value: typeof user) => void;
+    apiMe.mockReturnValue(
+      new Promise<typeof user>((resolve) => {
+        resolveMe = resolve;
+      }),
+    );
+    const { result, unmount } = renderHook(() => useAuth(), { wrapper });
+    await waitFor(() => expect(apiMe).toHaveBeenCalled());
+
+    unmount();
+    await act(async () => {
+      resolveMe(user);
+    });
+
+    // The cleanup flag short-circuits both the setUser and the setLoading call.
+    expect(result.current.user).toBeNull();
+    expect(result.current.loading).toBe(true);
+  });
+
+  it("drops a bootstrap failure that lands after the provider unmounts", async () => {
+    setAccessToken("stale-token");
+    let rejectRefresh!: (reason: Error) => void;
+    refreshSession.mockReturnValue(
+      new Promise<boolean>((_resolve, reject) => {
+        rejectRefresh = reject;
+      }),
+    );
+    const { unmount } = renderHook(() => useAuth(), { wrapper });
+    await waitFor(() => expect(refreshSession).toHaveBeenCalled());
+
+    unmount();
+    await act(async () => {
+      rejectRefresh(new Error("network"));
+    });
+
+    // An unmounted provider must not clear the token a newer provider may own.
+    expect(getAccessToken()).toBe("stale-token");
   });
 
   it("throws when useAuth is used outside an AuthProvider", () => {

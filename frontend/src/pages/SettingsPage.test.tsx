@@ -1,5 +1,5 @@
 import { mockApi, resetMockApi } from "../test/mockApi";
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithClient } from "../test/renderWithClient";
@@ -121,6 +121,43 @@ describe("SettingsPage", () => {
     await waitFor(() => expect(mockApi.deleteAccount).toHaveBeenCalledWith("password123"));
     expect(logout).toHaveBeenCalled();
     expect(navigate).toHaveBeenCalledWith("/");
+  });
+
+  it("ignores meta that resolves after the page unmounts", async () => {
+    type Meta = Awaited<ReturnType<typeof mockApi.meta>>;
+    let resolveMeta!: (value: Meta) => void;
+    const pending = new Promise<Meta>((resolve) => {
+      resolveMeta = resolve;
+    });
+    const meta = await mockApi.meta();
+    mockApi.meta.mockReturnValue(pending);
+
+    const { container, unmount } = renderSettings();
+    await waitFor(() => expect(mockApi.meta).toHaveBeenCalled());
+    unmount();
+    await act(async () => {
+      resolveMeta(meta);
+    });
+
+    expect(container).toBeEmptyDOMElement();
+  });
+
+  it("ignores a meta failure that lands after the page unmounts", async () => {
+    let rejectMeta!: (reason: Error) => void;
+    mockApi.meta.mockReturnValue(
+      new Promise((_resolve, reject) => {
+        rejectMeta = reject;
+      }),
+    );
+
+    const { container, unmount } = renderSettings();
+    await waitFor(() => expect(mockApi.meta).toHaveBeenCalled());
+    unmount();
+    await act(async () => {
+      rejectMeta(new Error("offline"));
+    });
+
+    expect(container).toBeEmptyDOMElement();
   });
 
   it("offers tier-aware checkout for free users", async () => {

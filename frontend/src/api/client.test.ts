@@ -344,6 +344,13 @@ describe("requestBlob", () => {
     expect(fetchCall(0)[1].headers["Authorization"]).toBe("Bearer access-1");
   });
 
+  it("omits the Authorization header when no token is held", async () => {
+    settings.accessToken = "";
+    fetchMock.mockResolvedValueOnce(jsonResponse(200, { pdf: true }));
+    expect(await requestBlob("/artifacts/1/download")).toBeInstanceOf(Blob);
+    expect(fetchCall(0)[1].headers["Authorization"]).toBeUndefined();
+  });
+
   it("refreshes on 401 and retries", async () => {
     fetchMock
       .mockResolvedValueOnce(jsonResponse(401, {}))

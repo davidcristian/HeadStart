@@ -241,10 +241,27 @@ Commit the updated images when the app chrome changes.
 Vite **6.4.3+** (with `overrides.esbuild: ^0.25.0`) keeps the locked esbuild
 past [GHSA-67mh-4wv8-2f99](https://github.com/advisories/GHSA-67mh-4wv8-2f99)
 (dev-server CORS SSRF in esbuild ≤0.24.2). Vitest / `@vitest/coverage-v8` track
-**3.2.7+** so `npm audit --audit-level=high` stays clean. CI runs
-`just audit-frontend` after `npm ci`; Dependabot watches `frontend/package-lock.json`
-weekly (`.github/dependabot.yml`). Backend SCA is `just audit-backend`
-(`pip-audit` on the hashed lockfiles) with Dependabot on `/backend`.
+**4.1.10+** so `npm audit --audit-level=high` stays clean. Three further
+`overrides` pull transitive packages past advisories their parents have not
+released a fix for: `brace-expansion ^5.0.8`
+([GHSA-mh99-v99m-4gvg](https://github.com/advisories/GHSA-mh99-v99m-4gvg)),
+`fast-uri ^3.1.4`
+([GHSA-v2hh-gcrm-f6hx](https://github.com/advisories/GHSA-v2hh-gcrm-f6hx)) and
+`postcss ^8.5.18`
+([GHSA-r28c-9q8g-f849](https://github.com/advisories/GHSA-r28c-9q8g-f849)).
+CI runs `just audit-frontend` after `npm ci`; Dependabot watches
+`frontend/package-lock.json` weekly (`.github/dependabot.yml`). Backend SCA is
+`just audit-backend` (`pip-audit` on the hashed lockfiles) with Dependabot on
+`/backend`.
+
+Two pins are deliberately behind their latest major, so a Dependabot PR that
+raises them needs the paired change first:
+
+- `@vitejs/plugin-react` stays on **5.x**: 6.x requires Vite 8, and 5.2.0 is the
+  newest release that still accepts the Vite 6 line this app builds on.
+- `eslint-plugin-react-refresh` **0.5.x** declares `eslint ^9 || ^10` while the
+  repo lints with ESLint 8, so the tree installs with peers relaxed. Moving to
+  ESLint 9+ means migrating `.eslintrc.cjs` to flat config.
 
 ## Progressive Web App (mobile)
 
