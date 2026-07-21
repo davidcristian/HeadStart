@@ -26,6 +26,22 @@ but does not install them. On **Ubuntu 24.04 / WSL**:
 After changing floors in `backend/pyproject.toml`, run `just lock-backend` and
 commit the regenerated lockfiles before opening a PR.
 
+A bare `just lock-backend` adds and drops packages but **keeps every existing
+pin**, because pip-compile reads the current lockfile as constraints. Applying a
+dependency bump therefore needs an explicit upgrade:
+
+```
+just lock-backend --upgrade-package fastapi   # bump one pin (repeatable)
+just lock-backend --upgrade                   # bump every pin to its ceiling
+just lock-backend --dry-run ...               # print the plan, write nothing
+```
+
+A named package is only passed to a lockfile that already pins it. That scoping
+is load-bearing: `--upgrade-package` **adds** a name the file does not yet have,
+so asking for a dev-only tool while compiling the runtime lock would move
+pre-commit and its virtualenv/nodeenv tail into production dependencies. An
+unknown name is rejected rather than silently upgrading nothing.
+
 Terraform and the AWS CLI are **not required for local development**. They are
 needed only for deploying to AWS. See
 [`devops/terraform/README.md`](../devops/terraform/README.md).

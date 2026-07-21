@@ -32,6 +32,10 @@ Regenerate with `just lock-backend` whenever floors or extras change.
 - Operators must run `just lock-backend` (and commit) after editing
   `pyproject.toml` dependencies; forgetting leaves CI/Docker on stale pins
   until the lock is refreshed.
+- A bare regenerate never moves an existing pin, since pip-compile treats the
+  current lockfile as constraints. Bumps need `--upgrade-package NAME` or
+  `--upgrade`, which the script scopes to the lockfiles that already pin the
+  name; see the recipe in [the runbook](../runbook.md).
 
 ## Alternatives considered
 

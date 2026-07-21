@@ -12,9 +12,9 @@ default:
 setup:
     ./scripts/setup.sh
 
-# Regenerate hashed backend lockfiles from pyproject.toml
-lock-backend:
-    ./scripts/lock-backend.sh
+# Regenerate hashed backend lockfiles; --upgrade-package NAME | --upgrade | --dry-run
+lock-backend *args:
+    ./scripts/lock-backend.sh {{ args }}
 
 # Build and start the full stack (docker compose)
 up:
