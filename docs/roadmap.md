@@ -3,17 +3,18 @@
 Living plan for HeadStart — what to build next and why. Update this doc when
 priorities shift or a milestone ships.
 
-**Current baseline (2026-07):** Phases 1–29 shipped (four-tier pricing, per-user AI
-summary preferences, curated employer portal catalog through batch 6 (**135**
-employers), SmartRecruiters adapter, custom career-site adapters for Shopify,
-Uber, and Snowflake, the dev-only local application agent, inbox OAuth providers
-for Gmail, Outlook, Yahoo, and Fastmail, the reusable iCIMS/Jibe Attract scraper
-with Rivian, the reusable Phenom People scraper (Splunk / CVS Health /
-GE HealthCare / RTX), the reusable Rippling ATS scraper with Rippling, the
-reusable IBM Careers Falcon search scraper (HashiCorp / Red Hat), and Phase 28
-Rippling + iCIMS + Phenom + IBM Careers apply).
+**Current baseline (2026-07):** Phases 1–30 shipped (four-tier pricing, per-user AI
+summary preferences, curated employer portal catalog through batch 6 plus
+Workable/Hugging Face (**136** employers), SmartRecruiters adapter, custom
+career-site adapters for Shopify, Uber, and Snowflake, the dev-only local
+application agent, inbox OAuth providers for Gmail, Outlook, Yahoo, and
+Fastmail, the reusable iCIMS/Jibe Attract scraper with Rivian, the reusable
+Phenom People scraper (Splunk / CVS Health / GE HealthCare / RTX), the reusable
+Rippling ATS scraper with Rippling, the reusable IBM Careers Falcon search
+scraper (HashiCorp / Red Hat), Phase 28 Rippling + iCIMS + Phenom + IBM Careers
+apply, and the reusable Workable widget scraper with Hugging Face).
 **Next:** pick up follow-on catalog growth or a new ATS gap once priorities
-shift — Phase 29’s done-when (≥135 or ≥12 verified presets) is met. See
+shift — Phase 30’s done-when (Workable adapter + Hugging Face preset) is met. See
 [architecture.md](architecture.md) for the system design.
 
 ---
@@ -922,7 +923,7 @@ fail, and document skips in the PR.
 | ~~Webflow~~ | ~~Greenhouse (`webflow`)~~ | ~~`unicorn`~~ | **Shipped** |
 | ~~Calendly~~ | ~~Greenhouse (`calendly`)~~ | ~~`unicorn`~~ | **Shipped** |
 | ~~Miro~~ | ~~Ashby (`miro`)~~ | ~~`unicorn`~~ | **Shipped** — Greenhouse token 404; Ashby board live |
-| Hugging Face | Greenhouse / Ashby / custom | `ai` | **Skipped** — no public Greenhouse/Ashby board; openings on Workable (`apply.workable.com/huggingface`) — no Workable scraper yet |
+| Hugging Face | Greenhouse / Ashby / custom | `ai` | **Skipped in batch 6** — no public Greenhouse/Ashby board; openings on Workable (`apply.workable.com/huggingface`). **Shipped later via [Phase 30](#phase-30--workable-adapter).** |
 | ~~xAI~~ | ~~Greenhouse (`xai`)~~ | ~~`ai`~~ | **Shipped** |
 | Additional iCIMS / Jibe | `icims` | varies | **Skipped this batch** — no second vanity domain with a working public `GET …/api/jobs` verified |
 | ~~Additional Phenom~~ | ~~`phenom`~~ | ~~`big_tech`~~ | **Shipped:** CVS Health (`jobs.cvshealth.com`, `CVSCHLUS`), GE HealthCare (`careers.gehealthcare.com`, `GEVGHLGLOBAL`), RTX (`careers.rtx.com`, `RAYTGLOBAL`) |
@@ -944,6 +945,32 @@ three new presets. **Met.**
 
 ---
 
+## Phase 30 — Workable adapter
+
+Goal: unlock employers on Workable's public careers widget feed (vanity boards
+at `apply.workable.com/<account>`). Starts with Hugging Face from the Phase 29
+skipped list and leaves a reusable adapter for further catalog growth.
+
+| Item | Why | Notes |
+| ---- | --- | ----- |
+| ~~`workable` scraper~~ | ~~Reusable ATS gap after Greenhouse / Lever / Ashby / Workday / SmartRecruiters / iCIMS / Phenom / Rippling / IBM Careers~~ | **Shipped:** `@register_scraper("workable")`; `GET https://apply.workable.com/api/v1/widget/accounts/<account>`; config `account` + optional `company` / `keywords` / `max_results` |
+| ~~Fixture + tests~~ | ~~CI safety~~ | **Shipped:** sample JSON under `tests/fixtures/workable_jobs.json`; no live network |
+| ~~URL detection~~ | ~~Paste-friendly source setup~~ | **Shipped:** `apply.workable.com/<account>` and the widget API path; job shortlinks (`/j/<shortcode>`) are ignored |
+| ~~Scraper docs~~ | ~~Operator discoverability~~ | **Shipped:** row in [modules/scrapers.md](modules/scrapers.md) |
+| ~~`workable_preset` + Hugging Face~~ | ~~Catalog growth~~ | **Shipped:** `workable_preset` in `catalog_helpers_workable.py`; Hugging Face preset (`account=huggingface`, category `ai`); catalog count **136** |
+
+**Caveat:** public widget availability depends on the employer's Workable careers
+page being published — verify each account slug before adding a catalog preset.
+Job shortlinks (`apply.workable.com/j/...`) do not encode the account and cannot
+drive source detection alone.
+
+**Done when:** Hugging Face appears in the curated catalog with working scrape
+against fixtures, and at least one live smoke of
+`apply.workable.com/api/v1/widget/accounts/huggingface` succeeds outside CI.
+**Met.**
+
+---
+
 ## Suggested starting points
 
 **Personal use (one job seeker):**
@@ -962,7 +989,7 @@ three new presets. **Met.**
 
 ## How to pick up work
 
-1. Choose an item from an open phase (Phase 29 catalog batch 6 is **shipped** —
+1. Choose an item from an open phase (Phase 30 Workable is **shipped** —
    pick the current **Next** item in the baseline blurb, or an unstruck row in a
    later phase).
 2. Read the relevant module doc under [modules/](modules/) and follow

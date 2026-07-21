@@ -26,6 +26,7 @@ from app.scrapers.adapters import (
     snowflake_careers,
     uber_careers,
     workday,
+    workable,
 )
 
 __all__ = [
@@ -50,4 +51,5 @@ __all__ = [
     "snowflake_careers",
     "uber_careers",
     "workday",
+    "workable",
 ]

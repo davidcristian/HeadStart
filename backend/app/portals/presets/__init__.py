@@ -32,6 +32,7 @@ from app.portals.presets.grammarly import PORTAL as grammarly
 from app.portals.presets.gusto import PORTAL as gusto
 from app.portals.presets.hashicorp import PORTAL as hashicorp
 from app.portals.presets.hubspot import PORTAL as hubspot
+from app.portals.presets.huggingface import PORTAL as huggingface
 from app.portals.presets.infosys import PORTAL as infosys
 from app.portals.presets.klaviyo import PORTAL as klaviyo
 from app.portals.presets.launchdarkly import PORTAL as launchdarkly
@@ -133,4 +134,5 @@ PORTALS: tuple[PortalPreset, ...] = (
     gehealthcare,
     rtx,
     clickhouse,
+    huggingface,
 )

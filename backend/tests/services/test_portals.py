@@ -20,7 +20,7 @@ def test_list_portal_presets_filters_query() -> None:
 def test_curated_portal_catalog_size() -> None:
     from app.portals.catalog import CURATED_PORTALS
 
-    assert len(CURATED_PORTALS) == 135
+    assert len(CURATED_PORTALS) == 136
 
 
 def test_curated_portal_apple_preset() -> None:
@@ -365,6 +365,28 @@ def test_curated_portal_phase29_batch_presets() -> None:
     clickhouse = next(p for p in CURATED_PORTALS if p.id == "clickhouse")
     assert clickhouse.adapter_key == "greenhouse"
     assert clickhouse.category == "unicorn"
+
+
+def test_curated_portal_huggingface_workable_preset() -> None:
+    from app.portals.catalog import CURATED_PORTALS
+    from app.portals.catalog_helpers_workable import workable_preset
+
+    preset = next(p for p in CURATED_PORTALS if p.id == "huggingface")
+    assert preset.adapter_key == "workable"
+    assert preset.company_name == "Hugging Face"
+    assert preset.category == "ai"
+    assert preset.base_url == "https://apply.workable.com/huggingface"
+    assert preset.default_config["account"] == "huggingface"
+    assert preset.default_config["portal_id"] == "huggingface"
+
+    other = workable_preset(
+        portal_id="acme",
+        company="Acme",
+        account="acme-corp",
+        category="unicorn",
+    )
+    assert other.base_url == "https://apply.workable.com/acme-corp"
+    assert other.default_config["account"] == "acme-corp"
 
 
 def test_curated_portal_confluent_ashby_preset() -> None:
