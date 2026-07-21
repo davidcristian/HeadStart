@@ -18,10 +18,13 @@ from app.portals.presets.carta import PORTAL as carta
 from app.portals.presets.checkr import PORTAL as checkr
 from app.portals.presets.chime import PORTAL as chime
 from app.portals.presets.clickhouse import PORTAL as clickhouse
+from app.portals.presets.clickup import PORTAL as clickup
 from app.portals.presets.cockroachlabs import PORTAL as cockroachlabs
 from app.portals.presets.confluent import PORTAL as confluent
+from app.portals.presets.contentful import PORTAL as contentful
 from app.portals.presets.crowdstrike import PORTAL as crowdstrike
 from app.portals.presets.cvshealth import PORTAL as cvshealth
+from app.portals.presets.deliveroo import PORTAL as deliveroo
 from app.portals.presets.docusign import PORTAL as docusign
 from app.portals.presets.endava import PORTAL as endava
 from app.portals.presets.ericsson import PORTAL as ericsson
@@ -34,7 +37,10 @@ from app.portals.presets.hashicorp import PORTAL as hashicorp
 from app.portals.presets.hubspot import PORTAL as hubspot
 from app.portals.presets.huggingface import PORTAL as huggingface
 from app.portals.presets.infosys import PORTAL as infosys
+from app.portals.presets.intercom import PORTAL as intercom
+from app.portals.presets.jetbrains import PORTAL as jetbrains
 from app.portals.presets.klaviyo import PORTAL as klaviyo
+from app.portals.presets.langchain import PORTAL as langchain
 from app.portals.presets.launchdarkly import PORTAL as launchdarkly
 from app.portals.presets.marqeta import PORTAL as marqeta
 from app.portals.presets.mcdonalds import PORTAL as mcdonalds
@@ -43,8 +49,11 @@ from app.portals.presets.microstrategy import PORTAL as microstrategy
 from app.portals.presets.miro import PORTAL as miro
 from app.portals.presets.n26 import PORTAL as n26
 from app.portals.presets.nuro import PORTAL as nuro
+from app.portals.presets.onepassword import PORTAL as onepassword
 from app.portals.presets.pagerduty import PORTAL as pagerduty
 from app.portals.presets.paloaltonetworks import PORTAL as paloaltonetworks
+from app.portals.presets.pleo import PORTAL as pleo
+from app.portals.presets.postman import PORTAL as postman
 from app.portals.presets.purestorage import PORTAL as purestorage
 from app.portals.presets.redhat import PORTAL as redhat
 from app.portals.presets.riotgames import PORTAL as riotgames
@@ -57,14 +66,19 @@ from app.portals.presets.rubrik import PORTAL as rubrik
 from app.portals.presets.samsara import PORTAL as samsara
 from app.portals.presets.samsung import PORTAL as samsung
 from app.portals.presets.sentinelone import PORTAL as sentinelone
+from app.portals.presets.sentry import PORTAL as sentry
 from app.portals.presets.servicenow import PORTAL as servicenow
+from app.portals.presets.skroutz import PORTAL as skroutz
 from app.portals.presets.snyk import PORTAL as snyk
 from app.portals.presets.splunk import PORTAL as splunk
 from app.portals.presets.squarespace import PORTAL as squarespace
+from app.portals.presets.typeform import PORTAL as typeform
 from app.portals.presets.unity3d import PORTAL as unity3d
 from app.portals.presets.webflow import PORTAL as webflow
 from app.portals.presets.westerndigital import PORTAL as westerndigital
+from app.portals.presets.wise import PORTAL as wise
 from app.portals.presets.wiz import PORTAL as wiz
+from app.portals.presets.wrike import PORTAL as wrike
 from app.portals.presets.xai import PORTAL as xai
 from app.portals.presets.zillow import PORTAL as zillow
 from app.portals.presets.zoom import PORTAL as zoom
@@ -135,4 +149,18 @@ PORTALS: tuple[PortalPreset, ...] = (
     rtx,
     clickhouse,
     huggingface,
+    skroutz,
+    typeform,
+    wrike,
+    intercom,
+    postman,
+    pleo,
+    deliveroo,
+    clickup,
+    wise,
+    sentry,
+    jetbrains,
+    contentful,
+    onepassword,
+    langchain,
 )

@@ -3,18 +3,19 @@
 Living plan for HeadStart — what to build next and why. Update this doc when
 priorities shift or a milestone ships.
 
-**Current baseline (2026-07):** Phases 1–30 shipped (four-tier pricing, per-user AI
-summary preferences, curated employer portal catalog through batch 6 plus
-Workable/Hugging Face (**136** employers), SmartRecruiters adapter, custom
+**Current baseline (2026-07):** Phases 1–31 shipped (four-tier pricing, per-user AI
+summary preferences, curated employer portal catalog through batch 7 plus
+Workable/Hugging Face (**150** employers), SmartRecruiters adapter, custom
 career-site adapters for Shopify, Uber, and Snowflake, the dev-only local
 application agent, inbox OAuth providers for Gmail, Outlook, Yahoo, and
 Fastmail, the reusable iCIMS/Jibe Attract scraper with Rivian, the reusable
 Phenom People scraper (Splunk / CVS Health / GE HealthCare / RTX), the reusable
 Rippling ATS scraper with Rippling, the reusable IBM Careers Falcon search
 scraper (HashiCorp / Red Hat), Phase 28 Rippling + iCIMS + Phenom + IBM Careers
-apply, and the reusable Workable widget scraper with Hugging Face).
-**Next:** pick up follow-on catalog growth or a new ATS gap once priorities
-shift — Phase 30’s done-when (Workable adapter + Hugging Face preset) is met. See
+apply, the reusable Workable widget scraper with Hugging Face, and Phase 31
+portal catalog batch 7).
+**Next:** pick up a Workable apply adapter or a new ATS gap once priorities
+shift — Phase 31’s done-when (catalog ≥ 150 via verified presets) is met. See
 [architecture.md](architecture.md) for the system design.
 
 ---
@@ -971,6 +972,56 @@ against fixtures, and at least one live smoke of
 
 ---
 
+## Phase 31 — Portal catalog batch 7 (Workable + existing adapters)
+
+Goal: grow the curated catalog from **136 → ~150** employers with **zero new
+scraper work** — only presets on adapters already shipped. Prefer at least one
+additional Workable account (to exercise Phase 30), then fill high-value wins on
+Greenhouse / Ashby / SmartRecruiters.
+
+Each row must pass a **live smoke** against the public board API before merge.
+Board tokens, Ashby boards, SmartRecruiters company IDs, and Workable account
+slugs below are **candidates to verify** — replace or skip any that fail, and
+document skips in the PR.
+
+| Employer | Likely adapter | Category | Verify |
+| -------- | -------------- | -------- | ------ |
+| ~~Skroutz~~ | ~~`workable` (`skroutz`)~~ | ~~`unicorn`~~ | **Shipped** — widget API returns openings |
+| ~~Typeform~~ | ~~Greenhouse (`typeform`)~~ | ~~`unicorn`~~ | **Shipped** |
+| ~~Wrike~~ | ~~Greenhouse (`wrike`)~~ | ~~`unicorn`~~ | **Shipped** |
+| ~~Intercom~~ | ~~Greenhouse (`intercom`)~~ | ~~`unicorn`~~ | **Shipped** |
+| ~~Postman~~ | ~~Greenhouse (`postman`)~~ | ~~`unicorn`~~ | **Shipped** |
+| ~~Pleo~~ | ~~Ashby (`pleo`)~~ | ~~`unicorn`~~ | **Shipped** — Workable slug empty; Ashby board live |
+| ~~Deliveroo~~ | ~~Ashby (`deliveroo`)~~ | ~~`unicorn`~~ | **Shipped** |
+| ~~ClickUp~~ | ~~Ashby (`clickup`)~~ | ~~`unicorn`~~ | **Shipped** |
+| ~~Wise~~ | ~~SmartRecruiters (`Wise`)~~ | ~~`unicorn`~~ | **Shipped** — `portal_id=wise` |
+| ~~Sentry~~ | ~~Ashby (`sentry`)~~ | ~~`unicorn`~~ | **Shipped** |
+| ~~JetBrains~~ | ~~Greenhouse (`jetbrains`)~~ | ~~`big_tech`~~ | **Shipped** |
+| ~~Contentful~~ | ~~Greenhouse (`contentful`)~~ | ~~`unicorn`~~ | **Shipped** |
+| ~~1Password~~ | ~~Ashby (`1password`)~~ | ~~`unicorn`~~ | **Shipped** — `portal_id=onepassword`; Workable slug had only 3 jobs |
+| ~~LangChain~~ | ~~Ashby (`langchain`)~~ | ~~`ai`~~ | **Shipped** |
+
+Skipped (roadmap candidates without a working public board at verification time,
+or already covered elsewhere): **Typeform/Pleo/Remote/Vinted/Wrike/Xeneta on
+Workable** (HTTP 200 with 0 jobs or 404 — many moved off Workable); **Retool /
+Snap / GitHub** (still no public Greenhouse/Ashby/SR/Workable board; same class
+as Phase 29 skips); **additional Rippling / iCIMS** vanity boards (none verified
+beyond existing presets).
+
+**Out of scope for this phase:** new scraper adapters, apply-adapter work, and
+UI changes beyond the catalog list growing automatically from new presets.
+
+**Shipped:** 14 presets in `presets/` (Skroutz, Typeform, Wrike, Intercom,
+Postman, Pleo, Deliveroo, ClickUp, Wise, Sentry, JetBrains, Contentful,
+1Password, LangChain); catalog count **150**.
+
+**Done when:** catalog count is ≥ 150 **or** at least **12** new verified
+presets ship in this batch; every skipped candidate documents why the public
+API failed; `just check` passes; Pro portal search returns results for at least
+three new presets. **Met.**
+
+---
+
 ## Suggested starting points
 
 **Personal use (one job seeker):**
@@ -989,13 +1040,13 @@ against fixtures, and at least one live smoke of
 
 ## How to pick up work
 
-1. Choose an item from an open phase (Phase 30 Workable is **shipped** —
+1. Choose an item from an open phase (Phase 31 catalog batch 7 is **shipped** —
    pick the current **Next** item in the baseline blurb, or an unstruck row in a
    later phase).
 2. Read the relevant module doc under [modules/](modules/) and follow
    [AGENTS.md](../AGENTS.md).
 3. For new adapters, use [recipes.md](recipes.md) — one file, tests
    with fixtures, no live network in CI. For catalog presets only, follow the
-   Phase 22 / Phase 29 pattern (one preset file + live smoke + docs count).
+   Phase 22 / Phase 29 / Phase 31 pattern (one preset file + live smoke + docs count).
 4. When an item ships, note it here (move to a **Shipped** subsection or strike
    through) and update the matching module doc.

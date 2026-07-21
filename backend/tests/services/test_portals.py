@@ -20,7 +20,7 @@ def test_list_portal_presets_filters_query() -> None:
 def test_curated_portal_catalog_size() -> None:
     from app.portals.catalog import CURATED_PORTALS
 
-    assert len(CURATED_PORTALS) == 136
+    assert len(CURATED_PORTALS) == 150
 
 
 def test_curated_portal_apple_preset() -> None:
@@ -387,6 +387,63 @@ def test_curated_portal_huggingface_workable_preset() -> None:
     )
     assert other.base_url == "https://apply.workable.com/acme-corp"
     assert other.default_config["account"] == "acme-corp"
+
+
+def test_curated_portal_batch7_presets() -> None:
+    from app.portals.catalog import CURATED_PORTALS
+
+    skroutz = next(p for p in CURATED_PORTALS if p.id == "skroutz")
+    assert skroutz.adapter_key == "workable"
+    assert skroutz.default_config["account"] == "skroutz"
+    assert skroutz.category == "unicorn"
+
+    typeform = next(p for p in CURATED_PORTALS if p.id == "typeform")
+    assert typeform.adapter_key == "greenhouse"
+    assert typeform.default_config["board_token"] == "typeform"
+
+    wrike = next(p for p in CURATED_PORTALS if p.id == "wrike")
+    assert wrike.adapter_key == "greenhouse"
+
+    intercom = next(p for p in CURATED_PORTALS if p.id == "intercom")
+    assert intercom.adapter_key == "greenhouse"
+
+    postman = next(p for p in CURATED_PORTALS if p.id == "postman")
+    assert postman.adapter_key == "greenhouse"
+
+    pleo = next(p for p in CURATED_PORTALS if p.id == "pleo")
+    assert pleo.adapter_key == "ashby"
+    assert pleo.default_config["board"] == "pleo"
+
+    deliveroo = next(p for p in CURATED_PORTALS if p.id == "deliveroo")
+    assert deliveroo.adapter_key == "ashby"
+
+    clickup = next(p for p in CURATED_PORTALS if p.id == "clickup")
+    assert clickup.adapter_key == "ashby"
+
+    wise = next(p for p in CURATED_PORTALS if p.id == "wise")
+    assert wise.adapter_key == "smartrecruiters"
+    assert wise.default_config["company_id"] == "Wise"
+    assert wise.default_config["portal_id"] == "wise"
+
+    sentry = next(p for p in CURATED_PORTALS if p.id == "sentry")
+    assert sentry.adapter_key == "ashby"
+
+    jetbrains = next(p for p in CURATED_PORTALS if p.id == "jetbrains")
+    assert jetbrains.adapter_key == "greenhouse"
+    assert jetbrains.category == "big_tech"
+
+    contentful = next(p for p in CURATED_PORTALS if p.id == "contentful")
+    assert contentful.adapter_key == "greenhouse"
+
+    onepassword = next(p for p in CURATED_PORTALS if p.id == "onepassword")
+    assert onepassword.adapter_key == "ashby"
+    assert onepassword.company_name == "1Password"
+    assert onepassword.default_config["board"] == "1password"
+    assert onepassword.default_config["portal_id"] == "onepassword"
+
+    langchain = next(p for p in CURATED_PORTALS if p.id == "langchain")
+    assert langchain.adapter_key == "ashby"
+    assert langchain.category == "ai"
 
 
 def test_curated_portal_confluent_ashby_preset() -> None:

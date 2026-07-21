@@ -505,6 +505,6 @@ def test_hashicorp_portal_preset_registered() -> None:
     assert preset.adapter_key == "ibm_careers"
     assert preset.default_config["keywords"] == "HashiCorp"
     assert preset.company_name == "HashiCorp"
-    assert len(CURATED_PORTALS) == 136
+    assert len(CURATED_PORTALS) == 150
     # Fixture still parses as JSON for CI smoke
     assert json.loads(load_fixture("ibm_careers_page1.json"))["resultset"]
