@@ -234,10 +234,7 @@ def _http_error_message(exc: httpx.HTTPError) -> str:
         else:
             status = response.status_code
             if status == 409:
-                return (
-                    "workable apply rejected Cloudflare Turnstile token "
-                    f"({message})"
-                )
+                return "workable apply rejected Cloudflare Turnstile token " f"({message})"
             if status == 412:
                 return (
                     "workable apply precondition failed — ensure a fresh "

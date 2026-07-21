@@ -108,9 +108,7 @@ def test_has_applier_registers_workable() -> None:
 def test_resolve_shortcode_and_account_from_config_and_url() -> None:
     assert resolve_shortcode({"shortcode": _SHORTCODE}, "", "") == _SHORTCODE
     assert resolve_shortcode({}, _SHORTCODE, "") == _SHORTCODE
-    assert (
-        resolve_shortcode({}, "", f"https://apply.workable.com/j/{_SHORTCODE}") == _SHORTCODE
-    )
+    assert resolve_shortcode({}, "", f"https://apply.workable.com/j/{_SHORTCODE}") == _SHORTCODE
     assert (
         resolve_shortcode({}, "", f"https://apply.workable.com/huggingface/j/{_SHORTCODE}/apply")
         == _SHORTCODE
@@ -561,15 +559,15 @@ def test_live_submit_without_resume_when_not_required() -> None:
 
 
 def test_payload_and_resume_helper_edge_cases() -> None:
+    from app.appliers.adapters.workable import _http_error_message, _response_has_error
     from app.appliers.adapters.workable_payload import (
-        iter_form_fields,
+        build_candidate,
         extract_application_id,
         extract_error_message,
+        iter_form_fields,
         missing_required_fields,
-        build_candidate,
     )
-    from app.appliers.adapters.workable_resume import upload_resume, _upload_payload
-    from app.appliers.adapters.workable import _response_has_error, _http_error_message
+    from app.appliers.adapters.workable_resume import _upload_payload, upload_resume
 
     assert iter_form_fields(None) == []
     assert iter_form_fields(["bad", {"name": "x"}, {"fields": [None, "bad", {"id": "ok"}]}]) == [
@@ -589,9 +587,7 @@ def test_payload_and_resume_helper_edge_cases() -> None:
     assert extract_error_message({"errors": {}}) == "workable apply failed"
     assert extract_error_message({"message": "nope"}) == "nope"
     assert missing_required_fields({}, ["resume"], live=False) == ["resume"]
-    assert missing_required_fields({"answers": [{"question_key": "x"}]}, ["x"], live=False) == [
-        "x"
-    ]
+    assert missing_required_fields({"answers": [{"question_key": "x"}]}, ["x"], live=False) == ["x"]
 
     bare = build_candidate(
         ProfileData(full_name="Ada Lovelace", email="ada@example.com"),
