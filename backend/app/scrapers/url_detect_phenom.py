@@ -14,6 +14,24 @@ _KNOWN_HOSTS: dict[str, dict[str, str]] = {
         "locale": "en_global",
         "ref_num": "CISCISGLOBAL",
     },
+    "jobs.cvshealth.com": {
+        "company": "CVS Health",
+        "country": "us",
+        "locale": "en_us",
+        "ref_num": "CVSCHLUS",
+    },
+    "careers.gehealthcare.com": {
+        "company": "GE HealthCare",
+        "country": "global",
+        "locale": "en_global",
+        "ref_num": "GEVGHLGLOBAL",
+    },
+    "careers.rtx.com": {
+        "company": "RTX",
+        "country": "global",
+        "locale": "en_global",
+        "ref_num": "RAYTGLOBAL",
+    },
 }
 
 

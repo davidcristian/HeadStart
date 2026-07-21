@@ -3,16 +3,17 @@
 Living plan for HeadStart — what to build next and why. Update this doc when
 priorities shift or a milestone ships.
 
-**Current baseline (2026-07):** Phases 1–28 shipped (four-tier pricing, per-user AI
-summary preferences, curated employer portal catalog through batch 5 plus later
-unblocks for Rivian / Splunk / Rippling / Grammarly / Snyk / HashiCorp, SmartRecruiters adapter, custom career-site
-adapters for Shopify, Uber, and Snowflake, the dev-only local application agent, inbox OAuth
-providers for Gmail, Outlook, Yahoo, and Fastmail, the reusable iCIMS/Jibe
-Attract scraper with Rivian, the reusable Phenom People scraper with Splunk,
-the reusable Rippling ATS scraper with Rippling, the reusable IBM Careers
-Falcon search scraper with HashiCorp, and Phase 28 Rippling + iCIMS + Phenom + IBM Careers apply).
-**Next:** [Phase 29](#phase-29--portal-catalog-batch-6-existing--recent-adapters) —
-grow the catalog from **121 → ~135** using adapters already shipped. See
+**Current baseline (2026-07):** Phases 1–29 shipped (four-tier pricing, per-user AI
+summary preferences, curated employer portal catalog through batch 6 (**135**
+employers), SmartRecruiters adapter, custom career-site adapters for Shopify,
+Uber, and Snowflake, the dev-only local application agent, inbox OAuth providers
+for Gmail, Outlook, Yahoo, and Fastmail, the reusable iCIMS/Jibe Attract scraper
+with Rivian, the reusable Phenom People scraper (Splunk / CVS Health /
+GE HealthCare / RTX), the reusable Rippling ATS scraper with Rippling, the
+reusable IBM Careers Falcon search scraper (HashiCorp / Red Hat), and Phase 28
+Rippling + iCIMS + Phenom + IBM Careers apply).
+**Next:** pick up follow-on catalog growth or a new ATS gap once priorities
+shift — Phase 29’s done-when (≥135 or ≥12 verified presets) is met. See
 [architecture.md](architecture.md) for the system design.
 
 ---
@@ -909,43 +910,37 @@ fail, and document skips in the PR.
 
 | Employer | Likely adapter | Category | Verify |
 | -------- | -------------- | -------- | ------ |
-| Red Hat | `ibm_careers` (`keywords=Red Hat`) | `big_tech` | Falcon search returns Red Hat–branded roles (same post-acquisition pattern as HashiCorp) |
-| Box | Greenhouse (`boxinc` or `box`) | `big_tech` | Public boards API returns openings |
-| Snap | Greenhouse (`snapinc` / `snapchat`) | `big_tech` | Public boards API returns openings |
-| GitHub | Greenhouse (`github`) | `big_tech` | Public boards API returns openings |
-| LaunchDarkly | Greenhouse (`launchdarkly`) | `unicorn` | Public boards API returns openings |
-| Amplitude | Greenhouse (`amplitude`) | `unicorn` | Public boards API returns openings |
-| Retool | Greenhouse (`retool`) | `unicorn` | Public boards API returns openings |
-| Benchling | Greenhouse (`benchling`) | `unicorn` | Public boards API returns openings |
-| Cockroach Labs | Greenhouse (`cockroachlabs`) | `unicorn` | Public boards API returns openings |
-| Webflow | Greenhouse (`webflow`) | `unicorn` | Public boards API returns openings |
-| Calendly | Greenhouse (`calendly`) | `unicorn` | Public boards API returns openings |
-| Miro | Greenhouse (`miro`) | `unicorn` | Public boards API returns openings |
-| Hugging Face | Greenhouse / Ashby / custom | `ai` | Identify public board; skip if proprietary-only |
-| xAI | Ashby / Greenhouse / custom | `ai` | Identify public board; skip if proprietary-only |
-| Additional iCIMS / Jibe | `icims` | varies | Second vanity domain with live `GET …/api/jobs` (beyond Rivian) |
-| Additional Phenom | `phenom` | varies | Second Phenom host with live `POST …/widgets` (beyond Cisco/Splunk) |
-| Additional Rippling ATS | `rippling` | varies | Second `ats.rippling.com/<board>` with live board API (beyond `rippling`) |
+| ~~Red Hat~~ | ~~`ibm_careers` (`keywords=Red Hat`)~~ | ~~`big_tech`~~ | **Shipped** — Falcon search returns Red Hat–branded roles |
+| ~~Box~~ | ~~Greenhouse (`boxinc`)~~ | ~~`big_tech`~~ | **Shipped** — `portal_id=box`, board token `boxinc` |
+| Snap | Greenhouse / Workday | `big_tech` | **Skipped** — careers.snap.com uses `wd1.myworkdaysite.com/recruiting/snapchat/snap` (not public `*.myworkdayjobs.com` CXS); Greenhouse/Ashby/SR boards empty or unrelated |
+| GitHub | Greenhouse (`github`) | `big_tech` | **Skipped** — no public Greenhouse / Ashby / SmartRecruiters board; `github.careers` is proprietary |
+| ~~LaunchDarkly~~ | ~~Greenhouse (`launchdarkly`)~~ | ~~`unicorn`~~ | **Shipped** |
+| ~~Amplitude~~ | ~~Greenhouse (`amplitude`)~~ | ~~`unicorn`~~ | **Shipped** |
+| Retool | Greenhouse (`retool`) | `unicorn` | **Skipped** — Greenhouse / Ashby / SmartRecruiters public boards return 404 / 0 postings |
+| ~~Benchling~~ | ~~Ashby (`benchling`)~~ | ~~`unicorn`~~ | **Shipped** — Greenhouse token 404; Ashby board live |
+| ~~Cockroach Labs~~ | ~~Greenhouse (`cockroachlabs`)~~ | ~~`unicorn`~~ | **Shipped** |
+| ~~Webflow~~ | ~~Greenhouse (`webflow`)~~ | ~~`unicorn`~~ | **Shipped** |
+| ~~Calendly~~ | ~~Greenhouse (`calendly`)~~ | ~~`unicorn`~~ | **Shipped** |
+| ~~Miro~~ | ~~Ashby (`miro`)~~ | ~~`unicorn`~~ | **Shipped** — Greenhouse token 404; Ashby board live |
+| Hugging Face | Greenhouse / Ashby / custom | `ai` | **Skipped** — no public Greenhouse/Ashby board; openings on Workable (`apply.workable.com/huggingface`) — no Workable scraper yet |
+| ~~xAI~~ | ~~Greenhouse (`xai`)~~ | ~~`ai`~~ | **Shipped** |
+| Additional iCIMS / Jibe | `icims` | varies | **Skipped this batch** — no second vanity domain with a working public `GET …/api/jobs` verified |
+| ~~Additional Phenom~~ | ~~`phenom`~~ | ~~`big_tech`~~ | **Shipped:** CVS Health (`jobs.cvshealth.com`, `CVSCHLUS`), GE HealthCare (`careers.gehealthcare.com`, `GEVGHLGLOBAL`), RTX (`careers.rtx.com`, `RAYTGLOBAL`) |
+| Additional Rippling ATS | `rippling` | varies | **Skipped this batch** — no second `ats.rippling.com/<board>` with a live public board API beyond `rippling` |
+| ~~ClickHouse~~ | ~~Greenhouse (`clickhouse`)~~ | ~~`unicorn`~~ | **Shipped** — fill to catalog count **135** |
 
 **Out of scope for this phase:** new scraper adapters, apply-adapter work, and
 UI changes beyond the catalog list growing automatically from new presets.
 
-**Implementation notes (when picking this up):**
-
-1. One preset module per employer under `backend/app/portals/presets/` (same
-   pattern as Phase 22).
-2. Prefer helpers already shipped: `gh_preset`, `ashby_preset`, `wd_preset`,
-   `sr_preset`, `icims_preset`, `phenom_preset`, `rippling_preset`,
-   `ibm_careers_preset`.
-3. Extend duplicate-detection tests if a new identity field is needed (unlikely
-   for existing adapters).
-4. Update [modules/portals.md](modules/portals.md) catalog count + adapter
-   breakdown when presets land; strike through shipped rows here.
+**Shipped:** 14 presets in `presets/` (Red Hat, Box, LaunchDarkly, Amplitude,
+Benchling, Cockroach Labs, Webflow, Calendly, Miro, xAI, CVS Health,
+GE HealthCare, RTX, ClickHouse); `gh_preset` accepts optional `portal_id`;
+Phenom URL detection covers the three new hosts; catalog count **135**.
 
 **Done when:** catalog count is ≥ 135 **or** at least **12** new verified
 presets ship in this batch; every skipped candidate documents why the public
 API failed; `just check` passes; Pro portal search returns results for at least
-three new presets.
+three new presets. **Met.**
 
 ---
 
@@ -967,8 +962,9 @@ three new presets.
 
 ## How to pick up work
 
-1. Choose an item from the current phase ([Phase 29](#phase-29--portal-catalog-batch-6-existing--recent-adapters)
-   is next — finish earlier phases before jumping ahead).
+1. Choose an item from an open phase (Phase 29 catalog batch 6 is **shipped** —
+   pick the current **Next** item in the baseline blurb, or an unstruck row in a
+   later phase).
 2. Read the relevant module doc under [modules/](modules/) and follow
    [AGENTS.md](../AGENTS.md).
 3. For new adapters, use [recipes.md](recipes.md) — one file, tests

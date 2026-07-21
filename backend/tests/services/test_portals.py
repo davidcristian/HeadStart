@@ -20,7 +20,7 @@ def test_list_portal_presets_filters_query() -> None:
 def test_curated_portal_catalog_size() -> None:
     from app.portals.catalog import CURATED_PORTALS
 
-    assert len(CURATED_PORTALS) == 121
+    assert len(CURATED_PORTALS) == 135
 
 
 def test_curated_portal_apple_preset() -> None:
@@ -301,6 +301,70 @@ def test_curated_portal_hashicorp_ibm_careers_preset() -> None:
     bare = ibm_careers_preset(portal_id="ibm", company="IBM", keywords="")
     assert bare.base_url == "https://www.ibm.com/careers/search"
     assert "keywords" not in bare.default_config
+
+
+def test_curated_portal_phase29_batch_presets() -> None:
+    from app.portals.catalog import CURATED_PORTALS
+    from app.portals.catalog_helpers import gh_preset
+
+    redhat = next(p for p in CURATED_PORTALS if p.id == "redhat")
+    assert redhat.adapter_key == "ibm_careers"
+    assert redhat.category == "big_tech"
+    assert redhat.default_config["keywords"] == "Red Hat"
+
+    box = next(p for p in CURATED_PORTALS if p.id == "box")
+    assert box.adapter_key == "greenhouse"
+    assert box.default_config["board_token"] == "boxinc"
+    assert box.default_config["portal_id"] == "box"
+    aliased = gh_preset("boxinc", "Box", category="big_tech", portal_id="box")
+    assert aliased.id == "box"
+    assert aliased.default_config["board_token"] == "boxinc"
+
+    launchdarkly = next(p for p in CURATED_PORTALS if p.id == "launchdarkly")
+    assert launchdarkly.adapter_key == "greenhouse"
+    assert launchdarkly.default_config["board_token"] == "launchdarkly"
+
+    amplitude = next(p for p in CURATED_PORTALS if p.id == "amplitude")
+    assert amplitude.adapter_key == "greenhouse"
+
+    benchling = next(p for p in CURATED_PORTALS if p.id == "benchling")
+    assert benchling.adapter_key == "ashby"
+    assert benchling.default_config["board"] == "benchling"
+
+    cockroach = next(p for p in CURATED_PORTALS if p.id == "cockroachlabs")
+    assert cockroach.company_name == "Cockroach Labs"
+    assert cockroach.adapter_key == "greenhouse"
+
+    webflow = next(p for p in CURATED_PORTALS if p.id == "webflow")
+    assert webflow.adapter_key == "greenhouse"
+
+    calendly = next(p for p in CURATED_PORTALS if p.id == "calendly")
+    assert calendly.adapter_key == "greenhouse"
+
+    miro = next(p for p in CURATED_PORTALS if p.id == "miro")
+    assert miro.adapter_key == "ashby"
+    assert miro.default_config["board"] == "miro"
+
+    xai = next(p for p in CURATED_PORTALS if p.id == "xai")
+    assert xai.adapter_key == "greenhouse"
+    assert xai.category == "ai"
+
+    cvs = next(p for p in CURATED_PORTALS if p.id == "cvshealth")
+    assert cvs.adapter_key == "phenom"
+    assert cvs.default_config["ref_num"] == "CVSCHLUS"
+    assert cvs.base_url == "https://jobs.cvshealth.com"
+
+    gehc = next(p for p in CURATED_PORTALS if p.id == "gehealthcare")
+    assert gehc.adapter_key == "phenom"
+    assert gehc.default_config["ref_num"] == "GEVGHLGLOBAL"
+
+    rtx = next(p for p in CURATED_PORTALS if p.id == "rtx")
+    assert rtx.adapter_key == "phenom"
+    assert rtx.default_config["ref_num"] == "RAYTGLOBAL"
+
+    clickhouse = next(p for p in CURATED_PORTALS if p.id == "clickhouse")
+    assert clickhouse.adapter_key == "greenhouse"
+    assert clickhouse.category == "unicorn"
 
 
 def test_curated_portal_confluent_ashby_preset() -> None:

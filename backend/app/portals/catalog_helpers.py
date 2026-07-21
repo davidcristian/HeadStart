@@ -21,14 +21,22 @@ class PortalPreset:
     default_config: dict[str, Any]
 
 
-def gh_preset(token: str, company: str, *, category: PortalCategory = "unicorn") -> PortalPreset:
+def gh_preset(
+    token: str,
+    company: str,
+    *,
+    category: PortalCategory = "unicorn",
+    portal_id: str | None = None,
+) -> PortalPreset:
+    """Build a Greenhouse preset; portal_id defaults to board token when omitted."""
+    pid = portal_id or token
     return PortalPreset(
-        id=token,
+        id=pid,
         company_name=company,
         category=category,
         adapter_key="greenhouse",
         base_url=f"https://boards.greenhouse.io/{token}",
-        default_config={"board_token": token, "company": company, "portal_id": token},
+        default_config={"board_token": token, "company": company, "portal_id": pid},
     )
 
 
