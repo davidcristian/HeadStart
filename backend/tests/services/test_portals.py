@@ -502,6 +502,20 @@ def test_config_keys_match_ashby() -> None:
     assert _config_keys_match(preset, source) is True
 
 
+def test_config_keys_match_workable() -> None:
+    from app.portals.catalog import CURATED_PORTALS
+
+    preset = next(p for p in CURATED_PORTALS if p.adapter_key == "workable")
+    source = Source(
+        user_id=1,
+        name="Workable co",
+        adapter_key="workable",
+        base_url="https://apply.workable.com/other",
+        default_config={"account": preset.default_config["account"]},
+    )
+    assert _config_keys_match(preset, source) is True
+
+
 def test_config_keys_match_workday() -> None:
     from app.portals.catalog import CURATED_PORTALS
 

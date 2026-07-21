@@ -173,7 +173,9 @@ def test_workable_skips_invalid_rows_and_builds_url() -> None:
         {"shortcode": "", "title": "Missing id"},
         {"shortcode": "B2", "title": "Designer", "locations": [{"id": "x"}]},
         {"shortcode": "C3", "title": "PM", "locations": "bad",
-         "published_on": "not-a-date", "created_at": "2026-01-02T03:04:05Z"}
+         "published_on": "not-a-date", "created_at": "2026-01-02T03:04:05Z"},
+        {"shortcode": "D4", "title": "Ops", "locations": ["nope", {}],
+         "city": "Remote", "country": "United States"}
       ]
     }
     """
@@ -183,12 +185,13 @@ def test_workable_skips_invalid_rows_and_builds_url() -> None:
 
     scraper = get_scraper("workable", http=make_http_client(handler))
     postings = scraper.fetch(ScrapeContext(config={"account": "acme", "company": "Acme"}))
-    assert len(postings) == 3
+    assert len(postings) == 4
     assert postings[0].location == "Austin, TX, United States"
     assert postings[0].url == "https://apply.workable.com/j/A1"
     assert postings[1].external_id == "B2"
     assert postings[1].location == ""
     assert postings[2].posted_at == datetime(2026, 1, 2, 3, 4, 5, tzinfo=UTC)
+    assert postings[3].location == "Remote, United States"
 
 
 def test_workable_respects_max_results() -> None:

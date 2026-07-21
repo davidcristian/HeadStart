@@ -52,14 +52,16 @@ class WorkableScraper(Scraper):
         if not isinstance(data, dict):
             raise ValueError("workable API returned unexpected payload (expected a JSON object)")
 
-        company = target.company or str(data.get("name") or "").strip() or _humanize_slug(
-            target.account
+        company = (
+            target.company or str(data.get("name") or "").strip() or _humanize_slug(target.account)
         )
         jobs = data.get("jobs")
         if jobs is None:
             jobs = []
         if not isinstance(jobs, list):
-            raise ValueError("workable API returned unexpected jobs payload (expected a JSON array)")
+            raise ValueError(
+                "workable API returned unexpected jobs payload (expected a JSON array)"
+            )
 
         keywords = target.keywords.casefold()
         postings: list[JobPosting] = []

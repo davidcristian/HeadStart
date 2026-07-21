@@ -17,9 +17,7 @@ def test_detect_workable_account_url() -> None:
 
 
 def test_detect_workable_widget_api_url() -> None:
-    result = detect_source_from_url(
-        "https://apply.workable.com/api/v1/widget/accounts/huggingface"
-    )
+    result = detect_source_from_url("https://apply.workable.com/api/v1/widget/accounts/huggingface")
     assert result is not None
     assert result.adapter_key == "workable"
     assert result.default_config["account"] == "huggingface"
