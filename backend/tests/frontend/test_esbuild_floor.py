@@ -31,10 +31,17 @@ def test_package_json_overrides_esbuild_past_ssrf_floor() -> None:
 
 
 def test_lockfile_resolves_esbuild_past_ssrf_floor() -> None:
-    """Every locked esbuild package must be >=0.25.0 (no nested 0.21.x)."""
+    """Every locked esbuild package must be >=0.25.0 (no nested 0.21.x).
+
+    Vite 8 builds without esbuild, so zero entries is the expected state and is
+    what the advisory wanted all along. The check stays because
+    `overrides.esbuild` holds a floor for the day a transitive dependency pulls
+    it back in; absence must not be confused with an unparsed lockfile, hence
+    the assertion that packages were read at all.
+    """
     lock = json.loads(_LOCKFILE.read_text(encoding="utf-8"))
     packages = lock.get("packages") or {}
-    found = False
+    assert packages, "package-lock.json parsed to no packages"
     for path, meta in packages.items():
         name = meta.get("name")
         if name != "esbuild" and not path.endswith("/esbuild") and path != "node_modules/esbuild":
@@ -42,5 +49,3 @@ def test_lockfile_resolves_esbuild_past_ssrf_floor() -> None:
         version = meta.get("version")
         assert isinstance(version, str), f"esbuild entry missing version: {path}"
         assert _parse_semver(version) >= _MIN_ESBUILD, f"{path} pins esbuild {version}"
-        found = True
-    assert found, "no esbuild entries in package-lock.json"
