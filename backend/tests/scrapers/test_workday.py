@@ -6,7 +6,6 @@ import httpx
 import pytest
 
 from app.scrapers import ScrapeContext, get_scraper
-from app.scrapers.adapters.workday import WorkdayScraper
 from app.scrapers.base import Scraper
 from tests.conftest import load_fixture, make_http_client
 
@@ -268,20 +267,75 @@ def test_workday_plain_host_without_region() -> None:
 
 def test_workday_rejects_non_workday_host() -> None:
     scraper = _make(lambda r: httpx.Response(200))
-    with pytest.raises(ValueError, match="must be a \\*.myworkdayjobs.com URL"):
+    with pytest.raises(ValueError, match="myworkdayjobs\\.com or \\*\\.myworkdaysite\\.com"):
         scraper.fetch(ScrapeContext(query_url="https://acme.example.com/en-US/AcmeCareers"))
 
 
 def test_workday_missing_tenant_from_query_url_raises() -> None:
-    # _parse_host normally guarantees a tenant; patch it empty to exercise the
-    # defensive "could not determine tenant" guard in the non-CXS branch.
+    # parse_host normally guarantees a tenant on jobs hosts; empty tenant exercises
+    # the defensive guard in board_from_url's non-CXS branch.
+    from app.scrapers.adapters import workday_parse
+
     scraper = _make(lambda r: httpx.Response(200))
     with (
-        patch.object(WorkdayScraper, "_parse_host", staticmethod(lambda host: ("", None))),
+        patch.object(workday_parse, "parse_host", lambda host: ("", "wd5", "jobs")),
         pytest.raises(ValueError, match="could not determine tenant"),
     ):
         scraper.fetch(
             ScrapeContext(query_url="https://acme.wd5.myworkdayjobs.com/en-US/AcmeCareers")
+        )
+
+
+def test_workday_accepts_myworkdaysite_recruiting_url() -> None:
+    fixture = load_fixture("workday_jobs.json")
+    seen: dict[str, str] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen["url"] = str(request.url)
+        seen["referer"] = request.headers.get("referer")
+        return httpx.Response(200, text=fixture)
+
+    scraper = _make(handler)
+    postings = scraper.fetch(
+        ScrapeContext(
+            query_url="https://wd1.myworkdaysite.com/recruiting/snapchat/snap",
+            config={"company": "Snap"},
+        )
+    )
+    assert seen["url"] == "https://wd1.myworkdaysite.com/wday/cxs/snapchat/snap/jobs"
+    assert seen["referer"] == "https://wd1.myworkdaysite.com/recruiting/snapchat/snap"
+    assert postings[0].company == "Snap"
+    assert postings[0].url.startswith("https://wd1.myworkdaysite.com/recruiting/snapchat/snap/job/")
+
+
+def test_workday_site_host_kind_from_config() -> None:
+    fixture = load_fixture("workday_jobs.json")
+    seen: dict[str, str] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen["url"] = str(request.url)
+        return httpx.Response(200, text=fixture)
+
+    scraper = _make(handler)
+    scraper.fetch(
+        ScrapeContext(
+            config={
+                "tenant": "snapchat",
+                "site": "snap",
+                "region": "wd1",
+                "host_kind": "site",
+                "company": "Snap",
+            }
+        )
+    )
+    assert seen["url"] == "https://wd1.myworkdaysite.com/wday/cxs/snapchat/snap/jobs"
+
+
+def test_workday_site_host_kind_requires_region() -> None:
+    scraper = _make(lambda r: httpx.Response(200))
+    with pytest.raises(ValueError, match="require config.region"):
+        scraper.fetch(
+            ScrapeContext(config={"tenant": "snapchat", "site": "snap", "host_kind": "site"})
         )
 
 

@@ -69,6 +69,7 @@ from app.portals.presets.sentinelone import PORTAL as sentinelone
 from app.portals.presets.sentry import PORTAL as sentry
 from app.portals.presets.servicenow import PORTAL as servicenow
 from app.portals.presets.skroutz import PORTAL as skroutz
+from app.portals.presets.snap import PORTAL as snap
 from app.portals.presets.snyk import PORTAL as snyk
 from app.portals.presets.splunk import PORTAL as splunk
 from app.portals.presets.squarespace import PORTAL as squarespace
@@ -163,4 +164,5 @@ PORTALS: tuple[PortalPreset, ...] = (
     contentful,
     onepassword,
     langchain,
+    snap,
 )

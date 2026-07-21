@@ -90,34 +90,6 @@ def sr_preset(
     )
 
 
-def workday_preset(
-    *,
-    portal_id: str,
-    company: str,
-    tenant: str,
-    site: str,
-    region: str,
-    locale: str = "en-US",
-    category: PortalCategory = "big_tech",
-) -> PortalPreset:
-    base = f"https://{tenant}.{region}.myworkdayjobs.com/{locale}/{site}"
-    return PortalPreset(
-        id=portal_id,
-        company_name=company,
-        category=category,
-        adapter_key="workday",
-        base_url=base,
-        default_config={
-            "tenant": tenant,
-            "site": site,
-            "region": region,
-            "locale": locale,
-            "company": company,
-            "portal_id": portal_id,
-        },
-    )
-
-
 def apple_careers_preset(
     *,
     portal_id: str = "apple",

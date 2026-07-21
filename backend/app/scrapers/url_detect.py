@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-import re
 from typing import Any
 from urllib.parse import parse_qs, unquote, urlparse
 
 from app.scrapers.adapters.ashby_parse import encode_board_slug
+from app.scrapers.adapters.workday_parse import board_from_url, try_parse_host
 from app.scrapers.url_detect_amazon import detect_amazon_jobs
 from app.scrapers.url_detect_apple import detect_apple_careers
 from app.scrapers.url_detect_ibm import detect_ibm_careers
@@ -23,9 +23,16 @@ from app.scrapers.url_detect_types import SourceDetection
 from app.scrapers.url_detect_uber import detect_uber_careers
 from app.scrapers.url_detect_workable import detect_workable
 
-_LOCALE_RE = re.compile(r"^[a-z]{2}-[A-Z]{2}$")
-_WORKDAY_HOST_WITH_REGION = re.compile(r"^([^.]+)\.(wd\d+)\.myworkdayjobs\.com$", re.IGNORECASE)
-_WORKDAY_HOST_PLAIN = re.compile(r"^([^.]+)\.myworkdayjobs\.com$", re.IGNORECASE)
+# Snap's marketing careers site links into Workday myworkdaysite.com.
+_WORKDAY_KNOWN_VANITY: dict[str, dict[str, str]] = {
+    "careers.snap.com": {
+        "tenant": "snapchat",
+        "site": "snap",
+        "region": "wd1",
+        "company": "Snap",
+        "host_kind": "site",
+    },
+}
 
 
 def detect_source_from_url(url: str, *, page_title: str | None = None) -> SourceDetection | None:
@@ -153,32 +160,50 @@ def _detect_ashby(parsed: Any, host: str, page_title: str | None) -> SourceDetec
 
 
 def _detect_workday(parsed: Any, host: str, page_title: str | None) -> SourceDetection | None:
-    tenant, region = _parse_workday_host(host)
-    if not tenant:
+    vanity = _WORKDAY_KNOWN_VANITY.get(host)
+    if vanity is not None:
+        tenant = vanity["tenant"]
+        site = vanity["site"]
+        region = vanity["region"]
+        company = vanity["company"]
+        host_kind = vanity["host_kind"]
+        board_host = f"{region}.myworkdaysite.com"
+        base_url = f"https://{board_host}/recruiting/{tenant}/{site}"
+        config: dict[str, Any] = {
+            "tenant": tenant,
+            "site": site,
+            "region": region,
+            "company": company,
+            "locale": "en-US",
+            "host_kind": host_kind,
+        }
+        return SourceDetection(
+            adapter_key="workday",
+            suggested_name=_title_or_slug(page_title, company),
+            base_url=base_url,
+            default_config=config,
+            query_url=base_url,
+        )
+
+    if try_parse_host(host) is None:
+        return None
+    try:
+        board = board_from_url(f"{parsed.scheme}://{host}{parsed.path}")
+    except ValueError:
         return None
 
-    parts = [part for part in parsed.path.split("/") if part]
-    locale = "en-US"
-    if parts and _LOCALE_RE.match(parts[0]):
-        locale = parts[0]
-        parts = parts[1:]
-
-    site = ""
-    if len(parts) >= 4 and parts[0] == "wday" and parts[1] == "cxs":
-        tenant = parts[2] or tenant
-        site = parts[3]
-    elif parts:
-        site = parts[0]
-    if not site:
-        return None
-
-    company = _humanize_slug(tenant)
+    company = _humanize_slug(board.tenant)
     suggested_name = _title_or_slug(page_title, company)
-    board_host = _workday_host(tenant, region)
-    base_url = f"https://{board_host}/{locale}/{site}"
-    config: dict[str, Any] = {"tenant": tenant, "site": site, "company": company, "locale": locale}
-    if region:
-        config["region"] = region
+    config = {
+        "tenant": board.tenant,
+        "site": board.site,
+        "company": company,
+        "locale": board.locale,
+        "host_kind": board.host_kind,
+    }
+    if board.region:
+        config["region"] = board.region
+    base_url = board.board_url
     return SourceDetection(
         adapter_key="workday",
         suggested_name=suggested_name,
@@ -186,22 +211,6 @@ def _detect_workday(parsed: Any, host: str, page_title: str | None) -> SourceDet
         default_config=config,
         query_url=base_url,
     )
-
-
-def _parse_workday_host(host: str) -> tuple[str, str | None]:
-    match = _WORKDAY_HOST_WITH_REGION.match(host)
-    if match:
-        return match.group(1), match.group(2)
-    match = _WORKDAY_HOST_PLAIN.match(host)
-    if match:
-        return match.group(1), None
-    return "", None
-
-
-def _workday_host(tenant: str, region: str | None) -> str:
-    if region:
-        return f"{tenant}.{region}.myworkdayjobs.com"
-    return f"{tenant}.myworkdayjobs.com"
 
 
 def _detect_google_careers(

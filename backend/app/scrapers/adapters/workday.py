@@ -1,15 +1,20 @@
 """Workday job-board adapter.
 
 Workday career sites expose a public Candidate Experience Service (CXS) API:
-  POST https://{tenant}.{region}.myworkdayjobs.com/wday/cxs/{tenant}/{site}/jobs
+  POST https://{host}/wday/cxs/{tenant}/{site}/jobs
+
+Hosts:
+  - Classic: ``{tenant}.{region}.myworkdayjobs.com`` (or ``{tenant}.myworkdayjobs.com``)
+  - Site: ``{region}.myworkdaysite.com`` with board path ``/recruiting/{tenant}/{site}``
 
 Config / context:
   - `query_url`: careers board URL, a CXS jobs endpoint, or empty.
   - `config["tenant"]`: Workday tenant slug (required when query_url is empty).
   - `config["site"]`: board/site path segment (required when query_url is empty).
-  - `config["region"]`: optional cluster host segment (e.g. `"wd5"`); inferred from
-    the hostname when omitted.
-  - `config["locale"]`: locale path prefix (default `"en-US"`).
+  - `config["region"]`: optional cluster host segment (e.g. `"wd5"`); required for
+    ``host_kind=site``; inferred from the hostname when omitted on jobs hosts.
+  - `config["host_kind"]`: ``"jobs"`` (default) or ``"site"`` for myworkdaysite.com.
+  - `config["locale"]`: locale path prefix for jobs hosts (default `"en-US"`).
   - `config["company"]`: display company name (defaults to tenant).
   - `config["page_size"]`: jobs per page (default 20, max 100).
   - `config["search_text"]`: optional keyword filter sent to the CXS API.
@@ -17,17 +22,18 @@ Config / context:
 
 from __future__ import annotations
 
-import re
 from typing import Any
-from urllib.parse import urlparse
 
+from app.scrapers.adapters.workday_parse import (
+    WorkdayBoard,
+    board_from_url,
+    build_host,
+    normalize_host_kind,
+)
 from app.scrapers.base import Scraper, register_scraper
 from app.scrapers.numbers import coerce_count
 from app.scrapers.types import JobPosting, ScrapeContext
 
-_LOCALE_RE = re.compile(r"^[a-z]{2}-[A-Z]{2}$")
-_HOST_WITH_REGION = re.compile(r"^([^.]+)\.(wd\d+)\.myworkdayjobs\.com$", re.IGNORECASE)
-_HOST_PLAIN = re.compile(r"^([^.]+)\.myworkdayjobs\.com$", re.IGNORECASE)
 _DEFAULT_PAGE_SIZE = 20
 _MAX_PAGE_SIZE = 100
 
@@ -38,6 +44,7 @@ class WorkdayScraper(Scraper):
 
     def fetch(self, ctx: ScrapeContext) -> list[JobPosting]:
         target = self._resolve(ctx)
+        company = target_company(ctx, target)
         search_text = self._search_text(ctx)
         page_size = self._page_size(ctx.config)
         postings: list[JobPosting] = []
@@ -68,7 +75,11 @@ class WorkdayScraper(Scraper):
                 total = coerce_count(raw_total, len(jobs))
             if not jobs:
                 break
-            postings.extend(self._to_posting(job, target) for job in jobs if isinstance(job, dict))
+            postings.extend(
+                self._to_posting(job, target, company=company)
+                for job in jobs
+                if isinstance(job, dict)
+            )
             offset += len(jobs)
 
         return postings
@@ -97,7 +108,7 @@ class WorkdayScraper(Scraper):
         return min(size, _MAX_PAGE_SIZE)
 
     @staticmethod
-    def _request_headers(target: _WorkdayTarget) -> dict[str, str]:
+    def _request_headers(target: WorkdayBoard) -> dict[str, str]:
         return {
             "Accept": "application/json",
             "Content-Type": "application/json",
@@ -105,83 +116,30 @@ class WorkdayScraper(Scraper):
         }
 
     @classmethod
-    def _resolve(cls, ctx: ScrapeContext) -> _WorkdayTarget:
+    def _resolve(cls, ctx: ScrapeContext) -> WorkdayBoard:
         config = ctx.config
-        company = str(config.get("company") or config.get("tenant") or config.get("site") or "")
         locale = str(config.get("locale") or "en-US")
         tenant = str(config.get("tenant") or "")
         site = str(config.get("site") or "")
         region = str(config.get("region") or "") or None
+        host_kind = normalize_host_kind(config.get("host_kind"))
 
         if ctx.query_url:
-            return cls._from_query_url(ctx.query_url, company=company, locale=locale)
+            return board_from_url(ctx.query_url, locale=locale)
 
         if not tenant or not site:
             raise ValueError("workday scraper needs a query_url or config.tenant + config.site")
-        host = cls._host(tenant, region)
-        return _WorkdayTarget(
+        return WorkdayBoard(
             tenant=tenant,
             site=site,
             region=region,
             locale=locale,
-            company=company or tenant,
-            host=host,
-        )
-
-    @classmethod
-    def _from_query_url(cls, query_url: str, *, company: str, locale: str) -> _WorkdayTarget:
-        parsed = urlparse(query_url)
-        host = parsed.netloc.lower()
-        tenant, region = cls._parse_host(host)
-        parts = [part for part in parsed.path.split("/") if part]
-
-        if len(parts) >= 4 and parts[0] == "wday" and parts[1] == "cxs":
-            tenant = parts[2] or tenant
-            site = parts[3]
-            return _WorkdayTarget(
-                tenant=tenant,
-                site=site,
-                region=region,
-                locale=locale,
-                company=company or tenant,
-                host=host,
-            )
-
-        if parts and _LOCALE_RE.match(parts[0]):
-            locale = parts[0]
-            parts = parts[1:]
-        if not parts:
-            raise ValueError("workday scraper could not determine site from query_url")
-        site = parts[0]
-        if not tenant:
-            raise ValueError("workday scraper could not determine tenant from query_url")
-        return _WorkdayTarget(
-            tenant=tenant,
-            site=site,
-            region=region,
-            locale=locale,
-            company=company or tenant,
-            host=host,
+            host=build_host(tenant, region, host_kind),
+            host_kind=host_kind,
         )
 
     @staticmethod
-    def _parse_host(host: str) -> tuple[str, str | None]:
-        match = _HOST_WITH_REGION.match(host)
-        if match:
-            return match.group(1), match.group(2)
-        match = _HOST_PLAIN.match(host)
-        if match:
-            return match.group(1), None
-        raise ValueError("workday scraper query_url must be a *.myworkdayjobs.com URL")
-
-    @staticmethod
-    def _host(tenant: str, region: str | None) -> str:
-        if region:
-            return f"{tenant}.{region}.myworkdayjobs.com"
-        return f"{tenant}.myworkdayjobs.com"
-
-    @staticmethod
-    def _to_posting(job: dict[str, Any], target: _WorkdayTarget) -> JobPosting:
+    def _to_posting(job: dict[str, Any], target: WorkdayBoard, *, company: str) -> JobPosting:
         external_path = str(job.get("externalPath") or "")
         url = target.job_url(external_path)
         bullet_fields = job.get("bulletFields")
@@ -193,44 +151,14 @@ class WorkdayScraper(Scraper):
         return JobPosting(
             external_id=external_id,
             title=str(job.get("title", "")),
-            company=target.company,
+            company=company,
             location=str(job.get("locationsText") or ""),
             url=url,
             raw=job,
         )
 
 
-class _WorkdayTarget:
-    """Resolved Workday tenant/site coordinates for one scrape."""
-
-    def __init__(
-        self,
-        *,
-        tenant: str,
-        site: str,
-        region: str | None,
-        locale: str,
-        company: str,
-        host: str,
-    ) -> None:
-        self.tenant = tenant
-        self.site = site
-        self.region = region
-        self.locale = locale
-        self.company = company
-        self.host = host
-
-    @property
-    def api_url(self) -> str:
-        return f"https://{self.host}/wday/cxs/{self.tenant}/{self.site}/jobs"
-
-    @property
-    def board_url(self) -> str:
-        return f"https://{self.host}/{self.locale}/{self.site}"
-
-    def job_url(self, external_path: str) -> str:
-        if not external_path:
-            return self.board_url
-        if external_path.startswith("/"):
-            return f"https://{self.host}/{self.locale}/{self.site}{external_path}"
-        return f"https://{self.host}/{self.locale}/{self.site}/{external_path}"
+def target_company(ctx: ScrapeContext, target: WorkdayBoard) -> str:
+    """Display company from config, falling back to the resolved tenant."""
+    config = ctx.config
+    return str(config.get("company") or config.get("tenant") or target.tenant or target.site)

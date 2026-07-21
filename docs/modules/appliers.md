@@ -487,14 +487,16 @@ automation; open `application_methods_url` to apply manually.
 ### Workday
 
 Maps `ProfileData` to the Workday CXS apply flow used by `*.myworkdayjobs.com`
-career sites. Config / credentials:
+and `{region}.myworkdaysite.com/recruiting/...` career sites (same CXS apply
+API). Config / credentials:
 
 | Field | Where | Purpose |
 | ----- | ----- | ------- |
 | `tenant` | source `default_config` or parsed from `job_url` | Workday tenant slug |
 | `site` | source `default_config` or parsed from `job_url` | Board/site path segment |
-| `region` | source/search config | Optional cluster host (`wd5`, `wd12`, …) |
-| `locale` | source/search config | Locale prefix (default `en-US`) |
+| `region` | source/search config | Optional cluster host (`wd5`, `wd12`, …); **required** when `host_kind=site` |
+| `host_kind` | source/search config | `jobs` (default, `*.myworkdayjobs.com`) or `site` (`*.myworkdaysite.com`) |
+| `locale` | source/search config | Locale prefix for jobs hosts (default `en-US`) |
 | `country_id` | source/search config | Country WID for name fields (default `US`) |
 | `job_path` | source/search config | Optional override when `job_url` is missing |
 | `questionnaire_id` | source/search config | Override primary questionnaire WID (else from job posting CXS detail) |

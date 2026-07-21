@@ -85,7 +85,32 @@ def test_detect_workday_board_url() -> None:
     assert result.default_config["tenant"] == "acme"
     assert result.default_config["site"] == "External"
     assert result.default_config["region"] == "wd5"
+    assert result.default_config["host_kind"] == "jobs"
     assert result.base_url == "https://acme.wd5.myworkdayjobs.com/en-US/External"
+
+
+def test_detect_workday_myworkdaysite_recruiting_url() -> None:
+    result = detect_source_from_url(
+        "https://wd1.myworkdaysite.com/recruiting/snapchat/snap/job/LA/Role_R1"
+    )
+    assert result is not None
+    assert result.adapter_key == "workday"
+    assert result.default_config["tenant"] == "snapchat"
+    assert result.default_config["site"] == "snap"
+    assert result.default_config["region"] == "wd1"
+    assert result.default_config["host_kind"] == "site"
+    assert result.base_url == "https://wd1.myworkdaysite.com/recruiting/snapchat/snap"
+
+
+def test_detect_workday_snap_careers_vanity() -> None:
+    result = detect_source_from_url("https://careers.snap.com/jobs", page_title="Jobs - Snap Inc")
+    assert result is not None
+    assert result.adapter_key == "workday"
+    assert result.default_config["tenant"] == "snapchat"
+    assert result.default_config["site"] == "snap"
+    assert result.default_config["host_kind"] == "site"
+    assert result.suggested_name == "Jobs - Snap Inc"
+    assert result.base_url == "https://wd1.myworkdaysite.com/recruiting/snapchat/snap"
 
 
 def test_detect_google_careers_search_url() -> None:

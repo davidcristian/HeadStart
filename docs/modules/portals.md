@@ -21,8 +21,8 @@ helpers). Each `PortalPreset` carries:
 | `base_url` | Careers board URL passed to the scraper |
 | `default_config` | Adapter-specific config merged into new sources (always includes `portal_id`) |
 
-As of the current catalog: **150 employers** — 58 big tech, 78 unicorn, 14 AI —
-across Greenhouse (79), Ashby (21), Workday (14), SmartRecruiters (14), Lever (4),
+As of the current catalog: **151 employers** — 59 big tech, 78 unicorn, 14 AI —
+across Greenhouse (79), Ashby (21), Workday (15), SmartRecruiters (14), Lever (4),
 Apple Careers (1), Google Careers (1), Meta Careers (1), Microsoft Careers (1),
 Shopify Careers (1), Snowflake Careers (1), Uber Careers (1), Amazon Jobs (1),
 iCIMS/Jibe (1), Phenom (4), Rippling ATS (1), IBM Careers (2), and Workable (2).
@@ -37,7 +37,9 @@ keeps `board` because its Ashby-backed scraper consumes it. Rivian uses the
 with board `Superhuman Platform Inc` (Grammarly careers redirect to Superhuman;
 `portal_id` stays `grammarly`). Snyk uses Workday (`tenant=snyk`, `site=External`,
 `region=wd103`); the marketing careers page at `snyk.io/careers` proxies the same
-board via `/api/next/jobs`. HashiCorp and Red Hat use `ibm_careers` keyword
+board via `/api/next/jobs`. Snap uses Workday on
+`wd1.myworkdaysite.com/recruiting/snapchat/snap` (`host_kind=site`; paste
+`careers.snap.com` also detects). HashiCorp and Red Hat use `ibm_careers` keyword
 search (post-acquisition roles live on IBM Careers). CVS Health, GE HealthCare,
 and RTX use Phenom (`jobs.cvshealth.com`, `careers.gehealthcare.com`,
 `careers.rtx.com`). Box uses Greenhouse board token `boxinc` with

@@ -2,17 +2,18 @@
 
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass
 from typing import Any
 from urllib.parse import urlparse
 
-_LOCALE_RE = re.compile(r"^[a-z]{2}-[A-Z]{2}$")
-_HOST_WITH_REGION = re.compile(r"^([^.]+)\.(wd\d+)\.myworkdayjobs\.com$", re.IGNORECASE)
-_HOST_PLAIN = re.compile(r"^([^.]+)\.myworkdayjobs\.com$", re.IGNORECASE)
-_JOB_URL_RE = re.compile(
-    r"myworkdayjobs\.com/(?:[a-z]{2}-[A-Z]{2}/)?[^/]+/job/(.+)$",
-    re.IGNORECASE,
+from app.scrapers.adapters.workday_parse import (
+    HOST_KIND_JOBS,
+    WorkdayBoard,
+    board_from_url,
+    build_host,
+    extract_job_path,
+    normalize_host_kind,
+    try_parse_host,
 )
 
 
@@ -26,13 +27,30 @@ class WorkdayTarget:
     locale: str
     company: str
     host: str
+    host_kind: str = HOST_KIND_JOBS
 
     @property
     def board_url(self) -> str:
-        return f"https://{self.host}/{self.locale}/{self.site}"
+        return WorkdayBoard(
+            tenant=self.tenant,
+            site=self.site,
+            region=self.region,
+            locale=self.locale,
+            host=self.host,
+            host_kind=self.host_kind,
+        ).board_url
 
     def job_page_url(self, job_path: str) -> str:
-        return f"{self.board_url}/job/{job_path}"
+        cleaned = str(job_path).strip("/")
+        board = WorkdayBoard(
+            tenant=self.tenant,
+            site=self.site,
+            region=self.region,
+            locale=self.locale,
+            host=self.host,
+            host_kind=self.host_kind,
+        )
+        return board.job_url(f"/job/{cleaned}")
 
     def apply_referer(self, job_path: str) -> str:
         return f"{self.job_page_url(job_path)}/apply"
@@ -48,6 +66,7 @@ def resolve_target(config: dict[str, Any], job_url: str) -> WorkdayTarget | None
     tenant = str(config.get("tenant") or "")
     site = str(config.get("site") or "")
     region = str(config.get("region") or "") or None
+    host_kind = normalize_host_kind(config.get("host_kind"))
 
     if job_url:
         try:
@@ -57,13 +76,18 @@ def resolve_target(config: dict[str, Any], job_url: str) -> WorkdayTarget | None
 
     if not tenant or not site:
         return None
+    try:
+        host = build_host(tenant, region, host_kind)
+    except ValueError:
+        return None
     return WorkdayTarget(
         tenant=tenant,
         site=site,
         region=region,
         locale=locale,
         company=company or tenant,
-        host=_host(tenant, region),
+        host=host,
+        host_kind=host_kind,
     )
 
 
@@ -74,10 +98,7 @@ def resolve_job_path(config: dict[str, Any], job_url: str) -> str | None:
         return str(configured).strip("/")
     if not job_url:
         return None
-    match = _JOB_URL_RE.search(job_url)
-    if not match:
-        return None
-    return match.group(1).strip("/")
+    return extract_job_path(job_url)
 
 
 def resolve_job_posting_id(
@@ -98,38 +119,15 @@ def resolve_job_posting_id(
 def _from_job_url(job_url: str, *, company: str, locale: str) -> WorkdayTarget:
     parsed = urlparse(job_url)
     host = parsed.netloc.lower()
-    tenant, region = _parse_host(host)
-    parts = [part for part in parsed.path.split("/") if part]
-
-    if parts and _LOCALE_RE.match(parts[0]):
-        locale = parts[0]
-        parts = parts[1:]
-    if not parts:
-        raise ValueError("workday applier could not determine site from job_url")
-    site = parts[0]
-    if not tenant:
-        raise ValueError("workday applier could not determine tenant from job_url")
+    if try_parse_host(host) is None:
+        raise ValueError("workday applier job_url must be a Workday careers host")
+    board = board_from_url(job_url, locale=locale)
     return WorkdayTarget(
-        tenant=tenant,
-        site=site,
-        region=region,
-        locale=locale,
-        company=company or tenant,
-        host=host,
+        tenant=board.tenant,
+        site=board.site,
+        region=board.region,
+        locale=board.locale,
+        company=company or board.tenant,
+        host=board.host,
+        host_kind=board.host_kind,
     )
-
-
-def _parse_host(host: str) -> tuple[str, str | None]:
-    match = _HOST_WITH_REGION.match(host)
-    if match:
-        return match.group(1), match.group(2)
-    match = _HOST_PLAIN.match(host)
-    if match:
-        return match.group(1), None
-    raise ValueError("workday applier job_url must be a *.myworkdayjobs.com URL")
-
-
-def _host(tenant: str, region: str | None) -> str:
-    if region:
-        return f"{tenant}.{region}.myworkdayjobs.com"
-    return f"{tenant}.myworkdayjobs.com"

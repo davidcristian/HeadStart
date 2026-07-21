@@ -15,8 +15,8 @@ from app.portals.catalog_helpers import (
     shopify_careers_preset,
     snowflake_careers_preset,
     uber_careers_preset,
-    workday_preset,
 )
+from app.portals.catalog_helpers_workday import workday_preset
 from app.portals.presets import PORTALS
 
 CURATED_PORTALS: tuple[PortalPreset, ...] = (

@@ -3,9 +3,9 @@
 Living plan for HeadStart — what to build next and why. Update this doc when
 priorities shift or a milestone ships.
 
-**Current baseline (2026-07):** Phases 1–32 shipped (four-tier pricing, per-user AI
+**Current baseline (2026-07):** Phases 1–33 shipped (four-tier pricing, per-user AI
 summary preferences, curated employer portal catalog through batch 7 plus
-Workable/Hugging Face (**150** employers), SmartRecruiters adapter, custom
+Workable/Hugging Face and Snap (**151** employers), SmartRecruiters adapter, custom
 career-site adapters for Shopify, Uber, and Snowflake, the dev-only local
 application agent, inbox OAuth providers for Gmail, Outlook, Yahoo, and
 Fastmail, the reusable iCIMS/Jibe Attract scraper with Rivian, the reusable
@@ -13,10 +13,11 @@ Phenom People scraper (Splunk / CVS Health / GE HealthCare / RTX), the reusable
 Rippling ATS scraper with Rippling, the reusable IBM Careers Falcon search
 scraper (HashiCorp / Red Hat), Phase 28 Rippling + iCIMS + Phenom + IBM Careers
 apply, the reusable Workable widget scraper with Hugging Face, Phase 31
-portal catalog batch 7, and Phase 32 Workable apply).
+portal catalog batch 7, Phase 32 Workable apply, and Phase 33 Workday
+`*.myworkdaysite.com` support with Snap).
 **Next:** pick up a new ATS gap or another catalog batch once priorities
-shift — Phase 32’s done-when (Workable dry-run + documented live Turnstile
-submit) is met. See [architecture.md](architecture.md) for the system design.
+shift — Phase 33’s done-when (Snap scrape + URL detect + catalog preset) is met.
+See [architecture.md](architecture.md) for the system design.
 
 ---
 
@@ -914,7 +915,7 @@ fail, and document skips in the PR.
 | -------- | -------------- | -------- | ------ |
 | ~~Red Hat~~ | ~~`ibm_careers` (`keywords=Red Hat`)~~ | ~~`big_tech`~~ | **Shipped** — Falcon search returns Red Hat–branded roles |
 | ~~Box~~ | ~~Greenhouse (`boxinc`)~~ | ~~`big_tech`~~ | **Shipped** — `portal_id=box`, board token `boxinc` |
-| Snap | Greenhouse / Workday | `big_tech` | **Skipped** — careers.snap.com uses `wd1.myworkdaysite.com/recruiting/snapchat/snap` (not public `*.myworkdayjobs.com` CXS); Greenhouse/Ashby/SR boards empty or unrelated |
+| Snap | Greenhouse / Workday | `big_tech` | **Skipped in batch 6** — careers.snap.com used `wd1.myworkdaysite.com/recruiting/snapchat/snap` (not classic `*.myworkdayjobs.com` CXS). **Shipped later via [Phase 33](#phase-33--workday-myworkdaysitecom--snap).** |
 | GitHub | Greenhouse (`github`) | `big_tech` | **Skipped** — no public Greenhouse / Ashby / SmartRecruiters board; `github.careers` is proprietary |
 | ~~LaunchDarkly~~ | ~~Greenhouse (`launchdarkly`)~~ | ~~`unicorn`~~ | **Shipped** |
 | ~~Amplitude~~ | ~~Greenhouse (`amplitude`)~~ | ~~`unicorn`~~ | **Shipped** |
@@ -1004,9 +1005,10 @@ document skips in the PR.
 Skipped (roadmap candidates without a working public board at verification time,
 or already covered elsewhere): **Typeform/Pleo/Remote/Vinted/Wrike/Xeneta on
 Workable** (HTTP 200 with 0 jobs or 404 — many moved off Workable); **Retool /
-Snap / GitHub** (still no public Greenhouse/Ashby/SR/Workable board; same class
-as Phase 29 skips); **additional Rippling / iCIMS** vanity boards (none verified
-beyond existing presets).
+GitHub** (still no public Greenhouse/Ashby/SR/Workable board; same class
+as Phase 29 skips); **Snap** (shipped later via
+[Phase 33](#phase-33--workday-myworkdaysitecom--snap)); **additional Rippling /
+iCIMS** vanity boards (none verified beyond existing presets).
 
 **Out of scope for this phase:** new scraper adapters, apply-adapter work, and
 UI changes beyond the catalog list growing automatically from new presets.
@@ -1045,6 +1047,34 @@ page (or an explicit, tested blocker is documented). **Met.**
 
 ---
 
+## Phase 33 — Workday myworkdaysite.com + Snap
+
+Goal: unlock Workday employers that publish on
+`{region}.myworkdaysite.com/recruiting/{tenant}/{site}` instead of classic
+`*.myworkdayjobs.com` boards. Starts with Snap (skipped in Phase 29) and leaves
+reusable scrape / URL-detect / apply support for further site-hosted boards.
+
+| Item | Why | Notes |
+| ---- | --- | ----- |
+| ~~Shared Workday host parse~~ | ~~Avoid duplicating jobs vs site host logic~~ | **Shipped:** `workday_parse.py` resolves both host kinds; CXS API path unchanged |
+| ~~Scraper `host_kind=site`~~ | ~~Paste-friendly scrape for site boards~~ | **Shipped:** Workday scraper accepts recruiting + CXS URLs on `*.myworkdaysite.com`; config `host_kind` + required `region` |
+| ~~URL detection~~ | ~~Sources detect + Snap vanity~~ | **Shipped:** detects recruiting/CXS site hosts; `careers.snap.com` → Snap Workday defaults |
+| ~~Apply target~~ | ~~Auto-apply job URLs from careers.snap.com~~ | **Shipped:** `workday_target` parses site job URLs; board/job URL builders honor `host_kind` |
+| ~~Snap portal preset~~ | ~~Catalog growth~~ | **Shipped:** `presets/snap.py` (`tenant=snapchat`, `site=snap`, `region=wd1`, `host_kind=site`); catalog count **151** |
+
+**Caveat:** Snap’s marketing site at `careers.snap.com` embeds
+`wd1.myworkdaysite.com` job links; the classic
+`snapchat.wd1.myworkdayjobs.com` CXS host also answers today, but public links
+and the catalog preset use the site host so Apply URLs match what candidates see.
+
+**Done when:** Snap appears in the curated catalog with working scrape against
+fixtures, `/sources/detect` accepts a Snap careers or myworkdaysite URL, and at
+least one live smoke of
+`POST https://wd1.myworkdaysite.com/wday/cxs/snapchat/snap/jobs` succeeds
+outside CI. **Met.**
+
+---
+
 ## Suggested starting points
 
 **Personal use (one job seeker):**
@@ -1063,9 +1093,9 @@ page (or an explicit, tested blocker is documented). **Met.**
 
 ## How to pick up work
 
-1. Choose an item from an open phase (Phase 32 Workable apply is **shipped** —
-   pick the current **Next** item in the baseline blurb, or an unstruck row in a
-   later phase).
+1. Choose an item from an open phase (Phase 33 Workday myworkdaysite / Snap is
+   **shipped** — pick the current **Next** item in the baseline blurb, or an
+   unstruck row in a later phase).
 2. Read the relevant module doc under [modules/](modules/) and follow
    [AGENTS.md](../AGENTS.md).
 3. For new adapters, use [recipes.md](recipes.md) — one file, tests

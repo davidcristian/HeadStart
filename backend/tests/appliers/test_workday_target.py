@@ -89,10 +89,69 @@ def test_resolve_job_posting_id_from_plain_external_id() -> None:
 
 
 def test_from_job_url_raises_when_tenant_is_empty(monkeypatch) -> None:
-    monkeypatch.setattr(workday_target, "_parse_host", lambda host: ("", None))
+    monkeypatch.setattr(
+        workday_target,
+        "board_from_url",
+        lambda *args, **kwargs: (_ for _ in ()).throw(ValueError("tenant")),
+    )
     with pytest.raises(ValueError, match="tenant"):
         _from_job_url(
             "https://acme.wd5.myworkdayjobs.com/en-US/AcmeCareers/job/US-CA/Role_JR1",
             company="",
             locale="en-US",
         )
+
+
+def test_resolve_target_site_without_region_returns_none() -> None:
+    assert (
+        resolve_target(
+            {"tenant": "snapchat", "site": "snap", "host_kind": "site"},
+            "",
+        )
+        is None
+    )
+
+
+def test_resolve_target_from_myworkdaysite_job_url() -> None:
+    target = resolve_target(
+        {"company": "Snap"},
+        "https://wd1.myworkdaysite.com/recruiting/snapchat/snap/job/"
+        "Los-Angeles-California/Role_R1",
+    )
+    assert target is not None
+    assert target.tenant == "snapchat"
+    assert target.site == "snap"
+    assert target.region == "wd1"
+    assert target.host_kind == "site"
+    assert target.host == "wd1.myworkdaysite.com"
+    assert target.board_url == "https://wd1.myworkdaysite.com/recruiting/snapchat/snap"
+    assert (
+        target.job_page_url("Los-Angeles-California/Role_R1")
+        == "https://wd1.myworkdaysite.com/recruiting/snapchat/snap/job/"
+        "Los-Angeles-California/Role_R1"
+    )
+
+
+def test_resolve_job_path_from_myworkdaysite_url() -> None:
+    path = resolve_job_path(
+        {},
+        "https://wd1.myworkdaysite.com/recruiting/snapchat/snap/job/"
+        "Los-Angeles-California/Role_R1",
+    )
+    assert path == "Los-Angeles-California/Role_R1"
+
+
+def test_resolve_target_site_host_kind_from_config() -> None:
+    target = resolve_target(
+        {
+            "tenant": "snapchat",
+            "site": "snap",
+            "region": "wd1",
+            "host_kind": "site",
+            "company": "Snap",
+        },
+        "",
+    )
+    assert target is not None
+    assert target.host == "wd1.myworkdaysite.com"
+    assert target.api_base() == "https://wd1.myworkdaysite.com/wday/cxs/snapchat"
