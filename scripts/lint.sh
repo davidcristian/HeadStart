@@ -15,6 +15,9 @@ run_backend() {
   # The LOC gate is repo-wide; it rides with the backend scope so CI runs it
   # exactly once.
   "${REPO_ROOT}/scripts/check_loc.sh"
+
+  # Same rationale: the text gate is repo-wide and runs once, with the backend.
+  "${REPO_ROOT}/scripts/check_text.sh"
 }
 
 run_frontend() {

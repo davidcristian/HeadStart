@@ -36,7 +36,7 @@ def test_render_resume_template_escapes_latex_special_chars() -> None:
 
 def test_render_resume_template_preserves_experience_markup_verbatim() -> None:
     # The experience field carries controlled LaTeX (\item / \textbf); escaping it
-    # would strip the \item rows the itemize environment requires (audit AIA-01).
+    # would strip the \item rows the itemize environment requires.
     fields = CuratedResumeFields(experience=r"\item \textbf{Engineer, ACME}. Built APIs")
     rendered = render_resume_template("[[experience]]", fields)
     assert rendered == r"\item \textbf{Engineer, ACME}. Built APIs"
@@ -53,7 +53,7 @@ def test_render_default_template_with_heuristic_fields_keeps_itemize_items() -> 
 
 
 def test_default_template_heuristic_render_feeds_compile_workspace(monkeypatch) -> None:
-    # TST-06: service tests inject fake compile_fn; this asserts the real default
+    # Service tests inject a fake compile_fn; this asserts the real default
     # template + heuristic fields still hand the compiler workspace a surviving
     # \item (the over-escape bug would ship green behind mocked PDF bytes).
     rendered = render_resume_template(default_template_tex(), heuristic_fields(_heuristic_ctx()))

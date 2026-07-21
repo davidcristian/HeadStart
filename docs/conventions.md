@@ -53,9 +53,39 @@ table in [AGENTS.md](../AGENTS.md) §1.
 ## Commits & branches
 
 - **Conventional Commits**: `feat:`, `fix:`, `docs:`, `refactor:`, `test:`,
-  `chore:`, `ci:`, `build:`.
+  `chore:`, `ci:`, `build:`. No other type. `style:` is `chore:`; an
+  accessibility fix is `fix:`.
 - Branches: `feat/...`, `fix/...`, `docs/...`, `chore/...`.
 - One logical concern per PR. `just check` must pass before opening a PR.
+
+### Write for the reader in two years
+
+A commit message outlives every tracker, board and plan it might cite, and it
+cannot be corrected later without rewriting history and forcing a re-clone. So
+it must stand on its own.
+
+- **No pointers to things that can vanish.** No tracker ids (`FRO-07`, `WS26`),
+  no `Phase 3`, no `batch 8`, no roadmap or backlog references. Say what the
+  change does. A tracker was deleted once and left 985 dangling ids behind.
+- **No PR references.** No `(#123)` suffix, no `PR #45`. The host's squash merge
+  appends `(#N)` on its own, so clear it from the message box when merging.
+- **No em or en dashes.** Restructure the sentence; do not swap in a comma or a
+  colon and call it done.
+
+`scripts/check_commit_msg.sh` enforces this as a `commit-msg` hook and in CI.
+
+### Dashes in code
+
+The same no-dash rule applies to source, docs and product copy, with one
+exception: text we **match or parse from someone else** keeps the character
+verbatim. Job boards title pages `"Software Engineer — Google Careers"` and
+postings write `"$120K – $180K"`, so the matchers, the salary regex and the
+captured fixtures they read must not be tidied. `scripts/check_text.sh` holds
+the allowlist; add to it only with a reason, since an over-broad entry silently
+reopens the rule.
+
+Spelling a dash as `\u2014` to satisfy the grep is not compliance: the dash
+still reaches the user. The gate rejects the escape too.
 
 ## Testing
 

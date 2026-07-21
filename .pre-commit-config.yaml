@@ -5,6 +5,8 @@
 default_language_version:
   python: python3.12
 
+default_install_hook_types: [pre-commit, commit-msg]
+
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.6.0
@@ -67,3 +69,13 @@ repos:
         entry: bash scripts/validate-shell-scripts.sh
         files: ^scripts/.*\.sh$
         pass_filenames: false
+      - id: check-text
+        name: text gate (dashes, tracker ids)
+        language: system
+        entry: bash scripts/check_text.sh
+        pass_filenames: false
+      - id: check-commit-msg
+        name: commit message gate
+        language: system
+        entry: bash scripts/check_commit_msg.sh
+        stages: [commit-msg]

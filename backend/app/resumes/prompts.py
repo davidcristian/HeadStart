@@ -53,7 +53,7 @@ def user_prompt(ctx: ResumeCurationContext) -> str:
     lines.append("Candidate profile:")
     if profile.full_name:
         lines.append(f"- Name: {profile.full_name}")
-    # Email/phone stay off the LLM wire (AIA-14); parse_curated_json merges
+    # Email/phone stay off the LLM wire; parse_curated_json merges
     # contact fields from the stored profile into the rendered resume.
     if profile.location:
         lines.append(f"- Location: {profile.location}")

@@ -65,7 +65,7 @@ def test_experience_item_uses_company_only_and_period_and_description() -> None:
 
 def test_experience_item_escapes_latex_special_chars_in_free_text() -> None:
     # \item / \textbf scaffolding stays raw, but user free text is escaped so it
-    # cannot break the compile once the renderer stops escaping this field (AIA-01).
+    # cannot break the compile once the renderer stops escaping this field.
     fields = _fields(
         ProfileData(
             work_experience=[

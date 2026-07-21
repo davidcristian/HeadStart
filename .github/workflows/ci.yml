@@ -10,6 +10,22 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  commit-messages:
+    name: Commit messages
+    runs-on: ubuntu-latest
+    # PR only: the local commit-msg hook cannot see commits pushed from
+    # elsewhere, and the host writes squash/merge subjects itself.
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          # rev-list needs both endpoints; a shallow clone cannot resolve the range.
+          fetch-depth: 0
+      - name: Check commit messages
+        run: |
+          ./scripts/check_commit_msg.sh --range \
+            "origin/${{ github.base_ref }}..${{ github.event.pull_request.head.sha }}"
+
   backend:
     name: Backend (lint, types, tests)
     runs-on: ubuntu-latest
