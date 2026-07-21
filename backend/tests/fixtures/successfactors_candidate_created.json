@@ -1,0 +1,13 @@
+{
+  "d": {
+    "__metadata": {
+      "uri": "https://api4.successfactors.com/odata/v2/Candidate(9001L)",
+      "type": "SFOData.Candidate"
+    },
+    "candidateId": "9001",
+    "firstName": "Ada",
+    "lastName": "Lovelace",
+    "primaryEmail": "ada@example.com",
+    "country": "United States"
+  }
+}

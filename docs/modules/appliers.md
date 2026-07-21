@@ -88,6 +88,7 @@ source's `adapter_key` when that source supports auto-apply. Import the
 | `phenom` | Downstream ATS delegation + partner Apply API | Resolves `applyUrl` via `POST /widgets` (`jobDetail`); delegates to Workday/Greenhouse/… when recognized; otherwise `POST api.phenompro.com/apply/v2/applications`; see below |
 | `ibm_careers` | Avature External Import Services | Dry-run previews CSV + portal URLs; live submit needs a provisioned Import Service endpoint; see below |
 | `workable` | Public careers apply JSON POST | `GET/POST apply.workable.com/api/v1/jobs/<shortcode>/…`; S3 resume upload; see below |
+| `successfactors` | Recruiting OData (Candidate + JobApplication) | Dry-run previews OData payloads + Talent Community URL; live submit needs API host + company id + Basic Auth; see below |
 
 ### Scrapers without apply adapters
 
@@ -99,7 +100,7 @@ work, but the Jobs page **Apply** action is unavailable:
 | `playwright` / `generic_html` | Custom HTML sources; no generic apply path |
 
 `GET /portals` sets `supports_auto_apply: false` for these keys. See
-[roadmap.md → Phase 32](../roadmap.md#phase-32--workable-apply-adapter).
+[roadmap.md → Phase 36](../roadmap.md#phase-36--successfactors-apply-adapter).
 
 ### Greenhouse
 
@@ -483,6 +484,53 @@ Without that URL, live submit fails with a clear blocker (same class of gate as
 iCIMS Partner API credentials — not available to typical self-serve job seekers).
 Public `careers.ibm.com` / Avature login+WAF apply remains unsupported for
 automation; open `application_methods_url` to apply manually.
+
+### SuccessFactors (OData Recruiting)
+
+Maps `ProfileData` to SuccessFactors Recruiting OData (`Candidate` + optional
+`Attachment` + `JobApplication`). Career Site Builder boards
+(`*.jobs.hr.cloud.sap`, e.g. W. L. Gore) scrape via the public jobs search API,
+but applications run through a login-gated Talent Community wizard
+(`/talentcommunity/apply/<id>/`) — there is no unauthenticated public candidate
+apply POST.
+
+| Step | Endpoint |
+| ---- | -------- |
+| Dry-run preview | Local only (no OData / portal login) |
+| Create candidate | `POST {odata_base_url}/odata/v2/Candidate` |
+| Upload resume | `POST {odata_base_url}/odata/v2/Attachment` (when a resume file is stored) |
+| Create application | `POST {odata_base_url}/odata/v2/JobApplication` |
+
+Config / credentials:
+
+| Field | Where | Purpose |
+| ----- | ----- | ------- |
+| `careers_base_url` | source `default_config` or parsed from `job_url` | CSB origin for Talent Community apply URL |
+| `locale` | source/search config | Apply URL locale (default `en_US`) |
+| `job_req_id` / `job_id` | source/search config | Optional numeric requisition id override |
+| `odata_base_url` / `api_base_url` | source/search config or credential `session` | **Required for live submit** — API host (`apiN.successfactors.com` / `apiN.sapsf.*`) |
+| `company_id` / `sf_company_id` | source/search config or credential `session` | **Required for live submit** — SF company id (appended as `user@CompanyId` when needed) |
+| `country` | source/search config or profile `answers` | Candidate country (default `United States`) |
+| `agree_to_privacy_statement` | source/search config | Candidate DPCS flag (default true) |
+| `sf_<field>` | profile `answers` | Pass-through JobApplication fields |
+| `sf_field_<name>` | source/search config | Pass-through JobApplication field overrides |
+| `username` + `password` | credential `session` (aliases: `basic_auth_*`, `api_*`, `sf_*`, `odata_*`) | **Required for live submit** — OData Basic Auth |
+
+**Dry run:** builds Candidate + JobApplication JSON (and Attachment metadata when
+a resume is stored), returns the Talent Community apply URL, and sets a
+`blocker` note when OData host / company id are missing. Resume Base64 bytes are
+omitted from the preview payload.
+
+**Resume file:** live submit uploads the stored resume as an OData `Attachment`
+(`module=RECRUITING`, `moduleCategory=RESUME`) and links it on the
+`JobApplication` via `resume` navigation.
+
+**Live submit:** creates Candidate → optional Attachment → JobApplication with
+API-user Basic Auth. Without `odata_base_url` + `company_id` + credentials, live
+submit fails with a clear blocker (same class of gate as iCIMS Partner API /
+IBM Avature Import Service — not available to typical self-serve job seekers).
+Public CSB Talent Community login apply remains unsupported for automation; open
+`talentcommunity_apply_url` to apply manually.
 
 ### Workday
 

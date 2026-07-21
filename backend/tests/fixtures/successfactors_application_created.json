@@ -1,0 +1,12 @@
+{
+  "d": {
+    "__metadata": {
+      "uri": "https://api4.successfactors.com/odata/v2/JobApplication(8001L)",
+      "type": "SFOData.JobApplication"
+    },
+    "applicationId": "8001",
+    "jobReqId": "1746",
+    "candidateId": "9001",
+    "contactEmail": "ada@example.com"
+  }
+}

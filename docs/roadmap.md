@@ -3,7 +3,7 @@
 Living plan for HeadStart — what to build next and why. Update this doc when
 priorities shift or a milestone ships.
 
-**Current baseline (2026-07):** Phases 1–35 shipped (four-tier pricing, per-user AI
+**Current baseline (2026-07):** Phases 1–36 shipped (four-tier pricing, per-user AI
 summary preferences, curated employer portal catalog through batch 8 plus
 SuccessFactors (**167** employers), SmartRecruiters adapter, custom
 career-site adapters for Shopify, Uber, and Snowflake, the dev-only local
@@ -14,10 +14,11 @@ Rippling ATS scraper with Rippling, the reusable IBM Careers Falcon search
 scraper (HashiCorp / Red Hat), Phase 28 Rippling + iCIMS + Phenom + IBM Careers
 apply, the reusable Workable widget scraper with Hugging Face, Phase 31
 portal catalog batch 7, Phase 32 Workable apply, Phase 33 Workday
-`*.myworkdaysite.com` support with Snap, Phase 34 portal catalog batch 8, and
-Phase 35 SAP SuccessFactors Career Site Builder with W. L. Gore).
-**Next:** pick a follow-up from later roadmap rows (SuccessFactors apply adapter,
-or another catalog/ATS gap).
+`*.myworkdaysite.com` support with Snap, Phase 34 portal catalog batch 8,
+Phase 35 SAP SuccessFactors Career Site Builder with W. L. Gore, and Phase 36
+SuccessFactors OData apply).
+**Next:** pick a follow-up from later roadmap rows (portal catalog batch 9 /
+more SuccessFactors employers, or another ATS gap).
 See [architecture.md](architecture.md) for the system design.
 
 ---
@@ -1144,7 +1145,7 @@ scraper for further catalog growth once a first live employer is verified.
 | ~~URL detection~~ | ~~Paste-friendly source setup~~ | **Shipped:** `*.jobs.hr.cloud.sap`, known host `wlgore.jobs.hr.cloud.sap`, and explicit `/services/recruiting/v1/jobs` paths |
 | ~~Scraper docs~~ | ~~Operator discoverability~~ | **Shipped:** row in [modules/scrapers.md](modules/scrapers.md) |
 | ~~`successfactors_preset` + first employer~~ | ~~Catalog growth~~ | **Shipped:** helper in `catalog_helpers_successfactors.py`; W. L. Gore preset (`wlgore.jobs.hr.cloud.sap`); catalog count **167** |
-| Apply adapter (follow-up) | Close auto-apply gap | Separate phase after scrape lands — SF apply is often auth/captcha gated |
+| ~~Apply adapter (follow-up)~~ | ~~Close auto-apply gap~~ | **Shipped (Phase 36):** `@register_applier("successfactors")` via Recruiting OData; see [Phase 36](#phase-36--successfactors-apply-adapter) |
 
 **Caveat:** SuccessFactors tenants vary widely (classic career site vs. Recruiting
 Marketing / RMK vs. Career Site Builder). This adapter targets **Career Site
@@ -1158,6 +1159,31 @@ out of scope for this phase.
 detection accepts at least one live SF careers URL, and at least one live smoke
 against a public SuccessFactors job search succeeds outside CI. **Met** (live
 smoke: `POST https://wlgore.jobs.hr.cloud.sap/services/recruiting/v1/jobs`).
+
+---
+
+## Phase 36 — SuccessFactors apply adapter
+
+Goal: close the auto-apply gap for the Phase 35 SuccessFactors scraper (W. L.
+Gore and future CSB catalog employers). One `@register_applier("successfactors")`
+adapter matching the scraper's `adapter_key`, following
+[Phase 28](#phase-28--apply-adapters-for-recent-ats-scrapers) /
+[Phase 32](#phase-32--workable-apply-adapter) and the apply recipe in
+[recipes.md](recipes.md).
+
+| Item | Why | Notes |
+| ---- | --- | ----- |
+| ~~`successfactors` apply adapter~~ | ~~Phase 35 CSB scrape is scrape-only; catalog employers cannot one-click apply~~ | **Shipped:** `@register_applier("successfactors")` dry-runs Candidate + JobApplication OData JSON + Talent Community apply URL; live submit uses Recruiting OData (`POST …/odata/v2/Candidate`, optional `Attachment`, then `JobApplication`). Public `/talentcommunity/apply/` is login-gated — live submit needs `odata_base_url` + `company_id` + API-user Basic Auth. See [modules/appliers.md](modules/appliers.md). |
+| ~~Fixture + tests~~ | ~~CI safety~~ | **Shipped:** OData create/error fixtures under `tests/fixtures/successfactors_*.json`; no live network |
+| ~~Applier docs~~ | ~~Operator discoverability~~ | **Shipped:** row + section in [modules/appliers.md](modules/appliers.md) |
+
+**Caveat:** Career Site Builder public apply is login/Talent-Community gated (same
+class as iCIMS / IBM Careers). Hosted pipeline auto-apply will not obtain
+Recruiting OData API credentials on its own — live submit is best-effort for
+operators with a provisioned integration user.
+
+**Done when:** SuccessFactors supports dry-run + documented live submit from the
+Jobs page (or an explicit, tested blocker is documented). **Met.**
 
 ---
 
@@ -1179,8 +1205,8 @@ smoke: `POST https://wlgore.jobs.hr.cloud.sap/services/recruiting/v1/jobs`).
 
 ## How to pick up work
 
-1. Choose an item from an open phase (Phase 35 SuccessFactors is **shipped** —
-   pick a SuccessFactors apply follow-up or an unstruck row in a later phase).
+1. Choose an item from an open phase (Phase 36 SuccessFactors apply is **shipped** —
+   pick a catalog batch / more SF employers or an unstruck row in a later phase).
 2. Read the relevant module doc under [modules/](modules/) and follow
    [AGENTS.md](../AGENTS.md).
 3. For new adapters, use [recipes.md](recipes.md) — one file, tests

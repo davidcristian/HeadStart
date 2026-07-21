@@ -1,0 +1,9 @@
+{
+  "error": {
+    "code": "COE_GENERAL_BAD_REQUEST",
+    "message": {
+      "lang": "en-US",
+      "value": "jobReqId is invalid"
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "d": {
+    "__metadata": {
+      "uri": "https://api4.successfactors.com/odata/v2/Attachment(7001L)",
+      "type": "SFOData.Attachment"
+    },
+    "attachmentId": "7001",
+    "fileName": "ada.pdf",
+    "module": "RECRUITING",
+    "moduleCategory": "RESUME"
+  }
+}
