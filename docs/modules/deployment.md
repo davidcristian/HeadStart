@@ -414,9 +414,11 @@ to Slack when `secrets.SLACK_WEBHOOK_URL` is set. The webhook is mapped at
 pre-commit is a **fast subset** of that gate (whitespace/yaml, ruff/black,
 eslint, prettier, LOC, shell validation), while types, tests, coverage, and
 dependency audits stay in `just check` / CI. The `frontend-lint` hook runs
-`npx eslint . --max-warnings=0` (same as `npm run lint`) so ESLint always
-receives an explicit path; without one, ESLint 8 scans zero files and exits
-0. LOC, shell validation, and prettier are enforced in both
+`npx eslint . --max-warnings=0` (same as `npm run lint`). The explicit path is
+no longer load-bearing (ESLint 10 defaults to the current directory, unlike
+ESLint 8, which scanned zero files and exited 0), but `--max-warnings=0` is:
+two rules are configured as warnings and would otherwise pass silently. LOC,
+shell validation, and prettier are enforced in both
 pre-commit and CI. Shell validation runs `bash -n` then `shellcheck
 -x -S warning` on every `scripts/*.sh` (CI installs `shellcheck` before
 that step). The LOC gate prints offender paths with a literal

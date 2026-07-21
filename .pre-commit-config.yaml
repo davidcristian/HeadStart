@@ -39,8 +39,10 @@ repos:
       - id: black
         files: ^backend/(app|tests)/
 
-  # Frontend eslint must pass an explicit path (`.`): ESLint 8 with no path
-  # argument lints zero files and always exits 0. Matches `npm run lint`.
+  # Matches `npm run lint`. `--max-warnings=0` is the load-bearing flag: two
+  # rules are warnings and would otherwise pass silently. The explicit path
+  # (`.`) is kept for clarity but no longer required, since ESLint 10 defaults
+  # to the current directory where ESLint 8 linted zero files and exited 0.
   # LOC / shell / prettier close the remaining gaps that CI already
   # covers via `just lint` / `just test --scripts`.
   - repo: local

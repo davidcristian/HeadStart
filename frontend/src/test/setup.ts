@@ -21,7 +21,7 @@ Object.defineProperty(window, "matchMedia", {
 // be shadowed by Node's experimental built-in localStorage, so we install our
 // own simple implementation when one is not usable.
 function installLocalStorage(): void {
-  let usable = false;
+  let usable: boolean;
   try {
     usable = typeof localStorage !== "undefined" && localStorage !== null;
     if (usable) localStorage.getItem("__probe__");

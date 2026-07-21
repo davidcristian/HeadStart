@@ -139,7 +139,11 @@ Server state is managed by **TanStack Query** (`@tanstack/react-query`). The
 
 - Strict TypeScript (`strict`, `noUncheckedIndexedAccess`, unused locals /
   parameters, no fallthrough); prettier + eslint. `just lint --frontend` runs
-  both `eslint` and `prettier --check` (CI uses the same recipe). Indexed and
+  both `eslint` and `prettier --check` (CI uses the same recipe). ESLint is
+  configured with **flat config** in `frontend/eslint.config.js`; the eslintrc
+  format it replaced was removed outright in ESLint 10, so there is no fallback
+  file. The config lints `src/**/*.{ts,tsx}` and ignores `dist`,
+  `vite.config.ts`, and itself. Indexed and
   record access may be `undefined` at compile time, so guard or narrow
   before use (tests use `must()` from `src/test/must.ts`).
 - All network calls go through `src/api/` (wrapped by the React Query hooks in
@@ -254,14 +258,11 @@ CI runs `just audit-frontend` after `npm ci`; Dependabot watches
 `just audit-backend` (`pip-audit` on the hashed lockfiles) with Dependabot on
 `/backend`.
 
-Two pins are deliberately behind their latest major, so a Dependabot PR that
-raises them needs the paired change first:
+One pin is deliberately behind its latest major, so a Dependabot PR that
+raises it needs the paired change first:
 
 - `@vitejs/plugin-react` stays on **5.x**: 6.x requires Vite 8, and 5.2.0 is the
   newest release that still accepts the Vite 6 line this app builds on.
-- `eslint-plugin-react-refresh` **0.5.x** declares `eslint ^9 || ^10` while the
-  repo lints with ESLint 8, so the tree installs with peers relaxed. Moving to
-  ESLint 9+ means migrating `.eslintrc.cjs` to flat config.
 
 ## Progressive Web App (mobile)
 
