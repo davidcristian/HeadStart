@@ -102,6 +102,7 @@ def _config_keys_match(preset: PortalPreset, source: Source) -> bool:
         "uber_careers",
         "icims",
         "phenom",
+        "successfactors",
     }:
         return cfg.get("portal_id") == pcfg.get("portal_id")
     return False

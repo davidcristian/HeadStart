@@ -3,9 +3,9 @@
 Living plan for HeadStart — what to build next and why. Update this doc when
 priorities shift or a milestone ships.
 
-**Current baseline (2026-07):** Phases 1–34 shipped (four-tier pricing, per-user AI
-summary preferences, curated employer portal catalog through batch 8
-(**166** employers), SmartRecruiters adapter, custom
+**Current baseline (2026-07):** Phases 1–35 shipped (four-tier pricing, per-user AI
+summary preferences, curated employer portal catalog through batch 8 plus
+SuccessFactors (**167** employers), SmartRecruiters adapter, custom
 career-site adapters for Shopify, Uber, and Snowflake, the dev-only local
 application agent, inbox OAuth providers for Gmail, Outlook, Yahoo, and
 Fastmail, the reusable iCIMS/Jibe Attract scraper with Rivian, the reusable
@@ -14,9 +14,10 @@ Rippling ATS scraper with Rippling, the reusable IBM Careers Falcon search
 scraper (HashiCorp / Red Hat), Phase 28 Rippling + iCIMS + Phenom + IBM Careers
 apply, the reusable Workable widget scraper with Hugging Face, Phase 31
 portal catalog batch 7, Phase 32 Workable apply, Phase 33 Workday
-`*.myworkdaysite.com` support with Snap, and Phase 34 portal catalog batch 8).
-**Next:** [Phase 35 — SAP SuccessFactors adapter](#phase-35--sap-successfactors-adapter)
-(largest remaining Fortune-500 ATS gap by market share).
+`*.myworkdaysite.com` support with Snap, Phase 34 portal catalog batch 8, and
+Phase 35 SAP SuccessFactors Career Site Builder with W. L. Gore).
+**Next:** pick a follow-up from later roadmap rows (SuccessFactors apply adapter,
+or another catalog/ATS gap).
 See [architecture.md](architecture.md) for the system design.
 
 ---
@@ -1138,21 +1139,25 @@ scraper for further catalog growth once a first live employer is verified.
 
 | Item | Why | Notes |
 | ---- | --- | ----- |
-| `successfactors` scraper | Reusable ATS gap for SF-hosted careers portals | `@register_scraper("successfactors")`; reverse-engineer the public job-search JSON used by typical `*.successfactors.com` / `*.jobs.sap` vanity hosts (confirm exact endpoint + pagination per tenant); config likely `company_id` / `career_site` / locale |
-| Fixture + tests | CI safety | Sample JSON under `tests/fixtures/`; no live network |
-| URL detection | Paste-friendly source setup | Detect known SuccessFactors host patterns + at least one vanity careers domain |
-| Scraper docs | Operator discoverability | Row in [modules/scrapers.md](modules/scrapers.md) |
-| `successfactors_preset` + first employer | Catalog growth | Helper + one verified preset once a public board returns openings |
+| ~~`successfactors` scraper~~ | ~~Reusable ATS gap for SF-hosted careers portals~~ | **Shipped:** `@register_scraper("successfactors")`; CSRF-seeded homepage then `POST {careers_base_url}/services/recruiting/v1/jobs` (Career Site Builder); config `careers_base_url` + optional `company` / `locale` / `category_id` / `keywords` / `max_results` |
+| ~~Fixture + tests~~ | ~~CI safety~~ | **Shipped:** sample JSON under `tests/fixtures/successfactors_jobs_page*.json`; no live network |
+| ~~URL detection~~ | ~~Paste-friendly source setup~~ | **Shipped:** `*.jobs.hr.cloud.sap`, known host `wlgore.jobs.hr.cloud.sap`, and explicit `/services/recruiting/v1/jobs` paths |
+| ~~Scraper docs~~ | ~~Operator discoverability~~ | **Shipped:** row in [modules/scrapers.md](modules/scrapers.md) |
+| ~~`successfactors_preset` + first employer~~ | ~~Catalog growth~~ | **Shipped:** helper in `catalog_helpers_successfactors.py`; W. L. Gore preset (`wlgore.jobs.hr.cloud.sap`); catalog count **167** |
 | Apply adapter (follow-up) | Close auto-apply gap | Separate phase after scrape lands — SF apply is often auth/captcha gated |
 
 **Caveat:** SuccessFactors tenants vary widely (classic career site vs. Recruiting
-Marketing / RMK vs. Career Site Builder). Prefer a zero-auth public search API
-when available; document per-employer blockers rather than forcing Playwright
-for the first adapter.
+Marketing / RMK vs. Career Site Builder). This adapter targets **Career Site
+Builder** boards on `*.jobs.hr.cloud.sap` (and vanity hosts that expose the same
+`/services/recruiting/v1/jobs` API). Prefer a zero-auth public search API when
+available; document per-employer blockers rather than forcing Playwright for the
+first adapter. Older RMK feeds (e.g. `sitemal.xml` on some `jobs.*` hosts) are
+out of scope for this phase.
 
 **Done when:** the adapter parses fixture postings into `JobPosting`s, URL
 detection accepts at least one live SF careers URL, and at least one live smoke
-against a public SuccessFactors job search succeeds outside CI.
+against a public SuccessFactors job search succeeds outside CI. **Met** (live
+smoke: `POST https://wlgore.jobs.hr.cloud.sap/services/recruiting/v1/jobs`).
 
 ---
 
@@ -1174,9 +1179,8 @@ against a public SuccessFactors job search succeeds outside CI.
 
 ## How to pick up work
 
-1. Choose an item from an open phase (Phase 34 portal catalog batch 8 is
-   **shipped** — pick [Phase 35 SuccessFactors](#phase-35--sap-successfactors-adapter)
-   or an unstruck row in a later phase).
+1. Choose an item from an open phase (Phase 35 SuccessFactors is **shipped** —
+   pick a SuccessFactors apply follow-up or an unstruck row in a later phase).
 2. Read the relevant module doc under [modules/](modules/) and follow
    [AGENTS.md](../AGENTS.md).
 3. For new adapters, use [recipes.md](recipes.md) — one file, tests

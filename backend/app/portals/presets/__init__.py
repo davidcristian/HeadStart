@@ -94,6 +94,7 @@ from app.portals.presets.webflow import PORTAL as webflow
 from app.portals.presets.westerndigital import PORTAL as westerndigital
 from app.portals.presets.wise import PORTAL as wise
 from app.portals.presets.wiz import PORTAL as wiz
+from app.portals.presets.wlgore import PORTAL as wlgore
 from app.portals.presets.wrike import PORTAL as wrike
 from app.portals.presets.xai import PORTAL as xai
 from app.portals.presets.zillow import PORTAL as zillow
@@ -195,4 +196,5 @@ PORTALS: tuple[PortalPreset, ...] = (
     faire,
     gong,
     checkout,
+    wlgore,
 )

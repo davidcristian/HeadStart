@@ -17,11 +17,11 @@ helpers). Each `PortalPreset` carries:
 | `id` | Stable slug used in API and `default_config.portal_id` |
 | `company_name` | Display name in the UI |
 | `category` | `big_tech`, `unicorn`, or `ai` |
-| `adapter_key` | Scraper key (`greenhouse`, `lever`, `ashby`, `workday`, `smartrecruiters`, `apple_careers`, `google_careers`, `microsoft_careers`, `shopify_careers`, `snowflake_careers`, `uber_careers`, `icims`, `phenom`, `rippling`, `ibm_careers`, `workable`) |
+| `adapter_key` | Scraper key (`greenhouse`, `lever`, `ashby`, `workday`, `smartrecruiters`, `apple_careers`, `google_careers`, `microsoft_careers`, `shopify_careers`, `snowflake_careers`, `uber_careers`, `icims`, `phenom`, `rippling`, `ibm_careers`, `workable`, `successfactors`) |
 | `base_url` | Careers board URL passed to the scraper |
 | `default_config` | Adapter-specific config merged into new sources (always includes `portal_id`) |
 
-As of the current catalog: **166 employers** — 59 big tech, 86 unicorn, 21 AI —
+As of the current catalog: **167 employers** — 59 big tech, 87 unicorn, 21 AI —
 across Greenhouse (84), Ashby (31), Workday (15), SmartRecruiters (14), Lever (4),
 Apple Careers (1), Google Careers (1), Meta Careers (1), Microsoft Careers (1),
 Shopify Careers (1), Snowflake Careers (1), Uber Careers (1), Amazon Jobs (1),
@@ -119,7 +119,9 @@ prompt). The Portals page reads `plan.features.portal_search` from `GET /meta`
    `phenom_preset` from `catalog_helpers_phenom.py`; Rippling uses
    `rippling_preset` from `catalog_helpers_rippling.py`; IBM Careers keyword
    brands use `ibm_careers_preset` from `catalog_helpers_ibm.py`; Workable
-   accounts use `workable_preset` from `catalog_helpers_workable.py`). Register it in `presets/__init__.py`.
+   accounts use `workable_preset` from `catalog_helpers_workable.py`;
+   SuccessFactors uses `successfactors_preset` from
+   `catalog_helpers_successfactors.py`). Register it in `presets/__init__.py`.
 3. Set a unique `portal_id` in `default_config` (the factory helpers do this
    automatically).
 4. Pick `category` (`big_tech`, `unicorn`, `ai`).

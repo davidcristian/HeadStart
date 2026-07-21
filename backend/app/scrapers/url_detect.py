@@ -19,6 +19,7 @@ from app.scrapers.url_detect_rippling import detect_rippling
 from app.scrapers.url_detect_shopify import detect_shopify_careers
 from app.scrapers.url_detect_smartrecruiters import detect_smartrecruiters
 from app.scrapers.url_detect_snowflake import detect_snowflake_careers
+from app.scrapers.url_detect_successfactors import detect_successfactors
 from app.scrapers.url_detect_types import SourceDetection
 from app.scrapers.url_detect_uber import detect_uber_careers
 from app.scrapers.url_detect_workable import detect_workable
@@ -61,6 +62,7 @@ def detect_source_from_url(url: str, *, page_title: str | None = None) -> Source
         detect_rippling,
         detect_ibm_careers,
         detect_workable,
+        detect_successfactors,
         detect_indeed,
     ):
         result = detector(parsed, host, page_title)

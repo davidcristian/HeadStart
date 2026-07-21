@@ -1,0 +1,405 @@
+{
+  "jobSearchResult": [
+    {
+      "response": {
+        "jobLocationShort": [
+          "Feldkirchen/Westerham, BY, DEU, D-83620<br/>"
+        ],
+        "supportedLocales": [
+          "en_US"
+        ],
+        "jobLocationCountry": [
+          "Germany"
+        ],
+        "businessUnit_obj": [
+          "Gore Fabrics"
+        ],
+        "filter2": [
+          "Sales & Marketing"
+        ],
+        "jobLocationState": [
+          "Bayern"
+        ],
+        "jobLocationShortWithCoordinates": [
+          {
+            "value": "Feldkirchen/Westerham, BY, DEU, D-83620<br/>",
+            "key": "47.8941553,11.8459431"
+          }
+        ],
+        "filter8": [
+          "Marketing"
+        ],
+        "unifiedStandardEnd": "9/2/26",
+        "unifiedUrlTitle": "Internship-%28fmd%29-Footwear-Gloves-&amp;-Accessories-Strategic-Marketing-and-Product-Management-Support",
+        "unifiedStandardStart": "6/3/26",
+        "currency": [
+          "EUR"
+        ],
+        "id": "1746",
+        "unifiedStandardTitle": "Internship (f/m/d) Footwear Gloves & Accessories Strategic Marketing and Product Management Support",
+        "urlTitle": "Internship-%28fmd%29-Footwear-Gloves-&amp;-Accessories-Strategic-Marketing-and-Product-Management-Support"
+      }
+    },
+    {
+      "response": {
+        "jobLocationShort": [
+          "Pleinfeld, BY, DEU, 91785<br/>"
+        ],
+        "supportedLocales": [
+          "en_US"
+        ],
+        "jobLocationCountry": [
+          "Germany"
+        ],
+        "businessUnit_obj": [
+          "Gore Performance Solutions"
+        ],
+        "filter2": [
+          "Engineering, Scientists & Technicians"
+        ],
+        "jobLocationState": [
+          "Bayern"
+        ],
+        "jobLocationShortWithCoordinates": [
+          {
+            "value": "Pleinfeld, BY, DEU, 91785<br/>",
+            "key": "49.1152829,10.9977696"
+          }
+        ],
+        "filter8": [
+          "Engineering"
+        ],
+        "unifiedStandardEnd": "8/17/26",
+        "unifiedUrlTitle": "Werkstudent-%28wmd%29-im-Bereich-der-Kabelproduktion-und-Entwicklung",
+        "unifiedStandardStart": "5/18/26",
+        "currency": [
+          "EUR"
+        ],
+        "id": "1693",
+        "unifiedStandardTitle": "Werkstudent (w/m/d) im Bereich der Kabelproduktion und Entwicklung",
+        "urlTitle": "Werkstudent-%28wmd%29-im-Bereich-der-Kabelproduktion-und-Entwicklung"
+      }
+    },
+    {
+      "response": {
+        "jobLocationShort": [
+          "Putzbrunn, BY, DEU, 85640<br/>"
+        ],
+        "supportedLocales": [
+          "en_US"
+        ],
+        "jobLocationCountry": [
+          "Germany"
+        ],
+        "businessUnit_obj": [
+          "Gore Fabrics"
+        ],
+        "filter2": [
+          "Sales & Marketing"
+        ],
+        "jobLocationState": [
+          "Bayern"
+        ],
+        "jobLocationShortWithCoordinates": [
+          {
+            "value": "Putzbrunn, BY, DEU, 85640<br/>",
+            "key": "48.073537,11.7242816"
+          }
+        ],
+        "filter8": [
+          "Marketing Communications"
+        ],
+        "unifiedStandardEnd": "9/2/26",
+        "unifiedUrlTitle": "Working-Student-%28fmd%29-Public-Relations-for-the-GORE-TEX-Brand",
+        "unifiedStandardStart": "6/3/26",
+        "currency": [
+          "EUR"
+        ],
+        "id": "1774",
+        "unifiedStandardTitle": "Working Student (f/m/d) Public Relations for the GORE-TEX Brand",
+        "urlTitle": "Working-Student-%28fmd%29-Public-Relations-for-the-GORE-TEX-Brand"
+      }
+    },
+    {
+      "response": {
+        "jobLocationShort": [
+          "Feldkirchen/Westerham, BY, DEU, D-83620<br/>"
+        ],
+        "supportedLocales": [
+          "en_US"
+        ],
+        "jobLocationCountry": [
+          "Germany"
+        ],
+        "businessUnit_obj": [
+          "Gore Fabrics"
+        ],
+        "filter2": [
+          "Sales & Marketing"
+        ],
+        "jobLocationState": [
+          "Bayern"
+        ],
+        "jobLocationShortWithCoordinates": [
+          {
+            "value": "Feldkirchen/Westerham, BY, DEU, D-83620<br/>",
+            "key": "47.8941553,11.8459431"
+          }
+        ],
+        "filter8": [
+          "Marketing"
+        ],
+        "unifiedStandardEnd": "9/2/26",
+        "unifiedUrlTitle": "Pad-Role-4",
+        "unifiedStandardStart": "6/3/26",
+        "currency": [
+          "EUR"
+        ],
+        "id": "1004",
+        "unifiedStandardTitle": "Pad Role 4",
+        "urlTitle": "Pad-Role-4"
+      }
+    },
+    {
+      "response": {
+        "jobLocationShort": [
+          "Feldkirchen/Westerham, BY, DEU, D-83620<br/>"
+        ],
+        "supportedLocales": [
+          "en_US"
+        ],
+        "jobLocationCountry": [
+          "Germany"
+        ],
+        "businessUnit_obj": [
+          "Gore Fabrics"
+        ],
+        "filter2": [
+          "Sales & Marketing"
+        ],
+        "jobLocationState": [
+          "Bayern"
+        ],
+        "jobLocationShortWithCoordinates": [
+          {
+            "value": "Feldkirchen/Westerham, BY, DEU, D-83620<br/>",
+            "key": "47.8941553,11.8459431"
+          }
+        ],
+        "filter8": [
+          "Marketing"
+        ],
+        "unifiedStandardEnd": "9/2/26",
+        "unifiedUrlTitle": "Pad-Role-5",
+        "unifiedStandardStart": "6/3/26",
+        "currency": [
+          "EUR"
+        ],
+        "id": "1005",
+        "unifiedStandardTitle": "Pad Role 5",
+        "urlTitle": "Pad-Role-5"
+      }
+    },
+    {
+      "response": {
+        "jobLocationShort": [
+          "Feldkirchen/Westerham, BY, DEU, D-83620<br/>"
+        ],
+        "supportedLocales": [
+          "en_US"
+        ],
+        "jobLocationCountry": [
+          "Germany"
+        ],
+        "businessUnit_obj": [
+          "Gore Fabrics"
+        ],
+        "filter2": [
+          "Sales & Marketing"
+        ],
+        "jobLocationState": [
+          "Bayern"
+        ],
+        "jobLocationShortWithCoordinates": [
+          {
+            "value": "Feldkirchen/Westerham, BY, DEU, D-83620<br/>",
+            "key": "47.8941553,11.8459431"
+          }
+        ],
+        "filter8": [
+          "Marketing"
+        ],
+        "unifiedStandardEnd": "9/2/26",
+        "unifiedUrlTitle": "Pad-Role-6",
+        "unifiedStandardStart": "6/3/26",
+        "currency": [
+          "EUR"
+        ],
+        "id": "1006",
+        "unifiedStandardTitle": "Pad Role 6",
+        "urlTitle": "Pad-Role-6"
+      }
+    },
+    {
+      "response": {
+        "jobLocationShort": [
+          "Feldkirchen/Westerham, BY, DEU, D-83620<br/>"
+        ],
+        "supportedLocales": [
+          "en_US"
+        ],
+        "jobLocationCountry": [
+          "Germany"
+        ],
+        "businessUnit_obj": [
+          "Gore Fabrics"
+        ],
+        "filter2": [
+          "Sales & Marketing"
+        ],
+        "jobLocationState": [
+          "Bayern"
+        ],
+        "jobLocationShortWithCoordinates": [
+          {
+            "value": "Feldkirchen/Westerham, BY, DEU, D-83620<br/>",
+            "key": "47.8941553,11.8459431"
+          }
+        ],
+        "filter8": [
+          "Marketing"
+        ],
+        "unifiedStandardEnd": "9/2/26",
+        "unifiedUrlTitle": "Pad-Role-7",
+        "unifiedStandardStart": "6/3/26",
+        "currency": [
+          "EUR"
+        ],
+        "id": "1007",
+        "unifiedStandardTitle": "Pad Role 7",
+        "urlTitle": "Pad-Role-7"
+      }
+    },
+    {
+      "response": {
+        "jobLocationShort": [
+          "Feldkirchen/Westerham, BY, DEU, D-83620<br/>"
+        ],
+        "supportedLocales": [
+          "en_US"
+        ],
+        "jobLocationCountry": [
+          "Germany"
+        ],
+        "businessUnit_obj": [
+          "Gore Fabrics"
+        ],
+        "filter2": [
+          "Sales & Marketing"
+        ],
+        "jobLocationState": [
+          "Bayern"
+        ],
+        "jobLocationShortWithCoordinates": [
+          {
+            "value": "Feldkirchen/Westerham, BY, DEU, D-83620<br/>",
+            "key": "47.8941553,11.8459431"
+          }
+        ],
+        "filter8": [
+          "Marketing"
+        ],
+        "unifiedStandardEnd": "9/2/26",
+        "unifiedUrlTitle": "Pad-Role-8",
+        "unifiedStandardStart": "6/3/26",
+        "currency": [
+          "EUR"
+        ],
+        "id": "1008",
+        "unifiedStandardTitle": "Pad Role 8",
+        "urlTitle": "Pad-Role-8"
+      }
+    },
+    {
+      "response": {
+        "jobLocationShort": [
+          "Feldkirchen/Westerham, BY, DEU, D-83620<br/>"
+        ],
+        "supportedLocales": [
+          "en_US"
+        ],
+        "jobLocationCountry": [
+          "Germany"
+        ],
+        "businessUnit_obj": [
+          "Gore Fabrics"
+        ],
+        "filter2": [
+          "Sales & Marketing"
+        ],
+        "jobLocationState": [
+          "Bayern"
+        ],
+        "jobLocationShortWithCoordinates": [
+          {
+            "value": "Feldkirchen/Westerham, BY, DEU, D-83620<br/>",
+            "key": "47.8941553,11.8459431"
+          }
+        ],
+        "filter8": [
+          "Marketing"
+        ],
+        "unifiedStandardEnd": "9/2/26",
+        "unifiedUrlTitle": "Pad-Role-9",
+        "unifiedStandardStart": "6/3/26",
+        "currency": [
+          "EUR"
+        ],
+        "id": "1009",
+        "unifiedStandardTitle": "Pad Role 9",
+        "urlTitle": "Pad-Role-9"
+      }
+    },
+    {
+      "response": {
+        "jobLocationShort": [
+          "Feldkirchen/Westerham, BY, DEU, D-83620<br/>"
+        ],
+        "supportedLocales": [
+          "en_US"
+        ],
+        "jobLocationCountry": [
+          "Germany"
+        ],
+        "businessUnit_obj": [
+          "Gore Fabrics"
+        ],
+        "filter2": [
+          "Sales & Marketing"
+        ],
+        "jobLocationState": [
+          "Bayern"
+        ],
+        "jobLocationShortWithCoordinates": [
+          {
+            "value": "Feldkirchen/Westerham, BY, DEU, D-83620<br/>",
+            "key": "47.8941553,11.8459431"
+          }
+        ],
+        "filter8": [
+          "Marketing"
+        ],
+        "unifiedStandardEnd": "9/2/26",
+        "unifiedUrlTitle": "Pad-Role-10",
+        "unifiedStandardStart": "6/3/26",
+        "currency": [
+          "EUR"
+        ],
+        "id": "1010",
+        "unifiedStandardTitle": "Pad Role 10",
+        "urlTitle": "Pad-Role-10"
+      }
+    }
+  ],
+  "totalJobs": 12
+}

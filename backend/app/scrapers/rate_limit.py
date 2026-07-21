@@ -32,6 +32,7 @@ ADAPTER_DEFAULTS: dict[str, float] = {
     "rippling": 1.0,
     "ibm_careers": 1.0,
     "workable": 1.0,
+    "successfactors": 1.5,
     "indeed": 5.0,
     "linkedin": 7.5,
     "generic_html": 2.0,

@@ -1,0 +1,90 @@
+{
+  "jobSearchResult": [
+    {
+      "response": {
+        "jobLocationShort": [
+          "Elkton, MD, USA, 21922-1550<br/>"
+        ],
+        "supportedLocales": [
+          "en_US"
+        ],
+        "jobLocationCountry": [
+          "United States"
+        ],
+        "businessUnit_obj": [
+          "Gore Performance Solutions"
+        ],
+        "filter2": [
+          "Business Strategy & Product Specialists"
+        ],
+        "jobLocationState": [
+          "Maryland"
+        ],
+        "jobLocationShortWithCoordinates": [
+          {
+            "value": "Elkton, MD, USA, 21922-1550<br/>",
+            "key": "39.6067789,-75.83327179"
+          }
+        ],
+        "filter8": [
+          "Strategy & Operations"
+        ],
+        "unifiedStandardEnd": "7/25/26",
+        "unifiedUrlTitle": "Pricing-Analyst",
+        "unifiedStandardStart": "7/10/26",
+        "currency": [
+          "USD"
+        ],
+        "id": "1875",
+        "unifiedStandardTitle": "Pricing Analyst",
+        "urlTitle": "Pricing-Analyst"
+      }
+    },
+    {
+      "response": {
+        "jobLocationShort": [
+          "Elkton, MD, USA, 21921<br/>",
+          "Elkton, MD, USA, 21921<br/>"
+        ],
+        "supportedLocales": [
+          "en_US"
+        ],
+        "jobLocationCountry": [
+          "United States"
+        ],
+        "businessUnit_obj": [
+          "Gore Fabrics"
+        ],
+        "filter2": [
+          "Information Technology"
+        ],
+        "jobLocationState": [
+          "Maryland"
+        ],
+        "jobLocationShortWithCoordinates": [
+          {
+            "value": "Elkton, MD, USA, 21921<br/>",
+            "key": "39.6465866,-75.8027819"
+          },
+          {
+            "value": "Elkton, MD, USA, 21921<br/>",
+            "key": "39.6638143,-75.812384"
+          }
+        ],
+        "filter8": [
+          "Information Technology"
+        ],
+        "unifiedStandardEnd": "7/31/26",
+        "unifiedUrlTitle": "SAP-Order-to-Cash-Value-Stream-Lead",
+        "unifiedStandardStart": "7/2/26",
+        "currency": [
+          "USD"
+        ],
+        "id": "1893",
+        "unifiedStandardTitle": "SAP Order-to-Cash Value Stream Lead",
+        "urlTitle": "SAP-Order-to-Cash-Value-Stream-Lead"
+      }
+    }
+  ],
+  "totalJobs": 12
+}
