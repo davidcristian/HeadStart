@@ -11,7 +11,7 @@ Regenerate after dependency bumps:
 just generate-third-party-licenses
 ```
 
-Generated at `2026-08-11T16:24:10Z` (UTC).
+Generated at `2026-08-11T17:12:40Z` (UTC).
 
 ## Backend runtime (`backend/requirements.txt`)
 
@@ -40,7 +40,7 @@ image) from the hashed runtime lockfile.
 | click-didyoumean   | 0.3.1       | MIT License                          | https://github.com/click-contrib/click-didyoumean                    |
 | click-plugins      | 1.1.1.2     | BSD License                          | https://github.com/click-contrib/click-plugins                       |
 | click-repl         | 0.3.0       | MIT                                  | https://github.com/untitaker/click-repl                              |
-| cryptography       | 49.0.0      | Apache-2.0 OR BSD-3-Clause           | https://github.com/pyca/cryptography                                 |
+| cryptography       | 50.0.0      | Apache-2.0 OR BSD-3-Clause           | https://github.com/pyca/cryptography                                 |
 | dnspython          | 2.8.0       | ISC License (ISCL)                   | https://www.dnspython.org                                            |
 | email-validator    | 2.3.0       | The Unlicense (Unlicense)            | https://github.com/JoshData/python-email-validator                   |
 | fastapi            | 0.140.13    | MIT                                  | https://github.com/fastapi/fastapi                                   |

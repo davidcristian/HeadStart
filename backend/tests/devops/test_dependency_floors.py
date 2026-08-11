@@ -19,7 +19,7 @@ _MIN_FLOORS: dict[str, tuple[int, ...]] = {
     "celery": (5, 6),
     "redis": (6, 0),
     "httpx": (0, 28),
-    "cryptography": (49, 0),
+    "cryptography": (50, 0),
     "stripe": (15, 0),
 }
 

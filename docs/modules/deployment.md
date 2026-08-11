@@ -44,7 +44,7 @@ after editing `backend/pyproject.toml` dependency floors.
 **Floors must match tested majors.** `pyproject.toml` `>=` floors are
 the human-readable support contract. Keep them aligned with the majors already
 pinned in the lockfiles (and exercised by CI), for example `celery>=5.6`,
-`redis>=6.0`, `httpx>=0.28`, `cryptography>=49.0`, `stripe>=15.0`. Do not leave
+`redis>=6.0`, `httpx>=0.28`, `cryptography>=50.0`, `stripe>=15.0`. Do not leave
 floors on older majors the suite never runs against.
 
 **Dependency CVE scanning.** CI runs `just audit-backend` after the

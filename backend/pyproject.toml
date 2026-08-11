@@ -24,7 +24,7 @@ dependencies = [
     "selectolax>=0.4.10",
     "pyjwt>=2.8",
     "bcrypt>=4.1",
-    "cryptography>=49.0",
+    "cryptography>=50.0",
     "prometheus-client>=0.20",
     "stripe>=15.0",
 ]
