@@ -247,14 +247,23 @@ Vite **8.x** no longer pulls esbuild into the tree at all, which retires
 (dev-server CORS SSRF in esbuild ≤0.24.2). The `overrides.esbuild: ^0.25.0`
 entry is kept as a floor in case a future dependency reintroduces it, so it is
 inert today rather than dead weight. Vitest / `@vitest/coverage-v8` track
-**4.1.10+** so the audit gate stays clean. Three further
+**4.1.10+** so the audit gate stays clean. Four further
 `overrides` pull transitive packages past advisories their parents have not
-released a fix for: `brace-expansion ^5.0.8`
-([GHSA-mh99-v99m-4gvg](https://github.com/advisories/GHSA-mh99-v99m-4gvg)),
-`fast-uri ^3.1.4`
-([GHSA-v2hh-gcrm-f6hx](https://github.com/advisories/GHSA-v2hh-gcrm-f6hx)) and
+released a fix for: `brace-expansion ^5.0.9`
+([GHSA-rgw5-rvv9-x895](https://github.com/advisories/GHSA-rgw5-rvv9-x895)),
+`fast-uri ^3.1.5`
+([GHSA-7p8r-x3mc-p8w7](https://github.com/advisories/GHSA-7p8r-x3mc-p8w7)),
+`nanoid ^3.3.17`
+([GHSA-2v37-7h3g-55p8](https://github.com/advisories/GHSA-2v37-7h3g-55p8)) and
 `postcss ^8.5.18`
 ([GHSA-r28c-9q8g-f849](https://github.com/advisories/GHSA-r28c-9q8g-f849)).
+
+Two of those floors have moved once already: `^5.0.8` and `^3.1.4` cleared
+GHSA-mh99-v99m-4gvg and GHSA-v2hh-gcrm-f6hx, then follow-up advisories landed
+covering the exact versions those pins had resolved to. Expect a floor to need
+raising again rather than treating one as settled, and raise it instead of
+reaching for an allowlist entry: an override keeps the gate enforcing, an
+allowlist entry stops it.
 CI runs `just audit-frontend` after `npm ci`; Dependabot watches
 `frontend/package-lock.json` weekly (`.github/dependabot.yml`). Backend SCA is
 `just audit-backend` (`pip-audit` on the hashed lockfiles) with Dependabot on
