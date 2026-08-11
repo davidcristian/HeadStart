@@ -275,9 +275,21 @@ one of them cannot install. Merge the pair in a single change.
 
 `@vitejs/plugin-react` also declares two optional peers, `@rolldown/plugin-babel`
 and `babel-plugin-react-compiler`. This app uses neither, and installing the
-first would drag in a conflicting `@babel/core` major, so leave them absent. A
-stale lockfile can make npm try to materialize them anyway and fail with
-ERESOLVE; regenerating `package-lock.json` resolves it.
+first would drag in a conflicting `@babel/core` major, so leave them absent.
+
+Raising the plugin still fails with ERESOLVE: while planning the install npm
+resolves that optional peer anyway, picks the newest `@rolldown/plugin-babel`,
+and follows it to `@babel/core` 8 against the tree's 7, even though it installs
+none of them. Two tempting fixes are wrong. Deleting `package-lock.json` and
+reinstalling hits the same peer on the fresh resolve. `--legacy-peer-deps`
+silences it by ignoring peers wholesale, which also drops legitimately
+peer-installed packages such as `@testing-library/dom`, leaving a lockfile that
+`npm ci` rejects as out of sync.
+
+What works is applying the bump on top of a lockfile that already pins the new
+plugin version, because npm then reuses that resolution instead of re-planning
+it. A Dependabot branch for the plugin is exactly such a lockfile: start from
+its `frontend/` files and `npm install` any remaining bumps on top.
 
 ## Progressive Web App (mobile)
 
