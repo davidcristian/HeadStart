@@ -8,15 +8,15 @@
 # shellcheck source=lib.sh
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
 
-# GHSA-qwww-vcr4-c8h2: React Router RSC mode CSRF bypass, high, affecting
-# >=7.12.0 <8.3.0. First patched in 8.3.0, which is not published yet (latest is
-# 7.18.2), so there is still no version to move to. This app renders a plain SPA
-# and never turns on RSC, so
-# the affected request path does not exist in the bundle. Holding at 6.x to dodge
-# it would reinstate three moderate advisories that DO apply here, two of them
-# open redirects in <Link> and useNavigate. Remove this entry once a fixed 7.x
-# is published.
-ALLOWED_ADVISORIES="GHSA-qwww-vcr4-c8h2"
+# Empty on purpose: prefer raising a version floor in frontend/package.json
+# `overrides` over adding an entry here, because an override keeps the gate
+# enforcing while an entry switches it off for that advisory. Anything listed
+# here needs its reasoning inline and a condition for removing it again.
+#
+# GHSA-qwww-vcr4-c8h2 (React Router RSC mode CSRF bypass) was the only entry.
+# Its range was revised to >=7.12.0 <7.18.2 with 7.18.2 as the first patched
+# 7.x, and the app is on 7.18.2, so the exception ADR 0013 opened is closed.
+ALLOWED_ADVISORIES=""
 
 log "Frontend dependency audit (npm audit, high+, allowlist applied)"
 

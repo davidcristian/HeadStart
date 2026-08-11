@@ -273,10 +273,11 @@ CI runs `just audit-frontend` after `npm ci`; Dependabot watches
 `--audit-level=high` directly, because npm has no allowlist of its own. Only the
 advisory ids in `ALLOWED_ADVISORIES` (in `scripts/audit-frontend.sh`) are
 skipped, each with its reasoning inline; everything else at high or critical
-still fails, and an entry whose id cannot be resolved fails too. The single
-current entry is the React Router RSC advisory covered by
-[ADR 0013](../adr/0013-frontend-audit-allowlist.md). Prune it when a fixed
-release lands; the list is meant to stay near empty.
+still fails, and an entry whose id cannot be resolved fails too. The list is
+**currently empty**: the React Router RSC advisory it was introduced for in
+[ADR 0013](../adr/0013-frontend-audit-allowlist.md) is fixed in 7.18.2, which
+the app tracks. Reach for an `overrides` floor before an entry here, and put
+back only what genuinely has no fixed version to move to.
 
 `vite` and `@vitejs/plugin-react` majors move **together**: the plugin declares
 a hard `vite` peer (6.x requires Vite 8), so a Dependabot PR that raises only

@@ -55,6 +55,11 @@ owns the id. Otherwise `react-router-dom` would block while its parent
   reviewable in a diff rather than invisible in a flag.
 - The list needs pruning: drop `GHSA-qwww-vcr4-c8h2` once a fixed 7.x ships,
   otherwise a genuine RSC exposure could be masked if the app ever adopts RSC.
+  **This has now happened.** The advisory range was revised to
+  `>=7.12.0 <7.18.2`, which makes 7.18.2 the first patched 7.x, and the app
+  already tracks 7.18.2. The entry is removed and `ALLOWED_ADVISORIES` is empty.
+  The filter it gates stays in place for the next exception, so this decision
+  still stands; only its one exception is closed.
 
 ## Alternatives considered
 
