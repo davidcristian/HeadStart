@@ -24,7 +24,10 @@ def test_third_party_licenses_manifest_committed() -> None:
     assert root == _FRONTEND_MANIFEST.read_text(encoding="utf-8")
     assert "psycopg" in root
     assert "LGPL-3.0-only" in root
-    assert "react@18" in root
+    # Pinning the react major froze the manifest instead of guarding it: the
+    # assertion kept passing against a stale react@18 entry long after the app
+    # moved to 19, so it failed the first time the file was regenerated.
+    assert "react@" in root
     assert "just generate-third-party-licenses" in root
 
 
